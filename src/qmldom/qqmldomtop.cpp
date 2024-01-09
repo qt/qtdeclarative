@@ -313,16 +313,10 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
     DomItem oldValue; // old ExternalItemPair (might be empty, or equal to newValue)
     DomItem newValue; // current ExternalItemPair
     DomItem univ = DomItem(shared_from_this());
-    QVector<ErrorMessage> errors;
 
     if (code.isEmpty()) {
-        QFile file(canonicalPath);
-        QFileInfo path(canonicalPath);
-        if (canonicalPath.isEmpty()) {
-            errors.append(myErrors().error(tr("Non existing path %1").arg(canonicalPath)));
-            skipParse = true; // nothing to parse from the non-existing path
-        }
         {
+            QFileInfo path(canonicalPath);
             // This check is for the purpose of verifying whether the Universe has "lastModified"
             // version of the ExtItemPair->current
             // Mutex is being helpful here to guarantee that there are no changes
@@ -342,7 +336,15 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
             }
         }
         if (!skipParse) {
-            code = readFileContent(canonicalPath, contentDate, errors);
+            auto readResult = readFileContent(canonicalPath);
+            if (std::holds_alternative<ErrorMessage>(readResult)) {
+                newValue.addError(std::move(std::get<ErrorMessage>(readResult)));
+                skipParse = true;
+            } else {
+                const auto &codeWithDate = std::get<ContentWithDate>(readResult);
+                code = codeWithDate.content;
+                contentDate = codeWithDate.date;
+            }
         }
     }
     if (!skipParse) {
@@ -399,10 +401,6 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
         }
     }
 
-    for (auto it = errors.begin(), end = errors.end(); it != end; ++it)
-        newValue.addError(std::move(*it));
-    errors.clear();
-
     // to do: tell observers?
     // execute callback
     if (callback) {
@@ -437,30 +435,27 @@ void DomUniverse::removePath(const QString &path)
     m_qmltypesFileWithPath.removeIf(toDelete);
 }
 
-QString DomUniverse::readFileContent(const QString &canonicalPath, QDateTime &contentDate,
-                                     QVector<ErrorMessage> &errors)
+DomUniverse::ReadResult DomUniverse::readFileContent(const QString &canonicalPath) const
 {
     if (canonicalPath.isEmpty()) {
-        errors.append(myErrors().error(tr("Non existing path %1").arg(canonicalPath)));
-        return QString();
+        return myErrors().error(tr("Non existing path %1").arg(canonicalPath));
     }
     QFile file(canonicalPath);
     QFileInfo fileInfo(canonicalPath);
-    contentDate = QDateTime::currentDateTimeUtc();
     if (fileInfo.isDir()) {
-        return QDir(canonicalPath)
-                .entryList(QDir::NoDotAndDotDot | QDir::Files, QDir::Name)
-                .join(QLatin1Char('\n'));
+        return ContentWithDate{ QDir(canonicalPath)
+                                        .entryList(QDir::NoDotAndDotDot | QDir::Files, QDir::Name)
+                                        .join(QLatin1Char('\n')),
+                                QDateTime::currentDateTimeUtc() };
     }
     if (!file.open(QIODevice::ReadOnly)) {
-        errors.append(myErrors().error(
+        return myErrors().error(
                 tr("Error opening path %1: %2 %3")
-                        .arg(canonicalPath, QString::number(file.error()), file.errorString())));
-        return QString();
+                        .arg(canonicalPath, QString::number(file.error()), file.errorString()));
     }
     auto content = QString::fromUtf8(file.readAll());
     file.close();
-    return content;
+    return ContentWithDate{ std::move(content), QDateTime::currentDateTimeUtc() };
 }
 
 std::shared_ptr<QmlFile> DomUniverse::parseQmlFile(const QString &code, const FileToLoad &file,

@@ -313,8 +313,14 @@ public:
     }
 
 private:
-    QString readFileContent(const QString &canonicalPath, QDateTime &contentDate,
-                            QVector<ErrorMessage> &errors);
+    struct ContentWithDate
+    {
+        QString content;
+        QDateTime date;
+    };
+    // contains either Content with the timestamp when it was read or an Error
+    using ReadResult = std::variant<ContentWithDate, ErrorMessage>;
+    ReadResult readFileContent(const QString &canonicalPath) const;
 
     std::shared_ptr<QmlFile> parseQmlFile(const QString &code, const FileToLoad &file,
                                           const QDateTime &contentDate);
