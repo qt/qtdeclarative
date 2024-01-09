@@ -573,6 +573,31 @@ TestCase {
         verify(!tableView.selectionModel.hasSelection)
     }
 
+    function test_pressAndHoldPlussShift() {
+        let tableView = createTemporaryObject(tableviewComp, testCase)
+        verify(tableView)
+        let selectionRectangle = tableView.selectionRectangle
+        verify(selectionRectangle)
+
+        selectionRectangle.selectionMode = SelectionRectangle.Drag
+
+        verify(!tableView.selectionModel.hasSelection)
+        verify(!tableView.selectionModel.currentIndex.isValid)
+
+        // select cell 0,0
+        mouseClick(tableView, 1, 1, Qt.LeftButton)
+        compare(tableView.selectionModel.currentIndex, tableView.index(0, 0))
+
+        // do a long press on cell 1,0 while holding down Shift. This will
+        // select both cells.
+        mousePress(tableView, cellWidth + 1, 1, Qt.LeftButton, Qt.ShiftModifier)
+        mouseRelease(tableView, cellWidth + 1, 1, Qt.LeftButton, Qt.ShiftModifier, 2000)
+        verify(tableView.selectionModel.hasSelection)
+        compare(tableView.selectionModel.selectedIndexes.length, 2)
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
+    }
+
     function test_pressAndHold_on_top_of_handle() {
         let tableView = createTemporaryObject(tableviewComp, testCase)
         verify(tableView)
