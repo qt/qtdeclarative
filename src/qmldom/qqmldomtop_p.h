@@ -82,9 +82,9 @@ public:
 
     void refreshedDataAt(QDateTime tNew) final override
     {
-        return OwningItem::refreshedDataAt(tNew);
         if (currentItem())
             currentItem()->refreshedDataAt(tNew);
+        return OwningItem::refreshedDataAt(tNew);
     }
 
     friend class DomUniverse;
@@ -368,9 +368,9 @@ public:
 
     void refreshedDataAt(QDateTime tNew) final override
     {
-        return OwningItem::refreshedDataAt(tNew);
         if (currentItem())
             currentItem()->refreshedDataAt(tNew);
+        return OwningItem::refreshedDataAt(tNew);
     }
 
     void ensureLogicalFilePath(const QString &path) {
