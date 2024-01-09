@@ -231,7 +231,7 @@ static DomType fileTypeForPath(const DomItem &self, const QString &canonicalFile
     return DomType::Empty;
 }
 
-void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOptions loadOptions,
+void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOptions,
                            std::optional<DomType> fileType)
 {
     DomItem selfItem(shared_from_this());
@@ -243,7 +243,7 @@ void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOption
     case DomType::QmldirFile:
     case DomType::QmlDirectory:
     case DomType::JsFile: {
-        return parse(file, fType, loadOptions, callback);
+        return parse(file, fType, callback);
         break;
     }
     default:
@@ -301,8 +301,7 @@ updateEntry(const DomItem &univ, const std::shared_ptr<T> &newItem,
     return qMakePair(oldValue, newValue);
 }
 
-void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadOptions,
-                        Callback callback)
+void DomUniverse::parse(const FileToLoad &file, DomType fType, Callback callback)
 {
     QString canonicalPath = file.canonicalPath();
     QString code = file.content() ? file.content()->data : QString();
@@ -324,8 +323,7 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
             // This is to sync this piece, piece on the line 355 and updateEntry method,
             // where the update of the timestamp or the data might happen
             QMutexLocker l(mutex());
-            auto value = getPathValueOrNull(fType, canonicalPath);
-            if (!(loadOptions & LoadOption::ForceLoad) && value) {
+            if (auto value = getPathValueOrNull(fType, canonicalPath)) {
                 // use value also when its path is non-existing
                 if (value && value->currentItem()
                     && (canonicalPath.isEmpty()

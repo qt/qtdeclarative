@@ -249,9 +249,9 @@ enum class ListOptions {
 };
 Q_ENUM_NS(ListOptions)
 
+// TODO get rid of this
 enum class LoadOption {
     DefaultLoad = 0x0,
-    ForceLoad = 0x1,
 };
 Q_ENUM_NS(LoadOption)
 Q_DECLARE_FLAGS(LoadOptions, LoadOption)

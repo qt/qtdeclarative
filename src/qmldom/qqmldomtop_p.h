@@ -199,7 +199,7 @@ public:
 
     void loadFile(const FileToLoad &file, Callback callback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>());
-    void parse(const FileToLoad &file, DomType fType, LoadOptions loadOptions, Callback callback);
+    void parse(const FileToLoad &file, DomType fType, Callback callback);
 
     void removePath(const QString &dir);
 
