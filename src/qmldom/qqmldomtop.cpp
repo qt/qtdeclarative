@@ -325,7 +325,6 @@ DomUniverse::ValueChange DomUniverse::parse(const FileToLoad &file, DomType fTyp
     QDateTime contentDate = file.content() ? file.content()->date
                                            : QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
 
-    bool skipParse = false;
     DomItem oldValue; // old ExternalItemPair (might be empty, or equal to newValue)
     DomItem newValue; // current ExternalItemPair
     DomItem univ = DomItem(shared_from_this());
@@ -346,23 +345,22 @@ DomUniverse::ValueChange DomUniverse::parse(const FileToLoad &file, DomType fTyp
                     && (canonicalPath.isEmpty()
                         || path.lastModified() < value->currentItem()->lastDataUpdateAt())) {
                     oldValue = newValue = univ.copy(value);
-                    skipParse = true;
+                    // value is considered up-to-date, early exit
+                    return { oldValue, newValue };
                 }
             }
         }
-        if (!skipParse) {
-            auto readResult = readFileContent(canonicalPath);
-            if (std::holds_alternative<ErrorMessage>(readResult)) {
-                newValue.addError(std::move(std::get<ErrorMessage>(readResult)));
-                skipParse = true;
-            } else {
-                const auto &codeWithDate = std::get<ContentWithDate>(readResult);
-                code = codeWithDate.content;
-                contentDate = codeWithDate.date;
-            }
+        auto readResult = readFileContent(canonicalPath);
+        if (std::holds_alternative<ErrorMessage>(readResult)) {
+            newValue.addError(std::move(std::get<ErrorMessage>(readResult)));
+            return { oldValue, newValue }; // read failed, nothing to parse
+        } else {
+            const auto &codeWithDate = std::get<ContentWithDate>(readResult);
+            code = codeWithDate.content;
+            contentDate = codeWithDate.date;
         }
     }
-    if (!skipParse) {
+    {
         // This section is here to check whether the value (if present) has the most
         // up-to-date content of the ExtItemPair->current and if so upd the timestamp.
         // Mutex is being helpful here to guarantee that there are no changes
@@ -372,48 +370,49 @@ DomUniverse::ValueChange DomUniverse::parse(const FileToLoad &file, DomType fTyp
         if (auto value = getPathValueOrNull(fType, canonicalPath)) {
             QString oldCode = value->currentItem()->code();
             if (value && value->currentItem() && !oldCode.isNull() && oldCode == code) {
-                skipParse = true;
                 newValue = oldValue = univ.copy(value);
                 if (value->currentItem()->lastDataUpdateAt() < contentDate)
                     value->currentItem()->refreshedDataAt(contentDate);
+                // value is considered up-to-date, early exit
+                return { oldValue, newValue };
             }
         }
     }
-    if (!skipParse) {
-        QDateTime now(QDateTime::currentDateTimeUtc());
-        if (fType == DomType::QmlFile) {
-            auto qmlFile = parseQmlFile(code, file, contentDate);
-            auto change = updateEntry<QmlFile>(univ, qmlFile, m_qmlFileWithPath, mutex());
-            oldValue = univ.copy(change.first);
-            newValue = univ.copy(change.second);
-        } else if (fType == DomType::QmltypesFile) {
-            auto qmltypesFile = std::make_shared<QmltypesFile>(canonicalPath, code, contentDate);
-            QmltypesReader reader(univ.copy(qmltypesFile));
-            reader.parse();
-            auto change =
-                    updateEntry<QmltypesFile>(univ, qmltypesFile, m_qmltypesFileWithPath, mutex());
-            oldValue = univ.copy(change.first);
-            newValue = univ.copy(change.second);
-        } else if (fType == DomType::QmldirFile) {
-            shared_ptr<QmldirFile> qmldirFile = QmldirFile::fromPathAndCode(canonicalPath, code);
-            auto change = updateEntry<QmldirFile>(univ, qmldirFile, m_qmldirFileWithPath, mutex());
-            oldValue = univ.copy(change.first);
-            newValue = univ.copy(change.second);
-        } else if (fType == DomType::QmlDirectory) {
-            auto qmlDirectory = std::make_shared<QmlDirectory>(
-                    canonicalPath, code.split(QLatin1Char('\n')), contentDate);
-            auto change =
-                    updateEntry<QmlDirectory>(univ, qmlDirectory, m_qmlDirectoryWithPath, mutex());
-            oldValue = univ.copy(change.first);
-            newValue = univ.copy(change.second);
-        } else if (fType == DomType::JsFile) {
-            auto jsFile = parseJsFile(code, file, contentDate);
-            auto change = updateEntry<JsFile>(univ, jsFile, m_jsFileWithPath, mutex());
-            oldValue = univ.copy(change.first);
-            newValue = univ.copy(change.second);
-        } else {
-            Q_ASSERT(false);
-        }
+
+    // Value doesn't exist or considered outdated / expired.
+    // Hence we do the actual parsing
+    if (fType == DomType::QmlFile) {
+        auto qmlFile = parseQmlFile(code, file, contentDate);
+        auto change = updateEntry<QmlFile>(univ, qmlFile, m_qmlFileWithPath, mutex());
+        oldValue = univ.copy(change.first);
+        newValue = univ.copy(change.second);
+    } else if (fType == DomType::QmltypesFile) {
+        auto qmltypesFile = std::make_shared<QmltypesFile>(canonicalPath, code, contentDate);
+        QmltypesReader reader(univ.copy(qmltypesFile));
+        reader.parse();
+        auto change =
+                updateEntry<QmltypesFile>(univ, qmltypesFile, m_qmltypesFileWithPath, mutex());
+        oldValue = univ.copy(change.first);
+        newValue = univ.copy(change.second);
+    } else if (fType == DomType::QmldirFile) {
+        shared_ptr<QmldirFile> qmldirFile = QmldirFile::fromPathAndCode(canonicalPath, code);
+        auto change = updateEntry<QmldirFile>(univ, qmldirFile, m_qmldirFileWithPath, mutex());
+        oldValue = univ.copy(change.first);
+        newValue = univ.copy(change.second);
+    } else if (fType == DomType::QmlDirectory) {
+        auto qmlDirectory = std::make_shared<QmlDirectory>(
+                canonicalPath, code.split(QLatin1Char('\n')), contentDate);
+        auto change =
+                updateEntry<QmlDirectory>(univ, qmlDirectory, m_qmlDirectoryWithPath, mutex());
+        oldValue = univ.copy(change.first);
+        newValue = univ.copy(change.second);
+    } else if (fType == DomType::JsFile) {
+        auto jsFile = parseJsFile(code, file, contentDate);
+        auto change = updateEntry<JsFile>(univ, jsFile, m_jsFileWithPath, mutex());
+        oldValue = univ.copy(change.first);
+        newValue = univ.copy(change.second);
+    } else {
+        Q_ASSERT(false);
     }
     return { oldValue, newValue };
 }
