@@ -164,12 +164,39 @@
     is possible to provide a different configuration file for different platforms and
     locales. See \l QFileSelector documentation for more details.
 
-    Finally, the \c .qrc file must be listed in the application's \c .pro file so that
-    the build system knows about it. For example:
+    Finally, the \c .qrc file must be listed in the application's build file.
+    For example:
 
-    \code
-    RESOURCES = application.qrc
+    \if defined(onlinedocs)
+      \tab {build-qt-app}{tab-cmake}{CMakeLists.txt (CMake)}{checked}
+      \tab {build-qt-app}{tab-qmake}{.pro (qmake)}{}
+      \tabcontent {tab-cmake}
+    \else
+      \section2 Using CMake
+    \endif
+    \badcode
+      set(CMAKE_AUTORCC ON)
+      qt_add_executable(my_app
+          application.qrc
+          main.cpp
+          ...
+      )
     \endcode
+    \if defined(onlinedocs)
+      \endtabcontent
+      \tabcontent {tab-qmake}
+    \else
+      \section2 Using qmake
+    \endif
+    \badcode
+      RESOURCES = application.qrc
+      ...
+    \endcode
+    \if defined(onlinedocs)
+      \endtabcontent
+    \endif
+
+    See also: \l {Build System Integration}
 
     \section1 Related Information
 
