@@ -242,9 +242,14 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
         }
 
         if (modifiers == Qt::ShiftModifier) {
-            // Extend the existing selection towards the pressed cell
-            if (!m_active)
-                return;
+            // Extend the selection towards the pressed cell. If there is no
+            // existing selection, start a new selection from the current item
+            // to the pressed item.
+            if (!m_active) {
+                if (!m_selectable->startSelection(pos))
+                    return;
+                m_selectable->setSelectionStartPos(QPoint{-1, -1});
+            }
             m_selectable->setSelectionEndPos(pos);
             updateHandles();
             updateActiveState(true);
