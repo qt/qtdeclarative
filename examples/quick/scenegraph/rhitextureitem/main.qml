@@ -33,10 +33,10 @@ Item {
 
         mirrorVertically: cbMirror.checked
         sampleCount: cbMSAA.checked ? 4 : 1
-        explicitTextureWidth: cbSize.checked ? slSize.value.toFixed(0) : 0
-        explicitTextureHeight: cbSize.checked ? slSize.value.toFixed(0) : 0
+        fixedColorBufferWidth: cbSize.checked ? slSize.value.toFixed(0) : 0
+        fixedColorBufferHeight: cbSize.checked ? slSize.value.toFixed(0) : 0
         alphaBlending: cbBlend.checked
-        textureFormat: rdFormatRGBA8.checked ? ExampleRhiItem.RGBA8
+        colorBufferFormat: rdFormatRGBA8.checked ? ExampleRhiItem.RGBA8
                                              : rdFormatFP16.checked ? ExampleRhiItem.RGBA16F
                                                                     : rdFormatFP32.checked ? ExampleRhiItem.RGBA32F
                                                                                            : ExampleRhiItem.RGB10A2
@@ -159,7 +159,7 @@ Item {
 
         CheckBox {
             id: cbSize
-            text: qsTr("Use explicit size")
+            text: qsTr("Use fixed size")
             checked: false
         }
         RowLayout {

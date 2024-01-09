@@ -10,18 +10,20 @@ QT_BEGIN_NAMESPACE
 
 class QQuickRhiItem;
 class QQuickRhiItemPrivate;
+class QQuickRhiItemNode;
 class QRhi;
 class QRhiCommandBuffer;
 class QRhiTexture;
 class QRhiRenderBuffer;
 class QRhiRenderTarget;
 
-class Q_QUICK_EXPORT QQuickRhiItemRenderer : public QObject
+class Q_QUICK_EXPORT QQuickRhiItemRenderer
 {
 public:
     QQuickRhiItemRenderer();
     virtual ~QQuickRhiItemRenderer();
 
+protected:
     virtual void initialize(QRhiCommandBuffer *cb) = 0;
     virtual void synchronize(QQuickRhiItem *item) = 0;
     virtual void render(QRhiCommandBuffer *cb) = 0;
@@ -36,8 +38,11 @@ public:
     QRhiRenderTarget *renderTarget() const;
 
 private:
-    void *data;
+    QQuickRhiItemNode *node;
     friend class QQuickRhiItem;
+    friend class QQuickRhiItemNode;
+
+    Q_DISABLE_COPY_MOVE(QQuickRhiItemRenderer)
 };
 
 class Q_QUICK_EXPORT QQuickRhiItem : public QQuickItem
@@ -46,13 +51,12 @@ class Q_QUICK_EXPORT QQuickRhiItem : public QQuickItem
     Q_DECLARE_PRIVATE(QQuickRhiItem)
 
     Q_PROPERTY(int sampleCount READ sampleCount WRITE setSampleCount NOTIFY sampleCountChanged FINAL)
-    Q_PROPERTY(TextureFormat textureFormat READ textureFormat WRITE setTextureFormat NOTIFY textureFormatChanged FINAL)
-    Q_PROPERTY(bool autoRenderTarget READ isAutoRenderTargetEnabled WRITE setAutoRenderTarget NOTIFY autoRenderTargetChanged FINAL)
+    Q_PROPERTY(TextureFormat colorBufferFormat READ colorBufferFormat WRITE setColorBufferFormat NOTIFY colorBufferFormatChanged FINAL)
     Q_PROPERTY(bool mirrorVertically READ isMirrorVerticallyEnabled WRITE setMirrorVertically NOTIFY mirrorVerticallyChanged FINAL)
     Q_PROPERTY(bool alphaBlending READ alphaBlending WRITE setAlphaBlending NOTIFY alphaBlendingChanged FINAL)
-    Q_PROPERTY(int explicitTextureWidth READ explicitTextureWidth WRITE setExplicitTextureWidth NOTIFY explicitTextureWidthChanged FINAL)
-    Q_PROPERTY(int explicitTextureHeight READ explicitTextureHeight WRITE setExplicitTextureHeight NOTIFY explicitTextureHeightChanged FINAL)
-    Q_PROPERTY(QSize effectiveTextureSize READ effectiveTextureSize NOTIFY effectiveTextureSizeChanged FINAL)
+    Q_PROPERTY(int fixedColorBufferWidth READ fixedColorBufferWidth WRITE setFixedColorBufferWidth NOTIFY fixedColorBufferWidthChanged FINAL)
+    Q_PROPERTY(int fixedColorBufferHeight READ fixedColorBufferHeight WRITE setFixedColorBufferHeight NOTIFY fixedColorBufferHeightChanged FINAL)
+    Q_PROPERTY(QSize effectiveColorBufferSize READ effectiveColorBufferSize NOTIFY effectiveColorBufferSizeChanged FINAL)
 
 public:
     enum class TextureFormat {
@@ -64,15 +68,13 @@ public:
     Q_ENUM(TextureFormat)
 
     QQuickRhiItem(QQuickItem *parent = nullptr);
+    ~QQuickRhiItem();
 
     int sampleCount() const;
     void setSampleCount(int samples);
 
-    TextureFormat textureFormat() const;
-    void setTextureFormat(TextureFormat format);
-
-    bool isAutoRenderTargetEnabled() const;
-    void setAutoRenderTarget(bool enabled);
+    TextureFormat colorBufferFormat() const;
+    void setColorBufferFormat(TextureFormat format);
 
     bool isMirrorVerticallyEnabled() const;
     void setMirrorVertically(bool enable);
@@ -80,27 +82,31 @@ public:
     bool alphaBlending() const;
     void setAlphaBlending(bool enable);
 
-    int explicitTextureWidth() const;
-    void setExplicitTextureWidth(int width);
-    int explicitTextureHeight() const;
-    void setExplicitTextureHeight(int height);
+    int fixedColorBufferWidth() const;
+    void setFixedColorBufferWidth(int width);
+    int fixedColorBufferHeight() const;
+    void setFixedColorBufferHeight(int height);
 
-    QSize effectiveTextureSize() const;
-
-    virtual QQuickRhiItemRenderer *createRenderer() = 0;
+    QSize effectiveColorBufferSize() const;
 
 Q_SIGNALS:
     void sampleCountChanged();
-    void textureFormatChanged();
+    void colorBufferFormatChanged();
     void autoRenderTargetChanged();
     void mirrorVerticallyChanged();
     void alphaBlendingChanged();
-    void explicitTextureWidthChanged();
-    void explicitTextureHeightChanged();
-    void effectiveTextureSizeChanged();
+    void fixedColorBufferWidthChanged();
+    void fixedColorBufferHeightChanged();
+    void effectiveColorBufferSizeChanged();
 
 protected:
+    virtual QQuickRhiItemRenderer *createRenderer() = 0;
+
+    bool isAutoRenderTargetEnabled() const;
+    void setAutoRenderTarget(bool enabled);
+
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
+    bool event(QEvent *) override;
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void releaseResources() override;
     bool isTextureProvider() const override;
