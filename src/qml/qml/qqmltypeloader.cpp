@@ -971,6 +971,7 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QUrl &unNormalizedUrl
         // this was started Asynchronous, but we need to force Synchronous
         // completion now (if at all possible with this type of URL).
 
+#if QT_CONFIG(thread)
         if (!m_thread->isThisThread()) {
             // this only works when called directly from the UI thread, but not
             // when recursively called on the QML thread via resolveTypes()
@@ -979,6 +980,7 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QUrl &unNormalizedUrl
                 m_thread->waitForNextMessage();
             }
         }
+#endif
     }
 
     return typeData;
