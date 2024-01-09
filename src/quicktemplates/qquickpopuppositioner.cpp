@@ -135,6 +135,11 @@ void QQuickPopupPositioner::reposition()
         // m_parentItem is the parent that the popup should open in,
         // and popupItem()->parentItem() is the overlay, so the mapToItem() calls below
         // effectively map the rect to scene coordinates.
+
+        // Animations can cause reposition() to get called when m_parentItem no longer has a window.
+        if (!m_parentItem->window())
+            return;
+
         if (centerInParent) {
             if (centerInParent != parentItem() && !centerInOverlay) {
                 qmlWarning(m_popup) << "Popup can only be centered within its immediate parent or Overlay.overlay";

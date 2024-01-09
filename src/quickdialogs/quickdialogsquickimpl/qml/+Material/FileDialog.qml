@@ -39,10 +39,13 @@ FileDialogImpl {
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
         dim: true
         modal: true
-        title: qsTr("“%1” already exists. Do you want to replace it?").arg(control.fileName)
+        title: qsTr("Overwrite file?")
+        width: control.width - control.leftPadding - control.rightPadding
+        clip: true
 
-        Label {
-            text: qsTr("A file with the same name already exists in %1.\nReplacing it will overwrite its current contents.").arg(control.currentFolderName)
+        contentItem: Label {
+            text: qsTr("“%1” already exists.\nDo you want to replace it?").arg(control.fileName)
+            wrapMode: Text.WordWrap
         }
 
         footer: DialogButtonBox {
