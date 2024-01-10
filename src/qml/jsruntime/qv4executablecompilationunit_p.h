@@ -157,20 +157,10 @@ public:
     }
 
     // --- interface for QQmlPropertyCacheCreator
-    using CompiledObject = const CompiledData::Object;
-    using CompiledFunction = const CompiledData::Function;
-    using CompiledBinding = const CompiledData::Binding;
-
-    // Empty dummy. We don't need to do this when loading from cache.
-    class IdToObjectMap
-    {
-    public:
-        void insert(int, int) {}
-        void clear() {}
-
-        // We have already checked uniqueness of IDs when creating the CU
-        bool contains(int) { return false; }
-    };
+    using CompiledObject = CompiledData::CompilationUnit::CompiledObject;
+    using CompiledFunction = CompiledData::CompilationUnit::CompiledFunction;
+    using CompiledBinding = CompiledData::CompilationUnit::CompiledBinding;
+    using IdToObjectMap = CompiledData::CompilationUnit::IdToObjectMap;
 
     using ListPropertyAssignBehavior = CompiledData::CompilationUnit::ListPropertyAssignBehavior;
     ListPropertyAssignBehavior listPropertyAssignBehavior() const
@@ -190,10 +180,10 @@ public:
     bool isESModule() const { return m_compilationUnit->isESModule(); }
     bool isSharedLibrary() const { return m_compilationUnit->isSharedLibrary(); }
 
-    int objectCount() const { return qmlData()->nObjects; }
+    int objectCount() const { return m_compilationUnit->objectCount(); }
     const CompiledObject *objectAt(int index) const
     {
-        return qmlData()->objectAt(index);
+        return m_compilationUnit->objectAt(index);
     }
 
     int importCount() const { return m_compilationUnit->importCount(); }
@@ -204,33 +194,17 @@ public:
 
     Heap::Object *templateObjectAt(int index) const;
 
-    struct FunctionIterator
-    {
-        FunctionIterator(const CompiledData::Unit *unit, const CompiledObject *object, int index)
-            : unit(unit), object(object), index(index) {}
-        const CompiledData::Unit *unit;
-        const CompiledObject *object;
-        int index;
-
-        const CompiledFunction *operator->() const
-        {
-            return unit->functionAt(object->functionOffsetTable()[index]);
-        }
-
-        void operator++() { ++index; }
-        bool operator==(const FunctionIterator &rhs) const { return index == rhs.index; }
-        bool operator!=(const FunctionIterator &rhs) const { return index != rhs.index; }
-    };
-
+    using FunctionIterator = CompiledData::CompilationUnit::FunctionIterator;
     FunctionIterator objectFunctionsBegin(const CompiledObject *object) const
     {
-        return FunctionIterator(unitData(), object, 0);
+        return m_compilationUnit->objectFunctionsBegin(object);
     }
 
     FunctionIterator objectFunctionsEnd(const CompiledObject *object) const
     {
-        return FunctionIterator(unitData(), object, object->nFunctions);
+        return m_compilationUnit->objectFunctionsEnd(object);
     }
+
 
     Heap::Module *instantiate();
     const Value *resolveExport(QV4::String *exportName)

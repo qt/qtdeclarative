@@ -1497,7 +1497,21 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
     QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
 
 public:
-    using CompiledObject = CompiledData::Object;
+    // --- interface for QQmlPropertyCacheCreator
+    using CompiledObject = const CompiledData::Object;
+    using CompiledFunction = const CompiledData::Function;
+    using CompiledBinding = const CompiledData::Binding;
+
+    // Empty dummy. We don't need to do this when loading from cache.
+    class IdToObjectMap
+    {
+    public:
+        void insert(int, int) {}
+        void clear() {}
+
+        // We have already checked uniqueness of IDs when creating the CU
+        bool contains(int) { return false; }
+    };
 
     explicit CompilationUnit(const Unit *unitData, const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions,
                              const QString &fileName = QString(), const QString &finalUrlString = QString())
@@ -1634,6 +1648,9 @@ public:
         return propertyCaches.at(/*root object*/0);
     }
 
+    int objectCount() const { return qmlData->nObjects; }
+    const CompiledObject *objectAt(int index) const { return qmlData->objectAt(index); }
+
     int totalBindingsCount() const;
     int totalParserStatusCount() const;
     int totalObjectCount() const;
@@ -1696,6 +1713,34 @@ public:
     bool isSharedLibrary() const
     {
         return unitData()->flags & CompiledData::Unit::IsSharedLibrary;
+    }
+
+    struct FunctionIterator
+    {
+        FunctionIterator(const CompiledData::Unit *unit, const CompiledObject *object, int index)
+            : unit(unit), object(object), index(index) {}
+        const CompiledData::Unit *unit;
+        const CompiledObject *object;
+        int index;
+
+        const CompiledFunction *operator->() const
+        {
+            return unit->functionAt(object->functionOffsetTable()[index]);
+        }
+
+        void operator++() { ++index; }
+        bool operator==(const FunctionIterator &rhs) const { return index == rhs.index; }
+        bool operator!=(const FunctionIterator &rhs) const { return index != rhs.index; }
+    };
+
+    FunctionIterator objectFunctionsBegin(const CompiledObject *object) const
+    {
+        return FunctionIterator(unitData(), object, 0);
+    }
+
+    FunctionIterator objectFunctionsEnd(const CompiledObject *object) const
+    {
+        return FunctionIterator(unitData(), object, object->nFunctions);
     }
 
     QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
