@@ -35,6 +35,7 @@ TapHandler {
             width: 100
             height: 100
             containsMode: Shape.FillContains
+            preferredRendererType: Shape.CurveRenderer
 
             property bool highlighted: menuTap.pressed &&
                     shape.contains(shape.mapFromItem(menuTap.parent, menuTap.point.position))
