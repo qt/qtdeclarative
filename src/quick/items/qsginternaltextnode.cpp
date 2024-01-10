@@ -36,6 +36,15 @@ QSGInternalTextNode::QSGInternalTextNode(QSGRenderContext *renderContext)
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("text"));
 #endif
+
+    static_assert(int(QSGTextNode::Normal) == int(QQuickText::Normal));
+    static_assert(int(QSGTextNode::Outline) == int(QQuickText::Outline));
+    static_assert(int(QSGTextNode::Raised) == int(QQuickText::Raised));
+    static_assert(int(QSGTextNode::Sunken) == int(QQuickText::Sunken));
+
+    static_assert(int(QSGTextNode::QtRendering) == int(QQuickText::QtRendering));
+    static_assert(int(QSGTextNode::NativeRendering) == int(QQuickText::NativeRendering));
+    static_assert(int(QSGTextNode::CurveRendering) == int(QQuickText::CurveRendering));
 }
 
 QSGInternalTextNode::~QSGInternalTextNode()

@@ -13,7 +13,7 @@ class Q_QUICK_EXPORT QSGTextNode : public QSGTransformNode
 {
 public:
     // Should match the TextStyle in qquicktext_p.h
-    enum TextStyle
+    enum TextStyle : quint8
     {
         Normal,
         Outline,
@@ -22,7 +22,7 @@ public:
     };
 
     // Should match the RenderType in qquicktext_p.h
-    enum RenderType
+    enum RenderType: quint8
     {
         QtRendering,
         NativeRendering,
