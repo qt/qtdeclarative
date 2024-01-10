@@ -898,7 +898,7 @@ void QQuickControlPrivate::itemFocusChanged(QQuickItem *item, Qt::FocusReason re
 {
     Q_Q(QQuickControl);
     if (item == contentItem || item == q)
-        q->setFocusReason(reason);
+        setLastFocusChangeReason(reason);
 }
 
 QQuickControl::QQuickControl(QQuickItem *parent)
@@ -1341,6 +1341,44 @@ bool QQuickControl::isMirrored() const
 {
     Q_D(const QQuickControl);
     return d->isMirrored();
+}
+
+/*!
+    \qmlproperty enumeration QtQuick.Controls::Control::focusReason
+    \readonly
+
+    This property holds the reason of the last focus change.
+
+    \note This property does not indicate whether the item has \l {Item::activeFocus}
+        {active focus}, but the reason why the item either gained or lost focus.
+
+    \value Qt.MouseFocusReason         A mouse action occurred.
+    \value Qt.TabFocusReason           The Tab key was pressed.
+    \value Qt.BacktabFocusReason       A Backtab occurred. The input for this may include the Shift or Control keys; e.g. Shift+Tab.
+    \value Qt.ActiveWindowFocusReason  The window system made this window either active or inactive.
+    \value Qt.PopupFocusReason         The application opened/closed a pop-up that grabbed/released the keyboard focus.
+    \value Qt.ShortcutFocusReason      The user typed a label's buddy shortcut
+    \value Qt.MenuBarFocusReason       The menu bar took focus.
+    \value Qt.OtherFocusReason         Another reason, usually application-specific.
+
+    \sa Item::activeFocus
+
+    \sa visualFocus
+*/
+Qt::FocusReason QQuickControl::focusReason() const
+{
+    Q_D(const QQuickControl);
+    return d->lastFocusChangeReason();
+}
+
+void QQuickControl::setFocusReason(Qt::FocusReason reason)
+{
+    Q_D(QQuickControl);
+    Qt::FocusReason oldReason = static_cast<Qt::FocusReason>(d->focusReason);
+    d->setLastFocusChangeReason(reason);
+    emit focusReasonChanged();
+    if (isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
+        emit visualFocusChanged();
 }
 
 /*!

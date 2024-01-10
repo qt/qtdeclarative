@@ -561,6 +561,8 @@ public:
     void updateSubFocusItem(QQuickItem *scope, bool focus);
 
     bool setFocusIfNeeded(QEvent::Type);
+    Qt::FocusReason lastFocusChangeReason() const;
+    void setLastFocusChangeReason(Qt::FocusReason reason);
 
     QTransform windowToItemTransform() const;
     QTransform itemToWindowTransform() const;
