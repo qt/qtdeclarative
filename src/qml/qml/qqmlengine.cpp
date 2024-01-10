@@ -632,6 +632,7 @@ void QQmlEngine::clearComponentCache()
     mm->runGC();
     mm->gcStateMachine->timeLimit = std::move(oldLimit);
 
+    handle()->clearCompilationUnits();
     d->typeLoader.lock();
     d->typeLoader.clearCache();
     d->typeLoader.unlock();
@@ -653,6 +654,7 @@ void QQmlEngine::clearComponentCache()
 void QQmlEngine::trimComponentCache()
 {
     Q_D(QQmlEngine);
+    handle()->trimCompilationUnits();
     d->typeLoader.trimCache();
 }
 
@@ -1967,13 +1969,20 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QV4::ExecutableCompilationU
 
 QV4::ExecutableCompilationUnit *QQmlEnginePrivate::compilationUnitFromUrl(const QUrl &url)
 {
+    QV4::ExecutionEngine *v4 = v4engine();
+    if (auto unit = v4->compilationUnitForUrl(url)) {
+        if (!unit->runtimeStrings)
+            unit->populate();
+        return unit.data();
+    }
+
     auto unit = typeLoader.getType(url)->compilationUnit();
     if (!unit)
         return nullptr;
-    Q_ASSERT(unit->engine == v4engine());
-    if (!unit->runtimeStrings)
-        unit->populate();
-    return unit;
+
+    auto executable = v4->executableCompilationUnit(std::move(unit));
+    executable->populate();
+    return executable.data();
 }
 
 QQmlRefPointer<QQmlContextData>

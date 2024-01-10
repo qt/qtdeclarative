@@ -1668,6 +1668,8 @@ public:
         return -1;
     }
 
+    void finalizeCompositeType(const QQmlType &type);
+
     bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
 
     enum class ListPropertyAssignBehavior { Append, Replace, ReplaceIfNotDefault };

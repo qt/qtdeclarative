@@ -45,7 +45,6 @@ protected:
     void dataReceived(const SourceCodeData &) override;
     void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit) override;
     void done() override;
-    void completed() override;
 
     QString stringAt(int index) const override;
 

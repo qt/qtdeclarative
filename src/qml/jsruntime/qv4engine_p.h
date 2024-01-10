@@ -496,11 +496,6 @@ public:
     Symbol *symbol_unscopables() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_unscopables); }
     Symbol *symbol_revokableProxy() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_revokableProxy); }
 
-    using CompilationUnitList = QIntrusiveList<
-            ExecutableCompilationUnit, &ExecutableCompilationUnit::nextCompilationUnit>;
-    CompilationUnitList &compilationUnits() { return m_compilationUnits; }
-    const CompilationUnitList &compilationUnits() const { return m_compilationUnits; }
-
     quint32 m_engineId;
 
     RegExpCache *regExpCache;
@@ -758,10 +753,16 @@ public:
     QQmlRefPointer<ExecutableCompilationUnit> compileModule(
             const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp);
 
+    QQmlRefPointer<ExecutableCompilationUnit> compilationUnitForUrl(const QUrl &url) const;
     QQmlRefPointer<ExecutableCompilationUnit> executableCompilationUnit(
             QQmlRefPointer<QV4::CompiledData::CompilationUnit> &&unit);
+    QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> compilationUnits() const
+    {
+        return m_compilationUnits;
+    }
+    void clearCompilationUnits() { m_compilationUnits.clear(); }
+    void trimCompilationUnits();
 
-    void injectCompiledModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit);
     QV4::Value *registerNativeModule(const QUrl &url, const QV4::Value &module);
 
     struct Module {
@@ -877,15 +878,13 @@ private:
 
     QVector<Deletable *> m_extensionData;
 
-    QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> modules;
+    QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> m_compilationUnits;
 
     // QV4::PersistentValue would be preferred, but using QHash will create copies,
     // and QV4::PersistentValue doesn't like creating copies.
     // Instead, we allocate a raw pointer using the same manual memory management
     // technique in QV4::PersistentValue.
     QHash<QUrl, Value *> nativeModules;
-
-    CompilationUnitList m_compilationUnits;
 };
 
 #define CHECK_STACK_LIMITS(v4) \

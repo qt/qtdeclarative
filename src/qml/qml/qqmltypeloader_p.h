@@ -18,6 +18,7 @@
 #include <private/qqmldatablob_p.h>
 #include <private/qqmlimport_p.h>
 #include <private/qqmlmetatype_p.h>
+#include <private/qv4compileddata_p.h>
 
 #include <QtQml/qtqmlglobal.h>
 #include <QtQml/qqmlerror.h>

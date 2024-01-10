@@ -3,6 +3,7 @@
 
 #include "qv4compileddata_p.h"
 
+#include <private/inlinecomponentutils_p.h>
 #include <private/qqmlscriptdata_p.h>
 #include <private/qqmltypenamecache_p.h>
 #include <private/qv4resolvedtypereference_p.h>
@@ -190,6 +191,143 @@ int CompilationUnit::totalObjectCount() const
     if (!icRootName)
         return m_totalObjectCount;
     return inlineComponentData[*icRootName].totalObjectCount;
+}
+
+template<typename F>
+void processInlinComponentType(
+        const QQmlType &type,
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit,
+        F &&populateIcData)
+{
+    if (type.isInlineComponentType()) {
+        QString icRootName;
+        if (compilationUnit->icRootName) {
+            icRootName = type.elementName();
+            std::swap(*compilationUnit->icRootName, icRootName);
+        } else {
+            compilationUnit->icRootName = std::make_unique<QString>(type.elementName());
+        }
+
+        populateIcData();
+
+        if (icRootName.isEmpty())
+            compilationUnit->icRootName.reset();
+        else
+            std::swap(*compilationUnit->icRootName, icRootName);
+    } else {
+        populateIcData();
+    }
+}
+
+void CompiledData::CompilationUnit::finalizeCompositeType(const QQmlType &type)
+{
+    // Add to type registry of composites
+    if (propertyCaches.needsVMEMetaObject(/*root object*/0)) {
+        // qmlType is only valid for types that have references to themselves.
+        if (type.isValid()) {
+            qmlType = type;
+        } else {
+            qmlType = QQmlMetaType::findCompositeType(
+                    finalUrl(), this, (unitData()->flags & CompiledData::Unit::IsSingleton)
+                            ? QQmlMetaType::Singleton
+                            : QQmlMetaType::NonSingleton);
+        }
+
+        QQmlMetaType::registerInternalCompositeType(this);
+    } else {
+        const QV4::CompiledData::Object *obj = objectAt(/*root object*/0);
+        auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        Q_ASSERT(typeRef);
+        if (const auto compilationUnit = typeRef->compilationUnit())
+            qmlType = compilationUnit->qmlType;
+        else
+            qmlType = typeRef->type();
+    }
+
+    // Collect some data for instantiation later.
+    using namespace icutils;
+    std::vector<QV4::CompiledData::InlineComponent> allICs {};
+    for (int i=0; i != objectCount(); ++i) {
+        const CompiledObject *obj = objectAt(i);
+        for (auto it = obj->inlineComponentsBegin(); it != obj->inlineComponentsEnd(); ++it) {
+            allICs.push_back(*it);
+        }
+    }
+    NodeList nodes;
+    nodes.resize(allICs.size());
+    std::iota(nodes.begin(), nodes.end(), 0);
+    AdjacencyList adjacencyList;
+    adjacencyList.resize(nodes.size());
+    fillAdjacencyListForInlineComponents(this, adjacencyList, nodes, allICs);
+    bool hasCycle = false;
+    auto nodesSorted = topoSort(nodes, adjacencyList, hasCycle);
+    Q_ASSERT(!hasCycle); // would have already been discovered by qqmlpropertycachcecreator
+
+    // We need to first iterate over all inline components,
+    // as the containing component might create instances of them
+    // and in that case we need to add its object count
+    for (auto nodeIt = nodesSorted.rbegin(); nodeIt != nodesSorted.rend(); ++nodeIt) {
+        const auto &ic = allICs.at(nodeIt->index());
+        const int lastICRoot = ic.objectIndex;
+        for (int i = ic.objectIndex; i<objectCount(); ++i) {
+            const QV4::CompiledData::Object *obj = objectAt(i);
+            bool leftCurrentInlineComponent
+                    = (i != lastICRoot
+                       && obj->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot))
+                    || !obj->hasFlag(QV4::CompiledData::Object::IsPartOfInlineComponent);
+            if (leftCurrentInlineComponent)
+                break;
+            const QString lastICRootName = stringAt(ic.nameIndex);
+            inlineComponentData[lastICRootName].totalBindingCount
+                    += obj->nBindings;
+
+            if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
+                const auto type = typeRef->type();
+                if (type.isValid() && type.parserStatusCast() != -1)
+                    ++inlineComponentData[lastICRootName].totalParserStatusCount;
+
+                ++inlineComponentData[lastICRootName].totalObjectCount;
+                if (const auto compilationUnit = typeRef->compilationUnit()) {
+                    // if the type is an inline component type, we have to extract the information
+                    // from it.
+                    // This requires that inline components are visited in the correct order.
+                    processInlinComponentType(type, compilationUnit, [&]() {
+                        auto &icData = inlineComponentData[lastICRootName];
+                        icData.totalBindingCount += compilationUnit->totalBindingsCount();
+                        icData.totalParserStatusCount += compilationUnit->totalParserStatusCount();
+                        icData.totalObjectCount += compilationUnit->totalObjectCount();
+                    });
+                }
+            }
+        }
+    }
+    int bindingCount = 0;
+    int parserStatusCount = 0;
+    int objectCount = 0;
+    for (quint32 i = 0, count = this->objectCount(); i < count; ++i) {
+        const QV4::CompiledData::Object *obj = objectAt(i);
+        if (obj->hasFlag(QV4::CompiledData::Object::IsPartOfInlineComponent))
+            continue;
+
+        bindingCount += obj->nBindings;
+        if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
+            const auto type = typeRef->type();
+            if (type.isValid() && type.parserStatusCast() != -1)
+                ++parserStatusCount;
+            ++objectCount;
+            if (const auto compilationUnit = typeRef->compilationUnit()) {
+                processInlinComponentType(type, compilationUnit, [&](){
+                    bindingCount += compilationUnit->totalBindingsCount();
+                    parserStatusCount += compilationUnit->totalParserStatusCount();
+                    objectCount += compilationUnit->totalObjectCount();
+                });
+            }
+        }
+    }
+
+    m_totalBindingsCount = bindingCount;
+    m_totalParserStatusCount = parserStatusCount;
+    m_totalObjectCount = objectCount;
 }
 
 int CompilationUnit::totalParserStatusCount() const

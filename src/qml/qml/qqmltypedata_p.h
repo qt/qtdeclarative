@@ -57,7 +57,7 @@ public:
 
     const QList<ScriptReference> &resolvedScripts() const;
 
-    QV4::ExecutableCompilationUnit *compilationUnit() const;
+    QV4::CompiledData::CompilationUnit *compilationUnit() const;
 
     // Used by QQmlComponent to get notifications
     struct TypeDataCallback {
@@ -129,11 +129,11 @@ private:
     QQmlType m_qmlType;
     QByteArray m_typeClassName; // used for meta-object later
 
-    using ExecutableCompilationUnitPtr = QQmlRefPointer<QV4::ExecutableCompilationUnit>;
+    using CompilationUnitPtr = QQmlRefPointer<QV4::CompiledData::CompilationUnit>;
 
     QHash<QString, InlineComponentData> m_inlineComponentData;
 
-    ExecutableCompilationUnitPtr m_compiledData;
+    CompilationUnitPtr m_compiledData;
 
     QList<TypeDataCallback *> m_callbacks;
 

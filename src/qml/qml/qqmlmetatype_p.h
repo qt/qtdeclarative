@@ -28,7 +28,11 @@ class QRecursiveMutex;
 class QQmlError;
 class QQmlValueType;
 
-namespace QV4 { class ExecutableCompilationUnit; }
+namespace QV4 {
+namespace CompiledData {
+struct CompilationUnit;
+}
+}
 
 class Q_QML_EXPORT QQmlMetaType
 {
@@ -67,13 +71,15 @@ public:
     };
 
     static QQmlType findCompositeType(
-        const QUrl &url, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-        CompositeTypeLookupMode mode = NonSingleton);
+            const QUrl &url,
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit,
+            CompositeTypeLookupMode mode = NonSingleton);
     static QQmlType findInlineComponentType(
-            const QUrl &url, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit);
+            const QUrl &url,
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
     static QQmlType findInlineComponentType(
             const QUrl &baseUrl, const QString &name,
-            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
     {
         return findInlineComponentType(inlineComponentUrl(baseUrl, name), compilationUnit);
     }
@@ -270,13 +276,15 @@ public:
 
     static QQmlPropertyCache::ConstPtr findPropertyCacheInCompositeTypes(QMetaType t);
     static void registerInternalCompositeType(
-        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit);
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
     static void unregisterInternalCompositeType(
-        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit);
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
     static int countInternalCompositeTypeSelfReferences(
-        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit);
-    static QQmlRefPointer<QV4::ExecutableCompilationUnit> obtainExecutableCompilationUnit(
-        QMetaType type);
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
+    static QQmlRefPointer<QV4::CompiledData::CompilationUnit> obtainCompilationUnit(
+            QMetaType type);
+    static QQmlRefPointer<QV4::CompiledData::CompilationUnit> obtainCompilationUnit(
+            const QUrl &url);
 };
 
 Q_DECLARE_TYPEINFO(QQmlMetaType, Q_RELOCATABLE_TYPE);

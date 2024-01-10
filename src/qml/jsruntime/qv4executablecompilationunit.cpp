@@ -19,7 +19,6 @@
 #include <private/qv4compilationunitmapper_p.h>
 #include <private/qml_compile_hash_p.h>
 #include <private/qqmltypewrapper_p.h>
-#include <private/inlinecomponentutils_p.h>
 #include <private/qv4resolvedtypereference_p.h>
 #include <private/qv4objectiterator_p.h>
 
@@ -58,8 +57,8 @@ ExecutableCompilationUnit::ExecutableCompilationUnit(
 
 ExecutableCompilationUnit::~ExecutableCompilationUnit()
 {
-    clear();
-    nextCompilationUnit.remove();
+    if (engine)
+        clear();
 }
 
 static QString toString(QV4::ReturnedValue v)
@@ -326,32 +325,6 @@ IdentifierHash ExecutableCompilationUnit::createNamedObjectsPerComponent(int com
     return *namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
 }
 
-template<typename F>
-void processInlinComponentType(
-        const QQmlType &type,
-        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit,
-        F &&populateIcData)
-{
-    if (type.isInlineComponentType()) {
-        QString icRootName;
-        if (compilationUnit->icRootName) {
-            icRootName = type.elementName();
-            std::swap(*compilationUnit->icRootName, icRootName);
-        } else {
-            compilationUnit->icRootName = std::make_unique<QString>(type.elementName());
-        }
-
-        populateIcData();
-
-        if (icRootName.isEmpty())
-            compilationUnit->icRootName.reset();
-        else
-            std::swap(*compilationUnit->icRootName, icRootName);
-    } else {
-        populateIcData();
-    }
-}
-
 QQmlRefPointer<ExecutableCompilationUnit> ExecutableCompilationUnit::create(
         QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit, ExecutionEngine *engine)
 {
@@ -359,117 +332,7 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutableCompilationUnit::create(
             new ExecutableCompilationUnit(std::move(compilationUnit)),
             QQmlRefPointer<ExecutableCompilationUnit>::Adopt);
     result->engine = engine;
-    engine->compilationUnits().insert(result.data());
     return result;
-}
-
-void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
-{
-    // Add to type registry of composites
-    if (m_compilationUnit->propertyCaches.needsVMEMetaObject(/*root object*/0)) {
-        // qmlType is only valid for types that have references to themselves.
-        if (type.isValid()) {
-            m_compilationUnit->qmlType = type;
-        } else {
-            m_compilationUnit->qmlType = QQmlMetaType::findCompositeType(
-                    finalUrl(), this, (unitData()->flags & CompiledData::Unit::IsSingleton)
-                            ? QQmlMetaType::Singleton
-                            : QQmlMetaType::NonSingleton);
-        }
-
-        QQmlMetaType::registerInternalCompositeType(this);
-    } else {
-        const QV4::CompiledData::Object *obj = objectAt(/*root object*/0);
-        auto *typeRef = m_compilationUnit->resolvedTypes.value(obj->inheritedTypeNameIndex);
-        Q_ASSERT(typeRef);
-        if (const auto compilationUnit = typeRef->compilationUnit())
-            m_compilationUnit->qmlType = compilationUnit->m_compilationUnit->qmlType;
-        else
-            m_compilationUnit->qmlType = typeRef->type();
-    }
-
-    // Collect some data for instantiation later.
-    using namespace  icutils;
-    std::vector<QV4::CompiledData::InlineComponent> allICs {};
-    for (int i=0; i != objectCount(); ++i) {
-        const CompiledObject *obj = objectAt(i);
-        for (auto it = obj->inlineComponentsBegin(); it != obj->inlineComponentsEnd(); ++it) {
-            allICs.push_back(*it);
-        }
-    }
-    NodeList nodes;
-    nodes.resize(allICs.size());
-    std::iota(nodes.begin(), nodes.end(), 0);
-    AdjacencyList adjacencyList;
-    adjacencyList.resize(nodes.size());
-    fillAdjacencyListForInlineComponents(this, adjacencyList, nodes, allICs);
-    bool hasCycle = false;
-    auto nodesSorted = topoSort(nodes, adjacencyList, hasCycle);
-    Q_ASSERT(!hasCycle); // would have already been discovered by qqmlpropertycachcecreator
-
-    // We need to first iterate over all inline components, as the containing component might create instances of them
-    // and in that case we need to add its object count
-    for (auto nodeIt = nodesSorted.rbegin(); nodeIt != nodesSorted.rend(); ++nodeIt) {
-        const auto &ic = allICs.at(nodeIt->index());
-        const int lastICRoot = ic.objectIndex;
-        for (int i = ic.objectIndex; i<objectCount(); ++i) {
-            const QV4::CompiledData::Object *obj = objectAt(i);
-            bool leftCurrentInlineComponent
-                    = (i != lastICRoot
-                            && obj->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot))
-                        || !obj->hasFlag(QV4::CompiledData::Object::IsPartOfInlineComponent);
-            if (leftCurrentInlineComponent)
-                break;
-            const QString lastICRootName = stringAt(ic.nameIndex);
-            m_compilationUnit->inlineComponentData[lastICRootName].totalBindingCount
-                    += obj->nBindings;
-
-            if (auto *typeRef = m_compilationUnit->resolvedTypes.value(obj->inheritedTypeNameIndex)) {
-                const auto type = typeRef->type();
-                if (type.isValid() && type.parserStatusCast() != -1)
-                    ++m_compilationUnit->inlineComponentData[lastICRootName].totalParserStatusCount;
-
-                ++m_compilationUnit->inlineComponentData[lastICRootName].totalObjectCount;
-                if (const auto compilationUnit = typeRef->compilationUnit()) {
-                    // if the type is an inline component type, we have to extract the information from it
-                    // This requires that inline components are visited in the correct order
-                    processInlinComponentType(type, compilationUnit->m_compilationUnit, [&]() {
-                        auto &icData = m_compilationUnit->inlineComponentData[lastICRootName];
-                        icData.totalBindingCount += compilationUnit->totalBindingsCount();
-                        icData.totalParserStatusCount += compilationUnit->totalParserStatusCount();
-                        icData.totalObjectCount += compilationUnit->totalObjectCount();
-                    });
-                }
-            }
-        }
-    }
-    int bindingCount = 0;
-    int parserStatusCount = 0;
-    int objectCount = 0;
-    for (quint32 i = 0, count = this->objectCount(); i < count; ++i) {
-        const QV4::CompiledData::Object *obj = objectAt(i);
-        if (obj->hasFlag(QV4::CompiledData::Object::IsPartOfInlineComponent))
-            continue;
-
-        bindingCount += obj->nBindings;
-        if (auto *typeRef = m_compilationUnit->resolvedTypes.value(obj->inheritedTypeNameIndex)) {
-            const auto type = typeRef->type();
-            if (type.isValid() && type.parserStatusCast() != -1)
-                ++parserStatusCount;
-            ++objectCount;
-            if (const auto compilationUnit = typeRef->compilationUnit()) {
-                processInlinComponentType(type, compilationUnit->m_compilationUnit, [&](){
-                    bindingCount += compilationUnit->totalBindingsCount();
-                    parserStatusCount += compilationUnit->totalParserStatusCount();
-                    objectCount += compilationUnit->totalObjectCount();
-                });
-            }
-        }
-    }
-
-    m_compilationUnit->m_totalBindingsCount = bindingCount;
-    m_compilationUnit->m_totalParserStatusCount = parserStatusCount;
-    m_compilationUnit->m_totalObjectCount = objectCount;
 }
 
 Heap::Module *ExecutableCompilationUnit::instantiate()

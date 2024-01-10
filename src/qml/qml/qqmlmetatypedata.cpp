@@ -244,9 +244,9 @@ static QQmlPropertyCache::ConstPtr propertyCacheForPotentialInlineComponentType(
         QMetaType t, const QQmlMetaTypeData::CompositeTypes::const_iterator &iter) {
     if (t != (*iter)->metaType()) {
         // this is an inline component, and what we have in the iterator is currently the parent compilation unit
-        for (auto &&icDatum: (*iter)->inlineComponentData())
+        for (auto &&icDatum: (*iter)->inlineComponentData)
             if (icDatum.qmlType.typeId() == t)
-                return (*iter)->propertyCachesPtr()->at(icDatum.objectIndex);
+                return (*iter)->propertyCaches.at(icDatum.objectIndex);
     }
     return (*iter)->rootPropertyCache();
 }

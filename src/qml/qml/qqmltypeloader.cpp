@@ -1361,7 +1361,7 @@ void QQmlTypeLoader::trimCache()
                 continue;
             }
 
-            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit
                 = typeData->m_compiledData;
             if (compilationUnit) {
                 if (compilationUnit->count()

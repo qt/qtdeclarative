@@ -1020,7 +1020,7 @@ void tst_qmldiskcache::cacheModuleScripts()
         QVERIFY(unitData);
         QVERIFY(unitData->flags & QV4::CompiledData::Unit::StaticData);
         QVERIFY(unitData->flags & QV4::CompiledData::Unit::IsESModule);
-        QVERIFY(compilationUnit->baseCompilationUnit()->backingFile);
+        QVERIFY(compilationUnit->backingFile);
     }
 
     const QSet<QString> entries = entrySet(m_qmlCacheDirectory, QStringList("*.mjsc"));

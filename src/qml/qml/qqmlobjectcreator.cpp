@@ -1276,7 +1276,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
             sharedState->allCreatedObjects.push(instance);
         } else {
-            const auto compilationUnit = typeRef->compilationUnit();
+            auto compilationUnit = typeRef->compilationUnit();
             Q_ASSERT(compilationUnit);
             typeName = compilationUnit->fileName();
             // compilation unit is shared between root type and its inline component types
@@ -1287,8 +1287,10 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             }
 
             if (!type.isInlineComponentType()) {
-                QQmlObjectCreator subCreator(context, compilationUnit, sharedState.data(),
-                                             isContextObject);
+                QQmlObjectCreator subCreator(
+                        context, engine->handle()->executableCompilationUnit(
+                                         std::move(compilationUnit)),
+                        sharedState.data(), isContextObject);
                 instance = subCreator.create();
                 if (!instance) {
                     errors += subCreator.errors;
@@ -1296,25 +1298,31 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                 }
             } else {
                 QString subObjectName;
-                if (QString *icRootName = compilationUnit->icRootName()) {
+                if (QString *icRootName = compilationUnit->icRootName.get()) {
                     subObjectName = type.elementName();
                     std::swap(*icRootName, subObjectName);
                 } else {
-                    compilationUnit->setIcRootName(std::make_unique<QString>(type.elementName()));
+                    compilationUnit->icRootName = std::make_unique<QString>(type.elementName());
                 }
 
                 const auto guard = qScopeGuard([&] {
                     if (subObjectName.isEmpty())
-                        compilationUnit->setIcRootName({});
+                        compilationUnit->icRootName.reset();
                     else
-                        std::swap(*compilationUnit->icRootName(), subObjectName);
+                        std::swap(*compilationUnit->icRootName, subObjectName);
                 });
 
-                QQmlObjectCreator subCreator(context, compilationUnit, sharedState.data(),
-                                             isContextObject);
+                const int inlineComponentId
+                        = compilationUnit->inlineComponentId(*compilationUnit->icRootName);
+                QQmlObjectCreator subCreator(
+                        context,
+                        engine->handle()->executableCompilationUnit(
+                                QQmlRefPointer<QV4::CompiledData::CompilationUnit>(
+                                        compilationUnit)),
+                        sharedState.data(),
+                        isContextObject);
                 instance = subCreator.create(
-                        compilationUnit->inlineComponentId(*compilationUnit->icRootName()),
-                    nullptr, nullptr, CreationFlags::InlineComponent);
+                        inlineComponentId, nullptr, nullptr, CreationFlags::InlineComponent);
                 if (!instance) {
                     errors += subCreator.errors;
                     return nullptr;

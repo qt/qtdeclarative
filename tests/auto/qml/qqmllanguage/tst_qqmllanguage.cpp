@@ -2619,14 +2619,14 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         Q_ASSERT(td);
         QVERIFY(!td->backupSourceCode().isValid());
 
-        QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit = td->compilationUnit();
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = td->compilationUnit();
         readOnlyQmlUnit.reset(compilationUnit->unitData());
         Q_ASSERT(readOnlyQmlUnit);
         QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(malloc(readOnlyQmlUnit->unitSize));
         memcpy(qmlUnit, readOnlyQmlUnit.data(), readOnlyQmlUnit->unitSize);
 
         qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
-        compilationUnit->baseCompilationUnit()->setUnitData(qmlUnit);
+        compilationUnit->setUnitData(qmlUnit);
 
         const QV4::CompiledData::Object *rootObject = compilationUnit->objectAt(/*root object*/0);
         QCOMPARE(compilationUnit->stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));

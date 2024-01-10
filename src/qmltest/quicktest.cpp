@@ -299,7 +299,8 @@ public:
         if (component.isReady()) {
             QQmlRefPointer<QV4::ExecutableCompilationUnit> rootCompilationUnit
                     = QQmlComponentPrivate::get(&component)->compilationUnit;
-            TestCaseEnumerationResult result = enumerateTestCases(rootCompilationUnit.data());
+            TestCaseEnumerationResult result = enumerateTestCases(
+                    rootCompilationUnit->baseCompilationUnit().data());
             m_testCases = result.testCases + result.finalizedPartialTestCases();
             m_errors += result.errors;
         }
@@ -340,7 +341,7 @@ private:
     };
 
     TestCaseEnumerationResult enumerateTestCases(
-            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit,
             const Object *object = nullptr)
     {
         QQmlType testCaseType;
@@ -354,7 +355,7 @@ private:
             if (!typeQualifier.isEmpty())
                 testCaseTypeName = typeQualifier % QLatin1Char('.') % testCaseTypeName;
 
-            testCaseType = compilationUnit->typeNameCache()->query(
+            testCaseType = compilationUnit->typeNameCache->query(
                     testCaseTypeName, QQmlTypeLoader::get(m_engine)).type;
             if (testCaseType.isValid())
                 break;

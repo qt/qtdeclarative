@@ -326,7 +326,6 @@ void Test262Runner::executeTest(QV4::ExecutionEngine &vm, const QString &testDat
                                           QFileInfo(f).lastModified());
                 if (vm.hasException)
                     break;
-                vm.injectCompiledModule(module);
             } else {
                 vm.throwError(QStringLiteral("Could not load module"));
                 break;

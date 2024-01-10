@@ -17,7 +17,6 @@
 
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
-#include <private/qv4compileddata_p.h>
 
 #if QT_CONFIG(qml_network)
 #include <QtNetwork/qnetworkreply.h>

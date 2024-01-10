@@ -848,7 +848,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
 ExecutionEngine::~ExecutionEngine()
 {
-    modules.clear();
     for (auto val : nativeModules) {
         PersistentValueStorage::free(val);
     }
@@ -859,14 +858,12 @@ ExecutionEngine::~ExecutionEngine()
     delete identifierTable;
     delete memoryManager;
 
-    // Take a temporary reference to the CU so that it doesn't disappear during unlinking.
-    while (!m_compilationUnits.isEmpty()) {
-        QQmlRefPointer<ExecutableCompilationUnit> cu(*m_compilationUnits.begin());
+    for (const auto &cu : std::as_const(m_compilationUnits)) {
         Q_ASSERT(cu->engine == this);
         cu->clear();
         cu->engine = nullptr;
-        cu->nextCompilationUnit.remove();
     }
+    m_compilationUnits.clear();
 
     delete bumperPointerAllocator;
     delete regExpCache;
@@ -1330,7 +1327,7 @@ void ExecutionEngine::markObjects(MarkStack *markStack)
 
     identifierTable->markObjects(markStack);
 
-    for (const auto &compilationUnit : m_compilationUnits)
+    for (const auto &compilationUnit : std::as_const(m_compilationUnits))
         compilationUnit->markObjects(markStack);
 }
 
@@ -2119,17 +2116,29 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(
     return executableCompilationUnit(std::move(unit));
 }
 
+QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compilationUnitForUrl(const QUrl &url) const
+{
+    return m_compilationUnits.value(url);
+}
+
 QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::executableCompilationUnit(
         QQmlRefPointer<CompiledData::CompilationUnit> &&unit)
 {
-    return ExecutableCompilationUnit::create(std::move(unit), this);
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> &result = m_compilationUnits[unit->finalUrl()];
+    if (!result || result->baseCompilationUnit() != unit)
+        result = ExecutableCompilationUnit::create(std::move(unit), this);
+
+    return result;
 }
 
-void ExecutionEngine::injectCompiledModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit)
+void ExecutionEngine::trimCompilationUnits()
 {
-    // Injection can happen from the QML type loader thread for example, but instantiation and
-    // evaluation must be limited to the ExecutionEngine's thread.
-    modules.insert(moduleUnit->finalUrl(), moduleUnit);
+    for (auto it = m_compilationUnits.begin(); it != m_compilationUnits.end();) {
+        if ((*it)->count() == 1)
+            it = m_compilationUnits.erase(it);
+        else
+            ++it;
+    }
 }
 
 ExecutionEngine::Module ExecutionEngine::moduleForUrl(
@@ -2142,8 +2151,8 @@ ExecutionEngine::Module ExecutionEngine::moduleForUrl(
     const QUrl resolved = referrer
             ? referrer->finalUrl().resolved(QQmlTypeLoader::normalize(url))
             : QQmlTypeLoader::normalize(url);
-    auto existingModule = modules.find(resolved);
-    if (existingModule == modules.end())
+    auto existingModule = m_compilationUnits.find(resolved);
+    if (existingModule == m_compilationUnits.end())
         return Module { nullptr, nullptr };
     return Module { *existingModule, nullptr };
 }
@@ -2157,13 +2166,13 @@ ExecutionEngine::Module ExecutionEngine::loadModule(const QUrl &url, const Execu
     const QUrl resolved = referrer
             ? referrer->finalUrl().resolved(QQmlTypeLoader::normalize(url))
             : QQmlTypeLoader::normalize(url);
-    auto existingModule = modules.find(resolved);
-    if (existingModule != modules.end())
+    auto existingModule = m_compilationUnits.find(resolved);
+    if (existingModule != m_compilationUnits.end())
         return Module { *existingModule, nullptr };
 
     auto newModule = compileModule(resolved);
     if (newModule)
-        modules.insert(resolved, newModule);
+        m_compilationUnits.insert(resolved, newModule);
 
     return Module { newModule, nullptr };
 }

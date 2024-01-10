@@ -28,15 +28,14 @@ QT_FOR_EACH_STATIC_PRIMITIVE_TYPE(HANDLE_PRIMITIVE);
     }
 }
 
-QQmlPropertyValidator::QQmlPropertyValidator(
-        QQmlEnginePrivate *enginePrivate, const QQmlImports *imports,
-        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports *imports,
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
     : enginePrivate(enginePrivate)
     , compilationUnit(compilationUnit)
     , imports(imports)
     , qmlUnit(compilationUnit->unitData())
-    , propertyCaches(*compilationUnit->propertyCachesPtr())
-    , bindingPropertyDataPerObject(&compilationUnit->baseCompilationUnit()->bindingPropertyDataPerObject)
+    , propertyCaches(compilationUnit->propertyCaches)
+    , bindingPropertyDataPerObject(&compilationUnit->bindingPropertyDataPerObject)
 {
     bindingPropertyDataPerObject->resize(compilationUnit->objectCount());
 }
@@ -343,7 +342,10 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         customParser->validator = this;
         customParser->engine = enginePrivate;
         customParser->imports = imports;
-        customParser->verifyBindings(compilationUnit, customBindings);
+        customParser->verifyBindings(
+                enginePrivate->v4engine()->executableCompilationUnit(
+                        QQmlRefPointer<QV4::CompiledData::CompilationUnit>(compilationUnit)),
+                customBindings);
         customParser->validator = nullptr;
         customParser->engine = nullptr;
         customParser->imports = (QQmlImports*)nullptr;
@@ -637,9 +639,9 @@ bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlPropertyCache::ConstPtr 
         // it is not properly registered at this point, as registration
         // only occurs after the whole file has been validated
         // Therefore we need to check the ICs here
-        for (const auto& icDatum : compilationUnit->inlineComponentData()) {
+        for (const auto& icDatum : compilationUnit->inlineComponentData) {
             if (icDatum.qmlType.typeId() == to) {
-                toMo = compilationUnit->propertyCachesPtr()->at(icDatum.objectIndex);
+                toMo = compilationUnit->propertyCaches.at(icDatum.objectIndex);
                 break;
             }
         }
@@ -747,10 +749,10 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *p
             // it is not properly registered at this point, as registration
             // only occurs after the whole file has been validated
             // Therefore we need to check the ICs here
-            for (const auto& icDatum: compilationUnit->inlineComponentData()) {
+            for (const auto& icDatum: compilationUnit->inlineComponentData) {
                 if (icDatum.qmlType.typeId() == property->propType()) {
                     propertyMetaObject
-                            = compilationUnit->propertyCachesPtr()->at(icDatum.objectIndex);
+                            = compilationUnit->propertyCaches.at(icDatum.objectIndex);
                     break;
                 }
             }

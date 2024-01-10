@@ -69,8 +69,8 @@ class Q_QML_EXPORT ExecutableCompilationUnit final
 public:
     friend class QQmlRefCounted<ExecutableCompilationUnit>;
     friend class QQmlRefPointer<ExecutableCompilationUnit>;
+    friend struct ExecutionEngine;
 
-    QIntrusiveListNode nextCompilationUnit;
     ExecutionEngine *engine = nullptr;
 
     QString finalUrlString() const { return m_compilationUnit->finalUrlString(); }
@@ -108,8 +108,6 @@ public:
     // this is initialized on-demand by QQmlContextData
     QHash<int, IdentifierHash> namedObjectsPerComponentCache;
     inline IdentifierHash namedObjectsPerComponent(int componentObjectIndex);
-
-    void finalizeCompositeType(const QQmlType &type);
 
     const QString *icRootName() const { return m_compilationUnit->icRootName.get(); }
     QString *icRootName() { return m_compilationUnit->icRootName.get(); }

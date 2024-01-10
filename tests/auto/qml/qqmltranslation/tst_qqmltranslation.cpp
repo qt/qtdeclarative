@@ -60,7 +60,7 @@ void tst_qqmltranslation::translation()
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(context->engine());
         QQmlRefPointer<QQmlTypeData> typeData = engine->typeLoader.getType(context->baseUrl());
         QVERIFY(!typeData->backupSourceCode().isValid());
-        QV4::ExecutableCompilationUnit *compilationUnit = typeData->compilationUnit();
+        QV4::CompiledData::CompilationUnit *compilationUnit = typeData->compilationUnit();
         QVERIFY(compilationUnit);
 
         QSet<QString> compiledTranslations;
@@ -73,7 +73,7 @@ void tst_qqmltranslation::translation()
                              << QStringLiteral("emptyContext");
 
         const QV4::CompiledData::Object *rootObject
-                = compilationUnit->qmlData()->objectAt(/*root object*/0);
+                = compilationUnit->qmlData->objectAt(/*root object*/0);
         const QV4::CompiledData::Binding *binding = rootObject->bindingTable();
         for (quint32 i = 0; i < rootObject->nBindings; ++i, ++binding) {
             const QString propertyName = compilationUnit->stringAt(binding->propertyNameIndex);
@@ -125,11 +125,11 @@ void tst_qqmltranslation::idTranslation()
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(context->engine());
         QQmlRefPointer<QQmlTypeData> typeData = engine->typeLoader.getType(context->baseUrl());
         QVERIFY(!typeData->backupSourceCode().isValid());
-        QV4::ExecutableCompilationUnit *compilationUnit = typeData->compilationUnit();
+        QV4::CompiledData::CompilationUnit *compilationUnit = typeData->compilationUnit();
         QVERIFY(compilationUnit);
 
         const QV4::CompiledData::Object *rootObject
-                = compilationUnit->qmlData()->objectAt(/*root object*/0);
+                = compilationUnit->qmlData->objectAt(/*root object*/0);
         const QV4::CompiledData::Binding *binding = rootObject->bindingTable();
         for (quint32 i = 0; i < rootObject->nBindings; ++i, ++binding) {
             const QString propertyName = compilationUnit->stringAt(binding->propertyNameIndex);

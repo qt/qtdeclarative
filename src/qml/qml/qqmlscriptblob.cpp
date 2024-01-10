@@ -168,14 +168,6 @@ void QQmlScriptBlob::done()
     m_scripts.clear();
 }
 
-void QQmlScriptBlob::completed()
-{
-    if (m_scriptData && m_scriptData->m_precompiledScript) {
-        QQmlEnginePrivate::getV4Engine(typeLoader()->engine())
-                ->injectCompiledModule(m_scriptData->m_precompiledScript);
-    }
-}
-
 QString QQmlScriptBlob::stringAt(int index) const
 {
     return m_scriptData->m_precompiledScript->stringAt(index);
@@ -201,19 +193,14 @@ void QQmlScriptBlob::initializeFromCompilationUnit(
     m_scriptData.adopt(new QQmlScriptData());
     m_scriptData->url = finalUrl();
     m_scriptData->urlString = finalUrlString();
-    m_scriptData->m_precompiledScript
-            = QQmlEnginePrivate::getV4Engine(typeLoader()->engine())->executableCompilationUnit(
-                std::move(unit));
+    m_scriptData->m_precompiledScript = unit;
 
     m_importCache->setBaseUrl(finalUrl(), finalUrlString());
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> script
-            = m_scriptData->m_precompiledScript->baseCompilationUnit();
-
     if (!m_isModule) {
         QList<QQmlError> errors;
-        for (quint32 i = 0, count = script->importCount(); i < count; ++i) {
-            const QV4::CompiledData::Import *import = script->importAt(i);
+        for (quint32 i = 0, count = unit->importCount(); i < count; ++i) {
+            const QV4::CompiledData::Import *import = unit->importAt(i);
             if (!addImport(import, {}, &errors)) {
                 Q_ASSERT(errors.size());
                 QQmlError error(errors.takeFirst());
@@ -227,13 +214,13 @@ void QQmlScriptBlob::initializeFromCompilationUnit(
         }
     }
 
-    const QStringList moduleRequests = script->moduleRequests();
+    const QStringList moduleRequests = unit->moduleRequests();
     for (const QString &request: moduleRequests) {
         const QUrl relativeRequest = QUrl(request);
         if (m_typeLoader->injectedScript(relativeRequest))
             continue;
 
-        const QUrl absoluteRequest = script->finalUrl().resolved(relativeRequest);
+        const QUrl absoluteRequest = unit->finalUrl().resolved(relativeRequest);
         QQmlRefPointer<QQmlScriptBlob> absoluteBlob = typeLoader()->getScript(absoluteRequest);
         if (absoluteBlob->m_scriptData && absoluteBlob->m_scriptData->m_precompiledScript)
             continue;
