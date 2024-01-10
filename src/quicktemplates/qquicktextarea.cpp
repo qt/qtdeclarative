@@ -634,6 +634,39 @@ void QQuickTextArea::setPlaceholderTextColor(const QColor &color)
     emit placeholderTextColorChanged();
 }
 
+/*!
+    \qmlproperty enumeration QtQuick.Controls::TextArea::focusReason
+
+    This property holds the reason of the last focus change.
+
+    \note This property does not indicate whether the item has \l {Item::activeFocus}
+        {active focus}, but the reason why the item either gained or lost focus.
+
+    \value Qt.MouseFocusReason         A mouse action occurred.
+    \value Qt.TabFocusReason           The Tab key was pressed.
+    \value Qt.BacktabFocusReason       A Backtab occurred. The input for this may include the Shift or Control keys; e.g. Shift+Tab.
+    \value Qt.ActiveWindowFocusReason  The window system made this window either active or inactive.
+    \value Qt.PopupFocusReason         The application opened/closed a pop-up that grabbed/released the keyboard focus.
+    \value Qt.ShortcutFocusReason      The user typed a label's buddy shortcut
+    \value Qt.MenuBarFocusReason       The menu bar took focus.
+    \value Qt.OtherFocusReason         Another reason, usually application-specific.
+
+    \note Prefer \l {Item::focusReason} to this property.
+*/
+Qt::FocusReason QQuickTextArea::focusReason() const
+{
+    Q_D(const QQuickTextArea);
+    return d->lastFocusChangeReason();
+}
+
+void QQuickTextArea::setFocusReason(Qt::FocusReason reason)
+{
+    Q_D(QQuickTextArea);
+    d->setLastFocusChangeReason(reason);
+    emit focusReasonChanged();
+}
+
+
 bool QQuickTextArea::contains(const QPointF &point) const
 {
     Q_D(const QQuickTextArea);

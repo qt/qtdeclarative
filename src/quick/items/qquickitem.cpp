@@ -1739,6 +1739,19 @@ bool QQuickItemPrivate::setFocusIfNeeded(QEvent::Type eventType)
     return false;
 }
 
+Qt::FocusReason QQuickItemPrivate::lastFocusChangeReason() const
+{
+    return static_cast<Qt::FocusReason>(focusReason);
+}
+
+void QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
+{
+    if (focusReason == reason)
+        return;
+
+    focusReason = reason;
+}
+
 /*!
     \class QQuickItem
     \brief The QQuickItem class provides the most basic of all visual items in \l {Qt Quick}.
@@ -4098,6 +4111,7 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
   */
 void QQuickItem::focusInEvent(QFocusEvent *event)
 {
+    Q_D(QQuickItem);
 #if QT_CONFIG(accessibility)
     if (QAccessible::isActive()) {
         if (QObject *acc = QQuickAccessibleAttached::findAccessible(this)) {
@@ -4106,7 +4120,7 @@ void QQuickItem::focusInEvent(QFocusEvent *event)
         }
     }
 #endif
-    setFocusReason(event->reason());
+    d->setLastFocusChangeReason(event->reason());
 }
 
 /*!
@@ -4118,7 +4132,8 @@ void QQuickItem::focusInEvent(QFocusEvent *event)
   */
 void QQuickItem::focusOutEvent(QFocusEvent *event)
 {
-    setFocusReason(event->reason());
+    Q_D(QQuickItem);
+    d->setLastFocusChangeReason(event->reason());
 }
 
 /*!
@@ -7916,31 +7931,6 @@ QQuickItem *QQuickItem::scopedFocusItem() const
 }
 
 /*!
-    \qmlproperty enumeration QtQuick::Item::focusReason
-    \readonly
-    \since 6.7
-
-    \input item.qdocinc focus-reason
-
-    \note This property was a member of {QQuickControl} {Control} until Qt 6.7.
-*/
-Qt::FocusReason QQuickItem::focusReason() const
-{
-    Q_D(const QQuickItem);
-    return static_cast<Qt::FocusReason>(d->focusReason);
-}
-
-void QQuickItem::setFocusReason(Qt::FocusReason reason)
-{
-    Q_D(QQuickItem);
-    if (d->focusReason == reason)
-        return;
-
-    d->focusReason = reason;
-    emit focusReasonChanged();
-}
-
-/*!
     \qmlproperty enumeration QtQuick::Item::focusPolicy
     \since 6.7
 
@@ -7952,7 +7942,15 @@ void QQuickItem::setFocusReason(Qt::FocusReason reason)
     \value Qt.WheelFocus  The item accepts focus by tabbing, clicking, and using the mouse wheel.
     \value Qt.NoFocus     The item does not accept focus.
 
-    \note This property was a member of {QQuickControl} {Control} until Qt 6.7.
+    \note This property was a member of \l {QQuickControl} {Control} until Qt 6.7.
+*/
+/*!
+    \property QQuickItem::focusPolicy
+    \since 6.7
+
+    This property determines the way the item accepts focus.
+
+    \note This property was a member of \l {QQuickControl} {Control} until Qt 6.7.
 */
 Qt::FocusPolicy QQuickItem::focusPolicy() const
 {
@@ -7963,6 +7961,11 @@ Qt::FocusPolicy QQuickItem::focusPolicy() const
     return static_cast<Qt::FocusPolicy>(policy);
 }
 
+/*!
+    Sets the focus policy of this item to \a policy.
+
+    \sa focusPolicy()
+*/
 void QQuickItem::setFocusPolicy(Qt::FocusPolicy policy)
 {
     Q_D(QQuickItem);

@@ -34,7 +34,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickTextArea : public QQuickTextEdit
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged3 FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QString placeholderText READ placeholderText WRITE setPlaceholderText NOTIFY placeholderTextChanged FINAL)
-    QT6_ONLY(Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL))
+    Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
     // 2.1 (Qt 5.8)
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL REVISION(2, 1))
     Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled RESET resetHoverEnabled NOTIFY hoverEnabledChanged FINAL REVISION(2, 1))
@@ -65,6 +65,9 @@ public:
 
     QString placeholderText() const;
     void setPlaceholderText(const QString &text);
+
+    Qt::FocusReason focusReason() const;
+    void setFocusReason(Qt::FocusReason reason);
 
     bool contains(const QPointF &point) const override;
 
@@ -105,6 +108,7 @@ Q_SIGNALS:
     void implicitHeightChanged3();
     void backgroundChanged();
     void placeholderTextChanged();
+    void focusReasonChanged();
     void pressAndHold(QQuickMouseEvent *event);
     // 2.1 (Qt 5.8)
     Q_REVISION(2, 1) void pressed(QQuickMouseEvent *event);
