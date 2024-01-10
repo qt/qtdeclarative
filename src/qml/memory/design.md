@@ -5,6 +5,7 @@ ChangeLog
 ---------
 - < 6.8: There was little documentation, and the gc was STW mark&sweep
 - 6.8: The gc became incremental (with a stop-the-world sweep phase)
+- 6.8: Sweep was made incremental, too
 
 
 Glossary:
@@ -28,7 +29,7 @@ Glossary:
 Overview:
 ---------
 
-Since Qt 6.7, V4 uses an incremental, precise mark-and-sweep gc algorithm. It is neither generational nor moving.
+Since Qt 6.8, V4 uses an incremental, precise mark-and-sweep gc algorithm. It is neither generational nor moving.
 
 In the mark phase, each heap-item can be in one of three states:
 1. unvisited ("white"): The gc has not seen this item at all
@@ -72,22 +73,15 @@ To facilitate incremental garbage collection, the gc algorithm is divided into t
 7. markWeakValues: An interruptible phase which takes care of marking the QObjectWrappers
 8. markDrain: An interrupible phase. While the MarkStack is not empty, the marking algorithm runs.
 9.  markReady: An atomic phase which currently does nothing, but could be used for e.g. logging statistics
-10.  sweepPhase: An atomic phase, in which the stack is rescanned, the MarkStack is drained once more, and then the actual sweep algorithm is running, freeing dead objects.
-11.  invalid, the "not-running" stage of the state machine.
-
-The transitions between the states look as following (D == done, T == can stay in state if there's a timeout, NW == No work):
-```
-             NW __->-__          _____  NW
-               /        \    __ /     |
-  D    D    D  | D    D  v /      D   v  D    D     D
-1 -> 2 -> 3 -> 4--> 5 -->6---->7----->8---->9--->10---->11
- ^                  T          T      T                 |
-  \___ __                                                | restart gc
-        \                                               |
-          ----------------------------------------------/
-
-```
-
+10. initCallDestroyObjects: An atomic phase, in which the stack is rescanned, the MarkStack is drained once more. This ensures that all live objects are really marked.
+    Afterwards, the iteration over all the QObjectWrappers is prepared.
+11. callDestroyObject: An interruptible phase, were we call destroyObject of all non-marked QObjectWrapper.
+12. freeWeakMaps: An atomic phase in which we remove references to dead objects from live weak maps.
+13. freeWeakSets: Same as the last phase, but for weak sets
+14: handleQObjectWrappers: An atomic phase in which pending references to QObjectWrappers are cleared
+15. multiple sweep phases: Atomic phases, in which do the actual sweeping to free up memory. Note that this will also call destroy on objects marked with `V4_NEEDS_DESTROY`. There is one phase for the various allocators (identifier table, block allocator, huge item allocator, IC allocator)
+16. updateMetaData: Updates the black bitmaps, the usage statistics, and marks the gc cycle as done.
+17. invalid, the "not-running" stage of the state machine.
 
 To avoid constantly having to query the timer, even interruptible phases run for a fixed amount of steps before checking whether there's a timemout.
 

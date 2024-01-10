@@ -38,7 +38,12 @@ enum GCState {
     MarkWeakValues,
     MarkDrain,
     MarkReady,
-    Sweep,
+    InitCallDestroyObjects,
+    CallDestroyObjects,
+    FreeWeakMaps,
+    FreeWeakSets,
+    HandleQObjectWrappers,
+    DoSweep,
     Invalid,
     Count,
 };
@@ -346,6 +351,7 @@ private:
 public:
     void collectFromJSStack(MarkStack *markStack) const;
     void sweep(bool lastSweep = false, ClassDestroyStatsCallback classCountPtr = nullptr);
+    void cleanupDeletedQObjectWrappersInSweep();
 private:
     bool shouldRunGC() const;
 

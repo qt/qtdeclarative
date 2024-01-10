@@ -784,21 +784,105 @@ GCState markDrain(GCStateMachine *that, ExtraData &)
 GCState markReady(GCStateMachine *, ExtraData &)
 {
     //Possibility to do some clean up, stat printing, etc...
-    return Sweep;
+    return InitCallDestroyObjects;
 }
 
-GCState sweepPhase(GCStateMachine *that, ExtraData &)
+/** \!internal
+collects new references from the stack, then drains the mark stack again
+*/
+void redrain(GCStateMachine *that)
 {
-    // if we don't have a deletion barrier, then we need to rescan
     that->mm->collectFromJSStack(that->mm->markStack());
     that->mm->m_markStack->drain();
-    if (!that->mm->gcCollectorStats) {
-        that->mm->sweep();
-    } else {
-        that->mm->sweep(false, increaseFreedCountForClass);
+}
+
+GCState initCallDestroyObjects(GCStateMachine *that, ExtraData &stateData)
+{
+    // as we don't have a deletion barrier, we need to rescan the stack
+    redrain(that);
+    if (!that->mm->m_weakValues)
+        return FreeWeakMaps; // no need to call destroy objects
+    stateData = GCIteratorStorage { that->mm->m_weakValues->begin() };
+    return CallDestroyObjects;
+}
+GCState callDestroyObject(GCStateMachine *, ExtraData &stateData)
+{
+    PersistentValueStorage::Iterator& it = get<GCIteratorStorage>(stateData).it;
+    // avoid repeatedly hitting the timer constantly by batching iterations
+    for (int i = 0; i < markLoopIterationCount; ++i) {
+        if (!it.p)
+            return FreeWeakMaps;
+        Managed *m = (*it).managed();
+        ++it;
+        if (!m || m->markBit())
+            continue;
+        // we need to call destroyObject on qobjectwrappers now, so that they can emit the destroyed
+        // signal before we start sweeping the heap
+        if (QObjectWrapper *qobjectWrapper = m->as<QObjectWrapper>())
+            qobjectWrapper->destroyObject(/*lastSweep =*/false);
     }
-    that->mm->m_markStack.reset();
-    that->mm->engine->isGCOngoing = false;
+    return CallDestroyObjects;
+}
+
+void freeWeakMaps(MemoryManager *mm)
+{
+    for (auto [map, lastMap] = std::tuple {mm->weakMaps, &mm->weakMaps }; map; map = map->nextWeakMap)  {
+        if (!map->isMarked())
+            continue;
+        map->removeUnmarkedKeys();
+        *lastMap = map;
+        lastMap = &map->nextWeakMap;
+    }
+}
+
+GCState freeWeakMaps(GCStateMachine *that, ExtraData &)
+{
+    freeWeakMaps(that->mm);
+    return FreeWeakSets;
+}
+
+void freeWeakSets(MemoryManager *mm)
+{
+    for (auto [set, lastSet] = std::tuple {mm->weakSets, &mm->weakSets}; set; set = set->nextWeakSet) {
+
+        if (!set->isMarked())
+            continue;
+        set->removeUnmarkedKeys();
+        *lastSet = set;
+        lastSet = &set->nextWeakSet;
+    }
+}
+
+GCState freeWeakSets(GCStateMachine *that, ExtraData &)
+{
+    freeWeakSets(that->mm);
+    return HandleQObjectWrappers;
+}
+
+GCState handleQObjectWrappers(GCStateMachine *that, ExtraData &)
+{
+    that->mm->cleanupDeletedQObjectWrappersInSweep();
+    return DoSweep;
+}
+
+GCState doSweep(GCStateMachine *that, ExtraData &)
+{
+    auto mm = that->mm;
+
+    mm->engine->identifierTable->sweep();
+    mm->blockAllocator.sweep();
+    mm->hugeItemAllocator.sweep(that->mm->gcCollectorStats ? increaseFreedCountForClass : nullptr);
+    mm->icAllocator.sweep();
+
+    // reset all black bits
+    mm->blockAllocator.resetBlackBits();
+    mm->hugeItemAllocator.resetBlackBits();
+    mm->icAllocator.resetBlackBits();
+
+    mm->usedSlotsAfterLastFullSweep = mm->blockAllocator.usedSlotsAfterLastSweep + mm->icAllocator.usedSlotsAfterLastSweep;
+    mm->gcBlocked = MemoryManager::Unblocked;
+    mm->m_markStack.reset();
+    mm->engine->isGCOngoing = false;
     return Invalid;
 }
 
@@ -862,11 +946,30 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
     };
     gcStateMachine->stateInfoMap[GCState::MarkReady] = {
         markReady,
-        true, //Break after this step, so that Sweep is only executed the next time GC is allowed
-              // as sweep is not concurrent, we want to provide as much time as possible to it
+        false,
     };
-    gcStateMachine->stateInfoMap[GCState::Sweep] = {
-        sweepPhase,
+    gcStateMachine->stateInfoMap[GCState::InitCallDestroyObjects] = {
+        initCallDestroyObjects,
+        false,
+    };
+    gcStateMachine->stateInfoMap[GCState::CallDestroyObjects] = {
+        callDestroyObject,
+        false,
+    };
+    gcStateMachine->stateInfoMap[GCState::FreeWeakMaps] = {
+        freeWeakMaps,
+        false,
+    };
+    gcStateMachine->stateInfoMap[GCState::FreeWeakSets] = {
+        freeWeakSets,
+        true, // ensure that handleQObjectWrappers runs in isolation
+    };
+    gcStateMachine->stateInfoMap[GCState::HandleQObjectWrappers] = {
+        handleQObjectWrappers,
+        false,
+    };
+    gcStateMachine->stateInfoMap[GCState::DoSweep] = {
+        doSweep,
         false,
     };
 }
@@ -1014,23 +1117,34 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
         }
     }
 
-    for (auto [map, lastMap] = std::tuple {weakMaps, &weakMaps }; map; map = map->nextWeakMap)  {
-        if (!map->isMarked())
-            continue;
-        map->removeUnmarkedKeys();
-        *lastMap = map;
-        lastMap = &map->nextWeakMap;
+    freeWeakMaps(this);
+    freeWeakSets(this);
+
+    cleanupDeletedQObjectWrappersInSweep();
+
+    if (!lastSweep) {
+        engine->identifierTable->sweep();
+        blockAllocator.sweep(/*classCountPtr*/);
+        hugeItemAllocator.sweep(classCountPtr);
+        icAllocator.sweep(/*classCountPtr*/);
     }
 
-    for (auto [set, lastSet] = std::tuple {weakSets, &weakSets}; set; set = set->nextWeakSet) {
+    // reset all black bits
+    blockAllocator.resetBlackBits();
+    hugeItemAllocator.resetBlackBits();
+    icAllocator.resetBlackBits();
 
-        if (!set->isMarked())
-            continue;
-        set->removeUnmarkedKeys();
-        *lastSet = set;
-        lastSet = &set->nextWeakSet;
-    }
+    usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep + icAllocator.usedSlotsAfterLastSweep;
+    gcBlocked = false;
+}
 
+/*
+   \internal
+   Helper function used in sweep to clean up the (to-be-freed) QObjectWrapper
+   Used both in MemoryManager::sweep, and the corresponding gc statemachine phase
+*/
+void MemoryManager::cleanupDeletedQObjectWrappersInSweep()
+{
     // onDestruction handlers may have accessed other QObject wrappers and reset their value, so ensure
     // that they are all set to undefined.
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
@@ -1063,21 +1177,6 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
                 ++it;
         }
     }
-
-    if (!lastSweep) {
-        engine->identifierTable->sweep();
-        blockAllocator.sweep(/*classCountPtr*/);
-        hugeItemAllocator.sweep(classCountPtr);
-        icAllocator.sweep(/*classCountPtr*/);
-    }
-
-    // reset all black bits
-    blockAllocator.resetBlackBits();
-    hugeItemAllocator.resetBlackBits();
-    icAllocator.resetBlackBits();
-
-    usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep + icAllocator.usedSlotsAfterLastSweep;
-    gcBlocked = false;
 }
 
 bool MemoryManager::shouldRunGC() const
@@ -1318,6 +1417,18 @@ void GCStateMachine::transition() {
         deadline = QDeadlineTimer(timeLimit);
         bool deadlineExpired = false;
         while (!(deadlineExpired = deadline.hasExpired()) && state != GCState::Invalid) {
+            if (state > GCState::InitCallDestroyObjects) {
+                /* initCallDestroyObjects is the last action which drains the mark
+                   stack by default. But as our write-barrier might end up putting
+                   objects on the markStack which still reference other objects.
+                   Especially when we call user code triggered by Component.onDestruction,
+                   but also when we run into a timeout.
+                   We don't redrain before InitCallDestroyObjects, as that would
+                   potentially lead to useless busy-work (e.g., if the last referencs
+                   to objects are removed while the mark phase is running)
+                */
+                redrain(this);
+            }
             GCStateInfo& stateInfo = stateInfoMap[int(state)];
             state = stateInfo.execute(this, stateData);
             if (stateInfo.breakAfter)
