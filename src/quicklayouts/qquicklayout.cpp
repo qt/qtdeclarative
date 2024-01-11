@@ -787,7 +787,6 @@ QQuickLayoutAttached *QQuickLayout::qmlAttachedProperties(QObject *object)
 void QQuickLayout::updatePolish()
 {
     qCDebug(lcQuickLayouts) << "updatePolish() ENTERING" << this;
-    d_func()->m_disableRearrange = false;
     m_inUpdatePolish = true;
 
     // Might have become "undirty" before we reach this updatePolish()
@@ -916,13 +915,8 @@ void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
         maybeSubscribeToBaseLineOffsetChanges(item);
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, changeTypes);
         qCDebug(lcQuickLayouts) << "ChildRemoved" << item;
-        if (isReady()) {
+        if (isReady())
             invalidate();
-            // The invalidate() triggers polish and this relayout items in the
-            // layout engine. But if there is any geometry change from the same
-            // item (due to deferred deletion), its better to skip rearrange
-            d_func()->m_disableRearrange = true;
-        }
     }
     QQuickItem::itemChange(change, value);
 }
@@ -931,7 +925,7 @@ void QQuickLayout::geometryChange(const QRectF &newGeometry, const QRectF &oldGe
 {
     Q_D(QQuickLayout);
     QQuickItem::geometryChange(newGeometry, oldGeometry);
-    if (d->m_disableRearrange || !isReady())
+    if (invalidated() || d->m_disableRearrange || !isReady())
         return;
 
     qCDebug(lcQuickLayouts) << "QQuickLayout::geometryChange" << newGeometry << oldGeometry;
