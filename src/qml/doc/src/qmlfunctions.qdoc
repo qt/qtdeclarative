@@ -528,7 +528,7 @@
   \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
   \l QML_ADDED_IN_VERSION(), \l QML_REMOVED_IN_VERSION(),
   \l QML_ADDED_IN_MINOR_VERSION(), \l QML_REMOVED_IN_MINOR_VERSION(),
-  \l QML_ATTACHED(), \l QML_EXTENDED(), or \l  QML_EXTENDED_NAMESPACE() macros
+  \l QML_EXTENDED(), or \l  QML_EXTENDED_NAMESPACE() macros
   in the enclosing C++ type do not apply to the enclosing type but instead to
   \a FOREIGN_TYPE. The enclosing type still needs to be registered with the
   \l {The Meta-Object System}{meta object system} using a \l Q_GADGET or
@@ -541,6 +541,9 @@
   \b{NOTE:} You may want to use \l QML_NAMED_ELEMENT() instead of \l QML_ELEMENT due to the fact that
   the element will be named like the struct it is contained in, not the foreign type.
   See the \l {Extension Objects} for an example.
+
+  \note QML_ATTACHED() can currently not be redirected like this. It has to be
+  specificed in the same type that implements qmlAttachedProperties().
 
   \include {qualified-class-name.qdocinc} {class name must be qualified}
 
