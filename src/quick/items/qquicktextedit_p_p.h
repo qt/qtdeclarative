@@ -113,6 +113,7 @@ public:
 
     void resetInputMethod();
     void updateDefaultTextOption();
+    void onDocumentStatusChanged();
     void relayoutDocument();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextEdit::HAlignment, bool forceAlign = false);

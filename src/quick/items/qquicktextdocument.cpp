@@ -16,6 +16,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcTextDoc, "qt.quick.textdocument")
+
 using namespace Qt::StringLiterals;
 
 /*!
@@ -209,7 +211,7 @@ void QQuickTextDocumentPrivate::load()
     QFile file(filePath);
     if (file.exists()) {
 #if QT_CONFIG(mimetype)
-        mimeType = QMimeDatabase().mimeTypeForFile(filePath);
+        QMimeType mimeType = QMimeDatabase().mimeTypeForFile(filePath);
         const bool isHtml = mimeType.inherits("text/html"_L1);
         const bool isMarkdown = mimeType.inherits("text/markdown"_L1);
 #else
@@ -218,17 +220,24 @@ void QQuickTextDocumentPrivate::load()
         const bool isMarkdown = filePath.endsWith(".md"_L1, Qt::CaseInsensitive) ||
                 filePath.endsWith(".markdown"_L1, Qt::CaseInsensitive);
 #endif
+        if (isHtml)
+            detectedFormat = Qt::RichText;
+        else if (isMarkdown)
+            detectedFormat = Qt::MarkdownText;
+        else
+            detectedFormat = Qt::PlainText;
         if (file.open(QFile::ReadOnly | QFile::Text)) {
             setStatus(QQuickTextDocument::Status::Loading);
             QByteArray data = file.readAll();
             doc->setBaseUrl(resolvedUrl.adjusted(QUrl::RemoveFilename));
+            const bool plainText = editor->textFormat() == QQuickTextEdit::PlainText;
 #if QT_CONFIG(textmarkdownreader)
-            if (isMarkdown) {
+            if (!plainText && isMarkdown) {
                 doc->setMarkdown(QString::fromUtf8(data));
             } else
 #endif
 #ifndef QT_NO_TEXTHTMLPARSER
-            if (isHtml) {
+            if (!plainText && isHtml) {
                 // If a user loads an HTML file, remember the encoding.
                 // If the user then calls save() later, the same encoding will be used.
                 encoding = QStringConverter::encodingForHtml(data);
@@ -245,6 +254,12 @@ void QQuickTextDocumentPrivate::load()
                 doc->setPlainText(QString::fromUtf8(data));
             }
             setStatus(QQuickTextDocument::Status::Loaded);
+            qCDebug(lcTextDoc) << editor << "loaded" << filePath
+                               << "as" << editor->textFormat() << "detected" << detectedFormat
+#if QT_CONFIG(mimetype)
+                               << "(file type" << mimeType << ')'
+#endif
+                    ;
             doc->setModified(false);
             return;
         }
@@ -264,31 +279,44 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
 
     const QString filePath = fileUrl.toLocalFile();
     const bool sameUrl = fileUrl == url;
+    if (!sameUrl) {
 #if QT_CONFIG(mimetype)
-    const auto type = (sameUrl ? mimeType : QMimeDatabase().mimeTypeForUrl(fileUrl));
-    const bool isHtml = type.inherits("text/html"_L1);
-    const bool isMarkdown = type.inherits("text/markdown"_L1);
+        const auto type = QMimeDatabase().mimeTypeForUrl(fileUrl);
+        if (type.inherits("text/html"_L1))
+            detectedFormat = Qt::RichText;
+        else if (type.inherits("text/markdown"_L1))
+            detectedFormat = Qt::MarkdownText;
+        else
+            detectedFormat = Qt::PlainText;
 #else
-    const bool isHtml = filePath.endsWith(".html"_L1, Qt::CaseInsensitive) ||
-            filePath.endsWith(".htm"_L1, Qt::CaseInsensitive);
-    const bool isMarkdown = filePath.endsWith(".md"_L1, Qt::CaseInsensitive) ||
-            filePath.endsWith(".markdown"_L1, Qt::CaseInsensitive);
+        if (filePath.endsWith(".html"_L1, Qt::CaseInsensitive) ||
+            filePath.endsWith(".htm"_L1, Qt::CaseInsensitive))
+            detectedFormat = Qt::RichText;
+        else if (filePath.endsWith(".md"_L1, Qt::CaseInsensitive) ||
+                 filePath.endsWith(".markdown"_L1, Qt::CaseInsensitive))
+            detectedFormat = Qt::MarkdownText;
+        else
+            detectedFormat = Qt::PlainText;
 #endif
+    }
     QFile file(filePath);
-    if (!file.open(QFile::WriteOnly | QFile::Truncate | (isHtml ? QFile::NotOpen : QFile::Text))) {
-        qmlWarning(q) << QQuickTextDocument::tr("Cannot save: %1").arg(file.errorString());
+    if (!file.open(QFile::WriteOnly | QFile::Truncate |
+                   (detectedFormat == Qt::RichText ? QFile::NotOpen : QFile::Text))) {
+        qmlWarning(q) << QQuickTextDocument::tr("Cannot save:") << file.errorString();
         setStatus(QQuickTextDocument::Status::WriteError);
         return;
     }
     setStatus(QQuickTextDocument::Status::Saving);
     QByteArray raw;
+
+    switch (detectedFormat) {
 #if QT_CONFIG(textmarkdownwriter)
-    if (isMarkdown) {
+    case Qt::MarkdownText:
         raw = doc->toMarkdown().toUtf8();
-    } else
+        break;
 #endif
 #ifndef QT_NO_TEXTHTMLPARSER
-    if (isHtml) {
+    case Qt::RichText:
         if (sameUrl && encoding) {
             QStringEncoder enc(*encoding);
             raw = enc.encode(doc->toHtml());
@@ -296,10 +324,11 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
             // default to UTF-8 unless the user is saving the same file as previously loaded
             raw = doc->toHtml().toUtf8();
         }
-    } else
+        break;
 #endif
-    {
+    default:
         raw = doc->toPlainText().toUtf8();
+        break;
     }
 
     file.write(raw);
