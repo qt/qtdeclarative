@@ -6125,6 +6125,7 @@ void tst_qquicktextedit::remoteImagesInDocumentSource()
 
     QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Protocol \"gopher\" is unknown"));
     QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Connection closed")); // httpfail/warning.png
+    textEdit->setTextFormat(QQuickTextEdit::MarkdownText);
     textEdit->textDocument()->setSource(QUrl::fromLocalFile(tmpPath));
 
     // the document gets loaded first, then the resources

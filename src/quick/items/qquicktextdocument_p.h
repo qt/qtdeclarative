@@ -68,10 +68,8 @@ public:
     // so far the QQuickItem given to the QQuickTextDocument ctor is always a QQuickTextEdit
     QQuickTextEdit *editor = nullptr;
     QUrl url;
-#if QT_CONFIG(mimetype)
-    QMimeType mimeType;
-#endif
-    std::optional<QStringConverter::Encoding> encoding; // only relevant for HTML
+    Qt::TextFormat detectedFormat = Qt::AutoText; // url's extension, independent of TextEdit.textFormat
+    std::optional<QStringConverter::Encoding> encoding; // only relevant for HTML (Qt::RichText)
     QQuickTextDocument::Status status = QQuickTextDocument::Status::Null;
 };
 

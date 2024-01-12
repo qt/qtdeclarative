@@ -510,24 +510,40 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
 
     const bool wasRich = d->richText;
     const bool wasMarkdown = d->markdownText;
+    const bool wasAuto = d->format == AutoText;
+    bool textCachedChanged = false;
     d->richText = format == RichText || (format == AutoText && (wasRich || Qt::mightBeRichText(text())));
     d->markdownText = format == MarkdownText;
 
+    qCDebug(lcTextEdit) << d->format << "->" << format
+                        << "was rich?" << wasRich << "md?" << wasMarkdown << "auto?" << wasAuto
+                        << "now: rich?" << d->richText << "md?" << d->markdownText;
+
     if (isComponentComplete()) {
+        const Qt::TextFormat detectedFormat = d->quickDocument ?
+                QQuickTextDocumentPrivate::get(d->quickDocument)->detectedFormat : Qt::AutoText;
+        // If converting between markdown and HTML, avoid using cached text: have QTD re-generate it
+        if (format != PlainText && (wasRich || detectedFormat == Qt::RichText) !=
+                    (wasMarkdown || detectedFormat == Qt::MarkdownText)) {
+            d->textCached = false;
+            textCachedChanged = true;
+        }
 #if QT_CONFIG(texthtmlparser)
-        if (wasRich && !d->richText && !d->markdownText) {
+        if ((wasRich || wasAuto) && !d->richText && !d->markdownText) {
             d->control->setPlainText(!d->textCached ? d->control->toHtml() : d->text);
             updateSize();
-        } else if (!wasRich && d->richText) {
+        } else if (!(wasRich || wasAuto) &&
+                   (d->richText || (format == AutoText && detectedFormat == Qt::RichText))) {
             d->control->setHtml(!d->textCached ? d->control->toPlainText() : d->text);
             updateSize();
         }
 #endif
 #if QT_CONFIG(textmarkdownwriter) && QT_CONFIG(textmarkdownreader)
-        if (wasMarkdown && !d->markdownText && !d->richText) {
+        if ((wasMarkdown || wasAuto) && !d->markdownText && !d->richText) {
             d->control->setPlainText(!d->textCached ? d->control->toMarkdown() : d->text);
             updateSize();
-        } else if (!wasMarkdown && d->markdownText) {
+        } else if (!(wasMarkdown || wasAuto) &&
+                   (d->markdownText || (format == AutoText && detectedFormat == Qt::MarkdownText))) {
             d->control->setMarkdownText(!d->textCached ? d->control->toPlainText() : d->text);
             updateSize();
         }
@@ -537,6 +553,8 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     d->format = format;
     d->control->setAcceptRichText(d->format != PlainText);
     emit textFormatChanged(d->format);
+    if (textCachedChanged)
+        emit textChanged();
 }
 
 /*!
@@ -1612,20 +1630,17 @@ void QQuickTextEdit::componentComplete()
     const QUrl url = baseUrl();
     const QQmlContext *context = qmlContext(this);
     d->document->setBaseUrl(context ? context->resolvedUrl(url) : url);
+    if (!d->text.isEmpty()) {
 #if QT_CONFIG(texthtmlparser)
-    if (d->richText)
-        d->control->setHtml(d->text);
-    else
+        if (d->richText)
+            d->control->setHtml(d->text);
+        else
 #endif
 #if QT_CONFIG(textmarkdownreader)
-    if (d->markdownText)
-        d->control->setMarkdownText(d->text);
-    else
-#endif
-    if (!d->text.isEmpty()) {
         if (d->markdownText)
             d->control->setMarkdownText(d->text);
         else
+#endif
             d->control->setPlainText(d->text);
     }
 
@@ -3085,6 +3100,34 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
     }
 }
 
+void QQuickTextEditPrivate::onDocumentStatusChanged()
+{
+    Q_ASSERT(quickDocument);
+    switch (quickDocument->status()) {
+    case QQuickTextDocument::Status::Loaded:
+    case QQuickTextDocument::Status::Saved:
+        switch (QQuickTextDocumentPrivate::get(quickDocument)->detectedFormat) {
+        case Qt::RichText:
+            richText = (format == QQuickTextEdit::RichText || format == QQuickTextEdit::AutoText);
+            markdownText = false;
+            break;
+        case Qt::MarkdownText:
+            richText = false;
+            markdownText = (format == QQuickTextEdit::MarkdownText || format == QQuickTextEdit::AutoText);
+            break;
+        case Qt::PlainText:
+            richText = false;
+            markdownText = false;
+            break;
+        case Qt::AutoText: // format not detected
+            break;
+        }
+        break;
+    default:
+        break;
+    }
+}
+
 void QQuickTextEdit::focusInEvent(QFocusEvent *event)
 {
     Q_D(QQuickTextEdit);
@@ -3281,8 +3324,11 @@ void QQuickTextEdit::remove(int start, int end)
 QQuickTextDocument *QQuickTextEdit::textDocument()
 {
     Q_D(QQuickTextEdit);
-    if (!d->quickDocument)
+    if (!d->quickDocument) {
         d->quickDocument = new QQuickTextDocument(this);
+        connect(d->quickDocument, &QQuickTextDocument::statusChanged, d->quickDocument,
+                [d]() { d->onDocumentStatusChanged(); } );
+    }
     return d->quickDocument;
 }
 
