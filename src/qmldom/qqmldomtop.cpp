@@ -321,73 +321,48 @@ updateEntry(const DomItem &univ, const std::shared_ptr<T> &newItem,
 DomUniverse::ValueChange DomUniverse::parse(const FileToLoad &file, DomType fType)
 {
     QString canonicalPath = file.canonicalPath();
-    QString code = file.content() ? file.content()->data : QString();
-    QDateTime contentDate = file.content() ? file.content()->date
-                                           : QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
+    ContentWithDate codeWithDate;
+    codeWithDate.content = file.content() ? file.content()->data : QString();
+    codeWithDate.date = file.content() ? file.content()->date
+                                       : QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
 
     DomItem oldValue; // old ExternalItemPair (might be empty, or equal to newValue)
     DomItem newValue; // current ExternalItemPair
     DomItem univ = DomItem(shared_from_this());
 
-    if (code.isEmpty()) {
-        {
-            QFileInfo path(canonicalPath);
-            // This check is for the purpose of verifying whether the Universe has "lastModified"
-            // version of the ExtItemPair->current
-            // Mutex is being helpful here to guarantee that there are no changes
-            // done on the Value and CurrentItem during the checks.
-            // This is to sync this piece, piece on the line 355 and updateEntry method,
-            // where the update of the timestamp or the data might happen
-            QMutexLocker l(mutex());
-            if (auto value = getPathValueOrNull(fType, canonicalPath)) {
-                // use value also when its path is non-existing
-                if (value && value->currentItem()
-                    && (canonicalPath.isEmpty()
-                        || path.lastModified() < value->currentItem()->lastDataUpdateAt())) {
-                    oldValue = newValue = univ.copy(value);
-                    // value is considered up-to-date, early exit
-                    return { oldValue, newValue };
-                }
-            }
+    if (codeWithDate.content.isEmpty()) {
+        // When the code is empty, Universe attempts to read it from the File.
+        // However if it already has the most recent version of that File it just returns it
+        const auto &curValueItem = getItemIfMostRecent(univ, fType, canonicalPath);
+        if (curValueItem.has_value()) {
+            oldValue = newValue = curValueItem.value();
+            return { oldValue, newValue };
         }
         auto readResult = readFileContent(canonicalPath);
         if (std::holds_alternative<ErrorMessage>(readResult)) {
             newValue.addError(std::move(std::get<ErrorMessage>(readResult)));
             return { oldValue, newValue }; // read failed, nothing to parse
         } else {
-            const auto &codeWithDate = std::get<ContentWithDate>(readResult);
-            code = codeWithDate.content;
-            contentDate = codeWithDate.date;
+            codeWithDate = std::get<ContentWithDate>(readResult);
         }
     }
-    {
-        // This section is here to check whether the value (if present) has the most
-        // up-to-date content of the ExtItemPair->current and if so upd the timestamp.
-        // Mutex is being helpful here to guarantee that there are no changes
-        // done on the Value and CurrentItem during the checks.
-        // This is to sync this piece and updateEntry method, where the upd might happen
-        QMutexLocker l(mutex());
-        if (auto value = getPathValueOrNull(fType, canonicalPath)) {
-            QString oldCode = value->currentItem()->code();
-            if (value && value->currentItem() && !oldCode.isNull() && oldCode == code) {
-                newValue = oldValue = univ.copy(value);
-                if (value->currentItem()->lastDataUpdateAt() < contentDate)
-                    value->currentItem()->refreshedDataAt(contentDate);
-                // value is considered up-to-date, early exit
-                return { oldValue, newValue };
-            }
-        }
+
+    const auto &curValueItem = getItemIfHasSameCode(univ, fType, canonicalPath, codeWithDate);
+    if (curValueItem.has_value()) {
+        oldValue = newValue = curValueItem.value();
+        return { oldValue, newValue };
     }
 
     // Value doesn't exist or considered outdated / expired.
     // Hence we do the actual parsing
     if (fType == DomType::QmlFile) {
-        auto qmlFile = parseQmlFile(code, file, contentDate);
+        auto qmlFile = parseQmlFile(codeWithDate.content, file, codeWithDate.date);
         auto change = updateEntry<QmlFile>(univ, qmlFile, m_qmlFileWithPath, mutex());
         oldValue = univ.copy(change.first);
         newValue = univ.copy(change.second);
     } else if (fType == DomType::QmltypesFile) {
-        auto qmltypesFile = std::make_shared<QmltypesFile>(canonicalPath, code, contentDate);
+        auto qmltypesFile = std::make_shared<QmltypesFile>(canonicalPath, codeWithDate.content,
+                                                           codeWithDate.date);
         QmltypesReader reader(univ.copy(qmltypesFile));
         reader.parse();
         auto change =
@@ -395,19 +370,20 @@ DomUniverse::ValueChange DomUniverse::parse(const FileToLoad &file, DomType fTyp
         oldValue = univ.copy(change.first);
         newValue = univ.copy(change.second);
     } else if (fType == DomType::QmldirFile) {
-        shared_ptr<QmldirFile> qmldirFile = QmldirFile::fromPathAndCode(canonicalPath, code);
+        shared_ptr<QmldirFile> qmldirFile =
+                QmldirFile::fromPathAndCode(canonicalPath, codeWithDate.content);
         auto change = updateEntry<QmldirFile>(univ, qmldirFile, m_qmldirFileWithPath, mutex());
         oldValue = univ.copy(change.first);
         newValue = univ.copy(change.second);
     } else if (fType == DomType::QmlDirectory) {
         auto qmlDirectory = std::make_shared<QmlDirectory>(
-                canonicalPath, code.split(QLatin1Char('\n')), contentDate);
+                canonicalPath, codeWithDate.content.split(QLatin1Char('\n')), codeWithDate.date);
         auto change =
                 updateEntry<QmlDirectory>(univ, qmlDirectory, m_qmlDirectoryWithPath, mutex());
         oldValue = univ.copy(change.first);
         newValue = univ.copy(change.second);
     } else if (fType == DomType::JsFile) {
-        auto jsFile = parseJsFile(code, file, contentDate);
+        auto jsFile = parseJsFile(codeWithDate.content, file, codeWithDate.date);
         auto change = updateEntry<JsFile>(univ, jsFile, m_jsFileWithPath, mutex());
         oldValue = univ.copy(change.first);
         newValue = univ.copy(change.second);
@@ -521,7 +497,7 @@ std::shared_ptr<JsFile> DomUniverse::parseJsFile(const QString &code, const File
     *WARNING* Usage of this function should be protected by the read lock
  */
 std::shared_ptr<ExternalItemPairBase> DomUniverse::getPathValueOrNull(DomType fType,
-                                                                      const QString &path)
+                                                                      const QString &path) const
 {
     switch (fType) {
     case DomType::QmlFile:
@@ -538,6 +514,74 @@ std::shared_ptr<ExternalItemPairBase> DomUniverse::getPathValueOrNull(DomType fT
         Q_ASSERT(false);
     }
     return nullptr;
+}
+
+std::optional<DomItem> DomUniverse::getItemIfMostRecent(const DomItem &univ, DomType fType,
+                                                        const QString &canonicalPath) const
+{
+    QFileInfo fInfo(canonicalPath);
+    std::shared_ptr<ExternalItemPairBase> value = nullptr;
+    {
+        // Mutex is to sync access to the Value and Value->CurrentItem, which can be modified
+        // through updateEnty method and currentItem->refreshedDataAt
+        QMutexLocker l(mutex());
+        value = getPathValueOrNull(fType, canonicalPath);
+        if (valueHasMostRecentItem(value.get(), fInfo.lastModified()) || canonicalPath.isEmpty()) {
+            return univ.copy(value);
+        };
+    }
+    return std::nullopt;
+}
+
+std::optional<DomItem> DomUniverse::getItemIfHasSameCode(const DomItem &univ, DomType fType,
+                                                         const QString &canonicalPath,
+                                                         const ContentWithDate &codeWithDate) const
+{
+    std::shared_ptr<ExternalItemPairBase> value = nullptr;
+    DomItem valueItem;
+    {
+        // Mutex is to sync access to the Value and Value->CurrentItem, which can be modified
+        // through updateEnty method and currentItem->refreshedDataAt
+        QMutexLocker l(mutex());
+        auto value = getPathValueOrNull(fType, canonicalPath);
+        if (valueHasSameContent(value.get(), codeWithDate.content)) {
+            valueItem = univ.copy(value);
+            if (value->currentItem()->lastDataUpdateAt() < codeWithDate.date)
+                value->currentItem()->refreshedDataAt(codeWithDate.date);
+        }
+    }
+    if (valueItem) {
+        return valueItem;
+    }
+    return std::nullopt;
+}
+
+/*!
+    \internal
+    Checks if value has current Item and if it was not modified since last seen
+    *WARNING* Usage of this function should be protected by the read lock
+ */
+bool DomUniverse::valueHasMostRecentItem(const ExternalItemPairBase *value,
+                                         const QDateTime &lastModified)
+{
+    if (!value || !value->currentItem()) {
+        return false;
+    }
+    return lastModified < value->currentItem()->lastDataUpdateAt();
+}
+
+/*!
+    \internal
+    Checks if value has current Item and if it has same content
+    *WARNING* Usage of this function should be protected by the read lock
+ */
+bool DomUniverse::valueHasSameContent(const ExternalItemPairBase *value, const QString &content)
+{
+    if (!value || !value->currentItem()) {
+        return false;
+    }
+    QString curContent = value->currentItem()->code();
+    return !curContent.isNull() && curContent == content;
 }
 
 std::shared_ptr<OwningItem> LoadInfo::doCopy(const DomItem &self) const

@@ -336,7 +336,17 @@ private:
                                           const QDateTime &contentDate);
     std::shared_ptr<JsFile> parseJsFile(const QString &code, const FileToLoad &file,
                                         const QDateTime &contentDate);
-    std::shared_ptr<ExternalItemPairBase> getPathValueOrNull(DomType fType, const QString &path);
+    std::shared_ptr<ExternalItemPairBase> getPathValueOrNull(DomType fType,
+                                                             const QString &path) const;
+    std::optional<DomItem> getItemIfMostRecent(const DomItem &univ, DomType fType,
+                                               const QString &path) const;
+    std::optional<DomItem> getItemIfHasSameCode(const DomItem &univ, DomType fType,
+                                                const QString &canonicalPath,
+                                                const ContentWithDate &codeWithDate) const;
+    static bool valueHasMostRecentItem(const ExternalItemPairBase *value,
+                                       const QDateTime &lastModified);
+    static bool valueHasSameContent(const ExternalItemPairBase *value, const QString &content);
+
 private:
     QString m_name;
     QMap<QString, std::shared_ptr<ExternalItemPair<GlobalScope>>> m_globalScopeWithName;
