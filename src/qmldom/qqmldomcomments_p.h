@@ -17,7 +17,6 @@
 
 #include "qqmldom_fwd_p.h"
 #include "qqmldomconstants_p.h"
-#include "qqmldomfunctionref_p.h"
 #include "qqmldomitem_p.h"
 #include "qqmldomattachedinfo_p.h"
 
@@ -75,7 +74,7 @@ public:
     DomType kind() const { return kindValue; }
 
     Comment(const QString &c, int newlinesBefore = 1)
-        : m_commentStr(c), m_comment(m_commentStr), m_newlinesBefore(newlinesBefore)
+        : m_comment(c), m_newlinesBefore(newlinesBefore)
     {
     }
     Comment(QStringView c, int newlinesBefore = 1) : m_comment(c), m_newlinesBefore(newlinesBefore)
@@ -96,7 +95,6 @@ public:
     friend bool operator!=(const Comment &c1, const Comment &c2) { return !(c1 == c2); }
 
 private:
-    QString m_commentStr;
     QStringView m_comment;
     int m_newlinesBefore;
 };

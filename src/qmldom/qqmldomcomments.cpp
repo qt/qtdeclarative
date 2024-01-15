@@ -368,8 +368,6 @@ public:
         return true;
     }
 
-    QQmlJS::Engine *engine;
-    FileLocations::Tree rootItemLocations;
     QMap<quint32, ElementRef> starts;
     QMap<quint32, ElementRef> ends;
 };
