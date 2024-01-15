@@ -12,6 +12,8 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_EXPORT QSGTextNode : public QSGTransformNode
 {
 public:
+    ~QSGTextNode() override;
+
     // Should match the TextStyle in qquicktext_p.h
     enum TextStyle : quint8
     {
@@ -28,8 +30,6 @@ public:
         NativeRendering,
         CurveRendering
     };
-
-    ~QSGTextNode() override = default;
 
     virtual void setColor(const QColor &color) = 0;
     virtual QColor color() const = 0;
