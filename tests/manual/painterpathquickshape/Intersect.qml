@@ -122,4 +122,20 @@ ControlledShape {
         anchors.centerIn: c3
         text: "c3"
     }
+    Text {
+        anchors.centerIn: p4
+        text: "p4"
+    }
+    Text {
+        anchors.centerIn: p5
+        text: "p5"
+    }
+    Text {
+        anchors.centerIn: p6
+        text: "p6"
+    }
+    Text {
+        anchors.centerIn: p7
+        text: "p7"
+    }
 }
