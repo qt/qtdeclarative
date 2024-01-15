@@ -993,7 +993,8 @@ QList<QPair<int, int>> QSGCurveProcessor::findOverlappingCandidates(const QQuadP
     return overlappingBB;
 }
 
-void QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
+// Returns true if the path was changed
+bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
 {
     struct IntersectionData { int e1; int e2; float t1; float t2; bool in1 = false, in2 = false, out1 = false, out2 = false; };
     QList<IntersectionData> intersections;
@@ -1040,7 +1041,7 @@ void QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
 
     if (intersections.isEmpty() && !alwaysReorder) {
         qCDebug(lcSGCurveIntersectionSolver) << "Returning the path unchanged.";
-        return;
+        return false;
     }
 
     // Store the starting and end elements of the subpaths to be able
@@ -1118,7 +1119,7 @@ void QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
 
     if (!findStart(path, 0, path.elementCount(), &i1, &forward)) {
         qWarning() << "No suitable start found. This should not happen. Returning the path unchanged.";
-        return;
+        return false;
     }
 
     // Helper function to start a new subpath and update temporary variables.
@@ -1151,7 +1152,7 @@ void QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
             }
             if (handledElements[nextIndex]) {
                 qWarning() << "Revisiting an element when trying to solve intersections. This should not happen. Returning the path unchanged.";
-                return;
+                return false;
             }
             handledElements[nextIndex] = true;
         }
@@ -1330,7 +1331,7 @@ void QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
                 if (intersections.isEmpty()) {
                     qCDebug(lcSGCurveIntersectionSolver) << "All intersections handled. I am done.";
                     path = fixedPath;
-                    return;
+                    return true;
                 }
 
                 IntersectionData &unhandledIntersec = intersections[0];
@@ -1395,7 +1396,7 @@ void QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
     // Check the totalIterations as a sanity check. Should never be triggered.
 
     qWarning() << "Could not solve intersections of path. This should not happen. Returning the path unchanged.";
-
+    return false;
 }
 
 
