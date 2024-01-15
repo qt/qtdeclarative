@@ -168,7 +168,7 @@ public:
         };
 
     private:
-        int intersectionsAtY(float y, float *fractions) const;
+        int intersectionsAtY(float y, float *fractions, bool swapXY = false) const;
 
         QVector2D sp;
         QVector2D cp;

@@ -248,13 +248,15 @@ float QQuadPath::Element::extent() const
 
 // Returns the number of intersections between element and a horizontal line at y.
 // The t values of max 2 intersection(s) are stored in the fractions array
-int QQuadPath::Element::intersectionsAtY(float y, float *fractions) const
+int QQuadPath::Element::intersectionsAtY(float y, float *fractions, bool swapXY) const
 {
     Q_ASSERT(!isLine());
 
-    const float y0 = startPoint().y() - y;
-    const float y1 = controlPoint().y() - y;
-    const float y2 = endPoint().y() - y;
+    auto getY = [=](QVector2D p) -> float { return swapXY ? -p.x() : p.y(); };
+
+    const float y0 = getY(startPoint()) - y;
+    const float y1 = getY(controlPoint()) - y;
+    const float y2 = getY(endPoint()) - y;
 
     int numRoots = 0;
     const float a = y0 - (2 * y1) + y2;
@@ -372,45 +374,49 @@ QQuadPath::Element::FillSide QQuadPath::fillSideOf(int elementIdx, float element
     constexpr float toleranceT = 1e-3f;
     const QVector2D point = m_elements.at(elementIdx).pointAtFraction(elementT);
 
+    const bool swapXY = qAbs(m_elements.at(elementIdx).tangentAtFraction(elementT).x()) > qAbs(m_elements.at(elementIdx).tangentAtFraction(elementT).y());
+    auto getX = [=](QVector2D p) -> float { return swapXY ? p.y() : p.x(); };
+    auto getY = [=](QVector2D p) -> float { return swapXY ? -p.x() : p.y(); };
+
     int winding_number = 0;
     for (int i = 0; i < elementCount(); i++) {
         const Element &e = m_elements.at(i);
-        int dir = 1;
-        float y1 = e.startPoint().y();
-        float y2 = e.endPoint().y();
+        int dir =  1;
+        float y1 = getY(e.startPoint());
+        float y2 = getY(e.endPoint());
         if (y2 < y1) {
             qSwap(y1, y2);
             dir = -1;
         }
         if (e.m_isLine) {
-            if (point.y() < y1 || point.y() >= y2 || y1 == y2)
+            if (getY(point) < y1 || getY(point) >= y2 || y1 == y2)
                 continue;
-            const float t = (point.y() - e.startPoint().y()) / (e.endPoint().y() - e.startPoint().y());
-            const float x = e.startPoint().x() + t * (e.endPoint().x() - e.startPoint().x());
-            if ((elementIdx != i && x <= point.x()) ||
-                (elementIdx == i && x <= point.x() && qAbs(t - elementT) > toleranceT)) {
+            const float t = (getY(point) - getY(e.startPoint())) / (getY(e.endPoint()) - getY(e.startPoint()));
+            const float x = getX(e.startPoint()) + t * (getX(e.endPoint()) - getX(e.startPoint()));
+            if ((elementIdx != i && x <= getX(point)) ||
+                (elementIdx == i && x <= getX(point) && qAbs(t - elementT) > toleranceT)) {
                 winding_number += dir;
             }
         } else {
-            y1 = qMin(y1, e.controlPoint().y());
-            y2 = qMax(y2, e.controlPoint().y());
-            if (point.y() < y1 || point.y() >= y2)
+            y1 = qMin(y1, getY(e.controlPoint()));
+            y2 = qMax(y2, getY(e.controlPoint()));
+            if (getY(point) < y1 || getY(point) >= y2)
                 continue;
             float ts[2];
-            const int numRoots = e.intersectionsAtY(point.y(), ts);
+            const int numRoots = e.intersectionsAtY(getY(point), ts, swapXY);
             // Count if there is exactly one intersection to the left
             bool oneHit = false;
             float tForHit = -1;
             for (int j = 0; j < numRoots; j++) {
-                const float x = e.pointAtFraction(ts[j]).x();
-                if ((elementIdx != i && x <= point.x()) ||
-                    (elementIdx == i && x <= point.x() && qAbs(ts[j] - elementT) > toleranceT)) {
+                const float x = getX(e.pointAtFraction(ts[j]));
+                if ((elementIdx != i && x <= getX(point)) ||
+                    (elementIdx == i && x <= getX(point) && qAbs(ts[j] - elementT) > toleranceT)) {
                     oneHit = !oneHit;
                     tForHit = ts[j];
                 }
             }
             if (oneHit) {
-                dir = e.tangentAtFraction(tForHit).y() < 0 ? -1 : 1;
+                dir = getY(e.tangentAtFraction(tForHit)) < 0 ? -1 : 1;
                 winding_number += dir;
             }
         }
@@ -419,7 +425,7 @@ QQuadPath::Element::FillSide QQuadPath::fillSideOf(int elementIdx, float element
     int left_winding_number = winding_number;
     int right_winding_number = winding_number;
 
-    int dir = m_elements.at(elementIdx).tangentAtFraction(elementT).y() < 0 ? -1 : 1;
+    int dir = getY(m_elements.at(elementIdx).tangentAtFraction(elementT)) < 0 ? -1 : 1;
 
     if (dir > 0) {
         left_winding_number += dir;
