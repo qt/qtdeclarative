@@ -1091,9 +1091,8 @@ void MemoryManager::onEventLoop()
         }, Qt::QueuedConnection);
         return;
     }
-    gcBlocked = NormalBlocked;
     if (gcStateMachine->inProgress()) {
-        runGC();
+        gcStateMachine->step();
     }
 }
 

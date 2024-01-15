@@ -369,9 +369,7 @@ private:
 
     HeapItem *allocate(BlockAllocator *allocator, std::size_t size)
     {
-        // We must not call runGC if incremental gc is running
-        // so temporarily set gcBlocked in that case, too
-        QBoolBlocker block(gcBlocked, m_markStack != nullptr || gcBlocked);
+        const bool incrementalGCIsAlreadyRunning = m_markStack != nullptr;
 
         bool didGCRun = false;
         if (aggressiveGC) {
