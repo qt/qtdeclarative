@@ -549,6 +549,9 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
 
     if(NOT arg_NO_GENERATE_QMLDIR)
         _qt_internal_target_generate_qmldir(${target})
+        set_source_files_properties(${arg_OUTPUT_DIRECTORY}/qmldir
+            PROPERTIES GENERATED TRUE
+        )
 
         # Embed qmldir in qrc. The following comments relate mostly to Qt5->6 transition.
         # The requirement to keep the same resource name might no longer apply, but it doesn't
