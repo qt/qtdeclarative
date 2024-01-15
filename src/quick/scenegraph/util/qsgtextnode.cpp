@@ -276,4 +276,6 @@ QT_BEGIN_NAMESPACE
     \sa addTextLayout(), addTextDocument()
 */
 
+QSGTextNode::~QSGTextNode() = default;
+
 QT_END_NAMESPACE
