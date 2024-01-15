@@ -98,11 +98,10 @@ bool QQmlPropertyCacheCreatorBase::canCreateClassNameTypeByUrl(const QUrl &url)
 QByteArray QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(const QUrl &url)
 {
     return processUrlForClassName(url, [](QStringView nameBase) {
-        return QByteArray(nameBase.toUtf8() + "_QMLTYPE_"
-                + QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1)));
+        return nameBase.toUtf8() + QByteArray("_QMLTYPE_");
     }, []() {
-        return QByteArray();
-    });
+        return QByteArray("ANON_QML_TYPE_");
+    }) + QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
 }
 
 QByteArray QQmlPropertyCacheCreatorBase::createClassNameForInlineComponent(

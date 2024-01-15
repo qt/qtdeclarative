@@ -151,6 +151,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
 
 static void addQQmlMetaTypeInterfaces(QQmlTypePrivate *priv, const QByteArray &className)
 {
+    Q_ASSERT(!className.isEmpty());
     QByteArray ptr = className + '*';
     QByteArray lst = "QQmlListProperty<" + className + '>';
 
