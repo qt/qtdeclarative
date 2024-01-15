@@ -221,7 +221,8 @@ void QQuickQmlGenerator::generateGradient(const QGradient *grad, QQuickShapePath
         stream() << "centerX: " << radGrad->center().x();
         stream() << "centerY: " << radGrad->center().y();
         stream() << "centerRadius: " << radGrad->radius();
-        stream() << "focalX: centerX; focalY: centerY";
+        stream() << "focalX:" << radGrad->focalPoint().x();
+        stream() << "focalY:" << radGrad->focalPoint().y();
         for (auto &stop : radGrad->stops()) {
             stream() << "GradientStop { position: " << stop.first << "; color: \"" << stop.second.name(QColor::HexArgb) << "\" }";
         }
@@ -233,8 +234,8 @@ void QQuickQmlGenerator::generateGradient(const QGradient *grad, QQuickShapePath
             quickGrad->setCenterX(radGrad->center().x());
             quickGrad->setCenterY(radGrad->center().y());
             quickGrad->setCenterRadius(radGrad->radius());
-            quickGrad->setFocalX(radGrad->center().x());
-            quickGrad->setFocalY(radGrad->center().y());
+            quickGrad->setFocalX(radGrad->focalPoint().x());
+            quickGrad->setFocalY(radGrad->focalPoint().y());
             setStops(quickGrad, radGrad->stops());
 
             shapePath->setFillGradient(quickGrad);

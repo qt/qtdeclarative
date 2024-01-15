@@ -205,8 +205,8 @@ void QQuickItemGenerator::generateGradient(const QGradient *grad, QQuickShapePat
             quickGrad->setCenterX(radGrad->center().x());
             quickGrad->setCenterY(radGrad->center().y());
             quickGrad->setCenterRadius(radGrad->radius());
-            quickGrad->setFocalX(radGrad->center().x());
-            quickGrad->setFocalY(radGrad->center().y());
+            quickGrad->setFocalX(radGrad->focalPoint().x());
+            quickGrad->setFocalY(radGrad->focalPoint().y());
             setStops(quickGrad, radGrad->stops());
 
             shapePath->setFillGradient(quickGrad);
