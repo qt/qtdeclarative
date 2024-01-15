@@ -238,26 +238,26 @@ startRegion/ EndRegion). Region comments keeps a mapping containing them.
 bool CommentedElement::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
-    cont = cont && self.dvWrapField(visitor, Fields::preComments, preComments);
-    cont = cont && self.dvWrapField(visitor, Fields::postComments, postComments);
+    cont = cont && self.dvWrapField(visitor, Fields::preComments, m_preComments);
+    cont = cont && self.dvWrapField(visitor, Fields::postComments, m_postComments);
     return cont;
 }
 
 void CommentedElement::writePre(OutWriter &lw, QList<SourceLocation> *locs) const
 {
     if (locs)
-        locs->resize(preComments.size());
+        locs->resize(m_preComments.size());
     int i = 0;
-    for (const Comment &c : preComments)
+    for (const Comment &c : m_preComments)
         c.write(lw, (locs ? &((*locs)[i++]) : nullptr));
 }
 
 void CommentedElement::writePost(OutWriter &lw, QList<SourceLocation> *locs) const
 {
     if (locs)
-        locs->resize(postComments.size());
+        locs->resize(m_postComments.size());
     int i = 0;
-    for (const Comment &c : postComments)
+    for (const Comment &c : m_postComments)
         c.write(lw, (locs ? &((*locs)[i++]) : nullptr));
 }
 
@@ -273,8 +273,8 @@ QMultiMap<quint32, const QList<Comment> *>
 CommentedElement::commentGroups(SourceLocation elLocation) const
 {
     return QMultiMap<quint32, const QList<Comment> *>(
-            { { elLocation.begin() * 2, &preComments },
-              { elLocation.end() * 2 + 1, &postComments } });
+            { { elLocation.begin() * 2, &m_preComments },
+              { elLocation.end() * 2 + 1, &m_postComments } });
 }
 
 using namespace QQmlJS::AST;
@@ -663,26 +663,18 @@ void AstComments::collectComments(
             }
         }
 
-        Comment comment(code.mid(iPre, iPost - iPre), preNewline);
+        Comment comment(code.mid(iPre, iPost - iPre), preNewline, pre ? Comment::Pre : Comment::Post);
         if (commentEl.element.index() == 0 && std::get<0>(commentEl.element)) {
             CommentedElement &cEl = commentedElements[std::get<0>(commentEl.element)];
-            if (pre)
-                cEl.preComments.append(comment);
-            else
-                cEl.postComments.append(comment);
+            cEl.addComment(comment);
         } else if (commentEl.element.index() == 1) {
             MutableDomItem rComments = rootItem.item()
                                         .path(std::get<1>(commentEl.element).path)
                                         .field(Fields::comments);
-            if (RegionComments *rCommentsPtr = rComments.mutableAs<RegionComments>()) {
-                if (pre)
-                    rCommentsPtr->addPreComment(comment, std::get<1>(commentEl.element).regionName);
-                else
-                    rCommentsPtr->addPostComment(comment,
-                                                 std::get<1>(commentEl.element).regionName);
-            } else {
+            if (RegionComments *rCommentsPtr = rComments.mutableAs<RegionComments>())
+                rCommentsPtr->addComment(comment, std::get<1>(commentEl.element).regionName);
+            else
                 Q_ASSERT(false);
-            }
         } else {
             qCWarning(commentsLog)
                     << "Failed: no item or node to attach comment" << comment.rawComment();
@@ -729,12 +721,12 @@ QMultiMap<quint32, const QList<Comment> *> AstComments::allCommentsInNode(AST::N
 bool RegionComments::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
-    if (!regionComments.isEmpty()) {
+    if (!m_regionComments.isEmpty()) {
         cont = cont
                 && self.dvItemField(visitor, Fields::regionComments, [this, &self]() -> DomItem {
                        const Path pathFromOwner =
                                self.pathFromOwner().field(Fields::regionComments);
-                       auto map = Map::fromFileRegionMap(pathFromOwner, regionComments);
+                       auto map = Map::fromFileRegionMap(pathFromOwner, m_regionComments);
                        return self.subMapItem(map);
                    });
     }

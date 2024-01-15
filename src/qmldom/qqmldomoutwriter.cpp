@@ -21,7 +21,7 @@ OutWriterState::OutWriterState(
 {
     DomItem cRegions = it.field(Fields::comments);
     if (const RegionComments *cRegionsPtr = cRegions.as<RegionComments>()) {
-        pendingComments = cRegionsPtr->regionComments;
+        pendingComments = cRegionsPtr->regionComments();
         fLoc->info().ensureCommentLocations(pendingComments.keys());
     }
 }

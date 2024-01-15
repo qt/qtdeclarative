@@ -3500,9 +3500,9 @@ MutableDomItem MutableDomItem::addPreComment(const Comment &comment, FileLocatio
     index_type idx;
     MutableDomItem rC = field(Fields::comments);
     if (auto rcPtr = rC.mutableAs<RegionComments>()) {
-        auto &preList = rcPtr->regionComments[region].preComments;
-        idx = preList.size();
-        preList.append(comment);
+        auto commentedElement = rcPtr->regionComments()[region];
+        idx = commentedElement.preComments().size();
+        commentedElement.addComment(comment);
         MutableDomItem res = path(Path::Field(Fields::comments)
                                           .field(Fields::regionComments)
                                           .key(fileLocationRegionName(region))
@@ -3519,9 +3519,9 @@ MutableDomItem MutableDomItem::addPostComment(const Comment &comment, FileLocati
     index_type idx;
     MutableDomItem rC = field(Fields::comments);
     if (auto rcPtr = rC.mutableAs<RegionComments>()) {
-        auto &postList = rcPtr->regionComments[region].postComments;
-        idx = postList.size();
-        postList.append(comment);
+        auto commentedElement = rcPtr->regionComments()[region];
+        idx = commentedElement.postComments().size();
+        commentedElement.addComment(comment);
         MutableDomItem res = path(Path::Field(Fields::comments)
                                           .field(Fields::regionComments)
                                           .key(fileLocationRegionName(region))

@@ -73,11 +73,14 @@ public:
     constexpr static DomType kindValue = DomType::Comment;
     DomType kind() const { return kindValue; }
 
-    Comment(const QString &c, int newlinesBefore = 1)
-        : m_comment(c), m_newlinesBefore(newlinesBefore)
+    enum CommentType {Pre, Post};
+
+    Comment(const QString &c, int newlinesBefore = 1, CommentType type = Pre)
+        : m_comment(c), m_newlinesBefore(newlinesBefore), m_type(type)
     {
     }
-    Comment(QStringView c, int newlinesBefore = 1) : m_comment(c), m_newlinesBefore(newlinesBefore)
+    Comment(QStringView c, int newlinesBefore = 1, CommentType type = Pre)
+    : m_comment(c), m_newlinesBefore(newlinesBefore), m_type(type)
     {
     }
 
@@ -88,6 +91,8 @@ public:
     CommentInfo info() const { return CommentInfo(m_comment); }
     void write(OutWriter &lw, SourceLocation *commentLocation = nullptr) const;
 
+    CommentType type() const { return m_type; }
+
     friend bool operator==(const Comment &c1, const Comment &c2)
     {
         return c1.m_newlinesBefore == c2.m_newlinesBefore && c1.m_comment == c2.m_comment;
@@ -97,6 +102,7 @@ public:
 private:
     QStringView m_comment;
     int m_newlinesBefore;
+    CommentType m_type;
 };
 
 class QMLDOM_EXPORT CommentedElement
@@ -112,15 +118,27 @@ public:
 
     friend bool operator==(const CommentedElement &c1, const CommentedElement &c2)
     {
-        return c1.preComments == c2.preComments && c1.postComments == c2.postComments;
+        return c1.m_preComments == c2.m_preComments && c1.m_postComments == c2.m_postComments;
     }
     friend bool operator!=(const CommentedElement &c1, const CommentedElement &c2)
     {
         return !(c1 == c2);
     }
 
-    QList<Comment> preComments;
-    QList<Comment> postComments;
+    void addComment(const Comment &comment)
+    {
+        if (comment.type() == Comment::CommentType::Pre)
+            m_preComments.append(comment);
+        else
+           m_postComments.append(comment);
+    }
+
+    const QList<Comment> &preComments() const { return m_preComments;}
+    const QList<Comment> &postComments() const { return m_postComments;}
+
+private:
+    QList<Comment> m_preComments;
+    QList<Comment> m_postComments;
 };
 
 class QMLDOM_EXPORT RegionComments
@@ -133,18 +151,28 @@ public:
 
     friend bool operator==(const RegionComments &c1, const RegionComments &c2)
     {
-        return c1.regionComments == c2.regionComments;
+        return c1.m_regionComments == c2.m_regionComments;
     }
     friend bool operator!=(const RegionComments &c1, const RegionComments &c2)
     {
         return !(c1 == c2);
     }
 
+    const QMap<FileLocationRegion, CommentedElement> &regionComments() const { return m_regionComments;}
+    Path addComment(const Comment &comment, FileLocationRegion region)
+    {
+        if (comment.type() == Comment::CommentType::Pre)
+            return addPreComment(comment, region);
+        else
+            return addPostComment(comment, region);
+    }
+
+private:
     Path addPreComment(const Comment &comment, FileLocationRegion region)
     {
-        auto &preList = regionComments[region].preComments;
+        auto &preList = m_regionComments[region].preComments();
         index_type idx = preList.size();
-        preList.append(comment);
+        m_regionComments[region].addComment(comment);
         return Path::Field(Fields::regionComments)
                 .key(fileLocationRegionName(region))
                 .field(Fields::preComments)
@@ -153,16 +181,16 @@ public:
 
     Path addPostComment(const Comment &comment, FileLocationRegion region)
     {
-        auto &postList = regionComments[region].postComments;
+        auto &postList = m_regionComments[region].postComments();
         index_type idx = postList.size();
-        postList.append(comment);
+        m_regionComments[region].addComment(comment);
         return Path::Field(Fields::regionComments)
                 .key(fileLocationRegionName(region))
                 .field(Fields::postComments)
                 .index(idx);
     }
 
-    QMap<FileLocationRegion, CommentedElement> regionComments;
+    QMap<FileLocationRegion, CommentedElement> m_regionComments;
 };
 
 class QMLDOM_EXPORT AstComments final : public OwningItem
