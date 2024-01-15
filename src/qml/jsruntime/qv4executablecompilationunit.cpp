@@ -82,12 +82,7 @@ void ExecutableCompilationUnit::populate()
        gc starts marking the root set at the start of a run.
      */
     const CompiledData::Unit *data = m_compilationUnit->data;
-    auto oldState = std::exchange(engine->memoryManager->gcBlocked, MemoryManager::InCriticalSection);
-    auto cleanup = qScopeGuard([this, oldState]() {
-        engine->memoryManager->gcBlocked = oldState;
-        if (oldState != MemoryManager::Unblocked)
-            this->markObjects(engine->memoryManager->markStack());
-    });
+    GCCriticalSection<ExecutableCompilationUnit> criticalSection(engine, this);
 
     Q_ASSERT(!runtimeStrings);
     Q_ASSERT(engine);

@@ -1216,6 +1216,28 @@ static size_t dumpBins(BlockAllocator *b, const char *title)
     return totalSlotMem*Chunk::SlotSize;
 }
 
+/*!
+    \internal
+    Precondition: Incremental garbage collection must be currently active
+    Finishes incremental garbage collection, unless in a critical section
+    Code entering a critical section is expected to check if we need to
+    force a gc completion, and to trigger the gc again if necessary
+    when exiting the critcial section.
+    Returns \c true if the gc cycle completed, false otherwise.
+ */
+bool MemoryManager::tryForceGCCompletion()
+{
+    if (gcBlocked == InCriticalSection)
+        return false;
+    const bool incrementalGCIsAlreadyRunning = m_markStack != nullptr;
+    Q_ASSERT(incrementalGCIsAlreadyRunning);
+    auto oldTimeLimit = std::exchange(gcStateMachine->timeLimit, std::chrono::microseconds::max());
+    while (gcStateMachine->inProgress())
+        gcStateMachine->step();
+    gcStateMachine->timeLimit = oldTimeLimit;
+    return true;
+}
+
 void MemoryManager::runGC()
 {
     if (gcBlocked != Unblocked) {
