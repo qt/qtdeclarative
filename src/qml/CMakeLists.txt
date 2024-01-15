@@ -531,6 +531,24 @@ add_custom_command(
     VERBATIM
 )
 
+get_target_property(builtins_metatypes_file "QmlBuiltins" INTERFACE_QT_META_TYPES_BUILD_FILE)
+
+_qt_internal_get_metatypes_install_dir(
+    ""
+    "${INSTALL_ARCHDATADIR}"
+    metatypes_install_dir
+)
+
+_qt_internal_assign_install_metatypes_files_and_properties(
+    QmlBuiltins
+    INSTALL_DIR "${metatypes_install_dir}"
+)
+
+qt_install(
+    FILES "${builtins_metatypes_file}"
+    DESTINATION "${metatypes_install_dir}"
+)
+
 set(builtins_output_files "")
 list(APPEND builtins_output_files "${qml_build_dir}/builtins.qmltypes")
 list(APPEND builtins_output_files "${qml_build_dir}/jsroot.qmltypes")
