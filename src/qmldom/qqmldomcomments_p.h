@@ -80,7 +80,7 @@ public:
     {
     }
     Comment(QStringView c, int newlinesBefore = 1, CommentType type = Pre)
-    : m_comment(c), m_newlinesBefore(newlinesBefore), m_type(type)
+        : m_comment(c), m_newlinesBefore(newlinesBefore), m_type(type)
     {
     }
 
@@ -130,7 +130,7 @@ public:
         if (comment.type() == Comment::CommentType::Pre)
             m_preComments.append(comment);
         else
-           m_postComments.append(comment);
+            m_postComments.append(comment);
     }
 
     const QList<Comment> &preComments() const { return m_preComments;}
@@ -211,11 +211,6 @@ public:
     }
 
     Path canonicalPath(const DomItem &self) const override { return self.m_ownerPath; }
-    static void collectComments(MutableDomItem &item);
-    static void collectComments(
-            const std::shared_ptr<Engine> &engine, AST::Node *n,
-            const std::shared_ptr<AstComments> &collectComments, const MutableDomItem &rootItem,
-            const FileLocations::Tree &rootItemLocations);
     AstComments(const std::shared_ptr<Engine> &e) : m_engine(e) { }
     AstComments(const AstComments &o)
         : OwningItem(o), m_engine(o.m_engine), m_commentedElements(o.m_commentedElements)
@@ -226,6 +221,12 @@ public:
     {
         return m_commentedElements;
     }
+
+    QHash<AST::Node *, CommentedElement> &commentedElements()
+    {
+        return m_commentedElements;
+    }
+
     CommentedElement *commentForNode(AST::Node *n)
     {
         if (m_commentedElements.contains(n))
@@ -237,6 +238,20 @@ public:
 private:
     std::shared_ptr<Engine> m_engine;
     QHash<AST::Node *, CommentedElement> m_commentedElements;
+};
+
+class CommentCollector
+{
+public:
+    CommentCollector() = default;
+    CommentCollector(MutableDomItem item);
+    void collectComments();
+    void collectComments(const std::shared_ptr<Engine> &engine, AST::Node *rootNode,
+                         const std::shared_ptr<AstComments> &astComments);
+
+private:
+    MutableDomItem m_rootItem;
+    FileLocations::Tree m_fileLocations;
 };
 
 class VisitAll : public AST::Visitor

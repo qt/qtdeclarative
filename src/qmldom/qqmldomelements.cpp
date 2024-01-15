@@ -1715,7 +1715,9 @@ void ScriptExpression::setCode(const QString &code, const QString &preCode, cons
         if (m_expressionType == ExpressionType::BindingExpression)
             if (AST::ExpressionStatement *exp = AST::cast<AST::ExpressionStatement *>(m_ast))
                 m_ast = exp->expression;
-        AstComments::collectComments(m_engine, m_ast, m_astComments, MutableDomItem(), nullptr);
+
+        CommentCollector collector;
+        collector.collectComments(m_engine, parser.rootNode(), m_astComments);
     }
 }
 
