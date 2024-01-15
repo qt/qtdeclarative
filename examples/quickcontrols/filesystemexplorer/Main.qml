@@ -16,6 +16,8 @@ ApplicationWindow {
 
     width: 1100
     height: 600
+    minimumWidth: 200
+    minimumHeight: 100
     visible: true
     color: Colors.background
     flags: Qt.Window | Qt.FramelessWindowHint
