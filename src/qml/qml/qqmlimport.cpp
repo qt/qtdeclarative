@@ -1114,7 +1114,7 @@ QQmlImportNamespace *QQmlImports::importNamespace(const QString &prefix)
     return nameSpace;
 }
 
-QQmlImportInstance *QQmlImports::addImportToNamespace(
+static QQmlImportInstance *addImportToNamespace(
         QQmlImportNamespace *nameSpace, const QString &uri, const QString &url, QTypeRevision version,
         QV4::CompiledData::Import::ImportType type, QList<QQmlError> *errors, quint16 precedence)
 {

@@ -15,7 +15,6 @@
 #include <private/qqmldirparser_p.h>
 #include <private/qqmltype_p.h>
 #include <private/qstringhash_p.h>
-#include <private/qv4compileddata_p.h>
 #include <private/qfieldlist_p.h>
 
 //
@@ -241,11 +240,6 @@ private:
             QQmlTypeLoaderQmldirContent *qmldir, QList<QQmlError> *errors);
 
     QString resolvedUri(const QString &dir_arg, QQmlImportDatabase *database);
-
-    QQmlImportInstance *addImportToNamespace(
-            QQmlImportNamespace *nameSpace, const QString &uri, const QString &url,
-            QTypeRevision version, QV4::CompiledData::Import::ImportType type,
-            QList<QQmlError> *errors, quint16 precedence);
 
     QUrl m_baseUrl;
     QString m_base;
