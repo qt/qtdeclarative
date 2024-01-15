@@ -1289,7 +1289,7 @@ QTypeRevision QQmlImports::addFileImport(
             importUri.chop(1);
 
         if (!typeLoader->absoluteFilePath(localFileOrQrc).isEmpty()) {
-            qmldirIdentifier = localFileOrQrc;
+            qmldirIdentifier = std::move(localFileOrQrc);
             if (localQmldir)
                 *localQmldir = qmldirIdentifier;
         }
