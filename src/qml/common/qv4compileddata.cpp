@@ -4,6 +4,7 @@
 #include "qv4compileddata_p.h"
 
 #include <private/inlinecomponentutils_p.h>
+#include <private/qml_compile_hash_p.h>
 #include <private/qqmlscriptdata_p.h>
 #include <private/qqmltypenamecache_p.h>
 #include <private/qv4resolvedtypereference_p.h>
@@ -14,10 +15,75 @@
 #include <QtCore/qscopeguard.h>
 #include <QtCore/qstandardpaths.h>
 
+static_assert(QV4::CompiledData::QmlCompileHashSpace > QML_COMPILE_HASH_LENGTH);
+
+#if defined(QML_COMPILE_HASH) && defined(QML_COMPILE_HASH_LENGTH) && QML_COMPILE_HASH_LENGTH > 0
+#  ifdef Q_OS_LINUX
+// Place on a separate section on Linux so it's easier to check from outside
+// what the hash version is.
+__attribute__((section(".qml_compile_hash")))
+#  endif
+const char qml_compile_hash[QV4::CompiledData::QmlCompileHashSpace] = QML_COMPILE_HASH;
+static_assert(sizeof(QV4::CompiledData::Unit::libraryVersionHash) > QML_COMPILE_HASH_LENGTH,
+              "Compile hash length exceeds reserved size in data structure. Please adjust and bump the format version");
+#else
+#  error "QML_COMPILE_HASH must be defined for the build of QtDeclarative to ensure version checking for cache files"
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 namespace CompiledData {
+
+
+bool Unit::verifyHeader(QDateTime expectedSourceTimeStamp, QString *errorString) const
+{
+    if (strncmp(magic, CompiledData::magic_str, sizeof(magic))) {
+        *errorString = QStringLiteral("Magic bytes in the header do not match");
+        return false;
+    }
+
+    if (version != quint32(QV4_DATA_STRUCTURE_VERSION)) {
+        *errorString = QString::fromUtf8("V4 data structure version mismatch. Found %1 expected %2")
+                               .arg(version, 0, 16).arg(QV4_DATA_STRUCTURE_VERSION, 0, 16);
+        return false;
+    }
+
+    if (qtVersion != quint32(QT_VERSION)) {
+        *errorString = QString::fromUtf8("Qt version mismatch. Found %1 expected %2")
+                               .arg(qtVersion, 0, 16).arg(QT_VERSION, 0, 16);
+        return false;
+    }
+
+    if (sourceTimeStamp) {
+        // Files from the resource system do not have any time stamps, so fall back to the application
+        // executable.
+        if (!expectedSourceTimeStamp.isValid())
+            expectedSourceTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
+
+        if (expectedSourceTimeStamp.isValid()
+            && expectedSourceTimeStamp.toMSecsSinceEpoch() != sourceTimeStamp) {
+            *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
+            return false;
+        }
+    }
+
+#if defined(QML_COMPILE_HASH) && defined(QML_COMPILE_HASH_LENGTH) && QML_COMPILE_HASH_LENGTH > 0
+    if (qstrncmp(qml_compile_hash, libraryVersionHash, QML_COMPILE_HASH_LENGTH) != 0) {
+        *errorString = QStringLiteral("QML compile hashes don't match. Found %1 expected %2")
+                               .arg(QString::fromLatin1(
+                                            QByteArray(libraryVersionHash, QML_COMPILE_HASH_LENGTH)
+                                                    .toPercentEncoding()),
+                                    QString::fromLatin1(
+                                            QByteArray(qml_compile_hash, QML_COMPILE_HASH_LENGTH)
+                                                    .toPercentEncoding()));
+        return false;
+    }
+#else
+#error "QML_COMPILE_HASH must be defined for the build of QtDeclarative to ensure version checking for cache files"
+#endif
+    return true;
+}
 
 /*!
     \internal

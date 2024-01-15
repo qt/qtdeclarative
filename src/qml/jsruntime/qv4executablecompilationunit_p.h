@@ -186,9 +186,6 @@ public:
 
     QString translateFrom(TranslationDataIndex index) const;
 
-    static bool verifyHeader(const CompiledData::Unit *unit, QDateTime expectedSourceTimeStamp,
-                             QString *errorString);
-
     Heap::Module *module() const { return m_module; }
     void setModule(Heap::Module *module) { m_module = module; }
 

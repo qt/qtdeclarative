@@ -4,7 +4,6 @@
 #include "qv4compilationunitmapper_p.h"
 
 #include <private/qv4compileddata_p.h>
-#include <private/qv4executablecompilationunit_p.h>
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmutex.h>
@@ -55,7 +54,7 @@ CompiledData::Unit *CompilationUnitMapper::get(
     CompilationUnitMapper mapper = cache.get(cacheFilePath);
     if (mapper.dataPtr) {
         auto *unit = reinterpret_cast<CompiledData::Unit *>(mapper.dataPtr);
-        if (ExecutableCompilationUnit::verifyHeader(unit, sourceTimeStamp, errorString)) {
+        if (unit->verifyHeader(sourceTimeStamp, errorString)) {
             *this = mapper;
             return unit;
         }
