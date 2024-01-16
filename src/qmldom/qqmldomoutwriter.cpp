@@ -20,10 +20,8 @@ OutWriterState::OutWriterState(
     : itemCanonicalPath(itCanonicalPath), item(it), currentMap(fLoc)
 {
     DomItem cRegions = it.field(Fields::comments);
-    if (const RegionComments *cRegionsPtr = cRegions.as<RegionComments>()) {
+    if (const RegionComments *cRegionsPtr = cRegions.as<RegionComments>())
         pendingComments = cRegionsPtr->regionComments();
-        fLoc->info().ensureCommentLocations(pendingComments.keys());
-    }
 }
 
 void OutWriterState::closeState(OutWriter &w)

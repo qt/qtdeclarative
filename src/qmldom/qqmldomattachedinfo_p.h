@@ -248,7 +248,6 @@ public:
     constexpr static DomType kindValue = DomType::FileLocations;
     DomType kind() const {  return kindValue; }
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const;
-    void ensureCommentLocations(const QList<FileLocationRegion> &keys);
 
     static Tree createTree(const Path &basePath);
     static Tree ensure(const Tree &base, const Path &basePath,
