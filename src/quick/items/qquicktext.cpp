@@ -2720,7 +2720,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     node->setTextStyle(QSGTextNode::TextStyle(d->style));
     node->setRenderType(QSGTextNode::RenderType(d->renderType));
     node->setRenderTypeQuality(d->renderTypeQuality());
-    node->deleteContent();
+    node->clear();
     node->setMatrix(QMatrix4x4());
 
     node->setColor(QColor::fromRgba(d->color));

@@ -255,7 +255,7 @@ void QSGInternalTextNode::addTextLayout(const QPointF &position, QTextLayout *te
     engine.addToSceneGraph(this, QQuickText::TextStyle(m_textStyle), m_styleColor);
 }
 
-void QSGInternalTextNode::deleteContent()
+void QSGInternalTextNode::clear()
 {
     while (firstChild() != nullptr)
         delete firstChild();

@@ -1988,7 +1988,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             node->clearCursor();
     } else {
         node->setRenderType(QSGTextNode::RenderType(d->renderType));
-        node->deleteContent();
+        node->clear();
         node->setMatrix(QMatrix4x4());
         node->setTextStyle(QSGInternalTextNode::Normal);
         node->setColor(d->color);
