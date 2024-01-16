@@ -168,15 +168,15 @@ static void addQQmlMetaTypeInterfaces(QQmlTypePrivate *priv, const QByteArray &c
 static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &elementName,
                                        const QQmlPrivate::RegisterCompositeType &type)
 {
+    // This is a procedurally registered composite type. It's evil. It doesn't get any metatypes
+    // because we never want to find it in the compositeTypes. Otherwise we might mix it up with an
+    // actually compiled version of the same type.
+
     auto *d = new QQmlTypePrivate(QQmlType::CompositeType);
     data->registerType(d);
     d->setName(QString::fromUtf8(type.uri), elementName);
     d->version = type.version;
-
-    const QUrl normalized = QQmlTypeLoader::normalize(type.url);
-    d->extraData.compositeTypeData = normalized;
-    addQQmlMetaTypeInterfaces(
-        d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(normalized));
+    d->extraData.compositeTypeData = QQmlTypeLoader::normalize(type.url);
     return d;
 }
 
@@ -185,6 +185,10 @@ static QQmlTypePrivate *createQQmlType(
         const QQmlPrivate::RegisterCompositeSingletonType &type,
         const QQmlType::SingletonInstanceInfo::ConstPtr &siinfo)
 {
+    // This is a procedurally registered composite singleton. It's evil. It doesn't get any
+    // metatypes because we never want to find it in the compositeTypes. Otherwise we might mix it
+    // up with an actually compiled version of the same type.
+
     auto *d = new QQmlTypePrivate(QQmlType::CompositeSingletonType);
     data->registerType(d);
     d->setName(QString::fromUtf8(type.uri), elementName);
@@ -192,8 +196,6 @@ static QQmlTypePrivate *createQQmlType(
     d->version = type.version;
 
     d->extraData.singletonTypeData->singletonInstanceInfo = siinfo;
-    addQQmlMetaTypeInterfaces(
-            d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(siinfo->url));
     return d;
 }
 
@@ -672,10 +674,13 @@ QQmlType QQmlMetaType::findCompositeType(
             urlExists = false;
     }
 
-    if (urlExists) {
+    if (const QtPrivate::QMetaTypeInterface *iface = urlExists
+                ? found.value()->typeId.iface()
+                : nullptr) {
         if (compilationUnit.isNull())
             return QQmlType(*found);
-        const auto composite = data->compositeTypes.constFind(found.value()->typeId.iface());
+
+        const auto composite = data->compositeTypes.constFind(iface);
         if (composite == data->compositeTypes.constEnd() || composite.value() == compilationUnit)
             return QQmlType(*found);
     }
