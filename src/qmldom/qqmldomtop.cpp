@@ -283,48 +283,6 @@ void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOption
     }
 }
 
-template<typename T>
-QPair<std::shared_ptr<ExternalItemPair<T>>, std::shared_ptr<ExternalItemPair<T>>>
-updateEntry(const DomItem &univ, const std::shared_ptr<T> &newItem,
-            QMap<QString, std::shared_ptr<ExternalItemPair<T>>> &map, QBasicMutex *mutex)
-{
-    std::shared_ptr<ExternalItemPair<T>> oldValue;
-    std::shared_ptr<ExternalItemPair<T>> newValue;
-    QString canonicalPath = newItem->canonicalFilePath();
-    QDateTime now = QDateTime::currentDateTimeUtc();
-    {
-        QMutexLocker l(mutex);
-        auto it = map.find(canonicalPath);
-        if (it != map.cend() && (*it) && (*it)->current) {
-            oldValue = *it;
-            QString oldCode = oldValue->current->code();
-            QString newCode = newItem->code();
-            if (!oldCode.isNull() && !newCode.isNull() && oldCode == newCode) {
-                newValue = oldValue;
-                if (newValue->current->lastDataUpdateAt() < newItem->lastDataUpdateAt())
-                    newValue->current->refreshedDataAt(newItem->lastDataUpdateAt());
-            } else if (oldValue->current->lastDataUpdateAt() > newItem->lastDataUpdateAt()) {
-                newValue = oldValue;
-            } else {
-                DomItem oldValueObj = univ.copy(oldValue);
-                newValue = oldValue->makeCopy(oldValueObj);
-                newValue->current = newItem;
-                newValue->currentExposedAt = now;
-                if (newItem->isValid()) {
-                    newValue->valid = newItem;
-                    newValue->validExposedAt = now;
-                }
-                it = map.insert(it, canonicalPath, newValue);
-            }
-        } else {
-            newValue = std::make_shared<ExternalItemPair<T>>(
-                    (newItem->isValid() ? newItem : std::shared_ptr<T>()), newItem, now, now);
-            map.insert(canonicalPath, newValue);
-        }
-    }
-    return qMakePair(oldValue, newValue);
-}
-
 DomUniverse::LoadResult DomUniverse::load(const ContentWithDate &codeWithDate,
                                           const FileToLoad &file, DomType fType)
 {
@@ -336,36 +294,24 @@ DomUniverse::LoadResult DomUniverse::load(const ContentWithDate &codeWithDate,
 
     if (fType == DomType::QmlFile) {
         auto qmlFile = parseQmlFile(codeWithDate.content, file, codeWithDate.date);
-        auto change = updateEntry<QmlFile>(univ, qmlFile, m_qmlFileWithPath, mutex());
-        oldValue = univ.copy(change.first);
-        newValue = univ.copy(change.second);
+        return insertOrUpdateExternalItem(std::move(qmlFile));
     } else if (fType == DomType::QmltypesFile) {
         auto qmltypesFile = std::make_shared<QmltypesFile>(canonicalPath, codeWithDate.content,
                                                            codeWithDate.date);
         QmltypesReader reader(univ.copy(qmltypesFile));
         reader.parse();
-        auto change =
-                updateEntry<QmltypesFile>(univ, qmltypesFile, m_qmltypesFileWithPath, mutex());
-        oldValue = univ.copy(change.first);
-        newValue = univ.copy(change.second);
+        return insertOrUpdateExternalItem(std::move(qmltypesFile));
     } else if (fType == DomType::QmldirFile) {
         shared_ptr<QmldirFile> qmldirFile =
                 QmldirFile::fromPathAndCode(canonicalPath, codeWithDate.content);
-        auto change = updateEntry<QmldirFile>(univ, qmldirFile, m_qmldirFileWithPath, mutex());
-        oldValue = univ.copy(change.first);
-        newValue = univ.copy(change.second);
+        return insertOrUpdateExternalItem(std::move(qmldirFile));
     } else if (fType == DomType::QmlDirectory) {
         auto qmlDirectory = std::make_shared<QmlDirectory>(
                 canonicalPath, codeWithDate.content.split(QLatin1Char('\n')), codeWithDate.date);
-        auto change =
-                updateEntry<QmlDirectory>(univ, qmlDirectory, m_qmlDirectoryWithPath, mutex());
-        oldValue = univ.copy(change.first);
-        newValue = univ.copy(change.second);
+        return insertOrUpdateExternalItem(std::move(qmlDirectory));
     } else if (fType == DomType::JsFile) {
         auto jsFile = parseJsFile(codeWithDate.content, file, codeWithDate.date);
-        auto change = updateEntry<JsFile>(univ, jsFile, m_jsFileWithPath, mutex());
-        oldValue = univ.copy(change.first);
-        newValue = univ.copy(change.second);
+        return insertOrUpdateExternalItem(std::move(jsFile));
     } else {
         Q_ASSERT(false);
     }

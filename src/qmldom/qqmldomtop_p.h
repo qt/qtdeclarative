@@ -351,6 +351,91 @@ private:
                                        const QDateTime &lastModified);
     static bool valueHasSameContent(const ExternalItemPairBase *value, const QString &content);
 
+    // TODO better name / consider proper public get/set
+    template <typename T>
+    QMap<QString, std::shared_ptr<ExternalItemPair<T>>> &getMutableRefToMap()
+    {
+        Q_ASSERT(!mutex()->tryLock());
+        if constexpr (std::is_same_v<T, QmlDirectory>) {
+            return m_qmlDirectoryWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmldirFile>) {
+            return m_qmldirFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmlFile>) {
+            return m_qmlFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, JsFile>) {
+            return m_jsFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmltypesFile>) {
+            return m_qmltypesFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, GlobalScope>) {
+            return m_globalScopeWithName;
+        }
+        Q_UNREACHABLE();
+    }
+
+    // Inserts or updates an entry reflecting ExternalItem in the corresponding map
+    // Returns a pair of:
+    // - current ExternalItemPair, current value in the map (might be empty, or equal to curValue)
+    // - new current ExternalItemPair, value in the map after after the execution of this function
+    template <typename T>
+    QPair<std::shared_ptr<ExternalItemPair<T>>, std::shared_ptr<ExternalItemPair<T>>>
+    insertOrUpdateEntry(std::shared_ptr<T> newItem)
+    {
+        std::shared_ptr<ExternalItemPair<T>> curValue;
+        std::shared_ptr<ExternalItemPair<T>> newCurValue;
+        QString canonicalPath = newItem->canonicalFilePath();
+        QDateTime now = QDateTime::currentDateTimeUtc();
+        {
+            QMutexLocker l(mutex());
+            auto &map = getMutableRefToMap<T>();
+            auto it = map.find(canonicalPath);
+            if (it != map.cend() && (*it) && (*it)->current) {
+                curValue = *it;
+                if (valueHasSameContent(curValue.get(), newItem->code())) {
+                    // value in the map has same content as newItem, a.k.a. most recent
+                    newCurValue = curValue;
+                    if (newCurValue->current->lastDataUpdateAt() < newItem->lastDataUpdateAt()) {
+                        // update timestamp in the current, as if its content was refreshed by
+                        // NewItem
+                        newCurValue->current->refreshedDataAt(newItem->lastDataUpdateAt());
+                    }
+                } else if (curValue->current->lastDataUpdateAt() > newItem->lastDataUpdateAt()) {
+                    // value in the map is more recent than newItem, nothing to update
+                    newCurValue = curValue;
+                } else {
+                    // perform update with newItem
+                    curValue->current = std::move(newItem);
+                    curValue->currentExposedAt = now;
+                    if (curValue->current->isValid()) {
+                        curValue->valid = curValue->current;
+                        curValue->validExposedAt = now;
+                    }
+                    newCurValue = curValue;
+                }
+            } else {
+                // not found / invalid, just insert
+                newCurValue = std::make_shared<ExternalItemPair<T>>(
+                        (newItem->isValid() ? newItem : std::shared_ptr<T>()), newItem, now, now);
+                map.insert(canonicalPath, newCurValue);
+            }
+        }
+        return qMakePair(curValue, newCurValue);
+    }
+
+    // Inserts or updates an entry reflecting ExternalItem in the corresponding map
+    // returns LoadResult reflecting the change made to the map
+    template <typename T>
+    LoadResult insertOrUpdateExternalItem(std::shared_ptr<T> extItem)
+    {
+        auto change = insertOrUpdateEntry<T>(std::move(extItem));
+        DomItem univ(shared_from_this());
+        return { univ.copy(change.first), univ.copy(change.second) };
+    }
+
 private:
     QString m_name;
     QMap<QString, std::shared_ptr<ExternalItemPair<GlobalScope>>> m_globalScopeWithName;
