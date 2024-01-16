@@ -8457,6 +8457,7 @@ void tst_qqmllanguage::ambiguousComponents()
 {
     auto e1 = std::make_unique<QQmlEngine>();
     e1->addImportPath(dataDirectory());
+    bool isInstanceOf = false;
 
     {
         QQmlComponent c(e1.get());
@@ -8466,6 +8467,9 @@ void tst_qqmllanguage::ambiguousComponents()
         QScopedPointer<QObject> o(c.create());
         QTest::ignoreMessage(QtDebugMsg, "do");
         QMetaObject::invokeMethod(o.data(), "dodo");
+
+        QMetaObject::invokeMethod(o.data(), "testInstanceOf", Q_RETURN_ARG(bool, isInstanceOf));
+        QVERIFY(isInstanceOf);
     }
 
     QQmlEngine e2;
@@ -8478,11 +8482,19 @@ void tst_qqmllanguage::ambiguousComponents()
     QTest::ignoreMessage(QtDebugMsg, "do");
     QMetaObject::invokeMethod(o2.data(), "dodo");
 
+    isInstanceOf = false;
+    QMetaObject::invokeMethod(o2.data(), "testInstanceOf", Q_RETURN_ARG(bool, isInstanceOf));
+    QVERIFY(isInstanceOf);
+
     e1.reset();
 
     // We can still invoke the function. This means its CU belongs to e2.
     QTest::ignoreMessage(QtDebugMsg, "do");
     QMetaObject::invokeMethod(o2.data(), "dodo");
+
+    isInstanceOf = false;
+    QMetaObject::invokeMethod(o2.data(), "testInstanceOf", Q_RETURN_ARG(bool, isInstanceOf));
+    QVERIFY(isInstanceOf);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
