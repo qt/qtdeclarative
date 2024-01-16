@@ -3,7 +3,7 @@
 
 /*!
 \page qtqml-tooling-qmlls.html
-\title QML Language Server
+\title \QMLLS Reference
 \brief Overview of the QML Language Server (qmlls).
 \ingroup qtqml-tooling
 
@@ -31,7 +31,7 @@ more details.
 
 QML Language Server can automatically lint opened QML files
 and display warnings or errors straight in the editor. See
-\l{qmllint} for more information about the linting process.
+\l{qmllint Reference}{qmllint} for more information about the linting process.
 
 \section2 Formatting
 

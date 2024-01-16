@@ -3,7 +3,7 @@
 
 /*!
 \page qtqml-tooling-qmllint.html
-\title qmllint
+\title qmllint Reference
 \ingroup qtqml-tooling
 \brief A tool for verifying the syntax of QML files and warning about
 anti-patterns.
