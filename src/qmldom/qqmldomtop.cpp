@@ -1776,21 +1776,10 @@ std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(const DomItem &s
     return moduleIndexWithUriHelper(self, uri, majorVersion, options).module;
 }
 
-
-
 std::shared_ptr<ExternalItemInfo<QmlDirectory>>
-DomEnvironment::qmlDirectoryWithPath(const DomItem &self, const QString &path, EnvLookup options) const
+DomEnvironment::qmlDirectoryWithPath(const DomItem &, const QString &path, EnvLookup options) const
 {
-    if (options != EnvLookup::BaseOnly) {
-        QMutexLocker l(mutex());
-        const auto &map = getConstRefToMap<QmlDirectory>();
-        if (map.contains(path))
-            return map.value(path);
-    }
-    if (options != EnvLookup::NoBase && m_base) {
-        return m_base->qmlDirectoryWithPath(self, path, options);
-    }
-    return {};
+    return lookup<QmlDirectory>(path, options);
 }
 
 QSet<QString> DomEnvironment::qmlDirectoryPaths(const DomItem &, EnvLookup options) const
@@ -1804,18 +1793,9 @@ QSet<QString> DomEnvironment::qmlDirectoryPaths(const DomItem &, EnvLookup optio
 }
 
 std::shared_ptr<ExternalItemInfo<QmldirFile>>
-DomEnvironment::qmldirFileWithPath(const DomItem &self, const QString &path, EnvLookup options) const
+DomEnvironment::qmldirFileWithPath(const DomItem &, const QString &path, EnvLookup options) const
 {
-    if (options != EnvLookup::BaseOnly) {
-        QMutexLocker l(mutex());
-        const auto &map = getConstRefToMap<QmldirFile>();
-        auto it = map.find(path);
-        if (it != map.end())
-            return *it;
-    }
-    if (options != EnvLookup::NoBase && m_base)
-        return m_base->qmldirFileWithPath(self, path, options);
-    return {};
+    return lookup<QmldirFile>(path, options);
 }
 
 QSet<QString> DomEnvironment::qmldirFilePaths(const DomItem &, EnvLookup lOptions) const
@@ -1854,18 +1834,9 @@ QSet<QString> DomEnvironment::qmlDirPaths(const DomItem &self, EnvLookup options
 }
 
 std::shared_ptr<ExternalItemInfo<QmlFile>>
-DomEnvironment::qmlFileWithPath(const DomItem &self, const QString &path, EnvLookup options) const
+DomEnvironment::qmlFileWithPath(const DomItem &, const QString &path, EnvLookup options) const
 {
-    if (options != EnvLookup::BaseOnly) {
-        QMutexLocker l(mutex());
-        const auto &map = getConstRefToMap<QmlFile>();
-        auto it = map.find(path);
-        if (it != map.end())
-            return *it;
-    }
-    if (options != EnvLookup::NoBase && m_base)
-        return m_base->qmlFileWithPath(self, path, options);
-    return {};
+    return lookup<QmlFile>(path, options);
 }
 
 QSet<QString> DomEnvironment::qmlFilePaths(const DomItem &, EnvLookup lookup) const
@@ -1879,17 +1850,9 @@ QSet<QString> DomEnvironment::qmlFilePaths(const DomItem &, EnvLookup lookup) co
 }
 
 std::shared_ptr<ExternalItemInfo<JsFile>>
-DomEnvironment::jsFileWithPath(const DomItem &self, const QString &path, EnvLookup options) const
+DomEnvironment::jsFileWithPath(const DomItem &, const QString &path, EnvLookup options) const
 {
-    if (options != EnvLookup::BaseOnly) {
-        QMutexLocker l(mutex());
-        const auto &map = getConstRefToMap<JsFile>();
-        if (map.contains(path))
-            return map.value(path);
-    }
-    if (options != EnvLookup::NoBase && m_base)
-        return m_base->jsFileWithPath(self, path, EnvLookup::Normal);
-    return {};
+    return lookup<JsFile>(path, options);
 }
 
 QSet<QString> DomEnvironment::jsFilePaths(const DomItem &, EnvLookup lookup) const
@@ -1903,17 +1866,9 @@ QSet<QString> DomEnvironment::jsFilePaths(const DomItem &, EnvLookup lookup) con
 }
 
 std::shared_ptr<ExternalItemInfo<QmltypesFile>>
-DomEnvironment::qmltypesFileWithPath(const DomItem &self, const QString &path, EnvLookup options) const
+DomEnvironment::qmltypesFileWithPath(const DomItem &, const QString &path, EnvLookup options) const
 {
-    if (options != EnvLookup::BaseOnly) {
-        QMutexLocker l(mutex());
-        const auto &map = getConstRefToMap<QmltypesFile>();
-        if (map.contains(path))
-            return map.value(path);
-    }
-    if (options != EnvLookup::NoBase && m_base)
-        return m_base->qmltypesFileWithPath(self, path, EnvLookup::Normal);
-    return {};
+    return lookup<QmltypesFile>(path, options);
 }
 
 QSet<QString> DomEnvironment::qmltypesFilePaths(const DomItem &, EnvLookup lookup) const
@@ -1927,18 +1882,10 @@ QSet<QString> DomEnvironment::qmltypesFilePaths(const DomItem &, EnvLookup looku
 }
 
 std::shared_ptr<ExternalItemInfo<GlobalScope>>
-DomEnvironment::globalScopeWithName(const DomItem &self, const QString &name, EnvLookup lookupOptions) const
+DomEnvironment::globalScopeWithName(const DomItem &, const QString &name,
+                                    EnvLookup lookupOptions) const
 {
-    if (lookupOptions != EnvLookup::BaseOnly) {
-        QMutexLocker l(mutex());
-        const auto &map = getConstRefToMap<GlobalScope>();
-        auto id = map.find(name);
-        if (id != map.end())
-            return *id;
-    }
-    if (lookupOptions != EnvLookup::NoBase && m_base)
-        return m_base->globalScopeWithName(self, name, lookupOptions);
-    return {};
+    return lookup<GlobalScope>(name, lookupOptions);
 }
 
 std::shared_ptr<ExternalItemInfo<GlobalScope>>

@@ -877,6 +877,21 @@ private:
         Q_UNREACHABLE();
     }
 
+    template <typename T>
+    std::shared_ptr<ExternalItemInfo<T>> lookup(const QString &path, EnvLookup options) const
+    {
+        if (options != EnvLookup::BaseOnly) {
+            QMutexLocker l(mutex());
+            const auto &map = getConstRefToMap<T>();
+            const auto &it = map.find(path);
+            if (it != map.end())
+                return *it;
+        }
+        if (options != EnvLookup::NoBase && m_base)
+            return m_base->lookup<T>(path, options);
+        return {};
+    }
+
     Callback callbackForQmlDirectory(const DomItem &self, Callback loadCallback,
                                      Callback directDepsCallback, Callback endCallback);
     Callback callbackForQmlFile(const DomItem &self, Callback loadCallback, Callback directDepsCallback,
