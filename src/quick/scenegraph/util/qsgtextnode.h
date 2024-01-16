@@ -58,6 +58,8 @@ public:
     virtual void setSmooth(bool smooth) = 0;
     virtual bool smooth() const = 0;
 
+    virtual void clear() = 0;
+
     virtual void setViewport(const QRectF &viewport) = 0;
     virtual QRectF viewport() const = 0;
 
