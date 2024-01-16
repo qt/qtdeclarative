@@ -4,7 +4,7 @@
 /*!
     \example scenegraph/rhitextureitem
     \title Scene Graph - RHI Texture Item
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
     \ingroup qtquickexamples
 
     \brief Shows how to implement a custom QQuickItem that displays a QRhi-rendered texture.

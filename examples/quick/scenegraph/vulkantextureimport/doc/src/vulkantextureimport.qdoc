@@ -4,7 +4,7 @@
 /*!
     \example scenegraph/vulkantextureimport
     \title Scene Graph - Vulkan Texture Import
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
     \ingroup qtquickexamples
     \brief Shows how to use a texture created directly with Vulkan.
 
