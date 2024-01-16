@@ -835,20 +835,16 @@ void QQuickLayout::invalidate(QQuickItem * /*childItem*/)
     d->m_dirtyArrangement = true;
 
     if (!qobject_cast<QQuickLayout *>(parentItem())) {
+        polish();
 
-        if (m_inUpdatePolish)
-            ++m_polishInsideUpdatePolish;
-        else
-            m_polishInsideUpdatePolish = 0;
-
-        if (m_polishInsideUpdatePolish <= 2) {
-            // allow at most two consecutive loops in order to respond to height-for-width
-            // (e.g QQuickText changes implicitHeight when its width gets changed)
-            qCDebug(lcQuickLayouts) << "QQuickLayout::invalidate(), polish()";
-            polish();
+        if (m_inUpdatePolish) {
+            if (++m_polishInsideUpdatePolish > 2)
+                // allow at most two consecutive loops in order to respond to height-for-width
+                // (e.g QQuickText changes implicitHeight when its width gets changed)
+                qCDebug(lcQuickLayouts) << "Layout polish loop detected for " << this
+                            << ". The polish request will still be scheduled.";
         } else {
-            qmlWarning(this).nospace() << "Layout polish loop detected for " << this
-                << ". Aborting after two iterations.";
+            m_polishInsideUpdatePolish = 0;
         }
     }
 }
@@ -927,7 +923,7 @@ void QQuickLayout::geometryChange(const QRectF &newGeometry, const QRectF &oldGe
 {
     Q_D(QQuickLayout);
     QQuickItem::geometryChange(newGeometry, oldGeometry);
-    if (d->m_disableRearrange || !isReady())
+    if (invalidated() || d->m_disableRearrange || !isReady())
         return;
 
     qCDebug(lcQuickLayouts) << "QQuickLayout::geometryChange" << newGeometry << oldGeometry;
