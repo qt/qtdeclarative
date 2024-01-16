@@ -852,6 +852,31 @@ private:
     QSet<QString> getStrings(function_ref<QSet<QString>()> getBase, const QMap<QString, T> &selfMap,
                              EnvLookup lookup) const;
 
+    template <typename T>
+    const QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> &getConstRefToMap() const
+    {
+        Q_ASSERT(!mutex()->tryLock());
+        if constexpr (std::is_same_v<T, GlobalScope>) {
+            return m_globalScopeWithName;
+        }
+        if constexpr (std::is_same_v<T, QmlDirectory>) {
+            return m_qmlDirectoryWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmldirFile>) {
+            return m_qmldirFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmlFile>) {
+            return m_qmlFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, JsFile>) {
+            return m_jsFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmltypesFile>) {
+            return m_qmltypesFileWithPath;
+        }
+        Q_UNREACHABLE();
+    }
+
     Callback callbackForQmlDirectory(const DomItem &self, Callback loadCallback,
                                      Callback directDepsCallback, Callback endCallback);
     Callback callbackForQmlFile(const DomItem &self, Callback loadCallback, Callback directDepsCallback,

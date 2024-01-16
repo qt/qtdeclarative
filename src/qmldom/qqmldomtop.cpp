@@ -1783,8 +1783,9 @@ DomEnvironment::qmlDirectoryWithPath(const DomItem &self, const QString &path, E
 {
     if (options != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
-        if (m_qmlDirectoryWithPath.contains(path))
-            return m_qmlDirectoryWithPath.value(path);
+        const auto &map = getConstRefToMap<QmlDirectory>();
+        if (map.contains(path))
+            return map.value(path);
     }
     if (options != EnvLookup::NoBase && m_base) {
         return m_base->qmlDirectoryWithPath(self, path, options);
@@ -1807,8 +1808,9 @@ DomEnvironment::qmldirFileWithPath(const DomItem &self, const QString &path, Env
 {
     if (options != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
-        auto it = m_qmldirFileWithPath.find(path);
-        if (it != m_qmldirFileWithPath.end())
+        const auto &map = getConstRefToMap<QmldirFile>();
+        auto it = map.find(path);
+        if (it != map.end())
             return *it;
     }
     if (options != EnvLookup::NoBase && m_base)
@@ -1856,8 +1858,9 @@ DomEnvironment::qmlFileWithPath(const DomItem &self, const QString &path, EnvLoo
 {
     if (options != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
-        auto it = m_qmlFileWithPath.find(path);
-        if (it != m_qmlFileWithPath.end())
+        const auto &map = getConstRefToMap<QmlFile>();
+        auto it = map.find(path);
+        if (it != map.end())
             return *it;
     }
     if (options != EnvLookup::NoBase && m_base)
@@ -1880,8 +1883,9 @@ DomEnvironment::jsFileWithPath(const DomItem &self, const QString &path, EnvLook
 {
     if (options != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
-        if (m_jsFileWithPath.contains(path))
-            return m_jsFileWithPath.value(path);
+        const auto &map = getConstRefToMap<JsFile>();
+        if (map.contains(path))
+            return map.value(path);
     }
     if (options != EnvLookup::NoBase && m_base)
         return m_base->jsFileWithPath(self, path, EnvLookup::Normal);
@@ -1903,8 +1907,9 @@ DomEnvironment::qmltypesFileWithPath(const DomItem &self, const QString &path, E
 {
     if (options != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
-        if (m_qmltypesFileWithPath.contains(path))
-            return m_qmltypesFileWithPath.value(path);
+        const auto &map = getConstRefToMap<QmltypesFile>();
+        if (map.contains(path))
+            return map.value(path);
     }
     if (options != EnvLookup::NoBase && m_base)
         return m_base->qmltypesFileWithPath(self, path, EnvLookup::Normal);
@@ -1926,8 +1931,9 @@ DomEnvironment::globalScopeWithName(const DomItem &self, const QString &name, En
 {
     if (lookupOptions != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
-        auto id = m_globalScopeWithName.find(name);
-        if (id != m_globalScopeWithName.end())
+        const auto &map = getConstRefToMap<GlobalScope>();
+        auto id = map.find(name);
+        if (id != map.end())
             return *id;
     }
     if (lookupOptions != EnvLookup::NoBase && m_base)
