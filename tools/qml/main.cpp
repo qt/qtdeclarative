@@ -80,9 +80,11 @@ static bool verboseMode = false;
 static bool quietMode = false;
 static bool glShareContexts = true;
 static bool disableShaderCache = true;
+#if defined(QT_GUI_LIB)
 static bool requestAlphaChannel = false;
 static bool requestMSAA = false;
 static bool requestCoreProfile = false;
+#endif
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
 {
