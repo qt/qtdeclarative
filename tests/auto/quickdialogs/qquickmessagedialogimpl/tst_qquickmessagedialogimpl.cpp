@@ -277,6 +277,10 @@ void tst_QQuickMessageDialogImpl::emitCorrectAcceptedAndRejectedSignals()
     QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
     QVERIFY(dialogHelper.waitForWindowActive());
     QVERIFY(dialogHelper.openDialog());
+
+    if (QQuickTest::qIsPolishScheduled(dialogHelper.window()))
+       QVERIFY(QQuickTest::qWaitForPolish(dialogHelper.window()));
+
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
 
     auto *buttonBox = dialogHelper.quickDialog->findChild<QQuickDialogButtonBox *>("buttonBox");

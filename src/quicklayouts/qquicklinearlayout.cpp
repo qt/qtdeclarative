@@ -361,26 +361,24 @@ void QQuickGridLayoutBase::invalidate(QQuickItem *childItem)
     if (!isReady())
         return;
     qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::invalidate()" << this << ", invalidated:" << invalidated();
-    if (invalidated()) {
-        return;
-    }
-    qCDebug(lcQuickLayouts) << "d->m_rearranging:" << d->m_rearranging;
-    if (d->m_rearranging) {
-        d->m_invalidateAfterRearrange << childItem;
-        return;
+    if (childItem) {
+        if (d->m_rearranging) {
+            if (!d->m_invalidateAfterRearrange.contains(childItem))
+                d->m_invalidateAfterRearrange << childItem;
+            return;
+        }
+        if (QQuickGridLayoutItem *layoutItem = d->engine.findLayoutItem(childItem)) {
+            layoutItem->invalidate();
+        }
     }
 
-    if (childItem) {
-        if (QQuickGridLayoutItem *layoutItem = d->engine.findLayoutItem(childItem))
-            layoutItem->invalidate();
-    }
     // invalidate engine
     d->engine.invalidate();
 
     qCDebug(lcQuickLayouts) << "calling QQuickLayout::invalidate();";
     QQuickLayout::invalidate();
 
-    if (QQuickLayout *parentLayout = qobject_cast<QQuickLayout *>(parentItem()))
+    if (auto *parentLayout = qobject_cast<QQuickLayout *>(parentItem()))
         parentLayout->invalidate(this);
     qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::invalidate() LEAVING" << this;
 }
@@ -479,8 +477,8 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
     d->engine.setGeometries(QRectF(QPointF(0,0), size), d->styleInfo);
     d->m_rearranging = false;
 
-    for (QQuickItem *invalid : std::as_const(d->m_invalidateAfterRearrange))
-        invalidate(invalid);
+    for (auto childItem : std::as_const(d->m_invalidateAfterRearrange))
+        invalidate(childItem);
     d->m_invalidateAfterRearrange.clear();
 }
 
