@@ -284,12 +284,10 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             return;
 
         if (m_dragHandler->active()) {
-            // Start a new selection, unless Shift is being pressed. Shift
-            // means that we should extend the existing selection instead.
-            if (modifiers & Qt::ShiftModifier) {
-                if (!m_active)
-                    return;
-            } else {
+            // Start a new selection if no selection exists from before.
+            // Note that if the user pressed ControlModifier while starting
+            // the drag, the first cell will be selected already on press.
+            if (!m_active) {
                 if (!m_selectable->startSelection(startPos))
                     return;
                 m_selectable->setSelectionStartPos(startPos);
