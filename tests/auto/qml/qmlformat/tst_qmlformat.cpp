@@ -362,6 +362,9 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("escapeChars")
             << "escapeChars.qml"
             << "escapeChars.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("javascriptBlock")
+            << "javascriptBlock.qml"
+            << "javascriptBlock.formatted.qml" << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()

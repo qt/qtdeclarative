@@ -567,10 +567,12 @@ protected:
     bool visit(Block *ast) override
     {
         out(ast->lbraceToken);
-        ++expressionDepth;
-        lnAcceptIndented(ast->statements);
-        newLine();
-        --expressionDepth;
+        if (ast->statements) {
+            ++expressionDepth;
+            lnAcceptIndented(ast->statements);
+            newLine();
+            --expressionDepth;
+        }
         out(ast->rbraceToken);
         return false;
     }
