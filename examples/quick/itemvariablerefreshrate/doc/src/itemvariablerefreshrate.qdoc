@@ -7,7 +7,7 @@
     \brief A Qt Quick example shows how to setup variable refresh rate for
     specific parts of the UI.
     \ingroup qtquickexamples
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
 
     This example demonstrates using the live property of a \l{Item Layers} to get a
     variable and independent refresh rate for Quick items. This can provide a significant

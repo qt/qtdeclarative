@@ -6,7 +6,7 @@
     \image qml-weatherforecast-example.png
     \brief A Qt Quick Shapes example demonstrating different ways to uses shapes in an application.
     \ingroup qtquickexamples
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
 
     This example is designed to look like a weather forecast app for Europe. It demonstrates
     a few different ways the \l{Qt Quick Shapes} API might be useful in an application, and how
