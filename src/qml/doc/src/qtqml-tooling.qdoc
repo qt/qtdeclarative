@@ -16,9 +16,9 @@ A set of tools provided by the Qt Qml module that aim to facilitate a QML develo
 during various phases of development. These tools are:
 
 \list
-    \li \l {qmllint}
+    \li \l {qmllint Reference}{qmllint}
     \li \l {qmlformat}
-    \li \l {QML Language Server}{qmlls}
+    \li \l {\QMLLS Reference}{qmlls}
     \li \l {qmlprofiler}
 \endlist
 

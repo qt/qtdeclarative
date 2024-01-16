@@ -75,7 +75,7 @@ tests are setup, UI tests are a lot easier to run.
 
 \section1 qmllint
 
-\l{qmllint} is a tool shipped with Qt, that verifies
+\l{qmllint Reference}{qmllint} is a tool shipped with Qt, that verifies
 the syntatic validity of QML files. It also warns about some QML anti-patterns.
 If you want to disable a specific warning type, you can find the appropriate
 flag for doing so by passing \c{--help} on the command line.
@@ -110,7 +110,7 @@ The Qt Quick Compiler consist of two components:
 
 \section1 QML Language Server
 
-\l{QML Language Server} is a tool shipped with Qt that helps you edit
+\l{\QMLLS Reference}{\QMLLS} is a tool shipped with Qt that helps you edit
 QML code in your favorite (LSP-compatible) editor.
 
 \section1 SVG to QML converter [tech preview]

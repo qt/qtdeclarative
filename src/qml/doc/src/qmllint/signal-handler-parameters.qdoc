@@ -42,7 +42,8 @@ hidden dependencies.
 
 In both cases, QML tooling is not able to find the QML counterpart of the
 C++ type: the \l{Qt Quick Compiler}{compiler} can't compile this signal handler to
-C++ and \l{qmllint} as well as \l{QML Language Server} can't analyze this handler.
+C++ and \l{qmllint Reference}{qmllint} as well as \l{\QMLLS Reference}{\QMLLS}
+can't analyze this handler.
 
 \section2 Example
 

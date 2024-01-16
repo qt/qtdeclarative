@@ -145,7 +145,7 @@ Item {
 }
 \endqml
 
-The solution here is to avoid the unqualified access. \l{qmllint} can be used to
+The solution here is to avoid the unqualified access. \l{qmllint Reference}{qmllint} can be used to
 find such problems. The following example accesses the property you actually mean
 in a safe, qualified way:
 

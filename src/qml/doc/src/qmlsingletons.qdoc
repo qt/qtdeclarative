@@ -244,7 +244,7 @@ to the engine. That can be globally shared settings, like the spacing between
 elements, or data models which need to be displayed in multiple places.
 Compared to context properties which can solve a similar use case,
 they have the benefit of being typed, being supported by tooling like the
-\l{QML Language Server}, and they are also generally faster at runtime.
+\l{\QMLLS Reference}{\QMLLS}, and they are also generally faster at runtime.
 
 It is recommended not to register too many singletons in a module: Singletons,
 once created, stay alive until the engine itself gets destroyed

@@ -226,7 +226,7 @@ properties called \c{rect}.
 
 Explicitly casting to the desired type helps tooling. It can allow the
 \l{Qt Quick Compiler} generate efficient code where it otherwise would not be
-able to. You can use \l{qmllint} to find such occurrences.
+able to. You can use \l{qmllint Reference}{qmllint} to find such occurrences.
 
 There is also a \c{Inaddressable} value you can use to explicitly specify the
 default behavior.
