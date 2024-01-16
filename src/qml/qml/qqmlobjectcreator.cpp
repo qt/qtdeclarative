@@ -41,14 +41,14 @@ QT_USE_NAMESPACE
 Q_TRACE_PREFIX(qtqml,
 "namespace QV4 {" \
 "struct ExecutionEngine;" \
+"struct ExecutableCompilationUnit;" \
 "namespace CompiledData {" \
-"struct CompilationUnit;" \
 "struct Object;" \
 "}}" \
 "class QQmlEngine;"
 )
 
-Q_TRACE_POINT(qtqml, QQmlObjectCreator_createInstance_entry, const QV4::CompiledData::CompilationUnit *compilationUnit, const QV4::CompiledData::Object *object, const QUrl &url)
+Q_TRACE_POINT(qtqml, QQmlObjectCreator_createInstance_entry, const QV4::ExecutableCompilationUnit *compilationUnit, const QV4::CompiledData::Object *object, const QUrl &url)
 Q_TRACE_POINT(qtqml, QQmlObjectCreator_createInstance_exit, const QString &typeName)
 
 QQmlObjectCreator::QQmlObjectCreator(
