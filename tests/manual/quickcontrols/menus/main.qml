@@ -65,6 +65,7 @@ ApplicationWindow {
                + "Right click on the TextArea to access its edit context menu.\n\n"
                + "Things to check:\n\n"
                + "- Do the menu items trigger their actions (check console for output)?\n"
+               + "- Do checkable menu items work?\n"
                + "- Do the Edit menu items (in the MenuBar menu and edit context menu)"
                + " work as expected with the TextArea?\n"
                + "  - Are they enabled/disabled as expected?\n"
@@ -138,7 +139,9 @@ ApplicationWindow {
     }
 
     component ContextAction: Action {
-        onTriggered: print("triggered", text)
+        id: action
+        onCheckedChanged: print("checked of \"" + text + "\" changed to " + action.checked)
+        onTriggered: print("triggered \"" + text + "\"")
     }
 
     Menu {
@@ -159,13 +162,16 @@ ApplicationWindow {
         }
 
         ContextAction {
-            text: qsTr("Context menu item 1")
+            text: qsTr("Context menu item")
         }
         ContextAction {
-            text: qsTr("Context menu item 2")
+            text: qsTr("Checkable context menu item")
+            checkable: true
         }
         ContextAction {
-            text: qsTr("Context menu item 3")
+            text: qsTr("Checked context menu item")
+            checkable: true
+            checked: true
         }
 
         // TODO: separator
@@ -184,13 +190,16 @@ ApplicationWindow {
             }
 
             ContextAction {
-                text: qsTr("Sub-menu item 1")
+                text: qsTr("Sub-menu item")
             }
             ContextAction {
-                text: qsTr("Sub-menu item 2")
+                text: qsTr("Checkable sub-menu item")
+                checkable: true
             }
             ContextAction {
-                text: qsTr("Sub-menu item 3")
+                text: qsTr("Checked sub-menu item")
+                checkable: true
+                checked: true
             }
         }
     }
