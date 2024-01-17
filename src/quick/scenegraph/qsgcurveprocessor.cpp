@@ -1486,6 +1486,7 @@ void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
     QPainterPath internalHull;
     internalHull.setFillRule(fillRule);
 
+    QMultiHash<QPair<float, float>, int> pointHash;
     QHash<QPair<float, float>, int> linePointHash;
     QHash<QPair<float, float>, int> concaveControlPointHash;
     QHash<QPair<float, float>, int> convexPointHash;
@@ -1588,16 +1589,19 @@ void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
             if (element.isLine()) {
                 internalHull.lineTo(ep);
                 linePointHash.insert(toRoundedPair(sp), index);
+                pointHash.insert(toRoundedPair(sp), index);
             } else {
                 if (element.isConvex()) {
                     internalHull.lineTo(ep);
                     addTriangleForConvex(element, toRoundedVec2D(sp), toRoundedVec2D(ep), toRoundedVec2D(cp));
                     convexPointHash.insert(toRoundedPair(sp), index);
+                    pointHash.insert(toRoundedPair(sp), index);
                 } else {
                     internalHull.lineTo(cp);
                     internalHull.lineTo(ep);
                     addTriangleForConcave(element, toRoundedVec2D(sp), toRoundedVec2D(ep), toRoundedVec2D(cp));
                     concaveControlPointHash.insert(toRoundedPair(cp), index);
+                    pointHash.insert(toRoundedPair(cp), index);
                 }
             }
         });
@@ -1633,70 +1637,85 @@ void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
         return safeSideOf1 && safeSideOf2;
     };
 
+    // Returns false if the triangle belongs to multiple elements and need to be split.
+    // Otherwise adds the triangle, optionally splitting it to avoid "unsafe space"
     auto handleTriangle = [&](const QVector2D (&p)[3]) -> bool {
-        int lineElementIndex = -1;
-        int concaveElementIndex = -1;
-        int convexElementIndex = -1;
+        bool isLine = false;
+        bool isConcave = false;
+        bool isConvex = false;
+        int elementIndex = -1;
 
         bool foundElement = false;
         int si = -1;
         int ei = -1;
+
         for (int i = 0; i < 3; ++i) {
-            if (auto found = linePointHash.constFind(makeHashable(p[i])); found != linePointHash.constEnd()) {
-                // check if this triangle is on a line, i.e. if one point is the sp and another is the ep of the same path element
-                const auto &element = fillPath.elementAt(*found);
-                for (int j = 0; j < 3; ++j) {
-                    if (i != j && roundVec2D(element.endPoint()) == p[j]) {
-                        if (foundElement)
-                            return false; // More than one edge on path: must split
-                        lineElementIndex = *found;
-                        si = i;
-                        ei = j;
-                        foundElement = true;
-                    }
-                }
-            } else if (auto found = concaveControlPointHash.constFind(makeHashable(p[i])); found != concaveControlPointHash.constEnd()) {
-                // check if this triangle is on the tangent line of a concave curve,
-                // i.e if one point is the cp, and the other is sp or ep
-                // TODO: clean up duplicated code (almost the same as the lineElement path above)
-                const auto &element = fillPath.elementAt(*found);
-                for (int j = 0; j < 3; ++j) {
-                    if (i == j)
-                        continue;
-                    if (roundVec2D(element.startPoint()) == p[j] || roundVec2D(element.endPoint()) == p[j]) {
-                        if (foundElement)
-                            return false; // More than one edge on path: must split
-                        concaveElementIndex = *found;
-                        // The tangent line is p[i] - p[j]
-                        si = i;
-                        ei = j;
-                        foundElement = true;
-                    }
-                }
-            } else if (auto found = convexPointHash.constFind(makeHashable(p[i])); found != convexPointHash.constEnd()) {
-                // check if this triangle is on a curve, i.e. if one point is the sp and another is the ep of the same path element
-                const auto &element = fillPath.elementAt(*found);
-                for (int j = 0; j < 3; ++j) {
-                    if (i != j && roundVec2D(element.endPoint()) == p[j]) {
-                        if (foundElement)
-                            return false; // More than one edge on path: must split
-                        convexElementIndex = *found;
-                        si = i;
-                        ei = j;
-                        foundElement = true;
+            auto pointFoundRange = std::as_const(pointHash).equal_range(makeHashable(p[i]));
+
+            if (pointFoundRange.first == pointHash.constEnd())
+                continue;
+
+            // This point is on some element, now find the element
+            int testIndex = *pointFoundRange.first;
+            bool ambiguous = std::next(pointFoundRange.first) != pointFoundRange.second;
+            if (ambiguous) {
+                // The triangle should be on the inside of exactly one of the elements
+                // We're doing the test for each of the points, which maybe duplicates some effort,
+                // but optimize for simplicity for now.
+                for (auto it = pointFoundRange.first; it != pointFoundRange.second; ++it) {
+                    auto &el = fillPath.elementAt(*it);
+                    bool fillOnLeft = !el.isFillOnRight();
+                    auto sp = roundVec2D(el.startPoint());
+                    auto ep = roundVec2D(el.endPoint());
+                    // Check if the triangle is on the inside of el; i.e. each point is either sp, ep, or on the inside.
+                    auto pointInside = [&](const QVector2D &p) {
+                        return p == sp || p == ep
+                                || QQuadPath::isPointOnLeft(p, el.startPoint(), el.endPoint()) == fillOnLeft;
+                    };
+                    if (pointInside(p[0]) && pointInside(p[1]) && pointInside(p[2])) {
+                        testIndex = *it;
+                        break;
                     }
                 }
             }
+
+            const auto &element = fillPath.elementAt(testIndex);
+            // Now we check if p[i] -> p[j] is on the element for some j
+            // For a line, the relevant line is sp-ep
+            // For concave it's cp-sp/ep
+            // For convex it's sp-ep again
+            bool onElement = false;
+            for (int j = 0; j < 3; ++j) {
+                if (i == j)
+                    continue;
+                if (element.isConvex() || element.isLine())
+                    onElement = roundVec2D(element.endPoint()) == p[j];
+                else // concave
+                    onElement = roundVec2D(element.startPoint()) == p[j] || roundVec2D(element.endPoint()) == p[j];
+                if (onElement) {
+                    if (foundElement)
+                        return false; // Triangle already on some other element: must split
+                    si = i;
+                    ei = j;
+                    foundElement = true;
+                    elementIndex = testIndex;
+                    isConvex = element.isConvex();
+                    isLine = element.isLine();
+                    isConcave = !isLine && !isConvex;
+                    break;
+                }
+            }
         }
-        if (lineElementIndex != -1) {
+
+        if (isLine) {
             int ci = (6 - si - ei) % 3; // 1+2+3 is 6, so missing number is 6-n1-n2
-            addTriangleForLine(fillPath.elementAt(lineElementIndex), p[si], p[ei], p[ci]);
-        } else if (concaveElementIndex != -1) {
-            addCurveTriangle(fillPath.elementAt(concaveElementIndex), p[0], p[1], p[2]);
-        } else if (convexElementIndex != -1) {
+            addTriangleForLine(fillPath.elementAt(elementIndex), p[si], p[ei], p[ci]);
+        } else if (isConcave) {
+            addCurveTriangle(fillPath.elementAt(elementIndex), p[0], p[1], p[2]);
+        } else if (isConvex) {
             int oi = (6 - si - ei) % 3;
             const auto &otherPoint = p[oi];
-            const auto &element = fillPath.elementAt(convexElementIndex);
+            const auto &element = fillPath.elementAt(elementIndex);
             // We have to test whether the triangle can cross the line
             // TODO: use the toplevel element's safe space
             bool safeSpace = pointInSafeSpace(otherPoint, element);

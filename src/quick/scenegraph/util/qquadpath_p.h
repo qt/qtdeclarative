@@ -149,6 +149,8 @@ public:
                 m_curvatureFlags = Element::CurvatureFlags(m_curvatureFlags & ~Element::FillOnRight);
         }
 
+        bool isFillOnRight() const { return m_curvatureFlags & FillOnRight; }
+
         bool isControlPointOnLeft() const
         {
             return isPointOnLeft(cp, sp, ep);
