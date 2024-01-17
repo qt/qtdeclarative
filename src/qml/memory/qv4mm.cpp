@@ -883,6 +883,9 @@ GCState doSweep(GCStateMachine *that, ExtraData &)
     mm->gcBlocked = MemoryManager::Unblocked;
     mm->m_markStack.reset();
     mm->engine->isGCOngoing = false;
+
+    mm->updateUnmanagedHeapSizeGCLimit();
+
     return Invalid;
 }
 
@@ -1134,7 +1137,8 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
     icAllocator.resetBlackBits();
 
     usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep + icAllocator.usedSlotsAfterLastSweep;
-    gcBlocked = false;
+    updateUnmanagedHeapSizeGCLimit();
+    gcBlocked = MemoryManager::Unblocked;
 }
 
 /*
@@ -1328,14 +1332,6 @@ void MemoryManager::runGC()
 
     if (gcStats)
         statistics.maxUsedMem = qMax(statistics.maxUsedMem, getUsedMem() + getLargeItemsMem());
-
-    if (aggressiveGC) {
-        // ensure we don't 'loose' any memory
-        Q_ASSERT(blockAllocator.allocatedMem()
-                 == blockAllocator.usedMem() + dumpBins(&blockAllocator, nullptr));
-        Q_ASSERT(icAllocator.allocatedMem()
-                 == icAllocator.usedMem() + dumpBins(&icAllocator, nullptr));
-    }
 }
 
 size_t MemoryManager::getUsedMem() const
@@ -1351,6 +1347,29 @@ size_t MemoryManager::getAllocatedMem() const
 size_t MemoryManager::getLargeItemsMem() const
 {
     return hugeItemAllocator.usedMem();
+}
+
+void MemoryManager::updateUnmanagedHeapSizeGCLimit()
+{
+    if (3*unmanagedHeapSizeGCLimit <= 4 * unmanagedHeapSize) {
+        // more than 75% full, raise limit
+        unmanagedHeapSizeGCLimit = std::max(unmanagedHeapSizeGCLimit,
+                                            unmanagedHeapSize) * 2;
+    } else if (unmanagedHeapSize * 4 <= unmanagedHeapSizeGCLimit) {
+        // less than 25% full, lower limit
+        unmanagedHeapSizeGCLimit = qMax(std::size_t(MinUnmanagedHeapSizeGCLimit),
+                                        unmanagedHeapSizeGCLimit/2);
+    }
+
+    if (aggressiveGC && !engine->inShutdown) {
+        // ensure we don't 'loose' any memory
+        // but not during shutdown, because than we skip parts of sweep
+        // and use freeAll instead
+        Q_ASSERT(blockAllocator.allocatedMem()
+                 == blockAllocator.usedMem() + dumpBins(&blockAllocator, nullptr));
+        Q_ASSERT(icAllocator.allocatedMem()
+                 == icAllocator.usedMem() + dumpBins(&icAllocator, nullptr));
+    }
 }
 
 void MemoryManager::registerWeakMap(Heap::MapObject *map)

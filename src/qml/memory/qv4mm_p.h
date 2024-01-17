@@ -325,6 +325,9 @@ public:
     // and InternalClassDataPrivate<PropertyAttributes>.
     void changeUnmanagedHeapSizeUsage(qptrdiff delta) { unmanagedHeapSize += delta; }
 
+    // called at the end of a gc cycle
+    void updateUnmanagedHeapSizeGCLimit();
+
     template<typename ManagedType>
     typename ManagedType::Data *allocIC()
     {
@@ -380,16 +383,6 @@ private:
         if (isAboveUnmanagedHeapLimit()) {
             if (!didGCRun)
                 incrementalGCIsAlreadyRunning ? (void) tryForceGCCompletion() : runGC();
-
-            if (3*unmanagedHeapSizeGCLimit <= 4 * unmanagedHeapSize) {
-                // more than 75% full, raise limit
-                unmanagedHeapSizeGCLimit = std::max(unmanagedHeapSizeGCLimit,
-                                                    unmanagedHeapSize) * 2;
-            } else if (unmanagedHeapSize * 4 <= unmanagedHeapSizeGCLimit) {
-                // less than 25% full, lower limit
-                unmanagedHeapSizeGCLimit = qMax(std::size_t(MinUnmanagedHeapSizeGCLimit),
-                                                unmanagedHeapSizeGCLimit/2);
-            }
             didGCRun = true;
         }
 
