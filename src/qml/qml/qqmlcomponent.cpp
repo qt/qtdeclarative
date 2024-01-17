@@ -1334,35 +1334,48 @@ void QQmlComponent::loadFromModule(QAnyStringView uri, QAnyStringView typeName,
                                    QQmlComponent::CompilationMode mode)
 {
     Q_D(QQmlComponent);
+    auto [status, type] = d->prepareLoadFromModule(uri, typeName);
+    d->completeLoadFromModule(uri, typeName, type, status, mode);
+}
 
-    auto enginePriv = QQmlEnginePrivate::get(d->engine);
+LoadHelper::ResolveTypeResult QQmlComponentPrivate::prepareLoadFromModule(QAnyStringView uri,
+                                                                          QAnyStringView typeName)
+{
+    auto enginePriv = QQmlEnginePrivate::get(engine);
     // LoadHelper must be on the Heap as it derives from QQmlRefCount
     auto loadHelper = QQml::makeRefPointer<LoadHelper>(&enginePriv->typeLoader, uri);
 
-    auto [moduleStatus, type] = loadHelper->resolveType(typeName);
+    return loadHelper->resolveType(typeName);
+}
+
+void QQmlComponentPrivate::completeLoadFromModule(QAnyStringView uri, QAnyStringView typeName, QQmlType type,
+                                                  LoadHelper::ResolveTypeResult::Status moduleStatus,
+                                                  QQmlComponent::CompilationMode mode)
+{
+    Q_Q(QQmlComponent);
+
     auto reportError = [&](QString msg) {
         QQmlError error;
         error.setDescription(msg);
-        d->state.errors.push_back(std::move(error));
-        emit statusChanged(Error);
+        state.errors.push_back(std::move(error));
+        emit q->statusChanged(q->Error);
     };
     if (moduleStatus == LoadHelper::ResolveTypeResult::NoSuchModule) {
-        reportError(QLatin1String(R"(No module named "%1" found)")
-                    .arg(uri.toString()));
+        reportError(QLatin1String(R"(No module named "%1" found)").arg(uri.toString()));
     } else if (!type.isValid()) {
         reportError(QLatin1String(R"(Module "%1" contains no type named "%2")")
                     .arg(uri.toString(), typeName.toString()));
     } else if (type.isCreatable()) {
-        d->clear();
+        clear();
         // mimic the progressChanged behavior from loadUrl
-        if (d->progress != 0) {
-            d->progress = 0;
-            emit progressChanged(0);
+        if (progress != 0) {
+            progress = 0;
+            emit q->progressChanged(0);
         }
-        d->loadedType = type;
-        d->progress = 1;
-        emit progressChanged(1);
-        emit statusChanged(status());
+        loadedType = type;
+        progress = 1;
+        emit q->progressChanged(1);
+        emit q->statusChanged(q->status());
 
     } else if (type.isComposite()) {
         loadUrl(type.sourceUrl(), mode);
@@ -1370,16 +1383,14 @@ void QQmlComponent::loadFromModule(QAnyStringView uri, QAnyStringView typeName,
         auto baseUrl = type.sourceUrl();
         baseUrl.setFragment(QString());
         loadUrl(baseUrl, mode);
-        if (!isError()) {
-            d->inlineComponentName = std::make_unique<QString>(type.elementName());
-            Q_ASSERT(!d->inlineComponentName->isEmpty());
+        if (!q->isError()) {
+            inlineComponentName = std::make_unique<QString>(type.elementName());
+            Q_ASSERT(!inlineComponentName->isEmpty());
         }
     } else if (type.isSingleton() || type.isCompositeSingleton()) {
-        reportError(QLatin1String(R"(%1 is a singleton, and cannot be loaded)")
-                    .arg(typeName.toString()));
+        reportError(QLatin1String(R"(%1 is a singleton, and cannot be loaded)").arg(typeName.toString()));
     } else {
-        reportError(QLatin1String("Could not load %1, as the type is uncreatable")
-                                 .arg(typeName.toString()));
+        reportError(QLatin1String("Could not load %1, as the type is uncreatable").arg(typeName.toString()));
     }
 }
 

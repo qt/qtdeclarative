@@ -168,6 +168,11 @@ public:
                                   QQmlContext *context, CreateBehavior behavior = CreateDefault);
 
     bool isBound() const { return compilationUnit && (compilationUnit->componentsAreBound()); }
+    LoadHelper::ResolveTypeResult prepareLoadFromModule(QAnyStringView uri,
+                                                        QAnyStringView typeName);
+    void completeLoadFromModule(QAnyStringView uri, QAnyStringView typeName, QQmlType type,
+                                LoadHelper::ResolveTypeResult::Status moduleStatus,
+                                QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous);
 };
 
 QQmlComponentPrivate::ConstructionState::~ConstructionState()
