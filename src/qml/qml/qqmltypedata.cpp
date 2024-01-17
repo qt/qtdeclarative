@@ -989,7 +989,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 const auto compilationUnit = resolvedType->typeData->compilationUnit();
                 ref->setTypePropertyCache(compilationUnit->propertyCachesPtr()->at(
                     compilationUnit->inlineComponentId(icName)));
-                ref->setType(qmlType);
+                ref->setType(std::move(qmlType));
                 Q_ASSERT(ref->type().isInlineComponentType());
             }
         } else if (resolvedType->type.isInlineComponentType()) {
@@ -1004,7 +1004,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 // this is required for inline components in singletons
                 const QMetaType type = qmlType.typeId();
                 if (auto exUnit = QQmlMetaType::obtainExecutableCompilationUnit(type)) {
-                    ref->setCompilationUnit(exUnit);
+                    ref->setCompilationUnit(std::move(exUnit));
                     ref->setTypePropertyCache(QQmlMetaType::propertyCacheForType(type));
                 }
             }
