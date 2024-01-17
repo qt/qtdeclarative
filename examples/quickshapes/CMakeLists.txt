@@ -6,7 +6,7 @@ qt_internal_add_example(weatherforecast)
 
 # qt_examples_build_end() misses at least some of these due to some
 # source subdirectories being added multiple times. See QTBUG-96159.
-set(reused_dir_targets shapes_shared)
+set(reused_dir_targets shapes_shared weatherforecast_shared)
 
 foreach(target IN LISTS reused_dir_targets)
     if(TARGET ${target})
