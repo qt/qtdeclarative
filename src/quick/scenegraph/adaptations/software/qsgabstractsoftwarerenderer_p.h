@@ -40,6 +40,9 @@ public:
 
     void markDirty();
 
+    void setClearColorEnabled(bool enable);
+    bool clearColorEnabled() const;
+
 protected:
     QRegion renderNodes(QPainter *painter);
     void buildRenderList();
@@ -70,6 +73,7 @@ private:
     QRegion m_obscuredRegion;
     qreal m_devicePixelRatio = 1;
     bool m_isOpaque = false;
+    bool m_clearColorEnabled = true;
 
     QSGSoftwareRenderableNodeUpdater *m_nodeUpdater;
 };
