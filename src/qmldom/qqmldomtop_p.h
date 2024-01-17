@@ -321,16 +321,20 @@ private:
     using ReadResult = std::variant<ContentWithDate, ErrorMessage>;
     ReadResult readFileContent(const QString &canonicalPath) const;
 
-    // Helper structure reflecting the change in the map after parsing completed
-    // formerItem - DomItem representing value existing in the map before the parsing.
+    // Helper structure reflecting the change in the map once loading && parsing is completed
+    // formerItem - DomItem representing value existing in the map before the loading && parsing.
     // Might be empty (if didn't exist / failure) or equal to currentItem
     // currentItem - DomItem representing current map value
-    struct ValueChange
+    struct LoadResult
     {
         DomItem formerItem;
         DomItem currentItem;
     };
-    ValueChange parse(const FileToLoad &file, DomType fType);
+    LoadResult load(const ContentWithDate &codeWithDate, const FileToLoad &file, DomType fType);
+
+    // contains either Content to be parsed or LoadResult if loading / parsing is not needed
+    using PreloadResult = std::variant<ContentWithDate, LoadResult>;
+    PreloadResult preload(const DomItem &univ, const FileToLoad &file, DomType fType) const;
 
     std::shared_ptr<QmlFile> parseQmlFile(const QString &code, const FileToLoad &file,
                                           const QDateTime &contentDate);

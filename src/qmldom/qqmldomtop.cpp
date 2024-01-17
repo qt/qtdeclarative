@@ -234,16 +234,24 @@ static DomType fileTypeForPath(const DomItem &self, const QString &canonicalFile
 void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOptions,
                            std::optional<DomType> fileType)
 {
-    DomItem selfItem(shared_from_this());
+    DomItem univ(shared_from_this());
     const auto &canonicalPath = file.canonicalPath();
-    DomType fType = (bool(fileType) ? (*fileType) : fileTypeForPath(selfItem, canonicalPath));
+    DomType fType = (bool(fileType) ? (*fileType) : fileTypeForPath(univ, canonicalPath));
     switch (fType) {
     case DomType::QmlFile:
     case DomType::QmltypesFile:
     case DomType::QmldirFile:
     case DomType::QmlDirectory:
     case DomType::JsFile: {
-        const auto &valueChange = parse(file, fType);
+        LoadResult loadRes;
+        const auto &preLoadResult = preload(univ, file, fType);
+        if (std::holds_alternative<LoadResult>(preLoadResult)) {
+            // universe already has the most recent version of the file
+            loadRes = std::move(std::get<LoadResult>(preLoadResult));
+        } else {
+            // content of the file needs to be parsed and value inside Universe needs to be updated
+            loadRes = load(std::get<ContentWithDate>(preLoadResult), file, fType);
+        }
         // execute callback
         if (callback) {
             Path p;
@@ -259,17 +267,16 @@ void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOption
                 p = Paths::jsFileInfoPath(canonicalPath);
             else
                 Q_ASSERT(false);
-            callback(p, valueChange.formerItem, valueChange.currentItem);
+            callback(p, loadRes.formerItem, loadRes.currentItem);
         }
         return;
     }
     default:
-        selfItem.addError(
-                myErrors()
-                        .error(tr("Ignoring request to load file %1 of unexpected type %2, "
-                                  "calling callback immediately")
-                                       .arg(file.canonicalPath(), domTypeToString(fType)))
-                        .handle());
+        univ.addError(myErrors()
+                              .error(tr("Ignoring request to load file %1 of unexpected type %2, "
+                                        "calling callback immediately")
+                                             .arg(file.canonicalPath(), domTypeToString(fType)))
+                              .handle());
         Q_ASSERT(false && "loading non supported file type");
         callback(Path(), DomItem::empty, DomItem::empty);
         return;
@@ -318,43 +325,15 @@ updateEntry(const DomItem &univ, const std::shared_ptr<T> &newItem,
     return qMakePair(oldValue, newValue);
 }
 
-DomUniverse::ValueChange DomUniverse::parse(const FileToLoad &file, DomType fType)
+DomUniverse::LoadResult DomUniverse::load(const ContentWithDate &codeWithDate,
+                                          const FileToLoad &file, DomType fType)
 {
     QString canonicalPath = file.canonicalPath();
-    ContentWithDate codeWithDate;
-    codeWithDate.content = file.content() ? file.content()->data : QString();
-    codeWithDate.date = file.content() ? file.content()->date
-                                       : QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
 
     DomItem oldValue; // old ExternalItemPair (might be empty, or equal to newValue)
     DomItem newValue; // current ExternalItemPair
     DomItem univ = DomItem(shared_from_this());
 
-    if (codeWithDate.content.isEmpty()) {
-        // When the code is empty, Universe attempts to read it from the File.
-        // However if it already has the most recent version of that File it just returns it
-        const auto &curValueItem = getItemIfMostRecent(univ, fType, canonicalPath);
-        if (curValueItem.has_value()) {
-            oldValue = newValue = curValueItem.value();
-            return { oldValue, newValue };
-        }
-        auto readResult = readFileContent(canonicalPath);
-        if (std::holds_alternative<ErrorMessage>(readResult)) {
-            newValue.addError(std::move(std::get<ErrorMessage>(readResult)));
-            return { oldValue, newValue }; // read failed, nothing to parse
-        } else {
-            codeWithDate = std::get<ContentWithDate>(readResult);
-        }
-    }
-
-    const auto &curValueItem = getItemIfHasSameCode(univ, fType, canonicalPath, codeWithDate);
-    if (curValueItem.has_value()) {
-        oldValue = newValue = curValueItem.value();
-        return { oldValue, newValue };
-    }
-
-    // Value doesn't exist or considered outdated / expired.
-    // Hence we do the actual parsing
     if (fType == DomType::QmlFile) {
         auto qmlFile = parseQmlFile(codeWithDate.content, file, codeWithDate.date);
         auto change = updateEntry<QmlFile>(univ, qmlFile, m_qmlFileWithPath, mutex());
@@ -391,6 +370,49 @@ DomUniverse::ValueChange DomUniverse::parse(const FileToLoad &file, DomType fTyp
         Q_ASSERT(false);
     }
     return { oldValue, newValue };
+}
+
+/*!
+ \internal
+    This function is somewhat coupled and does the following:
+    1. If a content of the file is provided it checks whether the item with the same content
+       already exists inside the Universe. If so, returns it as a result of the load
+    2. If a content is not provided, it first tries to check whether Universe has the most
+       recent item. If yes, it returns it as a result of the load. Otherwise does step 1.
+ */
+DomUniverse::PreloadResult DomUniverse::preload(const DomItem &univ, const FileToLoad &file,
+                                                DomType fType) const
+{
+    QString canonicalPath = file.canonicalPath();
+    ContentWithDate codeWithDate;
+
+    if (file.content().has_value()) {
+        codeWithDate = { file.content()->data, file.content()->date };
+    } else {
+        // When content is empty, Universe attempts to read it from the File.
+        // However if it already has the most recent version of that File it just returns it
+        const auto &curValueItem = getItemIfMostRecent(univ, fType, canonicalPath);
+        if (curValueItem.has_value()) {
+            return LoadResult{ curValueItem.value(), curValueItem.value() };
+        }
+        // otherwise tries to read the content from the path
+        auto readResult = readFileContent(canonicalPath);
+        if (std::holds_alternative<ErrorMessage>(readResult)) {
+            DomItem newValue;
+            newValue.addError(std::move(std::get<ErrorMessage>(readResult)));
+            return LoadResult{ DomItem(), newValue }; // read failed, nothing to parse
+        } else {
+            codeWithDate = std::get<ContentWithDate>(readResult);
+        }
+    }
+
+    // Once the code is provided Universe verifies if it already has an up-to-date code
+    const auto &curValueItem = getItemIfHasSameCode(univ, fType, canonicalPath, codeWithDate);
+    if (curValueItem.has_value()) {
+        return LoadResult{ curValueItem.value(), curValueItem.value() };
+    }
+    // otherwise code needs to be parsed
+    return codeWithDate;
 }
 
 void DomUniverse::removePath(const QString &path)
