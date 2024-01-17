@@ -894,6 +894,16 @@ void LoadInfo::addDependency(const DomItem &self, const Dependency &dep)
 \brief Represents a consistent set of types organized in modules, it is the top level of the DOM
  */
 
+/*!
+\internal
+\brief Once file is being loaded inside the DomUniverse this callback will be called to pull/add
+item to the DomEnvironment, which initiated the load.
+If the file needs to be loaded with dependencies, they will be added to
+the "loading queue" here.
+
+newItem is a DomItem representing ExternalItemPair, currently existed/updated or newly added value
+to the DomUniverse
+*/
 template <typename T>
 DomTop::Callback
 envCallbackForFile(const DomItem &self,
@@ -912,28 +922,35 @@ envCallbackForFile(const DomItem &self,
         if (!envPtr)
             return;
         DomItem env = DomItem(envPtr);
+        // values reflecting the change inside the DomEnvironment path map
         shared_ptr<ExternalItemInfo<T>> oldValue;
         shared_ptr<ExternalItemInfo<T>> newValue;
+
+        // get either Valid "file" from the ExternalItemPair or the current (wip) "file"
         shared_ptr<T> newItemPtr;
         if (envPtr->options() & DomEnvironment::Option::KeepValid)
             newItemPtr = newItem.field(Fields::validItem).ownerAs<T>();
         if (!newItemPtr)
             newItemPtr = newItem.field(Fields::currentItem).ownerAs<T>();
-        Q_ASSERT(newItemPtr && "callbackForQmlFile reached without current qmlFile");
+        Q_ASSERT(newItemPtr && "envCallbackForFile reached without current file");
+
+        // try to fetch from the "initial" env.
         {
             QMutexLocker l(envPtr->mutex());
             oldValue = ((*envPtr).*map).value(newItem.canonicalFilePath());
         }
         if (oldValue) {
-            // we do not change locally loaded files (avoid loading a file more than once)
+            // found in the "initial" env
             newValue = oldValue;
         } else {
             if (basePtr) {
+                // try to find ExternalItemInfo for the newItem inside the parent of the initial env
                 DomItem baseObj(basePtr);
                 oldValue = ((*basePtr).*lookupF)(baseObj, newItem.canonicalFilePath(),
                                                  EnvLookup::BaseOnly);
             }
             if (oldValue) {
+                // prepare newValue as copy from the Base to be inserted
                 DomItem oldValueObj = env.copy(oldValue);
                 newValue = oldValue->makeCopy(oldValueObj);
                 if (newValue->current != newItemPtr) {
@@ -941,10 +958,13 @@ envCallbackForFile(const DomItem &self,
                     newValue->setCurrentExposedAt(QDateTime::currentDateTimeUtc());
                 }
             } else {
+                // Nothing found. Just create which will be inserted
                 newValue = std::make_shared<ExternalItemInfo<T>>(
                         newItemPtr, QDateTime::currentDateTimeUtc());
             }
             {
+                // Before inserting new / updated value, check one more time, if ItemInfo is already
+                // present
                 QMutexLocker l(envPtr->mutex());
                 auto value = ((*envPtr).*map).value(newItem.canonicalFilePath());
                 if (value) {
@@ -954,16 +974,20 @@ envCallbackForFile(const DomItem &self,
                 }
             }
         }
+
         Path p = env.copy(newValue).canonicalPath();
         {
             auto depLoad = qScopeGuard([p, &env, envPtr, endCallback] {
                 if (!(envPtr->options() & DomEnvironment::Option::NoDependencies)) {
+                    // add dependencies to the queue to be loaded.
                     auto loadInfo = std::make_shared<LoadInfo>(p);
                     if (!p)
                         Q_ASSERT(false);
                     DomItem loadInfoObj = env.copy(loadInfo);
                     envPtr->addLoadInfo(env, loadInfo);
                 }
+                // add EndCallback to the queue, which should be called once all dependencies are
+                // loaded
                 if (endCallback)
                     envPtr->addAllLoadedCallback(env,
                                                  [p, endCallback](Path, const DomItem &, const DomItem &env) {
@@ -971,6 +995,7 @@ envCallbackForFile(const DomItem &self,
                                                      endCallback(p, el, el);
                                                  });
             });
+            // call loadCallback
             if (loadCallback) {
                 DomItem oldValueObj = env.copy(oldValue);
                 DomItem newValueObj = env.copy(newValue);
