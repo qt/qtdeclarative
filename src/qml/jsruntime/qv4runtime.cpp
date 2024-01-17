@@ -584,7 +584,7 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, Value val
         goto redo;
     }
     case Value::Integer_Type:
-        return RuntimeHelpers::stringFromNumber(engine, value.int_32());
+        return engine->newString(QString::number(value.int_32()));
     default: // double
         return RuntimeHelpers::stringFromNumber(engine, value.doubleValue());
     } // switch
