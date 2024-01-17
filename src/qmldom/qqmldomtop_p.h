@@ -197,7 +197,7 @@ public:
         return std::static_pointer_cast<DomUniverse>(doCopy(self));
     }
 
-    void loadFile(const FileToLoad &file, Callback callback, LoadOptions loadOptions,
+    void loadFile(const FileToLoad &file, const Callback &callback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>());
 
     void removePath(const QString &dir);
@@ -840,8 +840,9 @@ public:
 private:
     friend class RefCacheEntry;
 
-    void loadFile(const FileToLoad &file, Callback loadCallback, Callback directDepsCallback,
-                  Callback endCallback, LoadOptions loadOptions,
+    void loadFile(const FileToLoad &file, const Callback &loadCallback,
+                  const Callback &directDepsCallback, const Callback &endCallback,
+                  LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr);
 
@@ -975,6 +976,8 @@ private:
         return qMakePair(nullptr, nullptr);
     }
 
+    Callback getCallbackFor(DomType fileType, const DomItem &self, const Callback &loadCallback,
+                            const Callback &directDepsCallback, const Callback &endCallback);
     Callback callbackForQmlDirectory(const DomItem &self, Callback loadCallback,
                                      Callback directDepsCallback, Callback endCallback);
     Callback callbackForQmlFile(const DomItem &self, Callback loadCallback, Callback directDepsCallback,
