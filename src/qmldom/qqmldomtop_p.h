@@ -794,18 +794,19 @@ public:
                                                   Options options = Option::SingleThreaded,
                                                   const DomItem &universe = DomItem::empty);
 
-    std::shared_ptr<ExternalItemInfo<QmlFile>> addQmlFile(
-            const std::shared_ptr<QmlFile> &file, AddOption option = AddOption::KeepExisting);
-    std::shared_ptr<ExternalItemInfo<QmlDirectory>> addQmlDirectory(
-            const std::shared_ptr<QmlDirectory> &file, AddOption option = AddOption::KeepExisting);
-    std::shared_ptr<ExternalItemInfo<QmldirFile>> addQmldirFile(
-            const std::shared_ptr<QmldirFile> &file, AddOption option = AddOption::KeepExisting);
-    std::shared_ptr<ExternalItemInfo<QmltypesFile>> addQmltypesFile(
-            const std::shared_ptr<QmltypesFile> &file, AddOption option = AddOption::KeepExisting);
-    std::shared_ptr<ExternalItemInfo<JsFile>> addJsFile(
-            const std::shared_ptr<JsFile> &file, AddOption option = AddOption::KeepExisting);
-    std::shared_ptr<ExternalItemInfo<GlobalScope>> addGlobalScope(
-            const std::shared_ptr<GlobalScope> &file, AddOption option = AddOption::KeepExisting);
+    // TODO AddOption can easily be removed later. KeepExisting option only used in one
+    // place which will be removed in https://codereview.qt-project.org/c/qt/qtdeclarative/+/523217
+    void addQmlFile(const std::shared_ptr<QmlFile> &file,
+                    AddOption option = AddOption::KeepExisting);
+    void addQmlDirectory(const std::shared_ptr<QmlDirectory> &file,
+                         AddOption option = AddOption::KeepExisting);
+    void addQmldirFile(const std::shared_ptr<QmldirFile> &file,
+                       AddOption option = AddOption::KeepExisting);
+    void addQmltypesFile(const std::shared_ptr<QmltypesFile> &file,
+                         AddOption option = AddOption::KeepExisting);
+    void addJsFile(const std::shared_ptr<JsFile> &file, AddOption option = AddOption::KeepExisting);
+    void addGlobalScope(const std::shared_ptr<GlobalScope> &file,
+                        AddOption option = AddOption::KeepExisting);
 
     bool commitToBase(
             const DomItem &self, const std::shared_ptr<DomEnvironment> &validEnv = nullptr);
@@ -890,6 +891,48 @@ private:
         if (options != EnvLookup::NoBase && m_base)
             return m_base->lookup<T>(path, options);
         return {};
+    }
+
+    template <typename T>
+    QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> &getMutableRefToMap()
+    {
+        Q_ASSERT(!mutex()->tryLock());
+        if constexpr (std::is_same_v<T, QmlDirectory>) {
+            return m_qmlDirectoryWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmldirFile>) {
+            return m_qmldirFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmlFile>) {
+            return m_qmlFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, JsFile>) {
+            return m_jsFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmltypesFile>) {
+            return m_qmltypesFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, GlobalScope>) {
+            return m_globalScopeWithName;
+        }
+        Q_UNREACHABLE();
+    }
+
+    template <typename T>
+    void addExternalItem(std::shared_ptr<T> file, QString key, AddOption option)
+    {
+        if (!file)
+            return;
+
+        auto eInfo = std::make_shared<ExternalItemInfo<T>>(file, QDateTime::currentDateTimeUtc());
+        // Lookup helper can't be used here, because it introduces data-race otherwise
+        // (other modifications might happen between the lookup and the insert)
+        QMutexLocker l(mutex());
+        auto &map = getMutableRefToMap<T>();
+        const auto &it = map.find(key);
+        if (it != map.end() && option == AddOption::KeepExisting)
+            return;
+        map.insert(key, eInfo);
     }
 
     Callback callbackForQmlDirectory(const DomItem &self, Callback loadCallback,

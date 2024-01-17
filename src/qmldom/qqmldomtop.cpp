@@ -2053,75 +2053,34 @@ DomEnvironment::DomEnvironment(
       m_implicitImports(defaultImplicitImports())
 {}
 
-template<typename T>
-std::shared_ptr<ExternalItemInfo<T>>
-addExternalItem(const std::shared_ptr<T> &file, const QString &key,
-                QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> &map, AddOption option,
-                QBasicMutex *mutex)
+void DomEnvironment::addQmlFile(const std::shared_ptr<QmlFile> &file, AddOption options)
 {
-    if (!file)
-        return {};
-    auto eInfo = std::make_shared<ExternalItemInfo<T>>(
-            file, QDateTime::currentDateTimeUtc());
-    {
-        QMutexLocker l(mutex);
-        auto it = map.find(key);
-        if (it != map.end()) {
-            switch (option) {
-            case AddOption::KeepExisting:
-                eInfo = *it;
-                break;
-            case AddOption::Overwrite:
-                map.insert(key, eInfo);
-                break;
-            }
-        } else {
-            map.insert(key, eInfo);
-        }
-    }
-    return eInfo;
+    addExternalItem(file, file->canonicalFilePath(), options);
 }
 
-std::shared_ptr<ExternalItemInfo<QmlFile>> DomEnvironment::addQmlFile(
-        const std::shared_ptr<QmlFile> &file, AddOption options)
+void DomEnvironment::addQmlDirectory(const std::shared_ptr<QmlDirectory> &file, AddOption options)
 {
-    return addExternalItem<QmlFile>(file, file->canonicalFilePath(), m_qmlFileWithPath, options,
-                                    mutex());
+    addExternalItem(file, file->canonicalFilePath(), options);
 }
 
-std::shared_ptr<ExternalItemInfo<QmlDirectory>>
-DomEnvironment::addQmlDirectory(const std::shared_ptr<QmlDirectory> &file, AddOption options)
+void DomEnvironment::addQmldirFile(const std::shared_ptr<QmldirFile> &file, AddOption options)
 {
-    return addExternalItem<QmlDirectory>(file, file->canonicalFilePath(), m_qmlDirectoryWithPath,
-                                         options, mutex());
+    addExternalItem(file, file->canonicalFilePath(), options);
 }
 
-std::shared_ptr<ExternalItemInfo<QmldirFile>>
-DomEnvironment::addQmldirFile(const std::shared_ptr<QmldirFile> &file, AddOption options)
+void DomEnvironment::addQmltypesFile(const std::shared_ptr<QmltypesFile> &file, AddOption options)
 {
-    return addExternalItem<QmldirFile>(file, file->canonicalFilePath(), m_qmldirFileWithPath,
-                                       options, mutex());
+    addExternalItem(file, file->canonicalFilePath(), options);
 }
 
-std::shared_ptr<ExternalItemInfo<QmltypesFile>>
-DomEnvironment::addQmltypesFile(const std::shared_ptr<QmltypesFile> &file, AddOption options)
+void DomEnvironment::addJsFile(const std::shared_ptr<JsFile> &file, AddOption options)
 {
-    return addExternalItem<QmltypesFile>(file, file->canonicalFilePath(), m_qmltypesFileWithPath,
-                                         options, mutex());
+    addExternalItem(file, file->canonicalFilePath(), options);
 }
 
-std::shared_ptr<ExternalItemInfo<JsFile>> DomEnvironment::addJsFile(
-        const std::shared_ptr<JsFile> &file, AddOption options)
+void DomEnvironment::addGlobalScope(const std::shared_ptr<GlobalScope> &scope, AddOption options)
 {
-    return addExternalItem<JsFile>(file, file->canonicalFilePath(), m_jsFileWithPath, options,
-                                   mutex());
-}
-
-std::shared_ptr<ExternalItemInfo<GlobalScope>>
-DomEnvironment::addGlobalScope(const std::shared_ptr<GlobalScope> &scope, AddOption options)
-{
-    return addExternalItem<GlobalScope>(scope, scope->name(), m_globalScopeWithName, options,
-                                        mutex());
+    addExternalItem(scope, scope->name(), options);
 }
 
 bool DomEnvironment::commitToBase(
