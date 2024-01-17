@@ -3910,7 +3910,25 @@ void tst_qqmlecmascript::scriptConnect()
         engine.clearSingletons();
         QMetaObject::invokeMethod(obj.data(), "mySignal", Qt::DirectConnection);
         QCOMPARE(obj.data()->property("a").toInt(), 1);
+    }
 
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptConnect.deletion.qml"));
+
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY2(obj, qPrintable(component.errorString()));
+        QVERIFY(!obj.isNull());
+
+        QCOMPARE(obj->property("a"), 0);
+
+        QMetaObject::invokeMethod(obj.data(), "someSignal");
+        QCOMPARE(obj->property("a"), 1);
+
+        QCOMPARE(obj->property("b"), 0);
+        QMetaObject::invokeMethod(obj.data(), "destroyObj", Qt::DirectConnection);
+
+        QTRY_COMPARE(obj->property("b"), 1);
+        QCOMPARE(obj->property("a"), 1);
     }
 }
 

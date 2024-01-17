@@ -1197,13 +1197,15 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
     static void impl(int which, QSlotObjectBase *this_, QObject *receiver, void **metaArgs, bool *ret)
     {
-        Q_UNUSED(receiver);
         switch (which) {
         case Destroy: {
             delete static_cast<QObjectSlotDispatcher*>(this_);
         }
         break;
         case Call: {
+            if (QQmlData::wasDeleted(receiver))
+                break;
+
             QObjectSlotDispatcher *This = static_cast<QObjectSlotDispatcher*>(this_);
             ExecutionEngine *v4 = This->function.engine();
             // Might be that we're still connected to a signal that's emitted long
