@@ -11,6 +11,9 @@
 #include <QQmlEngine>
 #include <QQmlError>
 
+#include <QtGui/private/qfont_p.h>
+#include <QtGui/private/qfontengine_p.h>
+
 static QtMessageHandler testlibMsgHandler = nullptr;
 void msgHandlerFilter(QtMsgType type, const QMessageLogContext &ctxt, const QString &msg)
 {
@@ -224,6 +227,15 @@ void tst_examples::examples_data()
 void tst_examples::examples()
 {
     QFETCH(QString, file);
+
+#if defined(__SANITIZE_ADDRESS__) || __has_feature(address_sanitizer)
+    QFont f;
+    f.setStyleStrategy(QFont::NoFontMerging);
+    QFontPrivate *font_d = QFontPrivate::get(f);
+    if (font_d->engineForScript(QChar::Script_Common)->type() == QFontEngine::Freetype)
+        QSKIP("Triggers a race condition in the Freetype face cache, QTBUG-118867", Continue);
+#endif
+
     QQuickWindow window;
     window.setPersistentGraphics(true);
     window.setPersistentSceneGraph(true);
