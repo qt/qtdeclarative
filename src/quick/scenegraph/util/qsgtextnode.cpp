@@ -22,6 +22,15 @@ QT_BEGIN_NAMESPACE
 
     \note Properties must be set before \l addTextLayout() or \l addTextDocument() are called in
     order to have an effect.
+
+    \note The destruction of QSGTextNode has to be managed with care. In particular, since it
+    references graphics resources, it must be deleted when the Qt Quick scene graph is invalidated.
+    If the node is part of the graph and has the \c OwnedByParent flag set (which is the default),
+    this will happen automatically. However, if the \c OwnedByParent flag is cleared and the node is
+    disposed of manually, care must be taken to do this when the scene graph is invalidated. This
+    can be done by connecting to the \l{QQuickWindow::sceneGraphInvalidated()} signal, or by
+    implementing a slot in the QQuickItem subclass which is named \c{invalidateSceneGraph()}.
+    See also the documentation of QQuickItem for more details.
  */
 
 /*!
