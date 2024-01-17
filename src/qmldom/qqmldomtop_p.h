@@ -935,6 +935,46 @@ private:
         map.insert(key, eInfo);
     }
 
+    using FetchResult =
+            QPair<std::shared_ptr<ExternalItemInfoBase>, std::shared_ptr<ExternalItemInfoBase>>;
+    // This function tries to get an Info object about the ExternalItem from the current env
+    // and depending on the result and options tries to fetch it from the Parent env,
+    // saving a copy with an updated timestamp
+    template <typename T>
+    FetchResult fetchFileFromEnvs(const FileToLoad &file)
+    {
+        const auto &path = file.canonicalPath();
+        // lookup only in the current env
+        if (auto value = lookup<T>(path, EnvLookup::NoBase)) {
+            return qMakePair(value, value);
+        }
+        // try to find the file in the base(parent) Env and insert if found
+        if (options() & Option::NoReload) {
+            if (auto baseV = lookup<T>(path, EnvLookup::BaseOnly)) {
+                // Watch out! QTBUG-121171
+                // It's possible between the lookup and creation of curVal, baseV && baseV->current
+                // might have changed
+                // Prepare a value to be inserted as copy of the value from Base
+                auto curV = std::make_shared<ExternalItemInfo<T>>(
+                        baseV->current, QDateTime::currentDateTimeUtc(), baseV->revision(),
+                        baseV->lastDataUpdateAt());
+                // Lookup one more time if the value was already inserted to the current env
+                // Lookup can't be used here because of the data-race
+                {
+                    QMutexLocker l(mutex());
+                    auto &map = getMutableRefToMap<T>();
+                    const auto &it = map.find(path);
+                    if (it != map.end())
+                        return qMakePair(*it, *it);
+                    // otherwise insert
+                    map.insert(path, curV);
+                }
+                return qMakePair(baseV, curV);
+            }
+        }
+        return qMakePair(nullptr, nullptr);
+    }
+
     Callback callbackForQmlDirectory(const DomItem &self, Callback loadCallback,
                                      Callback directDepsCallback, Callback endCallback);
     Callback callbackForQmlFile(const DomItem &self, Callback loadCallback, Callback directDepsCallback,

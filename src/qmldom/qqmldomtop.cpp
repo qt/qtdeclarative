@@ -1286,28 +1286,9 @@ void DomEnvironment::loadFile(const FileToLoad &file, Callback loadCallback,
             (bool(fileType) ? (*fileType) : fileTypeForPath(self, file.canonicalPath()));
     switch (fType) {
     case DomType::QmlDirectory: {
-        {
-            QMutexLocker l(mutex());
-            auto it = m_qmlDirectoryWithPath.find(file.canonicalPath());
-            if (it != m_qmlDirectoryWithPath.end())
-                oldValue = newValue = *it;
-        }
-        if (!newValue && (options() & Option::NoReload) && m_base) {
-            if (auto v = m_base->qmlDirectoryWithPath(self, file.canonicalPath(),
-                                                      EnvLookup::Normal)) {
-                oldValue = v;
-                QDateTime now = QDateTime::currentDateTimeUtc();
-                auto newV = std::make_shared<ExternalItemInfo<QmlDirectory>>(
-                        v->current, now, v->revision(), v->lastDataUpdateAt());
-                newValue = newV;
-                QMutexLocker l(mutex());
-                auto it = m_qmlDirectoryWithPath.find(file.canonicalPath());
-                if (it != m_qmlDirectoryWithPath.end())
-                    oldValue = newValue = *it;
-                else
-                    m_qmlDirectoryWithPath.insert(file.canonicalPath(), newV);
-            }
-        }
+        const auto &fetchResult = fetchFileFromEnvs<QmlDirectory>(file);
+        oldValue = fetchResult.first;
+        newValue = fetchResult.second;
         if (!newValue) {
             universe()->loadFile(
                     file,
@@ -1317,27 +1298,9 @@ void DomEnvironment::loadFile(const FileToLoad &file, Callback loadCallback,
         }
     } break;
     case DomType::QmlFile: {
-        {
-            QMutexLocker l(mutex());
-            auto it = m_qmlFileWithPath.find(file.canonicalPath());
-            if (it != m_qmlFileWithPath.end())
-                oldValue = newValue = *it;
-        }
-        if (!newValue && (options() & Option::NoReload) && m_base) {
-            if (auto v = m_base->qmlFileWithPath(self, file.canonicalPath(), EnvLookup::Normal)) {
-                oldValue = v;
-                QDateTime now = QDateTime::currentDateTimeUtc();
-                auto newV = std::make_shared<ExternalItemInfo<QmlFile>>(
-                        v->current, now, v->revision(), v->lastDataUpdateAt());
-                newValue = newV;
-                QMutexLocker l(mutex());
-                auto it = m_qmlFileWithPath.find(file.canonicalPath());
-                if (it != m_qmlFileWithPath.end())
-                    oldValue = newValue = *it;
-                else
-                    m_qmlFileWithPath.insert(file.canonicalPath(), newV);
-            }
-        }
+        const auto &fetchResult = fetchFileFromEnvs<QmlFile>(file);
+        oldValue = fetchResult.first;
+        newValue = fetchResult.second;
         if (!newValue) {
             universe()->loadFile(
                     file, callbackForQmlFile(self, loadCallback, directDepsCallback, endCallback),
@@ -1346,28 +1309,9 @@ void DomEnvironment::loadFile(const FileToLoad &file, Callback loadCallback,
         }
     } break;
     case DomType::QmltypesFile: {
-        {
-            QMutexLocker l(mutex());
-            auto it = m_qmltypesFileWithPath.find(file.canonicalPath());
-            if (it != m_qmltypesFileWithPath.end())
-                oldValue = newValue = *it;
-        }
-        if (!newValue && (options() & Option::NoReload) && m_base) {
-            if (auto v = m_base->qmltypesFileWithPath(self, file.canonicalPath(),
-                                                      EnvLookup::Normal)) {
-                oldValue = v;
-                QDateTime now = QDateTime::currentDateTimeUtc();
-                auto newV = std::make_shared<ExternalItemInfo<QmltypesFile>>(
-                        v->current, now, v->revision(), v->lastDataUpdateAt());
-                newValue = newV;
-                QMutexLocker l(mutex());
-                auto it = m_qmltypesFileWithPath.find(file.canonicalPath());
-                if (it != m_qmltypesFileWithPath.end())
-                    oldValue = newValue = *it;
-                else
-                    m_qmltypesFileWithPath.insert(file.canonicalPath(), newV);
-            }
-        }
+        const auto &fetchResult = fetchFileFromEnvs<QmltypesFile>(file);
+        oldValue = fetchResult.first;
+        newValue = fetchResult.second;
         if (!newValue) {
             universe()->loadFile(
                     file,
@@ -1377,28 +1321,9 @@ void DomEnvironment::loadFile(const FileToLoad &file, Callback loadCallback,
         }
     } break;
     case DomType::QmldirFile: {
-        {
-            QMutexLocker l(mutex());
-            auto it = m_qmldirFileWithPath.find(file.canonicalPath());
-            if (it != m_qmldirFileWithPath.end())
-                oldValue = newValue = *it;
-        }
-        if (!newValue && (options() & Option::NoReload) && m_base) {
-            if (auto v =
-                        m_base->qmldirFileWithPath(self, file.canonicalPath(), EnvLookup::Normal)) {
-                oldValue = v;
-                QDateTime now = QDateTime::currentDateTimeUtc();
-                auto newV = std::make_shared<ExternalItemInfo<QmldirFile>>(
-                        v->current, now, v->revision(), v->lastDataUpdateAt());
-                newValue = newV;
-                QMutexLocker l(mutex());
-                auto it = m_qmldirFileWithPath.find(file.canonicalPath());
-                if (it != m_qmldirFileWithPath.end())
-                    oldValue = newValue = *it;
-                else
-                    m_qmldirFileWithPath.insert(file.canonicalPath(), newV);
-            }
-        }
+        const auto &fetchResult = fetchFileFromEnvs<QmldirFile>(file);
+        oldValue = fetchResult.first;
+        newValue = fetchResult.second;
         if (!newValue) {
             universe()->loadFile(
                     file,
