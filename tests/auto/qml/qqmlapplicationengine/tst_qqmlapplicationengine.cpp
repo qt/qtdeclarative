@@ -28,6 +28,8 @@ private slots:
     void removeObjectsWhenDestroyed();
     void loadTranslation_data();
     void loadTranslation();
+    void loadFromModuleTranslation_data();
+    void loadFromModuleTranslation();
     void translationChange();
     void setInitialProperties();
     void failureToLoadTriggersWarningSignal();
@@ -264,6 +266,53 @@ void tst_qqmlapplicationengine::loadTranslation()
     QVERIFY(rootObject);
 
     QCOMPARE(rootObject->property("translation").toString(), translation);
+}
+
+void tst_qqmlapplicationengine::loadFromModuleTranslation_data()
+{
+    QTest::addColumn<QString>("executable");
+    QTest::addColumn<QLocale::Language>("LANG");
+    QTest::addColumn<QString>("output");
+
+    QString qmlTypeExecutable = "loadFromModuleTranslationsQmlType/i18nLoadFromModuleQmlType";
+    QString cppTypeExecutable = "loadFromModuleTranslationsCppType/i18nLoadFromModuleCppType";
+
+    QTest::newRow("Qml: en -> en") << qmlTypeExecutable << QLocale::English << "Hello";
+    QTest::newRow("Qml: en -> fr") << qmlTypeExecutable << QLocale::French << "Salut";
+    QTest::newRow("Cpp: en -> en") << cppTypeExecutable << QLocale::English << "Hello";
+    QTest::newRow("Cpp: en -> es") << cppTypeExecutable << QLocale::Spanish << "Hola";
+}
+
+void tst_qqmlapplicationengine::loadFromModuleTranslation()
+{
+#if defined(Q_OS_ANDROID)
+    QSKIP("Test doesn't currently run on Android");
+    return;
+#endif
+
+#if QT_CONFIG(process)
+    QFETCH(QString, executable);
+    QFETCH(QLocale::Language, LANG);
+    QFETCH(QString, output);
+
+    QDir::setCurrent(buildDir);
+    QProcess app;
+    auto env = QProcessEnvironment::systemEnvironment();
+    env.insert("qtlang", QString::number(int(LANG)));
+    env.insert("LOADFROMMODULE_TEST_EXPECTED_OUTPUT", output);
+    app.setProcessEnvironment(env);
+    app.start(executable);
+    QVERIFY(app.waitForStarted());
+    QVERIFY(app.waitForFinished());
+
+    auto status = app.exitStatus();
+    auto code = app.exitCode();
+    QVERIFY2(code == 0,
+             QStringLiteral("status: %1, exitCode: %2").arg(status).arg(code).toStdString().c_str());
+    app.kill();
+#else
+    QSKIP("No process support");
+#endif
 }
 
 void tst_qqmlapplicationengine::translationChange()

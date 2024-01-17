@@ -63,5 +63,12 @@ qt_internal_extend_target(tst_qqmlapplicationengine CONDITION NOT ANDROID AND NO
     DEFINES
         QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
+
 add_subdirectory(testapp)
 add_subdirectory(androidassets)
+add_dependencies(tst_qqmlapplicationengine testapp)
+
+add_subdirectory(loadFromModuleTranslationsQmlType)
+add_subdirectory(loadFromModuleTranslationsCppType)
+add_dependencies(tst_qqmlapplicationengine i18nLoadFromModuleQmlType)
+add_dependencies(tst_qqmlapplicationengine i18nLoadFromModuleCppType)
