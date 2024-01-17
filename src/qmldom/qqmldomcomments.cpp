@@ -354,6 +354,7 @@ public:
     void throwRecursionDepthError() override { }
 
     static const QSet<int> kindsToSkip();
+    static bool shouldSkipRegion(const DomItem &item, FileLocationRegion region);
 
     bool preVisit(Node *n) override
     {
@@ -391,10 +392,13 @@ void AstRangesVisitor::addItemRanges(
         for (auto it = regs.cbegin(), end = regs.cend(); it != end; ++it) {
             quint32 startI = it.value().begin();
             quint32 endI = it.value().end();
-            if (!starts.contains(startI))
-                starts.insert(startI, { currentP, it.key(), quint32(endI - startI) });
-            if (!ends.contains(endI))
-                ends.insert(endI, { currentP, it.key(), endI - startI });
+
+            if (!shouldSkipRegion(item, it.key())) {
+                if (!starts.contains(startI))
+                    starts.insert(startI, { currentP, it.key(), quint32(endI - startI) });
+                if (!ends.contains(endI))
+                    ends.insert(endI, { currentP, it.key(), endI - startI });
+            }
         }
     }
     {
@@ -425,6 +429,25 @@ const QSet<int> AstRangesVisitor::kindsToSkip()
                                      })
                                    .unite(VisitAll::uiKinds());
     return res;
+}
+
+/*! \internal
+    \brief returns true if comments should skip attaching to this region
+*/
+bool AstRangesVisitor::shouldSkipRegion(const DomItem &item, FileLocationRegion region)
+{
+    switch (item.internalKind()) {
+    case DomType::EnumItem: {
+        return (region == FileLocationRegion::IdentifierRegion);
+    }
+    case DomType::QmlObject: {
+        return (region == FileLocationRegion::RightBraceRegion
+                          || region == FileLocationRegion::LeftBraceRegion);
+    }
+    default:
+        return false;
+    }
+    Q_UNREACHABLE_RETURN(false);
 }
 
 /*!

@@ -865,7 +865,7 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
             ow.ensureNewline();
         }
         ow.decreaseIndent(1, baseIndent);
-        ow.write(u"}");
+        ow.writeRegion(RightBraceRegion);
 
         return;
     }
@@ -1032,7 +1032,7 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
         ow.removeTextAddCallback(spacerId);
     }
     ow.decreaseIndent(1, baseIndent);
-    ow.ensureNewline().write(u"}");
+    ow.ensureNewline().writeRegion(RightBraceRegion);
 }
 
 Binding::Binding(const QString &name, std::unique_ptr<BindingValue> value, BindingType bindingType)
