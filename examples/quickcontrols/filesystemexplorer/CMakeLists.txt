@@ -4,6 +4,11 @@
 cmake_minimum_required(VERSION 3.16)
 project(filesystemexplorer LANGUAGES CXX)
 
+if (ANDROID OR IOS)
+    message(FATAL_ERROR "Platform is not supported")
+    return()
+endif ()
+
 if (NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif ()
