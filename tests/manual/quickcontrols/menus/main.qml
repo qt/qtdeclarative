@@ -173,6 +173,16 @@ ApplicationWindow {
             checkable: true
             checked: true
         }
+        ContextAction {
+            text: qsTr("Disabled context menu item")
+            enabled: false
+        }
+        ContextAction {
+            text: qsTr("Checked and disabled context menu item")
+            checkable: true
+            checked: true
+            enabled: false
+        }
 
         // TODO: separator
 
@@ -200,6 +210,16 @@ ApplicationWindow {
                 text: qsTr("Checked sub-menu item")
                 checkable: true
                 checked: true
+            }
+            ContextAction {
+                text: qsTr("Disabled sub-menu item")
+                enabled: false
+            }
+            ContextAction {
+                text: qsTr("Checked and disabled sub-menu item")
+                checkable: true
+                checked: true
+                enabled: false
             }
         }
     }
