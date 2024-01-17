@@ -925,7 +925,7 @@ void QQuickLayout::geometryChange(const QRectF &newGeometry, const QRectF &oldGe
 {
     Q_D(QQuickLayout);
     QQuickItem::geometryChange(newGeometry, oldGeometry);
-    if (invalidated() || d->m_disableRearrange || !isReady())
+    if (d->m_disableRearrange || !isReady())
         return;
 
     qCDebug(lcQuickLayouts) << "QQuickLayout::geometryChange" << newGeometry << oldGeometry;
