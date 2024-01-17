@@ -137,4 +137,7 @@ Zzz {
     function qualifiedScriptIdentifiers() {
         console.l()
     }
+    QtObject {
+
+    }
 }

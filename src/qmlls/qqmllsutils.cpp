@@ -171,6 +171,33 @@ static QStringList fieldMemberExpressionBits(const DomItem &item, const DomItem 
     return result;
 }
 
+static CompletionItem makeSnippet(QUtf8StringView qualifier, QUtf8StringView label,
+                                  QUtf8StringView insertText)
+{
+    CompletionItem res;
+    if (!qualifier.isEmpty()) {
+        res.label = qualifier.data();
+        res.label += '.';
+    }
+    res.label += label.data();
+    res.insertTextFormat = InsertTextFormat::Snippet;
+    if (!qualifier.isEmpty()) {
+        res.insertText = qualifier.data();
+        *res.insertText += '.';
+        *res.insertText += insertText.data();
+    } else {
+        res.insertText = insertText.data();
+    }
+    res.kind = int(CompletionItemKind::Snippet);
+    res.insertTextMode = InsertTextMode::AdjustIndentation;
+    return res;
+}
+
+static CompletionItem makeSnippet(QUtf8StringView label, QUtf8StringView insertText)
+{
+    return makeSnippet(QByteArray(), label, insertText);
+}
+
 /*!
    \internal
    The language server protocol calls "URI" what QML calls "URL".
@@ -1927,6 +1954,146 @@ static QList<CompletionItem> signalHandlerCompletion(const QQmlJSScope::ConstPtr
     return res;
 }
 
+static QList<CompletionItem> suggestQuickSnippetsCompletion(const DomItem &itemAtPosition)
+{
+    QList<CompletionItem> res;
+    auto file = itemAtPosition.containingFile().as<QmlFile>();
+    if (!file)
+        return {};
+
+    // check if QtQuick has been imported
+    const auto &imports = file->imports();
+    auto it = std::find_if(imports.constBegin(), imports.constEnd(), [](const Import &import) {
+        return import.uri.moduleUri() == u"QtQuick";
+    });
+    if (it == imports.constEnd()) {
+        return res;
+    }
+
+    // check if the user already typed some qualifier, remove its dot and compare it to QtQuick's
+    // qualified name
+    const QString userTypedQualifier = QQmlLSUtils::qualifiersFrom(itemAtPosition);
+    if (!userTypedQualifier.isEmpty()
+        && !it->importId.startsWith(QStringView(userTypedQualifier).chopped(1))) {
+        return res;
+    }
+
+    const QByteArray prefixForSnippet =
+            userTypedQualifier.isEmpty() ? it->importId.toUtf8() : QByteArray();
+    const QByteArray prefixWithDotForSnippet =
+            prefixForSnippet.isEmpty() ? QByteArray() : QByteArray(prefixForSnippet).append(u'.');
+
+    // Quick completions from Qt Creator's code model
+    res << makeSnippet(prefixForSnippet, "BorderImage snippet",
+                       "BorderImage {\n"
+                       "\tid: ${1:name}\n"
+                       "\tsource: \"${2:file}\"\n"
+                       "\twidth: ${3:100}; height: ${4:100}\n"
+                       "\tborder.left: ${5: 5}; border.top: ${5}\n"
+                       "\tborder.right: ${5}; border.bottom: ${5}\n"
+                       "}");
+    res << makeSnippet(prefixForSnippet, "ColorAnimation snippet",
+                       "ColorAnimation {\n"
+                       "\tfrom: \"${1:white}\"\n"
+                       "\tto: \"${2:black}\"\n"
+                       "\tduration: ${3:200}\n"
+                       "}");
+    res << makeSnippet(prefixForSnippet, "Image snippet",
+                       "Image {\n"
+                       "\tid: ${1:name}\n"
+                       "\tsource: \"${2:file}\"\n"
+                       "}");
+    res << makeSnippet(prefixForSnippet, "Item snippet",
+                       "Item {\n"
+                       "\tid: ${1:name}\n"
+                       "}");
+    res << makeSnippet(prefixForSnippet, "NumberAnimation snippet",
+                       "NumberAnimation {\n"
+                       "\ttarget: ${1:object}\n"
+                       "\tproperty: \"${2:name}\"\n"
+                       "\tduration: ${3:200}\n"
+                       "\teasing.type: "_ba.append(prefixWithDotForSnippet)
+                               .append("Easing.${4:InOutQuad}\n"
+                                       "}"));
+    res << makeSnippet(prefixForSnippet, "NumberAnimation with targets snippet",
+                       "NumberAnimation {\n"
+                       "\ttargets: [${1:object}]\n"
+                       "\tproperties: \"${2:name}\"\n"
+                       "\tduration: ${3:200}\n"
+                       "}");
+    res << makeSnippet(prefixForSnippet, "PauseAnimation snippet",
+                       "PauseAnimation {\n"
+                       "\tduration: ${1:200}\n"
+                       "}");
+    res << makeSnippet(prefixForSnippet, "PropertyAction snippet",
+                       "PropertyAction {\n"
+                       "\ttarget: ${1:object}\n"
+                       "\tproperty: \"${2:name}\"\n"
+                       "}");
+    res << makeSnippet(prefixForSnippet, "PropertyAction with targets snippet",
+                       "PropertyAction {\n"
+                       "\ttargets: [${1:object}]\n"
+                       "\tproperties: \"${2:name}\"\n"
+                       "}");
+    res << makeSnippet(prefixForSnippet, "PropertyChanges snippet",
+                       "PropertyChanges {\n"
+                       "\ttarget: ${1:object}\n"
+                       "}");
+    res << makeSnippet(prefixForSnippet, "State snippet",
+                       "State {\n"
+                       "\tname: ${1:name}\n"
+                       "\t"_ba.append(prefixWithDotForSnippet)
+                               .append("PropertyChanges {\n"
+                                       "\t\ttarget: ${2:object}\n"
+                                       "\t}\n"
+                                       "}"));
+    res << makeSnippet(prefixForSnippet, "Text snippet",
+                       "Text {\n"
+                       "\tid: ${1:name}\n"
+                       "\ttext: qsTr(\"${2:text}\")\n"
+                       "}");
+    res << makeSnippet(prefixForSnippet, "Transition snippet",
+                       "Transition {\n"
+                       "\tfrom: \"${1:fromState}\"\n"
+                       "\tto: \"${2:toState}\"\n"
+                       "}");
+
+    if (!userTypedQualifier.isEmpty())
+        return res;
+
+    auto resolver = file->typeResolver();
+    if (!resolver)
+        return res;
+    const auto qquickItemScope = resolver->typeForName(prefixWithDotForSnippet + u"Item"_s);
+    const QQmlJSScope::ConstPtr ownerScope = itemAtPosition.qmlObject().semanticScope();
+    if (!ownerScope || !qquickItemScope)
+        return res;
+
+    if (ownerScope->inherits(qquickItemScope)) {
+        res << makeSnippet("states binding with PropertyChanges in State",
+                           "states: [\n"
+                           "\t"_ba.append(prefixWithDotForSnippet)
+                                   .append("State {\n"
+                                           "\t\tname: \"${1:name}\"\n"
+                                           "\t\t"_ba.append(prefixWithDotForSnippet)
+                                                   .append("PropertyChanges {\n"
+                                                           "\t\t\ttarget: ${2:object}\n"
+                                                           "\t\t}\n"
+                                                           "\t}\n"
+                                                           "]")));
+        res << makeSnippet("transitions binding with Transition",
+                           "transitions: [\n"
+                           "\t"_ba.append(prefixWithDotForSnippet)
+                                   .append("Transition {\n"
+                                           "\t\tfrom: \"${1:fromState}\"\n"
+                                           "\t\tto: \"${2:fromState}\"\n"
+                                           "\t}\n"
+                                           "]"));
+    }
+
+    return res;
+}
+
 static QList<CompletionItem> suggestBindingCompletion(const DomItem &itemAtPosition)
 {
     QList<CompletionItem> res;
@@ -2075,6 +2242,29 @@ static bool testScopeSymbol(const QQmlJSScope::ConstPtr &scope, LocalSymbolsType
     return false;
 }
 
+QString QQmlLSUtils::qualifiersFrom(const DomItem &el)
+{
+    const bool isAccess = isFieldMemberAccess(el);
+    if (!isAccess && !isFieldMemberExpression(el))
+        return {};
+
+    const DomItem fieldMemberExpressionBeginning =
+            el.filterUp([](DomType, const DomItem &item) { return !isFieldMemberAccess(item); },
+                        FilterUpOptions::ReturnOuter);
+    QStringList qualifiers = fieldMemberExpressionBits(fieldMemberExpressionBeginning, el);
+
+    QString result;
+    for (const QString &qualifier : qualifiers)
+        result.append(qualifier).append(QChar(u'.'));
+    return result;
+}
+
+/*!
+\internal
+Obtain the types reachable from \c{el}.
+
+The parameter \c{qualifiers} is re-computed from \c{el} when empty.
+*/
 QList<CompletionItem> QQmlLSUtils::reachableTypes(const DomItem &el, LocalSymbolsTypes options,
                                                   CompletionItemKind kind)
 {
@@ -2085,22 +2275,7 @@ QList<CompletionItem> QQmlLSUtils::reachableTypes(const DomItem &el, LocalSymbol
     if (!resolver)
         return {};
 
-    const QString requiredQualifiers = [&el]() -> QString {
-        const bool isAccess = isFieldMemberAccess(el);
-        if (!isAccess && !isFieldMemberExpression(el))
-            return {};
-
-        const DomItem fieldMemberExpressionBeginning =
-                el.filterUp([](DomType, const DomItem &item) { return !isFieldMemberAccess(item); },
-                            FilterUpOptions::ReturnOuter);
-        QStringList qualifiers = fieldMemberExpressionBits(fieldMemberExpressionBeginning, el);
-
-        QString result;
-        for (const QString &qualifier : qualifiers)
-            result.append(qualifier).append(u'.');
-        return result;
-    }();
-
+    const QString requiredQualifiers = qualifiersFrom(el);
     QList<CompletionItem> res;
     const auto keyValueRange = resolver->importedTypes().asKeyValueRange();
     for (const auto &type : keyValueRange) {
@@ -2459,17 +2634,6 @@ static QList<CompletionItem> insidePragmaCompletion(QQmlJS::Dom::DomItem current
     return res;
 }
 
-static CompletionItem makeSnippet(QUtf8StringView label, QUtf8StringView insertText)
-{
-    CompletionItem res;
-    res.label = label.data();
-    res.insertTextFormat = InsertTextFormat::Snippet;
-    res.insertText = insertText.data();
-    res.kind = int(CompletionItemKind::Snippet);
-    res.insertTextMode = InsertTextMode::AdjustIndentation;
-    return res;
-}
-
 static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &parentForContext,
                                                        const QQmlLSCompletionPosition &positionInfo)
 {
@@ -2485,6 +2649,7 @@ static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &parentForC
         options.setFlag(LocalSymbolsType::ObjectType);
         res << QQmlLSUtils::reachableTypes(positionInfo.itemAtPosition, options,
                                            CompletionItemKind::Constructor);
+        res << suggestQuickSnippetsCompletion(positionInfo.itemAtPosition);
 
         if (isFieldMemberExpression(positionInfo.itemAtPosition)) {
             /*!
@@ -2564,6 +2729,7 @@ static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &parentForC
         const DomItem containingFile = parentForContext.containingFile();
         res += QQmlLSUtils::reachableTypes(containingFile, LocalSymbolsType::ObjectType,
                                            CompletionItemKind::Constructor);
+        res << suggestQuickSnippetsCompletion(positionInfo.itemAtPosition);
         return res;
     }
     return {};
@@ -2653,6 +2819,7 @@ static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
                 options.setFlag(LocalSymbolsType::ObjectType);
                 res << QQmlLSUtils::reachableTypes(positionInfo.itemAtPosition, options,
                                                    CompletionItemKind::Constructor);
+                res << suggestQuickSnippetsCompletion(positionInfo.itemAtPosition);
             }
         }
         return res;
@@ -2671,6 +2838,7 @@ static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
     // add Qml Types for default binding
     res += QQmlLSUtils::reachableTypes(positionInfo.itemAtPosition, LocalSymbolsType::ObjectType,
                                        CompletionItemKind::Constructor);
+    res << suggestQuickSnippetsCompletion(positionInfo.itemAtPosition);
     return res;
 }
 
@@ -2682,9 +2850,10 @@ static QList<CompletionItem> insideImportCompletion(const DomItem &currentItem,
     res += insideImportCompletionHelper(containingFile, positionInfo);
 
     // when in front of the import statement: propose types for root Qml Object completion
-    if (cursorInFrontOfItem(currentItem, positionInfo))
+    if (cursorInFrontOfItem(currentItem, positionInfo)) {
         res += QQmlLSUtils::reachableTypes(containingFile, LocalSymbolsType::ObjectType,
                                            CompletionItemKind::Constructor);
+    }
 
     return res;
 }

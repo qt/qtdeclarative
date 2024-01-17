@@ -162,6 +162,7 @@ public:
     using CompletionItem = QLspSpecification::CompletionItem;
     static QList<CompletionItem> idsCompletions(const DomItem& component);
 
+    static QString qualifiersFrom(const DomItem &el);
     static QList<CompletionItem> reachableTypes(const DomItem &context,
                                                 QQmlJS::Dom::LocalSymbolsTypes typeCompletionType,
                                                 QLspSpecification::CompletionItemKind kind);
