@@ -11,16 +11,12 @@ qt_internal_add_tool(${target_name}
     TOOLS_TARGET Quick
     SOURCES
         main.cpp
-        qsvgloader.cpp qsvgloader_p.h
     LIBRARIES
         Qt::Core
         Qt::Gui
         Qt::Qml
         Qt::Quick
-        Qt::QuickPrivate
-        Qt::Svg
-        Qt::SvgPrivate
-        Qt::QuickShapesPrivate
+        Qt::QuickVectorGraphicsGeneratorPrivate
 )
 qt_internal_return_unless_building_tools()
 

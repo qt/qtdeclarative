@@ -56,6 +56,10 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
         add_subdirectory(quickshapes)
     endif()
 
+    if(TARGET Qt::Svg)
+        add_subdirectory(quickvectorgraphics)
+    endif()
+
     if(TARGET Qt::Widgets)
         add_subdirectory(quickwidgets)
     endif()
