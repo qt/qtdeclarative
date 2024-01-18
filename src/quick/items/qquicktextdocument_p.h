@@ -17,17 +17,16 @@
 
 #include "qquicktextdocument.h"
 
+#include <QtGui/qabstracttextdocumentlayout.h>
 #include <QtGui/qtextdocument.h>
-#include <QtGui/qtextoption.h>
-#include <QtGui/qtextcursor.h>
+#include <QtGui/qtextdocumentfragment.h>
 #include <QtGui/qtextformat.h>
 #include <QtCore/qrect.h>
-#include <QtGui/qabstracttextdocumentlayout.h>
-#include <QtGui/qtextdocumentfragment.h>
-#include <QtGui/qclipboard.h>
-#include <QtGui/private/qinputcontrol_p.h>
-#include <QtCore/qmimedatabase.h>
 #include <QtCore/private/qobject_p_p.h>
+
+#if QT_CONFIG(mimetype)
+#include <QtCore/qmimedatabase.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -69,7 +68,9 @@ public:
     // so far the QQuickItem given to the QQuickTextDocument ctor is always a QQuickTextEdit
     QQuickTextEdit *editor = nullptr;
     QUrl url;
+#if QT_CONFIG(mimetype)
     QMimeType mimeType;
+#endif
     std::optional<QStringConverter::Encoding> encoding; // only relevant for HTML
     QQuickTextDocument::Status status = QQuickTextDocument::Status::Null;
 };
