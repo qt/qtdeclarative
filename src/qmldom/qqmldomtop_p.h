@@ -197,8 +197,17 @@ public:
         return std::static_pointer_cast<DomUniverse>(doCopy(self));
     }
 
-    void loadFile(const FileToLoad &file, const Callback &callback, LoadOptions loadOptions,
-                  std::optional<DomType> fileType = std::optional<DomType>());
+    // Helper structure reflecting the change in the map once loading && parsing is completed
+    // formerItem - DomItem representing value (ExternalItemPair) existing in the map before the
+    // loading && parsing. Might be empty (if didn't exist / failure) or equal to currentItem
+    // currentItem - DomItem representing current map value
+    struct LoadResult
+    {
+        DomItem formerItem;
+        DomItem currentItem;
+    };
+
+    LoadResult loadFile(const FileToLoad &file, DomType fileType, LoadOptions loadOptions);
 
     void removePath(const QString &dir);
 
@@ -321,15 +330,6 @@ private:
     using ReadResult = std::variant<ContentWithDate, ErrorMessage>;
     ReadResult readFileContent(const QString &canonicalPath) const;
 
-    // Helper structure reflecting the change in the map once loading && parsing is completed
-    // formerItem - DomItem representing value existing in the map before the loading && parsing.
-    // Might be empty (if didn't exist / failure) or equal to currentItem
-    // currentItem - DomItem representing current map value
-    struct LoadResult
-    {
-        DomItem formerItem;
-        DomItem currentItem;
-    };
     LoadResult load(const ContentWithDate &codeWithDate, const FileToLoad &file, DomType fType);
 
     // contains either Content to be parsed or LoadResult if loading / parsing is not needed
@@ -838,9 +838,9 @@ public:
     void clearReferenceCache();
     void setLoadPaths(const QStringList &v);
 
-    // Helper structure reflecting the change in the map once ExternalItemInfo is added
-    // formerItem - DomItem representing value existing in the map before.
-    // Might be empty (if didn't exist / failure) or equal to currentItem
+    // Helper structure reflecting the change in the map once loading / fetching is completed
+    // formerItem - DomItem representing value (ExternalItemInfo) existing in the map before the
+    // loading && parsing. Might be empty (if didn't exist / failure) or equal to currentItem
     // currentItem - DomItem representing current map value
     struct LoadResult
     {

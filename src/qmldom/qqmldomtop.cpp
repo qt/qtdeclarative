@@ -231,55 +231,33 @@ static DomType fileTypeForPath(const DomItem &self, const QString &canonicalFile
     return DomType::Empty;
 }
 
-void DomUniverse::loadFile(const FileToLoad &file, const Callback &callback, LoadOptions,
-                           std::optional<DomType> fileType)
+DomUniverse::LoadResult DomUniverse::loadFile(const FileToLoad &file, DomType fileType, LoadOptions)
 {
     DomItem univ(shared_from_this());
-    const auto &canonicalPath = file.canonicalPath();
-    DomType fType = (bool(fileType) ? (*fileType) : fileTypeForPath(univ, canonicalPath));
-    switch (fType) {
+    switch (fileType) {
     case DomType::QmlFile:
     case DomType::QmltypesFile:
     case DomType::QmldirFile:
     case DomType::QmlDirectory:
     case DomType::JsFile: {
         LoadResult loadRes;
-        const auto &preLoadResult = preload(univ, file, fType);
+        const auto &preLoadResult = preload(univ, file, fileType);
         if (std::holds_alternative<LoadResult>(preLoadResult)) {
             // universe already has the most recent version of the file
-            loadRes = std::move(std::get<LoadResult>(preLoadResult));
+            return std::move(std::get<LoadResult>(preLoadResult));
         } else {
             // content of the file needs to be parsed and value inside Universe needs to be updated
-            loadRes = load(std::get<ContentWithDate>(preLoadResult), file, fType);
+            return load(std::get<ContentWithDate>(preLoadResult), file, fileType);
         }
-        // execute callback
-        if (callback) {
-            Path p;
-            if (fType == DomType::QmlFile)
-                p = Paths::qmlFileInfoPath(canonicalPath);
-            else if (fType == DomType::QmltypesFile)
-                p = Paths::qmltypesFileInfoPath(canonicalPath);
-            else if (fType == DomType::QmldirFile)
-                p = Paths::qmldirFileInfoPath(canonicalPath);
-            else if (fType == DomType::QmlDirectory)
-                p = Paths::qmlDirectoryInfoPath(canonicalPath);
-            else if (fType == DomType::JsFile)
-                p = Paths::jsFileInfoPath(canonicalPath);
-            else
-                Q_ASSERT(false);
-            callback(p, loadRes.formerItem, loadRes.currentItem);
-        }
-        return;
     }
     default:
         univ.addError(myErrors()
                               .error(tr("Ignoring request to load file %1 of unexpected type %2, "
                                         "calling callback immediately")
-                                             .arg(file.canonicalPath(), domTypeToString(fType)))
+                                             .arg(file.canonicalPath(), domTypeToString(fileType)))
                               .handle());
         Q_ASSERT(false && "loading non supported file type");
-        callback(Path(), DomItem::empty, DomItem::empty);
-        return;
+        return {};
     }
 }
 
@@ -1226,7 +1204,11 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         oldValue = fetchResult.first;
         newValue = fetchResult.second;
         if (!newValue) {
-            universe()->loadFile(file, callback, loadOptions, fType);
+            const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
+            if (callback) {
+                callback(Paths::qmlDirectoryInfoPath(file.canonicalPath()), loadRes.formerItem,
+                         loadRes.currentItem);
+            }
             return;
         }
     } break;
@@ -1235,7 +1217,11 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         oldValue = fetchResult.first;
         newValue = fetchResult.second;
         if (!newValue) {
-            universe()->loadFile(file, callback, loadOptions, fType);
+            const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
+            if (callback) {
+                callback(Paths::qmlFileInfoPath(file.canonicalPath()), loadRes.formerItem,
+                         loadRes.currentItem);
+            }
             return;
         }
     } break;
@@ -1244,7 +1230,11 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         oldValue = fetchResult.first;
         newValue = fetchResult.second;
         if (!newValue) {
-            universe()->loadFile(file, callback, loadOptions, fType);
+            const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
+            if (callback) {
+                callback(Paths::qmltypesFileInfoPath(file.canonicalPath()), loadRes.formerItem,
+                         loadRes.currentItem);
+            }
             return;
         }
     } break;
@@ -1253,12 +1243,20 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         oldValue = fetchResult.first;
         newValue = fetchResult.second;
         if (!newValue) {
-            universe()->loadFile(file, callback, loadOptions, fType);
+            const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
+            if (callback) {
+                callback(Paths::qmldirFileInfoPath(file.canonicalPath()), loadRes.formerItem,
+                         loadRes.currentItem);
+            }
             return;
         }
     } break;
     case DomType::JsFile: {
-        universe()->loadFile(file, callback, loadOptions, fType);
+        const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
+        if (callback) {
+            callback(Paths::jsFileInfoPath(file.canonicalPath()), loadRes.formerItem,
+                     loadRes.currentItem);
+        }
         return;
     } break;
     default: {
