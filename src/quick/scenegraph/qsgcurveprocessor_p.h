@@ -32,8 +32,6 @@ public:
                                const std::array<QVector2D, 3> &,
                                bool)> addStrokeTriangleCallback;
 
-    enum OverlapSolveMode { FullOverlapSolve, SkipConcaveJoinsSolve };
-
     static void processFill(const QQuadPath &path,
                             Qt::FillRule fillRule,
                             addTriangleCallback addTriangle);
@@ -44,7 +42,7 @@ public:
                               Qt::PenCapStyle capStyle,
                               addStrokeTriangleCallback addTriangle,
                               int subdivisions = 3);
-    static bool solveOverlaps(QQuadPath &path, OverlapSolveMode mode = SkipConcaveJoinsSolve);
+    static bool solveOverlaps(QQuadPath &path);
     static QList<QPair<int, int>> findOverlappingCandidates(const QQuadPath &path);
     static bool solveIntersections(QQuadPath &path, bool alwaysReorder = true);
 };

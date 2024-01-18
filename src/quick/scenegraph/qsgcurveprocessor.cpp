@@ -193,20 +193,6 @@ bool checkLineTriangleOverlap(TrianglePoints &triangle, LinePoints &line, float 
     return true;
 }
 
-// We could slightly optimize this if we did fixWinding in advance
-bool checkTriangleContains (QVector2D pt, QVector2D v1, QVector2D v2, QVector2D v3, float epsilon = 1.0/32)
-{
-    float d1, d2, d3;
-    d1 = determinant(pt, v1, v2);
-    d2 = determinant(pt, v2, v3);
-    d3 = determinant(pt, v3, v1);
-
-    bool allNegative = d1 < -epsilon && d2 < -epsilon && d3 < -epsilon;
-    bool allPositive = d1 > epsilon && d2 > epsilon && d3 > epsilon;
-
-    return allNegative || allPositive;
-}
-
 static bool isOverlap(const QQuadPath &path, int e1, int e2)
 {
     const QQuadPath::Element &element1 = path.elementAt(e1);
@@ -342,13 +328,6 @@ static bool isIntersecting(const QQuadPath &path, int e1, int e2, QList<QPair<fl
                               TrianglePoints { elem2.startPoint(), elem2.controlPoint(), elem2.endPoint() },
                               solutions);
     }
-}
-
-static bool isOverlap(const QQuadPath &path, int index, const QVector2D &vertex)
-{
-    const QQuadPath::Element &elem = path.elementAt(index);
-    Q_ASSERT(!elem.isLine());
-    return checkTriangleContains(vertex, elem.startPoint(), elem.controlPoint(), elem.endPoint());
 }
 
 struct TriangleData
@@ -814,6 +793,10 @@ static QList<TriangleData> customTriangulator2(const QQuadPath &path, float penW
 // Returns true if a change was made
 static bool handleOverlap(QQuadPath &path, int e1, int e2, int recursionLevel = 0)
 {
+    // Splitting lines is not going to help with overlap, since we assume that lines don't intersect
+    if (path.elementAt(e1).isLine() && path.elementAt(e1).isLine())
+        return false;
+
     if (!isOverlap(path, e1, e2)) {
         return false;
     }
@@ -866,79 +849,19 @@ static bool handleOverlap(QQuadPath &path, int e1, int e2, int recursionLevel = 
     }
     return true;
 }
-
-// Test if element contains a start point of another element
-// Returns true if a change was made
-static bool handleOverlap(QQuadPath &path, int e1, const QVector2D vertex, int recursionLevel = 0)
-{
-    // First of all: Ignore the next element: it trivially overlaps (maybe not necessary: we do check for strict containment)
-    if (vertex == path.elementAt(e1).endPoint() || !isOverlap(path, e1, vertex))
-        return false;
-    if (recursionLevel > 8) {
-        qCDebug(lcSGCurveIntersectionSolver) << "Vertex overlap: recursion level" << recursionLevel << "aborting!";
-        return false;
-    }
-
-    bool changed = false;
-    // Don't split if we're already split
-    if (path.elementAt(e1).childCount() == 0) {
-        path.splitElementAt(e1);
-        changed = true;
-    }
-
-    changed = handleOverlap(path, path.indexOfChildAt(e1, 0), vertex, recursionLevel + 1) || changed; // variable at the end to avoid accidentally short-cutting out the call
-    changed = handleOverlap(path, path.indexOfChildAt(e1, 1), vertex, recursionLevel + 1) || changed;
-    return changed;
-}
-
 }
 
 // Returns true if the path was changed
-bool QSGCurveProcessor::solveOverlaps(QQuadPath &path, OverlapSolveMode mode)
+bool QSGCurveProcessor::solveOverlaps(QQuadPath &path)
 {
     bool changed = false;
     if (path.testHint(QQuadPath::PathNonOverlappingControlPointTriangles))
         return false;
-    for (int i = 0; i < path.elementCount(); i++) {
-        auto &element = path.elementAt(i);
-        // only concave curve overlap is problematic, as long as we don't allow self-intersecting curves
-        if (element.isLine() || element.isConvex())
-            continue;
 
-        for (int j = 0; j < path.elementCount(); j++) {
-            if (i == j)
-                continue; // Would be silly to test overlap with self
-            auto &other = path.elementAt(j);
-            if (!other.isConvex() && !other.isLine() && j < i)
-                continue; // We have already tested this combination, so no need to test again
-            changed = handleOverlap(path, i, j) || changed;
-        }
-    }
+    const auto candidates = findOverlappingCandidates(path);
+    for (auto candidate : candidates)
+        changed = handleOverlap(path, candidate.first, candidate.second) || changed;
 
-    const bool handleConcaveJoint = mode == FullOverlapSolve;
-    if (handleConcaveJoint) {
-        // Note that the joint between two non-concave elements can also be concave, so we have to
-        // test all convex elements to see if there is a vertex in any of them. We could do it the other way
-        // by identifying concave joints, but then we would have to know which side is the inside
-        // TODO: optimization potential! Maybe do that at the same time as we identify concave curves?
-
-        // We do this in a separate loop, since the triangle/triangle test above is more expensive, and
-        // if we did this first, there would be more triangles to test
-        for (int i = 0; i < path.elementCount(); i++) {
-            auto &element = path.elementAt(i);
-            if (!element.isConvex())
-                continue;
-
-            for (int j = 0; j < path.elementCount(); j++) {
-                // We only need to check one point per element, since all subpaths are closed
-                // Could do smartness to skip elements that cannot overlap, but let's do it the easy way first
-                if (i == j)
-                    continue;
-                const auto &other = path.elementAt(j);
-                changed = handleOverlap(path, i, other.startPoint()) || changed;
-            }
-        }
-    }
     path.setHint(QQuadPath::PathNonOverlappingControlPointTriangles);
     return changed;
 }

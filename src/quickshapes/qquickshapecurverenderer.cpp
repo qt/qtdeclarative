@@ -420,8 +420,6 @@ void QQuickShapeCurveRenderer::processPath(PathData *pathData)
     static const bool doIntersetionSolving = !qEnvironmentVariableIntValue("QT_QUICKSHAPES_DISABLE_INTERSECTION_SOLVER");
     static const bool useTriangulatingStroker = qEnvironmentVariableIntValue("QT_QUICKSHAPES_TRIANGULATING_STROKER");
     static const bool simplifyPath = qEnvironmentVariableIntValue("QT_QUICKSHAPES_SIMPLIFY_PATHS");
-    static const QSGCurveProcessor::OverlapSolveMode overlapMode = qEnvironmentVariableIntValue("QT_QUICKSHAPES_WIP_CONCAVE_JOINT")
-            ? QSGCurveProcessor::FullOverlapSolve : QSGCurveProcessor::SkipConcaveJoinsSolve;
 
     int &dirtyFlags = pathData->m_dirty;
 
@@ -443,7 +441,7 @@ void QQuickShapeCurveRenderer::processPath(PathData *pathData)
                     QSGCurveProcessor::solveIntersections(pathData->fillPath);
                 pathData->fillPath.addCurvatureData();
                 if (doOverlapSolving)
-                    QSGCurveProcessor::solveOverlaps(pathData->fillPath, overlapMode);
+                    QSGCurveProcessor::solveOverlaps(pathData->fillPath);
             }
             pathData->fillNodes = addFillNodes(*pathData);
             dirtyFlags |= StrokeDirty;
