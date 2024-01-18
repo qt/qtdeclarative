@@ -80,17 +80,12 @@
     \section1 Font Configuration
 
     The default \l {Control::font}{font} can be specified in a \c Font sub-group
-    in each style's section in the configuration file. The \c Font sub-group can
-    be defined in two alternative ways:
+    in each style's section in the configuration file:
 
     \code
     [Basic]
     Font\Family=Open Sans
     Font\PixelSize=20
-
-    [Material\Font]
-    Family=Open Sans
-    PixelSize=20
     \endcode
 
     Supported font attributes:
@@ -135,13 +130,6 @@
     [Fusion]
     Palette\Window=#dedede
     Palette\WindowText=#212121
-    \endcode
-
-    or:
-    \code
-    [Fusion\Palette]
-    Window=#dedede
-    WindowText=#212121
     \endcode
 
     See \l [QtQuick]{Palette} QML type for more information.
