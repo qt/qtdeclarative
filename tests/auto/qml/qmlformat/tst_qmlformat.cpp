@@ -142,6 +142,7 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qmlls/utils/data/completions/afterDots.qml";
     m_invalidFiles << "tests/auto/qmlls/modules/data/completions/bindingAfterDot.qml";
     m_invalidFiles << "tests/auto/qmlls/modules/data/completions/defaultBindingAfterDot.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/qualifiedModule.qml";
 
     // Files that get changed:
     // rewrite of import "bla/bla/.." to import "bla"

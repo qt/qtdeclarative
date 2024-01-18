@@ -1846,8 +1846,29 @@ void tst_qmlls_utils::completions_data()
                                     })
                                  << QStringList({ u"foo"_s, u"import"_s, u"Rectangle"_s });
 
-    QTest::newRow("asCompletions")
-            << file << 26 << 9
+    QTest::newRow("qualifiedTypeCompletionBeforeDot")
+            << testFile(u"qualifiedModule.qml"_s) << 4 << 31
+            << ExpectedCompletions({
+                       { u"QQ.Rectangle"_s, CompletionItemKind::Constructor },
+               })
+            << QStringList({ u"foo"_s, u"import"_s, u"lala"_s, u"width"_s });
+
+    QTest::newRow("qualifiedTypeCompletionAfterDot")
+            << testFile(u"qualifiedModule.qml"_s) << 4 << 35
+            << ExpectedCompletions({
+                       { u"Rectangle"_s, CompletionItemKind::Constructor },
+               })
+            << QStringList({ u"foo"_s, u"import"_s, u"lala"_s, u"width"_s });
+
+    QTest::newRow("qualifiedTypeCompletionBeforeDotInDefaultBinding")
+            << testFile(u"qualifiedModule.qml"_s) << 5 << 5
+            << ExpectedCompletions({
+                       { u"QQ.Rectangle"_s, CompletionItemKind::Constructor },
+               })
+            << QStringList({ u"foo"_s, u"import"_s, u"lala"_s });
+
+    QTest::newRow("qualifiedTypeCompletionAfterDotInDefaultBinding")
+            << testFile(u"qualifiedModule.qml"_s) << 5 << 8
             << ExpectedCompletions({
                        { u"Rectangle"_s, CompletionItemKind::Constructor },
                })

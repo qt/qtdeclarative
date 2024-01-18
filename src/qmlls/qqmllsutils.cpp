@@ -2644,7 +2644,6 @@ insidePropertyDefinitionCompletion(const DomItem &currentItem,
 static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
                                                      const QQmlLSCompletionPosition &positionInfo)
 {
-    const bool isQualified = isFieldMemberAccess(positionInfo.itemAtPosition);
     const DomItem containingBinding = currentItem.filterUp(
             [](DomType type, const QQmlJS::Dom::DomItem &) { return type == DomType::Binding; },
             FilterUpOptions::ReturnOuter);
@@ -2654,18 +2653,15 @@ static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
         QList<CompletionItem> res;
         res << QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
 
-        // TODO: fix type completion for qualified types, see QTBUG-120111
-        if (!isQualified) {
-            if (auto type = QQmlLSUtils::resolveExpressionType(currentItem, ResolveOwnerType)) {
-                const QStringList names = currentItem.field(Fields::name).toString().split(u'.');
-                const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
-                // add type names when binding to an object type or a property with var type
-                if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
-                    LocalSymbolsTypes options;
-                    options.setFlag(LocalSymbolsType::ObjectType);
-                    res << QQmlLSUtils::reachableTypes(currentItem, options,
-                                                       CompletionItemKind::Constructor);
-                }
+        if (auto type = QQmlLSUtils::resolveExpressionType(currentItem, ResolveOwnerType)) {
+            const QStringList names = currentItem.field(Fields::name).toString().split(u'.');
+            const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
+            // add type names when binding to an object type or a property with var type
+            if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
+                LocalSymbolsTypes options;
+                options.setFlag(LocalSymbolsType::ObjectType);
+                res << QQmlLSUtils::reachableTypes(positionInfo.itemAtPosition, options,
+                                                   CompletionItemKind::Constructor);
             }
         }
         return res;
@@ -2681,12 +2677,9 @@ static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
 
     res << suggestBindingCompletion(positionInfo.itemAtPosition);
 
-    // TODO: fix type completion for qualified types, see QTBUG-120111
-    if (!isQualified) {
-        // add Qml Types for default binding
-        res += QQmlLSUtils::reachableTypes(currentItem, LocalSymbolsType::ObjectType,
-                                           CompletionItemKind::Constructor);
-    }
+    // add Qml Types for default binding
+    res += QQmlLSUtils::reachableTypes(positionInfo.itemAtPosition, LocalSymbolsType::ObjectType,
+                                       CompletionItemKind::Constructor);
     return res;
 }
 
