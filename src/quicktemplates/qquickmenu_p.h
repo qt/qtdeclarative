@@ -45,9 +45,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenu : public QQuickPopup
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL REVISION(2, 3))
     // 6.5 (Qt 6.5)
     Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(6, 5))
-    // 6.7
+    // 6.8
     Q_PROPERTY(bool requestNative READ requestNative WRITE setRequestNative RESET resetRequestNative
-        NOTIFY requestNativeChanged FINAL REVISION(6, 7))
+        NOTIFY requestNativeChanged FINAL REVISION(6, 8))
     Q_CLASSINFO("DefaultProperty", "contentData")
     QML_NAMED_ELEMENT(Menu)
     QML_ADDED_IN_VERSION(2, 0)
