@@ -41,7 +41,7 @@ QT_USE_NAMESPACE
 Q_TRACE_PREFIX(qtqml,
 "namespace QV4 {" \
 "struct ExecutionEngine;" \
-"struct ExecutableCompilationUnit;" \
+"class ExecutableCompilationUnit;" \
 "namespace CompiledData {" \
 "struct Object;" \
 "}}" \
