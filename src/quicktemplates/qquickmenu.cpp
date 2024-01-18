@@ -1120,14 +1120,15 @@ QQuickMenu::~QQuickMenu()
     // We have to do this to ensure that the change listeners are removed.
     // It's too late to do this in ~QQuickMenuPrivate, as contentModel has already
     // been destroyed before that is called.
-    if (!d->usingNativeMenu()) {
-        while (d->contentModel->count() > 0)
-            d->removeItem(0, d->itemAt(0));
-    } else {
-        qCDebug(lcNativeMenu) << "destroying" << d->nativeItems.count() << "native menu item(s) of" << this;
-        while (d->nativeItems.count() > 0)
-            d->removeNativeItem(d->nativeItems.at(0));
-    }
+    qCDebug(lcNativeMenu) << "destroying" << this
+                          << "item count:"
+                          << d->contentModel->count()
+                          << "native item count:" << d->nativeItems.count();
+
+    while (d->contentModel->count() > 0)
+        d->removeItem(0, d->itemAt(0));
+    while (d->nativeItems.count() > 0)
+        d->removeNativeItem(d->nativeItems.at(0));
 
     if (d->contentItem) {
         QQuickItemPrivate::get(d->contentItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
