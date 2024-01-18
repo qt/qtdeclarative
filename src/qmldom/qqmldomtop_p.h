@@ -888,6 +888,42 @@ public:
         return { env.copy(valueInBase), env.copy(newCurValue) };
     }
 
+    template <typename T>
+    void addExternalItemInfo(const DomItem &newExtItem, const Callback &loadCallback,
+                             const Callback &endCallback)
+    {
+        // get either Valid "file" from the ExternalItemPair or the current (wip) "file"
+        std::shared_ptr<T> newItemPtr;
+        if (options() & DomEnvironment::Option::KeepValid)
+            newItemPtr = newExtItem.field(Fields::validItem).ownerAs<T>();
+        if (!newItemPtr)
+            newItemPtr = newExtItem.field(Fields::currentItem).ownerAs<T>();
+        Q_ASSERT(newItemPtr && "envCallbackForFile reached without current file");
+
+        auto loadResult = insertOrUpdateExternalItemInfo(newExtItem.canonicalFilePath(),
+                                                         std::move(newItemPtr));
+        Path p = loadResult.currentItem.canonicalPath();
+        {
+            auto depLoad = qScopeGuard([p, this, endCallback] {
+                addDependenciesToLoad(p);
+                // add EndCallback to the queue, which should be called once all dependencies are
+                // loaded
+                if (endCallback) {
+                    DomItem env = DomItem(shared_from_this());
+                    addAllLoadedCallback(
+                            env, [p, endCallback](Path, const DomItem &, const DomItem &env) {
+                                DomItem el = env.path(p);
+                                endCallback(p, el, el);
+                            });
+                }
+            });
+            // call loadCallback
+            if (loadCallback) {
+                loadCallback(p, loadResult.formerItem, loadResult.currentItem);
+            }
+        }
+    }
+
 private:
     friend class RefCacheEntry;
 

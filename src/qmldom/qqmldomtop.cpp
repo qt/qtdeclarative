@@ -914,41 +914,12 @@ DomTop::Callback envCallbackForFile(const DomItem &self, DomTop::Callback loadCa
         shared_ptr<DomEnvironment> envPtr = selfPtr.lock();
         if (!envPtr)
             return;
-
-        // get either Valid "file" from the ExternalItemPair or the current (wip) "file"
-        shared_ptr<T> newItemPtr;
-        if (envPtr->options() & DomEnvironment::Option::KeepValid)
-            newItemPtr = newItem.field(Fields::validItem).ownerAs<T>();
-        if (!newItemPtr)
-            newItemPtr = newItem.field(Fields::currentItem).ownerAs<T>();
-        Q_ASSERT(newItemPtr && "envCallbackForFile reached without current file");
-
-        auto loadResult = envPtr->insertOrUpdateExternalItemInfo(newItem.canonicalFilePath(),
-                                                                 std::move(newItemPtr));
-        Path p = loadResult.currentItem.canonicalPath();
-        {
-            auto depLoad = qScopeGuard([p, envPtr, endCallback] {
-                envPtr->addDependenciesToLoad(p);
-                // add EndCallback to the queue, which should be called once all dependencies are
-                // loaded
-                if (endCallback) {
-                    DomItem env = DomItem(envPtr);
-                    envPtr->addAllLoadedCallback(
-                            env, [p, endCallback](Path, const DomItem &, const DomItem &env) {
-                                DomItem el = env.path(p);
-                                endCallback(p, el, el);
-                            });
-                }
-            });
-            // call loadCallback
-            if (loadCallback) {
-                loadCallback(p, loadResult.formerItem, loadResult.currentItem);
-            }
-        }
+        envPtr->addExternalItemInfo<T>(newItem, loadCallback, endCallback);
     };
 }
 
-ErrorGroups DomEnvironment::myErrors() {
+ErrorGroups DomEnvironment::myErrors()
+{
     static ErrorGroups res = {{NewErrorGroup("Dom")}};
     return res;
 }
