@@ -3045,8 +3045,8 @@ void QQuickItemPrivate::derefWindow()
     paintNode = nullptr;
 
     for (int ii = 0; ii < childItems.size(); ++ii) {
-        QQuickItem *child = childItems.at(ii);
-        QQuickItemPrivate::get(child)->derefWindow();
+        if (QQuickItem *child = childItems.at(ii))
+            QQuickItemPrivate::get(child)->derefWindow();
     }
 
     dirty(Window);
