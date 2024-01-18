@@ -1565,6 +1565,8 @@ void QQuickMenu::setTitle(const QString &title)
     if (title == d->title)
         return;
     d->title = title;
+    if (d->handle)
+        d->handle->setText(title);
     emit titleChanged(title);
 }
 
