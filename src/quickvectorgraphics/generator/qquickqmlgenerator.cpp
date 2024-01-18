@@ -100,8 +100,6 @@ void QQuickQmlGenerator::generateNodeBase(NodeInfo &info)
             stream() << "transform: Scale { xScale: " << sx << "; yScale: " << sy << " }";
         } else {
             const QMatrix4x4 m(info.transform);
-            auto xform = new QQuickMatrix4x4;
-            xform->setMatrix(m);
             {
                 stream() << "transform: [ Matrix4x4 { matrix: Qt.matrix4x4 (";
                 m_indentLevel += 3;
