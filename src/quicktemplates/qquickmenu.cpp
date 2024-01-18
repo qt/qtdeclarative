@@ -538,6 +538,8 @@ void QQuickMenuPrivate::insertNativeItem(int index, QQuickAction *action)
         }
     }
 
+    QObjectPrivate::connect(action, &QQuickAction::textChanged, this, &QQuickMenuPrivate::syncWithNativeMenu);
+
     qCDebug(lcNativeMenu) << "- nativeItems now contains the following items:"
         << nativeMenuItemListToString(nativeItems);
 
@@ -600,6 +602,8 @@ void QQuickMenuPrivate::removeNativeItem(QQuickAction *action, DestroyPolicy des
 {
     Q_ASSERT(usingNativeMenu());
     qCDebug(lcNativeMenu) << "removeNativeItem called with" << action;
+
+    QObjectPrivate::disconnect(action, &QQuickAction::textChanged, this, &QQuickMenuPrivate::syncWithNativeMenu);
 
     const int actionIndex = indexOfActionInNativeItems(action);
     if (actionIndex == -1)
