@@ -157,16 +157,6 @@ static bool containsAny(const ContainerA &container, const ContainerB &elements)
     return false;
 }
 
-template<typename ContainerA, typename ContainerB>
-static bool containsAll(const ContainerA &container, const ContainerB &elements)
-{
-    for (const auto &element : elements) {
-        if (!container.contains(element))
-            return false;
-    }
-    return true;
-}
-
 template<class Key, class T, class Compare = std::less<Key>,
          class KeyContainer = QList<Key>, class MappedContainer = QList<T>>
 class NewFlatMap
@@ -193,7 +183,7 @@ private:
 
 struct PendingBlock
 {
-    QList<int> conversions;
+    QQmlJSBasicBlocks::Conversions conversions;
     int start = -1;
     bool registerActive = false;
 };
@@ -283,7 +273,7 @@ void QQmlJSBasicBlocks::populateReaderLocations()
             auto nextBlock = m_basicBlocks.find(block.start);
             auto currentBlock = nextBlock++;
             bool registerActive = block.registerActive;
-            QList<int> conversions = block.conversions;
+            Conversions conversions = block.conversions;
 
             const auto blockEnd = (nextBlock == m_basicBlocks.end())
                     ? m_annotations.end()
@@ -295,7 +285,7 @@ void QQmlJSBasicBlocks::populateReaderLocations()
             for (; blockInstr != blockEnd; ++blockInstr) {
                 if (registerActive
                         && blockInstr->second.typeConversions.contains(writtenRegister)) {
-                    conversions.append(blockInstr.key());
+                    conversions.insert(blockInstr.key());
                 }
 
                 for (auto readIt = blockInstr->second.readRegisters.constBegin(),
@@ -322,12 +312,26 @@ void QQmlJSBasicBlocks::populateReaderLocations()
                 // If we find that an already processed block has the register activated by this jump,
                 // we need to re-evaluate it. We also need to propagate any newly found conversions.
                 const auto processed = processedBlocks.find(blockStart);
-                if (processed == processedBlocks.end())
+                if (processed == processedBlocks.end()) {
                     blocks.append({conversions, blockStart, registerActive});
-                else if (registerActive && !processed->registerActive)
+                } else if (registerActive && !processed->registerActive) {
                     blocks.append({conversions, blockStart, registerActive});
-                else if (!containsAll(processed->conversions, conversions))
-                    blocks.append({processed->conversions + conversions, blockStart, registerActive});
+                } else {
+
+                    // TODO: Use unite() once it is fixed.
+                    // We don't use unite() here since it would be more expensive. unite()
+                    // effectively loops on only insert() and insert() does a number of checks
+                    // each time. We trade those checks for calculating the hash twice on each
+                    // iteration. Calculating the hash is very cheap for integers.
+                    Conversions merged = processed->conversions;
+                    for (const int conversion : std::as_const(conversions)) {
+                        if (!merged.contains(conversion))
+                            merged.insert(conversion);
+                    }
+
+                    if (merged.size() > processed->conversions.size())
+                        blocks.append({std::move(merged), blockStart, registerActive});
+                }
             };
 
             if (!currentBlock->second.jumpIsUnconditional && nextBlock != m_basicBlocks.end())

@@ -23,6 +23,8 @@ QT_BEGIN_NAMESPACE
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSBasicBlocks : public QQmlJSCompilePass
 {
 public:
+    using Conversions = QSet<int>;
+
     struct BasicBlock {
         QList<int> jumpOrigins;
         QList<int> readRegisters;
@@ -48,7 +50,7 @@ private:
     {
         QList<QQmlJSScope::ConstPtr> trackedTypes;
         QHash<int, QQmlJSScope::ConstPtr> typeReaders;
-        QHash<int, QList<int>> registerReadersAndConversions;
+        QHash<int, Conversions> registerReadersAndConversions;
         int trackedRegister;
     };
 
