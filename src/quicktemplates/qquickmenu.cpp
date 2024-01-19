@@ -245,12 +245,12 @@ bool QQuickMenuPrivate::usingNativeMenu()
     if (requestNative && !triedToCreateNativeMenu)
         createNativeMenu();
 
-    return nativeHandle.get();
+    return handle.get();
 }
 
 bool QQuickMenuPrivate::createNativeMenu()
 {
-    Q_ASSERT(!nativeHandle);
+    Q_ASSERT(!handle);
     Q_Q(QQuickMenu);
     qCDebug(lcNativeMenu) << "createNativeMenu called on" << q;
 
@@ -258,31 +258,31 @@ bool QQuickMenuPrivate::createNativeMenu()
     if (parentMenuBar && parentMenuBar->requestNative()) {
         qCDebug(lcNativeMenu) << "- creating native menu from native menubar";
         auto menuBarPrivate = QQuickMenuBarPrivate::get(parentMenuBar);
-        nativeHandle.reset(menuBarPrivate->nativeHandle()->createMenu());
+        handle.reset(menuBarPrivate->nativeHandle()->createMenu());
     } else {
-        QPlatformMenu *parentMenuHandle(parentMenu ? get(parentMenu)->nativeHandle.get() : nullptr);
+        QPlatformMenu *parentMenuHandle(parentMenu ? get(parentMenu)->handle.get() : nullptr);
         if (parentMenu && parentMenuHandle) {
             qCDebug(lcNativeMenu) << "- creating native sub-menu";
-            nativeHandle.reset(parentMenuHandle->createSubMenu());
+            handle.reset(parentMenuHandle->createSubMenu());
         } else {
             qCDebug(lcNativeMenu) << "- creating native menu";
-            nativeHandle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenu());
+            handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenu());
         }
     }
 
     triedToCreateNativeMenu = true;
 
-    if (!nativeHandle)
+    if (!handle)
         return false;
 
-    q->connect(nativeHandle.get(), &QPlatformMenu::aboutToShow, q, &QQuickPopup::aboutToShow);
-    q->connect(nativeHandle.get(), &QPlatformMenu::aboutToHide, q, [this](){
+    q->connect(handle.get(), &QPlatformMenu::aboutToShow, q, &QQuickPopup::aboutToShow);
+    q->connect(handle.get(), &QPlatformMenu::aboutToHide, q, [this](){
         qCDebug(lcNativeMenu) << "QPlatformMenu::aboutToHide called; about to call setVisible(false) on Menu";
         q_func()->setVisible(false);
     });
 
     for (QQuickNativeMenuItem *item : std::as_const(nativeItems))
-        nativeHandle->insertMenuItem(item->create(), nullptr);
+        handle->insertMenuItem(item->create(), nullptr);
 
     // TODO: we call setMenu in QQuickNativeMenuItem::create()
     // for sub-menus. do we also need to do it here?
@@ -316,12 +316,12 @@ void QQuickMenuPrivate::syncWithNativeMenu()
 
     // TODO: call this function when any of the variables below change
 
-    nativeHandle->setText(title);
-    nativeHandle->setEnabled(q->isEnabled());
-    nativeHandle->setVisible(visible);
-    nativeHandle->setMinimumWidth(q->implicitWidth());
+    handle->setText(title);
+    handle->setEnabled(q->isEnabled());
+    handle->setVisible(visible);
+    handle->setMinimumWidth(q->implicitWidth());
 //    nativeHandle->setMenuType(m_type);
-    nativeHandle->setFont(q->font());
+    handle->setFont(q->font());
 
 //    if (m_menuBar && m_menuBar->handle())
 //        m_menuBar->handle()->syncMenu(handle);
@@ -340,7 +340,7 @@ void QQuickMenuPrivate::syncWithNativeMenu()
 
 void QQuickMenuPrivate::destroyNativeMenu()
 {
-    if (!nativeHandle)
+    if (!handle)
         return;
 
     // Ensure that all submenus are unparented before we are destroyed,
@@ -351,7 +351,7 @@ void QQuickMenuPrivate::destroyNativeMenu()
         item->clearSubMenu();
     }
 
-    nativeHandle.reset();
+    handle.reset();
 }
 
 static QWindow *effectiveWindow(QWindow *window, QPoint *offset)
@@ -388,10 +388,10 @@ void QQuickMenuPrivate::setNativeMenuVisible(bool visible)
     targetRect.moveTo(pos);
 #endif
     if (visible)
-        nativeHandle->showPopup(window, QHighDpi::toNativePixels(targetRect, window),
+        handle->showPopup(window, QHighDpi::toNativePixels(targetRect, window),
             /*menuItem ? menuItem->handle() : */nullptr);
     else
-        nativeHandle->dismiss();
+        handle->dismiss();
 }
 
 QQuickItem *QQuickMenuPrivate::itemAt(int index) const
@@ -497,7 +497,7 @@ void QQuickMenuPrivate::insertNativeItem(int index, QQuickAction *action)
 
         if (nativeMenuItem->create()) {
             QQuickNativeMenuItem *before = nativeItems.value(index + 1);
-            nativeHandle->insertMenuItem(nativeMenuItem->handle(), before ? before->create() : nullptr);
+            handle->insertMenuItem(nativeMenuItem->handle(), before ? before->create() : nullptr);
             qCDebug(lcNativeMenu) << "- inserted native menu item at index" << index
                 << "before" << (before ? before->debugText() : QStringLiteral("null"));
         }
@@ -539,7 +539,7 @@ void QQuickMenuPrivate::insertNativeItem(int index, QQuickMenu *menu)
 
         if (nativeMenuItem->create()) {
             QQuickNativeMenuItem *before = nativeItems.value(index + 1);
-            nativeHandle->insertMenuItem(nativeMenuItem->handle(), before ? before->create() : nullptr);
+            handle->insertMenuItem(nativeMenuItem->handle(), before ? before->create() : nullptr);
             qCDebug(lcNativeMenu) << "- inserted native menu item at index" << index
                 << "before" << (before ? before->debugText() : QStringLiteral("null"));
         }
@@ -572,7 +572,7 @@ void QQuickMenuPrivate::removeNativeItem(QQuickAction *action, DestroyPolicy des
 
     contentData.removeAt(actionIndex);
     QQuickNativeMenuItem *nativeItem = nativeItems.takeAt(actionIndex);
-    nativeHandle->removeMenuItem(nativeItem->handle());
+    handle->removeMenuItem(nativeItem->handle());
     // We call deleteLater on the native item, but our QObject destructor will
     // synchronously destroy any Actions we own before the native item is destroyed.
     // In the meantime, QQuickNativeMenuItem code that uses the action could be executed,
@@ -596,7 +596,7 @@ void QQuickMenuPrivate::removeNativeItem(QQuickMenu *menu, DestroyPolicy destroy
 
     contentData.removeAt(menuIndex);
     QQuickNativeMenuItem *nativeItem = nativeItems.takeAt(menuIndex);
-    nativeHandle->removeMenuItem(nativeItem->handle());
+    handle->removeMenuItem(nativeItem->handle());
     nativeItem->reset();
     nativeItem->deleteLater();
     if (destroyPolicy == DestroyPolicy::Destroy)

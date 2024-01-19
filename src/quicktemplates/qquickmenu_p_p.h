@@ -131,7 +131,7 @@ public:
     QQuickIcon icon;
 
     // For native menu support.
-    std::unique_ptr<QPlatformMenu> nativeHandle = nullptr;
+    std::unique_ptr<QPlatformMenu> handle = nullptr;
     QList<QQuickNativeMenuItem *> nativeItems;
 };
 

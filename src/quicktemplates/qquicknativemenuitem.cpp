@@ -90,7 +90,7 @@ QPlatformMenuItem *QQuickNativeMenuItem::create()
         return m_handle.get();
 
     auto *parentMenuPrivate = QQuickMenuPrivate::get(m_parentMenu);
-    m_handle.reset(parentMenuPrivate->nativeHandle->createMenuItem());
+    m_handle.reset(parentMenuPrivate->handle->createMenuItem());
 
     if (!m_handle)
         m_handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenuItem());
@@ -104,7 +104,7 @@ QPlatformMenuItem *QQuickNativeMenuItem::create()
             });
         } else { // m_subMenu
 //            m_handle->setMenu(parentMenuPrivate->nativeHandle.get());
-            m_handle->setMenu(QQuickMenuPrivate::get(m_subMenu)->nativeHandle.get());
+            m_handle->setMenu(QQuickMenuPrivate::get(m_subMenu)->handle.get());
             // TODO: do we need to call anything here? need to at least ensure
             // that the QQuickMenu::isVisible returns true after this
 //            connect(m_handle.get(), &QPlatformMenuItem::activated, m_subMenu, &QQuickMenu::?
@@ -141,8 +141,8 @@ void QQuickNativeMenuItem::sync()
         // Sync first as dynamically created menus may need to get the handle recreated.
         auto *subMenuPrivate = QQuickMenuPrivate::get(m_subMenu);
         subMenuPrivate->syncWithNativeMenu();
-        if (subMenuPrivate->nativeHandle)
-            m_handle->setMenu(subMenuPrivate->nativeHandle.get());
+        if (subMenuPrivate->handle)
+            m_handle->setMenu(subMenuPrivate->handle.get());
     }
 
 #if QT_CONFIG(shortcut)
@@ -152,8 +152,8 @@ void QQuickNativeMenuItem::sync()
 
     if (m_parentMenu) {
         auto *menuPrivate = QQuickMenuPrivate::get(m_parentMenu);
-        if (menuPrivate->nativeHandle)
-            menuPrivate->nativeHandle->syncMenuItem(m_handle.get());
+        if (menuPrivate->handle)
+            menuPrivate->handle->syncMenuItem(m_handle.get());
     }
 }
 
