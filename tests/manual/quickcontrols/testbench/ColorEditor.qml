@@ -29,5 +29,6 @@ RowLayout {
         }
 
         Layout.preferredWidth: 200
+        Layout.fillWidth: false
     }
 }

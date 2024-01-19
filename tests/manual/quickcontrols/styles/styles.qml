@@ -109,6 +109,8 @@ ApplicationWindow {
             topPadding: 30
             contentWidth: fontColumnLayout.implicitWidth + fontColumnLayout.anchors.leftMargin
             background.visible: false
+            Layout.fillWidth: false
+            Layout.fillHeight: false
 
             ColumnLayout {
                 id: fontColumnLayout
@@ -118,15 +120,18 @@ ApplicationWindow {
                 RadioButton {
                     leftPadding: 0
                     text: "Small"
+                    Layout.fillWidth: false
                 }
                 RadioButton {
                     leftPadding: 0
                     text: "Medium"
                     checked: true
+                    Layout.fillWidth: false
                 }
                 RadioButton {
                     leftPadding: 0
                     text: "Large"
+                    Layout.fillWidth: false
                 }
             }
         }
@@ -138,6 +143,7 @@ ApplicationWindow {
             background.visible: false
 
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             GridLayout {
                 id: audioGridLayout
@@ -175,6 +181,7 @@ ApplicationWindow {
         Button {
             text: "Save"
             Layout.alignment: Qt.AlignRight
+            Layout.fillWidth: false
         }
 
         Item { Layout.fillHeight: true }

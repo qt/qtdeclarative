@@ -53,6 +53,7 @@ Page {
             value: root.completedTasks
             to: root.totalTasks
             Layout.leftMargin: 20
+            Layout.fillWidth: false
         }
     }
 

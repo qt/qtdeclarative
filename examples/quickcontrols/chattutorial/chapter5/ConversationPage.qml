@@ -90,6 +90,7 @@ Page {
         Pane {
             id: pane
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             RowLayout {
                 width: parent.width
@@ -105,6 +106,7 @@ Page {
                     id: sendButton
                     text: qsTr("Send")
                     enabled: messageField.length > 0
+                    Layout.fillWidth: false
                     onClicked: {
                         listView.model.sendMessage(inConversationWith, messageField.text);
                         messageField.text = "";

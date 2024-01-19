@@ -53,6 +53,7 @@ ApplicationWindow {
 
             ToolButton {
                 action: openDrawerAction
+                Layout.fillWidth: false
             }
 
             Label {
@@ -73,11 +74,13 @@ ApplicationWindow {
                 id: darkThemeSwitch
                 text: "Dark"
                 checked: settings.theme === Material.Dark
+                Layout.fillWidth: false
             }
 
             Switch {
                 id: denseSwitch
                 text: "Dense"
+                Layout.fillWidth: false
                 checked: settings.variant === "Dense"
 
                 ToolTip.text: "Requires restart"

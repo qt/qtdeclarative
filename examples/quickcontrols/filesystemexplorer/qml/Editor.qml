@@ -36,6 +36,7 @@ Rectangle {
             Layout.preferredWidth: fontMetrics.averageCharacterWidth
                 * (Math.floor(Math.log10(textArea.lineCount)) + 1) + 10
             Layout.fillHeight: true
+            Layout.fillWidth: false
 
             interactive: false
             contentY: editorFlickable.contentY

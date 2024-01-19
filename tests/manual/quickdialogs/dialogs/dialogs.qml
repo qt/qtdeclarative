@@ -80,6 +80,7 @@ ApplicationWindow {
                 id: useNativeDialogsCheckBox
                 text: qsTr("Use Native Dialogs (requires restart)")
                 checked: settings.useNativeDialogs
+                Layout.fillWidth: false
             }
 
             Item {
@@ -88,6 +89,7 @@ ApplicationWindow {
 
             Button {
                 text: qsTr("Open")
+                Layout.fillWidth: false
 
                 onClicked: stackLayout.children[stackLayout.currentIndex].dialog.open()
             }

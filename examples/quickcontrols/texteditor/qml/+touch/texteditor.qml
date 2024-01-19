@@ -85,6 +85,7 @@ ApplicationWindow {
                 text: "\uE809" // icon-ok
                 opacity: !textArea.readOnly ? 1 : 0
                 onClicked: textArea.readOnly = true
+                Layout.fillWidth: false
             }
 
             Label {
@@ -99,6 +100,7 @@ ApplicationWindow {
                 font.family: "fontello"
                 text: "\uF142" // icon-ellipsis-vert
                 onClicked: menu.open()
+                Layout.fillWidth: false
 
                 Menu {
                     id: menu

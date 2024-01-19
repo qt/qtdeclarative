@@ -15,11 +15,13 @@ Page {
         CheckBox {
             id: iconCheckBox
             text: "Icon"
+            Layout.fillWidth: false
         }
 
         CheckBox {
             id: disabledCheckBox
             text: "Disabled"
+            Layout.fillWidth: false
         }
 
         Item {
@@ -46,6 +48,7 @@ Page {
                 text: "Flat"
 
                 Layout.leftMargin: elevationLayout.contentLeftMargin
+                Layout.fillWidth: false
             }
         }
 
@@ -65,6 +68,7 @@ Page {
                     Material.elevation: modelData
 
                     Layout.leftMargin: elevationLayout.contentLeftMargin
+                    Layout.fillWidth: false
                 }
             }
 

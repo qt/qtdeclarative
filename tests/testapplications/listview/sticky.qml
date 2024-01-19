@@ -44,43 +44,138 @@ ApplicationWindow {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        ComboBox { id: oriItem; currentIndex: 1; model: ["Horizontal", "Vertical"] }
-        ComboBox { id: ldItem; model: ["LeftToRight", "RightToLeft"] }
-        ComboBox { id: vldItem;  model: ["TopToBottom", "BottomToTop"] }
+        ComboBox {
+            id: oriItem
+            currentIndex: 1
+            model: ["Horizontal", "Vertical"]
+            Layout.fillWidth: false
+        }
+        ComboBox {
+            id: ldItem
+            model: ["LeftToRight", "RightToLeft"]
+            Layout.fillWidth: false
+        }
+        ComboBox {
+            id: vldItem
+            model: ["TopToBottom", "BottomToTop"]
+            Layout.fillWidth: false
+        }
 
-        CheckBox { id: clipItem; text: "Clip"; checked: true }
-        CheckBox { id: opacityItem; text: "Opaque"; checked: true }
-        CheckBox { id: filterItem; text: "Filter" }
+        CheckBox {
+            id: clipItem
+            text: "Clip"
+            checked: true
+            Layout.fillWidth: false
+        }
+        CheckBox {
+            id: opacityItem
+            text: "Opaque"
+            checked: true
+            Layout.fillWidth: false
+        }
+        CheckBox {
+            id: filterItem
+            text: "Filter"
+            Layout.fillWidth: false
+        }
 
-        CheckBox { id: hItem; text: "Header:" }
-        CheckBox { id: fItem; text: "Footer:" }
-        Item { width: 1; height: 1 }
+        CheckBox {
+            id: hItem
+            text: "Header:"
+            Layout.fillWidth: false
+        }
+        CheckBox {
+            id: fItem
+            text: "Footer:"
+            Layout.fillWidth: false
+        }
+        Item {
+            width: 1
+            height: 1
+        }
 
-        ComboBox { id: shItem; model: shModel; textRole: "name"; enabled: hItem.checked }
-        ComboBox { id: sfItem; model: sfModel; textRole: "name"; enabled: fItem.checked }
-        Item { width: 1; height: 1 }
+        ComboBox {
+            id: shItem
+            model: shModel
+            textRole: "name"
+            enabled: hItem.checked
+            Layout.fillWidth: false
+        }
+        ComboBox {
+            id: sfItem
+            model: sfModel
+            textRole: "name"
+            enabled: fItem.checked
+            Layout.fillWidth: false
+        }
+        Item {
+            width: 1
+            height: 1
+        }
 
-        CheckBox { id: scsItem; text: "Sticky current section" }
-        CheckBox { id: snsItem; text: "Sticky next section" }
-        CheckBox { id: isItem; text: "Inline sections" }
+        CheckBox {
+            id: scsItem
+            text: "Sticky current section"
+            Layout.fillWidth: false
+        }
+        CheckBox {
+            id: snsItem
+            text: "Sticky next section"
+            Layout.fillWidth: false
+        }
+        CheckBox {
+            id: isItem
+            text: "Inline sections"
+            Layout.fillWidth: false
+        }
 
-        Button { text: "Beginning"; onClicked: listview.positionViewAtBeginning() }
-        Button { text: "Middle";  onClicked: listview.positionViewAtIndex(50, ListView.Center) }
-        Button { text: "End"; onClicked: listview.positionViewAtEnd() }
+        Button {
+            text: "Beginning"
+            Layout.fillWidth: false
+            onClicked: listview.positionViewAtBeginning()
+        }
+        Button {
+            text: "Middle"
+            Layout.fillWidth: false
+            onClicked: listview.positionViewAtIndex(50, ListView.Center)
+        }
+        Button {
+            text: "End"
+            Layout.fillWidth: false
+            onClicked: listview.positionViewAtEnd()
+        }
     }
 
     ListModel {
         id: shModel
-        ListElement { name: "Inline"; value: ListView.InlineHeader }
-        ListElement { name: "Overlay"; value: ListView.OverlayHeader }
-        ListElement { name: "PullBack"; value: ListView.PullBackHeader }
+        ListElement {
+            name: "Inline"
+            value: ListView.InlineHeader
+        }
+        ListElement {
+            name: "Overlay"
+            value: ListView.OverlayHeader
+        }
+        ListElement {
+            name: "PullBack"
+            value: ListView.PullBackHeader
+        }
     }
 
     ListModel {
         id: sfModel
-        ListElement { name: "Inline"; value: ListView.InlineFooter }
-        ListElement { name: "Overlay"; value: ListView.OverlayFooter }
-        ListElement { name: "PullBack"; value: ListView.PullBackFooter }
+        ListElement {
+            name: "Inline"
+            value: ListView.InlineFooter
+        }
+        ListElement {
+            name: "Overlay"
+            value: ListView.OverlayFooter
+        }
+        ListElement {
+            name: "PullBack"
+            value: ListView.PullBackFooter
+        }
     }
 
     footer: RowLayout {

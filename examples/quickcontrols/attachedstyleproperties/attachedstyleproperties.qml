@@ -32,6 +32,7 @@ ApplicationWindow {
             Switch {
                 id: darkModeSwitch
                 text: qsTr("Dark mode")
+                Layout.fillWidth: false
             }
         }
     }
@@ -48,11 +49,13 @@ ApplicationWindow {
         RowLayout {
             Button {
                 text: qsTr("Open Popup")
+                Layout.fillWidth: false
                 onClicked: popup.open()
             }
 
             Button {
                 text: qsTr("Open Window")
+                Layout.fillWidth: false
                 onClicked: {
                     if (!childWindow.active)
                         childWindow.show()
@@ -80,6 +83,7 @@ ApplicationWindow {
             Button {
                 text: qsTr("Close Popup")
                 Layout.alignment: Qt.AlignHCenter
+                Layout.fillWidth: false
                 onClicked: popup.close()
             }
         }
@@ -103,6 +107,7 @@ ApplicationWindow {
             Button {
                 text: qsTr("Close Window")
                 Layout.alignment: Qt.AlignHCenter
+                Layout.fillWidth: false
                 onClicked: childWindow.close()
             }
         }

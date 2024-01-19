@@ -138,6 +138,7 @@ Window {
 
         LayoutItemProxy {
             Layout.fillHeight: true
+            Layout.fillWidth: false
             target: contentItem
         }
     }

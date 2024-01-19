@@ -37,6 +37,7 @@ Window {
             RowLayout {
                 Button {
                     text: qsTr("New")
+                    Layout.fillWidth: false
                     onClicked: {
                         input.initrec_new()
                         window.creatingNewEntry = true
@@ -47,6 +48,7 @@ Window {
                     id: saveButton
                     enabled: (window.creatingNewEntry || window.editingEntry) && listView.currentIndex !== -1
                     text: qsTr("Save")
+                    Layout.fillWidth: false
                     onClicked: {
                         let insertedRow = false;
                         if (listView.model.get(listView.currentIndex).id < 1) {
@@ -80,6 +82,7 @@ Window {
                     id: editButton
                     text: qsTr("Edit")
                     enabled: !window.creatingNewEntry && !window.editingEntry && listView.currentIndex !== -1
+                    Layout.fillWidth: false
                     onClicked: {
                         input.editrec(listView.model.get(listView.currentIndex).date,
                                       listView.model.get(listView.currentIndex).trip_desc,
@@ -93,6 +96,7 @@ Window {
                     id: deleteButton
                     text: qsTr("Delete")
                     enabled: !window.creatingNewEntry && listView.currentIndex !== -1
+                    Layout.fillWidth: false
                     onClicked: {
                         JS.dbDeleteRow(listView.model.get(listView.currentIndex).id)
                         listView.model.remove(listView.currentIndex, 1)
@@ -107,6 +111,7 @@ Window {
                     id: cancelButton
                     text: qsTr("Cancel")
                     enabled: (window.creatingNewEntry || window.editingEntry) && listView.currentIndex !== -1
+                    Layout.fillWidth: false
                     onClicked: {
                         if (listView.model.get(listView.currentIndex).id === 0) {
                             // This entry had an id of 0, which means it was being created and hadn't
@@ -121,6 +126,7 @@ Window {
                 }
                 Button {
                     text: qsTr("Exit")
+                    Layout.fillWidth: false
                     onClicked: Qt.quit()
                 }
             }

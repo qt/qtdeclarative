@@ -23,14 +23,17 @@ Window {
             id: control1
             text: qsTr("First")
             checked: true
+            Layout.fillWidth: false
         }
         RadioButton {
             id: control2
             text: qsTr("Second")
+            Layout.fillWidth: false
         }
         RadioButton {
             id: control3
             text: qsTr("Third")
+            Layout.fillWidth: false
         }
     }
 }

@@ -94,6 +94,7 @@ Item {
             id: button
             text: qsTr("Change Color")
             Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+            Layout.fillWidth: false
         }
     }
 }
