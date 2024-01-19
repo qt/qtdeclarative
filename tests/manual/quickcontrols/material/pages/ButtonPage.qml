@@ -16,16 +16,19 @@ Page {
             id: textCheckBox
             text: "Text"
             checked: true
+            Layout.fillWidth: false
         }
 
         CheckBox {
             id: iconCheckBox
             text: "Icon"
+            Layout.fillWidth: false
         }
 
         CheckBox {
             id: disabledCheckBox
             text: "Disabled"
+            Layout.fillWidth: false
         }
 
         Item {

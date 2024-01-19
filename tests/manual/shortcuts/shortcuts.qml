@@ -77,6 +77,7 @@ ApplicationWindow {
                     ComboBox {
                         id: combobox
                         enabled: checkbox.checked
+                        Layout.fillWidth: false
                         model: ["WindowShortcut", "ApplicationShortcut"]
                     }
 

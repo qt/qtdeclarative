@@ -277,6 +277,7 @@ ApplicationWindow {
 
                     Frame {
                         Layout.fillWidth: true
+                        Layout.fillHeight: false
 
                         ColumnLayout {
                             anchors.fill: parent
@@ -290,15 +291,18 @@ ApplicationWindow {
                                 RadioButton {
                                     text: qsTr("Name")
                                     font.pixelSize: fontSizeExtraSmall
+                                    Layout.fillWidth: false
                                 }
                                 RadioButton {
                                     text: qsTr("Frequency")
                                     font.pixelSize: fontSizeExtraSmall
+                                    Layout.fillWidth: false
                                 }
                                 RadioButton {
                                     text: qsTr("Favourites")
                                     font.pixelSize: fontSizeExtraSmall
                                     checked: true
+                                    Layout.fillWidth: false
                                 }
                             }
                         }
@@ -533,6 +537,7 @@ ApplicationWindow {
                 currentIndex: 1
 
                 Layout.fillHeight: true
+                Layout.fillWidth: false
 
                 ButtonGroup {
                     buttons: rightTabBarContentLayout.children
@@ -557,6 +562,7 @@ ApplicationWindow {
 
                     Layout.maximumHeight: navigationFeatureButton.height
                     Layout.fillHeight: true
+                    Layout.fillWidth: false
                 }
                 FeatureButton {
                     text: qsTr("Air Con.")
@@ -565,6 +571,7 @@ ApplicationWindow {
 
                     Layout.maximumHeight: navigationFeatureButton.height
                     Layout.fillHeight: true
+                    Layout.fillWidth: false
                 }
                 FeatureButton {
                     text: qsTr("Seats")
@@ -572,6 +579,7 @@ ApplicationWindow {
 
                     Layout.maximumHeight: navigationFeatureButton.height
                     Layout.fillHeight: true
+                    Layout.fillWidth: false
                 }
                 FeatureButton {
                     text: qsTr("Statistics")
@@ -579,6 +587,7 @@ ApplicationWindow {
 
                     Layout.maximumHeight: navigationFeatureButton.height
                     Layout.fillHeight: true
+                    Layout.fillWidth: false
                 }
             }
         }

@@ -23,18 +23,21 @@ Window {
             checkState: english.checked && norwegian.checked
                 ? Qt.Checked : (english.checked || norwegian.checked) ? Qt.PartiallyChecked : Qt.Unchecked
             tristate: true
+            Layout.fillWidth: false
         }
         CheckBox {
             id: english
             text: qsTr("English")
             checked: true
             leftPadding: indicator.width
+            Layout.fillWidth: false
         }
         CheckBox {
             id: norwegian
             text: qsTr("Norwegian")
             checked: true
             leftPadding: indicator.width
+            Layout.fillWidth: false
         }
     }
 }

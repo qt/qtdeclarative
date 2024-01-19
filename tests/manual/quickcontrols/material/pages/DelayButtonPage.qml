@@ -15,6 +15,7 @@ Page {
         CheckBox {
             id: disabledCheckBox
             text: "Disabled"
+            Layout.fillWidth: false
         }
 
         Item {

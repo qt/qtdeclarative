@@ -84,18 +84,25 @@ Item {
                     }
                 }
             }
-            CheckBox { id: enableDebug }
+            CheckBox {
+                id: enableDebug
+                fillWidth: false
+            }
             Label {
                 text: "Debug"
                 color: "white"
             }
-            CheckBox { id: enableWireframe }
+            CheckBox {
+                id: enableWireframe
+                Layout.fillWidth: false
+            }
             Label {
                 text: "Wireframe"
                 color: "white"
             }
             ComboBox {
                 id: painterComparison
+                Layout.fillWidth: false
                 model: [
                     "No QPainter comparison",
                     "Overlaid QPainter comparison",
@@ -119,6 +126,7 @@ Item {
                 from: 0.0
                 to: 1.0
                 value: 1.0
+                Layout.fillWidth: false
             }
             Label {
                 text: "Alpha"
@@ -128,6 +136,7 @@ Item {
                 text: "Pick SVG sub-shape"
                 id: pickSubShape
                 palette.windowText: "white"
+                Layout.fillWidth: false
             }
             SpinBox {
                 id: subShapeSelector
@@ -135,17 +144,20 @@ Item {
                 value: 0
                 to: 999
                 editable: true
+                Layout.fillWidth: false
             }
             CheckBox {
                 id: pickSubShapeGreaterThan
                 visible: pickSubShape.checked
                 text: "show greater than"
                 palette.windowText: "white"
+                Layout.fillWidth: false
             }
             CheckBox {
                 id: setBackground
                 text: "Solid background"
                 palette.windowText: "white"
+                Layout.fillWidth: false
             }
             RowLayout {
                 visible: setBackground.checked
@@ -183,6 +195,7 @@ Item {
             TextField {
                 id: scaleEdit
                 text: scaleSlider.value.toFixed(4)
+                Layout.fillWidth: false
                 onEditingFinished: {
                     let val = +text
                     if (val > 0)
@@ -217,6 +230,7 @@ Item {
             }
             ComboBox {
                 id: gradientType
+                Layout.fillWidth: false
                 model: [ "NoGradient", "LinearGradient", "RadialGradient", "ConicalGradient" ]
             }
             Label {
@@ -227,6 +241,7 @@ Item {
                 id: fillRule
                 textRole: "text"
                 valueRole: "style"
+                Layout.fillWidth: false
                 model: ListModel {
                     ListElement {
                         text: "WindingFill"
@@ -255,6 +270,7 @@ Item {
                 id: enableOutline
                 text: "Enable outline"
                 palette.windowText: "white"
+                Layout.fillWidth: false
             }
             RowLayout {
                 opacity: enableOutline.checked ? 1 : 0
@@ -279,6 +295,7 @@ Item {
                 id: outlineStyle
                 textRole: "text"
                 valueRole: "style"
+                Layout.fillWidth: false
                 model: ListModel {
                     ListElement {
                         text: "Solid line"
@@ -294,6 +311,7 @@ Item {
                 id: joinStyle
                 textRole: "text"
                 valueRole: "style"
+                Layout.fillWidth: false
                 model: ListModel {
                     ListElement {
                         text: "Miter join"
@@ -313,6 +331,7 @@ Item {
                 id: capStyle
                 textRole: "text"
                 valueRole: "style"
+                Layout.fillWidth: false
                 model: ListModel {
                     ListElement {
                         text: "Square cap"
@@ -335,6 +354,7 @@ Item {
             TextField {
                 id: outlineWidthEdit
                 text: (cosmeticPen.checked ? outlineWidthSlider.value: outlineWidthSlider.value ** 2).toFixed(2)
+                Layout.fillWidth: false
                 onEditingFinished: {
                     let val = +text
                     if (val > 0) {
@@ -356,6 +376,7 @@ Item {
                 id: cosmeticPen
                 text: "Cosmetic pen"
                 palette.windowText: "white"
+                Layout.fillWidth: false
             }
             Label {
                 text: "Outline alpha (" + Math.round(outlineAlphaSlider.value*100)/100 + "):"

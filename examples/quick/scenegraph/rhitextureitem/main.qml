@@ -172,6 +172,7 @@ Item {
                 from: 8
                 to: 2048
                 value: 128
+                Layout.fillWidth: false
             }
         }
 
@@ -197,6 +198,7 @@ Item {
                 from: 0
                 to: 1.0
                 value: 1.0
+                Layout.fillWidth: false
             }
         }
 
@@ -234,18 +236,22 @@ Item {
                     id: rdFormatRGBA8
                     text: qsTr("8-bit RGBA")
                     checked: true
+                    Layout.fillWidth: false
                 }
                 RadioButton {
                     id: rdFormatFP16
                     text: qsTr("Half-float RGBA")
+                    Layout.fillWidth: false
                 }
                 RadioButton {
                     id: rdFormatFP32
                     text: qsTr("Float RGBA")
+                    Layout.fillWidth: false
                 }
                 RadioButton {
                     id: rdFormatRGB10A2
                     text: qsTr("10-bit RGB, 2-bit A")
+                    Layout.fillWidth: false
                 }
             }
         }

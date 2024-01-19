@@ -21,15 +21,18 @@ Window {
         CheckBox {
             checked: true
             text: qsTr("First")
+            Layout.fillWidth: false
         }
         CheckBox {
             id: control2
             text: qsTr("Second")
+            Layout.fillWidth: false
         }
         CheckBox {
             id: control3
             checked: true
             text: qsTr("Third")
+            Layout.fillWidth: false
         }
     }
 }
