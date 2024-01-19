@@ -1272,6 +1272,20 @@ bool QQmlDomAstCreator::visit(AST::UiInlineComponent *el)
     QString cName = els.join(QLatin1Char('.'));
     QmlComponent *compPtr;
     Path p = qmlFilePtr->addComponent(QmlComponent(cName), AddOption::KeepExisting, &compPtr);
+
+    if (m_enableScriptExpressions) {
+        auto inlineComponentType =
+                makeGenericScriptElement(el->identifierToken, DomType::ScriptType);
+
+        auto typeName = std::make_shared<ScriptElements::IdentifierExpression>(el->identifierToken);
+        typeName->setName(el->name);
+        inlineComponentType->insertChild(Fields::typeName,
+                                         ScriptElementVariant::fromElement(typeName));
+        compPtr->setNameIdentifiers(
+                finalizeScriptExpression(ScriptElementVariant::fromElement(inlineComponentType),
+                                         p.field(Fields::nameIdentifiers), rootMap));
+    }
+
     pushEl(p, *compPtr, el);
     FileLocations::addRegion(nodeStack.last().fileLocations, ComponentKeywordRegion,
                              el->componentToken);

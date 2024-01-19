@@ -392,7 +392,18 @@ QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(const DomItem 
 
 DomItem QQmlLSUtils::baseObject(const DomItem &object)
 {
-    auto prototypes = object.qmlObject().field(QQmlJS::Dom::Fields::prototypes);
+    DomItem prototypes;
+    DomItem qmlObject = object.qmlObject();
+    // object is (or is inside) an inline component definition
+    if (object.internalKind() == DomType::QmlComponent || !qmlObject) {
+        prototypes = object.component()
+                             .field(Fields::objects)
+                             .index(0)
+                             .field(QQmlJS::Dom::Fields::prototypes);
+    } else {
+        // object is (or is inside) a QmlObject
+        prototypes = qmlObject.field(QQmlJS::Dom::Fields::prototypes);
+    }
     switch (prototypes.indexes()) {
     case 0:
         return {};
@@ -487,14 +498,19 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
                     FilterUpOptions::ReturnOuter)) {
 
             const QString name = fieldMemberExpressionBits(type.field(Fields::typeName)).join(u'.');
-            if (type.directParent().internalKind() == DomType::QmlObject) {
+            switch (type.directParent().internalKind()) {
+            case DomType::QmlObject:
                 // is the type name of a QmlObject, like Item in `Item {...}`
                 typeDefinition = baseObject(type.directParent());
-            } else {
+                break;
+            case DomType::QmlComponent:
+                typeDefinition = type.directParent();
+                return locationFromDomItem(typeDefinition, FileLocationRegion::IdentifierRegion);
+                break;
+            default:
                 // is a type annotation, like Item in `function f(x: Item) { ... }`
                 typeDefinition = object.path(Paths::lookupTypePath(name));
             }
-
             break;
         }
         if (DomItem id = object.filterUp(
@@ -901,6 +917,15 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(const DomItem &item)
         findUsagesHelper(item, name, result);
         break;
     }
+    case DomType::QmlComponent: {
+        QString name = item.field(Fields::name).value().toString();
+
+        // get rid of extra qualifiers
+        if (const auto dotIndex = name.indexOf(u'.'); dotIndex != -1)
+            name = name.sliced(dotIndex + 1);
+        findUsagesHelper(item, name, result);
+        break;
+    }
     default:
         qCDebug(QQmlLSUtilsLog) << item.internalKindStr()
                                 << "was not implemented for QQmlLSUtils::findUsagesOf";
@@ -1207,11 +1232,9 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
                 name, attachedScope, QQmlLSUtilsIdentifierType::AttachedTypeIdentifier
             };
         }
-        // Check if it is a component
-        if (item.component().name() == name) {
-            return QQmlLSUtilsExpressionType{ name, item.component().semanticScope(),
-                                            QmlComponentIdentifier };
-        }
+
+        // its a (inline) component!
+        return QQmlLSUtilsExpressionType{ name, scope, QmlComponentIdentifier };
     }
 
     // check if its an id
@@ -1292,6 +1315,25 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
             }
         }
         return {};
+    }
+    case DomType::QmlComponent: {
+        auto component = item.as<QmlComponent>();
+        if (!component)
+            return {};
+        const auto scope = component->semanticScope();
+        if (!scope)
+            return {};
+
+        QString name = item.name();
+        if (auto dotIndex = name.indexOf(u'.'); dotIndex != -1)
+            name = name.sliced(dotIndex + 1);
+        switch (options) {
+        case ResolveOwnerType:
+            return QQmlLSUtilsExpressionType{ name, scope->parentScope(), QmlComponentIdentifier };
+        case ResolveActualTypeForFieldMemberExpression:
+            return QQmlLSUtilsExpressionType{ name, scope, QmlComponentIdentifier };
+        }
+        Q_UNREACHABLE_RETURN({});
     }
     case DomType::MethodInfo: {
         auto object = item.as<MethodInfo>();

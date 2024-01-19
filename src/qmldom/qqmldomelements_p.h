@@ -1133,12 +1133,17 @@ public:
 
     void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_semanticScope = scope; }
     QQmlJSScope::ConstPtr semanticScope() const { return m_semanticScope; }
+    ScriptElementVariant nameIdentifiers() const { return m_nameIdentifiers; }
+    void setNameIdentifiers(const ScriptElementVariant &name) { m_nameIdentifiers = name; }
 
 private:
     friend class QQmlDomAstCreator;
     Path m_nextComponentPath;
     QMultiMap<QString, Id> m_ids;
     QQmlJSScope::ConstPtr m_semanticScope;
+    // m_nameIdentifiers contains the name of the component as FieldMemberExpression, and therefore
+    // only exists in inline components!
+    ScriptElementVariant m_nameIdentifiers;
 };
 
 class QMLDOM_EXPORT GlobalComponent final : public Component

@@ -224,7 +224,7 @@ void tst_qmlls_utils::findItemFromLocation_data()
                                                << QQmlJS::Dom::DomType::Map << 16 << 8;
 
     // check workaround for inline components
-    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne
+    QTest::addRow("ic") << file1Qml << 15 << 5 << firstResult << outOfOne
                         << QQmlJS::Dom::DomType::QmlComponent << -1 << 5;
     QTest::addRow("ic2") << file1Qml << 15 << 20 << firstResult << outOfOne
                          << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1 << 18;
@@ -349,7 +349,7 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     QTest::addRow("onWhitespaceBetweenCAndD")
             << file1Qml << 17 << 24 << firstResult << outOfOne << noResultExpected << -1 << -1;
 
-    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne << file1Qml << -1 << 18;
+    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne << file1Qml << 15 << 15;
     QTest::addRow("icBase") << file1Qml << 15 << 20 << firstResult << outOfOne
                             << u"TODO: file location for C++ defined types?"_s << -1 << -1;
     QTest::addRow("ic3") << file1Qml << 15 << 33 << firstResult << outOfOne << file1Qml << -1 << 18;
@@ -1075,6 +1075,24 @@ void tst_qmlls_utils::findUsages_data()
             const auto enums = makeUsages(testFileName, expectedUsages);
             QTest::addRow("enumNameFromDeclaration") << 8 << 10 << enums;
             QTest::addRow("enumNameFromUsage") << 22 << 30 << enums;
+        }
+    }
+    {
+        const auto testFileName = testFile("findUsages/inlineComponents2.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 4, 15, strlen("MyIC"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 5, 5, strlen("MyIC"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 5, 12, strlen("MyIC"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 5, 19, strlen("MyIC"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 6, 19, strlen("MyIC"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 6, 26, strlen("MyIC"));
+            const auto inlineComponents = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findICUsagesFromDefinition") << 4 << 16 << inlineComponents;
+            QTest::addRow("findICUsagesFromDefinition2") << 4 << 9 << inlineComponents;
+            QTest::addRow("findICUsagesFromUsage") << 5 << 19 << inlineComponents;
+            QTest::addRow("findICUsagesFromTypeUsage") << 6 << 19 << inlineComponents;
         }
     }
 }

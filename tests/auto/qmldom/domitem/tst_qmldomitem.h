@@ -757,10 +757,11 @@ private slots:
 
         QString testFile = baseDir + u"/inlineComponents.qml"_s;
 
+        DomCreationOptions options{ DomCreationOption::WithScriptExpressions };
         auto envPtr = DomEnvironment::create(
                 QStringList(),
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies, options);
 
         DomItem tFile;
         envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, testFile),
@@ -778,6 +779,13 @@ private slots:
 
         QCOMPARE(ic3.size(), 1);
         QCOMPARE(ic3.front().name(), "inlineComponents.IC3");
+        QCOMPARE(ic3.front().field(Fields::nameIdentifiers).internalKind(), DomType::ScriptType);
+        QCOMPARE(ic3.front()
+                         .field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .value()
+                         .toString(),
+                 u"IC3"_s);
 
         auto ic1 = rootQmlObject.lookup("IC1", LookupType::Type, LookupOption::Normal,
                                         [](const ErrorMessage &) {});
