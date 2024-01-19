@@ -520,15 +520,17 @@ std::optional<DomItem> DomUniverse::getItemIfMostRecent(const DomItem &univ, Dom
                                                         const QString &canonicalPath) const
 {
     QFileInfo fInfo(canonicalPath);
+    bool valueItemIsMostRecent = false;
     std::shared_ptr<ExternalItemPairBase> value = nullptr;
     {
         // Mutex is to sync access to the Value and Value->CurrentItem, which can be modified
         // through updateEnty method and currentItem->refreshedDataAt
         QMutexLocker l(mutex());
         value = getPathValueOrNull(fType, canonicalPath);
-        if (valueHasMostRecentItem(value.get(), fInfo.lastModified())) {
-            return univ.copy(value);
-        };
+        valueItemIsMostRecent = valueHasMostRecentItem(value.get(), fInfo.lastModified());
+    }
+    if (valueItemIsMostRecent) {
+        return univ.copy(value);
     }
     return std::nullopt;
 }
@@ -538,20 +540,20 @@ std::optional<DomItem> DomUniverse::getItemIfHasSameCode(const DomItem &univ, Do
                                                          const ContentWithDate &codeWithDate) const
 {
     std::shared_ptr<ExternalItemPairBase> value = nullptr;
-    DomItem valueItem;
+    bool valueItemHasSameCode = false;
     {
         // Mutex is to sync access to the Value and Value->CurrentItem, which can be modified
         // through updateEnty method and currentItem->refreshedDataAt
         QMutexLocker l(mutex());
         auto value = getPathValueOrNull(fType, canonicalPath);
         if (valueHasSameContent(value.get(), codeWithDate.content)) {
-            valueItem = univ.copy(value);
+            valueItemHasSameCode = true;
             if (value->currentItem()->lastDataUpdateAt() < codeWithDate.date)
                 value->currentItem()->refreshedDataAt(codeWithDate.date);
         }
     }
-    if (valueItem) {
-        return valueItem;
+    if (valueItemHasSameCode) {
+        return univ.copy(value);
     }
     return std::nullopt;
 }
