@@ -1113,12 +1113,6 @@ public:
         setIsCreatable(true);
     }
 
-    QmlComponent(const QmlComponent &o)
-        : Component(o), m_nextComponentPath(o.m_nextComponentPath), m_ids(o.m_ids)
-    {
-    }
-    QmlComponent &operator=(const QmlComponent &) = default;
-
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
 
     const QMultiMap<QString, Id> &ids() const & { return m_ids; }
