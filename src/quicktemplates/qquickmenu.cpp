@@ -9,6 +9,7 @@
 #include "qquickmenubaritem_p.h"
 #include "qquickmenubar_p_p.h"
 #endif
+#include "qquickmenuseparator_p.h"
 #include "qquicknativemenuitem_p.h"
 #include "qquickpopupitem_p_p.h"
 #include "qquickpopuppositioner_p_p.h"
@@ -555,9 +556,9 @@ QQuickNativeMenuItem *QQuickMenuPrivate::maybeCreateNativeMenuItemFor(QQuickItem
         } else if (menuItem->subMenu()) {
             nativeMenuItem = new QQuickNativeMenuItem(q, menuItem->subMenu());
         }
-    }/* else if (auto *separator = qobject_cast<QQuickMenuSeparator *>(item)) {
+    } else if (auto *separator = qobject_cast<QQuickMenuSeparator *>(item)) {
         nativeMenuItem = new QQuickNativeMenuItem(q, separator);
-    }*/
+    }
 
     if (nativeMenuItem) {
         // This may fail; calling code needs to check handle() for the result.
@@ -1088,7 +1089,6 @@ void QQuickMenu::insertItem(int index, QQuickItem *item)
             --index;
         if (oldIndex != index) {
             d->moveItem(oldIndex, index);
-            // TODO: move native menu
         }
     } else {
         d->insertItem(index, item);

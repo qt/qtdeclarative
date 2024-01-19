@@ -184,7 +184,7 @@ ApplicationWindow {
             enabled: false
         }
 
-        // TODO: separator
+        MenuSeparator {}
 
         Menu {
             id: subMenu
@@ -211,6 +211,9 @@ ApplicationWindow {
                 checkable: true
                 checked: true
             }
+
+            MenuSeparator {}
+
             ContextAction {
                 text: qsTr("Disabled sub-menu item")
                 enabled: false

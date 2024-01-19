@@ -30,6 +30,8 @@ Q_LOGGING_CATEGORY(lcNativeMenuItem, "qt.quick.controls.nativemenuitem")
     Provides a way to sync between the properties and signals of action
     and the underlying native menu item.
 
+    It can also represent a sub-menu item or a MenuSeparator.
+
     \sa Menu, Action
 */
 
@@ -48,12 +50,24 @@ QQuickNativeMenuItem::QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickAction 
 /*!
     \internal
 
-    Adds \subMenu as a sub-menu menu item of \a parentMenu.
+    Adds \a subMenu as a sub-menu menu item of \a parentMenu.
 */
 QQuickNativeMenuItem::QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickMenu *subMenu)
     : QObject(parentMenu)
     , m_parentMenu(parentMenu)
     , m_subMenu(subMenu)
+{
+}
+
+/*!
+    \internal
+
+ Adds \a separator a separator of \a parentMenu.
+*/
+QQuickNativeMenuItem::QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickMenuSeparator *separator)
+    : QObject(parentMenu)
+    , m_parentMenu(parentMenu)
+    , m_separator(separator)
 {
 }
 
@@ -78,6 +92,11 @@ void QQuickNativeMenuItem::clearSubMenu()
     m_handle->setMenu(nullptr);
 }
 
+QQuickMenuSeparator *QQuickNativeMenuItem::separator() const
+{
+    return m_separator;
+}
+
 QPlatformMenuItem *QQuickNativeMenuItem::handle() const
 {
     return m_handle.get();
@@ -95,15 +114,14 @@ QPlatformMenuItem *QQuickNativeMenuItem::create()
     if (!m_handle)
         m_handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenuItem());
 
-    Q_ASSERT(m_action || m_subMenu);
+    Q_ASSERT(m_action || m_subMenu || m_separator);
 
     if (m_handle) {
         if (m_action) {
             connect(m_handle.get(), &QPlatformMenuItem::activated, m_action, [this](){
                 m_action->trigger(m_parentMenu);
             });
-        } else { // m_subMenu
-//            m_handle->setMenu(parentMenuPrivate->nativeHandle.get());
+        } else if (m_subMenu) {
             m_handle->setMenu(QQuickMenuPrivate::get(m_subMenu)->handle.get());
             // TODO: do we need to call anything here? need to at least ensure
             // that the QQuickMenu::isVisible returns true after this
@@ -120,15 +138,15 @@ void QQuickNativeMenuItem::sync()
     if (/* !m_complete || */!create())
         return;
 
-    Q_ASSERT(m_action || m_subMenu);
+    Q_ASSERT(m_action || m_subMenu || m_separator);
 
-    m_handle->setEnabled(m_action ? m_action->isEnabled() : m_subMenu->isEnabled());
+    m_handle->setEnabled(m_action ? m_action->isEnabled() : m_subMenu && m_subMenu->isEnabled());
 //    m_handle->setVisible(isVisible());
-//    m_handle->setIsSeparator(m_separator);
+    m_handle->setIsSeparator(m_separator != nullptr);
     m_handle->setCheckable(m_action && m_action->isCheckable());
     m_handle->setChecked(m_action && m_action->isChecked());
     m_handle->setRole(QPlatformMenuItem::TextHeuristicRole);
-    m_handle->setText(m_action ? m_action->text() : m_subMenu->title());
+    m_handle->setText(m_action ? m_action->text() : m_subMenu ? m_subMenu->title() : QString());
 
 //    m_handle->setFont(m_font);
 //    m_handle->setHasExclusiveGroup(m_group && m_group->isExclusive());
@@ -162,6 +180,7 @@ void QQuickNativeMenuItem::reset()
     m_parentMenu = nullptr;
     m_subMenu = nullptr;
     m_action = nullptr;
+    m_separator = nullptr;
     m_iconLoader = nullptr;
     m_handle->setMenu(nullptr);
     m_handle.reset();

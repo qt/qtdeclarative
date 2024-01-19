@@ -26,6 +26,7 @@
 #include <QtQuickTemplates2/private/qquickmenu_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
 #include <QtQuickTemplates2/private/qquickmenuseparator_p.h>
+#include <QtQuickTemplates2/private/qquicknativemenuitem_p.h>
 
 using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
@@ -46,10 +47,11 @@ private slots:
     void staticActionsAndSubmenus();
     void dynamicActions();
     void dynamicSubmenus();
+    void menuSeparator();
 };
 
 tst_NativeMenus::tst_NativeMenus()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
+    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::FailOnWarnings)
 {
     qputenv("QT_QUICK_CONTROLS_USE_NATIVE_MENUS", "1");
 }
@@ -291,6 +293,45 @@ void tst_NativeMenus::dynamicSubmenus()
     QVERIFY(contextMenu->menuAt(0));
     contextMenu->removeMenu(contextMenu->menuAt(0));
     QCOMPARE(contextMenuPrivate->contentData.size(), 0);
+}
+
+void tst_NativeMenus::menuSeparator()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("menuSeparator.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    // Check that separators in menus are where we expect them to be.
+    QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(contextMenu);
+    auto *contextMenuSeparatorAsItem = contextMenu->itemAt(1);
+    QVERIFY(contextMenuSeparatorAsItem);
+    auto *contextMenuSeparator = qobject_cast<QQuickMenuSeparator *>(contextMenuSeparatorAsItem);
+    QVERIFY(contextMenuSeparator);
+#ifdef HAVE_NATIVE_MENU_SUPPORT
+    auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
+    QCOMPARE(contextMenuPrivate->nativeItems.size(), 3);
+    auto *contextMenuSeparatorNativeItem = contextMenuPrivate->nativeItems.at(1);
+    QVERIFY(contextMenuSeparatorNativeItem);
+    QVERIFY(contextMenuSeparatorNativeItem->separator());
+#endif
+
+    // Check that separators in sub-menus are where we expect them to be.
+    QQuickMenu *subMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(subMenu);
+    auto *subMenuSeparatorAsItem = subMenu->itemAt(1);
+    QVERIFY(subMenuSeparatorAsItem);
+    auto *subMenuSeparator = qobject_cast<QQuickMenuSeparator *>(subMenuSeparatorAsItem);
+    QVERIFY(subMenuSeparator);
+#ifdef HAVE_NATIVE_MENU_SUPPORT
+    auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
+    QCOMPARE(subMenuPrivate->nativeItems.size(), 3);
+    auto *subMenuSeparatorNativeItem = subMenuPrivate->nativeItems.at(1);
+    QVERIFY(subMenuSeparatorNativeItem);
+    QVERIFY(subMenuSeparatorNativeItem->separator());
+#endif
 }
 
 // TODO: add a test that mixes items with native items

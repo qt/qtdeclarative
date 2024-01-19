@@ -16,26 +16,30 @@
 //
 
 #include <QtCore/qobject.h>
+#include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickAction;
 class QQuickNativeIconLoader;
 class QQuickMenu;
+class QQuickMenuSeparator;
 class QPlatformMenuItem;
 
-class QQuickNativeMenuItem : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickNativeMenuItem : public QObject
 {
     Q_OBJECT
 
 public:
     explicit QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickAction *action);
     explicit QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickMenu *subMenu);
+    explicit QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickMenuSeparator *separator);
     ~QQuickNativeMenuItem();
 
     QQuickAction *action() const;
     QQuickMenu *subMenu() const;
     void clearSubMenu();
+    QQuickMenuSeparator *separator() const;
     QPlatformMenuItem *handle() const;
     QPlatformMenuItem *create();
     void sync();
@@ -55,6 +59,7 @@ private:
     QQuickMenu *m_parentMenu = nullptr;
     QQuickMenu *m_subMenu = nullptr;
     QQuickAction *m_action = nullptr;
+    QQuickMenuSeparator *m_separator = nullptr;
     mutable QQuickNativeIconLoader *m_iconLoader = nullptr;
     std::unique_ptr<QPlatformMenuItem> m_handle = nullptr;
     int m_shortcutId = -1;
