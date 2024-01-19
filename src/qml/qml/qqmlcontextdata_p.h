@@ -128,6 +128,28 @@ public:
     QObject *contextObject() const { return m_contextObject; }
     void setContextObject(QObject *contextObject) { m_contextObject = contextObject; }
 
+    template<typename HandleSelf, typename HandleLinked>
+    void deepClearContextObject(
+            QObject *contextObject, HandleSelf &&handleSelf, HandleLinked &&handleLinked) {
+        for (QQmlContextData *lc = m_linkedContext.data(); lc; lc = lc->m_linkedContext.data()) {
+            handleLinked(lc);
+            if (lc->m_contextObject == contextObject)
+                lc->m_contextObject = nullptr;
+        }
+
+        handleSelf(this);
+        if (m_contextObject == contextObject)
+            m_contextObject = nullptr;
+    }
+
+    void deepClearContextObject(QObject *contextObject)
+    {
+        deepClearContextObject(
+                contextObject,
+                [](QQmlContextData *self) { self->emitDestruction(); },
+                [](QQmlContextData *){});
+    }
+
     QQmlEngine *engine() const { return m_engine; }
     void setEngine(QQmlEngine *engine) { m_engine = engine; }
 
