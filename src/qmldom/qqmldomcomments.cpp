@@ -682,42 +682,6 @@ void AstComments::collectComments(
     }
 }
 
-// internal class to collect all comments in a node or its subnodes
-class CommentCollectorVisitor : protected VisitAll
-{
-public:
-    CommentCollectorVisitor(AstComments *comments, AST::Node *n) : comments(comments)
-    {
-        AST::Node::accept(n, this);
-    }
-
-    void throwRecursionDepthError() override { }
-
-    bool preVisit(Node *n) override
-    {
-        auto &cEls = comments->commentedElements();
-        if (cEls.contains(n))
-            nodeComments += cEls[n].commentGroups(
-                    combine(n->firstSourceLocation(), n->lastSourceLocation()));
-        return true;
-    }
-
-    AstComments *comments;
-    QMultiMap<quint32, const QList<Comment> *> nodeComments;
-};
-
-/*!
-\brief low level method returns all comments in a node (including its subnodes)
-
-The comments are roughly ordered in the order they appear in the file.
-Multiple values are in reverse order if the index is even.
-*/
-QMultiMap<quint32, const QList<Comment> *> AstComments::allCommentsInNode(AST::Node *n)
-{
-    CommentCollectorVisitor v(this, n);
-    return v.nodeComments;
-}
-
 bool RegionComments::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
