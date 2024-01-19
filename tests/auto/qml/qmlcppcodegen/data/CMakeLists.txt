@@ -17,6 +17,7 @@ set(cpp_sources
     multiforeign.h
     objectwithmethod.h
     person.cpp person.h
+    resettable.h
     sequenceToIterable.h
     sequencetypeexample.cpp sequencetypeexample.h
     state.h
@@ -219,6 +220,7 @@ set(qml_files
     registerPropagation.qml
     registerelimination.qml
     renameAdjust.qml
+    resettable.qml
     returnAfterReject.qml
     revisions.qml
     scopeIdLookup.qml
