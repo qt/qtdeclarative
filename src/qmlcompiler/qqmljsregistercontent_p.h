@@ -178,6 +178,14 @@ public:
         return result;
     }
 
+    QQmlJSRegisterContent castTo(const QQmlJSScope::ConstPtr &newContainedType) const
+    {
+        // This is not a conversion but a run time cast. It may result in null or undefined.
+        QQmlJSRegisterContent result = *this;
+        result.m_content = newContainedType;
+        return result;
+    }
+
 private:
     enum ContentKind { Type, Property, Enum, Method, ImportNamespace, Conversion };
 

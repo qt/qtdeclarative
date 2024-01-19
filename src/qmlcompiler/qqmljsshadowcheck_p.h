@@ -32,6 +32,13 @@ public:
              QQmlJS::DiagnosticMessage *error);
 
 private:
+    struct ResettableStore {
+        QQmlJSRegisterContent accumulatorIn;
+        int instructionOffset = -1;
+    };
+
+    void handleStore(int base, const QString &memberName);
+
     void generate_LoadProperty(int nameIndex) override;
     void generate_GetLookup(int index) override;
     void generate_StoreProperty(int nameIndex, int base) override;
@@ -42,9 +49,13 @@ private:
     QV4::Moth::ByteCodeHandler::Verdict startInstruction(QV4::Moth::Instr::Type) override;
     void endInstruction(QV4::Moth::Instr::Type) override;
 
-    void checkShadowing(
+    enum Shadowability { NotShadowable, Shadowable };
+    Shadowability checkShadowing(
             const QQmlJSRegisterContent &baseType, const QString &propertyName, int baseRegister);
 
+    void checkResettable(const QQmlJSRegisterContent &accumulatorIn, int instructionOffset);
+
+    QList<ResettableStore> m_resettableStores;
     InstructionAnnotations *m_annotations = nullptr;
     State m_state;
 };
