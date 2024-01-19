@@ -67,14 +67,6 @@ if(APPLE)
     endif()
 endif()
 
-# The add_qml_module_to_macos_app_bundle helper from 'shared'
-# fails top copy the qmldir file from the right place.
-add_custom_command(TARGET windowembedding POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_PROPERTY:windowembedding_shared,RUNTIME_OUTPUT_DIRECTORY>/qmldir
-        $<TARGET_FILE_DIR:windowembedding_shared>/qmldir
-)
-
 install(TARGETS windowembedding
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
