@@ -139,6 +139,27 @@ public:
     // If internal is false publicContext owns this.
     QQmlContext *asQQmlContext();
     QQmlContextPrivate *asQQmlContextPrivate();
+
+    template<typename HandleSelf, typename HandleLinked>
+    void deepClearContextObject(
+            QObject *expectedContextObject, HandleSelf &&handleSelf, HandleLinked &&handleLinked) {
+        for (QQmlContextData *lc = linkedContext; lc; lc = lc->linkedContext) {
+            handleLinked(lc);
+            if (lc->contextObject == expectedContextObject)
+                lc->contextObject = nullptr;
+        }
+        handleSelf(this);
+        if (contextObject == expectedContextObject)
+            contextObject = nullptr;
+    }
+    void deepClearContextObject(QObject *contextObject)
+    {
+        deepClearContextObject(
+                contextObject,
+                [](QQmlContextData *self) { self->emitDestruction(); },
+                [](QQmlContextData *){});
+    }
+
     quint32 refCount = 0;
     quint32 isInternal:1;
     quint32 isJSContext:1;
