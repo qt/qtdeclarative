@@ -360,6 +360,7 @@ void tst_qqmlproperty::registeredCompositeTypeProperty()
     {
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("registeredCompositeTypeProperty.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(obj);
 
