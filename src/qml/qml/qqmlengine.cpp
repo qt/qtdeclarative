@@ -215,22 +215,15 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
     QObjectPrivate *p = QObjectPrivate::get(o);
     if (QQmlData *d = QQmlData::get(p)) {
+        const auto invalidate = [](QQmlContextData *c) {c->invalidate();};
         if (d->ownContext) {
-            for (QQmlRefPointer<QQmlContextData> lc = d->ownContext->linkedContext(); lc;
-                 lc = lc->linkedContext()) {
-                lc->invalidate();
-                if (lc->contextObject() == o)
-                    lc->setContextObject(nullptr);
-            }
-            d->ownContext->invalidate();
-            if (d->ownContext->contextObject() == o)
-                d->ownContext->setContextObject(nullptr);
+            d->ownContext->deepClearContextObject(o, invalidate, invalidate);
             d->ownContext.reset();
             d->context = nullptr;
+            Q_ASSERT(!d->outerContext || d->outerContext->contextObject() != o);
+        } else if (d->outerContext && d->outerContext->contextObject() == o) {
+            d->outerContext->deepClearContextObject(o, invalidate, invalidate);
         }
-
-        if (d->outerContext && d->outerContext->contextObject() == o)
-            d->outerContext->setContextObject(nullptr);
 
         if (d->hasVMEMetaObject || d->hasInterceptorMetaObject) {
             // This is somewhat dangerous because another thread might concurrently
@@ -407,9 +400,7 @@ void QQmlData::setQueuedForDeletion(QObject *object)
         if (QQmlData *ddata = QQmlData::get(object)) {
             if (ddata->ownContext) {
                 Q_ASSERT(ddata->ownContext.data() == ddata->context);
-                ddata->context->emitDestruction();
-                if (ddata->ownContext->contextObject() == object)
-                    ddata->ownContext->setContextObject(nullptr);
+                ddata->ownContext->deepClearContextObject(object);
                 ddata->ownContext.reset();
                 ddata->context = nullptr;
             }
