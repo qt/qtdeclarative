@@ -11,6 +11,7 @@
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
+#include <QtQuickTemplates2/private/qquickmenu_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenubar_p.h>
 #include <QtQuickTemplates2/private/qquickmenubar_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenubaritem_p.h>
@@ -38,6 +39,7 @@ private slots:
     void addRemove();
     void checkHighlightWhenMenuDismissed();
     void hoverAfterClosingWithEscape();
+    void requestNative_data();
     void requestNative();
     void containerItems_data();
     void containerItems();
@@ -825,22 +827,38 @@ void tst_qquickmenubar::hoverAfterClosingWithEscape()
     QVERIFY(!secondMenu->isVisible());
 }
 
+void tst_qquickmenubar::requestNative_data()
+{
+    QTest::addColumn<QString>("testUrl");
+    QTest::addColumn<bool>("requestNative");
+    QTest::newRow("menuitems, not native") << QStringLiteral("menubaritems.qml") << false;
+    QTest::newRow("menuitems, native") << QStringLiteral("menubaritems.qml") << true;
+    QTest::newRow("menus, not native") << QStringLiteral("menus.qml") << false;
+    QTest::newRow("menus, native") << QStringLiteral("menus.qml") << true;
+}
+
 void tst_qquickmenubar::requestNative()
 {
-    QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
+    QFETCH(QString, testUrl);
+    QFETCH(bool, requestNative);
+
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", requestNative }});
+    engine.load(testFileUrl(testUrl));
+
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
     QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
-    // uncomment when native menubar implementation is done
-//    QVERIFY(menuBar->requestNative());
+    QCOMPARE(menuBar->requestNative(), requestNative);
 
-    menuBar->setRequestNative(false);
-    QVERIFY(!menuBar->requestNative());
+    QQuickMenu *fileMenu = window->property("fileMenu").value<QQuickMenu *>();
+    QVERIFY(fileMenu);
+    QVERIFY(!fileMenu->requestNative());
 
-    menuBar->setRequestNative(true);
-    QVERIFY(menuBar->requestNative());
+    QQuickMenuPrivate *fileMenuPriv = QQuickMenuPrivate::get(fileMenu);
+    QCOMPARE(fileMenuPriv->useNativeMenu(), requestNative);
 }
 
 void tst_qquickmenubar::containerItems_data()

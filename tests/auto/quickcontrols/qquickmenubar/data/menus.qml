@@ -7,6 +7,7 @@ import QtQuick.Controls
 ApplicationWindow {
     id: root
     property bool requestNative: false
+    property alias fileMenu: fileMenu
 
     width: 400
     height: 400
@@ -15,6 +16,7 @@ ApplicationWindow {
     header: MenuBar {
         requestNative: root.requestNative
         Menu {
+            id: fileMenu
             title: "&File"
             MenuItem { text: "&Open..." }
             MenuItem { text: "&Save" }

@@ -8,6 +8,7 @@ ApplicationWindow {
     id: root
     readonly property Button oopsButton: oopsButton
     property bool requestNative: false
+    property alias fileMenu: fileMenu
 
     width: 400
     height: 400
@@ -17,6 +18,7 @@ ApplicationWindow {
         requestNative: root.requestNative
         MenuBarItem {
             menu: Menu {
+                id: fileMenu
                 title: "&File"
                 MenuItem { text: "&Open..." }
                 MenuItem { text: "&Save" }

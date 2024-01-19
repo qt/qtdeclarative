@@ -240,9 +240,27 @@ void QQuickMenuPrivate::init()
     requestNative = qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_USE_NATIVE_MENUS");
 }
 
+bool QQuickMenuPrivate::useNativeMenu() const
+{
+    Q_Q(const QQuickMenu);
+    if (requestNative)
+        return true;
+
+    // If the menu is inside a menubar, and the menubar is
+    // native, the menu needs to be native as well.
+    QObject *p = q->parent();
+    while (p) {
+        if (auto menuBar = qobject_cast<QQuickMenuBar *>(p))
+            return menuBar->requestNative();
+        p = p->parent();
+    }
+
+    return false;
+}
+
 QPlatformMenu *QQuickMenuPrivate::nativeHandle() const
 {
-    Q_ASSERT(requestNative);
+    Q_ASSERT(handle || useNativeMenu());
     if (!handle && !triedToCreateNativeMenu) {
         auto self = const_cast<QQuickMenuPrivate *>(this);
         self->createNativeMenu();
@@ -258,7 +276,7 @@ QPlatformMenu *QQuickMenuPrivate::maybeNativeHandle() const
 
 bool QQuickMenuPrivate::usingNativeMenu()
 {
-    if (requestNative) {
+    if (useNativeMenu()) {
         // ensure a native menu is created
         (void)nativeHandle();
     }
