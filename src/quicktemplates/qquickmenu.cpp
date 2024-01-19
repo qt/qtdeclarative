@@ -240,12 +240,29 @@ void QQuickMenuPrivate::init()
     requestNative = qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_USE_NATIVE_MENUS");
 }
 
+QPlatformMenu *QQuickMenuPrivate::nativeHandle() const
+{
+    Q_ASSERT(requestNative);
+    if (!handle && !triedToCreateNativeMenu) {
+        auto self = const_cast<QQuickMenuPrivate *>(this);
+        self->createNativeMenu();
+        Q_ASSERT(handle);
+    }
+    return handle.get();
+}
+
+QPlatformMenu *QQuickMenuPrivate::maybeNativeHandle() const
+{
+    return handle.get();
+}
+
 bool QQuickMenuPrivate::usingNativeMenu()
 {
-    if (requestNative && !triedToCreateNativeMenu)
-        createNativeMenu();
-
-    return handle.get();
+    if (requestNative) {
+        // ensure a native menu is created
+        (void)nativeHandle();
+    }
+    return bool(handle);
 }
 
 bool QQuickMenuPrivate::createNativeMenu()

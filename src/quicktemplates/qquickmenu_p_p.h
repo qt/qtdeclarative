@@ -45,6 +45,8 @@ public:
 
     void init();
 
+    QPlatformMenu *nativeHandle() const;
+    QPlatformMenu *maybeNativeHandle() const;
     bool usingNativeMenu();
     bool createNativeMenu();
     void syncWithNativeMenu();
