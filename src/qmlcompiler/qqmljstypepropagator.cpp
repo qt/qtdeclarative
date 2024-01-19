@@ -990,7 +990,20 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
                         getCurrentBindingSourceLocation()));
     }
 
-    addReadAccumulator(property);
+    // If the property is resettable we must not coerce the input to the property type
+    // as that might eliminate an undefined value. For example, undefined -> string
+    // becomes "undefined".
+    // Therefore we explicitly require the value to be given as QVariant. This triggers
+    // the QVariant fallback path that also used for shadowable properties. QVariant can
+    // hold undefined and the lookup functions will handle that appropriately.
+
+    const QQmlJSScope::ConstPtr varType = m_typeResolver->varType();
+    const QQmlJSRegisterContent readType
+            = (property.property().reset().isEmpty()
+                    || !m_typeResolver->canHoldUndefined(m_state.accumulatorIn()))
+                ? property
+                : property.storedIn(varType).castTo(varType);
+    addReadAccumulator(readType);
     addReadRegister(base, callBase);
     m_state.setHasSideEffects(true);
 }

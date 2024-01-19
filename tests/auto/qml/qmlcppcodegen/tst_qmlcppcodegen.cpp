@@ -8,6 +8,7 @@
 #include <data/enumproblems.h>
 #include <data/getOptionalLookup.h>
 #include <data/objectwithmethod.h>
+#include <data/resettable.h>
 #include <data/weathermoduleurl.h>
 #include <data/withlength.h>
 
@@ -187,6 +188,7 @@ private slots:
     void registerElimination();
     void registerPropagation();
     void renameAdjust();
+    void resettableProperty();
     void returnAfterReject();
     void revisions();
     void scopeIdLookup();
@@ -3848,6 +3850,27 @@ void tst_QmlCppCodegen::renameAdjust()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
+}
+
+void tst_QmlCppCodegen::resettableProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/resettable.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    ResettableProperty *resettable = qobject_cast<ResettableProperty *>(o.data());
+    QVERIFY(resettable);
+
+    QCOMPARE(resettable->value(), 999);
+    QMetaObject::invokeMethod(resettable, "doReset");
+    QCOMPARE(resettable->value(), 0);
+
+    resettable->setValue(82);
+    QCOMPARE(resettable->value(), 82);
+    QMetaObject::invokeMethod(resettable, "doReset2");
+    QCOMPARE(resettable->value(), 0);
 }
 
 void tst_QmlCppCodegen::returnAfterReject()
