@@ -526,7 +526,7 @@ std::optional<DomItem> DomUniverse::getItemIfMostRecent(const DomItem &univ, Dom
         // through updateEnty method and currentItem->refreshedDataAt
         QMutexLocker l(mutex());
         value = getPathValueOrNull(fType, canonicalPath);
-        if (valueHasMostRecentItem(value.get(), fInfo.lastModified()) || canonicalPath.isEmpty()) {
+        if (valueHasMostRecentItem(value.get(), fInfo.lastModified())) {
             return univ.copy(value);
         };
     }
