@@ -13,8 +13,8 @@ class QQuickTextDocumentPrivate;
 class Q_QUICK_EXPORT QQuickTextDocument : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged REVISION(6, 7) FINAL)
-    Q_PROPERTY(bool modified READ isModified WRITE setModified NOTIFY modifiedChanged REVISION(6, 7) FINAL)
+    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged REVISION(6, 7))
+    Q_PROPERTY(bool modified READ isModified WRITE setModified NOTIFY modifiedChanged REVISION(6, 7))
 
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
