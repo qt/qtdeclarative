@@ -112,6 +112,7 @@ private slots:
     void functionTakingVar();
     void getOptionalLookup();
     void getOptionalLookup_data();
+    void getOptionalLookupOnQJSValueNonStrict();
     void globals();
     void idAccess();
     void ignoredFunctionReturn();
@@ -2110,6 +2111,18 @@ void tst_QmlCppCodegen::getOptionalLookup()
 
     QVariant actual = o->property(propertyName.toLocal8Bit());
     QCOMPARE(actual, expected);
+}
+
+void tst_QmlCppCodegen::getOptionalLookupOnQJSValueNonStrict()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/qt/qml/TestTypes/GetOptionalLookupOnQJSValueNonStrict.qml"_s);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QVERIFY(o->property("b").toBool());
 }
 
 void tst_QmlCppCodegen::globals()

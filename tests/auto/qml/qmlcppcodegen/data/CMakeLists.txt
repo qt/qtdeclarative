@@ -32,6 +32,7 @@ set(cpp_sources
 
 set(qml_files
     AccessModelMethodsFromOutside.qml
+    Action.qml
     ArraySequenceLengthInterop.qml
     B.qml
     BadType.qml
@@ -47,6 +48,7 @@ set(qml_files
     Dummy2.qml
     Enums.qml
     Foozle.qml
+    GetOptionalLookupOnQJSValueNonStrict.qml
     Loopy.qml
     OkType.qml
     Panel.qml
@@ -316,6 +318,7 @@ qt6_add_qml_module(codegen_test_module
     IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
     DEPENDENCIES
         QtQuick
+        QtQuick.Controls
         QtQuick.Templates
         QtQuick.Shapes
     SOURCES
@@ -348,6 +351,7 @@ qt6_add_qml_module(codegen_test_module_verify
     IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
     DEPENDENCIES
         QtQuick
+        QtQuick.Controls
         QtQuick.Templates
         QtQuick.Shapes
     SOURCES
