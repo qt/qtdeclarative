@@ -18,6 +18,7 @@
 #include <private/qqmldatablob_p.h>
 #include <private/qqmlimport_p.h>
 #include <private/qqmlmetatype_p.h>
+#include <private/qv4compileddata_p.h>
 
 #include <QtQml/qtqmlglobal.h>
 #include <QtQml/qqmlerror.h>
@@ -38,14 +39,14 @@ class QQmlProfiler;
 class QQmlTypeLoaderThread;
 class QQmlEngine;
 
-class Q_QML_PRIVATE_EXPORT QQmlTypeLoader
+class Q_QML_EXPORT QQmlTypeLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
 public:
     using ChecksumCache = QHash<quintptr, QByteArray>;
     enum Mode { PreferSynchronous, Asynchronous, Synchronous };
 
-    class Q_QML_PRIVATE_EXPORT Blob : public QQmlDataBlob
+    class Q_QML_EXPORT Blob : public QQmlDataBlob
     {
     public:
         Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader);
@@ -122,6 +123,23 @@ public:
     QQmlTypeLoader(QQmlEngine *);
     ~QQmlTypeLoader();
 
+    template<
+            typename Engine,
+            typename EnginePrivate = QQmlEnginePrivate,
+            typename = std::enable_if_t<std::is_same_v<Engine, QQmlEngine>>>
+    static QQmlTypeLoader *get(Engine *engine)
+    {
+        return get(EnginePrivate::get(engine));
+    }
+
+    template<
+            typename Engine,
+            typename = std::enable_if_t<std::is_same_v<Engine, QQmlEnginePrivate>>>
+    static QQmlTypeLoader *get(Engine *engine)
+    {
+        return &engine->typeLoader;
+    }
+
     QQmlImportDatabase *importDatabase() const;
     ChecksumCache *checksumCache() { return &m_checksumCache; }
     const ChecksumCache *checksumCache() const { return &m_checksumCache; }
@@ -130,6 +148,9 @@ public:
 
     QQmlRefPointer<QQmlTypeData> getType(const QUrl &unNormalizedUrl, Mode mode = PreferSynchronous);
     QQmlRefPointer<QQmlTypeData> getType(const QByteArray &, const QUrl &url, Mode mode = PreferSynchronous);
+
+    void injectScript(const QUrl &relativeUrl, const QV4::Value &value);
+    QQmlRefPointer<QQmlScriptBlob> injectedScript(const QUrl &relativeUrl);
 
     QQmlRefPointer<QQmlScriptBlob> getScript(const QUrl &unNormalizedUrl);
     QQmlRefPointer<QQmlQmldirData> getQmldir(const QUrl &);

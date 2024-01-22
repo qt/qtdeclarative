@@ -26,7 +26,7 @@ ReturnedValue GeneratorFunctionCtor::virtualCallAsConstructor(const FunctionObje
     if (engine->hasException)
         return Encode::undefined();
 
-    Function *vmf = compilationUnit->linkToEngine(engine);
+    Function *vmf = compilationUnit->rootFunction();
     ExecutionContext *global = engine->scriptContext();
     ReturnedValue o = Encode(GeneratorFunction::create(global, vmf));
 

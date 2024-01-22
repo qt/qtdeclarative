@@ -54,6 +54,6 @@ install(TARGETS wearableexample
 include(../../quick/shared/QtBundleQmlModuleForMacOS.cmake)
 
 set(app_target "wearableexample")
-add_qml_module_to_macos_app_bundle("${app_target}" "wearable" "Wearable")
-add_qml_module_to_macos_app_bundle("${app_target}" "wearablesettings" "WearableSettings")
-add_qml_module_to_macos_app_bundle("${app_target}" "wearablestyle" "WearableStyle")
+add_qml_module_to_macos_app_bundle("${app_target}" "wearable")
+add_qml_module_to_macos_app_bundle("${app_target}" "wearablesettings")
+add_qml_module_to_macos_app_bundle("${app_target}" "wearablestyle")

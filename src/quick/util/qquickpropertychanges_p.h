@@ -21,7 +21,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickPropertyChangesPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPropertyChanges : public QQuickStateOperation
+class Q_QUICK_EXPORT QQuickPropertyChanges : public QQuickStateOperation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyChanges)

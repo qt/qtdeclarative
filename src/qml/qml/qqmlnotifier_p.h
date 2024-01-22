@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlNotifierEndpoint;
 class QQmlData;
-class Q_QML_PRIVATE_EXPORT QQmlNotifier
+class Q_QML_EXPORT QQmlNotifier
 {
 public:
     inline QQmlNotifier();

@@ -10,13 +10,17 @@ layout(binding = 1) uniform sampler2D _qt_texture;
 
 layout(std140, binding = 0) uniform buf {
     mat4 modelViewMatrix;
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 projectionMatrix[QSHADER_VIEW_COUNT];
+#else
     mat4 projectionMatrix;
-    vec4 color;
+#endif
     vec2 textureScale;
     float dpr;
-} ubuf;
+    vec4 color;
+};
 
 void main()
 {
-    fragColor = texture(_qt_texture, sampleCoord) * ubuf.color.a;
+    fragColor = texture(_qt_texture, sampleCoord) * color.a;
 }

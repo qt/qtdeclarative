@@ -31,7 +31,7 @@ class QQmlObjectModel;
 class QQuickMenuItem;
 class QQuickNativeMenuItem;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickMenu)

@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickColorImage : public QQuickImage
+class Q_QUICKCONTROLS2IMPL_EXPORT QQuickColorImage : public QQuickImage
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor RESET resetColor NOTIFY colorChanged FINAL)

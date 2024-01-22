@@ -24,7 +24,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_TEST_PRIVATE_EXPORT QuickTestUtil : public QObject
+class Q_QUICK_TEST_EXPORT QuickTestUtil : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions NOTIFY printAvailableFunctionsChanged)

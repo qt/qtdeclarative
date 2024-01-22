@@ -18,7 +18,7 @@
 #include <QtCore/qhash.h>
 #include <QtGui/qbrush.h>
 
-#include <QtQuick/private/qtquickexports_p.h>
+#include <QtQuick/qtquickexports.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -26,7 +26,7 @@ class QSGTexture;
 class QSGPlainTexture;
 class QRhi;
 
-struct Q_QUICK_PRIVATE_EXPORT QSGGradientCacheKey
+struct Q_QUICK_EXPORT QSGGradientCacheKey
 {
     QSGGradientCacheKey(const QGradientStops &stops, QGradient::Spread spread)
         : stops(stops), spread(spread)
@@ -47,7 +47,7 @@ inline size_t qHash(const QSGGradientCacheKey &v, size_t seed = 0)
     return h;
 }
 
-class Q_QUICK_PRIVATE_EXPORT QSGGradientCache
+class Q_QUICK_EXPORT QSGGradientCache
 {
 public:
     struct GradientDesc { // can fully describe a linear/radial/conical gradient

@@ -234,7 +234,7 @@ enum CoercionProblem
     InvalidListType
 };
 
-Q_QML_PRIVATE_EXPORT void warnAboutCoercionToVoid(
+Q_QML_EXPORT void warnAboutCoercionToVoid(
         ExecutionEngine *engine, const Value &value, CoercionProblem problem);
 
 inline ReturnedValue coerceListType(

@@ -20,8 +20,7 @@ qt_internal_add_qml_module(LabsSharedImage
         Qt::GuiPrivate
         Qt::QuickPrivate
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-)
+    )
 
 # We need to do additional initialization, so we have to provide our own
 # plugin class rather than using the generated one

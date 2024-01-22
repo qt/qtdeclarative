@@ -761,6 +761,9 @@
 
         \snippet qtquickcontrols-progressbar-custom.qml file
 
+        Above, the content item is also animated to represent an
+        \l {ProgressBar::}{indeterminate} progress bar state.
+
 
     \section2 Customizing RadioButton
 

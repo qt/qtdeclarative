@@ -247,10 +247,11 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
             // Types must begin with an uppercase letter (see checkRegistration()
             // in qqmlmetatype.cpp for the enforcement of this).
             if (typeNameCache && !pathName.isEmpty() && pathName.at(0).isUpper()) {
-                QQmlTypeNameCache::Result r = typeNameCache->query(pathName);
+                QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+                QQmlTypeLoader *typeLoader = QQmlTypeLoader::get(enginePrivate);
+                QQmlTypeNameCache::Result r = typeNameCache->query(pathName, typeLoader);
                 if (r.isValid()) {
                     if (r.type.isValid()) {
-                        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
                         QQmlAttachedPropertiesFunc func = r.type.attachedPropertiesFunction(enginePrivate);
                         if (!func) return; // Not an attachable type
 
@@ -262,12 +263,11 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
 
                         // TODO: Do we really _not_ want to query the namespaced types here?
                         r = typeNameCache->query<QQmlTypeNameCache::QueryNamespaced::No>(
-                                    path.at(ii), r.importNamespace);
+                                    path.at(ii), r.importNamespace, typeLoader);
 
                         if (!r.type.isValid())
                             return; // Invalid type in namespace
 
-                        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
                         QQmlAttachedPropertiesFunc func = r.type.attachedPropertiesFunction(enginePrivate);
                         if (!func)
                             return; // Not an attachable type

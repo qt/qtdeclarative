@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qqmlbind_p.h"
@@ -430,9 +430,9 @@ void QQmlBind::setWhen(bool v)
 /*!
     \qmlproperty QtObject QtQml::Binding::target
 
-    The object to be updated. You only need to use this property if you can't
-    supply the binding target declaratively. The following two pieces of code
-    are equivalent.
+    The object to be updated. You need to use this property if the binding target
+    does not have an \c id attribute (for example, when the target is a singleton).
+    Otherwise, the following two pieces of code are equivalent:
 
     \qml
     Binding { contactName.text: name }
@@ -780,14 +780,16 @@ void QQmlBindPrivate::decodeBinding(
             Q_ASSERT(typeReference);
             QQmlType attachedType = typeReference->type();
             if (!attachedType.isValid()) {
-                const QQmlTypeNameCache::Result result
-                        = deferredData->context->imports()->query(propertySuffix);
-                if (!result.isValid()) {
-                    qmlWarning(q).nospace()
-                            << "Unknown name " << propertySuffix << ". The binding is ignored.";
-                    return;
+                if (QQmlTypeLoader *typeLoader = compilationUnit->engine->typeLoader()) {
+                    const QQmlTypeNameCache::Result result
+                            = deferredData->context->imports()->query(propertySuffix, typeLoader);
+                    if (!result.isValid()) {
+                        qmlWarning(q).nospace()
+                                << "Unknown name " << propertySuffix << ". The binding is ignored.";
+                        return;
+                    }
+                    attachedType = result.type;
                 }
-                attachedType = result.type;
             }
 
             QQmlContext *context = qmlContext(q);

@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugServer : public QQmlDebugConnector
+class Q_QML_EXPORT QQmlDebugServer : public QQmlDebugConnector
 {
     Q_OBJECT
 public:

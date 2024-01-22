@@ -10,8 +10,7 @@ In QML, a singleton is an object which is created at most once per
 \l{QQmlEngine}{engine}. In this guide, we'll
 \l{How can singletons be created in QML}{explain how to create} singletons
 and \l{Accessing singletons}{how to use them}. We'll also provide some
-\l{Guidelines for using singletons}{best practices}
-for working with singletons.
+best practices for working with singletons.
 
 \section1 How can singletons be created in QML?
 
@@ -259,7 +258,7 @@ Most of the time, it makes more sense to group data you want to expose together 
 of a single singleton. Assume for instance that you want to create an ebook reader
 where you need to expose three \l{QAbstractItemModel}{abstract item models}, one
 for local books, and two for remote sources. Instead of repeating the process
-for \l{Exposing an already existing object as a singleton}{exposing existing objects}
+for \l{Exposing an existing object as a singleton}{exposing existing objects}
 three times, you can instead create one singleton and set it up before starting
 the main application:
 \code

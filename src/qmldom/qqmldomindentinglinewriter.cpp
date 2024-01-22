@@ -24,7 +24,7 @@ void IndentingLineWriter::willCommit()
     m_preCachedStatus = fStatus().currentStatus;
 }
 
-void IndentingLineWriter::reindentAndSplit(QString eol, bool eof)
+void IndentingLineWriter::reindentAndSplit(const QString &eol, bool eof)
 {
     bool shouldReindent = m_reindent;
 indentAgain:

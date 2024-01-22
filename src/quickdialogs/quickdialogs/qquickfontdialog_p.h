@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickFontDialog : public QQuickAbstractDialog
+class Q_QUICKDIALOGS2_EXPORT QQuickFontDialog : public QQuickAbstractDialog
 {
     Q_OBJECT
     Q_PROPERTY(QFont selectedFont READ selectedFont WRITE setSelectedFont NOTIFY selectedFontChanged)

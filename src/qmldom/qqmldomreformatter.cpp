@@ -30,8 +30,8 @@ class Rewriter : protected BaseVisitor
     bool addSemicolons() const { return expressionDepth > 0; }
 
 public:
-    Rewriter(OutWriter &lw, std::shared_ptr<AstComments> comments,
-             std::function<QStringView(SourceLocation)> loc2Str, Node *node)
+    Rewriter(OutWriter &lw, const std::shared_ptr<AstComments> &comments,
+             const std::function<QStringView(SourceLocation)> &loc2Str, Node *node)
         : lw(lw), comments(comments), loc2Str(loc2Str)
     {
         accept(node);
@@ -324,23 +324,7 @@ protected:
             PatternProperty *assignment = AST::cast<PatternProperty *>(it->property);
             if (assignment) {
                 preVisit(assignment);
-                const bool isStringLike = [this](const SourceLocation &loc) {
-                    const auto name = loc2Str(loc);
-                    if (name.first() == name.last()) {
-                        if (name.first() == QStringLiteral("\'")
-                            || name.first() == QStringLiteral("\""))
-                            return true;
-                    }
-                    return false;
-                }(assignment->name->propertyNameToken);
-
-                if (isStringLike)
-                    out("\"");
-
                 accept(assignment->name);
-                if (isStringLike)
-                    out("\"");
-
                 bool useInitializer = false;
                 const bool bindingIdentifierExist = !assignment->bindingIdentifier.isEmpty();
                 if (assignment->colonToken.length > 0) {
@@ -411,7 +395,7 @@ protected:
     }
     bool visit(StringLiteralPropertyName *ast) override
     {
-        out(ast->id.toString());
+        out(ast->propertyNameToken);
         return true;
     }
     bool visit(NumericLiteralPropertyName *ast) override
@@ -583,10 +567,12 @@ protected:
     bool visit(Block *ast) override
     {
         out(ast->lbraceToken);
-        ++expressionDepth;
-        lnAcceptIndented(ast->statements);
-        newLine();
-        --expressionDepth;
+        if (ast->statements) {
+            ++expressionDepth;
+            lnAcceptIndented(ast->statements);
+            newLine();
+            --expressionDepth;
+        }
         out(ast->rbraceToken);
         return false;
     }
@@ -1235,8 +1221,9 @@ protected:
     }
 };
 
-void reformatAst(OutWriter &lw, std::shared_ptr<AstComments> comments,
-                 const std::function<QStringView(SourceLocation)> loc2Str, AST::Node *n)
+void reformatAst(
+        OutWriter &lw, const std::shared_ptr<AstComments> &comments,
+        const std::function<QStringView(SourceLocation)> &loc2Str, AST::Node *n)
 {
     if (n) {
         Rewriter rewriter(lw, comments, loc2Str, n);

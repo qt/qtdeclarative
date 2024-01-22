@@ -16,7 +16,7 @@ namespace PathEls {
 class TestPaths: public QObject {
     Q_OBJECT
 public:
-    void testPathInternals(Path p1)
+    void testPathInternals(const Path &p1)
     {
         QCOMPARE(p1.component(0).kind(), Kind::Root);
         QCOMPARE(p1.component(1).kind(), Kind::Current);
@@ -175,7 +175,7 @@ private slots:
             Path::Index(4),
             Path::Key(u"zz")
             });
-        for (Path p : paths) {
+        for (const Path &p : paths) {
             Source s = p.split();
             QCOMPARE(p, s.pathToSource.path(s.pathFromSource));
             if (!s.pathFromSource)

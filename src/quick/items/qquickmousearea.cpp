@@ -1039,7 +1039,7 @@ void QQuickMouseArea::geometryChange(const QRectF &newGeometry, const QRectF &ol
     Q_D(QQuickMouseArea);
     QQuickItem::geometryChange(newGeometry, oldGeometry);
 
-    if (d->lastScenePos.isNull)
+    if (!d->lastScenePos.isValid())
         d->lastScenePos = mapToScene(d->lastPos);
     else if (newGeometry.x() != oldGeometry.x() || newGeometry.y() != oldGeometry.y())
         d->lastPos = mapFromScene(d->lastScenePos);

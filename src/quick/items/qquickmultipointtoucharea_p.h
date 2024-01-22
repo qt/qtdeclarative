@@ -30,7 +30,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickMultiPointTouchArea;
-class Q_QUICK_PRIVATE_EXPORT QQuickTouchPoint : public QObject
+class Q_QUICK_EXPORT QQuickTouchPoint : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int pointId READ pointId NOTIFY pointIdChanged FINAL)
@@ -176,7 +176,7 @@ private:
     QList<QObject*> _touchPoints;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickMultiPointTouchArea : public QQuickItem
+class Q_QUICK_EXPORT QQuickMultiPointTouchArea : public QQuickItem
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(QQuickMultiPointTouchArea)

@@ -136,6 +136,8 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
 
     JSTypedFunction *synthesized = new JSTypedFunction;
 
+    QQmlTypeLoader *typeLoader = engine->typeLoader();
+
     auto findQmlType = [&](const CompiledData::ParameterType &param) {
         const quint32 type = param.typeNameIndexOrCommonType();
         if (param.indexIsCommonType()) {
@@ -146,14 +148,18 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         if (type == 0)
             return QQmlType();
 
-        const QQmlType qmltype = unit->typeNameCache->query<QQmlImport::AllowRecursion>(
-                                                            unit->stringAt(type)).type;
+        const auto base = unit->baseCompilationUnit();
+        const QQmlType qmltype = typeLoader
+                ? base->typeNameCache->query<QQmlImport::AllowRecursion>(
+                                             base->stringAt(type), typeLoader).type
+                : QQmlType();
+
         if (!qmltype.isValid() || qmltype.typeId().isValid())
             return qmltype;
 
         if (!qmltype.isComposite()) {
             return qmltype.isInlineComponentType()
-                ? unit->qmlTypeForComponent(qmltype.elementName())
+                ? base->qmlTypeForComponent(qmltype.elementName())
                 : QQmlType();
         }
 

@@ -1,11 +1,22 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include <QtTest/QtTest>
-#include <QProcess>
+#include <QFileInfo>
+#include <QJSEngine>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLibraryInfo>
-#include <qjstest/test262runner.h>
+#include <QProcess>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtTest/QtTest>
+
+#include "test262runner.h"
+#include "private/qqmlbuiltinfunctions_p.h"
+#include "private/qv4arraybuffer_p.h"
+#include "private/qv4globalobject_p.h"
+#include "private/qv4script_p.h"
+
+#include <stdio.h>
 
 class tst_EcmaScriptTests : public QQmlDataTest
 {
@@ -94,7 +105,74 @@ void tst_EcmaScriptTests::runJitted()
     QVERIFY(result);
 }
 
-QTEST_GUILESS_MAIN(tst_EcmaScriptTests)
+//// v RUNNER PROCESS MODE v ////
+
+void readInput(bool &done, QString &mode, QString &testData, QString &testCasePath,
+               QString &harnessForModules, bool &runAsModule)
+{
+    QTextStream in(stdin);
+    QString input;
+    while (input.isEmpty())
+        input = in.readLine();
+
+    QJsonDocument json = QJsonDocument::fromJson(input.toUtf8());
+    done = json["done"].toBool(false);
+    mode = json["mode"].toString();
+    testData = json["testData"].toString();
+    testCasePath = json["testCasePath"].toString();
+    harnessForModules = json["harnessForModules"].toString();
+    runAsModule = json["runAsModule"].toBool(false);
+}
+
+void printResult(QV4::ExecutionEngine &vm, const QString &mode)
+{
+    QJsonObject result;
+    result.insert("mode", mode);
+    if (vm.hasException) {
+        QV4::Scope scope(&vm);
+        QV4::ScopedValue val(scope, vm.catchException());
+
+        result.insert("resultState", int(TestCase::State::Fails));
+        result.insert("resultErrorMessage", val->toQString());
+    } else {
+        result.insert("resultState", int(TestCase::State::Passes));
+    }
+
+    QTextStream(stdout) << QJsonDocument(result).toJson(QJsonDocument::Compact) << "\r\n";
+}
+
+void doRunnerProcess()
+{
+    bool done = false;
+    QString mode;
+    QString testData;
+    QString testCasePath;
+    QString harnessForModules;
+    bool runAsModule = false;
+
+    while (!done) {
+        QV4::ExecutionEngine vm;
+        readInput(done, mode, testData, testCasePath, harnessForModules, runAsModule);
+        if (done)
+            break;
+        Test262Runner::executeTest(vm, testData, testCasePath, harnessForModules, runAsModule);
+        printResult(vm, mode);
+    }
+}
+
+//// ^ RUNNER PROCESS MODE ^ ////
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+
+    if (qEnvironmentVariableIntValue("runnerProcess") == 1) {
+        doRunnerProcess();
+    } else {
+        tst_EcmaScriptTests tc;
+        QTEST_SET_MAIN_SOURCE_PATH
+        return QTest::qExec(&tc, argc, argv);
+    }
+}
 
 #include "tst_ecmascripttests.moc"
-

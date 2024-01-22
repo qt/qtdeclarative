@@ -39,7 +39,7 @@ QT_BEGIN_NAMESPACE
 class QSGInternalTextNode;
 class QInputControl;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTextInputPrivate : public QQuickImplicitSizeItemPrivate
+class Q_QUICK_EXPORT QQuickTextInputPrivate : public QQuickImplicitSizeItemPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickTextInput)

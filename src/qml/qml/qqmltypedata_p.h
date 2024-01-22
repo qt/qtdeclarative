@@ -57,7 +57,7 @@ public:
 
     const QList<ScriptReference> &resolvedScripts() const;
 
-    QV4::ExecutableCompilationUnit *compilationUnit() const;
+    QV4::CompiledData::CompilationUnit *compilationUnit() const;
 
     // Used by QQmlComponent to get notifications
     struct TypeDataCallback {
@@ -83,20 +83,23 @@ protected:
     QString stringAt(int index) const override;
 
 private:
+    using InlineComponentData = QV4::CompiledData::InlineComponentData;
+
     bool tryLoadFromDiskCache();
     bool loadFromSource();
-    void restoreIR(QV4::CompiledData::CompilationUnit &&unit);
+    void restoreIR(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit);
     void continueLoadFromIR();
     void resolveTypes();
     QQmlError buildTypeResolutionCaches(
             QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
-            QV4::ResolvedTypeReferenceMap *resolvedTypeCache
+            QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
             ) const;
     void compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                 QV4::ResolvedTypeReferenceMap *resolvedTypeCache,
+                 QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
                  const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
-    QQmlError createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                                          const QV4::ResolvedTypeReferenceMap &resolvedTypeCache);
+    QQmlError createTypeAndPropertyCaches(
+            const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
+            const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
     bool resolveType(const QString &typeName, QTypeRevision &version,
                      TypeReference &ref, int lineNumber = -1, int columnNumber = -1,
                      bool reportErrors = true,
@@ -126,11 +129,11 @@ private:
     QQmlType m_qmlType;
     QByteArray m_typeClassName; // used for meta-object later
 
-    using ExecutableCompilationUnitPtr = QQmlRefPointer<QV4::ExecutableCompilationUnit>;
+    using CompilationUnitPtr = QQmlRefPointer<QV4::CompiledData::CompilationUnit>;
 
     QHash<QString, InlineComponentData> m_inlineComponentData;
 
-    ExecutableCompilationUnitPtr m_compiledData;
+    CompilationUnitPtr m_compiledData;
 
     QList<TypeDataCallback *> m_callbacks;
 

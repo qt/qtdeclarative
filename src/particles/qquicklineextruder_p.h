@@ -16,7 +16,7 @@
 //
 #include "qquickparticleextruder_p.h"
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickLineExtruder : public QQuickParticleExtruder
+class Q_QUICKPARTICLES_EXPORT QQuickLineExtruder : public QQuickParticleExtruder
 {
     Q_OBJECT
     //Default is topleft to bottom right. Flipped makes it topright to bottom left

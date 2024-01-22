@@ -34,6 +34,25 @@ FileDialogImpl {
 
     standardButtons: T.Dialog.Open | T.Dialog.Cancel
 
+    Dialog {
+        id: overwriteConfirmationDialog
+        objectName: "confirmationDialog"
+        anchors.centerIn: parent
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+        dim: true
+        modal: true
+        title: qsTr("“%1” already exists. Do you want to replace it?").arg(control.fileName)
+
+        Label {
+            text: qsTr("A file with the same name already exists in %1.\nReplacing it will overwrite its current contents.").arg(control.currentFolderName)
+        }
+
+        footer: DialogButtonBox {
+            alignment: Qt.AlignHCenter
+            standardButtons: DialogButtonBox.Yes | DialogButtonBox.No
+        }
+    }
+
     /*
         We use attached properties because we want to handle logic in C++, and:
         - We can't assume the footer only contains a DialogButtonBox (which would allow us
@@ -48,6 +67,7 @@ FileDialogImpl {
     FileDialogImpl.breadcrumbBar: breadcrumbBar
     FileDialogImpl.fileNameLabel: fileNameLabel
     FileDialogImpl.fileNameTextField: fileNameTextField
+    FileDialogImpl.overwriteConfirmationDialog: overwriteConfirmationDialog
 
     background: Rectangle {
         implicitWidth: 600
@@ -106,7 +126,7 @@ FileDialogImpl {
             fileDetailRowWidth: nameFiltersComboBox.width
 
             KeyNavigation.backtab: breadcrumbBar
-            KeyNavigation.tab: nameFiltersComboBox
+            KeyNavigation.tab: fileNameTextField.visible ? fileNameTextField : nameFiltersComboBox
         }
     }
 
@@ -135,7 +155,6 @@ FileDialogImpl {
             TextField {
                 id: fileNameTextField
                 objectName: "fileNameTextField"
-                text: control.fileName
                 visible: false
 
                 Layout.fillWidth: true

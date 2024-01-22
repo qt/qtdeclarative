@@ -134,6 +134,8 @@ To find out more about using the QML language, see the \l{Qt Qml} module documen
                    - provides layouts for arranging Qt Quick items
             \li \l {Qt Quick Test QML Types} {Tests}
                    - contains types for writing unit test for a QML application
+            \li \l{Qt Quick Shapes QML Types}{Shapes}
+                   - provides types for rendering vector shapes in a Qt Quick scene.
         \endlist
 \endlist
 

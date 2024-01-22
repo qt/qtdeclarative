@@ -903,7 +903,7 @@ void BaselineAssembler::storeHeapObject(int reg)
 void BaselineAssembler::loadImport(int index)
 {
     Address addr = pasm()->loadCompilationUnitPtr(PlatformAssembler::ScratchRegister);
-    addr.offset = offsetof(QV4::CompiledData::CompilationUnitBase, imports);
+    addr.offset = offsetof(QV4::CompilationUnitRuntimeData, imports);
     pasm()->loadPtr(addr, PlatformAssembler::ScratchRegister);
     addr.offset = index * int(sizeof(QV4::Value*));
     pasm()->loadPtr(addr, PlatformAssembler::ScratchRegister);

@@ -364,8 +364,9 @@ inline QQmlPropertyCache::ConstPtr QQmlPropertyCacheCreator<ObjectContainer>::pr
             Q_ASSERT(typeRef);
             QQmlType qmltype = typeRef->type();
             if (!qmltype.isValid()) {
-                imports->resolveType(stringAt(binding->propertyNameIndex),
-                                     &qmltype, nullptr, nullptr, nullptr);
+                imports->resolveType(
+                        QQmlTypeLoader::get(enginePrivate), stringAt(binding->propertyNameIndex),
+                        &qmltype, nullptr, nullptr);
             }
 
             const QMetaObject *attachedMo = qmltype.attachedPropertiesType(enginePrivate);
@@ -666,8 +667,9 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             QQmlType qmltype;
             bool selfReference = false;
             if (!imports->resolveType(
-                    stringAt(p->commonTypeOrTypeNameIndex()), &qmltype, nullptr, nullptr,
-                    nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
+                        QQmlTypeLoader::get(enginePrivate),
+                        stringAt(p->commonTypeOrTypeNameIndex()), &qmltype, nullptr, nullptr,
+                        nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
                 return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
             }
 
@@ -685,7 +687,14 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
                 } else if (selfReference) {
                     compositeType = objectContainer->qmlTypeForComponent();
                 } else {
-                    compositeType = qmltype;
+                    // compositeType may not be the same type as qmlType because multiple engines
+                    // may load different types for the same document. Therefore we have to ask
+                    // our engine's type loader here.
+                    QQmlRefPointer<QQmlTypeData> tdata
+                            = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
+                    Q_ASSERT(tdata);
+                    Q_ASSERT(tdata->isComplete());
+                    compositeType = tdata->compilationUnit()->qmlTypeForComponent();
                 }
 
                 if (p->isList()) {
@@ -742,8 +751,9 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
         *customTypeName = typeName;
     QQmlType qmltype;
     bool selfReference = false;
-    if (!imports->resolveType(typeName, &qmltype, nullptr, nullptr, nullptr,
-                              QQmlType::AnyRegistrationType, &selfReference))
+    if (!imports->resolveType(
+                &enginePrivate->typeLoader, typeName, &qmltype, nullptr, nullptr, nullptr,
+                QQmlType::AnyRegistrationType, &selfReference))
         return QMetaType();
 
     if (!qmltype.isComposite()) {
@@ -870,7 +880,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
                 Q_ASSERT(type->isValid());
             }
         } else {
-            *type = typeRef->compilationUnit()->qmlType.typeId();
+            *type = typeRef->compilationUnit()->metaType();
         }
 
         *version = typeRef->version();

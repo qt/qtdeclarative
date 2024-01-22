@@ -7,7 +7,11 @@ layout(location = 0) in vec2 qt_TexCoord0;
 layout(location = 0) out vec4 fragColor;
 
 layout(std140, binding = 0) uniform qt_buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 qt_Matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 qt_Matrix;
+#endif
     float qt_Opacity;
 } qt_ubuf;
 

@@ -21,7 +21,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickImplicitSizeItemPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickImplicitSizeItem : public QQuickItem
+class Q_QUICK_EXPORT QQuickImplicitSizeItem : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(qreal implicitWidth READ implicitWidth NOTIFY implicitWidthChanged)

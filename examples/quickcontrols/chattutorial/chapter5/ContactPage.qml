@@ -1,10 +1,12 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
 
-import io.qt.examples.chattutorial
+import chattutorial
 
 Page {
     id: root
@@ -27,15 +29,21 @@ Page {
         spacing: 20
         model: SqlContactModel {}
         delegate: ItemDelegate {
+            id: contactDelegate
             text: model.display
             width: listView.width - listView.leftMargin - listView.rightMargin
             height: avatar.implicitHeight
             leftPadding: avatar.implicitWidth + 32
+
+            // Use "model" rather than the specific "display" role, because it
+            // would conflict with the display property of ItemDelegate.
+            required property var model
+
             onClicked: root.StackView.view.push("ConversationPage.qml", { inConversationWith: model.display })
 
             Image {
                 id: avatar
-                source: "images/" + model.display.replace(" ", "_") + ".png"
+                source: "images/" + contactDelegate.model.display.replace(" ", "_") + ".png"
             }
         }
     }

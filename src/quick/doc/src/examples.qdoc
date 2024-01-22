@@ -123,6 +123,13 @@ Creator.
         \li \l{Qt Quick Examples - MultiEffect Item Switcher}{MultiEffect-based Item Transitions}
         \endlist
     \enddiv
+    \div {class="doc-column"}
+        \b{Shapes}
+        \list
+        \li \l{Qt Quick Examples - Shapes}{Shapes}
+        \li \l{Weather Forecast Example}{Weather Forecast}
+        \endlist
+    \enddiv
 \enddiv
 
 \div {class="multi-column"}

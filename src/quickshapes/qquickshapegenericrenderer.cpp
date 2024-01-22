@@ -703,10 +703,10 @@ QSGMaterial *QQuickShapeGenericMaterialFactory::createConicalGradient(QQuickWind
     return nullptr;
 }
 
-QQuickShapeLinearGradientRhiShader::QQuickShapeLinearGradientRhiShader()
+QQuickShapeLinearGradientRhiShader::QQuickShapeLinearGradientRhiShader(int viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/lineargradient.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/lineargradient.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/lineargradient.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/lineargradient.frag.qsb"), viewCount);
 }
 
 bool QQuickShapeLinearGradientRhiShader::updateUniformData(RenderState &state,
@@ -717,11 +717,15 @@ bool QQuickShapeLinearGradientRhiShader::updateUniformData(RenderState &state,
     bool changed = false;
     QByteArray *buf = state.uniformData();
     Q_ASSERT(buf->size() >= 84);
+    const int shaderMatrixCount = newMaterial->viewCount();
+    const int matrixCount = qMin(state.projectionMatrixCount(), shaderMatrixCount);
 
     if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
-        changed = true;
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            const QMatrix4x4 m = state.combinedMatrix();
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
     }
 
     QQuickShapeGenericStrokeFillNode *node = m->node();
@@ -729,19 +733,19 @@ bool QQuickShapeLinearGradientRhiShader::updateUniformData(RenderState &state,
     if (!oldMaterial || m_gradA.x() != node->m_fillGradient.a.x() || m_gradA.y() != node->m_fillGradient.a.y()) {
         m_gradA = QVector2D(node->m_fillGradient.a.x(), node->m_fillGradient.a.y());
         Q_ASSERT(sizeof(m_gradA) == 8);
-        memcpy(buf->data() + 64, &m_gradA, 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount, &m_gradA, 8);
         changed = true;
     }
 
     if (!oldMaterial || m_gradB.x() != node->m_fillGradient.b.x() || m_gradB.y() != node->m_fillGradient.b.y()) {
         m_gradB = QVector2D(node->m_fillGradient.b.x(), node->m_fillGradient.b.y());
-        memcpy(buf->data() + 72, &m_gradB, 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8, &m_gradB, 8);
         changed = true;
     }
 
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
-        memcpy(buf->data() + 80, &opacity, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8 + 8, &opacity, 4);
         changed = true;
     }
 
@@ -810,13 +814,13 @@ int QQuickShapeLinearGradientMaterial::compare(const QSGMaterial *other) const
 QSGMaterialShader *QQuickShapeLinearGradientMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new QQuickShapeLinearGradientRhiShader;
+    return new QQuickShapeLinearGradientRhiShader(viewCount());
 }
 
-QQuickShapeRadialGradientRhiShader::QQuickShapeRadialGradientRhiShader()
+QQuickShapeRadialGradientRhiShader::QQuickShapeRadialGradientRhiShader(int viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/radialgradient.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/radialgradient.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/radialgradient.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/radialgradient.frag.qsb"), viewCount);
 }
 
 bool QQuickShapeRadialGradientRhiShader::updateUniformData(RenderState &state,
@@ -827,11 +831,15 @@ bool QQuickShapeRadialGradientRhiShader::updateUniformData(RenderState &state,
     bool changed = false;
     QByteArray *buf = state.uniformData();
     Q_ASSERT(buf->size() >= 92);
+    const int shaderMatrixCount = newMaterial->viewCount();
+    const int matrixCount = qMin(state.projectionMatrixCount(), shaderMatrixCount);
 
     if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
-        changed = true;
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            const QMatrix4x4 m = state.combinedMatrix();
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
     }
 
     QQuickShapeGenericStrokeFillNode *node = m->node();
@@ -845,32 +853,32 @@ bool QQuickShapeRadialGradientRhiShader::updateUniformData(RenderState &state,
     if (!oldMaterial || m_focalPoint.x() != focalPoint.x() || m_focalPoint.y() != focalPoint.y()) {
         m_focalPoint = QVector2D(focalPoint.x(), focalPoint.y());
         Q_ASSERT(sizeof(m_focalPoint) == 8);
-        memcpy(buf->data() + 64, &m_focalPoint, 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount, &m_focalPoint, 8);
         changed = true;
     }
 
     if (!oldMaterial || m_focalToCenter.x() != focalToCenter.x() || m_focalToCenter.y() != focalToCenter.y()) {
         m_focalToCenter = QVector2D(focalToCenter.x(), focalToCenter.y());
         Q_ASSERT(sizeof(m_focalToCenter) == 8);
-        memcpy(buf->data() + 72, &m_focalToCenter, 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8, &m_focalToCenter, 8);
         changed = true;
     }
 
     if (!oldMaterial || m_centerRadius != centerRadius) {
         m_centerRadius = centerRadius;
-        memcpy(buf->data() + 80, &m_centerRadius, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8 + 8, &m_centerRadius, 4);
         changed = true;
     }
 
     if (!oldMaterial || m_focalRadius != focalRadius) {
         m_focalRadius = focalRadius;
-        memcpy(buf->data() + 84, &m_focalRadius, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8 + 8 + 4, &m_focalRadius, 4);
         changed = true;
     }
 
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
-        memcpy(buf->data() + 88, &opacity, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8 + 8 + 4 + 4, &opacity, 4);
         changed = true;
     }
 
@@ -944,13 +952,13 @@ int QQuickShapeRadialGradientMaterial::compare(const QSGMaterial *other) const
 QSGMaterialShader *QQuickShapeRadialGradientMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new QQuickShapeRadialGradientRhiShader;
+    return new QQuickShapeRadialGradientRhiShader(viewCount());
 }
 
-QQuickShapeConicalGradientRhiShader::QQuickShapeConicalGradientRhiShader()
+QQuickShapeConicalGradientRhiShader::QQuickShapeConicalGradientRhiShader(int viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/conicalgradient.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/conicalgradient.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/conicalgradient.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/conicalgradient.frag.qsb"), viewCount);
 }
 
 bool QQuickShapeConicalGradientRhiShader::updateUniformData(RenderState &state,
@@ -961,11 +969,15 @@ bool QQuickShapeConicalGradientRhiShader::updateUniformData(RenderState &state,
     bool changed = false;
     QByteArray *buf = state.uniformData();
     Q_ASSERT(buf->size() >= 80);
+    const int shaderMatrixCount = newMaterial->viewCount();
+    const int matrixCount = qMin(state.projectionMatrixCount(), shaderMatrixCount);
 
     if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
-        changed = true;
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            const QMatrix4x4 m = state.combinedMatrix();
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
     }
 
     QQuickShapeGenericStrokeFillNode *node = m->node();
@@ -976,19 +988,19 @@ bool QQuickShapeConicalGradientRhiShader::updateUniformData(RenderState &state,
     if (!oldMaterial || m_centerPoint.x() != centerPoint.x() || m_centerPoint.y() != centerPoint.y()) {
         m_centerPoint = QVector2D(centerPoint.x(), centerPoint.y());
         Q_ASSERT(sizeof(m_centerPoint) == 8);
-        memcpy(buf->data() + 64, &m_centerPoint, 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount, &m_centerPoint, 8);
         changed = true;
     }
 
     if (!oldMaterial || m_angle != angle) {
         m_angle = angle;
-        memcpy(buf->data() + 72, &m_angle, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8, &m_angle, 4);
         changed = true;
     }
 
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
-        memcpy(buf->data() + 76, &opacity, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8 + 4, &opacity, 4);
         changed = true;
     }
 
@@ -1053,7 +1065,7 @@ int QQuickShapeConicalGradientMaterial::compare(const QSGMaterial *other) const
 QSGMaterialShader *QQuickShapeConicalGradientMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new QQuickShapeConicalGradientRhiShader;
+    return new QQuickShapeConicalGradientRhiShader(viewCount());
 }
 
 QT_END_NAMESPACE

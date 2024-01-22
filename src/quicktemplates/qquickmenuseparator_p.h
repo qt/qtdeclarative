@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickMenuSeparator;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuSeparator : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickMenuSeparator : public QQuickControl
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(MenuSeparator)

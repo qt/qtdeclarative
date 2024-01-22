@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 class QQmlPropertyValidator;
 class QQmlEnginePrivate;
 
-class Q_QML_PRIVATE_EXPORT QQmlCustomParser
+class Q_QML_EXPORT QQmlCustomParser
 {
 public:
     enum Flag {

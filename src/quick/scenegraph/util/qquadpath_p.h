@@ -20,18 +20,35 @@
 #include <QtCore/qdebug.h>
 #include <QtGui/qvector2d.h>
 #include <QtGui/qpainterpath.h>
-#include <QtQuick/private/qtquickexports_p.h>
+#include <QtQuick/qtquickexports.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuadPath
+class Q_QUICK_EXPORT QQuadPath
 {
 public:
+    // This is a copy of the flags in QQuickShapePath ### TODO: use a common definition
+    enum PathHint : quint8 {
+        PathLinear = 0x1,
+        PathQuadratic = 0x2,
+        PathConvex = 0x4,
+        PathFillOnRight = 0x8,
+        PathSolid = 0x10,
+        PathNonIntersecting = 0x20,
+        PathNonOverlappingControlPointTriangles = 0x40
+    };
+    Q_DECLARE_FLAGS(PathHints, PathHint)
+
     class Element
     {
     public:
         Element ()
             : m_isSubpathStart(false), m_isSubpathEnd(false), m_isLine(false)
+        {
+        }
+
+        Element (QVector2D s, QVector2D c, QVector2D e)
+            : sp(s), cp(c), ep(e), m_isSubpathStart(false), m_isSubpathEnd(false), m_isLine(false)
         {
         }
 
@@ -89,6 +106,10 @@ public:
             }
         }
 
+        Element segmentFromTo(float t0, float t1) const;
+
+        Element reversed() const;
+
         int childCount() const { return m_numChildren; }
 
         int indexOfChild(int childNumber) const
@@ -120,19 +141,36 @@ public:
                 m_curvatureFlags = Element::CurvatureFlags(m_curvatureFlags & ~Element::Convex);
         }
 
+        void setFillOnRight(bool isFillOnRight)
+        {
+            if (isFillOnRight)
+                m_curvatureFlags = Element::CurvatureFlags(m_curvatureFlags | Element::FillOnRight);
+            else
+                m_curvatureFlags = Element::CurvatureFlags(m_curvatureFlags & ~Element::FillOnRight);
+        }
+
+        bool isFillOnRight() const { return m_curvatureFlags & FillOnRight; }
+
         bool isControlPointOnLeft() const
         {
             return isPointOnLeft(cp, sp, ep);
         }
-
-    private:
-        int intersectionsAtY(float y, float *fractions) const;
 
         enum CurvatureFlags : quint8 {
             CurvatureUndetermined = 0,
             FillOnRight = 1,
             Convex = 2
         };
+
+        enum FillSide : quint8 {
+            FillSideUndetermined = 0,
+            FillSideRight = 1,
+            FillSideLeft = 2,
+            FillSideBoth = 3
+        };
+
+    private:
+        int intersectionsAtY(float y, float *fractions, bool swapXY = false) const;
 
         QVector2D sp;
         QVector2D cp;
@@ -144,7 +182,7 @@ public:
         quint8 m_isSubpathEnd : 1;
         quint8 m_isLine : 1;
         friend class QQuadPath;
-        friend QDebug operator<<(QDebug, const QQuadPath::Element &);
+        friend Q_QUICK_EXPORT QDebug operator<<(QDebug, const QQuadPath::Element &);
     };
 
     void moveTo(const QVector2D &to)
@@ -188,8 +226,9 @@ public:
     bool isEmpty() const { return m_elements.size() == 0; }
     int elementCountRecursive() const;
 
-    static QQuadPath fromPainterPath(const QPainterPath &path);
+    static QQuadPath fromPainterPath(const QPainterPath &path, PathHints hints = {});
     QPainterPath toPainterPath() const;
+    QString asSvgString() const;
 
     QQuadPath subPathsClosed() const;
     void addCurvatureData();
@@ -197,6 +236,7 @@ public:
     QQuadPath dashed(qreal lineWidth, const QList<qreal> &dashPattern, qreal dashOffset = 0) const;
     void splitElementAt(int index);
     bool contains(const QVector2D &point) const;
+    Element::FillSide fillSideOf(int elementIdx, float elementT) const;
 
     template<typename Func>
     void iterateChildrenOf(Element &e, Func &&lambda)
@@ -251,12 +291,33 @@ public:
     static bool isPointOnLine(const QVector2D &p, const QVector2D &sp, const QVector2D &ep);
     static bool isPointNearLine(const QVector2D &p, const QVector2D &sp, const QVector2D &ep);
 
+    bool testHint(PathHint hint) const
+    {
+        return m_hints.testFlag(hint);
+    }
+
+    void setHint(PathHint hint, bool on = true)
+    {
+        m_hints.setFlag(hint, on);
+    }
+
+    PathHints pathHints() const
+    {
+        return m_hints;
+    }
+
+    void setPathHints(PathHints newHints)
+    {
+        m_hints = newHints;
+    }
+
 private:
     void addElement(const QVector2D &control, const QVector2D &to, bool isLine = false);
     Element::CurvatureFlags coordinateOrderOfElement(const Element &element) const;
 
-    friend QDebug operator<<(QDebug, const QQuadPath &);
+    friend Q_QUICK_EXPORT QDebug operator<<(QDebug, const QQuadPath &);
 
+    PathHints m_hints;
     bool subPathToStart = true;
     Qt::FillRule m_fillRule = Qt::OddEvenFill;
     QVector2D currentPoint;
@@ -264,8 +325,10 @@ private:
     QList<Element> m_childElements;
 };
 
-QDebug operator<<(QDebug, const QQuadPath::Element &);
-QDebug operator<<(QDebug, const QQuadPath &);
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuadPath::PathHints);
+
+Q_QUICK_EXPORT QDebug operator<<(QDebug, const QQuadPath::Element &);
+Q_QUICK_EXPORT QDebug operator<<(QDebug, const QQuadPath &);
 
 QT_END_NAMESPACE
 

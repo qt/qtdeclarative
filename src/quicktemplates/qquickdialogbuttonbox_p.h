@@ -28,7 +28,7 @@ class QQuickDialogButtonBoxPrivate;
 class QQuickDialogButtonBoxAttached;
 class QQuickDialogButtonBoxAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBox : public QQuickContainer
+class Q_QUICKTEMPLATES2_EXPORT QQuickDialogButtonBox : public QQuickContainer
 {
     Q_OBJECT
     Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)
@@ -107,7 +107,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickDialogButtonBox)
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBoxAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickDialogButtonBoxAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickDialogButtonBox *buttonBox READ buttonBox NOTIFY buttonBoxChanged FINAL)

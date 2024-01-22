@@ -62,7 +62,7 @@ like the pre-defined sequence types and are stored as-is. However, they have
 no QML names.
 
 \warning Sequences stored as a C++ container like \l QList or \c std::vector are
-subject to the effects caused by \l{Value Type and Sequence References} and
+subject to the effects caused by \l{QML Value Type and Sequence References} and
 should thus be handled with care. \l QQmlListProperty is not affected since
 it is only a view for an underlying container. C++ standard containers such as
 \c std::vector are not implicitly shared. Therefore, copying them always
@@ -70,7 +70,7 @@ produces a deep copy. Since a sequence read from a property always has to be
 copied at least once, using such containers as QML sequences is rather
 expensive, even if you don't modify them from QML.
 
-The QtQml module contains a few \l{qtqml-qmlmodule.html#sequence-types}{sequence types}
+The QtQml module contains a few \l [QML] {QtQml#Sequence Types}{sequence types}
 you may want to use.
 
 */

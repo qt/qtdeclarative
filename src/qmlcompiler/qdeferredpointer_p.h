@@ -14,7 +14,7 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include <QtCore/private/qglobal_p.h>
 #include <QtCore/qsharedpointer.h>

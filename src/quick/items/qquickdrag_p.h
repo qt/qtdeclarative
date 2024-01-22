@@ -121,7 +121,7 @@ private:
 
 class QQmlV4Function;
 class QQuickDragAttached;
-class Q_QUICK_PRIVATE_EXPORT QQuickDrag : public QObject
+class Q_QUICK_EXPORT QQuickDrag : public QObject
 {
     Q_OBJECT
 
@@ -211,7 +211,7 @@ private:
 };
 
 class QQuickDragAttachedPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickDragAttached : public QObject
+class Q_QUICK_EXPORT QQuickDragAttached : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickDragAttached)

@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 class QQmlEngine;
 class QJSEngine;
 
-class Q_QMLCORE_PRIVATE_EXPORT QQmlStandardPaths : public QObject
+class Q_QMLCORE_EXPORT QQmlStandardPaths : public QObject
 {
     Q_OBJECT
     QML_SINGLETON

@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickSinglePointHandlerPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointHandler : public QQuickPointerDeviceHandler
+class Q_QUICK_EXPORT QQuickSinglePointHandler : public QQuickPointerDeviceHandler
 {
     Q_OBJECT
     Q_PROPERTY(QQuickHandlerPoint point READ point NOTIFY pointChanged FINAL)

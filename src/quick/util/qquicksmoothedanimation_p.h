@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlProperty;
 class QQuickSmoothedAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickSmoothedAnimation : public QQuickNumberAnimation
+class Q_QUICK_EXPORT QQuickSmoothedAnimation : public QQuickNumberAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickSmoothedAnimation)

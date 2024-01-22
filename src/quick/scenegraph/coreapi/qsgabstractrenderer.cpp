@@ -14,19 +14,6 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \enum QSGAbstractRenderer::ClearModeBit
-
-    Used with setClearMode() to indicate which buffer should
-    be cleared before the scene render.
-
-    \value ClearColorBuffer Clear the color buffer using clearColor().
-    \value ClearDepthBuffer Clear the depth buffer.
-    \value ClearStencilBuffer Clear the stencil buffer.
-
-    \sa setClearMode(), setClearColor()
- */
-
-/*!
     \enum QSGAbstractRenderer::MatrixTransformFlag
 
     Used with setProjectionMatrixToRect() to indicate the expectations towards
@@ -61,8 +48,9 @@ QT_BEGIN_NAMESPACE
 QSGAbstractRendererPrivate::QSGAbstractRendererPrivate()
     : m_root_node(nullptr)
     , m_clear_color(Qt::transparent)
-    , m_clear_mode(QSGAbstractRenderer::ClearColorBuffer | QSGAbstractRenderer::ClearDepthBuffer)
 {
+    m_projection_matrix.resize(1);
+    m_projection_matrix_native_ndc.resize(1);
 }
 
 /*!
@@ -245,7 +233,7 @@ void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect, MatrixTr
 
     QMatrix4x4 matrix;
     matrix.ortho(left, right, bottom, top, 1, -1);
-    setProjectionMatrix(matrix);
+    setProjectionMatrix(matrix, 0);
 
     if (nativeNDCFlipY) {
         std::swap(top, bottom);
@@ -253,27 +241,33 @@ void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect, MatrixTr
         matrix.setToIdentity();
         matrix.ortho(left, right, bottom, top, 1, -1);
     }
-    setProjectionMatrixWithNativeNDC(matrix);
+    setProjectionMatrixWithNativeNDC(matrix, 0);
 }
 
 /*!
     Use \a matrix to project the QSGNode coordinates onto surface pixels.
 
+    \a index specifies the view index when multiview rendering is in use.
+
     \sa projectionMatrix(), setProjectionMatrixToRect()
  */
-void QSGAbstractRenderer::setProjectionMatrix(const QMatrix4x4 &matrix)
+void QSGAbstractRenderer::setProjectionMatrix(const QMatrix4x4 &matrix, int index)
 {
     Q_D(QSGAbstractRenderer);
-    d->m_projection_matrix = matrix;
+    if (d->m_projection_matrix.count() <= index)
+        d->m_projection_matrix.resize(index + 1);
+    d->m_projection_matrix[index] = matrix;
 }
 
 /*!
     \internal
  */
-void QSGAbstractRenderer::setProjectionMatrixWithNativeNDC(const QMatrix4x4 &matrix)
+void QSGAbstractRenderer::setProjectionMatrixWithNativeNDC(const QMatrix4x4 &matrix, int index)
 {
     Q_D(QSGAbstractRenderer);
-    d->m_projection_matrix_native_ndc = matrix;
+    if (d->m_projection_matrix_native_ndc.count() <= index)
+        d->m_projection_matrix_native_ndc.resize(index + 1);
+    d->m_projection_matrix_native_ndc[index] = matrix;
 }
 
 /*!
@@ -281,26 +275,37 @@ void QSGAbstractRenderer::setProjectionMatrixWithNativeNDC(const QMatrix4x4 &mat
 
     \sa setProjectionMatrix(), setProjectionMatrixToRect()
  */
-QMatrix4x4 QSGAbstractRenderer::projectionMatrix() const
+QMatrix4x4 QSGAbstractRenderer::projectionMatrix(int index) const
 {
     Q_D(const QSGAbstractRenderer);
-    return d->m_projection_matrix;
+    return d->m_projection_matrix[index];
+}
+
+int QSGAbstractRenderer::projectionMatrixCount() const
+{
+    Q_D(const QSGAbstractRenderer);
+    return d->m_projection_matrix.count();
+}
+
+int QSGAbstractRenderer::projectionMatrixWithNativeNDCCount() const
+{
+    Q_D(const QSGAbstractRenderer);
+    return d->m_projection_matrix_native_ndc.count();
 }
 
 /*!
     \internal
  */
-QMatrix4x4 QSGAbstractRenderer::projectionMatrixWithNativeNDC() const
+QMatrix4x4 QSGAbstractRenderer::projectionMatrixWithNativeNDC(int index) const
 {
     Q_D(const QSGAbstractRenderer);
-    return d->m_projection_matrix_native_ndc;
+    return d->m_projection_matrix_native_ndc[index];
 }
 
 /*!
-    Use \a color to clear the framebuffer when clearMode() is
-    set to QSGAbstractRenderer::ClearColorBuffer.
+    Sets the \a color to clear the framebuffer.
 
-    \sa clearColor(), setClearMode()
+    \sa clearColor()
  */
 void QSGAbstractRenderer::setClearColor(const QColor &color)
 {
@@ -312,36 +317,12 @@ void QSGAbstractRenderer::setClearColor(const QColor &color)
     Returns the color that clears the framebuffer at the beginning
     of the rendering.
 
-    \sa setClearColor(), clearMode()
+    \sa setClearColor()
  */
 QColor QSGAbstractRenderer::clearColor() const
 {
     Q_D(const QSGAbstractRenderer);
     return d->m_clear_color;
-}
-
-/*!
-    Defines which attachment of the framebuffer should be cleared
-    before each scene render with the \a mode flag.
-
-    \sa clearMode(), setClearColor()
- */
-void QSGAbstractRenderer::setClearMode(ClearMode mode)
-{
-    Q_D(QSGAbstractRenderer);
-    d->m_clear_mode = mode;
-}
-
-/*!
-    Flags defining which attachment of the framebuffer will be cleared
-    before each scene render.
-
-    \sa setClearMode(), clearColor()
- */
-QSGAbstractRenderer::ClearMode QSGAbstractRenderer::clearMode() const
-{
-    Q_D(const QSGAbstractRenderer);
-    return d->m_clear_mode;
 }
 
 /*!

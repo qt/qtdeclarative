@@ -27,7 +27,7 @@ QT_REQUIRE_CONFIG(qml_table_model);
 
 QT_BEGIN_NAMESPACE
 
-class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlTableModelColumn : public QObject
+class Q_LABSQMLMODELS_EXPORT QQmlTableModelColumn : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QJSValue display READ display WRITE setDisplay NOTIFY displayChanged FINAL)

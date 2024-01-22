@@ -13,7 +13,7 @@ class Q_QUICK_EXPORT QSGTextNode : public QSGTransformNode
 {
 public:
     // Should match the TextStyle in qquicktext_p.h
-    enum TextStyle
+    enum TextStyle : quint8
     {
         Normal,
         Outline,
@@ -22,7 +22,7 @@ public:
     };
 
     // Should match the RenderType in qquicktext_p.h
-    enum RenderType
+    enum RenderType: quint8
     {
         QtRendering,
         NativeRendering,
@@ -40,8 +40,8 @@ public:
     virtual void setStyleColor(const QColor &styleColor) = 0;
     virtual QColor styleColor() const = 0;
 
-    virtual void setAnchorColor(const QColor &anchorColor) = 0;
-    virtual QColor anchorColor() const = 0;
+    virtual void setLinkColor(const QColor &linkColor) = 0;
+    virtual QColor linkColor() const = 0;
 
     virtual void setSelectionColor(const QColor &selectionColor) = 0;
     virtual QColor selectionColor() const = 0;
@@ -57,6 +57,8 @@ public:
 
     virtual void setSmooth(bool smooth) = 0;
     virtual bool smooth() const = 0;
+
+    virtual void clear() = 0;
 
     virtual void setViewport(const QRectF &viewport) = 0;
     virtual QRectF viewport() const = 0;

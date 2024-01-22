@@ -32,7 +32,7 @@
     \section1 Detailed Description
     \target detailed-desc-material
 
-    The Material style is based on the \l {https://www.google.com/design/spec/material-design/introduction.html}
+    The Material style is based on the \l {https://m3.material.io}
     {Google Material Design Guidelines}. It allows for a unified experience
     across platforms and device sizes.
 
@@ -47,6 +47,10 @@
     platform, and looks more or less identical everywhere. Minor differences
     may occur due to differences in available system fonts and font rendering
     engines.
+
+    \note As the Material Design Guidelines change over time, this style may
+    change certain padding or font values, for example, in order to maintain
+    consistency with the guidelines.
 
     \section2 Customization
 
@@ -255,6 +259,8 @@
     \l {Item::}{clip} to \c true. To avoid this, \l {Control::}{topInset} is
     set to an appropriate value in these cases.
 
+    \include qquickmaterialstyle.qdocinc placeholder-text-multiple-lines
+
     \section3 TextField
 
     The same \l {material-control-specific-notes-textarea}{issue with clipping}
@@ -262,9 +268,11 @@
     this, \l {Control::}{topInset} is set to an appropriate value when the
     TextField sets clip to \c true.
 
+    \include qquickmaterialstyle.qdocinc placeholder-text-multiple-lines
+
     \section1 Attached Property Documentation
 
-    \styleproperty {Material.accent} {color} {material-accent-attached-prop}
+    \styleproperty {Material.accent} {color}
     \target material-accent-attached-prop
     This attached property holds the accent color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
@@ -288,7 +296,7 @@
 
     \endstyleproperty
 
-    \styleproperty {Material.background} {color} {material-background-attached-prop}
+    \styleproperty {Material.background} {color}
     \target material-background-attached-prop
     This attached property holds the background color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
@@ -308,7 +316,7 @@
 
     \endstyleproperty
 
-    \styleproperty {Material.elevation} {int} {material-elevation-attached-prop}
+    \styleproperty {Material.elevation} {int}
     \target material-elevation-attached-prop
     This attached property holds the elevation of the control. The higher the
     elevation, the deeper the shadow. The property can be attached to any control,
@@ -319,7 +327,7 @@
 
     In the following example, the elevation of the pane is set to \c 6
     in order to achieve the look of an
-    \l {https://material.google.com/components/cards.html}{elevated card}:
+    \l {https://m3.material.io/components/cards/overview}{elevated card}:
 
     \table
         \row
@@ -331,7 +339,7 @@
 
     \endstyleproperty
 
-    \styleproperty {Material.foreground} {color} {material-foreground-attached-prop}
+    \styleproperty {Material.foreground} {color}
     \target material-foreground-attached-prop
     This attached property holds the foreground color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
@@ -351,7 +359,7 @@
 
     \endstyleproperty
 
-    \styleproperty {Material.primary} {color} {material-primary-attached-prop}
+    \styleproperty {Material.primary} {color}
     \target material-primary-attached-prop
     This attached property holds the primary color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
@@ -366,7 +374,7 @@
 
     \endstyleproperty
 
-    \styleproperty {Material.theme} {enumeration} {material-theme-attached-prop}
+    \styleproperty {Material.theme} {enumeration}
     \target material-theme-attached-prop
     This attached property holds whether the theme is light or dark. The property
     can be attached to any window or item. The value is propagated to children.
@@ -393,7 +401,7 @@
 
     \endstyleproperty
 
-    \styleproperty {Material.roundedScale} {enumeration} {material-roundedScale-attached-prop}
+    \styleproperty {Material.roundedScale} {enumeration}
     \target material-roundedScale-attached-prop
     This attached property holds the radius of rounded corners used on the
     target control. The property can be attached to any window or item, but
@@ -417,7 +425,7 @@
 
     \endstyleproperty
 
-    \styleproperty {Material.containerStyle} {enumeration} {material-containerStyle-attached-prop}
+    \styleproperty {Material.containerStyle} {enumeration}
     \target material-containerStyle-attached-prop
     This attached property holds the style of the container used by the
     target control. The property can be attached to any window or item, but
@@ -438,7 +446,7 @@
 
     \section1 Attached Method Documentation
 
-    \stylemethod2 {color} {color} {enumeration} {predefined} {enumeration} {shade} {material-color-attached-method}
+    \stylemethod2 {color} {color} {enumeration} {predefined} {enumeration} {shade}
     \target material-color-attached-method
     This attached method returns the effective color value of the specified
     \l {pre-defined Material colors}{pre-defined Material color} combined with

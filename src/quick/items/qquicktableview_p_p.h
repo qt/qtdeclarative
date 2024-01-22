@@ -124,7 +124,7 @@ public:
 };
 
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate, public QQuickSelectable
+class Q_QUICK_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate, public QQuickSelectable
 {
 public:
     Q_DECLARE_PUBLIC(QQuickTableView)
@@ -377,6 +377,7 @@ public:
 
     QPoint selectionStartCell = {-1, -1};
     QPoint selectionEndCell = {-1, -1};
+    QItemSelection existingSelection;
 
     QMargins edgesBeforeRebuild;
     QSize tableSizeBeforeRebuild;

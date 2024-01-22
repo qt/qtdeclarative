@@ -4,7 +4,7 @@
 /*!
     \example scenegraph/threadedanimation
     \title Scene Graph - Threaded Animation
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
     \ingroup qtquickexamples
     \brief Shows benefits of custom items animating independently of the main thread while using the threaded render loop of Qt Quick.
 

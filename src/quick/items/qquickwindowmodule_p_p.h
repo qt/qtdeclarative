@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImplPrivate : public QQuickWindowPrivate
+class Q_QUICK_EXPORT QQuickWindowQmlImplPrivate : public QQuickWindowPrivate
 {
 public:
     QQuickWindowQmlImplPrivate();

@@ -208,18 +208,18 @@ int main(int argc, char *argv[])
     DomItem env(envPtr);
     qDebug() << "will load\n";
     if (dep != Dependencies::None)
-        env.loadBuiltins();
+        envPtr->loadBuiltins();
     QList<DomItem> loadedFiles(positionalArguments.size());
     qsizetype iPos = 0;
     for (const QString &s : std::as_const(positionalArguments)) {
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), s),
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, s),
                 [&loadedFiles, iPos](Path, const DomItem &, const DomItem &newIt) {
                     loadedFiles[iPos] = newIt;
                 },
                 LoadOption::DefaultLoad, fileType);
     }
-    envPtr->loadPendingDependencies(env);
+    envPtr->loadPendingDependencies();
     bool hadFailures = false;
     const qsizetype largestFileSizeToCheck = 32000;
 

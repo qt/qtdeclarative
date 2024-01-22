@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimation;
 class QQuickBehaviorPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickBehavior : public QObject, public QQmlPropertyValueInterceptor, public QQmlFinalizerHook
+class Q_QUICK_EXPORT QQuickBehavior : public QObject, public QQmlPropertyValueInterceptor, public QQmlFinalizerHook
 {
     Q_OBJECT
     Q_INTERFACES(QQmlFinalizerHook)

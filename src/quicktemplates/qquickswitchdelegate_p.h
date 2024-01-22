@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickSwitchDelegatePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwitchDelegate : public QQuickItemDelegate
+class Q_QUICKTEMPLATES2_EXPORT QQuickSwitchDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)

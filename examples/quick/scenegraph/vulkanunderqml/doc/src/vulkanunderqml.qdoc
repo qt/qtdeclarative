@@ -4,7 +4,7 @@
 /*!
     \example scenegraph/vulkanunderqml
     \title Scene Graph - Vulkan Under QML
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
     \ingroup qtquickexamples
     \brief Shows how to render directly with Vulkan under a Qt Quick scene.
 

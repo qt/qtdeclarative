@@ -20,7 +20,7 @@
 #include <QtQml/qqmlregistration.h>
 
 QT_BEGIN_NAMESPACE
-class Q_QMLCORE_PRIVATE_EXPORT QQmlSystemInformation : public QObject
+class Q_QMLCORE_EXPORT QQmlSystemInformation : public QObject
 {
     Q_OBJECT
     QML_SINGLETON

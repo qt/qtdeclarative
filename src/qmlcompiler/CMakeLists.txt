@@ -7,8 +7,7 @@
 
 qt_internal_add_module(QmlCompiler
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-    PLUGIN_TYPES qmllint
+        PLUGIN_TYPES qmllint
     SOURCES
         qcoloroutput_p.h qcoloroutput.cpp
         qdeferredpointer_p.h

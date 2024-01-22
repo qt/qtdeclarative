@@ -171,7 +171,7 @@ Value *PersistentValueStorage::allocate()
     Value *v = p->values + p->header.freeList;
     p->header.freeList = v->int_32();
 
-    if (p->header.freeList != -1 && p != firstPage) {
+    if (p->header.freeList != -1 && p != firstPage && !engine->isGCOngoing) {
         unlink(p);
         insertInFront(this, p);
     }
@@ -304,6 +304,10 @@ void PersistentValue::set(ExecutionEngine *engine, const Value &value)
 {
     if (!val)
         val = engine->memoryManager->m_persistentValues->allocate();
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack){
+        if (QV4::WriteBarrier::isInsertionBarrier && value.isManaged())
+            stack->push(value.heapObject());
+    });
     *val = value;
 }
 
@@ -311,6 +315,13 @@ void PersistentValue::set(ExecutionEngine *engine, ReturnedValue value)
 {
     if (!val)
         val = engine->memoryManager->m_persistentValues->allocate();
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack){
+        if constexpr (!QV4::WriteBarrier::isInsertionBarrier)
+            return;
+        auto val = Value::fromReturnedValue(value);
+        if (val.isManaged())
+            stack->push(val.heapObject());
+    });
     *val = value;
 }
 
@@ -318,6 +329,11 @@ void PersistentValue::set(ExecutionEngine *engine, Heap::Base *obj)
 {
     if (!val)
         val = engine->memoryManager->m_persistentValues->allocate();
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack){
+        if constexpr (QV4::WriteBarrier::isInsertionBarrier)
+            stack->push(obj);
+    });
+
     *val = obj;
 }
 

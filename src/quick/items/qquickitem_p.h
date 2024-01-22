@@ -101,7 +101,7 @@ public:
 
 #if QT_CONFIG(quick_shadereffect)
 
-class Q_QUICK_PRIVATE_EXPORT QQuickItemLayer : public QObject, public QQuickItemChangeListener
+class Q_QUICK_EXPORT QQuickItemLayer : public QObject, public QQuickItemChangeListener
 {
     Q_OBJECT
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL)
@@ -218,7 +218,7 @@ private:
 
 #endif
 
-class Q_QUICK_PRIVATE_EXPORT QQuickItemPrivate
+class Q_QUICK_EXPORT QQuickItemPrivate
     : public QObjectPrivate
     , public QQuickPaletteProviderPrivateBase<QQuickItem, QQuickItemPrivate>
 {
@@ -560,6 +560,10 @@ public:
     QPointer<QQuickItem> subFocusItem;
     void updateSubFocusItem(QQuickItem *scope, bool focus);
 
+    bool setFocusIfNeeded(QEvent::Type);
+    Qt::FocusReason lastFocusChangeReason() const;
+    void setLastFocusChangeReason(Qt::FocusReason reason);
+
     QTransform windowToItemTransform() const;
     QTransform itemToWindowTransform() const;
     void itemToParentTransform(QTransform *) const;
@@ -646,6 +650,8 @@ public:
     void deliverInputMethodEvent(QInputMethodEvent *);
 #endif
     void deliverShortcutOverrideEvent(QKeyEvent *);
+
+    void deliverPointerEvent(QEvent *);
 
     bool anyPointerHandlerWants(const QPointerEvent *event, const QEventPoint &point) const;
     virtual bool handlePointerEvent(QPointerEvent *, bool avoidGrabbers = false);
@@ -754,7 +760,7 @@ public:
     bool backtabSet : 1;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickKeyNavigationAttached : public QObject, public QQuickItemKeyFilter
+class Q_QUICK_EXPORT QQuickKeyNavigationAttached : public QObject, public QQuickItemKeyFilter
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickKeyNavigationAttached)
@@ -887,7 +893,7 @@ public:
     QQuickKeyEvent theKeyEvent;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickKeysAttached : public QObject, public QQuickItemKeyFilter
+class Q_QUICK_EXPORT QQuickKeysAttached : public QObject, public QQuickItemKeyFilter
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickKeysAttached)

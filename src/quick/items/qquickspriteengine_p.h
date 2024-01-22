@@ -34,7 +34,7 @@ QT_REQUIRE_CONFIG(quick_sprite);
 QT_BEGIN_NAMESPACE
 
 class QQuickSprite;
-class Q_QUICK_PRIVATE_EXPORT QQuickStochasticState : public QObject //Currently for internal use only - Sprite and ParticleGroup
+class Q_QUICK_EXPORT QQuickStochasticState : public QObject //Currently for internal use only - Sprite and ParticleGroup
 {
     Q_OBJECT
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged FINAL)
@@ -147,7 +147,7 @@ private:
     bool m_randomStart = false;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickStochasticEngine : public QObject
+class Q_QUICK_EXPORT QQuickStochasticEngine : public QObject
 {
     Q_OBJECT
     //TODO: Optimize single state case?
@@ -226,7 +226,7 @@ protected:
     bool m_addAdvance;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickSpriteEngine : public QQuickStochasticEngine
+class Q_QUICK_EXPORT QQuickSpriteEngine : public QQuickStochasticEngine
 {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites FINAL)

@@ -68,34 +68,34 @@ tagfile                 = qtquickcontrols.tags
 macro.styleimport.HTML = "<table class=\"alignedsummary\"><tbody><tr><td class=\"memItemLeft rightAlign topAlign\"> Import Statement:</td><td class=\"memItemRight bottomAlign\"> import \1</td></tr><tr><td class=\"memItemLeft rightAlign topAlign\"> Since:</td><td class=\"memItemRight bottomAlign\"> \2</td></tr></tbody></table>"
 macro.styleimport.DocBook = "<db:variablelist><db:varlistentry><db:term>Import Statement</db:term><db:listitem><db:para>import \1</db:para></db:listitem></db:varlistentry><db:varlistentry><db:term>Since</db:term><db:listitem><db:para>\2</db:para></db:listitem></db:varlistentry></db:variablelist>"
 
-# \styleproperty {propertyname} {enumeration} {html-target-id}
+# \styleproperty {propertyname} {enumeration}
 # \target html-target-id
 # This property holds ...
 # (empty line)
 # \endstyleproperty
-macro.styleproperty.HTML = "<div class=\"qmlproto\"><table class=\"qmlname\"><tbody><tr valign=\"top\" class=\"odd\" id=\"\3\"><td class=\"tblQmlPropNode\"><p><span class=\"name\">\1</span> : <span class=\"type\">\2</span></p></td></tr></tbody></table></div>"
+macro.styleproperty.HTML = "<div class=\"qmlproto\"><table class=\"qmlname\"><tbody><tr valign=\"top\" class=\"odd\"><td class=\"tblQmlPropNode\"><p><span class=\"name\">\1</span> : <span class=\"type\">\2</span></p></td></tr></tbody></table></div>"
 macro.endstyleproperty.HTML = "<br/>"
-macro.styleproperty.DocBook = "<db:section xml:id=\"\3\"><db:title>\1 : \2</db:title><db:fieldsynopsis><db:type>\2</db:type><db:varname>\1</db:varname></db:fieldsynopsis>"
+macro.styleproperty.DocBook = "<db:section><db:title>\1 : \2</db:title><db:fieldsynopsis><db:type>\2</db:type><db:varname>\1</db:varname></db:fieldsynopsis>"
 macro.endstyleproperty.DocBook = "</db:section>"
 
-# \stylemethod {returntype} {methodname} {argtype} {argname} {html-target-id}
+# \stylemethod {returntype} {methodname} {argtype} {argname}
 # \target html-target-id
 # This property holds ...
 # (empty line)
 # \endstylemethod
-macro.stylemethod.HTML = "<div class=\"qmlproto\"><table class=\"qmlname\"><tbody><tr valign=\"top\" class=\"odd\" id=\"\5\"><td class=\"tblQmlFuncNode\"><p><span class=\"type\">\1</span> <span class=\"name\">\2</span>(<span class="type">\3</span> <i>\4</i>)</p></td></tr></tbody></table></div>"
+macro.stylemethod.HTML = "<div class=\"qmlproto\"><table class=\"qmlname\"><tbody><tr valign=\"top\" class=\"odd\"><td class=\"tblQmlFuncNode\"><p><span class=\"type\">\1</span> <span class=\"name\">\2</span>(<span class="type">\3</span> <i>\4</i>)</p></td></tr></tbody></table></div>"
 macro.endstylemethod.HTML = "<br/>"
-macro.stylemethod.DocBook = "<db:section xml:id=\"\5\"><db:title>\1 \2(\3 <db:emphasis>\4</db:emphasis>)</db:title><db:methodsynopsis><db:type>\1</db:type><db:methodname>\2</db:methodname><db:methodparam><db:type>\3</db:type><db:parameter>\4</db:parameter></db:methodparam></db:methodsynopsis>"
+macro.stylemethod.DocBook = "<db:section><db:title>\1 \2(\3 <db:emphasis>\4</db:emphasis>)</db:title><db:methodsynopsis><db:type>\1</db:type><db:methodname>\2</db:methodname><db:methodparam><db:type>\3</db:type><db:parameter>\4</db:parameter></db:methodparam></db:methodsynopsis>"
 macro.endstylemethod.DocBook = "</db:section>"
 
-# \stylemethod2 {returntype} {methodname} {arg1type} {arg1name} {arg2type} {arg2name} {html-target-id}
+# \stylemethod2 {returntype} {methodname} {arg1type} {arg1name} {arg2type} {arg2name}
 # \target html-target-id
 # This method returns ...
 # (empty line)
 # \endstylemethod2
-macro.stylemethod2.HTML = "<div class=\"qmlproto\"><table class=\"qmlname\"><tbody><tr valign=\"top\" class=\"odd\" id=\"\7\"><td class=\"tblQmlFuncNode\"><p><span class=\"type\">\1</span> <span class=\"name\">\2</span>(<span class="type">\3</span> <i>\4</i>, <span class="type">\5</span> <i>\6</i>)</p></td></tr></tbody></table></div>"
+macro.stylemethod2.HTML = "<div class=\"qmlproto\"><table class=\"qmlname\"><tbody><tr valign=\"top\" class=\"odd\"><td class=\"tblQmlFuncNode\"><p><span class=\"type\">\1</span> <span class=\"name\">\2</span>(<span class="type">\3</span> <i>\4</i>, <span class="type">\5</span> <i>\6</i>)</p></td></tr></tbody></table></div>"
 macro.endstylemethod2.HTML = "<br/>"
-macro.stylemethod2.DocBook = "<db:section xml:id=\"\7\"><db:title>\1 \2(\3 <db:emphasis>\4</db:emphasis>)</db:title><db:methodsynopsis><db:type>\1</db:type><db:methodname>\2</db:methodname><db:methodparam><db:type>\3</db:type><db:parameter>\4</db:parameter></db:methodparam><db:methodparam><db:type>\5</db:type><db:parameter>\6</db:parameter></db:methodparam></db:methodsynopsis>"
+macro.stylemethod2.DocBook = "<db:section><db:title>\1 \2(\3 <db:emphasis>\4</db:emphasis>)</db:title><db:methodsynopsis><db:type>\1</db:type><db:methodname>\2</db:methodname><db:methodparam><db:type>\3</db:type><db:parameter>\4</db:parameter></db:methodparam><db:methodparam><db:type>\5</db:type><db:parameter>\6</db:parameter></db:methodparam></db:methodsynopsis>"
 macro.endstylemethod2.DocBook = "</db:section>"
 
 # \stylecolor {#6A00FF} {(default)}

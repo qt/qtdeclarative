@@ -9,7 +9,11 @@ layout(location = 0) out vec4 fragColor;
 layout(binding = 1) uniform sampler2D _qt_texture;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
     vec2 textureScale;
     vec4 color;
     float alphaMin;
@@ -18,7 +22,7 @@ layout(std140, binding = 0) uniform buf {
     vec4 styleColor;
     float outlineAlphaMax0;
     float outlineAlphaMax1;
-} ubuf;
+};
 
 void main()
 {
@@ -27,8 +31,8 @@ void main()
 
     // The outlineLimit is based on font size, but scales with the transform, so
     // we can calculate it from the outline span.
-    float outlineLimit = (ubuf.outlineAlphaMax1 - ubuf.outlineAlphaMax0) / 2.0 + ubuf.outlineAlphaMax0;
+    float outlineLimit = (outlineAlphaMax1 - outlineAlphaMax0) / 2.0 + outlineAlphaMax0;
 
     float a = smoothstep(max(0.0, 0.5 - f), min(1.0, 0.5 + f), distance);
-    fragColor = step(1.0 - a, 1.0) * mix(ubuf.styleColor, ubuf.color, a) * smoothstep(max(0.0, outlineLimit - f), min(outlineLimit + f, 0.5 - f), distance);
+    fragColor = step(1.0 - a, 1.0) * mix(styleColor, color, a) * smoothstep(max(0.0, outlineLimit - f), min(outlineLimit + f, 0.5 - f), distance);
 }

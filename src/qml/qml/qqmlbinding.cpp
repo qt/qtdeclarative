@@ -410,6 +410,8 @@ QQmlBinding *QQmlBinding::createTranslationBinding(
 
                                            location.line, location.column });
     }
+#else
+    Q_UNUSED(propertyName)
 #endif
     return b;
 }

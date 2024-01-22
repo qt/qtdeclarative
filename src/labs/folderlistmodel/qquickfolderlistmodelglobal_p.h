@@ -17,6 +17,6 @@
 // We mean it.
 //
 
-#include <QtLabsFolderListModel/private/qtlabsfolderlistmodelexports_p.h>
+#include <QtLabsFolderListModel/qtlabsfolderlistmodelexports.h>
 
 #endif // QTLABSFOLDERLISTMODELGLOBAL_P_H

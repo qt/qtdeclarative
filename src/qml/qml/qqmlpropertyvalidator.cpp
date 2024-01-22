@@ -28,9 +28,8 @@ QT_FOR_EACH_STATIC_PRIMITIVE_TYPE(HANDLE_PRIMITIVE);
     }
 }
 
-QQmlPropertyValidator::QQmlPropertyValidator(
-        QQmlEnginePrivate *enginePrivate, const QQmlImports *imports,
-        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports *imports,
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
     : enginePrivate(enginePrivate)
     , compilationUnit(compilationUnit)
     , imports(imports)
@@ -133,7 +132,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         defaultProperty = propertyCache->defaultProperty();
     }
 
-    QV4::BindingPropertyData collectedBindingPropertyData(obj->nBindings);
+    QV4::CompiledData::BindingPropertyData collectedBindingPropertyData(obj->nBindings);
 
     binding = obj->bindingTable();
     for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
@@ -201,7 +200,8 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
             QQmlType type;
             QQmlImportNamespace *typeNamespace = nullptr;
             imports->resolveType(
-                        stringAt(binding->propertyNameIndex), &type, nullptr, &typeNamespace);
+                    QQmlTypeLoader::get(enginePrivate), stringAt(binding->propertyNameIndex),
+                    &type, nullptr, &typeNamespace);
             if (typeNamespace)
                 return recordError(binding->location, tr("Invalid use of namespace"));
             return recordError(binding->location, tr("Invalid attached object assignment"));
@@ -342,7 +342,10 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         customParser->validator = this;
         customParser->engine = enginePrivate;
         customParser->imports = imports;
-        customParser->verifyBindings(compilationUnit, customBindings);
+        customParser->verifyBindings(
+                enginePrivate->v4engine()->executableCompilationUnit(
+                        QQmlRefPointer<QV4::CompiledData::CompilationUnit>(compilationUnit)),
+                customBindings);
         customParser->validator = nullptr;
         customParser->engine = nullptr;
         customParser->imports = (QQmlImports*)nullptr;
@@ -748,7 +751,8 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *p
             // Therefore we need to check the ICs here
             for (const auto& icDatum: compilationUnit->inlineComponentData) {
                 if (icDatum.qmlType.typeId() == property->propType()) {
-                    propertyMetaObject = compilationUnit->propertyCaches.at(icDatum.objectIndex);
+                    propertyMetaObject
+                            = compilationUnit->propertyCaches.at(icDatum.objectIndex);
                     break;
                 }
             }

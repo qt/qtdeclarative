@@ -119,6 +119,46 @@ SourceLocation combineLocations(Node *n)
     return combineLocations(n->firstSourceLocation(), n->lastSourceLocation());
 }
 
+static ScriptElementVariant wrapIntoFieldMemberExpression(const ScriptElementVariant &left,
+                                                          const SourceLocation &dotToken,
+                                                          const ScriptElementVariant &right)
+{
+    SourceLocation s1, s2;
+    left.visitConst([&s1](auto &&el) { s1 = el->mainRegionLocation(); });
+    right.visitConst([&s2](auto &&el) { s2 = el->mainRegionLocation(); });
+
+    auto result = std::make_shared<ScriptElements::BinaryExpression>(s1, s2);
+    result->addLocation(OperatorTokenRegion, dotToken);
+    result->setOp(ScriptElements::BinaryExpression::FieldMemberAccess);
+    result->setLeft(left);
+    result->setRight(right);
+    return ScriptElementVariant::fromElement(result);
+};
+
+/*!
+   \internal
+    Creates a FieldMemberExpression if the qualified id has dots.
+*/
+static ScriptElementVariant fieldMemberExpressionForQualifiedId(AST::UiQualifiedId *qualifiedId)
+{
+    ScriptElementVariant bindable;
+    bool first = true;
+    for (auto exp = qualifiedId; exp; exp = exp->next) {
+        const SourceLocation identifierLoc = exp->identifierToken;
+        auto id = std::make_shared<ScriptElements::IdentifierExpression>(identifierLoc);
+        id->setName(exp->name);
+        if (first) {
+            first = false;
+            bindable = ScriptElementVariant::fromElement(id);
+            continue;
+        }
+        bindable = wrapIntoFieldMemberExpression(bindable, exp->dotToken,
+                                                 ScriptElementVariant::fromElement(id));
+    }
+
+    return bindable;
+}
+
 QQmlDomAstCreator::QmlStackElement &QQmlDomAstCreator::currentQmlObjectOrComponentEl(int idx)
 {
     Q_ASSERT_X(idx < nodeStack.size() && idx >= 0, "currentQmlObjectOrComponentEl",
@@ -184,7 +224,7 @@ void QQmlDomAstCreator::removeCurrentScriptNode(std::optional<DomType> expectedT
    crashes.
  */
 const ScriptElementVariant &
-QQmlDomAstCreator::finalizeScriptExpression(const ScriptElementVariant &element, Path pathFromOwner,
+QQmlDomAstCreator::finalizeScriptExpression(const ScriptElementVariant &element, const Path &pathFromOwner,
                                             const FileLocations::Tree &ownerFileLocations)
 {
     auto e = element.base();
@@ -198,7 +238,7 @@ QQmlDomAstCreator::finalizeScriptExpression(const ScriptElementVariant &element,
     return element;
 }
 
-FileLocations::Tree QQmlDomAstCreator::createMap(FileLocations::Tree base, Path p, AST::Node *n)
+FileLocations::Tree QQmlDomAstCreator::createMap(const FileLocations::Tree &base, const Path &p, AST::Node *n)
 {
     FileLocations::Tree res = FileLocations::ensure(base, p, AttachedInfo::PathType::Relative);
     if (n)
@@ -206,8 +246,9 @@ FileLocations::Tree QQmlDomAstCreator::createMap(FileLocations::Tree base, Path 
     return res;
 }
 
-FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n)
+FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, const Path &p, AST::Node *n)
 {
+    Path relative;
     FileLocations::Tree base;
     switch (k) {
     case DomType::QmlObject:
@@ -230,10 +271,10 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
                 && (p2.checkHeadName(Fields::children) || p2.checkHeadName(Fields::objects)
                     || p2.checkHeadName(Fields::value) || p2.checkHeadName(Fields::annotations)
                     || p2.checkHeadName(Fields::children)))
-                p = p.mid(p.length() - 2, 2);
+                relative = p.mid(p.length() - 2, 2);
             else if (p.last().checkHeadName(Fields::value)
                      && p.last().headKind() == Path::Kind::Field)
-                p = p.last();
+                relative = p.last();
             else {
                 qCWarning(domLog) << "unexpected path to QmlObject in createMap" << p;
                 Q_UNREACHABLE();
@@ -244,6 +285,7 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
         }
         break;
     case DomType::EnumItem:
+        relative = p;
         base = currentNodeEl().fileLocations;
         break;
     case DomType::QmlComponent:
@@ -251,6 +293,7 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
     case DomType::Import:
     case DomType::Id:
     case DomType::EnumDecl:
+        relative = p;
         base = rootMap;
         break;
     case DomType::Binding:
@@ -258,7 +301,9 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
     case DomType::MethodInfo:
         base = currentEl<QmlObject>().fileLocations;
         if (p.length() > 3)
-            p = p.mid(p.length() - 3, 3);
+            relative = p.mid(p.length() - 3, 3);
+        else
+            relative = p;
         break;
 
     default:
@@ -266,7 +311,7 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
         Q_UNREACHABLE();
         break;
     }
-    return createMap(base, p, n);
+    return createMap(base, relative, n);
 }
 
 QQmlDomAstCreator::QQmlDomAstCreator(const MutableDomItem &qmlFile)
@@ -746,7 +791,23 @@ bool QQmlDomAstCreator::visit(AST::UiObjectDefinition *el)
                                  el->qualifiedTypeNameId->identifierToken);
     }
     Q_ASSERT_X(sPtr, className, "could not recover new scope");
+
+    if (m_enableScriptExpressions) {
+        auto qmlObjectType = makeGenericScriptElement(el->qualifiedTypeNameId, DomType::ScriptType);
+        qmlObjectType->insertChild(Fields::typeName,
+                                   fieldMemberExpressionForQualifiedId(el->qualifiedTypeNameId));
+        sPtr->setNameIdentifiers(
+                finalizeScriptExpression(ScriptElementVariant::fromElement(qmlObjectType),
+                                         sPathFromOwner.field(Fields::nameIdentifiers), rootMap));
+    }
     pushEl(sPathFromOwner, *sPtr, el);
+
+    if (m_enableScriptExpressions && el->initializer) {
+        FileLocations::addRegion(nodeStack.last().fileLocations, LeftBraceRegion,
+                                 el->initializer->lbraceToken);
+        FileLocations::addRegion(nodeStack.last().fileLocations, RightBraceRegion,
+                                 el->initializer->rbraceToken);
+    }
     loadAnnotations(el);
     return true;
 }
@@ -809,8 +870,24 @@ bool QQmlDomAstCreator::visit(AST::UiObjectBinding *el)
     QmlObject *objValue = bPtr->objectValue();
     Q_ASSERT_X(objValue, className, "could not recover objectValue");
     objValue->setName(toString(el->qualifiedTypeNameId));
+
+    if (m_enableScriptExpressions) {
+        auto qmlObjectType = makeGenericScriptElement(el->qualifiedTypeNameId, DomType::ScriptType);
+        qmlObjectType->insertChild(Fields::typeName,
+                                   fieldMemberExpressionForQualifiedId(el->qualifiedTypeNameId));
+        objValue->setNameIdentifiers(finalizeScriptExpression(
+                ScriptElementVariant::fromElement(qmlObjectType),
+                bPathFromOwner.field(Fields::value).field(Fields::nameIdentifiers), rootMap));
+    }
+
     objValue->addPrototypePath(Paths::lookupTypePath(objValue->name()));
     pushEl(bPathFromOwner.field(Fields::value), *objValue, el->initializer);
+    if (m_enableScriptExpressions && el->initializer) {
+        FileLocations::addRegion(nodeStack.last().fileLocations, LeftBraceRegion,
+                                 el->initializer->lbraceToken);
+        FileLocations::addRegion(nodeStack.last().fileLocations, RightBraceRegion,
+                                 el->initializer->rbraceToken);
+    }
     return true;
 }
 
@@ -884,22 +961,6 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                             .withPath(pathFromOwner)));
         }
     } else {
-        // Create FieldExpression if the bindable element has dots
-        const auto reparentExp = [](const auto &left, const SourceLocation &dotToken,
-                                    const auto &right) {
-            SourceLocation s1, s2;
-            left.visitConst([&s1](auto &&el) { s1 = el->mainRegionLocation(); });
-
-            right.visitConst([&s2](auto &&el) { s2 = el->mainRegionLocation(); });
-
-            auto result = std::make_shared<ScriptElements::BinaryExpression>(s1, s2);
-            result->addLocation(OperatorTokenRegion, dotToken);
-            result->setOp(ScriptElements::BinaryExpression::FieldMemberAccess);
-            result->setLeft(left);
-            result->setRight(right);
-            return ScriptElementVariant::fromElement(result);
-        };
-
         pathFromOwner =
                 current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
         QmlStackElement &containingObjectEl = currentEl<QmlObject>();
@@ -911,19 +972,7 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                                  el->qualifiedId->identifierToken);
         FileLocations::addRegion(bindingFileLocation, ColonTokenRegion, el->colonToken);
 
-        ScriptElementVariant bindable;
-        bool first = true;
-        for (auto exp = el->qualifiedId; exp; exp = exp->next) {
-            const SourceLocation identifierLoc = exp->identifierToken;
-            auto id = std::make_shared<ScriptElements::IdentifierExpression>(identifierLoc);
-            id->setName(exp->name);
-            if (first) {
-                first = false;
-                bindable = ScriptElementVariant::fromElement(id);
-                continue;
-            }
-            bindable = reparentExp(bindable, exp->dotToken, ScriptElementVariant::fromElement(id));
-        }
+        ScriptElementVariant bindable = fieldMemberExpressionForQualifiedId(el->qualifiedId);
         bindingPtr->setBindingIdentifiers(finalizeScriptExpression(
                 bindable, pathFromOwner.field(Fields::bindingIdentifiers), rootMap));
 
@@ -1933,13 +1982,12 @@ void QQmlDomAstCreator::endVisit(AST::Type *exp)
     auto current = makeGenericScriptElement(exp, DomType::ScriptType);
 
     if (exp->typeArgument) {
-        auto currentChild = scriptElementForQualifiedId(exp->typeArgument);
-        current->insertChild(Fields::typeArgument, currentChild);
+        current->insertChild(Fields::typeArgumentName,
+                             fieldMemberExpressionForQualifiedId(exp->typeArgument));
     }
 
     if (exp->typeId) {
-        auto currentChild = scriptElementForQualifiedId(exp->typeId);
-        current->insertChild(Fields::typeName, currentChild);
+        current->insertChild(Fields::typeName, fieldMemberExpressionForQualifiedId(exp->typeId));
     }
 
     pushScriptElement(current);
@@ -2649,6 +2697,44 @@ void QQmlDomAstCreator::endVisit(AST::PreIncrementExpression *statement)
                                        Prefix);
     if (!current)
         return;
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::EmptyStatement *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::EmptyStatement *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(statement, DomType::ScriptEmptyStatement);
+    current->addLocation(FileLocationRegion::SemicolonTokenRegion, statement->semicolonToken);
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::NestedExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::NestedExpression *expression)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(expression, DomType::ScriptParenthesizedExpression);
+    current->addLocation(FileLocationRegion::LeftParenthesisRegion, expression->lparenToken);
+    current->addLocation(FileLocationRegion::RightParenthesisRegion, expression->rparenToken);
+
+    if (expression->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
 
     pushScriptElement(current);
 }

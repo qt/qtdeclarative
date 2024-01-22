@@ -28,7 +28,7 @@ class QQuickWindow;
 class QScreen;
 
 
-class Q_QUICK_PRIVATE_EXPORT QQuickScreenInfo : public QObject
+class Q_QUICK_EXPORT QQuickScreenInfo : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name NOTIFY nameChanged FINAL)
@@ -93,7 +93,7 @@ protected:
     QPointer<QScreen> m_screen;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickScreenAttached : public QQuickScreenInfo
+class Q_QUICK_EXPORT QQuickScreenAttached : public QQuickScreenInfo
 {
     Q_OBJECT
 
@@ -116,7 +116,7 @@ private:
     QQuickItem* m_attachee;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickScreen : public QObject
+class Q_QUICK_EXPORT QQuickScreen : public QObject
 {
     Q_OBJECT
     QML_ATTACHED(QQuickScreenAttached)

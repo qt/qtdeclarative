@@ -848,7 +848,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
 ExecutionEngine::~ExecutionEngine()
 {
-    modules.clear();
     for (auto val : nativeModules) {
         PersistentValueStorage::free(val);
     }
@@ -859,9 +858,12 @@ ExecutionEngine::~ExecutionEngine()
     delete identifierTable;
     delete memoryManager;
 
-    // Take a temporary reference to the CU so that it doesn't disappear during unlinking.
-    while (!compilationUnits.isEmpty())
-        QQmlRefPointer<ExecutableCompilationUnit>(*compilationUnits.begin())->unlink();
+    for (const auto &cu : std::as_const(m_compilationUnits)) {
+        Q_ASSERT(cu->engine == this);
+        cu->clear();
+        cu->engine = nullptr;
+    }
+    m_compilationUnits.clear();
 
     delete bumperPointerAllocator;
     delete regExpCache;
@@ -1325,7 +1327,7 @@ void ExecutionEngine::markObjects(MarkStack *markStack)
 
     identifierTable->markObjects(markStack);
 
-    for (auto compilationUnit: compilationUnits)
+    for (const auto &compilationUnit : std::as_const(m_compilationUnits))
         compilationUnit->markObjects(markStack);
 }
 
@@ -1479,11 +1481,13 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
 // Variant conversion code
 
 typedef QSet<QV4::Heap::Object *> V4ObjectSet;
+enum class JSToQVariantConversionBehavior {Never, Safish, Aggressive };
 static QVariant toVariant(
-    const QV4::Value &value, QMetaType typeHint, bool createJSValueForObjectsAndSymbols,
+    const QV4::Value &value, QMetaType typeHint, JSToQVariantConversionBehavior conversionBehavior,
     V4ObjectSet *visitedObjects);
 static QObject *qtObjectFromJS(const QV4::Value &value);
-static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObjects = nullptr);
+static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObjects = nullptr,
+                                JSToQVariantConversionBehavior behavior = JSToQVariantConversionBehavior::Safish);
 static bool convertToNativeQObject(const QV4::Value &value, QMetaType targetType, void **result);
 static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVariantMap &vmap);
 static QV4::ReturnedValue variantToJS(QV4::ExecutionEngine *v4, const QVariant &value)
@@ -1491,8 +1495,7 @@ static QV4::ReturnedValue variantToJS(QV4::ExecutionEngine *v4, const QVariant &
     return v4->metaTypeToJS(value.metaType(), value.constData());
 }
 
-static QVariant toVariant(
-        const QV4::Value &value, QMetaType metaType, bool createJSValueForObjectsAndSymbols,
+static QVariant toVariant(const QV4::Value &value, QMetaType metaType, JSToQVariantConversionBehavior conversionBehavior,
         V4ObjectSet *visitedObjects)
 {
     Q_ASSERT (!value.isEmpty());
@@ -1589,7 +1592,7 @@ static QVariant toVariant(
                         }
                     }
 
-                    asVariant = toVariant(arrayValue, valueMetaType, false, visitedObjects);
+                    asVariant = toVariant(arrayValue, valueMetaType, JSToQVariantConversionBehavior::Never, visitedObjects);
                     if (valueMetaType == QMetaType::fromType<QVariant>()) {
                         retnAsIterable.metaContainer().addValue(retn.data(), &asVariant);
                     } else {
@@ -1654,7 +1657,7 @@ static QVariant toVariant(
     if (const ArrayBuffer *d = value.as<ArrayBuffer>())
         return d->asByteArray();
     if (const Symbol *symbol = value.as<Symbol>()) {
-        return createJSValueForObjectsAndSymbols
+        return conversionBehavior == JSToQVariantConversionBehavior::Never
             ? QVariant::fromValue(QJSValuePrivate::fromReturnedValue(symbol->asReturnedValue()))
             : symbol->descriptiveString();
     }
@@ -1675,20 +1678,27 @@ static QVariant toVariant(
             return result;
     }
 
-    if (createJSValueForObjectsAndSymbols)
+    if (conversionBehavior == JSToQVariantConversionBehavior::Never)
         return QVariant::fromValue(QJSValuePrivate::fromReturnedValue(o->asReturnedValue()));
 
-    return objectToVariant(o, visitedObjects);
+    return objectToVariant(o, visitedObjects, conversionBehavior);
 }
 
+QVariant ExecutionEngine::toVariantLossy(const Value &value)
+{
+    return ::toVariant(value, QMetaType(), JSToQVariantConversionBehavior::Aggressive, nullptr);
+}
 
 QVariant ExecutionEngine::toVariant(
     const Value &value, QMetaType typeHint, bool createJSValueForObjectsAndSymbols)
 {
-    return ::toVariant(value, typeHint, createJSValueForObjectsAndSymbols, nullptr);
+    auto behavior = createJSValueForObjectsAndSymbols ? JSToQVariantConversionBehavior::Never
+                                                      : JSToQVariantConversionBehavior::Safish;
+    return ::toVariant(value, typeHint, behavior, nullptr);
 }
 
-static QVariantMap objectToVariantMap(const QV4::Object *o, V4ObjectSet *visitedObjects)
+static QVariantMap objectToVariantMap(const QV4::Object *o, V4ObjectSet *visitedObjects,
+                                      JSToQVariantConversionBehavior conversionBehvior)
 {
     QVariantMap map;
     QV4::Scope scope(o->engine());
@@ -1703,12 +1713,13 @@ static QVariantMap objectToVariantMap(const QV4::Object *o, V4ObjectSet *visited
         QString key = name->toQStringNoThrow();
         map.insert(key, ::toVariant(
                                 val, /*type hint*/ QMetaType {},
-                                /*createJSValueForObjectsAndSymbols*/false, visitedObjects));
+                                conversionBehvior, visitedObjects));
     }
     return map;
 }
 
-static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObjects)
+static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObjects,
+                                JSToQVariantConversionBehavior conversionBehvior)
 {
     Q_ASSERT(o);
 
@@ -1736,13 +1747,20 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
         int length = a->getLength();
         for (int ii = 0; ii < length; ++ii) {
             v = a->get(ii);
-            list << ::toVariant(v, QMetaType {}, /*createJSValueForObjectsAndSymbols*/false,
+            list << ::toVariant(v, QMetaType {}, conversionBehvior,
                                 visitedObjects);
         }
 
         result = list;
-    } else if (o->getPrototypeOf() == o->engine()->objectPrototype()->d()) {
-        result = objectToVariantMap(o, visitedObjects);
+    } else if (o->getPrototypeOf() == o->engine()->objectPrototype()->d()
+               || (conversionBehvior == JSToQVariantConversionBehavior::Aggressive &&
+                   !o->as<QV4::FunctionObject>())) {
+        /* FunctionObject is excluded for historical reasons, even though
+           objects with a custom prototype risk losing information
+           But the Aggressive path is used only in QJSValue::toVariant
+           which is documented to be lossy
+        */
+        result = objectToVariantMap(o, visitedObjects, conversionBehvior);
     } else {
         // If it's not a plain object, we can only save it as QJSValue.
         result = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(o->asReturnedValue()));
@@ -1968,7 +1986,7 @@ QVariantMap ExecutionEngine::variantMapFromJS(const Object *o)
     Q_ASSERT(o);
     V4ObjectSet visitedObjects;
     visitedObjects.insert(o->d());
-    return objectToVariantMap(o, &visitedObjects);
+    return objectToVariantMap(o, &visitedObjects, JSToQVariantConversionBehavior::Safish);
 }
 
 // Converts a QVariantMap to JS.
@@ -2058,10 +2076,10 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(const Q
                     : QQmlMetaType::RequireFullyTyped,
                 &cacheError)
             : nullptr) {
-        return ExecutableCompilationUnit::create(
-                    QV4::CompiledData::CompilationUnit(
-                        cachedUnit->qmlData, cachedUnit->aotCompiledFunctions,
-                        url.fileName(), url.toString()));
+        return executableCompilationUnit(
+                QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>(
+                        cachedUnit->qmlData, cachedUnit->aotCompiledFunctions, url.fileName(),
+                        url.toString()));
     }
 
     QFile f(QQmlFile::urlToLocalFileOrQrc(url));
@@ -2095,21 +2113,37 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(
         }
     }
 
-    return ExecutableCompilationUnit::create(std::move(unit));
+    return executableCompilationUnit(std::move(unit));
 }
 
-void ExecutionEngine::injectCompiledModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit)
+QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compilationUnitForUrl(const QUrl &url) const
 {
-    // Injection can happen from the QML type loader thread for example, but instantiation and
-    // evaluation must be limited to the ExecutionEngine's thread.
-    QMutexLocker moduleGuard(&moduleMutex);
-    modules.insert(moduleUnit->finalUrl(), moduleUnit);
+    return m_compilationUnits.value(url);
+}
+
+QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::executableCompilationUnit(
+        QQmlRefPointer<CompiledData::CompilationUnit> &&unit)
+{
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> &result = m_compilationUnits[unit->finalUrl()];
+    if (!result || result->baseCompilationUnit() != unit)
+        result = ExecutableCompilationUnit::create(std::move(unit), this);
+
+    return result;
+}
+
+void ExecutionEngine::trimCompilationUnits()
+{
+    for (auto it = m_compilationUnits.begin(); it != m_compilationUnits.end();) {
+        if ((*it)->count() == 1)
+            it = m_compilationUnits.erase(it);
+        else
+            ++it;
+    }
 }
 
 ExecutionEngine::Module ExecutionEngine::moduleForUrl(
         const QUrl &url, const ExecutableCompilationUnit *referrer) const
 {
-    QMutexLocker moduleGuard(&moduleMutex);
     const auto nativeModule = nativeModules.find(url);
     if (nativeModule != nativeModules.end())
         return Module { nullptr, *nativeModule };
@@ -2117,15 +2151,14 @@ ExecutionEngine::Module ExecutionEngine::moduleForUrl(
     const QUrl resolved = referrer
             ? referrer->finalUrl().resolved(QQmlTypeLoader::normalize(url))
             : QQmlTypeLoader::normalize(url);
-    auto existingModule = modules.find(resolved);
-    if (existingModule == modules.end())
+    auto existingModule = m_compilationUnits.find(resolved);
+    if (existingModule == m_compilationUnits.end())
         return Module { nullptr, nullptr };
     return Module { *existingModule, nullptr };
 }
 
 ExecutionEngine::Module ExecutionEngine::loadModule(const QUrl &url, const ExecutableCompilationUnit *referrer)
 {
-    QMutexLocker moduleGuard(&moduleMutex);
     const auto nativeModule = nativeModules.find(url);
     if (nativeModule != nativeModules.end())
         return Module { nullptr, *nativeModule };
@@ -2133,24 +2166,19 @@ ExecutionEngine::Module ExecutionEngine::loadModule(const QUrl &url, const Execu
     const QUrl resolved = referrer
             ? referrer->finalUrl().resolved(QQmlTypeLoader::normalize(url))
             : QQmlTypeLoader::normalize(url);
-    auto existingModule = modules.find(resolved);
-    if (existingModule != modules.end())
+    auto existingModule = m_compilationUnits.find(resolved);
+    if (existingModule != m_compilationUnits.end())
         return Module { *existingModule, nullptr };
 
-    moduleGuard.unlock();
-
     auto newModule = compileModule(resolved);
-    if (newModule) {
-        moduleGuard.relock();
-        modules.insert(resolved, newModule);
-    }
+    if (newModule)
+        m_compilationUnits.insert(resolved, newModule);
 
     return Module { newModule, nullptr };
 }
 
 QV4::Value *ExecutionEngine::registerNativeModule(const QUrl &url, const QV4::Value &module)
 {
-    QMutexLocker moduleGuard(&moduleMutex);
     const auto existingModule = nativeModules.find(url);
     if (existingModule != nativeModules.end())
         return nullptr;
@@ -2158,6 +2186,11 @@ QV4::Value *ExecutionEngine::registerNativeModule(const QUrl &url, const QV4::Va
     QV4::Value *val = this->memoryManager->m_persistentValues->allocate();
     *val = module.asReturnedValue();
     nativeModules.insert(url, val);
+
+    // Make sure the type loader doesn't try to resolve the script anymore.
+    if (m_qmlEngine)
+        QQmlEnginePrivate::get(m_qmlEngine)->typeLoader.injectScript(url, *val);
+
     return val;
 }
 

@@ -137,6 +137,11 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qmlls/utils/data/emptyFile.qml";
     m_invalidFiles << "tests/auto/qmlls/utils/data/completions/missingRHS.qml";
     m_invalidFiles << "tests/auto/qmlls/utils/data/completions/missingRHS.parserfail.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/completions/attachedPropertyMissingRHS.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/completions/groupedPropertyMissingRHS.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/completions/afterDots.qml";
+    m_invalidFiles << "tests/auto/qmlls/modules/data/completions/bindingAfterDot.qml";
+    m_invalidFiles << "tests/auto/qmlls/modules/data/completions/defaultBindingAfterDot.qml";
 
     // Files that get changed:
     // rewrite of import "bla/bla/.." to import "bla"
@@ -354,6 +359,12 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("arrayEndComma")
             << "arrayEndComma.qml"
             << "arrayEndComma.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("escapeChars")
+            << "escapeChars.qml"
+            << "escapeChars.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("javascriptBlock")
+            << "javascriptBlock.qml"
+            << "javascriptBlock.formatted.qml" << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
@@ -626,16 +637,16 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
                                       LineWriterOptions options, WriteOutChecks extraChecks,
                                       WriteOutChecks largeChecks)
 {
-    DomItem env = DomEnvironment::create(
+    auto env = DomEnvironment::create(
             QStringList(), // as we load no dependencies we do not need any paths
             QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                     | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
     DomItem tFile;
-    env.loadFile(
-            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), fileToFormat),
+    env->loadFile(
+            FileToLoad::fromFileSystem(env, fileToFormat),
             [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
             LoadOption::DefaultLoad);
-    env.loadPendingDependencies();
+    env->loadPendingDependencies();
     MutableDomItem myFile = tFile.field(Fields::currentItem);
 
     DomItem writtenOut;

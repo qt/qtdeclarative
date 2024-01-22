@@ -28,6 +28,68 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+enum GCState {
+    MarkStart = 0,
+    MarkGlobalObject,
+    MarkJSStack,
+    InitMarkPersistentValues,
+    MarkPersistentValues,
+    InitMarkWeakValues,
+    MarkWeakValues,
+    MarkDrain,
+    MarkReady,
+    Sweep,
+    Invalid,
+    Count,
+};
+
+struct GCData { virtual ~GCData(){};};
+
+struct GCIteratorStorage {
+    PersistentValueStorage::Iterator it{nullptr, 0};
+};
+struct GCStateMachine;
+
+struct GCStateInfo {
+    using ExtraData = std::variant<std::monostate, GCIteratorStorage>;
+    GCState (*execute)(GCStateMachine *, ExtraData &) = nullptr;  // Function to execute for this state, returns true if ready to transition
+    bool breakAfter{false};
+};
+
+struct GCStateMachine {
+    using ExtraData = GCStateInfo::ExtraData;
+    GCState state{GCState::Invalid};
+    std::chrono::microseconds timeLimit{};
+    QDeadlineTimer deadline;
+    std::array<GCStateInfo, GCState::Count> stateInfoMap;
+    MemoryManager *mm = nullptr;
+    ExtraData stateData; // extra date for specific states
+
+    GCStateMachine();
+
+    inline void step() {
+        if (!inProgress()) {
+            reset();
+        }
+        transition();
+    }
+
+    inline bool inProgress() {
+        return state != GCState::Invalid;
+    }
+
+    inline void reset() {
+        state = GCState::MarkStart;
+    }
+
+    Q_QML_EXPORT void transition();
+
+    inline void handleTimeout(GCState state) {
+        Q_UNUSED(state);
+    }
+};
+
+
 struct ChunkAllocator;
 struct MemorySegment;
 
@@ -258,11 +320,23 @@ public:
     typename ManagedType::Data *allocIC()
     {
         Heap::Base *b = *allocate(&icAllocator, align(sizeof(typename ManagedType::Data)));
+        if (m_markStack) {
+            // If the gc is running right now, it will not have a chance to mark the newly created item
+            // and may therefore sweep it right away.
+            // Protect the new object from the current GC run to avoid this.
+            b->setMarkBit();
+        }
         return static_cast<typename ManagedType::Data *>(b);
     }
 
     void registerWeakMap(Heap::MapObject *map);
     void registerWeakSet(Heap::SetObject *set);
+
+    void onEventLoop();
+
+    //GC related methods
+    void setGCTimeLimit(int timeMs);
+    MarkStack* markStack() { return m_markStack.get(); }
 
 protected:
     /// expects size to be aligned
@@ -275,14 +349,18 @@ private:
         MinUnmanagedHeapSizeGCLimit = 128 * 1024
     };
 
+public:
     void collectFromJSStack(MarkStack *markStack) const;
-    void mark();
     void sweep(bool lastSweep = false, ClassDestroyStatsCallback classCountPtr = nullptr);
+private:
     bool shouldRunGC() const;
-    void collectRoots(MarkStack *markStack);
 
     HeapItem *allocate(BlockAllocator *allocator, std::size_t size)
     {
+        // We must not call runGC if incremental gc is running
+        // so temporarily set gcBlocked in that case, too
+        QBoolBlocker block(gcBlocked, m_markStack != nullptr || gcBlocked);
+
         bool didGCRun = false;
         if (aggressiveGC) {
             runGC();
@@ -328,6 +406,9 @@ public:
     QVector<Value *> m_pendingFreedObjectWrapperValue;
     Heap::MapObject *weakMaps = nullptr;
     Heap::SetObject *weakSets = nullptr;
+
+    std::unique_ptr<GCStateMachine> gcStateMachine{nullptr};
+    std::unique_ptr<MarkStack> m_markStack{nullptr};
 
     std::size_t unmanagedHeapSize = 0; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
     std::size_t unmanagedHeapSizeGCLimit;

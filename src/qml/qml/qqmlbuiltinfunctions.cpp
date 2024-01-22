@@ -2173,9 +2173,8 @@ QString GlobalExtensions::currentTranslationContext(ExecutionEngine *engine)
 
     // The first non-empty source URL in the call stack determines the translation context.
     while (frame && context.isEmpty()) {
-        if (CompiledData::CompilationUnitBase *baseUnit = frame->v4Function->compilationUnit) {
-            const auto *unit = static_cast<const CompiledData::CompilationUnit *>(baseUnit);
-            auto translationContextIndex = unit->data->translationContextIndex();
+        if (ExecutableCompilationUnit *unit = frame->v4Function->executableCompilationUnit()) {
+            auto translationContextIndex = unit->unitData()->translationContextIndex();
             if (translationContextIndex)
                 context = unit->stringAt(*translationContextIndex);
             if (!context.isEmpty())
@@ -2357,15 +2356,25 @@ ReturnedValue GlobalExtensions::method_qsTrIdNoOp(const FunctionObject *, const 
 }
 #endif // translation
 
+/*!
+    \qmlmethod void Qt::gc()
 
+    Runs the garbage collector.
+
+    This is equivalent to calling QJSEngine::collectGarbage().
+
+    \sa {Garbage Collection}
+*/
 ReturnedValue GlobalExtensions::method_gc(const FunctionObject *b, const Value *, const Value *, int)
 {
-    b->engine()->memoryManager->runGC();
+    auto mm = b->engine()->memoryManager;
+    auto oldLimit = mm->gcStateMachine->timeLimit;
+    mm->setGCTimeLimit(-1); // temporarily use non-incremental gc
+    mm->runGC();
+    mm->gcStateMachine->timeLimit = oldLimit;
 
     return QV4::Encode::undefined();
 }
-
-
 
 ReturnedValue GlobalExtensions::method_string_arg(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {

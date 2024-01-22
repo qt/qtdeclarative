@@ -27,15 +27,15 @@ QT_BEGIN_NAMESPACE
 class QQuickShapePathPrivate;
 class QQuickShapePrivate;
 
-void Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapes_initializeModule();
+void Q_QUICKSHAPES_EXPORT QQuickShapes_initializeModule();
 
-class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapesModule
+class Q_QUICKSHAPES_EXPORT QQuickShapesModule
 {
 public:
     static void defineModule();
 };
 
-class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeGradient : public QQuickGradient
+class Q_QUICKSHAPES_EXPORT QQuickShapeGradient : public QQuickGradient
 {
     Q_OBJECT
     Q_PROPERTY(SpreadMode spread READ spread WRITE setSpread NOTIFY spreadChanged FINAL)
@@ -65,7 +65,7 @@ private:
     SpreadMode m_spread;
 };
 
-class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeLinearGradient : public QQuickShapeGradient
+class Q_QUICKSHAPES_EXPORT QQuickShapeLinearGradient : public QQuickShapeGradient
 {
     Q_OBJECT
     Q_PROPERTY(qreal x1 READ x1 WRITE setX1 NOTIFY x1Changed FINAL)
@@ -99,7 +99,7 @@ private:
     QPointF m_end;
 };
 
-class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeRadialGradient : public QQuickShapeGradient
+class Q_QUICKSHAPES_EXPORT QQuickShapeRadialGradient : public QQuickShapeGradient
 {
     Q_OBJECT
     Q_PROPERTY(qreal centerX READ centerX WRITE setCenterX NOTIFY centerXChanged FINAL)
@@ -148,7 +148,7 @@ private:
     qreal m_focalRadius = 0;
 };
 
-class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeConicalGradient : public QQuickShapeGradient
+class Q_QUICKSHAPES_EXPORT QQuickShapeConicalGradient : public QQuickShapeGradient
 {
     Q_OBJECT
     Q_PROPERTY(qreal centerX READ centerX WRITE setCenterX NOTIFY centerXChanged FINAL)
@@ -180,7 +180,7 @@ private:
     qreal m_angle = 0;
 };
 
-class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapePath : public QQuickPath
+class Q_QUICKSHAPES_EXPORT QQuickShapePath : public QQuickPath
 {
     Q_OBJECT
 
@@ -300,7 +300,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_fillGradientChanged())
 };
 
-class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShape : public QQuickItem
+class Q_QUICKSHAPES_EXPORT QQuickShape : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(RendererType rendererType READ rendererType NOTIFY rendererChanged FINAL)

@@ -752,8 +752,10 @@ void tst_QQuickLoader::initialPropertyValuesError_data()
     QTest::newRow("nonexistent source url") << testFileUrl("initialPropertyValues.error.2.qml")
             << (QStringList() << QString(testFileUrl("NonexistentSourceComponent.qml").toString() + ": No such file or directory"));
 
-    QTest::newRow("invalid source url") << testFileUrl("initialPropertyValues.error.3.qml")
-            << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString() + ":5:1: Expected token `:'"));
+    QTest::newRow("invalid source url")
+            << testFileUrl("initialPropertyValues.error.3.qml")
+            << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString()
+                                         + ":4:5: Incomplete binding, expected token `:` or `{`"));
 
     QTest::newRow("invalid initial property values object with invalid property access") << testFileUrl("initialPropertyValues.error.4.qml")
             << (QStringList() << QString(testFileUrl("initialPropertyValues.error.4.qml").toString() + ":7:5: QML Loader: setSource: value is not an object")
@@ -898,8 +900,10 @@ void tst_QQuickLoader::asynchronous_data()
     QTest::newRow("Non-existent component") << testFileUrl("IDoNotExist.qml")
             << (QStringList() << QString(testFileUrl("IDoNotExist.qml").toString() + ": No such file or directory"));
 
-    QTest::newRow("Invalid component") << testFileUrl("InvalidSourceComponent.qml")
-            << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString() + ":5:1: Expected token `:'"));
+    QTest::newRow("Invalid component")
+            << testFileUrl("InvalidSourceComponent.qml")
+            << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString()
+                                         + ":4:5: Incomplete binding, expected token `:` or `{`"));
 }
 
 void tst_QQuickLoader::asynchronous()

@@ -59,7 +59,7 @@ class QRhiTexture;
 Q_DECLARE_LOGGING_CATEGORY(lcQuickWindow)
 
 //Make it easy to identify and customize the root item if needed
-class Q_QUICK_PRIVATE_EXPORT QQuickRootItem : public QQuickItem
+class Q_QUICK_EXPORT QQuickRootItem : public QQuickItem
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -81,11 +81,13 @@ public:
     QRhiTexture *texture = nullptr;
     QRhiRenderBuffer *renderBuffer = nullptr;
     QRhiRenderBuffer *depthStencil = nullptr;
+    QRhiTexture *depthStencilTexture = nullptr; // for multiview
     QPaintDevice *paintDevice = nullptr;
     bool owns = false;
+    int multiViewCount = 1;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowPrivate
+class Q_QUICK_EXPORT QQuickWindowPrivate
     : public QWindowPrivate
     , public QQuickPaletteProviderPrivateBase<QQuickWindow, QQuickWindowPrivate>
 {
@@ -184,6 +186,8 @@ public:
     void clearGrabbers(QPointerEvent *event);
 
     void updateChildWindowStackingOrder(QQuickItem *item = nullptr);
+
+    int multiViewCount();
 
     QSGRenderContext *context;
     QSGRenderer *renderer;

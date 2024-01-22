@@ -47,8 +47,9 @@ Rectangle {
         NumberAnimation { duration: 2000 }
     }
 }
+\endqml
 
-\sa {Property Modifier Types}
+\b {See also} \l {Property Modifier Types}.
 
 \section1 Duplicate Value Source On Property
 

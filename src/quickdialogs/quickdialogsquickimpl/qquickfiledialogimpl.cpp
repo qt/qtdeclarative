@@ -137,10 +137,22 @@ void QQuickFileDialogImplPrivate::updateSelectedFile(const QString &oldFolderPat
     qCDebug(lcUpdateSelectedFile).nospace() << "updateSelectedFile is setting selectedFile to " << newSelectedFileUrl
         << ", newSelectedFileIndex is " << newSelectedFileIndex;
     q->setSelectedFile(newSelectedFileUrl);
+    updateFileNameTextEdit();
     // If the index is -1, there are no files in the directory, and so fileDialogListView's
     // currentIndex will already be -1.
     if (newSelectedFileIndex != -1)
         tryUpdateFileDialogListViewCurrentIndex(newSelectedFileIndex);
+}
+
+void QQuickFileDialogImplPrivate::updateFileNameTextEdit()
+{
+    QQuickFileDialogImplAttached *attached = attachedOrWarn();
+    if (Q_UNLIKELY(!attached))
+        return;
+
+    const QFileInfo fileInfo(selectedFile.toLocalFile());
+    if (fileInfo.isFile())
+        attached->fileNameTextField()->setText(fileInfo.fileName());
 }
 
 QDir::SortFlags QQuickFileDialogImplPrivate::fileListSortFlags()
@@ -238,12 +250,33 @@ void QQuickFileDialogImplPrivate::handleClick(QQuickAbstractButton *button)
             // Don't call accept(), because selecting a folder != accepting the dialog.
         } else {
             // Otherwise it's a file, so select it and close the dialog.
-            q->setSelectedFile(selectedFile);
-            q->accept();
-            QQuickDialogPrivate::handleClick(button);
-            emit q->fileSelected(selectedFile);
+
+            lastButtonClicked = button;
+
+            // Unless it already exists...
+            const bool dontConfirmOverride = q->options()->testOption(QFileDialogOptions::DontConfirmOverwrite);
+            const bool isSaveMode = q->options()->fileMode() == QFileDialogOptions::AnyFile;
+            if (QQuickFileDialogImplAttached *attached = attachedOrWarn();
+                attached && fileInfo.exists() && isSaveMode && !dontConfirmOverride) {
+                QQuickDialog *confirmationDialog = attached->overwriteConfirmationDialog();
+                confirmationDialog->open();
+                static_cast<QQuickDialogButtonBox *>(confirmationDialog->footer())->standardButton(QPlatformDialogHelper::Yes)
+                    ->forceActiveFocus(Qt::PopupFocusReason);
+            } else {
+                selectFile();
+            }
         }
     }
+}
+
+void QQuickFileDialogImplPrivate::selectFile()
+{
+    Q_Q(QQuickFileDialogImpl);
+    Q_ASSERT(lastButtonClicked);
+    q->setSelectedFile(selectedFile);
+    q->accept();
+    QQuickDialogPrivate::handleClick(lastButtonClicked);
+    emit q->fileSelected(selectedFile);
 }
 
 QQuickFileDialogImpl::QQuickFileDialogImpl(QObject *parent)
@@ -332,6 +365,7 @@ void QQuickFileDialogImpl::setInitialCurrentFolderAndSelectedFile(const QUrl &fi
     qCDebug(lcSelectedFile) << "setting initial currentFolder to" << fileDirUrl << "and selectedFile to" << file;
     setCurrentFolder(fileDirUrl, QQuickFileDialogImpl::SetReason::Internal);
     setSelectedFile(file);
+    d->updateFileNameTextEdit();
     d->setCurrentIndexToInitiallySelectedFile = true;
 
     // If the currentFolder didn't change, the FolderListModel won't change and
@@ -470,7 +504,15 @@ void QQuickFileDialogImpl::setFileName(const QString &fileName)
     if (previous == fileName)
         return;
 
-    setSelectedFile(QUrl(currentFolder().path() + u'/' + fileName));
+    QUrl newSelectedFile;
+    newSelectedFile.setScheme(currentFolder().scheme());
+    newSelectedFile.setPath(currentFolder().path() + u'/' + fileName);
+    setSelectedFile(newSelectedFile);
+}
+
+QString QQuickFileDialogImpl::currentFolderName() const
+{
+    return QDir(currentFolder().toLocalFile()).dirName();
 }
 
 void QQuickFileDialogImpl::componentComplete()
@@ -564,6 +606,7 @@ void QQuickFileDialogImplAttachedPrivate::fileDialogListViewCurrentIndexChanged(
     auto fileDialogImplPrivate = QQuickFileDialogImplPrivate::get(fileDialogImpl);
     if (moveReason != QQuickItemViewPrivate::Other) {
         fileDialogImpl->setSelectedFile(fileDialogDelegate->file());
+        fileDialogImplPrivate->updateFileNameTextEdit();
     } else if (fileDialogImplPrivate->setCurrentIndexToInitiallySelectedFile) {
         // When setting selectedFile before opening the FileDialog,
         // we need to ensure that the currentIndex is correct, because the initial change
@@ -769,6 +812,32 @@ void QQuickFileDialogImplAttached::setFileNameTextField(QQuickTextField *fileNam
             d, &QQuickFileDialogImplAttachedPrivate::fileNameEditedByUser);
     }
     emit fileNameTextFieldChanged();
+}
+
+QQuickDialog *QQuickFileDialogImplAttached::overwriteConfirmationDialog() const
+{
+    Q_D(const QQuickFileDialogImplAttached);
+    return d->overwriteConfirmationDialog;
+}
+
+void QQuickFileDialogImplAttached::setOverwriteConfirmationDialog(QQuickDialog *dialog)
+{
+    Q_D(QQuickFileDialogImplAttached);
+    if (dialog == d->overwriteConfirmationDialog)
+        return;
+
+    QQuickFileDialogImpl *fileDialogImpl = qobject_cast<QQuickFileDialogImpl*>(parent());
+    if (d->overwriteConfirmationDialog && fileDialogImpl)
+        QObjectPrivate::disconnect(d->overwriteConfirmationDialog, &QQuickDialog::accepted,
+            QQuickFileDialogImplPrivate::get(fileDialogImpl),  &QQuickFileDialogImplPrivate::selectFile);
+
+    d->overwriteConfirmationDialog = dialog;
+
+    if (d->overwriteConfirmationDialog && fileDialogImpl)
+        QObjectPrivate::connect(d->overwriteConfirmationDialog, &QQuickDialog::accepted,
+            QQuickFileDialogImplPrivate::get(fileDialogImpl), &QQuickFileDialogImplPrivate::selectFile, Qt::QueuedConnection);
+
+    emit overwriteConfirmationDialogChanged();
 }
 
 QT_END_NAMESPACE

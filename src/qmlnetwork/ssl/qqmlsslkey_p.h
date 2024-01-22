@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include <private/qtqmlnetworkexports_p.h>
+#include <qtqmlnetworkexports.h>
 
 #include <QtCore/QByteArray>
 #include <QtCore/QMetaType>
@@ -25,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLNETWORK_PRIVATE_EXPORT QQmlSslKey
+class Q_QMLNETWORK_EXPORT QQmlSslKey
 {
     Q_GADGET
     QML_NAMED_ELEMENT(sslKey)

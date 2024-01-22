@@ -30,7 +30,7 @@ class QQmlGuardedContextData;
 class QQmlJavaScriptExpression;
 class QQmlIncubatorPrivate;
 
-class Q_QML_PRIVATE_EXPORT QQmlContextData
+class Q_QML_EXPORT QQmlContextData
 {
 public:
     static QQmlRefPointer<QQmlContextData> createRefCounted(

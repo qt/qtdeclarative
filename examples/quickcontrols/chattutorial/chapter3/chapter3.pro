@@ -1,7 +1,6 @@
 TEMPLATE = app
 
 QT += qml quick
-CONFIG += c++11
 
 SOURCES += main.cpp
 
@@ -20,8 +19,9 @@ resources.files = \
     images/Hans_Gude@2x.png \
     images/Hans_Gude@3x.png \
     images/Hans_Gude@4x.png \
-    main.qml
-resources.prefix = qt/qml/chapter3/
+    Main.qml \
+    qmldir
+resources.prefix = qt/qml/chattutorial/
 RESOURCES += resources \
     qtquickcontrols2.conf
 

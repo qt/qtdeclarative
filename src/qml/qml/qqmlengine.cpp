@@ -509,7 +509,7 @@ void QQmlEnginePrivate::init()
   \inmodule QtQml
   \brief The QQmlEngine class provides an environment for instantiating QML components.
 
-  A QQmlEngine is used to manage \l{components}{QQmlComponent} and objects created from
+  A QQmlEngine is used to manage \l{QQmlComponent}{components} and objects created from
   them and execute their bindings and functions. QQmlEngine also inherits from
   \l{QJSEngine} which allows seamless integration between your QML components and
   JavaScript code.
@@ -554,6 +554,7 @@ QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
 QQmlEngine::~QQmlEngine()
 {
     Q_D(QQmlEngine);
+    handle()->inShutdown = true;
     QJSEnginePrivate::removeFromDebugServer(this);
 
     // Emit onDestruction signals for the root context before
@@ -622,9 +623,20 @@ QQmlEngine::~QQmlEngine()
 void QQmlEngine::clearComponentCache()
 {
     Q_D(QQmlEngine);
+
+    // Contexts can hold on to CUs but live on the JS heap.
+    // Use a non-incremental GC run to get rid of those.
+    QV4::MemoryManager *mm = handle()->memoryManager;
+    auto oldLimit = mm->gcStateMachine->timeLimit;
+    mm->setGCTimeLimit(-1);
+    mm->runGC();
+    mm->gcStateMachine->timeLimit = std::move(oldLimit);
+
+    handle()->clearCompilationUnits();
     d->typeLoader.lock();
     d->typeLoader.clearCache();
     d->typeLoader.unlock();
+    QQmlMetaType::freeUnusedTypesAndCaches();
 }
 
 /*!
@@ -642,6 +654,7 @@ void QQmlEngine::clearComponentCache()
 void QQmlEngine::trimComponentCache()
 {
     Q_D(QQmlEngine);
+    handle()->trimCompilationUnits();
     d->typeLoader.trimCache();
 }
 
@@ -1245,11 +1258,12 @@ void QQmlData::deferData(
     deferData->context = context;
 
     const QV4::CompiledData::Object *compiledObject = compilationUnit->objectAt(objectIndex);
-    const QV4::BindingPropertyData &propertyData = compilationUnit->bindingPropertyDataPerObject.at(objectIndex);
+    const QV4::CompiledData::BindingPropertyData *propertyData
+            = compilationUnit->bindingPropertyDataPerObjectAt(objectIndex);
 
     const QV4::CompiledData::Binding *binding = compiledObject->bindingTable();
     for (quint32 i = 0; i < compiledObject->nBindings; ++i, ++binding) {
-        const QQmlPropertyData *property = propertyData.at(i);
+        const QQmlPropertyData *property = propertyData->at(i);
         if (binding->hasFlag(QV4::CompiledData::Binding::IsDeferredBinding))
             deferData->bindings.insert(property ? property->coreIndex() : -1, binding);
     }
@@ -1955,12 +1969,20 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QV4::ExecutableCompilationU
 
 QV4::ExecutableCompilationUnit *QQmlEnginePrivate::compilationUnitFromUrl(const QUrl &url)
 {
+    QV4::ExecutionEngine *v4 = v4engine();
+    if (auto unit = v4->compilationUnitForUrl(url)) {
+        if (!unit->runtimeStrings)
+            unit->populate();
+        return unit.data();
+    }
+
     auto unit = typeLoader.getType(url)->compilationUnit();
     if (!unit)
         return nullptr;
-    if (!unit->engine)
-        unit->linkToEngine(v4engine());
-    return unit;
+
+    auto executable = v4->executableCompilationUnit(std::move(unit));
+    executable->populate();
+    return executable.data();
 }
 
 QQmlRefPointer<QQmlContextData>
@@ -1973,21 +1995,21 @@ QQmlEnginePrivate::createInternalContext(const QQmlRefPointer<QV4::ExecutableCom
     QQmlRefPointer<QQmlContextData> context;
     context = QQmlContextData::createRefCounted(parentContext);
     context->setInternal(true);
-    context->setImports(unit->typeNameCache);
+    context->setImports(unit->typeNameCache());
     context->initFromTypeCompilationUnit(unit, subComponentIndex);
 
-    if (isComponentRoot && unit->dependentScripts.size()) {
+    const auto *dependentScripts = unit->dependentScriptsPtr();
+    const qsizetype dependentScriptsSize = dependentScripts->size();
+    if (isComponentRoot && dependentScriptsSize) {
         QV4::ExecutionEngine *v4 = v4engine();
         Q_ASSERT(v4);
         QV4::Scope scope(v4);
 
-        QV4::ScopedObject scripts(scope, v4->newArrayObject(unit->dependentScripts.size()));
+        QV4::ScopedObject scripts(scope, v4->newArrayObject(dependentScriptsSize));
         context->setImportedScripts(QV4::PersistentValue(v4, scripts.asReturnedValue()));
         QV4::ScopedValue v(scope);
-        for (int i = 0; i < unit->dependentScripts.size(); ++i) {
-            QQmlRefPointer<QQmlScriptData> s = unit->dependentScripts.at(i);
-            scripts->put(i, (v = s->scriptValueForContext(context)));
-        }
+        for (qsizetype i = 0; i < dependentScriptsSize; ++i)
+            scripts->put(i, (v = dependentScripts->at(i)->scriptValueForContext(context)));
     }
 
     return context;
@@ -2132,9 +2154,8 @@ LoadHelper::ResolveTypeResult LoadHelper::resolveType(QAnyStringView typeName)
     QTypeRevision versionReturn;
     QList<QQmlError> errors;
     QQmlImportNamespace *ns_return = nullptr;
-    m_importCache->resolveType(typeName.toString(), &type, &versionReturn,
-                               &ns_return,
-                               &errors);
+    m_importCache->resolveType(
+            typeLoader(), typeName.toString(), &type, &versionReturn, &ns_return, &errors);
     return {ResolveTypeResult::ModuleFound, type};
 }
 

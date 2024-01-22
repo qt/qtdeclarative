@@ -93,6 +93,12 @@ if(TARGET Qt::Quick)
     )
 endif()
 
+if(TARGET Qt::QuickControls2)
+    list(APPEND module_includes
+        QuickControls2 QQuickStyle
+    )
+endif()
+
 _qt_internal_test_module_includes(${module_includes})
 
 if(TARGET Qt::Qml)

@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     } \
     Q_SIGNAL void P ## Changed(bool arg);
 
-class Q_QUICK_PRIVATE_EXPORT QQuickAccessibleAttached : public QObject
+class Q_QUICK_EXPORT QQuickAccessibleAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QAccessible::Role role READ role WRITE setRole NOTIFY roleChanged FINAL)

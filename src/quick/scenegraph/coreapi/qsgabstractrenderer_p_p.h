@@ -25,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGAbstractRendererPrivate : public QObjectPrivate
+class Q_QUICK_EXPORT QSGAbstractRendererPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QSGAbstractRenderer)
 public:
@@ -36,13 +36,12 @@ public:
 
     QSGRootNode *m_root_node;
     QColor m_clear_color;
-    QSGAbstractRenderer::ClearMode m_clear_mode;
 
     QRect m_device_rect;
     QRect m_viewport_rect;
 
-    QMatrix4x4 m_projection_matrix;
-    QMatrix4x4 m_projection_matrix_native_ndc;
+    QVarLengthArray<QMatrix4x4, 1> m_projection_matrix;
+    QVarLengthArray<QMatrix4x4, 1> m_projection_matrix_native_ndc;
     uint m_mirrored : 1;
 };
 

@@ -29,7 +29,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickMultiEffectPrivate;
 
-class Q_QUICKEFFECTS_PRIVATE_EXPORT QQuickMultiEffect : public QQuickItem
+class Q_QUICKEFFECTS_EXPORT QQuickMultiEffect : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *source READ source WRITE setSource NOTIFY sourceChanged FINAL)

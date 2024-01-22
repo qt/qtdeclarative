@@ -438,6 +438,10 @@ private slots:
     void asCastToInlineComponent();
     void deepAliasOnICOrReadonly();
 
+    void optionalChainCallOnNullProperty();
+
+    void ambiguousComponents();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -2615,7 +2619,7 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         Q_ASSERT(td);
         QVERIFY(!td->backupSourceCode().isValid());
 
-        QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit = td->compilationUnit();
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = td->compilationUnit();
         readOnlyQmlUnit.reset(compilationUnit->unitData());
         Q_ASSERT(readOnlyQmlUnit);
         QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(malloc(readOnlyQmlUnit->unitSize));
@@ -3894,6 +3898,7 @@ void tst_qqmllanguage::initTestCase()
     qmlRegisterType(testFileUrl("invalidRoot.1.qml"), "Test", 1, 0, "RegisteredCompositeType3");
     qmlRegisterType(testFileUrl("CompositeTypeWithEnum.qml"), "Test", 1, 0, "RegisteredCompositeTypeWithEnum");
     qmlRegisterType(testFileUrl("CompositeTypeWithAttachedProperty.qml"), "Test", 1, 0, "RegisteredCompositeTypeWithAttachedProperty");
+    qmlRegisterType(testFileUrl("CompositeTypeWithEnumSelfReference.qml"), "Test", 1, 0, "CompositeTypeWithEnumSelfReference");
 
     // Registering the TestType class in other modules should have no adverse effects
     qmlRegisterType<TestType>("org.qtproject.TestPre", 1, 0, "Test");
@@ -3922,6 +3927,7 @@ void tst_qqmllanguage::initTestCase()
 
     // Register a Composite Singleton.
     qmlRegisterSingletonType(testFileUrl("singleton/RegisteredCompositeSingletonType.qml"), "org.qtproject.Test", 1, 0, "RegisteredSingleton");
+    qmlRegisterType(testFileUrl("Comps/OverlayDrawer.qml"), "Comps", 2, 0, "OverlayDrawer");
 }
 
 void tst_qqmllanguage::aliasPropertyChangeSignals()
@@ -4069,6 +4075,17 @@ void tst_qqmllanguage::registeredCompositeTypeWithEnum()
     QCOMPARE(o->property("enumValue0").toInt(), static_cast<int>(MyCompositeBaseType::EnumValue0));
     QCOMPARE(o->property("enumValue42").toInt(), static_cast<int>(MyCompositeBaseType::EnumValue42));
     QCOMPARE(o->property("enumValue15").toInt(), static_cast<int>(MyCompositeBaseType::ScopedCompositeEnum::EnumValue15));
+
+    {
+        QQmlComponent component(&engine);
+        component.setData("import Test\nCompositeTypeWithEnumSelfReference {}", QUrl());
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY(o != nullptr);
+
+        QCOMPARE(o->property("e").toInt(), 1);
+        QCOMPARE(o->property("f").toInt(), 2);
+    }
 }
 
 // QTBUG-43581
@@ -5783,7 +5800,7 @@ void tst_qqmllanguage::selfReference()
 
     const QMetaObject *metaObject = o->metaObject();
     QMetaProperty selfProperty = metaObject->property(metaObject->indexOfProperty("self"));
-    QCOMPARE(selfProperty.metaType().id(), compilationUnit->qmlType.typeId().id());
+    QCOMPARE(selfProperty.metaType().id(), compilationUnit->metaType().id());
 
     QByteArray typeName = selfProperty.typeName();
     QVERIFY(typeName.endsWith('*'));
@@ -5792,7 +5809,7 @@ void tst_qqmllanguage::selfReference()
 
     QMetaMethod selfFunction = metaObject->method(metaObject->indexOfMethod("returnSelf()"));
     QVERIFY(selfFunction.isValid());
-    QCOMPARE(selfFunction.returnType(), compilationUnit->qmlType.typeId().id());
+    QCOMPARE(selfFunction.returnType(), compilationUnit->metaType().id());
 
     QMetaMethod selfSignal;
 
@@ -5806,7 +5823,7 @@ void tst_qqmllanguage::selfReference()
 
     QVERIFY(selfSignal.isValid());
     QCOMPARE(selfSignal.parameterCount(), 1);
-    QCOMPARE(selfSignal.parameterType(0), compilationUnit->qmlType.typeId().id());
+    QCOMPARE(selfSignal.parameterType(0), compilationUnit->metaType().id());
 }
 
 void tst_qqmllanguage::selfReferencingSingleton()
@@ -8423,6 +8440,61 @@ void tst_qqmllanguage::deepAliasOnICOrReadonly()
     QVERIFY(c2.errorString().contains(
             QLatin1String(
                     "Invalid property assignment: \"readonlyRectX\" is a read-only property")));
+}
+
+void tst_qqmllanguage::optionalChainCallOnNullProperty()
+{
+    QTest::failOnWarning(QRegularExpression(".*Cannot call method 'destroy' of null.*"));
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("optionalChainCallOnNullProperty.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::ambiguousComponents()
+{
+    auto e1 = std::make_unique<QQmlEngine>();
+    e1->addImportPath(dataDirectory());
+    bool isInstanceOf = false;
+
+    {
+        QQmlComponent c(e1.get());
+        c.loadUrl(testFileUrl("ambiguousComponents.qml"));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+        QScopedPointer<QObject> o(c.create());
+        QTest::ignoreMessage(QtDebugMsg, "do");
+        QMetaObject::invokeMethod(o.data(), "dodo");
+
+        QMetaObject::invokeMethod(o.data(), "testInstanceOf", Q_RETURN_ARG(bool, isInstanceOf));
+        QVERIFY(isInstanceOf);
+    }
+
+    QQmlEngine e2;
+    e2.addImportPath(dataDirectory());
+    QQmlComponent c2(&e2);
+    c2.loadUrl(testFileUrl("ambiguousComponents.qml"));
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+
+    QScopedPointer<QObject> o2(c2.create());
+    QTest::ignoreMessage(QtDebugMsg, "do");
+    QMetaObject::invokeMethod(o2.data(), "dodo");
+
+    isInstanceOf = false;
+    QMetaObject::invokeMethod(o2.data(), "testInstanceOf", Q_RETURN_ARG(bool, isInstanceOf));
+    QVERIFY(isInstanceOf);
+
+    e1.reset();
+
+    // We can still invoke the function. This means its CU belongs to e2.
+    QTest::ignoreMessage(QtDebugMsg, "do");
+    QMetaObject::invokeMethod(o2.data(), "dodo");
+
+    isInstanceOf = false;
+    QMetaObject::invokeMethod(o2.data(), "testInstanceOf", Q_RETURN_ARG(bool, isInstanceOf));
+    QVERIFY(isInstanceOf);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

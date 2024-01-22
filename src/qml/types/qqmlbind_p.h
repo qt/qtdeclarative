@@ -23,7 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlBindPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlBind : public QObject, public QQmlPropertyValueSource, public QQmlParserStatus
+class Q_QML_EXPORT QQmlBind : public QObject, public QQmlPropertyValueSource, public QQmlParserStatus
 {
 public:
     enum RestorationMode {

@@ -21,6 +21,7 @@ void QQmlDMListAccessorData::setModelData(const QVariant &data) {
         return;
 
     cachedData = data;
+    cachedDataClean = false;
     static_cast<const VDMListDelegateDataType *>(QObjectPrivate::get(this)->metaObject)
             ->emitAllSignals(this);
 }
@@ -28,6 +29,8 @@ void QQmlDMListAccessorData::setModelData(const QVariant &data) {
 void QQmlDMListAccessorData::setValue(const QString &role, const QVariant &value)
 {
     // Used only for initialization of the cached data. Does not have to emit change signals.
+    Q_ASSERT(!cachedDataClean);
+
     if (role == QLatin1String("modelData") || role.isEmpty())
         cachedData = value;
     else
@@ -84,10 +87,12 @@ int VDMListDelegateDataType::metaCall(
         if (argument == value(&data, name))
             return -1;
         setValue(&data, name, argument);
-        if (accessor->index == -1)
+        if (accessor->index == -1) {
             accessor->cachedData = data;
-        else
+            accessor->cachedDataClean = false;
+        } else {
             model->list.set(accessor->index, data);
+        }
         QMetaObject::activate(accessor, this, id - propertyOffset, nullptr);
         emit accessor->modelDataChanged();
         return -1;
@@ -134,7 +139,11 @@ QMetaObject *VDMListDelegateDataType::toDynamicMetaObject(QObject *object)
 
     // If the context object is not the model object, we are using required properties.
     // In that case, create any extra properties.
-    createMissingProperties(&static_cast<QQmlDMListAccessorData *>(object)->cachedData);
+    QQmlDMListAccessorData *data = static_cast<QQmlDMListAccessorData *>(object);
+    if (!data->cachedDataClean) {
+        createMissingProperties(&data->cachedData);
+        data->cachedDataClean = true;
+    }
     return this;
 }
 

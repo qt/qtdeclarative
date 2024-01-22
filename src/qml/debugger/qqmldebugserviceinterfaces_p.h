@@ -78,7 +78,7 @@ public:
 
 #else
 
-class Q_QML_PRIVATE_EXPORT QV4DebugService : public QQmlDebugService
+class Q_QML_EXPORT QV4DebugService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -96,7 +96,7 @@ protected:
 };
 
 class QQmlAbstractProfilerAdapter;
-class Q_QML_PRIVATE_EXPORT QQmlProfilerService : public QQmlDebugService
+class Q_QML_EXPORT QQmlProfilerService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -120,7 +120,7 @@ protected:
         QQmlDebugService(s_key, version, parent) {}
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlEngineDebugService : public QQmlDebugService
+class Q_QML_EXPORT QQmlEngineDebugService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -160,7 +160,7 @@ struct TranslationBindingInformation
     quint32 column;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugTranslationService : public QQmlDebugService
+class Q_QML_EXPORT QQmlDebugTranslationService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -178,7 +178,7 @@ protected:
 };
 #endif //QT_CONFIG(translation)
 
-class Q_QML_PRIVATE_EXPORT QQmlInspectorService : public QQmlDebugService
+class Q_QML_EXPORT QQmlInspectorService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -197,7 +197,7 @@ protected:
         QQmlDebugService(s_key, version, parent) {}
 };
 
-class Q_QML_PRIVATE_EXPORT QDebugMessageService : public QQmlDebugService
+class Q_QML_EXPORT QDebugMessageService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -214,7 +214,7 @@ protected:
         QQmlDebugService(s_key, version, parent) {}
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlEngineControlService : public QQmlDebugService
+class Q_QML_EXPORT QQmlEngineControlService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -230,7 +230,7 @@ protected:
 
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlNativeDebugService : public QQmlDebugService
+class Q_QML_EXPORT QQmlNativeDebugService : public QQmlDebugService
 {
     Q_OBJECT
 public:

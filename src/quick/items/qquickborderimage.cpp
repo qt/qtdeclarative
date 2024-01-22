@@ -398,7 +398,9 @@ void QQuickBorderImage::requestFinished()
 {
     Q_D(QQuickBorderImage);
 
-    QSize impsize = d->pix.implicitSize();
+    const QSize impsize = d->pix.implicitSize();
+    setImplicitSize(impsize.width() / d->devicePixelRatio, impsize.height() / d->devicePixelRatio);
+
     if (d->pix.isError()) {
         qmlWarning(this) << d->pix.error();
         d->setStatus(Error);
@@ -407,8 +409,6 @@ void QQuickBorderImage::requestFinished()
         d->setStatus(Ready);
         d->setProgress(1);
     }
-
-    setImplicitSize(impsize.width() / d->devicePixelRatio, impsize.height() / d->devicePixelRatio);
 
     if (sourceSize() != d->oldSourceSize) {
         d->oldSourceSize = sourceSize();

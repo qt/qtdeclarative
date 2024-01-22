@@ -12,7 +12,7 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/texteditor")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2 OPTIONAL_COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
 
 qt_add_executable(texteditorexample WIN32 MACOSX_BUNDLE
     texteditor.cpp
@@ -37,12 +37,6 @@ target_link_libraries(texteditorexample PUBLIC
     Qt6::Quick
     Qt6::QuickControls2
 )
-
-if(TARGET Qt6::Widgets)
-    target_link_libraries(texteditorexample PUBLIC
-        Qt6::Widgets
-    )
-endif()
 
 if(CMAKE_CROSSCOMPILING)
     target_compile_definitions(texteditorexample PUBLIC

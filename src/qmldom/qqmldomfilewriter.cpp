@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-FileWriter::Status FileWriter::write(QString tFile, function_ref<bool(QTextStream &)> write,
+FileWriter::Status FileWriter::write(const QString &tFile, function_ref<bool(QTextStream &)> write,
                                      int nBk)
 {
     if (shouldRemoveTempFile)

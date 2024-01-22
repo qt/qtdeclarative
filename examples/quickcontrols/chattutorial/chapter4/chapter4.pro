@@ -1,7 +1,11 @@
 TEMPLATE = app
 
 QT += qml quick sql
-CONFIG += c++11
+CONFIG += c++11 qmltypes
+
+QML_IMPORT_PATH = $$pwd/.
+QML_IMPORT_NAME = chattutorial
+QML_IMPORT_MAJOR_VERSION = 1
 
 HEADERS += sqlcontactmodel.h \
     sqlconversationmodel.h
@@ -25,8 +29,9 @@ resources.files = \
     images/Hans_Gude@2x.png \
     images/Hans_Gude@3x.png \
     images/Hans_Gude@4x.png \
-    main.qml
-resources.prefix = qt/qml/chapter4/
+    Main.qml \
+    qmldir
+resources.prefix = qt/qml/chattutorial/
 RESOURCES += resources \
     qtquickcontrols2.conf
 

@@ -16,6 +16,6 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQmlXmlListModel/private/qtqmlxmllistmodelexports_p.h>
+#include <QtQmlXmlListModel/qtqmlxmllistmodelexports.h>
 
 #endif // QTQMLXMLLISTMODELGLOBAL_P_H

@@ -19,7 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGBasicInternalImageNode : public QSGInternalImageNode
+class Q_QUICK_EXPORT QSGBasicInternalImageNode : public QSGInternalImageNode
 {
 public:
     QSGBasicInternalImageNode();

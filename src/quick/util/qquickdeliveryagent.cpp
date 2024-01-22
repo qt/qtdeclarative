@@ -2092,6 +2092,16 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
         }
         if (!relevantPassiveGrabbers.isEmpty())
             deliverToPassiveGrabbers(relevantPassiveGrabbers, event);
+
+        // Ensure that HoverHandlers are updated, in case no items got dirty so far and there's no update request
+        if (event->type() == QEvent::TouchUpdate) {
+            for (auto hoverItem : hoverItems) {
+                if (auto item = hoverItem.first) {
+                    deliverHoverEventToItem(item, point.scenePosition(), point.sceneLastPosition(),
+                                            event->modifiers(), event->timestamp(), false);
+                }
+            }
+        }
     }
 
     if (done)

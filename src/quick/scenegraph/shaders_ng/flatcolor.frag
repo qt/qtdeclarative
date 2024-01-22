@@ -6,11 +6,15 @@
 layout(location = 0) out vec4 fragColor;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
     vec4 color;
-} ubuf;
+};
 
 void main()
 {
-    fragColor = ubuf.color;
+    fragColor = color;
 }

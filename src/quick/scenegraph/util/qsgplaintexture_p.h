@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGPlainTexturePrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QSGPlainTexture : public QSGTexture
+class Q_QUICK_EXPORT QSGPlainTexture : public QSGTexture
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSGPlainTexture)

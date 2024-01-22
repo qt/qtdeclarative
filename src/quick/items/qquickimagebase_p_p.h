@@ -23,7 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 class QNetworkReply;
-class Q_QUICK_PRIVATE_EXPORT QQuickImageBasePrivate : public QQuickImplicitSizeItemPrivate
+class Q_QUICK_EXPORT QQuickImageBasePrivate : public QQuickImplicitSizeItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickImageBase)
 

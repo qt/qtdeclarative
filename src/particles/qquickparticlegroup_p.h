@@ -19,7 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleGroup : public QQuickStochasticState,
+class Q_QUICKPARTICLES_EXPORT QQuickParticleGroup : public QQuickStochasticState,
                                                             public QQmlParserStatus
 {
     Q_OBJECT

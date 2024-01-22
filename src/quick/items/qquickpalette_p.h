@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractPaletteProvider;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPalette : public QQuickColorGroup
+class Q_QUICK_EXPORT QQuickPalette : public QQuickColorGroup
 {
     Q_OBJECT
 

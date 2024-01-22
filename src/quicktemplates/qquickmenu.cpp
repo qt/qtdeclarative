@@ -1735,10 +1735,10 @@ void QQuickMenu::popup(QQuickItem *menuItem)
 #endif
 
     // As a fallback, center the menu over its parent item.
-    if (pos.isNull && d->parentItem)
+    if (!pos.isValid() && d->parentItem)
         pos = QPointF((d->parentItem->width() - width()) / 2, (d->parentItem->height() - height()) / 2);
 
-    popup(pos.isNull ? QPointF() : pos.value, menuItem);
+    popup(pos.isValid() ? pos.value() : QPointF(), menuItem);
 }
 
 void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
@@ -1839,7 +1839,7 @@ void QQuickMenu::popup(QQmlV4Function *args)
             pos = QPointF(xArg->asDouble(), yArg->asDouble());
     }
 
-    if (pos.isNull && (len >= 2 || (!parentItem && len >= 1))) {
+    if (!pos.isValid() && (len >= 2 || (!parentItem && len >= 1))) {
         // point pos
         QV4::ScopedValue posArg(scope, (*args)[parentItem ? 1 : 0]);
         const QVariant var = QV4::ExecutionEngine::toVariant(posArg, QMetaType {});
@@ -1850,10 +1850,10 @@ void QQuickMenu::popup(QQmlV4Function *args)
     if (parentItem)
         setParentItem(parentItem);
 
-    if (pos.isNull)
-        popup(menuItem);
-    else
+    if (pos.isValid())
         popup(pos, menuItem);
+    else
+        popup(menuItem);
 }
 
 /*!

@@ -1,0 +1,4 @@
+module Comps
+OverlayDrawer 254.0 OverlayDrawer.qml
+IconPropertiesGroup 254.0 IconPropertiesGroup.qml
+

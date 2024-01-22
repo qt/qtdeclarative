@@ -166,5 +166,3 @@ void tst_qml_common::tst_isChangedHandlerName()
 }
 
 QTEST_MAIN(tst_qml_common)
-
-#include "tst_qml_common.moc"

@@ -104,6 +104,7 @@ public:
     QQmlToolingSettings *settings();
     QStringList findFilePathsFromFileNames(const QStringList &fileNames) const;
     static QStringList fileNamesToWatch(const QQmlJS::Dom::DomItem &qmlFile);
+    void disableCMakeCalls();
 Q_SIGNALS:
     void updatedSnapshot(const QByteArray &url);
 private:
@@ -122,8 +123,8 @@ private:
 
     static bool callCMakeBuild(const QStringList &buildPaths);
     void addFileWatches(const QQmlJS::Dom::DomItem &qmlFile);
-    enum CMakeStatus { ToTest, HasCMake, DoesNotHaveCMake };
-    CMakeStatus testCMakeStatus();
+    enum CMakeStatus { RequiresInitialization, HasCMake, DoesNotHaveCMake };
+    void initializeCMakeStatus(const QString &);
 
     mutable QMutex m_mutex;
     State m_state = State::Running;
@@ -145,7 +146,7 @@ private:
     QQmlToolingSettings *m_settings;
     QFileSystemWatcher m_cppFileWatcher;
     bool m_rebuildRequired = true; // always trigger a rebuild on start
-    CMakeStatus m_cmakeStatus = ToTest;
+    CMakeStatus m_cmakeStatus = RequiresInitialization;
 private slots:
     void onCppFileChanged(const QString &);
 };

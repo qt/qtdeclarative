@@ -78,7 +78,7 @@ Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERER)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_INFO)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_RENDERLOOP)
 
-class Q_QUICK_PRIVATE_EXPORT QSGContext : public QObject
+class Q_QUICK_EXPORT QSGContext : public QObject
 {
     Q_OBJECT
 
@@ -130,7 +130,7 @@ public:
     static QString backend();
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderContext : public QObject
+class Q_QUICK_EXPORT QSGRenderContext : public QObject
 {
     Q_OBJECT
 public:

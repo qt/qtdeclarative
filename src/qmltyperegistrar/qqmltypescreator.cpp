@@ -176,7 +176,7 @@ void QmlTypesCreator::writeType(const QCborMap &property, QLatin1StringView key)
     // presence of typedefs.
     bool isConstant = false;
 
-    auto handleList = [&](QAnyStringView list) {
+    auto handleList = [&](QLatin1StringView list) {
         if (!startsWith(type, list) || type.back() != '>'_L1)
             return false;
 

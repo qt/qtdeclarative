@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickHoverHandlerPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickHoverHandler : public QQuickSinglePointHandler
+class Q_QUICK_EXPORT QQuickHoverHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL)

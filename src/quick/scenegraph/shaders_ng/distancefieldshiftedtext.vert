@@ -7,7 +7,11 @@ layout(location = 0) out vec2 sampleCoord;
 layout(location = 1) out vec2 shiftedSampleCoord;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
     vec2 textureScale;
     vec4 color;
     float alphaMin;
@@ -15,13 +19,15 @@ layout(std140, binding = 0) uniform buf {
     // up to this point it must match distancefieldtext
     vec4 styleColor;
     vec2 shift;
-} ubuf;
-
-out gl_PerVertex { vec4 gl_Position; };
+};
 
 void main()
 {
-     sampleCoord = tCoord * ubuf.textureScale;
-     shiftedSampleCoord = (tCoord - ubuf.shift) * ubuf.textureScale;
-     gl_Position = ubuf.matrix * vCoord;
+     sampleCoord = tCoord * textureScale;
+     shiftedSampleCoord = (tCoord - shift) * textureScale;
+#if QSHADER_VIEW_COUNT >= 2
+     gl_Position = matrix[gl_ViewIndex] * vCoord;
+#else
+     gl_Position = matrix * vCoord;
+#endif
 }

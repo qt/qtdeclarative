@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickSelectable
+class Q_QUICK_EXPORT QQuickSelectable
 {
 public:
     virtual QQuickItem *selectionPointerHandlerTarget() const = 0;

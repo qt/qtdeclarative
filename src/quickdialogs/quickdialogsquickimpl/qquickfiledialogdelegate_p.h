@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuickDialog;
 class QQuickFileDialogDelegatePrivate;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFileDialogDelegate : public QQuickItemDelegate
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickFileDialogDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
     Q_PROPERTY(QQuickDialog *dialog READ dialog WRITE setDialog NOTIFY dialogChanged)

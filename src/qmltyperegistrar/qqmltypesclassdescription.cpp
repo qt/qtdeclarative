@@ -292,9 +292,9 @@ void QmlTypesClassDescription::collect(
             if (value == S_TRUE)
                 hasCustomParser = true;
         } else if (name == S_DEFERRED_PROPERTY_NAMES) {
-            deferredNames = split(value, ',');
+            deferredNames = split(value, QLatin1StringView(","));
         } else if (name == S_IMMEDIATE_PROPERTY_NAMES) {
-            immediateNames = split(value, ',');
+            immediateNames = split(value, QLatin1StringView(","));
         }
     }
 

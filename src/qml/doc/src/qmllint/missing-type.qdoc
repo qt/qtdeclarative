@@ -26,7 +26,7 @@ actually installed, and that their modules end up in an
 
 The warning might also indicate that the type of the property referenced by the alias does not have
 a QML counterpart. The referenced property type might be missing the
-\l{QQmlEngine Class#QML_ELEMENT}{QML_ELEMENT} macro, for example. Refer to
+\l{QQmlEngine::}{QML_ELEMENT} macro, for example. Refer to
 \l{Defining QML Types from C++} or \l{Overview - QML and C++ Integration} in this case.
 
 \section2 Why is this bad?
@@ -116,10 +116,11 @@ qt_add_qml_module(mymodule
     DEPENDENCIES QtQuick
     ...
 )
+\endcode
 
 Now, the warning should be gone!
 
-\sa{Declaring module dependencies}
+\b {See also} \l {Declaring module dependencies}.
 
 \section1 No Type Found For Property
 
@@ -133,7 +134,7 @@ actually installed, and that their modules end up in an
 
 The warning might also indicate that the type of the property does not have
 a QML counterpart. The property type might be missing the
-\l{QQmlEngine Class#QML_ELEMENT}{QML_ELEMENT} macro, for example. Refer to
+\l{QQmlEngine::}{QML_ELEMENT} macro, for example. Refer to
 \l{Defining QML Types from C++} or \l{Overview - QML and C++ Integration} in this case.
 
 \section2 Why is this bad?
@@ -229,11 +230,10 @@ qt_add_qml_module(mymodule
     DEPENDENCIES QtQuick
     ...
 )
+\endcode
 
 Now, the warning should be gone!
 
-\sa{Declaring module dependencies}
-
-\endcode
+\b {See also} \l {Declaring module dependencies}.
 */
 

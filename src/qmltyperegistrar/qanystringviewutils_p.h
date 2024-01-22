@@ -47,13 +47,17 @@ inline QAnyStringView toStringView(const QCborMap &map, QLatin1StringView key)
     return toStringView(map[key]);
 }
 
-inline bool endsWith(QAnyStringView whole, QAnyStringView part)
+// Note: This only works if part is US-ASCII, but there is no type to encode this information!
+inline bool endsWith(QAnyStringView whole, QLatin1StringView part)
 {
+    Q_ASSERT(QtPrivate::isAscii(part));
     return whole.length() >= part.length() && whole.last(part.length()) == part;
 }
 
-inline bool startsWith(QAnyStringView whole, QAnyStringView part)
+// Note: This only works if part is US-ASCII, but there is no type to encode this information!
+inline bool startsWith(QAnyStringView whole, QLatin1StringView part)
 {
+    Q_ASSERT(QtPrivate::isAscii(part));
     return whole.length() >= part.length() && whole.first(part.length()) == part;
 }
 
@@ -131,8 +135,11 @@ auto processAsUtf8(StringView string, Handler &&handler)
     Q_UNREACHABLE();
 }
 
-inline QList<QAnyStringView> split(QAnyStringView source, QAnyStringView sep)
+// Note: This only works if sep is US-ASCII, but there is no type to encode this information!
+inline QList<QAnyStringView> split(QAnyStringView source, QLatin1StringView sep)
 {
+    Q_ASSERT(QtPrivate::isAscii(sep));
+
     QList<QAnyStringView> list;
     if (source.isEmpty()) {
         list.append(source);

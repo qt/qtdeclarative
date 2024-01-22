@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+
+<svg
+   width="800px"
+   height="800px"
+   viewBox="0 0 128 128"
+   aria-hidden="true"
+   role="img"
+   class="iconify iconify--noto"
+   preserveAspectRatio="xMidYMid meet"
+   version="1.1"
+   id="svg1314"
+   sodipodi:docname="cloud-with-lightning-svgrepo-com.svg"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1318" />
+  <sodipodi:namedview
+     id="namedview1316"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="0.805"
+     inkscape:cx="399.37888"
+     inkscape:cy="400"
+     inkscape:window-width="3840"
+     inkscape:window-height="2065"
+     inkscape:window-x="1200"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1314" />
+  <path
+     d="M79.83 71.24L57 75.21s-7.6 19.36-8.07 20.67c-.47 1.31-.45 3.38 1.62 3.38c2.63 0 15.98-.07 15.98-.07s-3.24 15.63-3.43 17.03s1.31 2.63 2.63 1.22c1.31-1.41 19.51-24.79 20.3-25.93c1.41-2.04.05-3.92-1.55-4.01c-1.6-.09-12.32.14-12.32.14l7.67-16.4z"
+     fill="#feca18"
+     id="path1287"
+     style="stroke:#b0ab9d;stroke-opacity:1" />
+  <path
+     d="M73.71 75.04s-5.09 11.26-5.28 11.9c-.56 1.9 1.9 2.67 2.6 1.13c.7-1.55 6.76-14.08 6.76-14.08l-4.08 1.05z"
+     fill="#fdb900"
+     id="path1289" />
+  <path
+     d="M50.83 96.3c1.34-.04 13.1-.07 14.08-.14c1.83-.14 2.11 2.39 0 2.39c-2.19 0-13.73.04-14.43.07c-1.62.08-1.83-2.25.35-2.32z"
+     fill="#fdb900"
+     id="path1291" />
+  <path
+     d="M59.98 75.96s-6 15.06-6.34 16.19c-1.41 4.72 3.66 4.58 5 1.9c.66-1.33 7.11-14.99 7.39-17.46c.29-2.46-6.05-.63-6.05-.63z"
+     fill="#ffe36a"
+     id="path1293" />
+  <path
+     d="M62.52 91.16c-.86-.59-1.9-.07-2.53.92c-.63.99-1.55 2.6-.14 3.45c1.27.76 2.39-.77 2.89-1.48c.48-.7 1.11-1.97-.22-2.89z"
+     fill="#ffe36a"
+     id="path1295" />
+  <path
+     d="M72.09 94.4c-2.29-.49-3.03 1.41-3.52 3.66c-.49 2.25-2.33 9.53-2.67 11.33c-.49 2.53 1.83 2.89 2.82.56c.74-1.74 3.95-9.59 4.36-10.84c.63-1.89 1.33-4.22-.99-4.71z"
+     fill="#ffe36a"
+     id="path1297" />
+  <path
+     d="M107.35 50.2s1.29-34.78-27.45-39C53.01 7.26 48.23 32.6 48.23 32.6s-11.68-2.67-18.02 4.79s-6.48 13.23-6.48 13.23s-17.6-1.69-19.15 12.67s11.54 8.45 11.54 8.45l107.13-4.72s2.95-8.03-4.65-13.73c-4.49-3.37-11.25-3.09-11.25-3.09z"
+     fill="#e4eaee"
+     id="path1299" />
+  <radialGradient
+     id="IconifyId17ecdb2904d178eab6089"
+     cx="65.427"
+     cy="79.054"
+     r="29.294"
+     fx="52.312"
+     fy="79.18"
+     gradientTransform="matrix(.0288 -.9996 1.4975 .0432 -54.843 141.038)"
+     gradientUnits="userSpaceOnUse">
+    <stop
+       offset=".193"
+       stop-color="#ffe366"
+       id="stop1301" />
+    <stop
+       offset=".331"
+       stop-color="#eddd82"
+       id="stop1303" />
+    <stop
+       offset=".571"
+       stop-color="#d0d4ad"
+       id="stop1305" />
+    <stop
+       offset=".759"
+       stop-color="#bfcfc7"
+       id="stop1307" />
+    <stop
+       offset=".87"
+       stop-color="#b8cdd1"
+       id="stop1309" />
+  </radialGradient>
+  <path
+     d="M58.78 55.69c.84-.28 6.05 4.22 19.85 3.8s26.61-7.32 26.61-7.32s-.7 4.93-2.25 7.32s-4.22 5.21-4.22 5.21s7.18 1.69 13.66.84c6.48-.84 11.26-3.94 11.26-3.94s.84 3.24.28 6.34c-.72 3.97-4.22 6.9-7.18 7.32s-29.56 1.76-39.98 2.11c-8.45.29-56.63.68-61.52.14c-5.07-.56-8.87-2.82-10.28-7.18c-1.07-3.31-.56-5.35-.56-5.35s6.36 2.73 11.54 1.83c6.48-1.13 10-6.19 10-6.19s6.34 3.24 15.49 2.11c9.14-1.13 17.3-7.04 17.3-7.04z"
+     fill="url(#IconifyId17ecdb2904d178eab6089)"
+     id="path1312" />
+  <path
+     id="path1377"
+     style="stroke-width:6.25;fill:none;stroke:#b0ab9d;stroke-opacity:1"
+     d="M 462.46484 67.416016 C 326.82772 69.1539 301.4375 203.75 301.4375 203.75 C 301.4375 203.75 228.4375 187.0625 188.8125 233.6875 C 149.1875 280.3125 148.3125 316.375 148.3125 316.375 C 148.3125 316.375 38.3125 305.8125 28.625 395.5625 C 28.219648 399.31789 27.988274 402.83249 27.890625 406.15625 C 27.88823 406.15523 27.8125 406.125 27.8125 406.125 C 27.8125 406.125 24.625 418.875 31.3125 439.5625 C 40.125 466.8125 63.875 480.9375 95.5625 484.4375 C 126.125 487.8125 427.25 485.375 480.0625 483.5625 C 545.1875 481.375 711.4375 473 729.9375 470.375 C 748.4375 467.75 770.3125 449.4375 774.8125 424.625 C 778.04161 406.74956 773.86966 388.33772 773.19727 385.5625 C 771.11652 369.23452 763.28052 349.58539 741.25 333.0625 C 713.1875 312 670.9375 313.75 670.9375 313.75 C 670.9375 313.75 679 96.375 499.375 70 C 486.24512 68.076172 473.95951 67.268737 462.46484 67.416016 z "
+     transform="scale(0.16)" />
+</svg>

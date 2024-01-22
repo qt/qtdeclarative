@@ -1,0 +1,8 @@
+module contactlist
+
+ContactDelegate 1.0 ContactDelegate.ui.qml
+ContactDialog 1.0 ContactDialog.qml
+ContactForm 1.0 ContactForm.ui.qml
+ContactList 1.0 ContactList.qml
+ContactView 1.0 ContactView.ui.qml
+SectionDelegate 1.0 SectionDelegate.ui.qml

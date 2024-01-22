@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickPagePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPage : public QQuickPane
+class Q_QUICKTEMPLATES2_EXPORT QQuickPage : public QQuickPane
 {
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)

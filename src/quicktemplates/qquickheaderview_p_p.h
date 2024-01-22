@@ -25,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QHeaderDataProxyModel : public QAbstractItemModel
+class Q_QUICKTEMPLATES2_EXPORT QHeaderDataProxyModel : public QAbstractItemModel
 {
     Q_OBJECT
     Q_DISABLE_COPY(QHeaderDataProxyModel)

@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickAnchorsPrivate;
 class QQuickAnchorLine;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnchors : public QObject
+class Q_QUICK_EXPORT QQuickAnchors : public QObject
 {
     Q_OBJECT
 

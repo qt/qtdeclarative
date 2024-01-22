@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickFolderBreadcrumbBarPrivate;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFolderBreadcrumbBar : public QQuickContainer
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickFolderBreadcrumbBar : public QQuickContainer
 {
     Q_OBJECT
     Q_PROPERTY(QQuickDialog *dialog READ dialog WRITE setDialog NOTIFY dialogChanged)

@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include <QtCore>
@@ -6,9 +6,6 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QtQml>
-
-#include "sqlcontactmodel.h"
-#include "sqlconversationmodel.h"
 
 static void connectToDatabase()
 {
@@ -37,13 +34,10 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<SqlContactModel>("io.qt.examples.chattutorial", 1, 0, "SqlContactModel");
-    qmlRegisterType<SqlConversationModel>("io.qt.examples.chattutorial", 1, 0, "SqlConversationModel");
-
     connectToDatabase();
 
     QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/qt/qml/chapter5/main.qml")));
+    engine.loadFromModule("chattutorial", "Main");
     if (engine.rootObjects().isEmpty())
         return -1;
 

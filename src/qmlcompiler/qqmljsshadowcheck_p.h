@@ -18,7 +18,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSShadowCheck : public QQmlJSCompilePass
+class Q_QMLCOMPILER_EXPORT QQmlJSShadowCheck : public QQmlJSCompilePass
 {
 public:
     QQmlJSShadowCheck(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,

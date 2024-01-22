@@ -35,7 +35,7 @@ class QQmlDelegateModelAttached;
 class QQmlDelegateModelPrivate;
 
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModel : public QQmlInstanceModel, public QQmlParserStatus
+class Q_QMLMODELS_EXPORT QQmlDelegateModel : public QQmlInstanceModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlDelegateModel)
@@ -133,7 +133,7 @@ private:
 };
 
 class QQmlDelegateModelGroupPrivate;
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelGroup : public QObject
+class Q_QMLMODELS_EXPORT QQmlDelegateModelGroup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)

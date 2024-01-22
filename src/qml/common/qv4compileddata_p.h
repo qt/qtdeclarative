@@ -16,21 +16,29 @@
 
 #include <functional>
 
-#include <QtCore/qhashfunctions.h>
-#include <QtCore/qstring.h>
-#include <QtCore/qscopeguard.h>
-#include <QtCore/qvector.h>
-#include <QtCore/qstringlist.h>
+#include <QtCore/qcryptographichash.h>
 #include <QtCore/qhash.h>
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qhashfunctions.h>
 #include <QtCore/qlocale.h>
+#include <QtCore/qscopeguard.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qstringlist.h>
+#include <QtCore/qurl.h>
+#include <QtCore/qvector.h>
+#include <QtCore/qversionnumber.h>
 
 #if QT_CONFIG(temporaryfile)
 #include <QtCore/qsavefile.h>
 #endif
 
 #include <private/qendian_p.h>
+#include <private/qqmlnullablevalue_p.h>
+#include <private/qqmlpropertycachevector_p.h>
+#include <private/qqmlrefcount_p.h>
+#include <private/qqmltype_p.h>
+#include <private/qv4compilationunitmapper_p.h>
 #include <private/qv4staticvalue_p.h>
+
 #include <functional>
 #include <limits.h>
 
@@ -43,12 +51,14 @@ QT_BEGIN_NAMESPACE
 // Also change the comment behind the number to describe the latest change. This has the added
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
-#define QV4_DATA_STRUCTURE_VERSION 0x3E // Add Translator pragma
+#define QV4_DATA_STRUCTURE_VERSION 0x3F // Refactor compilation units
 
 class QIODevice;
 class QQmlTypeNameCache;
 class QQmlType;
 class QQmlEngine;
+class QQmlPropertyData;
+class QQmlScriptData;
 
 namespace QQmlPrivate {
 struct AOTCompiledFunction;
@@ -67,8 +77,18 @@ struct InternalClass;
 
 struct Function;
 class EvalISelFactory;
+class ResolvedTypeReference;
 
 namespace CompiledData {
+
+// index is per-object binding index
+using BindingPropertyData = QVector<const QQmlPropertyData *>;
+
+// map from name index
+struct ResolvedTypeReferenceMap: public QHash<int, ResolvedTypeReference*>
+{
+    bool addToHash(QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const;
+};
 
 struct String;
 struct Function;
@@ -1419,65 +1439,79 @@ struct TypeReferenceMap : QHash<int, TypeReference>
 
 using DependentTypesHasher = std::function<QByteArray()>;
 
-// This is how this hooks into the existing structures:
+struct InlineComponentData {
 
-struct CompilationUnitBase
-{
-    Q_DISABLE_COPY(CompilationUnitBase)
+    InlineComponentData() = default;
+    InlineComponentData(
+            const QQmlType &qmlType, int objectIndex, int nameIndex, int totalObjectCount,
+            int totalBindingCount, int totalParserStatusCount)
+        : qmlType(qmlType)
+        , objectIndex(objectIndex)
+        , nameIndex(nameIndex)
+        , totalObjectCount(totalObjectCount)
+        , totalBindingCount(totalBindingCount)
+        , totalParserStatusCount(totalParserStatusCount)
+    {}
 
-    CompilationUnitBase() = default;
-    ~CompilationUnitBase() = default;
-
-    CompilationUnitBase(CompilationUnitBase &&other) noexcept { *this = std::move(other); }
-
-    CompilationUnitBase &operator=(CompilationUnitBase &&other) noexcept
-    {
-        if (this != &other) {
-            runtimeStrings = other.runtimeStrings;
-            other.runtimeStrings = nullptr;
-            constants = other.constants;
-            other.constants = nullptr;
-            runtimeRegularExpressions = other.runtimeRegularExpressions;
-            other.runtimeRegularExpressions = nullptr;
-            runtimeClasses = other.runtimeClasses;
-            other.runtimeClasses = nullptr;
-            imports = other.imports;
-            other.imports = nullptr;
-        }
-        return *this;
-    }
-
-    // pointers either to data->constants() or little-endian memory copy.
-    Heap::String **runtimeStrings = nullptr; // Array
-    const StaticValue* constants = nullptr;
-    QV4::StaticValue *runtimeRegularExpressions = nullptr;
-    Heap::InternalClass **runtimeClasses = nullptr;
-    const StaticValue** imports = nullptr;
+    QQmlType qmlType;
+    int objectIndex = -1;
+    int nameIndex = -1;
+    int totalObjectCount = 0;
+    int totalBindingCount = 0;
+    int totalParserStatusCount = 0;
 };
 
-Q_STATIC_ASSERT(std::is_standard_layout<CompilationUnitBase>::value);
-Q_STATIC_ASSERT(offsetof(CompilationUnitBase, runtimeStrings) == 0);
-Q_STATIC_ASSERT(offsetof(CompilationUnitBase, constants) == sizeof(QV4::Heap::String **));
-Q_STATIC_ASSERT(offsetof(CompilationUnitBase, runtimeRegularExpressions) == offsetof(CompilationUnitBase, constants) + sizeof(const StaticValue *));
-Q_STATIC_ASSERT(offsetof(CompilationUnitBase, runtimeClasses) == offsetof(CompilationUnitBase, runtimeRegularExpressions) + sizeof(const StaticValue *));
-Q_STATIC_ASSERT(offsetof(CompilationUnitBase, imports) == offsetof(CompilationUnitBase, runtimeClasses) + sizeof(const StaticValue *));
-
-struct CompilationUnit : public CompilationUnitBase
+struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
 {
-    Q_DISABLE_COPY(CompilationUnit)
+    Q_DISABLE_COPY_MOVE(CompilationUnit)
 
     const Unit *data = nullptr;
     const QmlUnit *qmlData = nullptr;
     QStringList dynamicStrings;
     const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions = nullptr;
-public:
-    using CompiledObject = CompiledData::Object;
 
-    CompilationUnit(const Unit *unitData = nullptr, const QString &fileName = QString(),
-                    const QString &finalUrlString = QString())
+    // pointers either to data->constants() or little-endian memory copy.
+    const StaticValue *constants = nullptr;
+
+    std::unique_ptr<CompilationUnitMapper> backingFile;
+
+    int m_totalBindingsCount = 0; // Number of bindings used in this type
+    int m_totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
+    int m_totalObjectCount = 0; // Number of objects explicitly instantiated
+
+    std::unique_ptr<QString> icRootName;
+    QHash<QString, InlineComponentData> inlineComponentData;
+
+    // index is object index. This allows fast access to the
+    // property data when initializing bindings, avoiding expensive
+    // lookups by string (property name).
+    QVector<BindingPropertyData> bindingPropertyDataPerObject;
+
+    ResolvedTypeReferenceMap resolvedTypes;
+    QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
+
+    QQmlPropertyCacheVector propertyCaches;
+
+    QQmlType qmlType;
+
+    QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
+
+public:
+    // --- interface for QQmlPropertyCacheCreator
+    using CompiledObject = const CompiledData::Object;
+    using CompiledFunction = const CompiledData::Function;
+    using CompiledBinding = const CompiledData::Binding;
+
+    // Empty dummy. We don't need to do this when loading from cache.
+    class IdToObjectMap
     {
-        setUnitData(unitData, nullptr, fileName, finalUrlString);
-    }
+    public:
+        void insert(int, int) {}
+        void clear() {}
+
+        // We have already checked uniqueness of IDs when creating the CU
+        bool contains(int) { return false; }
+    };
 
     explicit CompilationUnit(const Unit *unitData, const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions,
                              const QString &fileName = QString(), const QString &finalUrlString = QString())
@@ -1486,51 +1520,11 @@ public:
         this->aotCompiledFunctions = aotCompiledFunctions;
     }
 
-    ~CompilationUnit()
-    {
-        if (data) {
-            if (data->qmlUnit() != qmlData)
-                free(const_cast<QmlUnit *>(qmlData));
-            qmlData = nullptr;
+    Q_QML_EXPORT CompilationUnit(
+            const Unit *unitData = nullptr, const QString &fileName = QString(),
+            const QString &finalUrlString = QString());
 
-            if (!(data->flags & QV4::CompiledData::Unit::StaticData))
-                free(const_cast<Unit *>(data));
-        }
-        data = nullptr;
-#if Q_BYTE_ORDER == Q_BIG_ENDIAN
-        delete [] constants;
-        constants = nullptr;
-#endif
-
-        delete [] imports;
-        imports = nullptr;
-    }
-
-    CompilationUnit(CompilationUnit &&other) noexcept
-    {
-        *this = std::move(other);
-    }
-
-    CompilationUnit &operator=(CompilationUnit &&other) noexcept
-    {
-        if (this != &other) {
-            data = other.data;
-            other.data = nullptr;
-            qmlData = other.qmlData;
-            other.qmlData = nullptr;
-            dynamicStrings = std::move(other.dynamicStrings);
-            aotCompiledFunctions = other.aotCompiledFunctions;
-            other.dynamicStrings.clear();
-            m_fileName = std::move(other.m_fileName);
-            other.m_fileName.clear();
-            m_finalUrlString = std::move(other.m_finalUrlString);
-            other.m_finalUrlString.clear();
-            m_module = other.m_module;
-            other.m_module = nullptr;
-            CompilationUnitBase::operator=(std::move(other));
-        }
-        return *this;
-    }
+    Q_QML_EXPORT ~CompilationUnit();
 
     const Unit *unitData() const { return data; }
 
@@ -1577,9 +1571,6 @@ public:
     QString fileName() const { return m_fileName; }
     QString finalUrlString() const { return m_finalUrlString; }
 
-    Heap::Module *module() const { return m_module; }
-    void setModule(Heap::Module *module) { m_module = module; }
-
     QString bindingValueAsString(const CompiledData::Binding *binding) const
     {
         using namespace CompiledData;
@@ -1618,11 +1609,151 @@ public:
         return constants[binding->value.constantValueIndex].doubleValue();
     }
 
+    Q_QML_EXPORT static QString localCacheFilePath(const QUrl &url);
+    Q_QML_EXPORT bool loadFromDisk(
+            const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString);
+    Q_QML_EXPORT bool saveToDisk(const QUrl &unitUrl, QString *errorString);
+
+    int importCount() const { return qmlData->nImports; }
+    const CompiledData::Import *importAt(int index) const { return qmlData->importAt(index); }
+
+    Q_QML_EXPORT QStringList moduleRequests() const;
+
+    // url() and fileName() shall be used to load the actual QML/JS code or to show errors or
+    // warnings about that code. They include any potential URL interceptions and thus represent the
+    // "physical" location of the code.
+    //
+    // finalUrl() and finalUrlString() shall be used to resolve further URLs referred to in the code
+    // They are _not_ intercepted and thus represent the "logical" name for the code.
+
+    QUrl url() const
+    {
+        if (!m_url.isValid())
+            m_url = QUrl(fileName());
+        return m_url;
+    }
+
+    QUrl finalUrl() const
+    {
+        if (!m_finalUrl.isValid())
+            m_finalUrl = QUrl(finalUrlString());
+        return m_finalUrl;
+    }
+
+    ResolvedTypeReference *resolvedType(int id) const { return resolvedTypes.value(id); }
+    ResolvedTypeReference *resolvedType(QMetaType type) const;
+
+    QQmlPropertyCache::ConstPtr rootPropertyCache() const
+    {
+        return propertyCaches.at(/*root object*/0);
+    }
+
+    int objectCount() const { return qmlData->nObjects; }
+    const CompiledObject *objectAt(int index) const { return qmlData->objectAt(index); }
+
+    int totalBindingsCount() const;
+    int totalParserStatusCount() const;
+    int totalObjectCount() const;
+
+    int inlineComponentId(const QString &inlineComponentName) const
+    {
+        for (uint i = 0; i < qmlData->nObjects; ++i) {
+            auto *object = qmlData->objectAt(i);
+            for (auto it = object->inlineComponentsBegin(), end = object->inlineComponentsEnd();
+                 it != end; ++it) {
+                if (stringAt(it->nameIndex) == inlineComponentName)
+                    return it->objectIndex;
+            }
+        }
+        return -1;
+    }
+
+    void finalizeCompositeType(const QQmlType &type);
+
+    bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
+
+    enum class ListPropertyAssignBehavior { Append, Replace, ReplaceIfNotDefault };
+    ListPropertyAssignBehavior listPropertyAssignBehavior() const
+    {
+        if (unitData()->flags & CompiledData::Unit::ListPropertyAssignReplace)
+            return ListPropertyAssignBehavior::Replace;
+        if (unitData()->flags & CompiledData::Unit::ListPropertyAssignReplaceIfNotDefault)
+            return ListPropertyAssignBehavior::ReplaceIfNotDefault;
+        return ListPropertyAssignBehavior::Append;
+    }
+
+    bool ignoresFunctionSignature() const
+    {
+        return unitData()->flags & CompiledData::Unit::FunctionSignaturesIgnored;
+    }
+
+    bool nativeMethodsAcceptThisObjects() const
+    {
+        return unitData()->flags & CompiledData::Unit::NativeMethodsAcceptThisObject;
+    }
+
+    bool valueTypesAreCopied() const
+    {
+        return unitData()->flags & CompiledData::Unit::ValueTypesCopied;
+    }
+
+    bool valueTypesAreAddressable() const
+    {
+        return unitData()->flags & CompiledData::Unit::ValueTypesAddressable;
+    }
+
+    bool componentsAreBound() const
+    {
+        return unitData()->flags & CompiledData::Unit::ComponentsBound;
+    }
+
+    bool isESModule() const
+    {
+        return unitData()->flags & CompiledData::Unit::IsESModule;
+    }
+
+    bool isSharedLibrary() const
+    {
+        return unitData()->flags & CompiledData::Unit::IsSharedLibrary;
+    }
+
+    struct FunctionIterator
+    {
+        FunctionIterator(const CompiledData::Unit *unit, const CompiledObject *object, int index)
+            : unit(unit), object(object), index(index) {}
+        const CompiledData::Unit *unit;
+        const CompiledObject *object;
+        int index;
+
+        const CompiledFunction *operator->() const
+        {
+            return unit->functionAt(object->functionOffsetTable()[index]);
+        }
+
+        void operator++() { ++index; }
+        bool operator==(const FunctionIterator &rhs) const { return index == rhs.index; }
+        bool operator!=(const FunctionIterator &rhs) const { return index != rhs.index; }
+    };
+
+    FunctionIterator objectFunctionsBegin(const CompiledObject *object) const
+    {
+        return FunctionIterator(unitData(), object, 0);
+    }
+
+    FunctionIterator objectFunctionsEnd(const CompiledObject *object) const
+    {
+        return FunctionIterator(unitData(), object, object->nFunctions);
+    }
+
+    QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
+    QMetaType metaType() const { return qmlType.typeId(); }
+
 private:
     QString m_fileName; // initialized from data->sourceFileIndex
     QString m_finalUrlString; // initialized from data->finalUrlIndex
 
-    Heap::Module *m_module = nullptr;
+    mutable QQmlNullableValue<QUrl> m_url;
+    mutable QQmlNullableValue<QUrl> m_finalUrl;
 };
 
 class SaveableUnitPointer

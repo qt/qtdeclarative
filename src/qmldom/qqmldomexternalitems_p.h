@@ -73,7 +73,7 @@ public:
     bool iterateSubOwners(const DomItem &self, function_ref<bool(const DomItem &owner)> visitor) override
     {
         bool cont = OwningItem::iterateSubOwners(self, visitor);
-        cont = cont && self.field(Fields::components).visitKeys([visitor](QString, const DomItem &comps) {
+        cont = cont && self.field(Fields::components).visitKeys([visitor](const QString &, const DomItem &comps) {
             return comps.visitIndexes([visitor](const DomItem &comp) {
                 return comp.field(Fields::objects).visitIndexes([visitor](const DomItem &qmlObj) {
                     if (const QmlObject *qmlObjPtr = qmlObj.as<QmlObject>())
@@ -132,7 +132,7 @@ public:
 
     const QMultiMap<QString, QString> &qmlFiles() const & { return m_qmlFiles; }
 
-    bool addQmlFilePath(QString relativePath);
+    bool addQmlFilePath(const QString &relativePath);
 
 private:
     QMultiMap<QString, Export> m_exports;
@@ -193,7 +193,7 @@ public:
     QList<ModuleAutoExport> autoExports() const;
     void setAutoExports(const QList<ModuleAutoExport> &autoExport);
 
-    void ensureInModuleIndex(const DomItem &self, QString uri) const;
+    void ensureInModuleIndex(const DomItem &self, const QString &uri) const;
 
 private:
     void parse();
@@ -227,8 +227,8 @@ public:
         : ExternalOwningItem(filePath, lastDataUpdateAt, pathFromTop, derivedFrom)
     {
     }
-    JsFile(QString filePath = QString(), QString code = QString(),
-           QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+    JsFile(const QString &filePath = QString(), const QString &code = QString(),
+           const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
            int derivedFrom = 0);
     JsFile(const JsFile &o) = default;
 
@@ -242,12 +242,12 @@ public:
 
     std::shared_ptr<QQmlJS::Engine> engine() const { return m_engine; }
     JsResource rootComponent() const { return m_rootComponent; }
-    void setFileLocationsTree(FileLocations::Tree v) { m_fileLocationsTree = std::move(v); }
+    void setFileLocationsTree(const FileLocations::Tree &v) { m_fileLocationsTree = std::move(v); }
 
     static ErrorGroups myParsingErrors();
 
     void writeOut(const DomItem &self, OutWriter &lw) const override;
-    void setExpression(std::shared_ptr<ScriptExpression> script) { m_script = std::move(script); }
+    void setExpression(const std::shared_ptr<ScriptExpression> &script) { m_script = script; }
 
     void initPragmaLibrary() { m_pragmaLibrary = LegacyPragmaLibrary{}; };
     void addFileImport(const QString &jsfile, const QString &module);
@@ -387,9 +387,9 @@ public:
     std::shared_ptr<QQmlJS::Engine> engine() const { return m_engine; }
     RegionComments &comments() { return m_comments; }
     std::shared_ptr<AstComments> astComments() const { return m_astComments; }
-    void setAstComments(std::shared_ptr<AstComments> comm) { m_astComments = comm; }
+    void setAstComments(const std::shared_ptr<AstComments> &comm) { m_astComments = comm; }
     FileLocations::Tree fileLocationsTree() const { return m_fileLocationsTree; }
-    void setFileLocationsTree(FileLocations::Tree v) { m_fileLocationsTree = v; }
+    void setFileLocationsTree(const FileLocations::Tree &v) { m_fileLocationsTree = v; }
     const QList<Pragma> &pragmas() const & { return m_pragmas; }
     void setPragmas(QList<Pragma> pragmas) { m_pragmas = pragmas; }
     Path addPragma(const Pragma &pragma)
@@ -485,7 +485,7 @@ public:
     }
 
     const QMap<QString, QSet<int>> &uris() const & { return m_uris; }
-    void addUri(QString uri, int majorVersion)
+    void addUri(const QString &uri, int majorVersion)
     {
         QSet<int> &v = m_uris[uri];
         if (!v.contains(majorVersion)) {
@@ -527,7 +527,7 @@ public:
     QString name() const { return m_name; }
     Language language() const { return m_language; }
     GlobalComponent rootComponent() const { return m_rootComponent; }
-    void setName(QString name) { m_name = name; }
+    void setName(const QString &name) { m_name = name; }
     void setLanguage(Language language) { m_language = language; }
     void setRootComponent(const GlobalComponent &ob)
     {

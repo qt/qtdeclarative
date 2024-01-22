@@ -421,24 +421,29 @@ static OptionalReturnedValue getPropertyFromImports(
     if (!qmlContext || !qmlContext->imports())
         return OptionalReturnedValue();
 
-    QQmlTypeNameCache::Result r = qmlContext->imports()->query(name);
-
     if (hasProperty)
         *hasProperty = true;
 
-    if (!r.isValid())
-        return OptionalReturnedValue();
+    if (QQmlTypeLoader *typeLoader = v4->typeLoader()) {
+        QQmlTypeNameCache::Result r = qmlContext->imports()->query(name, typeLoader);
 
-    if (r.scriptIndex != -1) {
-        return OptionalReturnedValue(Encode::undefined());
-    } else if (r.type.isValid()) {
-        return OptionalReturnedValue(QQmlTypeWrapper::create(v4, qobj,r.type, Heap::QQmlTypeWrapper::ExcludeEnums));
-    } else if (r.importNamespace) {
-        return OptionalReturnedValue(QQmlTypeWrapper::create(
-                                         v4, qobj, qmlContext->imports(), r.importNamespace,
-                                         Heap::QQmlTypeWrapper::ExcludeEnums));
+        if (!r.isValid())
+            return OptionalReturnedValue();
+
+        if (r.scriptIndex != -1) {
+            return OptionalReturnedValue(Encode::undefined());
+        } else if (r.type.isValid()) {
+            return OptionalReturnedValue(
+                    QQmlTypeWrapper::create(v4, qobj,r.type, Heap::QQmlTypeWrapper::ExcludeEnums));
+        } else if (r.importNamespace) {
+            return OptionalReturnedValue(QQmlTypeWrapper::create(
+                    v4, qobj, qmlContext->imports(), r.importNamespace,
+                    Heap::QQmlTypeWrapper::ExcludeEnums));
+        }
+        Q_UNREACHABLE_RETURN(OptionalReturnedValue());
+    } else {
+        return OptionalReturnedValue();
     }
-    Q_UNREACHABLE_RETURN(OptionalReturnedValue());
 }
 
 ReturnedValue QObjectWrapper::getQmlProperty(
@@ -1192,13 +1197,15 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
     static void impl(int which, QSlotObjectBase *this_, QObject *receiver, void **metaArgs, bool *ret)
     {
-        Q_UNUSED(receiver);
         switch (which) {
         case Destroy: {
             delete static_cast<QObjectSlotDispatcher*>(this_);
         }
         break;
         case Call: {
+            if (QQmlData::wasDeleted(receiver))
+                break;
+
             QObjectSlotDispatcher *This = static_cast<QObjectSlotDispatcher*>(this_);
             ExecutionEngine *v4 = This->function.engine();
             // Might be that we're still connected to a signal that's emitted long
@@ -1513,9 +1520,18 @@ void QObjectWrapper::destroyObject(bool lastCall)
                     ddata->ownContext.reset();
                     ddata->context = nullptr;
                 }
-                // This object is notionally destroyed now
+
+                // This object is notionally destroyed now. It might still live until the next
+                // event loop iteration, but it won't need its connections, CU, or deferredData
+                // anymore.
+
                 ddata->isQueuedForDeletion = true;
                 ddata->disconnectNotifiers(QQmlData::DeleteNotifyList::No);
+                ddata->compilationUnit.reset();
+
+                qDeleteAll(ddata->deferredData);
+                ddata->deferredData.clear();
+
                 if (lastCall)
                     delete o;
                 else
@@ -3024,13 +3040,15 @@ void QObjectMethod::callInternalWithMetaTypes(
             // (if it's destructible).
             QObject *qobjectPtr = nullptr;
             const QMetaType resultType = method->propType();
-            if (resultType.flags() & QMetaType::PointerToQObject) {
-                qobjectPtr = *static_cast<QObject **>(argv[0]);
-            } else if (resultType == QMetaType::fromType<QVariant>()) {
-                const QVariant *result = static_cast<const QVariant *>(argv[0]);
-                const QMetaType variantType = result->metaType();
-                if (variantType.flags() & QMetaType::PointerToQObject)
-                    qobjectPtr = *static_cast<QObject *const *>(result->data());
+            if (argv[0]) {
+                if (resultType.flags() & QMetaType::PointerToQObject) {
+                    qobjectPtr = *static_cast<QObject **>(argv[0]);
+                } else if (resultType == QMetaType::fromType<QVariant>()) {
+                    const QVariant *result = static_cast<const QVariant *>(argv[0]);
+                    const QMetaType variantType = result->metaType();
+                    if (variantType.flags() & QMetaType::PointerToQObject)
+                        qobjectPtr = *static_cast<QObject *const *>(result->data());
+                }
             }
 
             if (qobjectPtr) {

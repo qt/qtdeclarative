@@ -112,14 +112,14 @@ QQmlTestMessageHandler::~QQmlTestMessageHandler()
 
 
 bool gcDone(const QV4::ExecutionEngine *engine) {
-    // always true as long as the gc is non-incremental
-    Q_UNUSED(engine);
-    return true;
+    return !engine->memoryManager->gcStateMachine->inProgress();
 }
 
 void gc(QV4::ExecutionEngine &engine, GCFlags flags)
 {
     engine.memoryManager->runGC();
+    while (!gcDone(&engine))
+        engine.memoryManager->gcStateMachine->step();
     if (int(GCFlags::DontSendPostedEvents) & int(flags))
         return;
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);

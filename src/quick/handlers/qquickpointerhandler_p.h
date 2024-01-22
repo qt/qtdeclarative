@@ -23,7 +23,7 @@
 #include <QtQml/QQmlParserStatus>
 #include <QtQml/qqmlregistration.h>
 #include <QtQuick/qtquickglobal.h>
-#include <QtQuick/private/qtquickexports_p.h>
+#include <QtQuick/qtquickexports.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -33,7 +33,7 @@ class QQuickItem;
 class QQuickPointerHandlerPrivate;
 class QPointerEvent;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlParserStatus
+class Q_QUICK_EXPORT QQuickPointerHandler : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)

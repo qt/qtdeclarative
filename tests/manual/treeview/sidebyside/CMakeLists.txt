@@ -35,6 +35,8 @@ qt_internal_extend_target(treeview_sidebyside CONDITION TARGET Qt::Widgets
 qt6_add_qml_module(treeview_sidebyside
     URI TestModel
     VERSION 1.0
+    QML_FILES
+        data/treeview.qml
 )
 
 # Resources:

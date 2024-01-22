@@ -24,7 +24,7 @@ class QValidator;
 class QQuickSpinBoxPrivate;
 class QQuickIndicatorButton;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickSpinBox : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(int from READ from WRITE setFrom NOTIFY fromChanged FINAL)

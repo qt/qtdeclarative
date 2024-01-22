@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickFileNameFilter;
 
-class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickFileDialog : public QQuickAbstractDialog
+class Q_QUICKDIALOGS2_EXPORT QQuickFileDialog : public QQuickAbstractDialog
 {
     Q_OBJECT
     Q_PROPERTY(FileMode fileMode READ fileMode WRITE setFileMode NOTIFY fileModeChanged FINAL)

@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 class QQuickMenu;
 class QQuickMenuItemPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuItem : public QQuickAbstractButton
+class Q_QUICKTEMPLATES2_EXPORT QQuickMenuItem : public QQuickAbstractButton
 {
     Q_OBJECT
     Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)

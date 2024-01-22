@@ -23,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_QML_COMPILER_PRIVATE_EXPORT QStringList qQmlResolveImportPaths(QStringView uri, const QStringList &basePaths,
+Q_QML_COMPILER_EXPORT QStringList qQmlResolveImportPaths(QStringView uri, const QStringList &basePaths,
                                    QTypeRevision version);
 
 QT_END_NAMESPACE

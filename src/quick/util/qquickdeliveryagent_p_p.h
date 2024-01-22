@@ -42,7 +42,7 @@ struct QQuickPointingDeviceExtra {
     QVector<QObject *> deliveryTargets;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickDeliveryAgentPrivate : public QObjectPrivate
+class Q_QUICK_EXPORT QQuickDeliveryAgentPrivate : public QObjectPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickDeliveryAgent)

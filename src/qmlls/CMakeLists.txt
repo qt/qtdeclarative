@@ -34,5 +34,4 @@ qt_internal_add_module(QmlLSPrivate
         Qt::QmlToolingSettingsPrivate
         Qt::LanguageServerPrivate
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-)
+    )

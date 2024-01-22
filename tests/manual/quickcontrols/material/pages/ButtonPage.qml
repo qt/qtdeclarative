@@ -13,6 +13,12 @@ Page {
 
     header: RowLayout {
         CheckBox {
+            id: textCheckBox
+            text: "Text"
+            checked: true
+        }
+
+        CheckBox {
             id: iconCheckBox
             text: "Icon"
         }
@@ -88,7 +94,7 @@ Page {
                             model: 13
 
                             Button {
-                                text: modelData
+                                text: textCheckBox.checked ? modelData : ""
                                 flat: flatCheckBox.checked
                                 icon.source: iconCheckBox.checked ? "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png" : ""
 

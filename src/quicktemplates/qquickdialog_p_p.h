@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuickAbstractButton;
 class QQuickDialogButtonBox;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogPrivate : public QQuickPopupPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickDialogPrivate : public QQuickPopupPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickDialog)

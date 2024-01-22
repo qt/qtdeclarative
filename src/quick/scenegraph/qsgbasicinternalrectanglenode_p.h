@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGBasicInternalRectangleNode : public QSGInternalRectangleNode
+class Q_QUICK_EXPORT QSGBasicInternalRectangleNode : public QSGInternalRectangleNode
 {
 public:
     QSGBasicInternalRectangleNode();

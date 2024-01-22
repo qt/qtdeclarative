@@ -169,7 +169,7 @@ qt_internal_add_qml_module(Qml
         common/qqmljssourcelocation_p.h
         common/qv4alloca_p.h
         common/qv4calldata_p.h
-        common/qv4compileddata_p.h
+        common/qv4compileddata.cpp common/qv4compileddata_p.h
         common/qv4staticvalue_p.h
         common/qv4stringtoarrayindex_p.h
         common/qqmltranslation.cpp common/qqmltranslation_p.h
@@ -281,7 +281,7 @@ qt_internal_add_qml_module(Qml
         memory/qv4mm.cpp memory/qv4mm_p.h
         memory/qv4mmdefs_p.h
         memory/qv4stacklimits.cpp memory/qv4stacklimits_p.h
-        memory/qv4writebarrier_p.h
+        memory/qv4writebarrier_p.h memory/qv4writebarrier.cpp
         parser/qqmljsast.cpp parser/qqmljsast_p.h
         parser/qqmljsastfwd_p.h
         parser/qqmljsastvisitor.cpp parser/qqmljsastvisitor_p.h
@@ -495,8 +495,7 @@ qt_internal_add_qml_module(Qml
         "${INSTALL_CMAKE_NAMESPACE}QmlFindQmlscInternal.cmake"
         ${extra_cmake_includes}
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-    POLICIES
+        POLICIES
         QTP0001
 )
 
@@ -529,6 +528,24 @@ add_custom_command(
         --jsroot --generate-qmltypes "${qml_build_dir}/jsroot.qmltypes"
     COMMENT "Generating jsroot.qmltypes"
     VERBATIM
+)
+
+get_target_property(builtins_metatypes_file "QmlBuiltins" INTERFACE_QT_META_TYPES_BUILD_FILE)
+
+_qt_internal_get_metatypes_install_dir(
+    ""
+    "${INSTALL_ARCHDATADIR}"
+    metatypes_install_dir
+)
+
+_qt_internal_assign_install_metatypes_files_and_properties(
+    QmlBuiltins
+    INSTALL_DIR "${metatypes_install_dir}"
+)
+
+qt_install(
+    FILES "${builtins_metatypes_file}"
+    DESTINATION "${metatypes_install_dir}"
 )
 
 set(builtins_output_files "")

@@ -497,7 +497,7 @@ inline bool operator!=(const StackSlot &l, const StackSlot &r) { return l.stackS
 
 // When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
 
-Q_QML_PRIVATE_EXPORT
+Q_QML_EXPORT
 QString dumpBytecode(
         const char *bytecode, int len, int nLocals, int nFormals, int beginOffset, int endOffset,
         const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping =

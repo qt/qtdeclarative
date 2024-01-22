@@ -62,7 +62,7 @@ private:
     QVariantMap mProperties;
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackView : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickStackView : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(bool busy READ isBusy NOTIFY busyChanged FINAL)
@@ -207,7 +207,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickStackView)
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackViewAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickStackViewAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)

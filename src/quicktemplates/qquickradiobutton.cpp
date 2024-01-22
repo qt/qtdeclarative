@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
     \sa ButtonGroup, {Customizing RadioButton}, {Button Controls}, RadioDelegate
 */
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRadioButtonPrivate : public QQuickAbstractButtonPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickRadioButtonPrivate : public QQuickAbstractButtonPrivate
 {
     Q_DECLARE_PUBLIC(QQuickRadioButton)
 

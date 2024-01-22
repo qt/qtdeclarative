@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTreeViewDelegatePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTreeViewDelegate : public QQuickItemDelegate
+class Q_QUICKTEMPLATES2_EXPORT QQuickTreeViewDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
     Q_PROPERTY(qreal indentation READ indentation WRITE setIndentation NOTIFY indentationChanged FINAL)

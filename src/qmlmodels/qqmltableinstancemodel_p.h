@@ -47,7 +47,7 @@ public:
     QQmlTableInstanceModel *tableInstanceModel = nullptr;
 };
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlTableInstanceModel : public QQmlInstanceModel
+class Q_QMLMODELS_EXPORT QQmlTableInstanceModel : public QQmlInstanceModel
 {
     Q_OBJECT
 

@@ -6,7 +6,7 @@
     \image qml-multieffectitemswitcher-example.jpg
     \brief Demonstrates MultiEffect usage.
     \ingroup qtquickexamples
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
 
     This example demonstrates advanced usage of the MultiEffect type, which
     offers a simple, efficient solution for applying effects such as blur, drop

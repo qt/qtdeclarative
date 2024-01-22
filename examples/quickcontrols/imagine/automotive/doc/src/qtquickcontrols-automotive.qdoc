@@ -7,7 +7,7 @@
     \title Qt Quick Controls - Imagine Style Example: Automotive
     \keyword Qt Quick Controls 2 - Imagine Style Example: Automotive
     \ingroup qtquickcontrols-examples
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
     \brief An automotive user interface using custom Imagine style assets.
 
     This example demonstrates how custom Imagine style assets can be used to

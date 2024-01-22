@@ -28,7 +28,7 @@ class QObject;
 class QQmlChangeSet;
 class QAbstractItemModel;
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstanceModel : public QObject
+class Q_QMLMODELS_EXPORT QQmlInstanceModel : public QObject
 {
     Q_OBJECT
 
@@ -82,7 +82,7 @@ private:
 
 class QQmlObjectModelAttached;
 class QQmlObjectModelPrivate;
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlObjectModel : public QQmlInstanceModel
+class Q_QMLMODELS_EXPORT QQmlObjectModel : public QQmlInstanceModel
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlObjectModel)

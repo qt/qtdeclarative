@@ -27,7 +27,7 @@ class QQuickTextField;
 class QQuickFileDialogImpl;
 class QQuickFolderDialogImpl;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFolderBreadcrumbBarPrivate : public QQuickContainerPrivate
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickFolderBreadcrumbBarPrivate : public QQuickContainerPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickFolderBreadcrumbBar)

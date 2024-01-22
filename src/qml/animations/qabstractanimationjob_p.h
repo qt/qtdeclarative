@@ -30,7 +30,7 @@ class QAnimationGroupJob;
 class QAnimationJobChangeListener;
 class QQmlAnimationTimer;
 
-class Q_QML_PRIVATE_EXPORT QAbstractAnimationJob : public QInheritedListNode
+class Q_QML_EXPORT QAbstractAnimationJob : public QInheritedListNode
 {
     Q_DISABLE_COPY(QAbstractAnimationJob)
 public:
@@ -149,10 +149,10 @@ protected:
 
     friend class QQmlAnimationTimer;
     friend class QAnimationGroupJob;
-    friend Q_QML_PRIVATE_EXPORT QDebug operator<<(QDebug, const QAbstractAnimationJob *job);
+    friend Q_QML_EXPORT QDebug operator<<(QDebug, const QAbstractAnimationJob *job);
 };
 
-class Q_QML_PRIVATE_EXPORT QAnimationJobChangeListener
+class Q_QML_EXPORT QAnimationJobChangeListener
 {
 public:
     virtual ~QAnimationJobChangeListener();
@@ -162,7 +162,7 @@ public:
     virtual void animationCurrentTimeChanged(QAbstractAnimationJob *, int) {}
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlAnimationTimer : public QAbstractAnimationTimer
+class Q_QML_EXPORT QQmlAnimationTimer : public QAbstractAnimationTimer
 {
     Q_OBJECT
 private:
@@ -223,7 +223,7 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QAbstractAnimationJob::ChangeTypes)
 
-Q_QML_PRIVATE_EXPORT QDebug operator<<(QDebug, const QAbstractAnimationJob *job);
+Q_QML_EXPORT QDebug operator<<(QDebug, const QAbstractAnimationJob *job);
 
 QT_END_NAMESPACE
 

@@ -354,7 +354,7 @@ void QQuickDragAttached::setImageSource(const QUrl &url)
         if (url.isEmpty()) {
             d->pixmapLoader.clear();
         } else {
-            d->pixmapLoader.load(qmlEngine(parent()), url);
+            d->loadPixmap();
         }
 
         Q_EMIT imageSourceChanged();
@@ -758,6 +758,17 @@ QMimeData *QQuickDragAttachedPrivate::createMimeData() const
     }
 
     return mimeData;
+}
+
+void QQuickDragAttachedPrivate::loadPixmap()
+{
+    Q_Q(QQuickDragAttached);
+
+    QUrl loadUrl = imageSource;
+    const QQmlContext *context = qmlContext(q->parent());
+    if (context)
+        loadUrl = context->resolvedUrl(imageSource);
+    pixmapLoader.load(context ? context->engine() : nullptr, loadUrl);
 }
 
 Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedActions)

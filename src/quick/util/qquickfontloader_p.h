@@ -25,7 +25,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickFontLoaderPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickFontLoader : public QObject
+class Q_QUICK_EXPORT QQuickFontLoader : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickFontLoader)

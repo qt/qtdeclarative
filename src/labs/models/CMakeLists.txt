@@ -16,8 +16,7 @@ qt_internal_add_qml_module(LabsQmlModels
     DEPENDENCIES
         QtQml.Models/auto
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-)
+    )
 
 qt_internal_extend_target(LabsQmlModels CONDITION QT_FEATURE_qml_table_model
     SOURCES

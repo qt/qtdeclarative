@@ -24,7 +24,7 @@ QT_REQUIRE_CONFIG(qml_object_model);
 QT_BEGIN_NAMESPACE
 
 class QQmlInstantiatorPrivate;
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstantiator : public QObject, public QQmlParserStatus
+class Q_QMLMODELS_EXPORT QQmlInstantiator : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)

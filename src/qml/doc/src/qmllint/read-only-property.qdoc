@@ -5,22 +5,34 @@
 \page qmllint-warnings-and-errors-read-only-property.html
 \ingroup qmllint-warnings-and-errors
 
-\title read-only-property
-\brief BRIEF
+\title Readonly Property
+\brief A readonly property was written.
 
-\section1 read-only-property
+\section1 Cannot Assign To Read-Only Property
 
 \section2 What happened?
-TODO
+A \l{Read-Only Properties}{read-only property} was written.
 
 \section2 Why is this bad?
-TODO
+The QML engine will throw a Type Error when it sees the write to a read-only property.
 
 \section2 Example
 \qml
+import QtQuick
+
+Item {
+    id: root
+    readonly property int someNumber: 10
+
+    Component.onCompleted: {
+        someNumber = 20  // not ok: TypeError: Cannot assign to read-only property
+    }
+}
 \endqml
-You can fix this warning by TODO
-\qml
-\endqml
+You can fix this warning by removing the write to the read-only property, by writing to another
+non-read-only property, or by removing the readonly modifier if the property should no longer be
+considered constant.
+
+\sa{Read-Only Properties}
 */
 

@@ -41,7 +41,7 @@ namespace QV4 {
 struct ModelObject;
 }
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlListModel : public QAbstractListModel
+class Q_QMLMODELS_EXPORT QQmlListModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)

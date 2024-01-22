@@ -71,6 +71,8 @@ private slots:
     void conversionDecrement();
     void conversionInDeadCode();
     void conversions();
+    void convertPrimitiveToVar();
+    void convertQJSPrimitiveValueToIntegral();
     void convertToOriginalReadAcumulatorForUnaryOperators();
     void cppValueTypeList();
     void dateConstruction();
@@ -111,6 +113,7 @@ private slots:
     void getOptionalLookup_data();
     void globals();
     void idAccess();
+    void ignoredFunctionReturn();
     void importsFromImportPath();
     void inPlaceDecrement();
     void inaccessibleProperty();
@@ -183,6 +186,7 @@ private slots:
     void registerElimination();
     void registerPropagation();
     void renameAdjust();
+    void returnAfterReject();
     void revisions();
     void scopeIdLookup();
     void scopeObjectDestruction();
@@ -1304,6 +1308,28 @@ void tst_QmlCppCodegen::conversions()
     QVERIFY(!undef.isValid());
 }
 
+void tst_QmlCppCodegen::convertPrimitiveToVar()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/convertPrimitiveToVar.qml"_s));
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("offsetValue").toInt(), 41);
+}
+
+void tst_QmlCppCodegen::convertQJSPrimitiveValueToIntegral()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/convertQJSPrimitiveValueToIntegral.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+}
+
 void tst_QmlCppCodegen::convertToOriginalReadAcumulatorForUnaryOperators()
 {
     QQmlEngine engine;
@@ -2139,6 +2165,15 @@ void tst_QmlCppCodegen::idAccess()
     QObject *ttt = qmlContext(object.data())->objectForName(u"ttt"_s);
     QFont f = qvariant_cast<QFont>(ttt->property("font"));
     QCOMPARE(f.pointSize(), 22);
+}
+
+void tst_QmlCppCodegen::ignoredFunctionReturn()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/ignoredFunctionReturn.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
 }
 
 void tst_QmlCppCodegen::importsFromImportPath()
@@ -3800,6 +3835,16 @@ void tst_QmlCppCodegen::renameAdjust()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
+}
+
+void tst_QmlCppCodegen::returnAfterReject()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/returnAfterReject.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("bar").toInt(), 123);
 }
 
 void tst_QmlCppCodegen::revisions()

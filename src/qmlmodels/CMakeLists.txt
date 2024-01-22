@@ -31,8 +31,7 @@ qt_internal_add_qml_module(QmlModels
         Qt::CorePrivate
         Qt::QmlPrivate
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-)
+    )
 
 qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_itemmodel
     SOURCES

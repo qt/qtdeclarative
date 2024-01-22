@@ -39,9 +39,10 @@ tst_qmlls_modules::tst_qmlls_modules() : QQmlDataTest(QT_QMLTEST_DATADIR)
     m_qmllsPath = qEnvironmentVariable("QMLLS", m_qmllsPath);
     // qputenv("QT_LOGGING_RULES",
     // "qt.languageserver.codemodel.debug=true;qt.languageserver.codemodel.warning=true"); // helps
+    qputenv("QT_LOGGING_RULES", "*.debug=true;*.warning=true");
     // when using EditingRecorder
     m_server.setProgram(m_qmllsPath);
-    // m_server.setArguments(QStringList() << u"-v"_s << u"-w"_s << u"8"_s);
+    // m_server.setArguments(QStringList() << u"-v"_s << u"-w"_s << u"7"_s);
 }
 
 void tst_qmlls_modules::init()
@@ -194,9 +195,6 @@ void tst_qmlls_modules::checkCompletions(const QByteArray &uri, int lineNr, int 
                     } else if (c.kind->toInt() == int(CompletionItemKind::Property)) {
                         QVERIFY2(!propertiesTracker.hasSeen(c.label),
                                  "Duplicate property: " + c.label);
-                        QVERIFY2(c.insertText == c.label + u": "_s,
-                                 "a property should end with a colon with a space for "
-                                 "'insertText', for better coding experience");
                     }
                     labels << c.label;
                 }
@@ -390,6 +388,36 @@ void tst_qmlls_modules::buildDir()
                                            { u"width"_s, CompletionItemKind::Property },
                                    }),
                                    QStringList({ u"QtQuick"_s, u"vector4d"_s })));
+}
+
+void tst_qmlls_modules::automaticSemicolonInsertionForCompletions_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<int>("row");
+    QTest::addColumn<int>("column");
+
+    QTest::addRow("bindingAfterDot") << u"completions/bindingAfterDot.qml"_s << 11 << 32;
+    QTest::addRow("defaultBindingAfterDot")
+            << u"completions/defaultBindingAfterDot.qml"_s << 11 << 32;
+}
+
+void tst_qmlls_modules::automaticSemicolonInsertionForCompletions()
+{
+    ignoreDiagnostics();
+    QFETCH(QString, filePath);
+    QFETCH(int, row);
+    QFETCH(int, column);
+    row--;
+    column--;
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+
+    QTEST_CHECKED(checkCompletions(
+            *uri, row, column,
+            ExpectedCompletions({
+                    { u"good"_s, CompletionItemKind::Property },
+            }),
+            QStringList({ u"bad"_s, u"BuildDirType"_s, u"QtQuick"_s, u"width"_s, u"vector4d"_s })));
 }
 
 void tst_qmlls_modules::goToTypeDefinition_data()

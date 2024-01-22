@@ -32,8 +32,8 @@ class QMLDOM_EXPORT FieldFilter
     Q_GADGET
 public:
     QString describeFieldsFilter() const;
-    bool addFilter(QString f);
-    bool operator()(const DomItem &, Path, const DomItem &) const;
+    bool addFilter(const QString &f);
+    bool operator()(const DomItem &, const Path &, const DomItem &) const;
     bool operator()(const DomItem &, const PathEls::PathComponent &c, const DomItem &) const;
     static FieldFilter defaultFilter();
     static FieldFilter noLocationFilter();

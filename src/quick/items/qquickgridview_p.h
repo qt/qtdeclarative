@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickGridViewAttached;
 class QQuickGridViewPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickGridView : public QQuickItemView
+class Q_QUICK_EXPORT QQuickGridView : public QQuickItemView
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickGridView)

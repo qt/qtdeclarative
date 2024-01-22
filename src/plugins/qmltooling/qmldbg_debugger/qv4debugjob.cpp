@@ -232,7 +232,8 @@ GatherSourcesJob::GatherSourcesJob(QV4::ExecutionEngine *engine)
 
 void GatherSourcesJob::run()
 {
-    for (QV4::ExecutableCompilationUnit *unit : engine->compilationUnits) {
+    const auto compilationUnits = engine->compilationUnits();
+    for (const auto &unit : compilationUnits) {
         QString fileName = unit->fileName();
         if (!fileName.isEmpty())
             sources.append(fileName);

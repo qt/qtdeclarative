@@ -30,7 +30,7 @@ class QSGRenderContext;
 class QAnimationDriver;
 class QRunnable;
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderLoop : public QObject
+class Q_QUICK_EXPORT QSGRenderLoop : public QObject
 {
     Q_OBJECT
 

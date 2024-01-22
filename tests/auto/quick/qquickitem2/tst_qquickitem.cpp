@@ -17,6 +17,7 @@
 #include <QtQuick/private/qquickanchors_p.h>
 #include <QtGui/qstylehints.h>
 #include <private/qquickitem_p.h>
+#include <QtQuickTest/QtQuickTest>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
@@ -88,6 +89,7 @@ private slots:
     void mapCoordinates_data();
     void mapCoordinatesRect();
     void mapCoordinatesRect_data();
+    void mapCoordinatesWithWindows();
     void propertyChanges();
     void nonexistentPropertyConnection();
     void transforms();
@@ -128,6 +130,8 @@ private slots:
     void signalsOnDestruction_data();
     void signalsOnDestruction();
     void visibleChanged();
+
+    void lastFocusChangeReason();
 
 private:
     QQmlEngine engine;
@@ -2798,6 +2802,76 @@ void tst_QQuickItem::mapCoordinatesRect_data()
         QTest::newRow(QTest::toString(i)) << i << i << i << i;
 }
 
+void tst_QQuickItem::mapCoordinatesWithWindows()
+{
+    QQmlComponent component(&engine, testFileUrl("mapCoordinatesWithWindows.qml"));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY(root);
+
+    auto *windowA = root->property("windowA").value<QQuickWindow*>();
+    QVERIFY(windowA);
+
+    // The window container geometry, parenting, etc, is applied
+    // during polish, so to test these we need to wait for one.
+    QVERIFY(QQuickTest::qWaitForPolish(windowA));
+
+    auto *childItem = windowA->findChild<QQuickItem*>("childItem");
+    QVERIFY(childItem);
+
+    QPoint itemPos = childItem->position().toPoint();
+    QCOMPARE(childItem->mapToScene({0, 0}), itemPos);
+    QCOMPARE(childItem->mapToGlobal({0, 0}), windowA->position() + itemPos);
+
+    auto *childItemInChildWindow = windowA->findChild<QQuickItem*>("childItemInChildWindow");
+    QVERIFY(childItemInChildWindow);
+
+    QPoint windowItemPos = childItemInChildWindow->position().toPoint();
+    QCOMPARE(childItemInChildWindow->mapToScene({0, 0}), windowItemPos);
+    QCOMPARE(childItemInChildWindow->mapToGlobal({0, 0}), windowA->position()
+        + childItemInChildWindow->window()->position() + windowItemPos);
+
+    QCOMPARE(childItemInChildWindow->mapToItem(nullptr, {0, 0}), windowItemPos);
+
+    auto globalItemOffset = [](QQuickItem *a, QQuickItem *b) {
+        return a->mapToGlobal({0, 0}) - b->mapToGlobal({0, 0});
+    };
+
+    QCOMPARE(childItemInChildWindow->mapToItem(childItem, {0, 0}),
+        globalItemOffset(childItemInChildWindow, childItem));
+    QCOMPARE(childItemInChildWindow->mapFromItem(childItem, {0, 0}),
+        globalItemOffset(childItem, childItemInChildWindow));
+
+    QCOMPARE(childItem->mapToItem(childItemInChildWindow, {0, 0}),
+        globalItemOffset(childItem, childItemInChildWindow));
+    QCOMPARE(childItem->mapFromItem(childItemInChildWindow, {0, 0}),
+        globalItemOffset(childItemInChildWindow, childItem));
+
+    auto *windowB = root->property("windowB").value<QQuickWindow*>();
+    QVERIFY(windowA);
+    auto *childItemInOtherWindow = windowB->findChild<QQuickItem*>("childItem");
+    QVERIFY(childItemInOtherWindow);
+
+    QCOMPARE(childItemInOtherWindow->mapToItem(childItem, {0, 0}),
+        globalItemOffset(childItemInOtherWindow, childItem));
+    QCOMPARE(childItemInOtherWindow->mapFromItem(childItem, {0, 0}),
+        globalItemOffset(childItem, childItemInOtherWindow));
+
+    QCOMPARE(childItem->mapToItem(childItemInOtherWindow, {0, 0}),
+        globalItemOffset(childItem, childItemInOtherWindow));
+    QCOMPARE(childItem->mapFromItem(childItemInOtherWindow, {0, 0}),
+        globalItemOffset(childItemInOtherWindow, childItem));
+
+    QCOMPARE(childItemInOtherWindow->mapToItem(childItemInChildWindow, {0, 0}),
+        globalItemOffset(childItemInOtherWindow, childItemInChildWindow));
+    QCOMPARE(childItemInOtherWindow->mapFromItem(childItemInChildWindow, {0, 0}),
+        globalItemOffset(childItemInChildWindow, childItemInOtherWindow));
+
+    QCOMPARE(childItemInChildWindow->mapToItem(childItemInOtherWindow, {0, 0}),
+        globalItemOffset(childItemInChildWindow, childItemInOtherWindow));
+    QCOMPARE(childItemInChildWindow->mapFromItem(childItemInOtherWindow, {0, 0}),
+        globalItemOffset(childItemInOtherWindow, childItemInChildWindow));
+}
+
 void tst_QQuickItem::transforms_data()
 {
     QTest::addColumn<QByteArray>("qml");
@@ -4138,6 +4212,170 @@ void tst_QQuickItem::visibleChanged()
 
     QCOMPARE(parentItemSpy.count(), 0);
     QCOMPARE(childItemSpy.count(), 1);
+}
+
+void tst_QQuickItem::lastFocusChangeReason()
+{
+    std::unique_ptr<QQuickView> window = std::make_unique<QQuickView>();
+    window->setSource(testFileUrl("focusReason.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.get()));
+
+    QQuickItem *item = window->findChild<QQuickItem *>("item");
+    QQuickItem *customText = window->findChild<QQuickItem *>("customText");
+    QQuickItem *customItem = window->findChild<QQuickItem *>("customItem");
+    QQuickItem *hyperlink = window->findChild<QQuickItem *>("hyperlink");
+    QQuickItem *textInputChild = window->findChild<QQuickItem *>("textInputChild");
+
+    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+    QQuickItemPrivate *customTextPrivate = QQuickItemPrivate::get(customText);
+    QQuickItemPrivate *customItemPrivate = QQuickItemPrivate::get(customItem);
+    QQuickItemPrivate *hyperlinkPrivate = QQuickItemPrivate::get(hyperlink);
+    QQuickItemPrivate *textInputChildPrivate = QQuickItemPrivate::get(textInputChild);
+
+    QVERIFY(item);
+    QVERIFY(customText);
+    QVERIFY(customItem);
+    QVERIFY(hyperlink);
+    QVERIFY(textInputChild);
+
+    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusAllControls);
+    auto resetTabFocusBehavior = qScopeGuard([]{
+        QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusBehavior(-1));
+    });
+
+    // helper for clicking into an item
+    const auto itemCenter = [](const QQuickItem *item) -> QPoint {
+        return item->mapToScene(item->clipRect().center()).toPoint();
+    };
+
+    // setting focusPolicy to Strong/WheelFocus doesn't implicitly turn on event delivery
+    customText->setAcceptedMouseButtons(Qt::LeftButton);
+    customItem->setAcceptedMouseButtons(Qt::LeftButton);
+    customItem->setAcceptTouchEvents(true);
+    customText->setAcceptTouchEvents(true);
+    hyperlink->setAcceptTouchEvents(true);
+
+    // window activation -> ActiveWindowFocusReason
+    QVERIFY(item->hasFocus());
+    QVERIFY(item->hasActiveFocus());
+    if (itemPrivate->lastFocusChangeReason() != Qt::ActiveWindowFocusReason
+     && QStringList{"windows", "offscreen"}.contains(QGuiApplication::platformName())) {
+        QEXPECT_FAIL("", "On Windows and offscreen platforms, window activation does not set focus reason", Continue);
+    }
+    QCOMPARE(itemPrivate->lastFocusChangeReason(), Qt::ActiveWindowFocusReason);
+
+    // test setter/getter
+    item->setFocus(false, Qt::MouseFocusReason);
+    QCOMPARE(itemPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+    item->setFocus(true, Qt::TabFocusReason);
+    QCOMPARE(itemPrivate->lastFocusChangeReason(), Qt::TabFocusReason);
+    item->setFocus(false, Qt::BacktabFocusReason);
+    QCOMPARE(itemPrivate->lastFocusChangeReason(), Qt::BacktabFocusReason);
+    item->forceActiveFocus(Qt::ShortcutFocusReason);
+    QCOMPARE(itemPrivate->lastFocusChangeReason(), Qt::ShortcutFocusReason);
+    item->setFocus(false, Qt::NoFocusReason);
+    QCOMPARE(itemPrivate->lastFocusChangeReason(), Qt::NoFocusReason);
+    QVERIFY(!item->hasFocus());
+
+    // programmatic focus changes
+    item->setFocus(true, Qt::OtherFocusReason);
+    QCOMPARE(itemPrivate->lastFocusChangeReason(), Qt::OtherFocusReason);
+
+    QVERIFY(item->hasFocus());
+    QVERIFY(item->hasActiveFocus());
+    QCOMPARE(itemPrivate->lastFocusChangeReason(), Qt::OtherFocusReason);
+
+    // tab focus -> TabFocusReason
+    QTest::keyClick(window.get(), Qt::Key_Tab);
+    QVERIFY(customText->hasFocus());
+    QVERIFY(customText->hasActiveFocus());
+    QCOMPARE(qApp->focusObject(), customText);
+    QCOMPARE(customTextPrivate->lastFocusChangeReason(), Qt::TabFocusReason);
+    QCOMPARE(itemPrivate->lastFocusChangeReason(), Qt::TabFocusReason);
+
+    QTest::keyClick(window.get(), Qt::Key_Tab);
+    QVERIFY(customItem->hasFocus());
+    QVERIFY(customItem->hasActiveFocus());
+    QCOMPARE(qApp->focusObject(), customItem);
+    QCOMPARE(customItemPrivate->lastFocusChangeReason(), Qt::TabFocusReason);
+    QCOMPARE(customTextPrivate->lastFocusChangeReason(), Qt::TabFocusReason);
+
+    QTest::keyClick(window.get(), Qt::Key_Tab);
+    QVERIFY(hyperlink->hasFocus());
+    QVERIFY(hyperlink->hasActiveFocus());
+    QCOMPARE(qApp->focusObject(), hyperlink);
+    QCOMPARE(hyperlinkPrivate->lastFocusChangeReason(), Qt::TabFocusReason);
+    QCOMPARE(customTextPrivate->lastFocusChangeReason(), Qt::TabFocusReason);
+
+    QTest::keyClick(window.get(), Qt::Key_Tab);
+    QVERIFY(item->hasFocus());
+    QVERIFY(item->hasActiveFocus());
+    QCOMPARE(itemPrivate->lastFocusChangeReason(), Qt::TabFocusReason);
+    QCOMPARE(hyperlinkPrivate->lastFocusChangeReason(), Qt::TabFocusReason);
+
+    // backtab -> BacktabFocusReason
+    QTest::keyClick(window.get(), Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(hyperlink->hasFocus());
+    QCOMPARE(hyperlinkPrivate->lastFocusChangeReason(), Qt::BacktabFocusReason);
+    QCOMPARE(itemPrivate->lastFocusChangeReason(), Qt::BacktabFocusReason);
+
+    QTest::keyClick(window.get(), Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(customItem->hasFocus());
+    QCOMPARE(customItemPrivate->lastFocusChangeReason(), Qt::BacktabFocusReason);
+    QCOMPARE(hyperlinkPrivate->lastFocusChangeReason(), Qt::BacktabFocusReason);
+
+    QTest::keyClick(window.get(), Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(customText->hasFocus());
+    QCOMPARE(customTextPrivate->lastFocusChangeReason(), Qt::BacktabFocusReason);
+    QCOMPARE(customItemPrivate->lastFocusChangeReason(), Qt::BacktabFocusReason);
+
+    // click focus -> MouseFocusReason
+    QTest::mouseClick(window.get(), Qt::LeftButton, {}, itemCenter(customItem));
+    QVERIFY(customItem->hasFocus());
+    QVERIFY(customItem->hasActiveFocus());
+    QCOMPARE(customItemPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+    QCOMPARE(customTextPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+
+    QTest::mouseClick(window.get(), Qt::LeftButton, {}, itemCenter(hyperlink));
+    QVERIFY(hyperlink->hasFocus());
+    QVERIFY(hyperlink->hasActiveFocus());
+    QCOMPARE(hyperlinkPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+    QCOMPARE(customItemPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+
+    QTest::mouseClick(window.get(), Qt::LeftButton, {}, itemCenter(customText));
+    QCOMPARE(textInputChild, textInputChild);
+    QVERIFY(textInputChild->hasFocus());
+    QVERIFY(textInputChild->hasActiveFocus());
+    QCOMPARE(textInputChildPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+    QCOMPARE(hyperlinkPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+
+    // touch focus -> MouseFocusReason
+    std::unique_ptr<QPointingDevice> touchDevice(QTest::createTouchDevice());
+
+    QTest::touchEvent(window.get(), touchDevice.get()).press(0, itemCenter(customItem));
+    QTest::touchEvent(window.get(), touchDevice.get()).press(0, itemCenter(customItem));
+    QTest::touchEvent(window.get(), touchDevice.get()).release(0, itemCenter(customItem));
+    QVERIFY(customItem->hasFocus());
+    QVERIFY(customItem->hasActiveFocus());
+    QCOMPARE(customItemPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+    QCOMPARE(textInputChildPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+
+    QTest::touchEvent(window.get(), touchDevice.get()).press(0, itemCenter(hyperlink));
+    QTest::touchEvent(window.get(), touchDevice.get()).release(0, itemCenter(hyperlink));
+    QVERIFY(hyperlink->hasFocus());
+    QVERIFY(hyperlink->hasActiveFocus());
+    QCOMPARE(hyperlinkPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+    QCOMPARE(customItemPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+
+    // Wheel focus -> MouseFocusReason
+    QWheelEvent wheelEvent(QPointF(customItem->width() / 2, customItem->height() / 2), QPointF(),
+                           QPoint(), QPoint(0, 10), Qt::NoButton, Qt::NoModifier,
+                           Qt::NoScrollPhase, false);
+    QGuiApplication::sendEvent(customItem, &wheelEvent);
+    QVERIFY(customItem->hasActiveFocus());
+    QCOMPARE(customItemPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
 }
 
 QTEST_MAIN(tst_QQuickItem)

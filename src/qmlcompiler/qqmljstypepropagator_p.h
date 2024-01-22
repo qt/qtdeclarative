@@ -24,7 +24,7 @@ namespace QQmlSA {
 class PassManager;
 };
 
-struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypePropagator : public QQmlJSCompilePass
+struct Q_QMLCOMPILER_EXPORT QQmlJSTypePropagator : public QQmlJSCompilePass
 {
     QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                          const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,

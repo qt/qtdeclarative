@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickAnchorLine
+class Q_QUICK_EXPORT QQuickAnchorLine
 {
     Q_GADGET
     QML_ANONYMOUS

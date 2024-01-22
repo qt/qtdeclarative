@@ -196,9 +196,14 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             return;
 
         if (modifiers & Qt::ShiftModifier) {
-            // Extend the existing selection towards the pressed cell
-            if (!m_active)
-                return;
+            // Extend the selection towards the pressed cell. If there is no
+            // existing selection, start a new selection from the current item
+            // to the pressed item.
+            if (!m_active) {
+                if (!m_selectable->startSelection(pos))
+                    return;
+                m_selectable->setSelectionStartPos(QPoint{-1, -1});
+            }
             m_selectable->setSelectionEndPos(pos);
             updateHandles();
             updateActiveState(true);
@@ -237,9 +242,14 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
         }
 
         if (modifiers == Qt::ShiftModifier) {
-            // Extend the existing selection towards the pressed cell
-            if (!m_active)
-                return;
+            // Extend the selection towards the pressed cell. If there is no
+            // existing selection, start a new selection from the current item
+            // to the pressed item.
+            if (!m_active) {
+                if (!m_selectable->startSelection(pos))
+                    return;
+                m_selectable->setSelectionStartPos(QPoint{-1, -1});
+            }
             m_selectable->setSelectionEndPos(pos);
             updateHandles();
             updateActiveState(true);
@@ -274,12 +284,10 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             return;
 
         if (m_dragHandler->active()) {
-            // Start a new selection, unless Shift is being pressed. Shift
-            // means that we should extend the existing selection instead.
-            if (modifiers & Qt::ShiftModifier) {
-                if (!m_active)
-                    return;
-            } else {
+            // Start a new selection if no selection exists from before.
+            // Note that if the user pressed ControlModifier while starting
+            // the drag, the first cell will be selected already on press.
+            if (!m_active) {
                 if (!m_selectable->startSelection(startPos))
                     return;
                 m_selectable->setSelectionStartPos(startPos);

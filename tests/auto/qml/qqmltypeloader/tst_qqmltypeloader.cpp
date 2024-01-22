@@ -38,6 +38,7 @@ private slots:
     void redirect();
     void qmlSingletonWithinModule();
     void multiSingletonModule();
+    void multiSingletonModuleNoWarning();
     void implicitComponentModule();
     void customDiskCachePath();
     void qrcRootPathUrl();
@@ -91,7 +92,7 @@ void tst_QQMLTypeLoader::trimCache()
     QQmlEngine engine;
     QQmlTypeLoader &loader = QQmlEnginePrivate::get(&engine)->typeLoader;
     QVector<QQmlTypeData *> releaseLater;
-    QVector<QV4::ExecutableCompilationUnit *> releaseCompilationUnitLater;
+    QVector<QV4::CompiledData::CompilationUnit *> releaseCompilationUnitLater;
     for (int i = 0; i < 256; ++i) {
         QUrl url = testFileUrl("trim_cache.qml");
         url.setQuery(QString::number(i));
@@ -533,6 +534,18 @@ void tst_QQMLTypeLoader::multiSingletonModule()
     checkCleanCacheLoad(QLatin1String("multiSingletonModule"));
 }
 
+void tst_QQMLTypeLoader::multiSingletonModuleNoWarning()
+{
+    // Should not warn about a "cyclic" dependency between the singletons
+    QTest::failOnWarning(QRegularExpression(".*"));
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("imports/multisingletonmodule/a.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+}
+
 void tst_QQMLTypeLoader::implicitComponentModule()
 {
 #ifdef Q_OS_ANDROID
@@ -672,7 +685,7 @@ static void getCompilationUnitAndRuntimeInfo(QQmlRefPointer<QV4::ExecutableCompi
         QVERIFY(!typeData->isError()); // this returns
     }
 
-    unit = typeData->compilationUnit();
+    unit = engine->handle()->executableCompilationUnit(typeData->compilationUnit());
     QVERIFY(unit);
 
     // the QmlIR::Document is deleted once loader.getType() is complete, so

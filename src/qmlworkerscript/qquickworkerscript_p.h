@@ -48,7 +48,7 @@ private:
 };
 
 class QQmlV4Function;
-class Q_QMLWORKERSCRIPT_PRIVATE_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
+class Q_QMLWORKERSCRIPT_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(QQuickWorkerScript)
