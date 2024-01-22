@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QObject;
 
-struct Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickShortcutContext
+struct Q_QUICKTEMPLATES2_EXPORT QQuickShortcutContext
 {
     static bool matcher(QObject *object, Qt::ShortcutContext context);
 };

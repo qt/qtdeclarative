@@ -163,7 +163,7 @@ is completely empty, it is decommitted, but the address space is retained
 (see \l{Basic Principles} above). If the memory usage grows again, the same
 address space is re-used.
 
-The garbage collector is triggered either manually by calling the gc() function
+The garbage collector is triggered either manually by calling the \l [QML] {Qt::}{gc()} function
 or by a heuristic that takes the following aspects into account:
 
 \list

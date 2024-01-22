@@ -147,15 +147,15 @@ public:
     static std::optional<QQmlLSUtilsLocation> findDefinitionOf(const DomItem &item);
     static QList<QQmlLSUtilsLocation> findUsagesOf(const DomItem &item);
 
-    static std::optional<QQmlLSUtilsErrorMessage>
-    checkNameForRename(const DomItem &item, const QString &newName,
-                       std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
-    static QList<QQmlLSUtilsEdit>
-    renameUsagesOf(const DomItem &item, const QString &newName,
-                   std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
+    static std::optional<QQmlLSUtilsErrorMessage> checkNameForRename(
+            const DomItem &item, const QString &newName,
+            const std::optional<QQmlLSUtilsExpressionType> &targetType = std::nullopt);
+    static QList<QQmlLSUtilsEdit> renameUsagesOf(
+            const DomItem &item, const QString &newName,
+            const std::optional<QQmlLSUtilsExpressionType> &targetType = std::nullopt);
 
-    static std::optional<QQmlLSUtilsExpressionType>
-    resolveExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions);
+    static std::optional<QQmlLSUtilsExpressionType> resolveExpressionType(
+            const DomItem &item, QQmlLSUtilsResolveOptions);
     static bool isValidEcmaScriptIdentifier(QStringView view);
 
     // completion stuff
@@ -166,15 +166,13 @@ public:
                                                 QQmlJS::Dom::LocalSymbolsTypes typeCompletionType,
                                                 QLspSpecification::CompletionItemKind kind);
 
-    static QList<CompletionItem> scriptIdentifierCompletion(const DomItem &context,
-                                                            const CompletionContextStrings &ctx);
+    static QList<CompletionItem> suggestJSExpressionCompletion(const DomItem &context);
     static QList<CompletionItem> completions(const DomItem& currentItem,
                                              const CompletionContextStrings &ctx);
 
 
     // JS statement completion
-    static QList<CompletionItem> suggestJSStatementCompletion(const DomItem &currentItem,
-                                                              const CompletionContextStrings &ctx);
+    static QList<CompletionItem> suggestJSStatementCompletion(const DomItem &currentItem);
     static QList<CompletionItem>
     suggestCaseAndDefaultStatementCompletion();
     static QList<CompletionItem>

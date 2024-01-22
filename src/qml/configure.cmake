@@ -82,7 +82,7 @@ qt_feature("qml-ssl" PUBLIC
     SECTION "QML"
     LABEL "QML SSL support"
     PURPOSE "Provides ssl support in QML."
-    CONDITION QT_FEATURE_ssl
+    CONDITION QT_FEATURE_qml_network AND QT_FEATURE_ssl
 )
 
 # On arm and arm64 we need a specialization of cacheFlush() for each OS to be

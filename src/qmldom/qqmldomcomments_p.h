@@ -74,7 +74,7 @@ public:
     constexpr static DomType kindValue = DomType::Comment;
     DomType kind() const { return kindValue; }
 
-    Comment(QString c, int newlinesBefore = 1)
+    Comment(const QString &c, int newlinesBefore = 1)
         : m_commentStr(c), m_comment(m_commentStr), m_newlinesBefore(newlinesBefore)
     {
     }
@@ -187,10 +187,10 @@ public:
     Path canonicalPath(const DomItem &self) const override { return self.m_ownerPath; }
     static void collectComments(MutableDomItem &item);
     static void collectComments(
-            std::shared_ptr<Engine> engine, AST::Node *n,
-            std::shared_ptr<AstComments> collectComments, const MutableDomItem &rootItem,
-            FileLocations::Tree rootItemLocations);
-    AstComments(std::shared_ptr<Engine> e) : m_engine(e) { }
+            const std::shared_ptr<Engine> &engine, AST::Node *n,
+            const std::shared_ptr<AstComments> &collectComments, const MutableDomItem &rootItem,
+            const FileLocations::Tree &rootItemLocations);
+    AstComments(const std::shared_ptr<Engine> &e) : m_engine(e) { }
     AstComments(const AstComments &o)
         : OwningItem(o), m_engine(o.m_engine), m_commentedElements(o.m_commentedElements)
     {

@@ -30,7 +30,7 @@ class QQmlChangeSet;
 
 class QQuickPathViewPrivate;
 class QQuickPathViewAttached;
-class Q_QUICK_PRIVATE_EXPORT QQuickPathView : public QQuickItem
+class Q_QUICK_EXPORT QQuickPathView : public QQuickItem
 {
     Q_OBJECT
 

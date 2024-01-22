@@ -344,56 +344,33 @@ void QQuickTreeViewPrivate::updateSelection(const QRect &oldSelection, const QRe
 {
     Q_Q(QQuickTreeView);
 
-    const QRect oldRect = oldSelection.normalized();
-    const QRect newRect = newSelection.normalized();
-
     if (oldSelection == newSelection)
         return;
 
-    // Select the rows inside newRect that doesn't overlap with oldRect
-    for (int row = newRect.y(); row <= newRect.y() + newRect.height(); ++row) {
-        if (oldRect.y() != -1 && oldRect.y() <= row && row <= oldRect.y() + oldRect.height())
-            continue;
-        const QModelIndex startIndex = q->index(row, newRect.x());
-        const QModelIndex endIndex = q->index(row, newRect.x() + newRect.width());
-        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
+    QItemSelection select;
+    QItemSelection deselect;
+
+    // Because each row can have a different parent, we need to create separate QItemSelections
+    // per row. But all the cells in a given row have the same parent, so they can be combined.
+    // As a result, the final QItemSelection can end up more fragmented compared to a selection
+    // in QQuickTableView, where all cells have the same parent. In the end, if TreeView has
+    // a lot of columns and the selection mode is "SelectCells", using the mouse to adjust
+    // a selection containing a _large_ number of columns can be slow.
+    const QRect cells = newSelection.normalized();
+    for (int row = cells.y(); row <= cells.y() + cells.height(); ++row) {
+        const QModelIndex startIndex = q->index(row, cells.x());
+        const QModelIndex endIndex = q->index(row, cells.x() + cells.width());
+        select.merge(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
     }
 
-    if (oldRect.x() != -1) {
-        // Since oldRect is valid, this update is a continuation of an already existing selection!
-
-        // Select the columns inside newRect that don't overlap with oldRect
-        for (int column = newRect.x(); column <= newRect.x() + newRect.width(); ++column) {
-            if (oldRect.x() <= column && column <= oldRect.x() + oldRect.width())
-                continue;
-            for (int row = newRect.y(); row <= newRect.y() + newRect.height(); ++row)
-                selectionModel->select(q->index(row, column), QItemSelectionModel::Select);
-        }
-
-        // Unselect the rows inside oldRect that don't overlap with newRect
-        for (int row = oldRect.y(); row <= oldRect.y() + oldRect.height(); ++row) {
-            if (newRect.y() <= row && row <= newRect.y() + newRect.height())
-                continue;
-            const QModelIndex startIndex = q->index(row, oldRect.x());
-            const QModelIndex endIndex = q->index(row, oldRect.x() + oldRect.width());
-            selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
-        }
-
-        // Unselect the columns inside oldRect that don't overlap with newRect
-        for (int column = oldRect.x(); column <= oldRect.x() + oldRect.width(); ++column) {
-            if (newRect.x() <= column && column <= newRect.x() + newRect.width())
-                continue;
-            // Since we're not allowed to call select/unselect on the selectionModel with
-            // indices from different parents, and since indicies from different parents are
-            // expected when working with trees, we need to unselect the indices in the column
-            // one by one, rather than the whole column in one go. This, however, can cause a
-            // lot of selection fragments in the selectionModel, which eventually can hurt
-            // performance. But large selections containing a lot of columns is not normally
-            // the case for a treeview, so accept this potential corner case for now.
-            for (int row = newRect.y(); row <= newRect.y() + newRect.height(); ++row)
-                selectionModel->select(q->index(row, column), QItemSelectionModel::Deselect);
-        }
+    const QModelIndexList indexes = selectionModel->selection().indexes();
+    for (const QModelIndex &index : indexes) {
+        if (!select.contains(index) && !existingSelection.contains(index))
+            deselect.merge(QItemSelection(index, index), QItemSelectionModel::Select);
     }
+
+    selectionModel->select(deselect, QItemSelectionModel::Deselect);
+    selectionModel->select(select, QItemSelectionModel::Select);
 }
 
 QQuickTreeView::QQuickTreeView(QQuickItem *parent)

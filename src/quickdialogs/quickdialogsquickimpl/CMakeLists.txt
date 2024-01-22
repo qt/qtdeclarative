@@ -112,8 +112,7 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         Qt::Gui
         Qt::Quick
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-)
+    )
 
 qt_internal_extend_target(QuickDialogs2QuickImpl CONDITION QT_FEATURE_quick_listview
     SOURCES

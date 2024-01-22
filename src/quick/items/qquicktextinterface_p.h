@@ -17,7 +17,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTextInterface
+class Q_QUICK_EXPORT QQuickTextInterface
 {
 public:
     virtual void invalidate() = 0;

@@ -17,8 +17,8 @@ two different properties, the properties carry separate values. If you modify
 one of them, the other one stays the same. Value types are only conceptually
 passed by value since it must still be possible to interact with them as if they
 were JavaScript objects. To facilitate this, in reality they are passed as
-\l{Value Type and Sequence References}{Value Type References} when you access them
-from JavaScript code.
+\l{QML Value Type and Sequence References}{Value Type References} when you access
+them from JavaScript code.
 
 Unlike an object type, a value type cannot be used to declare QML objects:
 it is not possible, for example, to declare an \c int{} object or a \c size{} object.

@@ -29,7 +29,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickListView;
 class QQuickListViewPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickViewSection : public QObject
+class Q_QUICK_EXPORT QQuickViewSection : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged FINAL)
@@ -77,7 +77,7 @@ private:
 
 class QQmlInstanceModel;
 class QQuickListViewAttached;
-class Q_QUICK_PRIVATE_EXPORT QQuickListView : public QQuickItemView
+class Q_QUICK_EXPORT QQuickListView : public QQuickItemView
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickListView)
@@ -171,7 +171,7 @@ protected:
     qreal maxXExtent() const override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickListViewAttached : public QQuickItemViewAttached
+class Q_QUICK_EXPORT QQuickListViewAttached : public QQuickItemViewAttached
 {
     Q_OBJECT
 

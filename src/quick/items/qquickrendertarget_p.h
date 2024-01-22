@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QRhi;
 class QQuickWindowRenderTarget;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickRenderTargetPrivate
+class Q_QUICK_EXPORT QQuickRenderTargetPrivate
 {
 public:
     static QQuickRenderTargetPrivate *get(QQuickRenderTarget *rt) { return rt->d; }
@@ -36,6 +36,7 @@ public:
     enum class Type {
         Null,
         NativeTexture,
+        NativeTextureArray,
         NativeRenderbuffer,
         RhiRenderTarget,
         PaintDevice
@@ -52,8 +53,16 @@ public:
         uint rhiFormat;
         uint rhiFlags;
     };
+    struct NativeTextureArray {
+        quint64 object;
+        int layoutOrState;
+        int arraySize;
+        uint rhiFormat;
+        uint rhiFlags;
+    };
     union {
         NativeTexture nativeTexture;
+        NativeTextureArray nativeTextureArray;
         quint64 nativeRenderbufferObject;
         QRhiRenderTarget *rhiRt;
         QPaintDevice *paintDevice;

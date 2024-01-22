@@ -28,7 +28,7 @@ class QQuickSplitViewAttachedPrivate;
 class QQuickSplitHandleAttached;
 class QQuickSplitHandleAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSplitView : public QQuickContainer
+class Q_QUICKTEMPLATES2_EXPORT QQuickSplitView : public QQuickContainer
 {
     Q_OBJECT
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
@@ -88,7 +88,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickSplitView)
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSplitViewAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickSplitViewAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickSplitView *view READ view NOTIFY viewChanged FINAL)
@@ -158,7 +158,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickSplitViewAttached)
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSplitHandleAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickSplitHandleAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL)

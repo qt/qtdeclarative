@@ -484,6 +484,7 @@ void QQuickWindowRenderTarget::reset(QRhi *rhi)
             delete texture;
             delete renderBuffer;
             delete depthStencil;
+            delete depthStencilTexture;
         }
 
         delete paintDevice;
@@ -494,8 +495,10 @@ void QQuickWindowRenderTarget::reset(QRhi *rhi)
     texture = nullptr;
     renderBuffer = nullptr;
     depthStencil = nullptr;
+    depthStencilTexture = nullptr;
     paintDevice = nullptr;
     owns = false;
+    multiViewCount = 1;
 }
 
 void QQuickWindowPrivate::invalidateFontData(QQuickItem *item)
@@ -574,13 +577,7 @@ void QQuickWindowPrivate::syncSceneGraph()
 
     animationController->afterNodeSync();
 
-    // Copy the current state of clearing from window into renderer.
     renderer->setClearColor(clearColor);
-    // Cannot skip clearing the color buffer in Qt 6 anymore.
-    const QSGAbstractRenderer::ClearMode mode = QSGAbstractRenderer::ClearColorBuffer
-                                                | QSGAbstractRenderer::ClearStencilBuffer
-                                                | QSGAbstractRenderer::ClearDepthBuffer;
-    renderer->setClearMode(mode);
 
     renderer->setVisualizationMode(visualizationMode);
 
@@ -603,6 +600,21 @@ void QQuickWindowPrivate::emitAfterRenderPassRecording(void *ud)
 {
     QQuickWindow *w = reinterpret_cast<QQuickWindow *>(ud);
     emit w->afterRenderPassRecording();
+}
+
+int QQuickWindowPrivate::multiViewCount()
+{
+    if (rhi) {
+        ensureCustomRenderTarget();
+        if (redirect.rt.renderTarget)
+            return redirect.rt.multiViewCount;
+    }
+
+    // Note that on QRhi level 0 and 1 are often used interchangeably, as both mean
+    // no-multiview. Here in Qt Quick let's always use 1 as the default
+    // (no-multiview), so that higher layers (effects, materials) do not need to
+    // handle both 0 and 1, only 1.
+    return 1;
 }
 
 void QQuickWindowPrivate::renderSceneGraph()
@@ -640,6 +652,7 @@ void QQuickWindowPrivate::renderSceneGraph()
             cb = swapchain->currentFrameCommandBuffer();
         }
         sgRenderTarget = QSGRenderTarget(rt, rp, cb);
+        sgRenderTarget.multiViewCount = multiViewCount();
     } else {
         sgRenderTarget = QSGRenderTarget(redirect.rt.paintDevice);
     }
@@ -3522,6 +3535,8 @@ void QQuickWindow::endExternalCommands()
 
     Setting visible to false is the same as setting \l visibility to \l {QWindow::}{Hidden}.
 
+    The default value is \c false, unless overridden by setting \l visibility.
+
     \sa visibility
  */
 
@@ -3644,8 +3659,10 @@ void QQuickWindow::endExternalCommands()
     \l{Window::data}{default property} or a dedicated property, will automatically
     set up a transient parent relationship to the containing Item or Window,
     unless the \l transientParent property is explicitly set. This applies
-    when creating Window items via \l Qt.createComponent or \l Qt.createQmlObject
-    as well, if an Item or Window is passed as the \c parent argument.
+    when creating Window items via \l [QML] {QtQml::Qt::createComponent()}
+    {Qt.createComponent} or \l [QML] {QtQml::Qt::createQmlObject()}
+    {Qt.createQmlObject} as well, if an Item or Window is passed as the
+    \c parent argument.
 
     A Window with a transient parent will not be shown until its transient
     parent is shown, even if the \l visible property is \c true. Setting

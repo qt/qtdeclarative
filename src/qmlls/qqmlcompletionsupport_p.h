@@ -37,6 +37,7 @@ struct CompletionRequest
     void sendCompletions(QmlLsp::OpenDocumentSnapshot &);
     QString urlAndPos() const;
     QList<QLspSpecification::CompletionItem> completions(QmlLsp::OpenDocumentSnapshot &doc) const;
+    DomItem patchInvalidFileForParser(const DomItem& file, qsizetype position) const;
 };
 
 class QmlCompletionSupport : public QQmlBaseModule<CompletionRequest>

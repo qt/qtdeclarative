@@ -6,7 +6,6 @@ import QtCore
 import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Dialogs
-import Qt.labs.platform as Platform
 
 // TODO:
 // - make designer-friendly
@@ -135,93 +134,93 @@ ApplicationWindow {
         onTriggered: textArea.cursorSelection.alignment = Qt.AlignJustify
     }
 
-    Platform.MenuBar {
-        Platform.Menu {
+    menuBar: MenuBar {
+        Menu {
             title: qsTr("&File")
 
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("&Open")
                 onTriggered: openDialog.open()
             }
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("&Save As...")
                 onTriggered: saveDialog.open()
             }
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("&Quit")
                 onTriggered: close()
             }
         }
 
-        Platform.Menu {
+        Menu {
             title: qsTr("&Edit")
 
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("&Copy")
                 enabled: textArea.selectedText
                 onTriggered: textArea.copy()
             }
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("Cu&t")
                 enabled: textArea.selectedText
                 onTriggered: textArea.cut()
             }
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("&Paste")
                 enabled: textArea.canPaste
                 onTriggered: textArea.paste()
             }
         }
 
-        Platform.Menu {
+        Menu {
             title: qsTr("F&ormat")
 
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("&Bold")
                 checkable: true
                 checked: boldAction.checked
                 onTriggered: boldAction.trigger()
             }
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("&Italic")
                 checkable: true
                 checked: italicAction.checked
                 onTriggered: italicAction.trigger()
             }
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("&Underline")
                 checkable: true
                 checked: underlineAction.checked
                 onTriggered: underlineAction.trigger()
             }
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("&Strikeout")
                 checkable: true
                 checked: strikeoutAction.checked
                 onTriggered: strikeoutAction.trigger()
             }
 
-            Platform.MenuSeparator {}
+            MenuSeparator {}
 
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("Align &Left")
                 checkable: true
                 checked: alignLeftAction.checked
                 onTriggered: alignLeftAction.trigger()
             }
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("&Center")
                 checkable: true
                 checked: alignCenterAction.checked
                 onTriggered: alignCenterAction.trigger()
             }
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("&Justify")
                 checkable: true
                 checked: alignJustifyAction.checked
                 onTriggered: alignJustifyAction.trigger()
             }
-            Platform.MenuItem {
+            MenuItem {
                 text: qsTr("Align &Right")
                 checkable: true
                 checked: alignRightAction.checked
@@ -482,7 +481,7 @@ ApplicationWindow {
             MouseArea {
                 acceptedButtons: Qt.RightButton
                 anchors.fill: parent
-                onClicked: contextMenu.open()
+                onClicked: contextMenu.popup()
             }
 
             onLinkActivated: function (link) {
@@ -505,28 +504,28 @@ ApplicationWindow {
         ScrollBar.vertical: ScrollBar {}
     }
 
-    Platform.Menu {
+    Menu {
         id: contextMenu
 
-        Platform.MenuItem {
+        MenuItem {
             text: qsTr("Copy")
             enabled: textArea.selectedText
             onTriggered: textArea.copy()
         }
-        Platform.MenuItem {
+        MenuItem {
             text: qsTr("Cut")
             enabled: textArea.selectedText
             onTriggered: textArea.cut()
         }
-        Platform.MenuItem {
+        MenuItem {
             text: qsTr("Paste")
             enabled: textArea.canPaste
             onTriggered: textArea.paste()
         }
 
-        Platform.MenuSeparator {}
+        MenuSeparator {}
 
-        Platform.MenuItem {
+        MenuItem {
             text: qsTr("Font...")
             onTriggered: function () {
                 fontDialog.selectedFont = textArea.cursorSelection.font
@@ -534,7 +533,7 @@ ApplicationWindow {
             }
         }
 
-        Platform.MenuItem {
+        MenuItem {
             text: qsTr("Color...")
             onTriggered: function () {
                 colorDialog.selectedColor = textArea.cursorSelection.color

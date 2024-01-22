@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickItemParticleAttached;
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickItemParticle : public QQuickParticlePainter
+class Q_QUICKPARTICLES_EXPORT QQuickItemParticle : public QQuickParticlePainter
 {
     Q_OBJECT
     Q_PROPERTY(bool fade READ fade WRITE setFade NOTIFY fadeChanged FINAL)

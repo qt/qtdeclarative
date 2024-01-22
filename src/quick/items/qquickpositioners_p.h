@@ -64,7 +64,7 @@ private:
     bool m_isLastItem;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickBasePositioner : public QQuickImplicitSizeItem
+class Q_QUICK_EXPORT QQuickBasePositioner : public QQuickImplicitSizeItem
 {
     Q_OBJECT
 
@@ -207,7 +207,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickBasePositioner)
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickColumn : public QQuickBasePositioner
+class Q_QUICK_EXPORT QQuickColumn : public QQuickBasePositioner
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(Column)
@@ -221,7 +221,7 @@ protected:
 };
 
 class QQuickRowPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickRow: public QQuickBasePositioner
+class Q_QUICK_EXPORT QQuickRow: public QQuickBasePositioner
 {
     Q_OBJECT
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged FINAL)
@@ -248,7 +248,7 @@ private:
 };
 
 class QQuickGridPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickGrid : public QQuickBasePositioner
+class Q_QUICK_EXPORT QQuickGrid : public QQuickBasePositioner
 {
     Q_OBJECT
     Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged FINAL)
@@ -336,7 +336,7 @@ private:
 };
 
 class QQuickFlowPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickFlow: public QQuickBasePositioner
+class Q_QUICK_EXPORT QQuickFlow: public QQuickBasePositioner
 {
     Q_OBJECT
     Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged FINAL)

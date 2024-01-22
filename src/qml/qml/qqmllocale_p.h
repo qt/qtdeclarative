@@ -57,7 +57,7 @@ private:
 
 namespace QQmlLocale
 {
-    Q_NAMESPACE_EXPORT(Q_QML_PRIVATE_EXPORT)
+    Q_NAMESPACE_EXPORT(Q_QML_EXPORT)
     QML_NAMED_ELEMENT(Locale)
     QML_ADDED_IN_VERSION(2, 2)
     QML_NAMESPACE_EXTENDED(QLocale)
@@ -74,10 +74,10 @@ namespace QQmlLocale
     };
     Q_ENUM_NS(DayOfWeek)
 
-    Q_QML_PRIVATE_EXPORT QV4::ReturnedValue locale(QV4::ExecutionEngine *engine, const QString &localeName);
-    Q_QML_PRIVATE_EXPORT QV4::ReturnedValue wrap(QV4::ExecutionEngine *engine, const QLocale &locale);
-    Q_QML_PRIVATE_EXPORT void registerStringLocaleCompare(QV4::ExecutionEngine *engine);
-    Q_QML_PRIVATE_EXPORT QV4::ReturnedValue method_localeCompare(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+    Q_QML_EXPORT QV4::ReturnedValue locale(QV4::ExecutionEngine *engine, const QString &localeName);
+    Q_QML_EXPORT QV4::ReturnedValue wrap(QV4::ExecutionEngine *engine, const QLocale &locale);
+    Q_QML_EXPORT void registerStringLocaleCompare(QV4::ExecutionEngine *engine);
+    Q_QML_EXPORT QV4::ReturnedValue method_localeCompare(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 };
 
 namespace QV4 {

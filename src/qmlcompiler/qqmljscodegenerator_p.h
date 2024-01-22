@@ -27,7 +27,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSCodeGenerator : public QQmlJSCompilePass
+class Q_QMLCOMPILER_EXPORT QQmlJSCodeGenerator : public QQmlJSCompilePass
 {
 public:
     QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
@@ -49,7 +49,7 @@ protected:
     // This is an RAII helper we can use to automatically convert the result of "inflexible"
     // operations to the desired type. For example GetLookup can only retrieve the type of
     // the property we're looking up. If we want to store a different type, we need to convert.
-    struct Q_QMLCOMPILER_PRIVATE_EXPORT AccumulatorConverter
+    struct Q_QMLCOMPILER_EXPORT AccumulatorConverter
     {
         Q_DISABLE_COPY_MOVE(AccumulatorConverter);
         AccumulatorConverter(QQmlJSCodeGenerator *generator);

@@ -26,7 +26,7 @@ QT_REQUIRE_CONFIG(qml_animation);
 QT_BEGIN_NAMESPACE
 
 class QQmlTimerPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlTimer : public QObject, public QQmlParserStatus
+class Q_QML_EXPORT QQmlTimer : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlTimer)

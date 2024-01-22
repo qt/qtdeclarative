@@ -30,12 +30,35 @@ FileDialogImpl {
 
     standardButtons: T.Dialog.Open | T.Dialog.Cancel
 
+    Dialog {
+        id: overwriteConfirmationDialog
+        objectName: "confirmationDialog"
+        anchors.centerIn: parent
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+        dim: true
+        modal: true
+        title: qsTr("“%1” already exists. Do you want to replace it?").arg(control.fileName)
+
+        Label {
+            text: qsTr("A file with the same name already exists in %1.\nReplacing it will overwrite its current contents.").arg(control.currentFolderName)
+        }
+
+        footer: DialogButtonBox {
+            standardButtons: DialogButtonBox.Yes | DialogButtonBox.No
+        }
+
+        Overlay.modal: Rectangle {
+            color: overwriteConfirmationDialog.Universal.baseMediumColor
+        }
+    }
+
     FileDialogImpl.buttonBox: buttonBox
     FileDialogImpl.nameFiltersComboBox: nameFiltersComboBox
     FileDialogImpl.fileDialogListView: fileDialogListView
     FileDialogImpl.breadcrumbBar: breadcrumbBar
     FileDialogImpl.fileNameLabel: fileNameLabel
     FileDialogImpl.fileNameTextField: fileNameTextField
+    FileDialogImpl.overwriteConfirmationDialog: overwriteConfirmationDialog
 
     background: Rectangle {
         implicitWidth: 600
@@ -99,6 +122,9 @@ FileDialogImpl {
             highlighted: ListView.isCurrentItem
             dialog: control
             fileDetailRowWidth: nameFiltersComboBox.width
+
+            KeyNavigation.backtab: breadcrumbBar
+            KeyNavigation.tab: fileNameTextField.visible ? fileNameTextField : nameFiltersComboBox
         }
     }
 
@@ -117,7 +143,6 @@ FileDialogImpl {
         TextField {
             id: fileNameTextField
             objectName: "fileNameTextField"
-            text: control.fileName
             visible: false
 
             Layout.fillWidth: true

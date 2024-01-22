@@ -35,7 +35,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcItemManagement)
 
 class QQuickAccessibleAttached;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControlPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
+class Q_QUICKTEMPLATES2_EXPORT QQuickControlPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif

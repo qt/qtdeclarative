@@ -78,8 +78,8 @@ public:
         DebugWireframe = 0x02
     };
 
-    Q_QUICKSHAPES_PRIVATE_EXPORT static int debugVisualization();
-    Q_QUICKSHAPES_PRIVATE_EXPORT static void setDebugVisualization(int options);
+    Q_QUICKSHAPES_EXPORT static int debugVisualization();
+    Q_QUICKSHAPES_EXPORT static void setDebugVisualization(int options);
 
 private:
     struct PathData {
@@ -98,6 +98,7 @@ private:
         QPen pen;
         bool validPenWidth = true;
         int m_dirty = 0;
+        QQuickShapePath::PathHints pathHints;
 
         QPainterPath originalPath;
         QQuadPath path;
@@ -118,6 +119,7 @@ private:
     static NodeList addTriangulatingStrokerNodes(const PathData &pathData);
     static NodeList addCurveStrokeNodes(const PathData &pathData);
 
+    void solveIntersections(QQuadPath &path);
     QQuickItem *m_item;
     QSGNode *m_rootNode = nullptr;
     QVector<PathData> m_paths;

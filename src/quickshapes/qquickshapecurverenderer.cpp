@@ -29,25 +29,27 @@ namespace {
 class QQuickShapeWireFrameMaterialShader : public QSGMaterialShader
 {
 public:
-    QQuickShapeWireFrameMaterialShader()
+    QQuickShapeWireFrameMaterialShader(int viewCount)
     {
         setShaderFileName(VertexStage,
-                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.vert.qsb"));
+                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.vert.qsb"), viewCount);
         setShaderFileName(FragmentStage,
-                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.frag.qsb"));
+                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.frag.qsb"), viewCount);
     }
 
-    bool updateUniformData(RenderState &state, QSGMaterial *, QSGMaterial *) override
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         bool changed = false;
         QByteArray *buf = state.uniformData();
         Q_ASSERT(buf->size() >= 64);
+        const int matrixCount = qMin(state.projectionMatrixCount(), newMaterial->viewCount());
 
-        if (state.isMatrixDirty()) {
-            const QMatrix4x4 m = state.combinedMatrix();
-
-            memcpy(buf->data(), m.constData(), 64);
-            changed = true;
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            if (state.isMatrixDirty()) {
+                const QMatrix4x4 m = state.combinedMatrix(viewIndex);
+                memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+                changed = true;
+            }
         }
 
         return changed;
@@ -75,7 +77,7 @@ protected:
     }
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode) const override
     {
-        return new QQuickShapeWireFrameMaterialShader;
+        return new QQuickShapeWireFrameMaterialShader(viewCount());
     }
 
 };
@@ -146,6 +148,9 @@ void QQuickShapeCurveRenderer::setPath(int index, const QQuickPath *path)
     auto &pathData = m_paths[index];
     pathData.originalPath = path->path();
     pathData.m_dirty |= PathDirty;
+    const auto *shapePath = qobject_cast<const QQuickShapePath *>(path);
+    if (shapePath)
+        pathData.pathHints = shapePath->pathHints();
 }
 
 void QQuickShapeCurveRenderer::setStrokeColor(int index, const QColor &color)
@@ -359,16 +364,13 @@ void QQuickShapeCurveRenderer::updateNode()
         if (pathData.currentRunner) {
             if (!pathData.currentRunner->isDone)
                 continue;
-            // Find insertion point for new nodes
-            QSGNode *nextNode = nullptr;
-            int j = i;
-            do {
+            // Find insertion point for new nodes. Default is the first stroke node of this path
+            QSGNode *nextNode = pathData.strokeNodes.value(0);
+            // If that is 0, use the first node (stroke or fill) of later paths, if any
+            for (int j = i + 1; !nextNode && j < m_paths.size(); j++) {
                 const PathData &pd = m_paths[j];
-                if (!pd.fillNodes.isEmpty())
-                    nextNode = pd.fillNodes.first();
-                else if (!pathData.strokeNodes.isEmpty())
-                    nextNode = pd.strokeNodes.first();
-            } while (!nextNode && ++j < m_paths.size());
+                nextNode = pd.fillNodes.isEmpty() ? pd.strokeNodes.value(0) : pd.fillNodes.value(0);
+            }
 
             const PathData &newData = pathData.currentRunner->pathData;
             if (newData.m_dirty & PathDirty)
@@ -417,16 +419,19 @@ void QQuickShapeCurveRenderer::updateNode()
 void QQuickShapeCurveRenderer::processPath(PathData *pathData)
 {
     static const bool doOverlapSolving = !qEnvironmentVariableIntValue("QT_QUICKSHAPES_DISABLE_OVERLAP_SOLVER");
+    static const bool doIntersetionSolving = !qEnvironmentVariableIntValue("QT_QUICKSHAPES_DISABLE_INTERSECTION_SOLVER");
     static const bool useTriangulatingStroker = qEnvironmentVariableIntValue("QT_QUICKSHAPES_TRIANGULATING_STROKER");
     static const bool simplifyPath = qEnvironmentVariableIntValue("QT_QUICKSHAPES_SIMPLIFY_PATHS");
+    static const QSGCurveProcessor::OverlapSolveMode overlapMode = qEnvironmentVariableIntValue("QT_QUICKSHAPES_WIP_CONCAVE_JOINT")
+            ? QSGCurveProcessor::FullOverlapSolve : QSGCurveProcessor::SkipConcaveJoinsSolve;
 
     int &dirtyFlags = pathData->m_dirty;
 
     if (dirtyFlags & PathDirty) {
         if (simplifyPath)
-            pathData->path = QQuadPath::fromPainterPath(pathData->originalPath.simplified());
+            pathData->path = QQuadPath::fromPainterPath(pathData->originalPath.simplified(), QQuadPath::PathLinear | QQuadPath::PathNonIntersecting | QQuadPath::PathNonOverlappingControlPointTriangles);
         else
-            pathData->path = QQuadPath::fromPainterPath(pathData->originalPath);
+            pathData->path = QQuadPath::fromPainterPath(pathData->originalPath, QQuadPath::PathHints(int(pathData->pathHints)));
         pathData->path.setFillRule(pathData->fillRule);
         pathData->fillPath = {};
         dirtyFlags |= (FillDirty | StrokeDirty);
@@ -436,9 +441,11 @@ void QQuickShapeCurveRenderer::processPath(PathData *pathData)
         if (pathData->isFillVisible()) {
             if (pathData->fillPath.isEmpty()) {
                 pathData->fillPath = pathData->path.subPathsClosed();
+                if (doIntersetionSolving)
+                    QSGCurveProcessor::solveIntersections(pathData->fillPath);
                 pathData->fillPath.addCurvatureData();
                 if (doOverlapSolving)
-                    QSGCurveProcessor::solveOverlaps(pathData->fillPath);
+                    QSGCurveProcessor::solveOverlaps(pathData->fillPath, overlapMode);
             }
             pathData->fillNodes = addFillNodes(*pathData);
             dirtyFlags |= StrokeDirty;

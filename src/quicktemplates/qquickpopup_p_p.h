@@ -37,7 +37,7 @@ class QQuickPopupItem;
 class QQuickPopupPrivate;
 class QQuickPopupPositioner;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupTransitionManager : public QQuickTransitionManager
+class Q_QUICKTEMPLATES2_EXPORT QQuickPopupTransitionManager : public QQuickTransitionManager
 {
 public:
     QQuickPopupTransitionManager(QQuickPopupPrivate *popup);
@@ -52,7 +52,7 @@ private:
     QQuickPopupPrivate *popup = nullptr;
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickPopupPrivate
     : public QObjectPrivate
     , public QQuickItemChangeListener
     , public QQuickPaletteProviderPrivateBase<QQuickPopup, QQuickPopupPrivate>

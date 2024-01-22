@@ -71,8 +71,17 @@ void QQuickFusionBusyIndicator::itemChange(ItemChange change, const ItemChangeDa
 {
     QQuickPaintedItem::itemChange(change, data);
 
-    if (change == ItemOpacityHasChanged && qFuzzyIsNull(data.realValue))
-        setVisible(false);
+    switch (change) {
+    case ItemOpacityHasChanged:
+        if (qFuzzyIsNull(data.realValue))
+            setVisible(false);
+        break;
+    case ItemVisibleHasChanged:
+        update();
+        break;
+    default:
+        break;
+    }
 }
 
 QT_END_NAMESPACE

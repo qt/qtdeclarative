@@ -23,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleAffector : public QQuickItem
+class Q_QUICKPARTICLES_EXPORT QQuickParticleAffector : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged FINAL)

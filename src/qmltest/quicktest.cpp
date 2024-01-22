@@ -287,7 +287,7 @@ class TestCaseCollector
 public:
     typedef QList<QString> TestCaseList;
 
-    TestCaseCollector(const QFileInfo &fileInfo, QQmlEngine *engine)
+    TestCaseCollector(const QFileInfo &fileInfo, QQmlEngine *engine) : m_engine(engine)
     {
         QString path = fileInfo.absoluteFilePath();
         if (path.startsWith(QLatin1String(":/")))
@@ -299,7 +299,8 @@ public:
         if (component.isReady()) {
             QQmlRefPointer<QV4::ExecutableCompilationUnit> rootCompilationUnit
                     = QQmlComponentPrivate::get(&component)->compilationUnit;
-            TestCaseEnumerationResult result = enumerateTestCases(rootCompilationUnit.data());
+            TestCaseEnumerationResult result = enumerateTestCases(
+                    rootCompilationUnit->baseCompilationUnit().data());
             m_testCases = result.testCases + result.finalizedPartialTestCases();
             m_errors += result.errors;
         }
@@ -311,6 +312,7 @@ public:
 private:
     TestCaseList m_testCases;
     QList<QQmlError> m_errors;
+    QQmlEngine *m_engine = nullptr;
 
     struct TestCaseEnumerationResult
     {
@@ -339,7 +341,7 @@ private:
     };
 
     TestCaseEnumerationResult enumerateTestCases(
-            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit,
             const Object *object = nullptr)
     {
         QQmlType testCaseType;
@@ -353,7 +355,8 @@ private:
             if (!typeQualifier.isEmpty())
                 testCaseTypeName = typeQualifier % QLatin1Char('.') % testCaseTypeName;
 
-            testCaseType = compilationUnit->typeNameCache->query(testCaseTypeName).type;
+            testCaseType = compilationUnit->typeNameCache->query(
+                    testCaseTypeName, QQmlTypeLoader::get(m_engine)).type;
             if (testCaseType.isValid())
                 break;
         }
@@ -365,8 +368,8 @@ private:
         if (object->hasFlag(Object::IsInlineComponentRoot))
             return result;
 
-        if (const auto superTypeUnit = compilationUnit->resolvedTypes.value(
-                    object->inheritedTypeNameIndex)->compilationUnit()) {
+        if (const auto superTypeUnit = compilationUnit->resolvedType(object->inheritedTypeNameIndex)
+                                               ->compilationUnit()) {
             // We have a non-C++ super type, which could indicate we're a subtype of a TestCase
             if (testCaseType.isValid() && superTypeUnit->url() == testCaseType.sourceUrl())
                 result.isTestCase = true;

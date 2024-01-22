@@ -22,13 +22,13 @@
 //
 
 #include "qtquickglobal.h"
-#include <QtQuick/private/qtquickexports_p.h>
+#include <QtQuick/qtquickexports.h>
 
 QT_BEGIN_NAMESPACE
 
-void Q_QUICK_PRIVATE_EXPORT qml_register_types_QtQuick();
+void Q_QUICK_EXPORT qml_register_types_QtQuick();
 
-void Q_QUICK_PRIVATE_EXPORT QQuick_initializeModule();
+void Q_QUICK_EXPORT QQuick_initializeModule();
 
 Q_DECLARE_LOGGING_CATEGORY(lcTouch)
 Q_DECLARE_LOGGING_CATEGORY(lcMouse)

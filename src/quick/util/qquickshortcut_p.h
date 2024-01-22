@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 
 class QShortcutEvent;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickShortcut : public QObject, public QQmlParserStatus
+class Q_QUICK_EXPORT QQuickShortcut : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)

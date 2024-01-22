@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 class QQuickWheelEvent;
 class QQuickWheelHandlerPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWheelHandler : public QQuickSinglePointHandler
+class Q_QUICK_EXPORT QQuickWheelHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)

@@ -25,7 +25,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
-class Q_QML_COMPILER_PRIVATE_EXPORT QQmlDirParser
+class Q_QML_COMPILER_EXPORT QQmlDirParser
 {
 public:
     void clear();

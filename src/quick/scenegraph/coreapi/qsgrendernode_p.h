@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderNodePrivate
+class Q_QUICK_EXPORT QSGRenderNodePrivate
 {
 public:
     QSGRenderNodePrivate();
@@ -32,7 +32,7 @@ public:
     const QSGClipNode *m_clip_list;
     qreal m_opacity;
     QSGRenderTarget m_rt;
-    QMatrix4x4 m_projectionMatrix;
+    QVarLengthArray<QMatrix4x4, 1> m_projectionMatrix;
     QMatrix4x4 m_localMatrix; //  ### Qt 7 m_matrix should not be a pointer
 };
 

@@ -16,6 +16,6 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQuickParticles/private/qtquickparticlesexports_p.h>
+#include <QtQuickParticles/qtquickparticlesexports.h>
 
 #endif // QTQUICKPARTICLESGLOBAL_P_H

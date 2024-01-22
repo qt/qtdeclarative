@@ -66,7 +66,8 @@ import "testlogger.js" as TestLogger
 
     Table data can be provided to a test using a function name that ends
     with "_data". Alternatively, the \c init_data() function can be used
-    to provide default test data for all test functions in a TestCase type:
+    to provide default test data for all test functions without a matching
+    "_data" function in a TestCase type:
 
 
     \code
@@ -95,7 +96,7 @@ import "testlogger.js" as TestLogger
             compare(data.a + data.b, data.answer)
         }
 
-        function test__default_table(data) {
+        function test_default_table(data) {
             //data comes from init_data
             compare(data.a + data.b, data.answer)
         }
@@ -164,6 +165,15 @@ import "testlogger.js" as TestLogger
     The mousePress(), mouseRelease(), mouseClick(), mouseDoubleClickSequence()
     and mouseMove() methods can be used to simulate mouse events in a
     similar fashion.
+
+    If your test creates other windows, it's possible that those windows
+    become active, stealing the focus from the TestCase's window. To ensure
+    that the TestCase's window is active, use the following code:
+
+    \code
+    testCase.Window.window.requestActivate()
+    tryCompare(testCase.Window.window, "active", true)
+    \endcode
 
     \b{Note:} keyboard and mouse events can only be delivered once the
     main window has been shown.  Attempts to deliver events before then

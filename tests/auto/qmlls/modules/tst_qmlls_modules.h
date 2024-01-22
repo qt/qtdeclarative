@@ -62,6 +62,8 @@ private slots:
     void qmldirImports();
     void quickFixes_data();
     void quickFixes();
+    void automaticSemicolonInsertionForCompletions_data();
+    void automaticSemicolonInsertionForCompletions();
 
 private:
     QProcess m_server;

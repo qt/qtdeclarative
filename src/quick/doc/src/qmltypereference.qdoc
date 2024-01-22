@@ -35,6 +35,8 @@ information about the concepts that are central to \c QtQuick.
     \li \l{Qt Quick Test QML Types}{Tests} - types for testing QML applications.
     \li \l{Qt Quick Effects QML Types}{Effects} - provides types for applying
     one or more simple graphical effects to Qt Quick items.
+    \li \l{Qt Quick Shapes QML Types}{Shapes} - provides types for rendering vector shapes in
+    a Qt Quick scene.
     \endlist
 
 \target value-types

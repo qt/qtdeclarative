@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractColorPickerPrivate;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickAbstractColorPicker : public QQuickControl
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickAbstractColorPicker : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)

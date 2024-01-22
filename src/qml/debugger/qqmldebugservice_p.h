@@ -27,7 +27,7 @@ QT_BEGIN_NAMESPACE
 class QJSEngine;
 
 class QQmlDebugServicePrivate;
-class Q_QML_PRIVATE_EXPORT QQmlDebugService : public QObject
+class Q_QML_EXPORT QQmlDebugService : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlDebugService)

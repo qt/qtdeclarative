@@ -34,7 +34,7 @@ class QQuickFlickableVisibleArea;
 class QQuickTransition;
 class QQuickFlickableReboundTransition;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickFlickablePrivate : public QQuickItemPrivate, public QQuickItemChangeListener
+class Q_QUICK_EXPORT QQuickFlickablePrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickFlickable)
 
@@ -250,7 +250,7 @@ public:
     static void data_clear(QQmlListProperty<QObject> *);
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickFlickableVisibleArea : public QObject
+class Q_QUICK_EXPORT QQuickFlickableVisibleArea : public QObject
 {
     Q_OBJECT
 

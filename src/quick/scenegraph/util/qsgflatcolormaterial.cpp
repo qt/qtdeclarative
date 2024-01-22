@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 class FlatColorMaterialRhiShader : public QSGMaterialShader
 {
 public:
-    FlatColorMaterialRhiShader();
+    FlatColorMaterialRhiShader(int viewCount);
 
     bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 
@@ -18,10 +18,10 @@ public:
 
 QSGMaterialType FlatColorMaterialRhiShader::type;
 
-FlatColorMaterialRhiShader::FlatColorMaterialRhiShader()
+FlatColorMaterialRhiShader::FlatColorMaterialRhiShader(int viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/flatcolor.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/flatcolor.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/flatcolor.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/flatcolor.frag.qsb"), viewCount);
 }
 
 bool FlatColorMaterialRhiShader::updateUniformData(RenderState &state,
@@ -33,11 +33,15 @@ bool FlatColorMaterialRhiShader::updateUniformData(RenderState &state,
     QSGFlatColorMaterial *mat = static_cast<QSGFlatColorMaterial *>(newMaterial);
     bool changed = false;
     QByteArray *buf = state.uniformData();
+    const int shaderMatrixCount = newMaterial->viewCount();
+    const int matrixCount = qMin(state.projectionMatrixCount(), shaderMatrixCount);
 
-    if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
-        changed = true;
+    for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+        if (state.isMatrixDirty()) {
+            const QMatrix4x4 m = state.combinedMatrix(viewIndex);
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
     }
 
     const QColor &c = mat->color();
@@ -47,7 +51,7 @@ bool FlatColorMaterialRhiShader::updateUniformData(RenderState &state,
         const float opacity = state.opacity() * a;
         QVector4D v(r * opacity, g * opacity, b * opacity, opacity);
         Q_ASSERT(sizeof(v) == 16);
-        memcpy(buf->data() + 64, &v, 16);
+        memcpy(buf->data() + 64 * shaderMatrixCount, &v, 16);
         changed = true;
     }
 
@@ -130,7 +134,7 @@ QSGMaterialType *QSGFlatColorMaterial::type() const
 QSGMaterialShader *QSGFlatColorMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new FlatColorMaterialRhiShader;
+    return new FlatColorMaterialRhiShader(viewCount());
 }
 
 

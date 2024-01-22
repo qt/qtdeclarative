@@ -217,7 +217,7 @@ public:
 class QQuickShapeLinearGradientRhiShader : public QSGMaterialShader
 {
 public:
-    QQuickShapeLinearGradientRhiShader();
+    QQuickShapeLinearGradientRhiShader(int viewCount);
 
     bool updateUniformData(RenderState &state, QSGMaterial *newMaterial,
                            QSGMaterial *oldMaterial) override;
@@ -256,7 +256,7 @@ private:
 class QQuickShapeRadialGradientRhiShader : public QSGMaterialShader
 {
 public:
-    QQuickShapeRadialGradientRhiShader();
+    QQuickShapeRadialGradientRhiShader(int viewCount);
 
     bool updateUniformData(RenderState &state, QSGMaterial *newMaterial,
                            QSGMaterial *oldMaterial) override;
@@ -292,7 +292,7 @@ private:
 class QQuickShapeConicalGradientRhiShader : public QSGMaterialShader
 {
 public:
-    QQuickShapeConicalGradientRhiShader();
+    QQuickShapeConicalGradientRhiShader(int viewCount);
 
     bool updateUniformData(RenderState &state, QSGMaterial *newMaterial,
                            QSGMaterial *oldMaterial) override;

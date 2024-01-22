@@ -65,7 +65,7 @@ struct Q_QML_EXPORT Script {
 
     Function *function();
 
-    static QV4::CompiledData::CompilationUnit precompile(
+    static QQmlRefPointer<QV4::CompiledData::CompilationUnit> precompile(
             QV4::Compiler::Module *module, QQmlJS::Engine *jsEngine,
             Compiler::JSUnitGenerator *unitGenerator, const QString &fileName,
             const QString &finalUrl, const QString &source,

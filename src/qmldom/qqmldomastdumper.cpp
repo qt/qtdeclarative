@@ -1084,7 +1084,7 @@ QString astNodeDiff(AST::Node *n1, AST::Node *n2, int nContext, AstDumperOptions
     return lineDiff(s1, s2, nContext);
 }
 
-void astNodeDumper(Sink s, Node *n, AstDumperOptions opt, int indent, int baseIndent,
+void astNodeDumper(const Sink &s, Node *n, AstDumperOptions opt, int indent, int baseIndent,
                    function_ref<QStringView(SourceLocation)>loc2str)
 {
     AstDumper visitor=AstDumper(s, opt, indent, baseIndent, loc2str);
@@ -1094,7 +1094,10 @@ void astNodeDumper(Sink s, Node *n, AstDumperOptions opt, int indent, int baseIn
 QString astNodeDump(Node *n, AstDumperOptions opt, int indent, int baseIndent,
                     function_ref<QStringView(SourceLocation)>loc2str)
 {
-    return dumperToString([n, opt, indent, baseIndent, loc2str](Sink s) { astNodeDumper(s, n, opt, indent, baseIndent, loc2str); });
+    return dumperToString(
+            [n, opt, indent, baseIndent, loc2str = std::move(loc2str)](const Sink &s) {
+        astNodeDumper(s, n, opt, indent, baseIndent, std::move(loc2str));
+    });
 }
 
 } // end namespace Dom

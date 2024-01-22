@@ -48,6 +48,7 @@ qt_internal_extend_target(tst_qquickpixmapcache CONDITION NOT ANDROID AND NOT IO
         QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 
+qt_policy(SET QTP0001 NEW)
 qt_add_qml_module(tst_qquickpixmapcache
     URI PixmapCacheTest
 )

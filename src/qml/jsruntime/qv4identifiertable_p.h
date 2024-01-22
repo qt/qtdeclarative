@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Q_QML_PRIVATE_EXPORT IdentifierTable
+struct Q_QML_EXPORT IdentifierTable
 {
     ExecutionEngine *engine;
 

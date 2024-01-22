@@ -20,11 +20,11 @@ BaseType {
         id:derivedInIcInline
     }
 
-    property var icType2: MyBaseInlineComponent {
+    property var icType2: BaseType.MyBaseInlineComponent {
         id:derivedInIcInline2
     }
 
-    property var nestedIcType: MyNestedInlineComponent {
+    property var nestedIcType: BaseType.MyNestedInlineComponent {
         id:derivedInIcInline3
     }
 }

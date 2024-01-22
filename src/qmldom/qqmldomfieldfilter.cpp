@@ -61,7 +61,7 @@ QString FieldFilter::describeFieldsFilter() const
     return fieldFilterStr;
 }
 
-bool FieldFilter::operator()(const DomItem &obj, Path p, const DomItem &i) const
+bool FieldFilter::operator()(const DomItem &obj, const Path &p, const DomItem &i) const
 {
     if (p)
         return this->operator()(obj, p.component(0), i);
@@ -95,7 +95,7 @@ bool FieldFilter::operator()(const DomItem &base, const PathEls::PathComponent &
     return true;
 }
 
-bool FieldFilter::addFilter(QString fFields)
+bool FieldFilter::addFilter(const QString &fFields)
 {
     // parses a base filter of the form <op><typeName>:<fieldName> or <op><fieldName>
     // as described in this class documentation

@@ -4,13 +4,14 @@
 /*!
 \page qtqml-index.html
 \title Qt Qml
-\brief The Qt Qml module implements the QML language and offers APIs to register types for it
+\brief The Qt Qml module implements the QML language and offers APIs to register
+       types for it.
 
 The Qt Qml module provides a framework for developing applications and libraries
 with the \l{The QML Reference}{QML language}. It defines and implements the
 language and engine infrastructure, and provides an API to enable application
-developers to \l{Registering Types and Modules}{register} custom QML types and
-modules and integrate QML code with JavaScript and C++. The Qt Qml module
+developers to \l{Registering QML Types and QML Modules}{register} custom QML types
+and modules and integrate QML code with JavaScript and C++. The Qt Qml module
 provides both a \l{Qt QML QML Types}{QML API} and a
 \l{Qt Qml C++ Classes}{C++ API}.
 

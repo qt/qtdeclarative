@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 // rely on the plugin to be loaded.
 // In CMakeLists.txt we've specified NO_GENERATE_QMLTYPES to prevent
 // the generation of an extra type registration file.
-Q_QML_PRIVATE_EXPORT void qml_register_types_QtQml()
+Q_QML_EXPORT void qml_register_types_QtQml()
 {
     // ### Qt7: Handle version 6 like version 2.
     qmlRegisterModule("QtQml", 2, 0);

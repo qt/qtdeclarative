@@ -1269,6 +1269,32 @@ int QQuickMaterialStyle::touchTarget() const
     return globalVariant == Dense ? 44 : 48;
 }
 
+int QQuickMaterialStyle::buttonVerticalPadding() const
+{
+    return globalVariant == Dense ? 10 : 14;
+}
+
+// https://m3.material.io/components/buttons/specs#256326ad-f934-40e7-b05f-0bcb41aa4382
+int QQuickMaterialStyle::buttonLeftPadding(bool flat, bool hasIcon) const
+{
+    static const int noIconPadding = globalVariant == Dense ? 12 : 24;
+    static const int iconPadding = globalVariant == Dense ? 8 : 16;
+    static const int flatPadding = globalVariant == Dense ? 6 : 12;
+    return !flat ? (!hasIcon ? noIconPadding : iconPadding) : flatPadding;
+}
+
+int QQuickMaterialStyle::buttonRightPadding(bool flat, bool hasIcon, bool hasText) const
+{
+    static const int noTextPadding = globalVariant == Dense ? 8 : 16;
+    static const int textPadding = globalVariant == Dense ? 12 : 24;
+    static const int flatNoIconPadding = globalVariant == Dense ? 6 : 12;
+    static const int flatNoTextPadding = globalVariant == Dense ? 6 : 12;
+    static const int flatTextPadding = globalVariant == Dense ? 8 : 16;
+    return !flat
+        ? (!hasText ? noTextPadding : textPadding)
+        : (!hasIcon ? flatNoIconPadding : (!hasText ? flatNoTextPadding : flatTextPadding));
+}
+
 int QQuickMaterialStyle::buttonHeight() const
 {
     // https://m3.material.io/components/buttons/specs#256326ad-f934-40e7-b05f-0bcb41aa4382
@@ -1284,6 +1310,19 @@ int QQuickMaterialStyle::delegateHeight() const
 int QQuickMaterialStyle::dialogButtonBoxHeight() const
 {
     return globalVariant == Dense ? 48 : 52;
+}
+
+int QQuickMaterialStyle::dialogTitleFontPixelSize() const
+{
+    return globalVariant == Dense ? 16 : 24;
+}
+
+// https://m3.material.io/components/dialogs/specs#6771d107-624e-47cc-b6d8-2b7b620ba2f1
+QQuickMaterialStyle::RoundedScale QQuickMaterialStyle::dialogRoundedScale() const
+{
+    return globalVariant == Dense
+        ? QQuickMaterialStyle::RoundedScale::LargeScale
+        : QQuickMaterialStyle::RoundedScale::ExtraLargeScale;
 }
 
 int QQuickMaterialStyle::frameVerticalPadding() const

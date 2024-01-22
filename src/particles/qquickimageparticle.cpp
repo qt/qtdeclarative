@@ -54,41 +54,45 @@ class ImageMaterialData
 class TabledMaterialRhiShader : public QSGMaterialShader
 {
 public:
-    TabledMaterialRhiShader()
+    TabledMaterialRhiShader(int viewCount)
     {
-        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_tabled.vert.qsb"));
-        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_tabled.frag.qsb"));
+        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_tabled.vert.qsb"), viewCount);
+        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_tabled.frag.qsb"), viewCount);
     }
 
     bool updateUniformData(RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         QByteArray *buf = renderState.uniformData();
         Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
+        const int shaderMatrixCount = newMaterial->viewCount();
+        const int matrixCount = qMin(renderState.projectionMatrixCount(), shaderMatrixCount);
 
-        if (renderState.isMatrixDirty()) {
-            const QMatrix4x4 m = renderState.combinedMatrix();
-            memcpy(buf->data(), m.constData(), 64);
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            if (renderState.isMatrixDirty()) {
+                const QMatrix4x4 m = renderState.combinedMatrix(viewIndex);
+                memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            }
         }
 
         if (renderState.isOpacityDirty()) {
             const float opacity = renderState.opacity();
-            memcpy(buf->data() + 64, &opacity, 4);
+            memcpy(buf->data() + 64 * shaderMatrixCount, &opacity, 4);
         }
 
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
 
         float entry = float(state->entry);
-        memcpy(buf->data() + 68, &entry, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 4, &entry, 4);
 
         float timestamp = float(state->timestamp);
-        memcpy(buf->data() + 72, &timestamp, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8, &timestamp, 4);
 
-        float *p = reinterpret_cast<float *>(buf->data() + 80);
+        float *p = reinterpret_cast<float *>(buf->data() + 64 * shaderMatrixCount + 16);
         for (int i = 0; i < UNIFORM_ARRAY_SIZE; ++i) {
             *p = state->sizeTable[i];
             p += 4;
         }
-        p = reinterpret_cast<float *>(buf->data() + 80 + (UNIFORM_ARRAY_SIZE * 4 * 4));
+        p = reinterpret_cast<float *>(buf->data() + 64 * shaderMatrixCount + 16 + (UNIFORM_ARRAY_SIZE * 4 * 4));
         for (int i = 0; i < UNIFORM_ARRAY_SIZE; ++i) {
             *p = state->opacityTable[i];
             p += 4;
@@ -116,7 +120,7 @@ class TabledMaterial : public ImageMaterial
 public:
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override {
         Q_UNUSED(renderMode);
-        return new TabledMaterialRhiShader;
+        return new TabledMaterialRhiShader(viewCount());
     }
     QSGMaterialType *type() const override { return &m_type; }
 
@@ -132,34 +136,38 @@ QSGMaterialType TabledMaterial::m_type;
 class DeformableMaterialRhiShader : public QSGMaterialShader
 {
 public:
-    DeformableMaterialRhiShader()
+    DeformableMaterialRhiShader(int viewCount)
     {
-        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_deformed.vert.qsb"));
-        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_deformed.frag.qsb"));
+        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_deformed.vert.qsb"), viewCount);
+        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_deformed.frag.qsb"), viewCount);
     }
 
     bool updateUniformData(RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         QByteArray *buf = renderState.uniformData();
         Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
+        const int shaderMatrixCount = newMaterial->viewCount();
+        const int matrixCount = qMin(renderState.projectionMatrixCount(), shaderMatrixCount);
 
-        if (renderState.isMatrixDirty()) {
-            const QMatrix4x4 m = renderState.combinedMatrix();
-            memcpy(buf->data(), m.constData(), 64);
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            if (renderState.isMatrixDirty()) {
+                const QMatrix4x4 m = renderState.combinedMatrix(viewIndex);
+                memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            }
         }
 
         if (renderState.isOpacityDirty()) {
             const float opacity = renderState.opacity();
-            memcpy(buf->data() + 64, &opacity, 4);
+            memcpy(buf->data() + 64 * shaderMatrixCount, &opacity, 4);
         }
 
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
 
         float entry = float(state->entry);
-        memcpy(buf->data() + 68, &entry, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 4, &entry, 4);
 
         float timestamp = float(state->timestamp);
-        memcpy(buf->data() + 72, &timestamp, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8, &timestamp, 4);
 
         return true;
     }
@@ -180,7 +188,7 @@ class DeformableMaterial : public ImageMaterial
 public:
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override {
         Q_UNUSED(renderMode);
-        return new DeformableMaterialRhiShader;
+        return new DeformableMaterialRhiShader(viewCount());
     }
     QSGMaterialType *type() const override { return &m_type; }
 
@@ -196,41 +204,45 @@ QSGMaterialType DeformableMaterial::m_type;
 class ParticleSpriteMaterialRhiShader : public QSGMaterialShader
 {
 public:
-    ParticleSpriteMaterialRhiShader()
+    ParticleSpriteMaterialRhiShader(int viewCount)
     {
-        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_sprite.vert.qsb"));
-        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_sprite.frag.qsb"));
+        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_sprite.vert.qsb"), viewCount);
+        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_sprite.frag.qsb"), viewCount);
     }
 
     bool updateUniformData(RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         QByteArray *buf = renderState.uniformData();
         Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
+        const int shaderMatrixCount = newMaterial->viewCount();
+        const int matrixCount = qMin(renderState.projectionMatrixCount(), shaderMatrixCount);
 
-        if (renderState.isMatrixDirty()) {
-            const QMatrix4x4 m = renderState.combinedMatrix();
-            memcpy(buf->data(), m.constData(), 64);
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            if (renderState.isMatrixDirty()) {
+                const QMatrix4x4 m = renderState.combinedMatrix(viewIndex);
+                memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            }
         }
 
         if (renderState.isOpacityDirty()) {
             const float opacity = renderState.opacity();
-            memcpy(buf->data() + 64, &opacity, 4);
+            memcpy(buf->data() + 64 * shaderMatrixCount, &opacity, 4);
         }
 
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
 
         float entry = float(state->entry);
-        memcpy(buf->data() + 68, &entry, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 4, &entry, 4);
 
         float timestamp = float(state->timestamp);
-        memcpy(buf->data() + 72, &timestamp, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8, &timestamp, 4);
 
-        float *p = reinterpret_cast<float *>(buf->data() + 80);
+        float *p = reinterpret_cast<float *>(buf->data() + 64 * shaderMatrixCount + 16);
         for (int i = 0; i < UNIFORM_ARRAY_SIZE; ++i) {
             *p = state->sizeTable[i];
             p += 4;
         }
-        p = reinterpret_cast<float *>(buf->data() + 80 + (UNIFORM_ARRAY_SIZE * 4 * 4));
+        p = reinterpret_cast<float *>(buf->data() + 64 * shaderMatrixCount + 16 + (UNIFORM_ARRAY_SIZE * 4 * 4));
         for (int i = 0; i < UNIFORM_ARRAY_SIZE; ++i) {
             *p = state->opacityTable[i];
             p += 4;
@@ -258,7 +270,7 @@ class SpriteMaterial : public ImageMaterial
 public:
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override {
         Q_UNUSED(renderMode);
-        return new ParticleSpriteMaterialRhiShader;
+        return new ParticleSpriteMaterialRhiShader(viewCount());
     }
     QSGMaterialType *type() const override { return &m_type; }
 
@@ -274,37 +286,41 @@ QSGMaterialType SpriteMaterial::m_type;
 class ColoredPointMaterialRhiShader : public QSGMaterialShader
 {
 public:
-    ColoredPointMaterialRhiShader()
+    ColoredPointMaterialRhiShader(int viewCount)
     {
-        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_coloredpoint.vert.qsb"));
-        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_coloredpoint.frag.qsb"));
+        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_coloredpoint.vert.qsb"), viewCount);
+        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_coloredpoint.frag.qsb"), viewCount);
     }
 
     bool updateUniformData(RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         QByteArray *buf = renderState.uniformData();
         Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
+        const int shaderMatrixCount = newMaterial->viewCount();
+        const int matrixCount = qMin(renderState.projectionMatrixCount(), shaderMatrixCount);
 
-        if (renderState.isMatrixDirty()) {
-            const QMatrix4x4 m = renderState.combinedMatrix();
-            memcpy(buf->data(), m.constData(), 64);
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            if (renderState.isMatrixDirty()) {
+                const QMatrix4x4 m = renderState.combinedMatrix(viewIndex);
+                memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            }
         }
 
         if (renderState.isOpacityDirty()) {
             const float opacity = renderState.opacity();
-            memcpy(buf->data() + 64, &opacity, 4);
+            memcpy(buf->data() + 64 * shaderMatrixCount, &opacity, 4);
         }
 
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
 
         float entry = float(state->entry);
-        memcpy(buf->data() + 68, &entry, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 4, &entry, 4);
 
         float timestamp = float(state->timestamp);
-        memcpy(buf->data() + 72, &timestamp, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8, &timestamp, 4);
 
         float dpr = float(state->dpr);
-        memcpy(buf->data() + 76, &dpr, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 12, &dpr, 4);
 
         return true;
     }
@@ -325,7 +341,7 @@ class ColoredPointMaterial : public ImageMaterial
 public:
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override {
         Q_UNUSED(renderMode);
-        return new ColoredPointMaterialRhiShader;
+        return new ColoredPointMaterialRhiShader(viewCount());
     }
     QSGMaterialType *type() const override { return &m_type; }
 
@@ -341,10 +357,11 @@ QSGMaterialType ColoredPointMaterial::m_type;
 class ColoredMaterialRhiShader : public ColoredPointMaterialRhiShader
 {
 public:
-    ColoredMaterialRhiShader()
+    ColoredMaterialRhiShader(int viewCount)
+        : ColoredPointMaterialRhiShader(viewCount)
     {
-        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_colored.vert.qsb"));
-        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_colored.frag.qsb"));
+        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_colored.vert.qsb"), viewCount);
+        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_colored.frag.qsb"), viewCount);
     }
 };
 
@@ -353,7 +370,7 @@ class ColoredMaterial : public ImageMaterial
 public:
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override {
         Q_UNUSED(renderMode);
-        return new ColoredMaterialRhiShader;
+        return new ColoredMaterialRhiShader(viewCount());
     }
     QSGMaterialType *type() const override { return &m_type; }
 
@@ -369,37 +386,41 @@ QSGMaterialType ColoredMaterial::m_type;
 class SimplePointMaterialRhiShader : public QSGMaterialShader
 {
 public:
-    SimplePointMaterialRhiShader()
+    SimplePointMaterialRhiShader(int viewCount)
     {
-        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_simplepoint.vert.qsb"));
-        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_simplepoint.frag.qsb"));
+        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_simplepoint.vert.qsb"), viewCount);
+        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_simplepoint.frag.qsb"), viewCount);
     }
 
     bool updateUniformData(RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         QByteArray *buf = renderState.uniformData();
         Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
+        const int shaderMatrixCount = newMaterial->viewCount();
+        const int matrixCount = qMin(renderState.projectionMatrixCount(), shaderMatrixCount);
 
-        if (renderState.isMatrixDirty()) {
-            const QMatrix4x4 m = renderState.combinedMatrix();
-            memcpy(buf->data(), m.constData(), 64);
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            if (renderState.isMatrixDirty()) {
+                const QMatrix4x4 m = renderState.combinedMatrix(viewIndex);
+                memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            }
         }
 
         if (renderState.isOpacityDirty()) {
             const float opacity = renderState.opacity();
-            memcpy(buf->data() + 64, &opacity, 4);
+            memcpy(buf->data() + 64 * shaderMatrixCount, &opacity, 4);
         }
 
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
 
         float entry = float(state->entry);
-        memcpy(buf->data() + 68, &entry, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 4, &entry, 4);
 
         float timestamp = float(state->timestamp);
-        memcpy(buf->data() + 72, &timestamp, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8, &timestamp, 4);
 
         float dpr = float(state->dpr);
-        memcpy(buf->data() + 76, &dpr, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 12, &dpr, 4);
 
         return true;
     }
@@ -420,7 +441,7 @@ class SimplePointMaterial : public ImageMaterial
 public:
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override {
         Q_UNUSED(renderMode);
-        return new SimplePointMaterialRhiShader;
+        return new SimplePointMaterialRhiShader(viewCount());
     }
     QSGMaterialType *type() const override { return &m_type; }
 

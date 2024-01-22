@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickDrawerPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDrawer : public QQuickPopup
+class Q_QUICKTEMPLATES2_EXPORT QQuickDrawer : public QQuickPopup
 {
     Q_OBJECT
     Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)

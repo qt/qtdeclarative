@@ -19,7 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugServiceFactory : public QObject
+class Q_QML_EXPORT QQmlDebugServiceFactory : public QObject
 {
     Q_OBJECT
 public:

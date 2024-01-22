@@ -751,7 +751,7 @@ QVariant QQmlColorProvider::tint(const QVariant &, const QVariant &) { return QV
 
 static QQmlColorProvider *colorProvider = nullptr;
 
-Q_QML_PRIVATE_EXPORT QQmlColorProvider *QQml_setColorProvider(QQmlColorProvider *newProvider)
+Q_QML_EXPORT QQmlColorProvider *QQml_setColorProvider(QQmlColorProvider *newProvider)
 {
     QQmlColorProvider *old = colorProvider;
     colorProvider = newProvider;
@@ -805,7 +805,7 @@ QString QQmlGuiProvider::pluginName() const { return QString(); }
 
 static QQmlGuiProvider *guiProvider = nullptr;
 
-Q_QML_PRIVATE_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *newProvider)
+Q_QML_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *newProvider)
 {
     QQmlGuiProvider *old = guiProvider;
     guiProvider = newProvider;

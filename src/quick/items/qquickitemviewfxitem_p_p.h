@@ -28,7 +28,7 @@ QT_REQUIRE_CONFIG(quick_itemview);
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickItemViewFxItem
+class Q_QUICK_EXPORT QQuickItemViewFxItem
 {
 public:
     QQuickItemViewFxItem(QQuickItem *item, bool ownItem, QQuickItemChangeListener *changeListener);

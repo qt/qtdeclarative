@@ -83,6 +83,9 @@ Q_SIGNALS:
 private:
     friend class VDMListDelegateDataType;
     QVariant cachedData;
+
+    // Gets cleaned when the metaobject has processed it.
+    bool cachedDataClean = false;
 };
 
 

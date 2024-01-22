@@ -9,6 +9,7 @@
 
 #include <private/qobject_p.h>
 #include <private/qv4compileddata_p.h>
+#include <private/qv4executablecompilationunit_p.h>
 #include <private/qv4string_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <qobject.h>
@@ -77,13 +78,13 @@ void tst_toolsupport::offsets_data()
             = QTest::newRow("CompiledData::CompilationUnit::data")
             << pmm_to_offsetof(&QV4::CompiledData::CompilationUnit::data);
 
-        data << 20 << 40;
+        data << 4 << 8;
     }
 
     {
         QTestData &data
-            = QTest::newRow("CompiledData::CompilationUnit::runtimeStrings")
-            << pmm_to_offsetof(&QV4::CompiledData::CompilationUnit::runtimeStrings);
+            = QTest::newRow("ExecutableCompilationUnit::runtimeStrings")
+            << pmm_to_offsetof(&QV4::ExecutableCompilationUnit::runtimeStrings);
 
         data << 0 << 0;
     }

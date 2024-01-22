@@ -145,18 +145,18 @@ private slots:
         QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/reformatter");
         QStringList qmltypeDirs =
                 QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         DomItem tFile;
-        env.loadBuiltins();
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
+        envPtr->loadBuiltins();
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, testFilePath),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         MutableDomItem myFile = tFile.field(Fields::currentItem);
 
@@ -252,18 +252,18 @@ private slots:
         QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/reformatter");
         QStringList qmltypeDirs =
                 QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         DomItem tFile;
-        env.loadBuiltins();
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
+        envPtr->loadBuiltins();
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, testFilePath),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         QString resultStr;
         QTextStream res(&resultStr);

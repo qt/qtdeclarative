@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickToolBarPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolBar : public QQuickPane
+class Q_QUICKTEMPLATES2_EXPORT QQuickToolBar : public QQuickPane
 {
     Q_OBJECT
     Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)

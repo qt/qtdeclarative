@@ -41,7 +41,7 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         auto secondFolder = QDir(build.absolutePath().append(u"/qml/hello/subfolders"_s));
         QVERIFY(secondFolder.exists());
         QCOMPARE(fileContent,
-                 u"[General]\nbuildDir=%1%2%3\n"_s.arg(build.absolutePath(), QDir::listSeparator(),
+                 u"[General]\nbuildDir=%1%2%3\nno-cmake-calls=false\n"_s.arg(build.absolutePath(), QDir::listSeparator(),
                                                        secondFolder.absolutePath()));
     }
 
@@ -54,7 +54,7 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         QVERIFY(file.open(QFile::ReadOnly | QFile::Text));
         const auto fileContent = QString::fromUtf8(file.readAll());
         QCOMPARE(fileContent,
-                 u"[General]\nbuildDir=%1\n"_s.arg(buildSubfolder.absolutePath()));
+                 u"[General]\nbuildDir=%1\nno-cmake-calls=false\n"_s.arg(buildSubfolder.absolutePath()));
     }
 }
 

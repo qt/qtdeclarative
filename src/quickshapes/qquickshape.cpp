@@ -51,15 +51,19 @@ Q_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
     rendered, so applying a very high scale to the shape may show artifacts where it is visible
     that the curves are represented by a sequence of smaller, straight lines.
 
-    \note Qt Quick Shapes relies on multi-sampling for anti-aliasing. This can be enabled for the
-    entire application or window using the corresponding settings in QSurfaceFormat. It can also
-    be enabled for only the shape, by setting its \l{Item::layer.enabled}{layer.enabled} property to
-    true and then adjusting the \l{Item::layer.samples}{layer.samples} property. In the latter case,
-    multi-sampling will not be applied to the entire scene, but the shape will be rendered via an
-    intermediate off-screen buffer.
+    \note By default, Qt Quick Shapes relies on multi-sampling for anti-aliasing. This can be
+    enabled for the entire application or window using the corresponding settings in QSurfaceFormat.
+    It can also be enabled for only the shape, by setting its \l{Item::layer.enabled}{layer.enabled}
+    property to true and then adjusting the \l{Item::layer.samples}{layer.samples} property. In the
+    latter case, multi-sampling will not be applied to the entire scene, but the shape will be
+    rendered via an intermediate off-screen buffer. Alternatively, the
+    \l{QtQuick.Shapes::Shape::preferredRendererType}{preferredRendererType} property can be set
+    to \c{Shape.CurveRenderer}. This has anti-aliasing built in and generally renders the shapes
+    at a higher quality, but at some additional performance cost.
 
     For further information, the \l{Qt Quick Examples - Shapes}{Shapes example} shows how to
-    implement different types of shapes, fills and strokes.
+    implement different types of shapes, fills and strokes, and the \l{Weather Forecast Example}
+    shows examples of different ways shapes might be useful in a user interface.
 */
 
 void QQuickShapes_initializeModule()
@@ -145,7 +149,7 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
 
     \image visualpath-code-example.png
 
-    \sa {Qt Quick Examples - Shapes}, Shape
+    \sa {Qt Quick Examples - Shapes}, {Weather Forecast Example}, Shape
  */
 
 QQuickShapePathPrivate::QQuickShapePathPrivate()
@@ -672,7 +676,7 @@ void QQuickShapePath::setPathHints(PathHints newPathHints)
 
     \endlist
 
-    \sa {Qt Quick Examples - Shapes}, Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
+    \sa {Qt Quick Examples - Shapes}, {Weather Forecast Example}, Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
 */
 
 QQuickShapePrivate::QQuickShapePrivate()
@@ -728,6 +732,7 @@ QQuickShape::~QQuickShape()
 
 /*!
     \qmlproperty enumeration QtQuick.Shapes::Shape::rendererType
+    \readonly
 
     This property determines which path rendering backend is active.
 
@@ -746,7 +751,7 @@ QQuickShape::~QQuickShape()
            with the \c software backend.
 
     \value Shape.CurveRenderer
-           Experimental GPU-based renderer, added as technology preview in Qt 6.6.
+           GPU-based renderer that aims to preserve curvature at any scale.
            In contrast to \c Shape.GeometryRenderer, curves are not approximated by short straight
            lines. Instead, curves are rendered using a specialized fragment shader. This improves
            visual quality and avoids re-tesselation performance hit when zooming. Also,
@@ -757,23 +762,11 @@ QQuickShape::~QQuickShape()
     with the \c software backend. In that case, \c Shape.SoftwareRenderer will be used.
     \c Shape.CurveRenderer may be requested using the \l preferredRendererType property.
 
-    Note that \c Shape.CurveRenderer is currently regarded as experimental. The enum name of
-    this renderer may change in future versions of Qt, and some shapes may render incorrectly.
-    Among the known limitations are:
-    \list 1
-      \li Only quadratic curves are inherently supported. Cubic curves will be approximated by
-          quadratic curves.
-      \li Shapes where elements intersect are not rendered correctly. The \l [QML] {Path::simplify}
-          {Path.simplify} property may be used to remove self-intersections from such shapes, but
-          may incur a performance cost and reduced visual quality.
-      \li Shapes that span a large numerical range, such as a long string of text, may have
-          issues. Consider splitting these shapes into multiple ones, for instance by making
-          a \l PathText for each individual word.
-      \li If the shape is being rendered into a Qt Quick 3D scene, the
-          \c GL_OES_standard_derivatives extension to OpenGL is required when the OpenGL
-          RHI backend is in use (this is available by default on OpenGL ES 3 and later, but
-          optional in OpenGL ES 2).
-    \endlist
+    \note The \c Shape.CurveRenderer will approximate cubic curves with quadratic ones and may
+    therefore diverge slightly from the mathematically correct visualization of the shape. In
+    addition, if the shape is being rendered into a Qt Quick 3D scene and the OpenGL backend for
+    RHI is active, the \c GL_OES_standard_derivatives extension to OpenGL is required (this is
+    available by default on OpenGL ES 3 and later, but optional in OpenGL ES 2.)
 */
 
 QQuickShape::RendererType QQuickShape::rendererType() const
@@ -796,9 +789,6 @@ QQuickShape::RendererType QQuickShape::rendererType() const
     \c Shape.SoftwareRenderer can currently not be selected without running the scenegraph with
     the \c software backend, in which case it will be selected regardless of the
     \c preferredRendererType.
-
-    \note This API is considered tech preview and may change or be removed in future versions of
-    Qt.
 
     See \l rendererType for more information on the implications.
 */
@@ -866,6 +856,7 @@ void QQuickShape::setAsynchronous(bool async)
 
 /*!
     \qmlproperty rect QtQuick.Shapes::Shape::boundingRect
+    \readonly
     \since 6.6
 
     Contains the united bounding rect of all sub paths in the shape.
@@ -910,6 +901,7 @@ void QQuickShape::setVendorExtensionsEnabled(bool enable)
 
 /*!
     \qmlproperty enumeration QtQuick.Shapes::Shape::status
+    \readonly
 
     This property determines the status of the Shape and is relevant when
     Shape.asynchronous is set to \c true.

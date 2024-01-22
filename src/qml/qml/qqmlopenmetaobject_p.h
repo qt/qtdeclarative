@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 class QQmlEngine;
 class QMetaPropertyBuilder;
 class QQmlOpenMetaObjectTypePrivate;
-class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObjectType final
+class Q_QML_EXPORT QQmlOpenMetaObjectType final
     : public QQmlRefCounted<QQmlOpenMetaObjectType>
 {
 public:
@@ -54,7 +54,7 @@ private:
 };
 
 class QQmlOpenMetaObjectPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObject : public QAbstractDynamicMetaObject
+class Q_QML_EXPORT QQmlOpenMetaObject : public QAbstractDynamicMetaObject
 {
 public:
     QQmlOpenMetaObject(QObject *, const QMetaObject * = nullptr);

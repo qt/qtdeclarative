@@ -23,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPen : public QObject
+class Q_QUICK_EXPORT QQuickPen : public QObject
 {
     Q_OBJECT
 
@@ -58,7 +58,7 @@ private:
     bool m_valid : 1;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickGradientStop : public QObject
+class Q_QUICK_EXPORT QQuickGradientStop : public QObject
 {
     Q_OBJECT
 
@@ -84,7 +84,7 @@ private:
     QColor m_color;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickGradient : public QObject
+class Q_QUICK_EXPORT QQuickGradient : public QObject
 {
     Q_OBJECT
 
@@ -125,7 +125,7 @@ private:
 };
 
 class QQuickRectanglePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickRectangle : public QQuickItem
+class Q_QUICK_EXPORT QQuickRectangle : public QQuickItem
 {
     Q_OBJECT
 

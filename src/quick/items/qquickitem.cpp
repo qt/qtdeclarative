@@ -88,6 +88,14 @@ void debugFocusTree(QQuickItem *item, QQuickItem *scope = nullptr, int depth = 1
     }
 }
 
+static void setActiveFocus(QQuickItem *item, Qt::FocusReason reason)
+{
+    QQuickItemPrivate *d = QQuickItemPrivate::get(item);
+    if (d->subFocusItem && d->window && d->flags & QQuickItem::ItemIsFocusScope)
+        QQuickWindowPrivate::get(d->window)->clearFocusInScope(item, d->subFocusItem, reason);
+    item->forceActiveFocus(reason);
+}
+
 /*!
     \qmltype Transform
     \instantiates QQuickTransform
@@ -1695,6 +1703,53 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     } else {
         scopePrivate->subFocusItem = nullptr;
     }
+}
+
+
+bool QQuickItemPrivate::setFocusIfNeeded(QEvent::Type eventType)
+{
+    Q_Q(QQuickItem);
+    const bool setFocusOnRelease = QGuiApplication::styleHints()->setFocusOnTouchRelease();
+    Qt::FocusPolicy policy = Qt::ClickFocus;
+
+    switch (eventType) {
+        case QEvent::MouseButtonPress:
+        case QEvent::MouseButtonDblClick:
+        case QEvent::TouchBegin:
+            if (setFocusOnRelease)
+                return false;
+            break;
+        case QEvent::MouseButtonRelease:
+        case QEvent::TouchEnd:
+            if (!setFocusOnRelease)
+                return false;
+            break;
+        case QEvent::Wheel:
+            policy = Qt::WheelFocus;
+            break;
+        default:
+            break;
+    }
+
+    if ((focusPolicy & policy) == policy) {
+        setActiveFocus(q, Qt::MouseFocusReason);
+        return true;
+    }
+
+    return false;
+}
+
+Qt::FocusReason QQuickItemPrivate::lastFocusChangeReason() const
+{
+    return static_cast<Qt::FocusReason>(focusReason);
+}
+
+void QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
+{
+    if (focusReason == reason)
+        return;
+
+    focusReason = reason;
 }
 
 /*!
@@ -4046,7 +4101,7 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 
 /*!
     This event handler can be reimplemented in a subclass to receive focus-in
-    events for an item. The event information is provided by the \c event
+    events for an item. The event information is provided by the \a event
     parameter.
 
     \input item.qdocinc accepting-events
@@ -4054,8 +4109,9 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
     If you do reimplement this function, you should call the base class
     implementation.
   */
-void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
+void QQuickItem::focusInEvent(QFocusEvent *event)
 {
+    Q_D(QQuickItem);
 #if QT_CONFIG(accessibility)
     if (QAccessible::isActive()) {
         if (QObject *acc = QQuickAccessibleAttached::findAccessible(this)) {
@@ -4064,17 +4120,20 @@ void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
         }
     }
 #endif
+    d->setLastFocusChangeReason(event->reason());
 }
 
 /*!
     This event handler can be reimplemented in a subclass to receive focus-out
-    events for an item. The event information is provided by the \c event
+    events for an item. The event information is provided by the \a event
     parameter.
 
     \input item.qdocinc accepting-events
   */
-void QQuickItem::focusOutEvent(QFocusEvent * /*event*/)
+void QQuickItem::focusOutEvent(QFocusEvent *event)
 {
+    Q_D(QQuickItem);
+    d->setLastFocusChangeReason(event->reason());
 }
 
 /*!
@@ -4638,7 +4697,7 @@ static bool unwrapMapFromToFromItemArgs(QQmlV4Function *args, const QQuickItem *
     \input item.qdocinc mapping
 
     If \a item is a \c null value, this maps the point or rect from the coordinate system of
-    the root QML view.
+    the \l{Scene Coordinates}{scene}.
 
     The versions accepting point and rect are since Qt 5.15.
 */
@@ -4696,7 +4755,7 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
     \input item.qdocinc mapping
 
     If \a item is a \c null value, this maps the point or rect to the coordinate system of the
-    root QML view.
+    \l{Scene Coordinates}{scene}.
 
     The versions accepting point and rect are since Qt 5.15.
 */
@@ -5531,6 +5590,41 @@ bool QQuickItemPrivate::filterKeyEvent(QKeyEvent *e, bool post)
         extra->keyHandler->keyReleased(e, post);
 
     return e->isAccepted();
+}
+
+void QQuickItemPrivate::deliverPointerEvent(QEvent *event)
+{
+    Q_Q(QQuickItem);
+    const auto eventType = event->type();
+    const bool focusAccepted = setFocusIfNeeded(eventType);
+
+    switch (eventType) {
+    case QEvent::MouseButtonPress:
+        q->mousePressEvent(static_cast<QMouseEvent *>(event));
+        break;
+    case QEvent::MouseButtonRelease:
+        q->mouseReleaseEvent(static_cast<QMouseEvent *>(event));
+        break;
+    case QEvent::MouseButtonDblClick:
+        q->mouseDoubleClickEvent(static_cast<QMouseEvent *>(event));
+        break;
+#if QT_CONFIG(wheelevent)
+    case QEvent::Wheel:
+        q->wheelEvent(static_cast<QWheelEvent*>(event));
+        break;
+#endif
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+    case QEvent::TouchCancel:
+        q->touchEvent(static_cast<QTouchEvent *>(event));
+        break;
+    default:
+        break;
+    }
+
+    if (focusAccepted)
+        event->accept();
 }
 
 void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
@@ -7837,31 +7931,6 @@ QQuickItem *QQuickItem::scopedFocusItem() const
 }
 
 /*!
-    \qmlproperty enumeration QtQuick::Item::focusReason
-    \readonly
-    \since 6.7
-
-    \input item.qdocinc focus-reason
-
-    \note This property was a member of {QQuickControl} {Control} until Qt 6.7.
-*/
-Qt::FocusReason QQuickItem::focusReason() const
-{
-    Q_D(const QQuickItem);
-    return static_cast<Qt::FocusReason>(d->focusReason);
-}
-
-void QQuickItem::setFocusReason(Qt::FocusReason reason)
-{
-    Q_D(QQuickItem);
-    if (d->focusReason == reason)
-        return;
-
-    d->focusReason = reason;
-    emit focusReasonChanged();
-}
-
-/*!
     \qmlproperty enumeration QtQuick::Item::focusPolicy
     \since 6.7
 
@@ -7873,7 +7942,15 @@ void QQuickItem::setFocusReason(Qt::FocusReason reason)
     \value Qt.WheelFocus  The item accepts focus by tabbing, clicking, and using the mouse wheel.
     \value Qt.NoFocus     The item does not accept focus.
 
-    \note This property was a member of {QQuickControl} {Control} until Qt 6.7.
+    \note This property was a member of \l {QQuickControl} {Control} until Qt 6.7.
+*/
+/*!
+    \property QQuickItem::focusPolicy
+    \since 6.7
+
+    This property determines the way the item accepts focus.
+
+    \note This property was a member of \l {QQuickControl} {Control} until Qt 6.7.
 */
 Qt::FocusPolicy QQuickItem::focusPolicy() const
 {
@@ -7884,6 +7961,11 @@ Qt::FocusPolicy QQuickItem::focusPolicy() const
     return static_cast<Qt::FocusPolicy>(policy);
 }
 
+/*!
+    Sets the focus policy of this item to \a policy.
+
+    \sa focusPolicy()
+*/
 void QQuickItem::setFocusPolicy(Qt::FocusPolicy policy)
 {
     Q_D(QQuickItem);
@@ -8655,8 +8737,12 @@ void QQuickItem::setContainmentMask(QObject *mask)
 QPointF QQuickItem::mapToItem(const QQuickItem *item, const QPointF &point) const
 {
     QPointF p = mapToScene(point);
-    if (item)
+    if (item) {
+        if (item->window() != window())
+            p = item->window()->mapFromGlobal(window()->mapToGlobal(p));
+
         p = item->mapFromScene(p);
+    }
     return p;
 }
 
@@ -8748,7 +8834,13 @@ QRectF QQuickItem::mapRectToScene(const QRectF &rect) const
 */
 QPointF QQuickItem::mapFromItem(const QQuickItem *item, const QPointF &point) const
 {
-    QPointF p = item?item->mapToScene(point):point;
+    QPointF p = point;
+    if (item) {
+        p = item->mapToScene(point);
+
+        if (item->window() != window())
+            p = window()->mapFromGlobal(item->window()->mapToGlobal(p));
+    }
     return mapFromScene(p);
 }
 
@@ -8916,8 +9008,14 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
     case QEvent::TouchCancel:
-        touchEvent(static_cast<QTouchEvent*>(ev));
-        break;
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+    case QEvent::MouseButtonDblClick:
+#if QT_CONFIG(wheelevent)
+    case QEvent::Wheel:
+#endif
+        d->deliverPointerEvent(ev);
+    break;
     case QEvent::StyleAnimationUpdate:
         if (isVisible()) {
             ev->accept();
@@ -8949,20 +9047,6 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::MouseMove:
         mouseMoveEvent(static_cast<QMouseEvent*>(ev));
         break;
-    case QEvent::MouseButtonPress:
-        mousePressEvent(static_cast<QMouseEvent*>(ev));
-        break;
-    case QEvent::MouseButtonRelease:
-        mouseReleaseEvent(static_cast<QMouseEvent*>(ev));
-        break;
-    case QEvent::MouseButtonDblClick:
-        mouseDoubleClickEvent(static_cast<QMouseEvent*>(ev));
-        break;
-#if QT_CONFIG(wheelevent)
-    case QEvent::Wheel:
-        wheelEvent(static_cast<QWheelEvent*>(ev));
-        break;
-#endif
 #if QT_CONFIG(quick_draganddrop)
     case QEvent::DragEnter:
         dragEnterEvent(static_cast<QDragEnterEvent*>(ev));

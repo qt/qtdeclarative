@@ -9,6 +9,7 @@ TapHandler {
     signal triggered(string text)
 
     id: menuTap
+    acceptedButtons: Qt.RightButton
     gesturePolicy: TapHandler.DragWithinBounds
     onPressedChanged: if (pressed) {
         impl.x = point.position.x - impl.width / 2
@@ -22,7 +23,10 @@ TapHandler {
         parent: menuTap.parent
         width: 100
         height: 100
-        scale: Math.min(1, Math.max(0, menuTap.timeHeld * 4))
+        // with touchscreen or stylus, long-press slowly expands the menu to size
+        // with mouse or touchpad right-click, it opens instantly
+        scale: menuTap.point.device.pointerType === PointerDevice.Generic ?
+                   1 : Math.min(1, Math.max(0, menuTap.timeHeld * 4))
         opacity: scale * 2
         visible: menuTap.pressed
         property Shape highlightedShape: null
@@ -35,6 +39,7 @@ TapHandler {
             width: 100
             height: 100
             containsMode: Shape.FillContains
+            preferredRendererType: Shape.CurveRenderer
 
             property bool highlighted: menuTap.pressed &&
                     shape.contains(shape.mapFromItem(menuTap.parent, menuTap.point.position))

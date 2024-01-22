@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickScrollViewPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollView : public QQuickPane
+class Q_QUICKTEMPLATES2_EXPORT QQuickScrollView : public QQuickPane
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(ScrollView)

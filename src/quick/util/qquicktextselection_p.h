@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 class QFont;
 class QQuickTextControl;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTextSelection : public QObject
+class Q_QUICK_EXPORT QQuickTextSelection : public QObject
 {
     Q_OBJECT
 

@@ -14,6 +14,7 @@
 // We mean it.
 //
 
+#include <private/qqmlmetatype_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qv4resolvedtypereference_p.h>
 

@@ -27,9 +27,9 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-QMLDOM_EXPORT void reformatAst(OutWriter &lw, std::shared_ptr<AstComments> comments,
-                               const std::function<QStringView(SourceLocation)> loc2Str,
-                               AST::Node *n);
+QMLDOM_EXPORT void reformatAst(
+        OutWriter &lw, const std::shared_ptr<AstComments> &comments,
+        const std::function<QStringView(SourceLocation)> &loc2Str, AST::Node *n);
 
 } // namespace Dom
 } // namespace QQmlJS

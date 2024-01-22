@@ -197,9 +197,11 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
             return result->asReturnedValue();
     }
 
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(v4->qmlEngine());
     if (context->imports() && (name->startsWithUpper() || context->valueTypesAreAddressable())) {
         // Search for attached properties, enums and imported scripts
-        QQmlTypeNameCache::Result r = context->imports()->query<QQmlImport::AllowRecursion>(name);
+        QQmlTypeNameCache::Result r = context->imports()->query<QQmlImport::AllowRecursion>(
+                name, QQmlTypeLoader::get(ep));
 
         if (r.isValid()) {
             if (hasProperty)
@@ -258,7 +260,6 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         // Fall through
     }
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(v4->qmlEngine());
     Lookup * const originalLookup = lookup;
 
     decltype(lookup->qmlContextPropertyGetter) contextGetterFunction = QQmlContextWrapper::lookupContextObjectProperty;

@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 class QQuickPopup;
 class QQuickPopupItemPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupItem : public QQuickPage
+class Q_QUICKTEMPLATES2_EXPORT QQuickPopupItem : public QQuickPage
 {
     Q_OBJECT
 
@@ -74,7 +74,7 @@ private:
     friend class QQuickPopup;
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupItemPrivate : public QQuickPagePrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickPopupItemPrivate : public QQuickPagePrivate
 {
     Q_DECLARE_PUBLIC(QQuickPopupItem)
 

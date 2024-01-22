@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointHandlerPrivate : public QQuickPointerDeviceHandlerPrivate
+class Q_QUICK_EXPORT QQuickSinglePointHandlerPrivate : public QQuickPointerDeviceHandlerPrivate
 {
     Q_DECLARE_PUBLIC(QQuickSinglePointHandler)
 

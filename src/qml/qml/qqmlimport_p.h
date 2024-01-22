@@ -15,7 +15,6 @@
 #include <private/qqmldirparser_p.h>
 #include <private/qqmltype_p.h>
 #include <private/qstringhash_p.h>
-#include <private/qv4compileddata_p.h>
 #include <private/qfieldlist_p.h>
 
 //
@@ -115,7 +114,7 @@ public:
     }
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlImports final : public QQmlRefCounted<QQmlImports>
+class Q_QML_EXPORT QQmlImports final : public QQmlRefCounted<QQmlImports>
 {
     Q_DISABLE_COPY_MOVE(QQmlImports)
 public:
@@ -127,7 +126,7 @@ public:
     };
     Q_DECLARE_FLAGS(ImportFlags, ImportFlag)
 
-    QQmlImports(QQmlTypeLoader *loader) : m_typeLoader(loader) {}
+    QQmlImports() = default;
     ~QQmlImports()
     {
         while (QQmlImportNamespace *ns = m_qualifiedSets.takeFirst())
@@ -138,13 +137,14 @@ public:
     QUrl baseUrl() const { return m_baseUrl; }
 
     bool resolveType(
-            const QHashedStringRef &type, QQmlType *type_return, QTypeRevision *version_return,
-            QQmlImportNamespace **ns_return, QList<QQmlError> *errors = nullptr,
+            QQmlTypeLoader *typeLoader, const QHashedStringRef &type, QQmlType *type_return,
+            QTypeRevision *version_return, QQmlImportNamespace **ns_return,
+            QList<QQmlError> *errors = nullptr,
             QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
             bool *typeRecursionDetected = nullptr) const;
 
     QTypeRevision addImplicitImport(
-            QQmlImportDatabase *importDb, QString *localQmldir, QList<QQmlError> *errors)
+            QQmlTypeLoader *typeLoader, QString *localQmldir, QList<QQmlError> *errors)
     {
         Q_ASSERT(errors);
         qCDebug(lcQmlImport) << "addImplicitImport:" << qPrintable(baseUrl().toString());
@@ -152,25 +152,25 @@ public:
         const ImportFlags flags =
                 ImportFlags(!isLocal(baseUrl()) ? ImportIncomplete : ImportNoFlag);
         return addFileImport(
-                    importDb, QLatin1String("."), QString(), QTypeRevision(),
-                    flags, QQmlImportInstance::Implicit, localQmldir, errors);
+                typeLoader, QLatin1String("."), QString(), QTypeRevision(), flags,
+                QQmlImportInstance::Implicit, localQmldir, errors);
     }
 
     bool addInlineComponentImport(
             QQmlImportInstance  *const importInstance, const QString &name, const QUrl importUrl);
 
     QTypeRevision addFileImport(
-            QQmlImportDatabase *importDb, const QString &uri, const QString &prefix,
+            QQmlTypeLoader *typeLoader, const QString &uri, const QString &prefix,
             QTypeRevision version, ImportFlags flags, quint16 precedence, QString *localQmldir,
             QList<QQmlError> *errors);
 
     QTypeRevision addLibraryImport(
-            QQmlImportDatabase *importDb, const QString &uri, const QString &prefix,
+            QQmlTypeLoader *typeLoader, const QString &uri, const QString &prefix,
             QTypeRevision version, const QString &qmldirIdentifier, const QString &qmldirUrl,
             ImportFlags flags, quint16 precedence, QList<QQmlError> *errors);
 
     QTypeRevision updateQmldirContent(
-            QQmlImportDatabase *importDb, const QString &uri, const QString &prefix,
+            QQmlTypeLoader *typeLoader, const QString &uri, const QString &prefix,
             const QString &qmldirIdentifier, const QString &qmldirUrl, QList<QQmlError> *errors);
 
     void populateCache(QQmlTypeNameCache *cache) const;
@@ -220,8 +220,9 @@ private:
     QQmlImportNamespace *importNamespace(const QString &prefix);
 
     bool resolveType(
-            const QHashedStringRef &type, QTypeRevision *version_return, QQmlType *type_return,
-            QList<QQmlError> *errors, QQmlType::RegistrationType registrationType,
+            QQmlTypeLoader *typeLoader, const QHashedStringRef &type, QTypeRevision *version_return,
+            QQmlType *type_return, QList<QQmlError> *errors,
+            QQmlType::RegistrationType registrationType,
             bool *typeRecursionDetected = nullptr) const;
 
     QQmlImportNamespace *findQualifiedNamespace(const QHashedStringRef &) const;
@@ -231,19 +232,14 @@ private:
             QTypeRevision version, QList<QQmlError> *errors);
 
     QTypeRevision importExtension(
-            const QString &uri, QTypeRevision version, QQmlImportDatabase *database,
+            QQmlTypeLoader *typeLoader, const QString &uri, QTypeRevision version,
             const QQmlTypeLoaderQmldirContent *qmldir, QList<QQmlError> *errors);
 
     bool getQmldirContent(
-            const QString &qmldirIdentifier, const QString &uri, QQmlTypeLoaderQmldirContent *qmldir,
-            QList<QQmlError> *errors);
+            QQmlTypeLoader *typeLoader,  const QString &qmldirIdentifier, const QString &uri,
+            QQmlTypeLoaderQmldirContent *qmldir, QList<QQmlError> *errors);
 
     QString resolvedUri(const QString &dir_arg, QQmlImportDatabase *database);
-
-    QQmlImportInstance *addImportToNamespace(
-            QQmlImportNamespace *nameSpace, const QString &uri, const QString &url,
-            QTypeRevision version, QV4::CompiledData::Import::ImportType type,
-            QList<QQmlError> *errors, quint16 precedence);
 
     QUrl m_baseUrl;
     QString m_base;
@@ -256,13 +252,11 @@ private:
 
     // storage of data related to imports with a namespace
     QFieldList<QQmlImportNamespace, &QQmlImportNamespace::nextNamespace> m_qualifiedSets;
-
-    QQmlTypeLoader *m_typeLoader = nullptr;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlImports::ImportFlags)
 
-class Q_QML_PRIVATE_EXPORT QQmlImportDatabase
+class Q_QML_EXPORT QQmlImportDatabase
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlImportDatabase)
 public:

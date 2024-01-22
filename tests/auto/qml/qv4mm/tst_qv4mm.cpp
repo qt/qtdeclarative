@@ -9,6 +9,7 @@
 #include <private/qv4mm_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qjsvalue_p.h>
+#include <private/qqmlengine_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -92,6 +93,8 @@ void tst_qv4mm::accessParentOnDestruction()
     QTRY_VERIFY(!timer->property("running").toBool());
     QCOMPARE(obj->property("iterations").toInt(), 100);
     QCOMPARE(obj->property("creations").toInt(), 100);
+    gc(engine); // ensure incremental gc has finished, and collected all objects
+    // TODO: investigaet whether we really need two gc rounds for incremental gc
     gc(engine); // ensure incremental gc has finished, and collected all objects
     QCOMPARE(obj->property("destructions").toInt(), 100);
 }
@@ -184,6 +187,10 @@ void tst_qv4mm::cleanInternalClasses()
 
     // Make sure that all dangling ICs are actually gone.
     gc(engine);
+    // NOTE: If we allocate new ICs during gc (potentially triggered on alloc),
+    // then they will survive the previous gc call
+    // run gc again to ensure that a full gc cycle happens
+    gc(engine);
 
     // Now the GC has removed the ICs we originally added by adding properties.
     QVERIFY(prevIC->d()->transitions.empty() || prevIC->d()->transitions.front().lookup == nullptr);
@@ -199,8 +206,8 @@ void tst_qv4mm::cleanInternalClasses()
 
 void tst_qv4mm::createObjectsOnDestruction()
 {
-    QLoggingCategory::setFilterRules("qt.qml.gc.*=false");
     QQmlEngine engine;
+
     QQmlComponent component(&engine, testFileUrl("createobjects.qml"));
     std::unique_ptr<QObject> obj(component.create());
     QVERIFY(obj);

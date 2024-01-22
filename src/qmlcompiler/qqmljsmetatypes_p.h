@@ -14,7 +14,7 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
@@ -455,7 +455,7 @@ public:
     create a new binding, you know all the details of it already, so you should
     just set all the data at once.
 */
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaPropertyBinding
+class Q_QMLCOMPILER_EXPORT QQmlJSMetaPropertyBinding
 {
     using BindingType = QQmlSA::BindingType;
     using ScriptBindingKind = QQmlSA::ScriptBindingKind;
@@ -860,7 +860,7 @@ public:
     }
 };
 
-struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaSignalHandler
+struct Q_QMLCOMPILER_EXPORT QQmlJSMetaSignalHandler
 {
     QStringList signalParameters;
     bool isMultiline;

@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlPlatform : public QObject
+class Q_QML_EXPORT QQmlPlatform : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString os READ os CONSTANT)

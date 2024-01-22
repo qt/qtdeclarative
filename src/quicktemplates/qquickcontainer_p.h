@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickContainerPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickContainer : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickContainer : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)

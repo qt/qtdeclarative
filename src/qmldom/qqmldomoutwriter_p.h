@@ -30,7 +30,7 @@ namespace Dom {
 class QMLDOM_EXPORT OutWriterState
 {
 public:
-    OutWriterState(Path itPath, const DomItem &it, FileLocations::Tree fLoc);
+    OutWriterState(const Path &itPath, const DomItem &it, const FileLocations::Tree &fLoc);
 
     void closeState(OutWriter &);
 
@@ -140,7 +140,7 @@ public:
         return lineWriter.addTextAddCallback(callback);
     }
     bool removeTextAddCallback(int i) { return lineWriter.removeTextAddCallback(i); }
-    void addReformattedScriptExpression(Path p, std::shared_ptr<ScriptExpression> exp)
+    void addReformattedScriptExpression(const Path &p, const std::shared_ptr<ScriptExpression> &exp)
     {
         if (auto updExp = UpdatedScriptExpression::ensure(reformattedScriptExpressions, p,
                                                           AttachedInfo::PathType::Canonical)) {

@@ -274,10 +274,11 @@ void QQuickImageBase::loadEmptyUrl()
     Q_D(QQuickImageBase);
     d->pix.clear(this);
     d->setProgress(0);
-    d->setStatus(Null);
+    d->status = Null; // do not emit statusChanged until after setImplicitSize
     setImplicitSize(0, 0); // also called in QQuickImageBase::pixmapChange, but not QQuickImage/QQuickBorderImage overrides
     pixmapChange(); // This calls update() in QQuickBorderImage and QQuickImage, not in QQuickImageBase...
 
+    emit statusChanged(d->status);
     if (sourceSize() != d->oldSourceSize) {
         d->oldSourceSize = sourceSize();
         emit sourceSizeChanged();
@@ -371,13 +372,15 @@ void QQuickImageBase::requestFinished()
     if (d->pix.isError()) {
         qmlWarning(this) << d->pix.error();
         d->pix.clear(this);
-        d->setStatus(Error);
+        d->status = Error;
         d->setProgress(0);
     } else {
-        d->setStatus(Ready);
+        d->status = Ready; // do not emit statusChanged until after setImplicitSize
         d->setProgress(1);
     }
+
     pixmapChange();
+    emit statusChanged(d->status);
 
     if (sourceSize() != d->oldSourceSize) {
         d->oldSourceSize = sourceSize();

@@ -106,7 +106,7 @@ struct TypedArrayPrototype : Object {
 
 }
 
-struct Q_QML_PRIVATE_EXPORT TypedArray : Object
+struct Q_QML_EXPORT TypedArray : Object
 {
     V4_OBJECT2(TypedArray, Object)
 

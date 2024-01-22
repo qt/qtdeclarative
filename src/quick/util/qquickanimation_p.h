@@ -31,7 +31,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimationPrivate;
 class QQuickAnimationGroup;
-class Q_QUICK_PRIVATE_EXPORT QQuickAbstractAnimation : public QObject, public QQmlPropertyValueSource, public QQmlParserStatus
+class Q_QUICK_EXPORT QQuickAbstractAnimation : public QObject, public QQmlPropertyValueSource, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAbstractAnimation)
@@ -125,7 +125,7 @@ private:
 };
 
 class QQuickPauseAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPauseAnimation : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickPauseAnimation : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPauseAnimation)
@@ -152,7 +152,7 @@ protected:
 };
 
 class QQuickScriptActionPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickScriptAction : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickScriptAction : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickScriptAction)
@@ -180,7 +180,7 @@ protected:
 };
 
 class QQuickPropertyActionPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPropertyAction : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickPropertyAction : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAction)
@@ -227,7 +227,7 @@ protected:
 };
 
 class QQuickPropertyAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPropertyAnimation : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickPropertyAnimation : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
@@ -292,7 +292,7 @@ Q_SIGNALS:
     void propertyChanged();
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickColorAnimation : public QQuickPropertyAnimation
+class Q_QUICK_EXPORT QQuickColorAnimation : public QQuickPropertyAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
@@ -312,7 +312,7 @@ public:
     void setTo(const QColor &);
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickNumberAnimation : public QQuickPropertyAnimation
+class Q_QUICK_EXPORT QQuickNumberAnimation : public QQuickPropertyAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
@@ -339,7 +339,7 @@ private:
     void init();
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickVector3dAnimation : public QQuickPropertyAnimation
+class Q_QUICK_EXPORT QQuickVector3dAnimation : public QQuickPropertyAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
@@ -361,7 +361,7 @@ public:
 };
 
 class QQuickRotationAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimation : public QQuickPropertyAnimation
+class Q_QUICK_EXPORT QQuickRotationAnimation : public QQuickPropertyAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickRotationAnimation)
@@ -392,7 +392,7 @@ Q_SIGNALS:
 };
 
 class QQuickAnimationGroupPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnimationGroup : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickAnimationGroup : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnimationGroup)
@@ -411,7 +411,7 @@ protected:
     QQuickAnimationGroup(QQuickAnimationGroupPrivate &dd, QObject *parent);
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickSequentialAnimation : public QQuickAnimationGroup
+class Q_QUICK_EXPORT QQuickSequentialAnimation : public QQuickAnimationGroup
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnimationGroup)
@@ -430,7 +430,7 @@ protected:
                             QObject *defaultTarget = nullptr) override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickParallelAnimation : public QQuickAnimationGroup
+class Q_QUICK_EXPORT QQuickParallelAnimation : public QQuickAnimationGroup
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnimationGroup)

@@ -51,8 +51,8 @@ void Heap::Module::init(ExecutionEngine *engine, ExecutableCompilationUnit *modu
     {
         Scoped<QV4::InternalClass> ic(valueScope, scope->internalClass);
 
-        for (uint i = 0; i < unit->data->importEntryTableSize; ++i) {
-            const CompiledData::ImportEntry &import = unit->data->importEntryTable()[i];
+        for (uint i = 0; i < unit->unitData()->importEntryTableSize; ++i) {
+            const CompiledData::ImportEntry &import = unit->unitData()->importEntryTable()[i];
             ic = ic->addMember(engine->identifierTable->asPropertyKey(unit->runtimeStrings[import.localName]), Attr_NotConfigurable);
         }
         scope->internalClass.set(engine, ic->d());
@@ -76,7 +76,7 @@ void Module::evaluate()
     unit->evaluateModuleRequests();
 
     ExecutionEngine *v4 = engine();
-    Function *moduleFunction = unit->runtimeFunctions[unit->data->indexOfRootFunction];
+    Function *moduleFunction = unit->runtimeFunctions[unit->unitData()->indexOfRootFunction];
     JSTypesStackFrame frame;
     frame.init(moduleFunction, nullptr, 0);
     frame.setupJSFrame(v4->jsStackTop, Value::undefinedValue(), d()->scope,

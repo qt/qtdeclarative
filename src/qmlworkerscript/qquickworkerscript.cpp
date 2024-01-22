@@ -255,7 +255,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
     if (fileName.endsWith(QLatin1String(".mjs"))) {
         auto module = engine->loadModule(url);
         if (module.compiled) {
-            if (module.compiled->instantiate(engine))
+            if (module.compiled->instantiate())
                 module.compiled->evaluate();
         } else if (module.native) {
             // Nothing to do. There is no global code in a native module.

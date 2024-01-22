@@ -32,7 +32,7 @@ struct QWindowForeign
     QML_ADDED_IN_VERSION(2, 1)
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public QQmlParserStatus
+class Q_QUICK_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)

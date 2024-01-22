@@ -15,7 +15,11 @@ layout(location = 2) out vec2 coord;
 #endif
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 qt_Matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 qt_Matrix;
+#endif
     float matrixScale;
     float opacity;
     float debug;
@@ -44,8 +48,6 @@ layout(std140, binding = 0) uniform buf {
     vec4 color;
 #endif
 } ubuf;
-
-out gl_PerVertex { vec4 gl_Position; };
 
 #define SQRT2 1.41421356237
 
@@ -77,5 +79,9 @@ void main()
     coord = vertexCoord.xy - ubuf.translationPoint;
 #endif
 
+#if QSHADER_VIEW_COUNT >= 2
+    gl_Position = ubuf.qt_Matrix[gl_ViewIndex] * (vertexCoord + vec4(offset, 0, 0));
+#else
     gl_Position = ubuf.qt_Matrix * (vertexCoord + vec4(offset, 0, 0));
+#endif
 }

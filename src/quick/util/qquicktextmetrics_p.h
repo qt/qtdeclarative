@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 
 class QFont;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTextMetrics : public QObject
+class Q_QUICK_EXPORT QQuickTextMetrics : public QObject
 {
     Q_OBJECT
 

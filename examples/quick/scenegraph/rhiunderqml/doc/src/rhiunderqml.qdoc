@@ -4,7 +4,7 @@
 /*!
     \example scenegraph/rhiunderqml
     \title Scene Graph - RHI Under QML
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
     \ingroup qtquickexamples
     \brief Shows how to render directly with \l QRhi under a Qt Quick scene.
 

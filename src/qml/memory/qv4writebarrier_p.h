@@ -15,56 +15,49 @@
 //
 
 #include <private/qv4global_p.h>
+#include <private/qv4enginebase_p.h>
 
 QT_BEGIN_NAMESPACE
 
-#define WRITEBARRIER_none 1
-
-#define WRITEBARRIER(x) (1/WRITEBARRIER_##x == 1)
-
 namespace QV4 {
 struct EngineBase;
+typedef quint64 ReturnedValue;
 
-namespace WriteBarrier {
+struct WriteBarrier {
 
-enum Type {
-    NoBarrier,
-    Barrier
+    static constexpr bool isInsertionBarrier = true;
+
+    Q_ALWAYS_INLINE static void write(EngineBase *engine, Heap::Base *base, ReturnedValue *slot, ReturnedValue value)
+    {
+        if (engine->isGCOngoing)
+            write_slowpath(engine, base, slot, value);
+        *slot = value;
+    }
+    Q_QML_EXPORT Q_NEVER_INLINE static void write_slowpath(
+            EngineBase *engine, Heap::Base *base,
+            ReturnedValue *slot, ReturnedValue value);
+
+    Q_ALWAYS_INLINE static void write(EngineBase *engine, Heap::Base *base, Heap::Base **slot, Heap::Base *value)
+    {
+        if (engine->isGCOngoing)
+            write_slowpath(engine, base, slot, value);
+        *slot = value;
+    }
+    Q_QML_EXPORT Q_NEVER_INLINE static void write_slowpath(
+            EngineBase *engine, Heap::Base *base,
+            Heap::Base **slot, Heap::Base *value);
+
+    // MemoryManager isn't a complete type here, so make Engine a template argument
+    // so that we can still call engine->memoryManager->markStack()
+    template<typename F, typename Engine = EngineBase>
+    static void markCustom(Engine *engine, F &&markFunction) {
+        if (engine->isGCOngoing)
+            (std::forward<F>(markFunction))(engine->memoryManager->markStack());
+    }
 };
 
-enum NewValueType {
-    Primitive,
-    Object,
-    Unknown
-};
-
-// ### this needs to be filled with a real memory fence once marking is concurrent
+       // ### this needs to be filled with a real memory fence once marking is concurrent
 Q_ALWAYS_INLINE void fence() {}
-
-#if WRITEBARRIER(none)
-
-template <NewValueType type>
-static constexpr inline bool isRequired() {
-    return false;
-}
-
-inline void write(EngineBase *engine, Heap::Base *base, ReturnedValue *slot, ReturnedValue value)
-{
-    Q_UNUSED(engine);
-    Q_UNUSED(base);
-    *slot = value;
-}
-
-inline void write(EngineBase *engine, Heap::Base *base, Heap::Base **slot, Heap::Base *value)
-{
-    Q_UNUSED(engine);
-    Q_UNUSED(base);
-    *slot = value;
-}
-
-#endif
-
-}
 
 }
 

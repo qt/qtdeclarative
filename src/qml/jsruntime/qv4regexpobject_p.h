@@ -56,7 +56,7 @@ DECLARE_HEAP_OBJECT(RegExpCtor, FunctionObject) {
 
 }
 
-struct Q_QML_PRIVATE_EXPORT RegExpObject: Object {
+struct Q_QML_EXPORT RegExpObject: Object {
     V4_OBJECT2(RegExpObject, Object)
     Q_MANAGED_TYPE(RegExpObject)
     V4_INTERNALCLASS(RegExpObject)

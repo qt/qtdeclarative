@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickGraphicsDevicePrivate
+class Q_QUICK_EXPORT QQuickGraphicsDevicePrivate
 {
 public:
     static QQuickGraphicsDevicePrivate *get(QQuickGraphicsDevice *p) { return p->d; }

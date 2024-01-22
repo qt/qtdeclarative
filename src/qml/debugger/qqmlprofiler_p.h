@@ -112,7 +112,7 @@ struct Q_AUTOTEST_EXPORT QQmlProfilerData : public QQmlProfilerDefinitions
 
 Q_DECLARE_TYPEINFO(QQmlProfilerData, Q_RELOCATABLE_TYPE);
 
-class Q_QML_PRIVATE_EXPORT QQmlProfiler : public QObject, public QQmlProfilerDefinitions {
+class Q_QML_EXPORT QQmlProfiler : public QObject, public QQmlProfilerDefinitions {
     Q_OBJECT
 public:
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include <QGuiApplication>
@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/qt/qml/chapter3/main.qml")));
+    engine.loadFromModule("chattutorial", "Main");
 
     return app.exec();
 }

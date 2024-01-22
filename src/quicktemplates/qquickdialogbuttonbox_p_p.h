@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBoxPrivate : public QQuickContainerPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickDialogButtonBoxPrivate : public QQuickContainerPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickDialogButtonBox)

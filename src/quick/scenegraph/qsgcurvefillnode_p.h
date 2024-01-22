@@ -6,7 +6,7 @@
 
 #include <QtGui/qbrush.h>
 
-#include <QtQuick/private/qtquickexports_p.h>
+#include <QtQuick/qtquickexports.h>
 #include <QtQuick/private/qsggradientcache_p.h>
 #include <QtQuick/qsgnode.h>
 
@@ -25,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGCurveFillNode : public QSGCurveAbstractNode
+class Q_QUICK_EXPORT QSGCurveFillNode : public QSGCurveAbstractNode
 {
 public:
     QSGCurveFillNode();

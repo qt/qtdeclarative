@@ -29,7 +29,7 @@ class QQuickFolderDialogImplAttachedPrivate;
 class QQuickFolderDialogImplPrivate;
 class QQuickFolderBreadcrumbBar;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFolderDialogImpl : public QQuickDialog
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickFolderDialogImpl : public QQuickDialog
 {
     Q_OBJECT
     Q_PROPERTY(QUrl currentFolder READ currentFolder WRITE setCurrentFolder NOTIFY currentFolderChanged FINAL)
@@ -68,7 +68,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickFolderDialogImpl)
 };
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFolderDialogImplAttached : public QObject
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickFolderDialogImplAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickListView *folderDialogListView READ folderDialogListView WRITE setFolderDialogListView NOTIFY folderDialogListViewChanged)

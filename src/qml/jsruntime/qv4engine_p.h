@@ -109,6 +109,7 @@ class QQmlError;
 class QJSEngine;
 class QQmlEngine;
 class QQmlContextData;
+class QQmlTypeLoader;
 
 namespace QV4 {
 namespace Debugging {
@@ -172,6 +173,14 @@ public:
     QJSEngine *jsEngine() const { return publicEngine; }
     QQmlEngine *qmlEngine() const { return m_qmlEngine; }
     QJSEngine *publicEngine;
+
+    template<typename TypeLoader = QQmlTypeLoader>
+    TypeLoader *typeLoader()
+    {
+        if (m_qmlEngine)
+            return TypeLoader::get(m_qmlEngine);
+        return nullptr;
+    }
 
     enum JSObjects {
         RootContext,
@@ -487,8 +496,6 @@ public:
     Symbol *symbol_unscopables() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_unscopables); }
     Symbol *symbol_revokableProxy() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_revokableProxy); }
 
-    QIntrusiveList<ExecutableCompilationUnit, &ExecutableCompilationUnit::nextCompilationUnit> compilationUnits;
-
     quint32 m_engineId;
 
     RegExpCache *regExpCache;
@@ -665,6 +672,7 @@ public:
     // variant conversions
     static QVariant toVariant(
         const QV4::Value &value, QMetaType typeHint, bool createJSValueForObjectsAndSymbols = true);
+    static QVariant toVariantLossy(const QV4::Value &value);
     QV4::ReturnedValue fromVariant(const QVariant &);
     QV4::ReturnedValue fromVariant(
             const QVariant &variant, Heap::Object *parent, int property, uint flags);
@@ -745,7 +753,16 @@ public:
     QQmlRefPointer<ExecutableCompilationUnit> compileModule(
             const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp);
 
-    void injectCompiledModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit);
+    QQmlRefPointer<ExecutableCompilationUnit> compilationUnitForUrl(const QUrl &url) const;
+    QQmlRefPointer<ExecutableCompilationUnit> executableCompilationUnit(
+            QQmlRefPointer<QV4::CompiledData::CompilationUnit> &&unit);
+    QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> compilationUnits() const
+    {
+        return m_compilationUnits;
+    }
+    void clearCompilationUnits() { m_compilationUnits.clear(); }
+    void trimCompilationUnits();
+
     QV4::Value *registerNativeModule(const QUrl &url, const QV4::Value &module);
 
     struct Module {
@@ -861,8 +878,7 @@ private:
 
     QVector<Deletable *> m_extensionData;
 
-    mutable QMutex moduleMutex;
-    QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> modules;
+    QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> m_compilationUnits;
 
     // QV4::PersistentValue would be preferred, but using QHash will create copies,
     // and QV4::PersistentValue doesn't like creating copies.

@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickImageTextureProvider : public QSGTextureProvider
+class Q_QUICK_EXPORT QQuickImageTextureProvider : public QSGTextureProvider
 {
     Q_OBJECT
 public:
@@ -38,7 +38,7 @@ public:
     bool m_mipmap;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickImagePrivate : public QQuickImageBasePrivate
+class Q_QUICK_EXPORT QQuickImagePrivate : public QQuickImageBasePrivate
 {
     Q_DECLARE_PUBLIC(QQuickImage)
 

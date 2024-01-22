@@ -53,7 +53,7 @@ QQuickSpriteMaterial::~QQuickSpriteMaterial()
 class SpriteMaterialRhiShader : public QSGMaterialShader
 {
 public:
-     SpriteMaterialRhiShader();
+     SpriteMaterialRhiShader(int viewCount);
 
      bool updateUniformData(RenderState &state,
                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
@@ -61,10 +61,10 @@ public:
                              QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
-SpriteMaterialRhiShader::SpriteMaterialRhiShader()
+SpriteMaterialRhiShader::SpriteMaterialRhiShader(int viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/sprite.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/sprite.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/sprite.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/sprite.frag.qsb"), viewCount);
 }
 
 bool SpriteMaterialRhiShader::updateUniformData(RenderState &state,
@@ -80,20 +80,24 @@ bool SpriteMaterialRhiShader::updateUniformData(RenderState &state,
     QByteArray *buf = state.uniformData();
     Q_ASSERT(buf->size() >= 96);
 
-    if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
-        changed = true;
+    const int shaderMatrixCount = newMaterial->viewCount();
+    const int matrixCount = qMin(state.projectionMatrixCount(), shaderMatrixCount);
+    for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+        if (state.isMatrixDirty()) {
+            const QMatrix4x4 m = state.combinedMatrix(viewIndex);
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
     }
 
     float animPosAndData[7] = { mat->animX1, mat->animY1, mat->animX2, mat->animY2,
                                 mat->animW, mat->animH, mat->animT };
-    memcpy(buf->data() + 64, animPosAndData, 28);
+    memcpy(buf->data() + 64 * shaderMatrixCount, animPosAndData, 28);
     changed = true;
 
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
-        memcpy(buf->data() + 92, &opacity, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 16 + 12, &opacity, 4);
         changed = true;
     }
 
@@ -120,7 +124,7 @@ void SpriteMaterialRhiShader::updateSampledImage(RenderState &state, int binding
 QSGMaterialShader *QQuickSpriteMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new SpriteMaterialRhiShader;
+    return new SpriteMaterialRhiShader(viewCount());
 }
 
 static QSGGeometry::Attribute Sprite_Attributes[] = {

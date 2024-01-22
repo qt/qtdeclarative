@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickHeaderViewBase;
 class QQuickHeaderViewBasePrivate;
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickHeaderViewBase : public QQuickTableView
+class Q_QUICKTEMPLATES2_EXPORT QQuickHeaderViewBase : public QQuickTableView
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickHeaderViewBase)
@@ -48,7 +48,7 @@ private:
 };
 
 class QQuickHorizontalHeaderViewPrivate;
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickHorizontalHeaderView : public QQuickHeaderViewBase
+class Q_QUICKTEMPLATES2_EXPORT QQuickHorizontalHeaderView : public QQuickHeaderViewBase
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickHorizontalHeaderView)
@@ -67,7 +67,7 @@ private:
 };
 
 class QQuickVerticalHeaderViewPrivate;
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickVerticalHeaderView : public QQuickHeaderViewBase
+class Q_QUICKTEMPLATES2_EXPORT QQuickVerticalHeaderView : public QQuickHeaderViewBase
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickVerticalHeaderView)

@@ -368,7 +368,7 @@ private slots:
         auto tOwner3 = tOwner.path(u"$env.testOwner");
         QCOMPARE(tOwner3.internalKind(), DomType::MockOwner);
         QList<qint64> values;
-        tOwner.visitTree(Path(), [&values](Path p, DomItem i, bool) {
+        tOwner.visitTree(Path(), [&values](const Path &p, DomItem i, bool) {
             if (i.pathFromOwner() != p)
                 myErrors()
                         .error(QStringLiteral(u"unexpected path %1 %2")
@@ -413,13 +413,12 @@ private slots:
         QVERIFY(env);
         QString testFile1 = baseDir + QLatin1String("/test1.qml");
         DomItem tFile;
-        // env.loadBuiltins();
-        env.loadFile(
+        envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, testFile1),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
-        env.loadFile(FileToLoad::fromFileSystem(envPtr, baseDir), {}, LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir), {}, LoadOption::DefaultLoad);
+        envPtr->loadPendingDependencies();
 
         QVERIFY(tFile);
         tFile = tFile.field(Fields::currentItem);
@@ -429,7 +428,7 @@ private slots:
         DomItem obj1 = comp1.field(Fields::objects).index(0);
         QVERIFY(obj1);
 
-        tFile.visitTree(Path(), [&tFile](Path p, DomItem i, bool) {
+        tFile.visitTree(Path(), [&tFile](const Path &p, DomItem i, bool) {
             if (!(i == i.path(i.canonicalPath()))) {
                 DomItem i2 = i.path(i.canonicalPath());
                 qDebug() << p << i.canonicalPath() << i.internalKindStr() << i2.internalKindStr()
@@ -499,13 +498,13 @@ private slots:
         QVERIFY(env);
         QString testFile1 = baseDir + QLatin1String("/test1.qml");
         DomItem tFile;
-        env.loadBuiltins();
-        env.loadFile(
+        envPtr->loadBuiltins();
+        envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, testFile1),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
-        env.loadFile(FileToLoad::fromFileSystem(envPtr, baseDir), {}, LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir), {}, LoadOption::DefaultLoad);
+        envPtr->loadPendingDependencies();
 
         QVERIFY(tFile);
         tFile = tFile.field(Fields::currentItem);
@@ -563,17 +562,19 @@ private slots:
         using namespace Qt::StringLiterals;
 
         QString testFile1 = baseDir + QLatin1String("/TestImports.qml");
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 QStringList(),
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
         DomItem tFile;
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile1),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt.fileObject(); },
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, testFile1),
+                [&tFile](Path, const DomItem &, const DomItem &newIt) {
+                    tFile = newIt.fileObject();
+                },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         QVERIFY(tFile);
         QList<QmlUri> importedModules;
@@ -606,17 +607,17 @@ private slots:
     {
         QString testFile = baseDir + QLatin1String("/test1.qml");
 
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
         DomItem tFile; // place where to store the loaded file
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile),
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, testFile),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
         DomItem f = tFile.fileObject();
         QString dump1;
         f.dump([&dump1](QStringView v) { dump1.append(v); });
@@ -631,6 +632,7 @@ private slots:
         if (!diffs.isEmpty())
             qDebug() << "testDeepCopy.diffs:" << diffs;
         QVERIFY(diffs.isEmpty());
+        DomItem env(envPtr);
         DomItem univFile = env.universe().path(f.canonicalPath());
         MutableDomItem univFileCopy = univFile.makeCopy();
         QStringList univFileDiffs =
@@ -740,17 +742,19 @@ private slots:
 
         QFETCH(QString, inFile);
         QString testFile1 = baseDir + u"/"_s + inFile;
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 QStringList(),
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
         DomItem tFile;
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile1),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt.fileObject(); },
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, testFile1),
+                [&tFile](Path, const DomItem &, const DomItem &newIt) {
+                    tFile = newIt.fileObject();
+                },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         DomItem rootObj = tFile.qmlObject(GoTo::MostLikely);
         checkAliases(rootObj);
@@ -762,17 +766,19 @@ private slots:
 
         QString testFile = baseDir + u"/inlineComponents.qml"_s;
 
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 QStringList(),
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
         DomItem tFile;
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt.fileObject(); },
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, testFile),
+                [&tFile](Path, const DomItem &, const DomItem &newIt) {
+                    tFile = newIt.fileObject();
+                },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         auto rootQmlObject = tFile.rootQmlObject(GoTo::MostLikely);
 
@@ -796,17 +802,19 @@ private slots:
         using namespace Qt::StringLiterals;
         QString testFile = baseDir + u"/inlineObject.qml"_s;
 
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 QStringList(),
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
         DomItem tFile;
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt.fileObject(); },
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, testFile),
+                [&tFile](Path, const DomItem &, const DomItem &newIt) {
+                    tFile = newIt.fileObject();
+                },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         auto rootQmlObject = tFile.rootQmlObject(GoTo::MostLikely);
 
@@ -857,17 +865,18 @@ private slots:
 
         DomItem tFile;
 
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 importPaths,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), fileName,
-                                           WithSemanticAnalysis),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt.fileObject(); },
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, fileName, WithSemanticAnalysis),
+                [&tFile](Path, const DomItem &, const DomItem &newIt) {
+                    tFile = newIt.fileObject();
+                },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         auto root = tFile.rootQmlObject(GoTo::MostLikely);
 
@@ -2616,7 +2625,7 @@ private slots:
         const QString canonicalFilePathB = QFileInfo(filePathB).canonicalFilePath();
         QVERIFY(!canonicalFilePathB.isEmpty());
 
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
@@ -2627,16 +2636,20 @@ private slots:
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
 
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), filePathA, options),
-                [&fileA](Path, const DomItem &, const DomItem &newIt) { fileA = newIt.fileObject(); },
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, filePathA, options),
+                [&fileA](Path, const DomItem &, const DomItem &newIt) {
+                    fileA = newIt.fileObject();
+                },
                 LoadOption::DefaultLoad);
 
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), filePathB, options),
-                [&fileB](Path, const DomItem &, const DomItem &newIt) { fileB = newIt.fileObject(); },
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, filePathB, options),
+                [&fileB](Path, const DomItem &, const DomItem &newIt) {
+                    fileB = newIt.fileObject();
+                },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         QCOMPARE(fileA.goToFile(canonicalFilePathB), fileB);
     }
@@ -2648,7 +2661,7 @@ private slots:
         const QString canonicalFilePathB = QFileInfo(filePath).canonicalFilePath();
         QVERIFY(!canonicalFilePathB.isEmpty());
 
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
@@ -2659,14 +2672,14 @@ private slots:
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
 
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), filePath, options),
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, filePath, options),
                 [&fileA](Path, const DomItem &, const DomItem &newIt) {
                     fileA = newIt.fileObject();
                 },
                 LoadOption::DefaultLoad);
 
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         QCOMPARE(fileA.top().goUp(1), DomItem());
         QCOMPARE(fileA.top().directParent(), DomItem());
@@ -2696,7 +2709,7 @@ private slots:
 private:
     static DomItem parse(const QString &path, const QStringList &qmltypeDirs)
     {
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
@@ -2706,13 +2719,13 @@ private:
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
 
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), path, options),
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, path, options),
                 [&fileItem](Path, const DomItem &, const DomItem &newIt) {
                     fileItem = newIt.fileObject();
                 },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
         return fileItem;
     }
 
@@ -2960,6 +2973,67 @@ private slots:
                          .value()
                          .toString(),
                  u"a"_s);
+    }
+
+    void objectBindings()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/objectBindings.qml"_s;
+        const DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+
+        const DomItem xBinding = rootQmlObject.path(".bindings[\"x\"][0].value");
+        QCOMPARE(xBinding.field(Fields::name).value().toString(), u"root.QQ.Drag");
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers).internalKind(),
+                 DomType::ScriptType);
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers).field(Fields::typeName).internalKind(),
+                 DomType::ScriptBinaryExpression);
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::operation)
+                         .value()
+                         .toInteger(-1),
+                 ScriptElements::BinaryExpression::FieldMemberAccess);
+
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers).field(Fields::typeName).field(Fields::left).internalKind(),
+                 DomType::ScriptBinaryExpression);
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::left)
+                         .field(Fields::right)
+                         .value()
+                         .toString(),
+                 u"QQ");
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::left)
+                         .field(Fields::left)
+                         .value()
+                         .toString(),
+                 u"root");
+
+        const DomItem item = rootQmlObject.path(".children[0]");
+        QCOMPARE(item.field(Fields::nameIdentifiers).field(Fields::typeName).value().toString(),
+                 u"Item");
+
+        const DomItem qqItem = rootQmlObject.path(".children[1]");
+        QCOMPARE(qqItem.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::operation)
+                         .value()
+                         .toInteger(-1),
+                 ScriptElements::BinaryExpression::FieldMemberAccess);
+        QCOMPARE(qqItem.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::right)
+                         .value()
+                         .toString(),
+                 u"Item");
+        QCOMPARE(qqItem.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::left)
+                         .value()
+                         .toString(),
+                 u"QQ");
     }
 
 private:

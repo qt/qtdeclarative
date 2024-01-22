@@ -4,6 +4,7 @@
 set(cpp_sources
     ambiguous.h
     birthdayparty.cpp birthdayparty.h
+    convertQJSPrimitiveValueToIntegral.h
     cppbaseclass.h
     druggeljug.h
     dummyobjekt.h
@@ -102,6 +103,8 @@ set(qml_files
     conversionInDeadCode.qml
     conversions.qml
     conversions2.qml
+    convertPrimitiveToVar.qml
+    convertQJSPrimitiveValueToIntegral.qml
     convertToOriginalReadAcumulatorForUnaryOperators.qml
     curlygrouped.qml
     cycleHead.qml
@@ -143,6 +146,7 @@ set(qml_files
     hidden/Main.qml
     hidden/Style.qml
     idAccess.qml
+    ignoredFunctionReturn.qml
     immediateQuit.qml
     imports/QmlBench/Globals.qml
     importsFromImportPath.qml
@@ -215,6 +219,7 @@ set(qml_files
     registerPropagation.qml
     registerelimination.qml
     renameAdjust.qml
+    returnAfterReject.qml
     revisions.qml
     scopeIdLookup.qml
     scopeVsObject.qml

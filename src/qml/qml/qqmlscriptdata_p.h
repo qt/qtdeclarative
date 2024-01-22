@@ -19,7 +19,7 @@
 #include <private/qqmlscriptblob_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4persistent_p.h>
-#include <private/qv4executablecompilationunit_p.h>
+#include <private/qv4compileddata_p.h>
 
 #include <QtCore/qurl.h>
 
@@ -43,7 +43,10 @@ public:
 
     QV4::ReturnedValue scriptValueForContext(const QQmlRefPointer<QQmlContextData> &parentCtxt);
 
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit() const { return m_precompiledScript; }
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit() const
+    {
+        return m_precompiledScript;
+    }
 
 private:
     friend class QQmlScriptBlob;
@@ -52,7 +55,7 @@ private:
             const QQmlRefPointer<QQmlContextData> &parentQmlContextData);
 
     bool m_loaded = false;
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> m_precompiledScript;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_precompiledScript;
     QV4::PersistentValue m_value;
 };
 

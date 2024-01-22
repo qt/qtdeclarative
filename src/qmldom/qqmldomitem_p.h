@@ -222,7 +222,7 @@ public:
 
     virtual DomItem containingObject(
             const DomItem &self) const; // the DomItem corresponding to the canonicalSource source
-    virtual void dump(const DomItem &, Sink sink, int indent, FilterT filter) const;
+    virtual void dump(const DomItem &, const Sink &sink, int indent, FilterT filter) const;
     virtual quintptr id() const;
     QString typeName() const;
 
@@ -233,7 +233,7 @@ public:
     virtual DomItem index(const DomItem &self, index_type index) const;
 
     virtual QSet<QString> const keys(const DomItem &self) const;
-    virtual DomItem key(const DomItem &self, QString name) const;
+    virtual DomItem key(const DomItem &self, const QString &name) const;
 
     virtual QString canonicalFilePath(const DomItem &self) const;
 
@@ -278,7 +278,7 @@ public:
     Path canonicalPath(const DomItem &self) const override;
     DomItem containingObject(const DomItem &self) const override;
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
-    void dump(const DomItem &, Sink s, int indent,
+    void dump(const DomItem &, const Sink &s, int indent,
               function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter)
             const override;
 };
@@ -287,13 +287,13 @@ class QMLDOM_EXPORT DomElement: public DomBase {
 protected:
     DomElement& operator=(const DomElement&) = default;
 public:
-    DomElement(Path pathFromOwner = Path());
+    DomElement(const Path &pathFromOwner = Path());
     DomElement(const DomElement &o) = default;
     Path pathFromOwner(const DomItem &self) const override;
     Path pathFromOwner() const { return m_pathFromOwner; }
     Path canonicalPath(const DomItem &self) const override;
     DomItem containingObject(const DomItem &self) const override;
-    virtual void updatePathFromOwner(Path newPath);
+    virtual void updatePathFromOwner(const Path &newPath);
 
 private:
     Path m_pathFromOwner;
@@ -312,28 +312,29 @@ public:
 
     using LookupFunction = std::function<DomItem(const DomItem &, QString)>;
     using Keys = std::function<QSet<QString>(const DomItem &)>;
-    Map(Path pathFromOwner, LookupFunction lookup, Keys keys, QString targetType);
+    Map(const Path &pathFromOwner, const LookupFunction &lookup,
+        const Keys &keys, const QString &targetType);
     quintptr id() const override;
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
     QSet<QString> const keys(const DomItem &self) const override;
-    DomItem key(const DomItem &self, QString name) const override;
+    DomItem key(const DomItem &self, const QString &name) const override;
 
     template<typename T>
-    static Map fromMultiMapRef(Path pathFromOwner, const QMultiMap<QString, T> &mmap);
+    static Map fromMultiMapRef(const Path &pathFromOwner, const QMultiMap<QString, T> &mmap);
     template<typename T>
-    static Map fromMultiMap(Path pathFromOwner, const QMultiMap<QString, T> &mmap);
+    static Map fromMultiMap(const Path &pathFromOwner, const QMultiMap<QString, T> &mmap);
     template<typename T>
     static Map
-    fromMapRef(Path pathFromOwner, const QMap<QString, T> &mmap,
-               std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)>
-                       elWrapper);
+    fromMapRef(
+            const Path &pathFromOwner, const QMap<QString, T> &mmap,
+            const std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> &elWrapper);
 
     template<typename T>
-    static Map fromFileRegionMap(Path pathFromOwner,
-                                          const QMap<FileLocationRegion, T> &map);
+    static Map fromFileRegionMap(
+            const Path &pathFromOwner, const QMap<FileLocationRegion, T> &map);
     template<typename T>
-    static Map fromFileRegionListMap(Path pathFromOwner,
-                                              const QMap<FileLocationRegion, QList<T>> &map);
+    static Map fromFileRegionListMap(
+            const Path &pathFromOwner, const QMap<FileLocationRegion, QList<T>> &map);
 
 private:
     template<typename MapT>
@@ -359,24 +360,25 @@ public:
     using IteratorFunction =
             std::function<bool(const DomItem &, function_ref<bool(index_type, function_ref<DomItem()>)>)>;
 
-    List(Path pathFromOwner, LookupFunction lookup, Length length, IteratorFunction iterator, QString elType);
+    List(const Path &pathFromOwner, const LookupFunction &lookup, const Length &length,
+         const IteratorFunction &iterator, const QString &elType);
     quintptr id() const override;
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
     void
-    dump(const DomItem &, Sink s, int indent,
+    dump(const DomItem &, const Sink &s, int indent,
          function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)>) const override;
     index_type indexes(const DomItem &self) const override;
     DomItem index(const DomItem &self, index_type index) const override;
 
     template<typename T>
     static List
-    fromQList(Path pathFromOwner, QList<T> list,
-              std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> elWrapper,
+    fromQList(const Path &pathFromOwner, const QList<T> &list,
+              const std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> &elWrapper,
               ListOptions options = ListOptions::Normal);
     template<typename T>
     static List
-    fromQListRef(Path pathFromOwner, const QList<T> &list,
-                 std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> elWrapper,
+    fromQListRef(const Path &pathFromOwner, const QList<T> &list,
+                 const std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> &elWrapper,
                  ListOptions options = ListOptions::Normal);
     void writeOut(const DomItem &self, OutWriter &ow, bool compact) const;
     void writeOut(const DomItem &self, OutWriter &ow) const override { writeOut(self, ow, true); }
@@ -394,7 +396,7 @@ public:
     constexpr static DomType kindValue = DomType::ListP;
     DomType kind() const override { return kindValue; }
 
-    ListPBase(Path pathFromOwner, const QList<const void *> &pList, QString elType)
+    ListPBase(const Path &pathFromOwner, const QList<const void *> &pList, const QString &elType)
         : DomElement(pathFromOwner), m_pList(pList), m_elType(elType)
     {
     }
@@ -417,7 +419,7 @@ class ListPT final : public ListPBase
 public:
     constexpr static DomType kindValue = DomType::ListP;
 
-    ListPT(Path pathFromOwner, QList<T *> pList, QString elType = QString(),
+    ListPT(const Path &pathFromOwner, const QList<T *> &pList, const QString &elType = QString(),
            ListOptions options = ListOptions::Normal)
         : ListPBase(pathFromOwner, {},
                     (elType.isEmpty() ? QLatin1String(typeid(T).name()) : elType))
@@ -450,7 +452,7 @@ class QMLDOM_EXPORT ListP
 public:
     constexpr static DomType kindValue = DomType::ListP;
     template<typename T>
-    ListP(Path pathFromOwner, QList<T *> pList, QString elType = QString(),
+    ListP(const Path &pathFromOwner, const QList<T *> &pList, const QString &elType = QString(),
           ListOptions options = ListOptions::Normal)
         : list(ListPT<T>(pathFromOwner, pList, elType, options))
     {
@@ -482,7 +484,8 @@ public:
     ConstantData &operator*() { return *this; }
     const ConstantData &operator*() const { return *this; }
 
-    ConstantData(Path pathFromOwner, QCborValue value, Options options = Options::MapIsMap);
+    ConstantData(const Path &pathFromOwner, const QCborValue &value,
+                 Options options = Options::MapIsMap);
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
     quintptr id() const override;
     DomKind domKind() const override;
@@ -525,7 +528,7 @@ public:
 
 protected:
     friend class TestDomItem;
-    SimpleObjectWrapBase(Path pathFromOwner, QVariant value, quintptr idValue,
+    SimpleObjectWrapBase(const Path &pathFromOwner, const QVariant &value, quintptr idValue,
                          DomType kind = kindValue,
                          SimpleWrapOptions options = SimpleWrapOption::None)
         : DomElement(pathFromOwner),
@@ -590,7 +593,8 @@ public:
         new (target) SimpleObjectWrapT(std::move(*this));
     }
 
-    SimpleObjectWrapT(Path pathFromOwner, QVariant v, quintptr idValue, SimpleWrapOptions o)
+    SimpleObjectWrapT(const Path &pathFromOwner, const QVariant &v,
+                      quintptr idValue, SimpleWrapOptions o)
         : SimpleObjectWrapBase(pathFromOwner, v, idValue, T::kindValue, o)
     {
         Q_ASSERT(domTypeIsValueWrap(T::kindValue) == bool(o & SimpleWrapOption::ValueType));
@@ -608,7 +612,7 @@ public:
     const SimpleObjectWrapBase &operator*() const { return *wrap.data(); }
 
     template<typename T>
-    static SimpleObjectWrap fromObjectRef(Path pathFromOwner, T &value)
+    static SimpleObjectWrap fromObjectRef(const Path &pathFromOwner, T &value)
     {
         return SimpleObjectWrap(pathFromOwner, value);
     }
@@ -616,7 +620,7 @@ public:
 
 private:
     template<typename T>
-    SimpleObjectWrap(Path pathFromOwner, T &value)
+    SimpleObjectWrap(const Path &pathFromOwner, T &value)
     {
         using BaseT = std::decay_t<T>;
         if constexpr (domTypeIsObjWrap(BaseT::kindValue)) {
@@ -650,7 +654,8 @@ public:
     const Reference &operator*() const { return *this; }
 
     bool shouldCache() const;
-    Reference(Path referredObject = Path(), Path pathFromOwner = Path(), const SourceLocation & loc = SourceLocation());
+    Reference(const Path &referredObject = Path(), const Path &pathFromOwner = Path(),
+              const SourceLocation &loc = SourceLocation());
     quintptr id() const override;
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
     DomItem field(const DomItem &self, QStringView name) const override;
@@ -658,10 +663,11 @@ public:
     index_type indexes(const DomItem &) const override { return 0; }
     DomItem index(const DomItem &, index_type) const override;
     QSet<QString> const keys(const DomItem &) const override { return {}; }
-    DomItem key(const DomItem &, QString) const override;
+    DomItem key(const DomItem &, const QString &) const override;
 
-    DomItem get(const DomItem &self, ErrorHandler h = nullptr, QList<Path> *visitedRefs = nullptr) const;
-    QList<DomItem> getAll(const DomItem &self, ErrorHandler h = nullptr,
+    DomItem get(const DomItem &self, const ErrorHandler &h = nullptr,
+                QList<Path> *visitedRefs = nullptr) const;
+    QList<DomItem> getAll(const DomItem &self, const ErrorHandler &h = nullptr,
                           QList<Path> *visitedRefs = nullptr) const;
 
     Path referredObjectPath;
@@ -688,7 +694,8 @@ struct ScriptElement : public DomElement
     using PointerType = std::shared_ptr<T>;
 
     using DomElement::DomElement;
-    virtual void createFileLocations(std::shared_ptr<AttachedInfoT<FileLocations>> fileLocationOfOwner) = 0;
+    virtual void createFileLocations(
+            const std::shared_ptr<AttachedInfoT<FileLocations>> &fileLocationOfOwner) = 0;
 
     QQmlJSScope::ConstPtr semanticScope();
     void setSemanticScope(const QQmlJSScope::ConstPtr &scope);
@@ -724,7 +731,7 @@ public:
                              ScriptElements::VariableDeclaration, ScriptElements::ReturnStatement>;
 
     template<typename T>
-    static ScriptElementVariant fromElement(T element)
+    static ScriptElementVariant fromElement(const T &element)
     {
         static_assert(TypeIsInVariant<T, ScriptElementT>::value,
                       "Cannot construct ScriptElementVariant from T, as it is missing from the "
@@ -742,17 +749,17 @@ public:
     void visitConst(F &&visitor) const
     {
         if (m_data)
-            std::visit(visitor, *m_data);
+            std::visit(std::forward<F>(visitor), *m_data);
     }
 
     template<typename F>
     void visit(F &&visitor)
     {
         if (m_data)
-            std::visit(visitor, *m_data);
+            std::visit(std::forward<F>(visitor), *m_data);
     }
     std::optional<ScriptElementT> data() { return m_data; }
-    void setData(ScriptElementT data) { m_data = data; }
+    void setData(const ScriptElementT &data) { m_data = data; }
 
 private:
     std::optional<ScriptElementT> m_data;
@@ -820,17 +827,29 @@ using ElementT =
                 const ScriptExpression *
         >;
 
-using TopT = std::variant<std::shared_ptr<DomEnvironment>, std::shared_ptr<DomUniverse>>;
+using TopT = std::variant<
+        std::monostate,
+        std::shared_ptr<DomEnvironment>,
+        std::shared_ptr<DomUniverse>>;
 
-using OwnerT =
-        std::variant<std::shared_ptr<ModuleIndex>, std::shared_ptr<MockOwner>,
-                     std::shared_ptr<ExternalItemInfoBase>, std::shared_ptr<ExternalItemPairBase>,
-                     std::shared_ptr<QmlDirectory>, std::shared_ptr<QmldirFile>,
-                     std::shared_ptr<JsFile>, std::shared_ptr<QmlFile>,
-                     std::shared_ptr<QmltypesFile>, std::shared_ptr<GlobalScope>,
-                     std::shared_ptr<ScriptExpression>, std::shared_ptr<AstComments>,
-                     std::shared_ptr<LoadInfo>, std::shared_ptr<AttachedInfo>,
-                     std::shared_ptr<DomEnvironment>, std::shared_ptr<DomUniverse>>;
+using OwnerT = std::variant<
+        std::monostate,
+        std::shared_ptr<ModuleIndex>,
+        std::shared_ptr<MockOwner>,
+        std::shared_ptr<ExternalItemInfoBase>,
+        std::shared_ptr<ExternalItemPairBase>,
+        std::shared_ptr<QmlDirectory>,
+        std::shared_ptr<QmldirFile>,
+        std::shared_ptr<JsFile>,
+        std::shared_ptr<QmlFile>,
+        std::shared_ptr<QmltypesFile>,
+        std::shared_ptr<GlobalScope>,
+        std::shared_ptr<ScriptExpression>,
+        std::shared_ptr<AstComments>,
+        std::shared_ptr<LoadInfo>,
+        std::shared_ptr<AttachedInfo>,
+        std::shared_ptr<DomEnvironment>,
+        std::shared_ptr<DomUniverse>>;
 
 inline bool emptyChildrenVisitor(Path, const DomItem &, bool)
 {
@@ -849,7 +868,7 @@ public:
     };
 
     FileToLoad(const std::weak_ptr<DomEnvironment> &environment, const QString &canonicalPath,
-               const QString &logicalPath, std::optional<InMemoryContents> content,
+               const QString &logicalPath, const std::optional<InMemoryContents> &content,
                DomCreationOptions options);
     FileToLoad() = default;
 
@@ -877,11 +896,11 @@ private:
 class QMLDOM_EXPORT DomItem {
     Q_DECLARE_TR_FUNCTIONS(DomItem);
 public:
-    using Callback = function<void(Path, const DomItem &, const DomItem &)>;
+    using Callback = function<void(const Path &, const DomItem &, const DomItem &)>;
 
     using InternalKind = DomType;
-    using Visitor = function_ref<bool(Path, const DomItem &)>;
-    using ChildrenVisitor = function_ref<bool(Path, const DomItem &, bool)>;
+    using Visitor = function_ref<bool(const Path &, const DomItem &)>;
+    using ChildrenVisitor = function_ref<bool(const Path &, const DomItem &, bool)>;
 
     static ErrorGroup domErrorGroup;
     static ErrorGroups myErrors();
@@ -935,8 +954,8 @@ public:
     QQmlJSScope::ConstPtr semanticScope() const;
 
     // convenience getters
-    DomItem get(ErrorHandler h = nullptr, QList<Path> *visitedRefs = nullptr) const;
-    QList<DomItem> getAll(ErrorHandler h = nullptr, QList<Path> *visitedRefs = nullptr) const;
+    DomItem get(const ErrorHandler &h = nullptr, QList<Path> *visitedRefs = nullptr) const;
+    QList<DomItem> getAll(const ErrorHandler &h = nullptr, QList<Path> *visitedRefs = nullptr) const;
     bool isOwningItem() const { return domTypeIsOwningItem(internalKind()); }
     bool isExternalItem() const { return domTypeIsExternalItem(internalKind()); }
     bool isTopItem() const { return domTypeIsTopItem(internalKind()); }
@@ -949,7 +968,7 @@ public:
     DomItem ids() const { return field(Fields::ids); }
     QString idStr() const { return field(Fields::idStr).value().toString(); }
     DomItem propertyInfos() const { return field(Fields::propertyInfos); }
-    PropertyInfo propertyInfoWithName(QString name) const;
+    PropertyInfo propertyInfoWithName(const QString &name) const;
     QSet<QString> propertyInfoNames() const;
     DomItem propertyDefs() const { return field(Fields::propertyDefs); }
     DomItem bindings() const { return field(Fields::bindings); }
@@ -965,11 +984,11 @@ public:
             return DomItem();
     }
 
-    bool resolve(Path path, Visitor visitor, ErrorHandler errorHandler,
-                 ResolveOptions options = ResolveOption::None, Path fullPath = Path(),
+    bool resolve(const Path &path, Visitor visitor, const ErrorHandler &errorHandler,
+                 ResolveOptions options = ResolveOption::None, const Path &fullPath = Path(),
                  QList<Path> *visitedRefs = nullptr) const;
 
-    DomItem operator[](Path path) const;
+    DomItem operator[](const Path &path) const;
     DomItem operator[](QStringView component) const;
     DomItem operator[](const QString &component) const;
     DomItem operator[](const char16_t *component) const
@@ -981,9 +1000,9 @@ public:
     index_type size() const { return indexes() + keys().size(); }
     index_type length() const { return size(); }
 
-    DomItem path(Path p, ErrorHandler h = &defaultErrorHandler) const;
-    DomItem path(QString p, ErrorHandler h = &defaultErrorHandler) const;
-    DomItem path(QStringView p, ErrorHandler h = &defaultErrorHandler) const;
+    DomItem path(const Path &p, const ErrorHandler &h = &defaultErrorHandler) const;
+    DomItem path(const QString &p, const ErrorHandler &h = &defaultErrorHandler) const;
+    DomItem path(QStringView p, const ErrorHandler &h = &defaultErrorHandler) const;
 
     QList<QString> fields() const;
     DomItem field(QStringView name) const;
@@ -994,56 +1013,63 @@ public:
 
     QSet<QString> keys() const;
     QStringList sortedKeys() const;
-    DomItem key(QString name) const;
+    DomItem key(const QString &name) const;
     DomItem key(QStringView name) const { return key(name.toString()); }
-    bool visitKeys(function_ref<bool(QString, const DomItem &)> visitor) const;
+    bool visitKeys(function_ref<bool(const QString &, const DomItem &)> visitor) const;
 
     QList<DomItem> values() const;
     void writeOutPre(OutWriter &lw) const;
     void writeOut(OutWriter &lw) const;
     void writeOutPost(OutWriter &lw) const;
     DomItem writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks) const;
-    DomItem writeOut(QString path, int nBackups = 2,
+    DomItem writeOut(const QString &path, int nBackups = 2,
                      const LineWriterOptions &opt = LineWriterOptions(), FileWriter *fw = nullptr,
                      WriteOutChecks extraChecks = WriteOutCheck::Default) const;
 
-    bool visitTree(Path basePath, ChildrenVisitor visitor,
+    bool visitTree(const Path &basePath, ChildrenVisitor visitor,
                    VisitOptions options = VisitOption::Default,
                    ChildrenVisitor openingVisitor = emptyChildrenVisitor,
                    ChildrenVisitor closingVisitor = emptyChildrenVisitor) const;
     bool visitPrototypeChain(function_ref<bool(const DomItem &)> visitor,
                              VisitPrototypesOptions options = VisitPrototypesOption::Normal,
-                             ErrorHandler h = nullptr, QSet<quintptr> *visited = nullptr,
+                             const ErrorHandler &h = nullptr, QSet<quintptr> *visited = nullptr,
                              QList<Path> *visitedRefs = nullptr) const;
     bool visitDirectAccessibleScopes(function_ref<bool(const DomItem &)> visitor,
                                      VisitPrototypesOptions options = VisitPrototypesOption::Normal,
-                                     ErrorHandler h = nullptr, QSet<quintptr> *visited = nullptr,
+                                     const ErrorHandler &h = nullptr, QSet<quintptr> *visited = nullptr,
                                      QList<Path> *visitedRefs = nullptr) const;
     bool
     visitStaticTypePrototypeChains(function_ref<bool(const DomItem &)> visitor,
                                    VisitPrototypesOptions options = VisitPrototypesOption::Normal,
-                                   ErrorHandler h = nullptr, QSet<quintptr> *visited = nullptr,
+                                   const ErrorHandler &h = nullptr, QSet<quintptr> *visited = nullptr,
                                    QList<Path> *visitedRefs = nullptr) const;
 
     bool visitUp(function_ref<bool(const DomItem &)> visitor) const;
-    bool visitScopeChain(function_ref<bool(const DomItem &)> visitor,
-                         LookupOptions = LookupOption::Normal, ErrorHandler h = nullptr,
-                         QSet<quintptr> *visited = nullptr, QList<Path> *visitedRefs = nullptr) const;
-    bool visitLocalSymbolsNamed(QString name, function_ref<bool(const DomItem &)> visitor) const;
-    bool visitLookup1(QString symbolName, function_ref<bool(const DomItem &)> visitor,
-                      LookupOptions = LookupOption::Normal, ErrorHandler h = nullptr,
-                      QSet<quintptr> *visited = nullptr, QList<Path> *visitedRefs = nullptr) const;
-    bool visitLookup(QString symbolName, function_ref<bool(const DomItem &)> visitor,
-                     LookupType type = LookupType::Symbol, LookupOptions = LookupOption::Normal,
-                     ErrorHandler errorHandler = nullptr, QSet<quintptr> *visited = nullptr,
-                     QList<Path> *visitedRefs = nullptr) const;
-    bool visitSubSymbolsNamed(QString name, function_ref<bool(const DomItem &)> visitor) const;
-    DomItem proceedToScope(ErrorHandler h = nullptr, QList<Path> *visitedRefs = nullptr) const;
-    QList<DomItem> lookup(QString symbolName, LookupType type = LookupType::Symbol,
-                          LookupOptions = LookupOption::Normal,
-                          ErrorHandler errorHandler = nullptr) const;
-    DomItem lookupFirst(QString symbolName, LookupType type = LookupType::Symbol,
-                        LookupOptions = LookupOption::Normal, ErrorHandler errorHandler = nullptr) const;
+    bool visitScopeChain(
+            function_ref<bool(const DomItem &)> visitor, LookupOptions = LookupOption::Normal,
+            const ErrorHandler &h = nullptr, QSet<quintptr> *visited = nullptr,
+            QList<Path> *visitedRefs = nullptr) const;
+    bool visitLocalSymbolsNamed(
+            const QString &name, function_ref<bool(const DomItem &)> visitor) const;
+    bool visitLookup1(
+            const QString &symbolName, function_ref<bool(const DomItem &)> visitor,
+            LookupOptions = LookupOption::Normal, const ErrorHandler &h = nullptr,
+            QSet<quintptr> *visited = nullptr, QList<Path> *visitedRefs = nullptr) const;
+    bool visitLookup(
+            const QString &symbolName, function_ref<bool(const DomItem &)> visitor,
+            LookupType type = LookupType::Symbol, LookupOptions = LookupOption::Normal,
+            const ErrorHandler &errorHandler = nullptr, QSet<quintptr> *visited = nullptr,
+            QList<Path> *visitedRefs = nullptr) const;
+    bool visitSubSymbolsNamed(
+            const QString &name, function_ref<bool(const DomItem &)> visitor) const;
+    DomItem proceedToScope(
+            const ErrorHandler &h = nullptr, QList<Path> *visitedRefs = nullptr) const;
+    QList<DomItem> lookup(
+            const QString &symbolName, LookupType type = LookupType::Symbol,
+            LookupOptions = LookupOption::Normal, const ErrorHandler &errorHandler = nullptr) const;
+    DomItem lookupFirst(
+            const QString &symbolName, LookupType type = LookupType::Symbol,
+            LookupOptions = LookupOption::Normal, const ErrorHandler &errorHandler = nullptr) const;
 
     quintptr id() const;
     Path pathFromOwner() const;
@@ -1051,16 +1077,16 @@ public:
     DomItem fileLocationsTree() const;
     DomItem fileLocations() const;
     MutableDomItem makeCopy(CopyOption option = CopyOption::EnvConnected) const;
-    bool commitToBase(std::shared_ptr<DomEnvironment> validPtr = nullptr) const;
+    bool commitToBase(const std::shared_ptr<DomEnvironment> &validPtr = nullptr) const;
     DomItem refreshed() const { return top().path(canonicalPath()); }
     QCborValue value() const;
 
-    void dumpPtr(Sink sink) const;
-    void dump(Sink, int indent = 0,
+    void dumpPtr(const Sink &sink) const;
+    void dump(const Sink &, int indent = 0,
               function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter =
                       noFilter) const;
     FileWriter::Status
-    dump(QString path,
+    dump(const QString &path,
          function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter = noFilter,
          int nBackups = 2, int indent = 0, FileWriter *fw = nullptr) const;
     QString toString() const;
@@ -1074,7 +1100,7 @@ public:
 
     void addError(ErrorMessage &&msg) const;
     ErrorHandler errorHandler() const;
-    void clearErrors(ErrorGroups groups = ErrorGroups({}), bool iterate = true) const;
+    void clearErrors(const ErrorGroups &groups = ErrorGroups({}), bool iterate = true) const;
     // return false if a quick exit was requested
     bool iterateErrors(
             function_ref<bool (const DomItem &, const ErrorMessage &)> visitor, bool iterate,
@@ -1102,7 +1128,7 @@ public:
     bool dvValueField(DirectVisitor visitor, QStringView f, const T &value,
                       ConstantData::Options options = ConstantData::Options::MapIsMap) const
     {
-        return this->dvValue<T>(visitor, PathEls::Field(f), value, options);
+        return this->dvValue<T>(std::move(visitor), PathEls::Field(f), value, options);
     }
     template<typename F>
     bool dvValueLazy(DirectVisitor visitor, const PathEls::PathComponent &c, F valueF,
@@ -1111,7 +1137,7 @@ public:
     bool dvValueLazyField(DirectVisitor visitor, QStringView f, F valueF,
                           ConstantData::Options options = ConstantData::Options::MapIsMap) const
     {
-        return this->dvValueLazy(visitor, PathEls::Field(f), valueF, options);
+        return this->dvValueLazy(std::move(visitor), PathEls::Field(f), valueF, options);
     }
     DomItem subLocationItem(const PathEls::PathComponent &c, SourceLocation loc) const
     {
@@ -1119,25 +1145,28 @@ public:
     }
     // bool dvSubReference(DirectVisitor visitor, const PathEls::PathComponent &c, Path
     // referencedObject);
-    DomItem subReferencesItem(const PathEls::PathComponent &c, QList<Path> paths) const;
-    DomItem subReferenceItem(const PathEls::PathComponent &c, Path referencedObject) const;
-    bool dvReference(DirectVisitor visitor, const PathEls::PathComponent &c, Path referencedObject) const
+    DomItem subReferencesItem(const PathEls::PathComponent &c, const QList<Path> &paths) const;
+    DomItem subReferenceItem(const PathEls::PathComponent &c, const Path &referencedObject) const;
+    bool dvReference(DirectVisitor visitor, const PathEls::PathComponent &c, const Path &referencedObject) const
     {
-        return dvItem(visitor, c, [c, this, referencedObject]() {
+        return dvItem(std::move(visitor), c, [c, this, referencedObject]() {
             return this->subReferenceItem(c, referencedObject);
         });
     }
-    bool dvReferences(DirectVisitor visitor, const PathEls::PathComponent &c, QList<Path> paths) const
+    bool dvReferences(
+            DirectVisitor visitor, const PathEls::PathComponent &c, const QList<Path> &paths) const
     {
-        return dvItem(visitor, c, [c, this, paths]() { return this->subReferencesItem(c, paths); });
+        return dvItem(std::move(visitor), c, [c, this, paths]() {
+            return this->subReferencesItem(c, paths);
+        });
     }
-    bool dvReferenceField(DirectVisitor visitor, QStringView f, Path referencedObject) const
+    bool dvReferenceField(DirectVisitor visitor, QStringView f, const Path &referencedObject) const
     {
-        return dvReference(visitor, PathEls::Field(f), referencedObject);
+        return dvReference(std::move(visitor), PathEls::Field(f), referencedObject);
     }
-    bool dvReferencesField(DirectVisitor visitor, QStringView f, QList<Path> paths) const
+    bool dvReferencesField(DirectVisitor visitor, QStringView f, const QList<Path> &paths) const
     {
-        return dvReferences(visitor, PathEls::Field(f), paths);
+        return dvReferences(std::move(visitor), PathEls::Field(f), paths);
     }
     bool dvItem(DirectVisitor visitor, const PathEls::PathComponent &c, function_ref<DomItem()> it) const
     {
@@ -1145,7 +1174,7 @@ public:
     }
     bool dvItemField(DirectVisitor visitor, QStringView f, function_ref<DomItem()> it) const
     {
-        return dvItem(visitor, PathEls::Field(f), it);
+        return dvItem(std::move(visitor), PathEls::Field(f), it);
     }
     DomItem subListItem(const List &list) const;
     DomItem subMapItem(const Map &map) const;
@@ -1180,23 +1209,15 @@ public:
     template<typename T>
     bool dvWrapField(DirectVisitor visitor, QStringView f, T &obj) const
     {
-        return dvWrap<T>(visitor, PathEls::Field(f), obj);
+        return dvWrap<T>(std::move(visitor), PathEls::Field(f), obj);
     }
 
     DomItem() = default;
-    DomItem(std::shared_ptr<DomEnvironment>);
-    DomItem(std::shared_ptr<DomUniverse>);
+    DomItem(const std::shared_ptr<DomEnvironment> &);
+    DomItem(const std::shared_ptr<DomUniverse> &);
 
-    static DomItem fromCode(QString code, DomType fileType = DomType::QmlFile);
-    void loadFile(const FileToLoad &file, std::function<void(Path, const DomItem &, const DomItem &)> callback,
-                  LoadOptions loadOptions,
-                  std::optional<DomType> fileType = std::optional<DomType>()) const;
-    void loadModuleDependency(QString uri, Version v,
-                              std::function<void(Path, const DomItem &, const DomItem &)> callback = nullptr,
-                              ErrorHandler = nullptr) const;
-    void loadBuiltins(std::function<void(Path, const DomItem &, const DomItem &)> callback = nullptr,
-                      ErrorHandler = nullptr) const;
-    void loadPendingDependencies() const;
+    // TODO move to DomEnvironment?
+    static DomItem fromCode(const QString &code, DomType fileType = DomType::QmlFile);
 
     // --- start of potentially dangerous stuff, make private? ---
 
@@ -1230,33 +1251,36 @@ public:
     std::shared_ptr<T> ownerAs() const;
 
     template<typename Owner, typename T>
-    DomItem copy(Owner owner, Path ownerPath, T base) const
+    DomItem copy(const Owner &owner, const Path &ownerPath, const T &base) const
     {
-        Q_ASSERT(m_top);
+        Q_ASSERT(!std::holds_alternative<std::monostate>(m_top));
         static_assert(IsInlineDom<std::decay_t<T>>::value, "Expected an inline item or pointer");
         return DomItem(m_top, owner, ownerPath, base);
     }
 
     template<typename Owner>
-    DomItem copy(Owner owner, Path ownerPath) const
+    DomItem copy(const Owner &owner, const Path &ownerPath) const
     {
-        Q_ASSERT(m_top);
+        Q_ASSERT(!std::holds_alternative<std::monostate>(m_top));
         return DomItem(m_top, owner, ownerPath, owner.get());
     }
 
     template<typename T>
-    DomItem copy(T base) const
+    DomItem copy(const T &base) const
     {
-        Q_ASSERT(m_top);
+        Q_ASSERT(!std::holds_alternative<std::monostate>(m_top));
         using BaseT = std::decay_t<T>;
         static_assert(!std::is_same_v<BaseT, ElementT>,
                       "variant not supported, pass in the stored types");
-        static_assert(IsInlineDom<BaseT>::value, "expected either a pointer or an inline item");
-        if constexpr (IsSharedPointerToDomObject<BaseT>::value) {
+        static_assert(IsInlineDom<BaseT>::value || std::is_same_v<BaseT, std::monostate>,
+                      "expected either a pointer or an inline item");
+
+        if constexpr (IsSharedPointerToDomObject<BaseT>::value)
             return DomItem(m_top, base, Path(), base.get());
-        } else {
+        else if constexpr (IsInlineDom<BaseT>::value)
             return DomItem(m_top, m_owner, m_ownerPath, base);
-        }
+
+        Q_UNREACHABLE_RETURN(DomItem(m_top, m_owner, m_ownerPath, nullptr));
     }
 
 private:
@@ -1271,7 +1295,7 @@ private:
 
     template<typename Env, typename Owner, typename T,
              typename = std::enable_if_t<IsInlineDom<std::decay_t<T>>::value>>
-    DomItem(Env env, Owner owner, Path ownerPath, T el)
+    DomItem(Env env, Owner owner, const Path &ownerPath, const T &el)
         : m_top(env), m_owner(owner), m_ownerPath(ownerPath), m_element(el)
     {
         using BaseT = std::decay_t<T>;
@@ -1279,8 +1303,8 @@ private:
             if (!el || el->kind() == DomType::Empty) { // avoid null ptr, and allow only a
                 // single kind of Empty
                 m_kind = DomType::Empty;
-                m_top.reset();
-                m_owner.reset();
+                m_top = std::monostate();
+                m_owner = std::monostate();
                 m_ownerPath = Path();
                 m_element = Empty();
             } else {
@@ -1310,8 +1334,8 @@ private:
     friend class TestDomItem;
     friend QMLDOM_EXPORT bool operator==(const DomItem &, const DomItem &);
     DomType m_kind = DomType::Empty;
-    std::optional<TopT> m_top;
-    std::optional<OwnerT> m_owner;
+    TopT m_top;
+    OwnerT m_owner;
     Path m_ownerPath;
     ElementT m_element = Empty();
 };
@@ -1324,7 +1348,7 @@ inline bool operator!=(const DomItem &o1, const DomItem &o2)
 }
 
 template<typename T>
-static DomItem keyMultiMapHelper(const DomItem &self, QString key,
+static DomItem keyMultiMapHelper(const DomItem &self, const QString &key,
                                  const QMultiMap<QString, T> &mmap)
 {
     auto it = mmap.find(key);
@@ -1343,11 +1367,11 @@ static DomItem keyMultiMapHelper(const DomItem &self, QString key,
 }
 
 template<typename T>
-Map Map::fromMultiMapRef(Path pathFromOwner, const QMultiMap<QString, T> &mmap)
+Map Map::fromMultiMapRef(const Path &pathFromOwner, const QMultiMap<QString, T> &mmap)
 {
     return Map(
             pathFromOwner,
-            [&mmap](const DomItem &self, QString key) {
+            [&mmap](const DomItem &self, const QString &key) {
                 return keyMultiMapHelper(self, key, mmap);
             },
             [&mmap](const DomItem &) { return QSet<QString>(mmap.keyBegin(), mmap.keyEnd()); },
@@ -1356,12 +1380,12 @@ Map Map::fromMultiMapRef(Path pathFromOwner, const QMultiMap<QString, T> &mmap)
 
 template<typename T>
 Map Map::fromMapRef(
-        Path pathFromOwner, const QMap<QString, T> &map,
-        std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> elWrapper)
+        const Path &pathFromOwner, const QMap<QString, T> &map,
+        const std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> &elWrapper)
 {
     return Map(
             pathFromOwner,
-            [&map, elWrapper](const DomItem &self, QString key) {
+            [&map, elWrapper](const DomItem &self, const QString &key) {
                 const auto it = map.constFind(key);
                 if (it == map.constEnd())
                     return DomItem();
@@ -1380,7 +1404,7 @@ QSet<QString> Map::fileRegionKeysFromMap(const MapT &map)
 }
 
 template<typename T>
-Map Map::fromFileRegionMap(Path pathFromOwner, const QMap<FileLocationRegion, T> &map)
+Map Map::fromFileRegionMap(const Path &pathFromOwner, const QMap<FileLocationRegion, T> &map)
 {
     auto result = Map(
             pathFromOwner,
@@ -1397,7 +1421,7 @@ Map Map::fromFileRegionMap(Path pathFromOwner, const QMap<FileLocationRegion, T>
 }
 
 template<typename T>
-Map Map::fromFileRegionListMap(Path pathFromOwner,
+Map Map::fromFileRegionListMap(const Path &pathFromOwner,
                                    const QMap<FileLocationRegion, QList<T>> &map)
 {
     using namespace Qt::StringLiterals;
@@ -1423,8 +1447,8 @@ Map Map::fromFileRegionListMap(Path pathFromOwner,
 
 template<typename T>
 List List::fromQList(
-        Path pathFromOwner, QList<T> list,
-        std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> elWrapper,
+        const Path &pathFromOwner, const QList<T> &list,
+        const std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> &elWrapper,
         ListOptions options)
 {
     index_type len = list.size();
@@ -1451,8 +1475,8 @@ List List::fromQList(
 
 template<typename T>
 List List::fromQListRef(
-        Path pathFromOwner, const QList<T> &list,
-        std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> elWrapper,
+        const Path &pathFromOwner, const QList<T> &list,
+        const std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> &elWrapper,
         ListOptions options)
 {
     if (options == ListOptions::Reverse) {
@@ -1511,12 +1535,12 @@ public:
 
     virtual void addError(const DomItem &self, ErrorMessage &&msg);
     void addErrorLocal(ErrorMessage &&msg);
-    void clearErrors(ErrorGroups groups = ErrorGroups({}));
+    void clearErrors(const ErrorGroups &groups = ErrorGroups({}));
     // return false if a quick exit was requested
     bool iterateErrors(
             const DomItem &self,
             function_ref<bool(const DomItem &source, const ErrorMessage &msg)> visitor,
-            Path inPath = Path());
+            const Path &inPath = Path());
     QMultiMap<Path, ErrorMessage> localErrors() const {
         QMutexLocker l(mutex());
         return m_errors;
@@ -1540,22 +1564,22 @@ template<typename T>
 std::shared_ptr<T> DomItem::ownerAs() const
 {
     if constexpr (domTypeIsOwningItem(T::kindValue)) {
-        if (m_owner) {
+        if (!std::holds_alternative<std::monostate>(m_owner)) {
             if constexpr (T::kindValue == DomType::AttachedInfo) {
-                if (std::holds_alternative<std::shared_ptr<AttachedInfo>>(*m_owner))
+                if (std::holds_alternative<std::shared_ptr<AttachedInfo>>(m_owner))
                     return std::static_pointer_cast<T>(
-                            std::get<std::shared_ptr<AttachedInfo>>(*m_owner));
+                            std::get<std::shared_ptr<AttachedInfo>>(m_owner));
             } else if constexpr (T::kindValue == DomType::ExternalItemInfo) {
-                if (std::holds_alternative<std::shared_ptr<ExternalItemInfoBase>>(*m_owner))
+                if (std::holds_alternative<std::shared_ptr<ExternalItemInfoBase>>(m_owner))
                     return std::static_pointer_cast<T>(
-                            std::get<std::shared_ptr<ExternalItemInfoBase>>(*m_owner));
+                            std::get<std::shared_ptr<ExternalItemInfoBase>>(m_owner));
             } else if constexpr (T::kindValue == DomType::ExternalItemPair) {
-                if (std::holds_alternative<std::shared_ptr<ExternalItemPairBase>>(*m_owner))
+                if (std::holds_alternative<std::shared_ptr<ExternalItemPairBase>>(m_owner))
                     return std::static_pointer_cast<T>(
-                            std::get<std::shared_ptr<ExternalItemPairBase>>(*m_owner));
+                            std::get<std::shared_ptr<ExternalItemPairBase>>(m_owner));
             } else {
-                if (std::holds_alternative<std::shared_ptr<T>>(*m_owner)) {
-                    return std::get<std::shared_ptr<T>>(*m_owner);
+                if (std::holds_alternative<std::shared_ptr<T>>(m_owner)) {
+                    return std::get<std::shared_ptr<T>>(m_owner);
                 }
             }
         }
@@ -1682,24 +1706,24 @@ public:
     MutableDomItem index(index_type i) { return MutableDomItem(item().index(i)); }
 
     QSet<QString> const keys() { return item().keys(); }
-    MutableDomItem key(QString name) { return MutableDomItem(item().key(name)); }
+    MutableDomItem key(const QString &name) { return MutableDomItem(item().key(name)); }
     MutableDomItem key(QStringView name) { return key(name.toString()); }
 
     void
-    dump(Sink s, int indent = 0,
+    dump(const Sink &s, int indent = 0,
          function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter = noFilter)
     {
         item().dump(s, indent, filter);
     }
     FileWriter::Status
-    dump(QString path,
+    dump(const QString &path,
          function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter = noFilter,
          int nBackups = 2, int indent = 0, FileWriter *fw = nullptr)
     {
         return item().dump(path, filter, nBackups, indent, fw);
     }
     void writeOut(OutWriter &lw) { return item().writeOut(lw); }
-    MutableDomItem writeOut(QString path, int nBackups = 2,
+    MutableDomItem writeOut(const QString &path, int nBackups = 2,
                             const LineWriterOptions &opt = LineWriterOptions(),
                             FileWriter *fw = nullptr)
     {
@@ -1711,7 +1735,7 @@ public:
     {
         return item().makeCopy(option);
     }
-    bool commitToBase(std::shared_ptr<DomEnvironment> validEnvPtr = nullptr)
+    bool commitToBase(const std::shared_ptr<DomEnvironment> &validEnvPtr = nullptr)
     {
         return item().commitToBase(validEnvPtr);
     }
@@ -1746,15 +1770,15 @@ public:
     ErrorHandler errorHandler();
 
     // convenience setters
-    MutableDomItem addPrototypePath(Path prototypePath);
-    MutableDomItem setNextScopePath(Path nextScopePath);
+    MutableDomItem addPrototypePath(const Path &prototypePath);
+    MutableDomItem setNextScopePath(const Path &nextScopePath);
     MutableDomItem setPropertyDefs(QMultiMap<QString, PropertyDefinition> propertyDefs);
     MutableDomItem setBindings(QMultiMap<QString, Binding> bindings);
     MutableDomItem setMethods(QMultiMap<QString, MethodInfo> functionDefs);
-    MutableDomItem setChildren(QList<QmlObject> children);
-    MutableDomItem setAnnotations(QList<QmlObject> annotations);
-    MutableDomItem setScript(std::shared_ptr<ScriptExpression> exp);
-    MutableDomItem setCode(QString code);
+    MutableDomItem setChildren(const QList<QmlObject> &children);
+    MutableDomItem setAnnotations(const QList<QmlObject> &annotations);
+    MutableDomItem setScript(const std::shared_ptr<ScriptExpression> &exp);
+    MutableDomItem setCode(const QString &code);
     MutableDomItem addPropertyDef(const PropertyDefinition &propertyDef,
                                   AddOption option = AddOption::Overwrite);
     MutableDomItem addBinding(Binding binding, AddOption option = AddOption::Overwrite);
@@ -1768,7 +1792,7 @@ public:
     void setSemanticScope(const QQmlJSScope::ConstPtr &scope);
 
     MutableDomItem() = default;
-    MutableDomItem(const DomItem &owner, Path pathFromOwner):
+    MutableDomItem(const DomItem &owner, const Path &pathFromOwner):
         m_owner(owner), m_pathFromOwner(pathFromOwner)
     {}
     MutableDomItem(const DomItem &item):
@@ -1829,7 +1853,7 @@ private:
 QMLDOM_EXPORT QDebug operator<<(QDebug debug, const MutableDomItem &c);
 
 template<typename K, typename T>
-Path insertUpdatableElementInMultiMap(Path mapPathFromOwner, QMultiMap<K, T> &mmap, K key,
+Path insertUpdatableElementInMultiMap(const Path &mapPathFromOwner, QMultiMap<K, T> &mmap, K key,
                                       const T &value, AddOption option = AddOption::KeepExisting,
                                       T **valuePtr = nullptr)
 {
@@ -1866,7 +1890,7 @@ Path insertUpdatableElementInMultiMap(Path mapPathFromOwner, QMultiMap<K, T> &mm
 }
 
 template<typename T>
-Path appendUpdatableElementInQList(Path listPathFromOwner, QList<T> &list, const T &value,
+Path appendUpdatableElementInQList(const Path &listPathFromOwner, QList<T> &list, const T &value,
                                    T **vPtr = nullptr)
 {
     int idx = list.size();
@@ -1880,7 +1904,7 @@ Path appendUpdatableElementInQList(Path listPathFromOwner, QList<T> &list, const
 }
 
 template <typename T, typename K = QString>
-void updatePathFromOwnerMultiMap(QMultiMap<K, T> &mmap, Path newPath)
+void updatePathFromOwnerMultiMap(QMultiMap<K, T> &mmap, const Path &newPath)
 {
     auto it = mmap.begin();
     auto end = mmap.end();
@@ -1909,7 +1933,7 @@ void updatePathFromOwnerMultiMap(QMultiMap<K, T> &mmap, Path newPath)
 }
 
 template <typename T>
-void updatePathFromOwnerQList(QList<T> &list, Path newPath)
+void updatePathFromOwnerQList(QList<T> &list, const Path &newPath)
 {
     auto it = list.begin();
     auto end = list.end();
@@ -2199,7 +2223,7 @@ inline DomKind DomBase::domKind() const
 inline bool DomBase::iterateDirectSubpathsConst(const DomItem &self, DirectVisitor visitor) const
 {
     Q_ASSERT(self.base() == this);
-    return self.iterateDirectSubpaths(visitor);
+    return self.iterateDirectSubpaths(std::move(visitor));
 }
 
 inline DomItem DomBase::containingObject(const DomItem &self) const
@@ -2288,7 +2312,7 @@ inline QSet<QString> const DomBase::keys(const DomItem &self) const
     return res;
 }
 
-inline DomItem DomBase::key(const DomItem &self, QString name) const
+inline DomItem DomBase::key(const DomItem &self, const QString &name) const
 {
     DomItem res;
     self.iterateDirectSubpaths(

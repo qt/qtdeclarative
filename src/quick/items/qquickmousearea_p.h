@@ -26,7 +26,7 @@ class QQuickDrag;
 class QQuickMouseAreaPrivate;
 class QQuickWheelEvent;
 // used in Qt Location
-class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
+class Q_QUICK_EXPORT QQuickMouseArea : public QQuickItem
 {
     Q_OBJECT
 

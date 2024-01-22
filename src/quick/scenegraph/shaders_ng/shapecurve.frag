@@ -16,7 +16,11 @@ layout(location = 2) in vec2 coord;
 layout(location = 0) out vec4 fragColor;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 qt_Matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 qt_Matrix;
+#endif
     float matrixScale;
     float opacity;
     float debug;

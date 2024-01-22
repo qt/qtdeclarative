@@ -26,7 +26,7 @@ class QSGContext;
 
 class QSGRenderLoop;
 
-struct Q_QUICK_PRIVATE_EXPORT QSGContextFactoryInterface : public QFactoryInterface
+struct Q_QUICK_EXPORT QSGContextFactoryInterface : public QFactoryInterface
 {
     enum Flag {
         SupportsShaderEffectNode = 0x01
@@ -46,7 +46,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSGContextFactoryInterface::Flags)
         "org.qt-project.Qt.QSGContextFactoryInterface"
 Q_DECLARE_INTERFACE(QSGContextFactoryInterface, QSGContextFactoryInterface_iid)
 
-class Q_QUICK_PRIVATE_EXPORT QSGContextPlugin : public QObject, public QSGContextFactoryInterface
+class Q_QUICK_EXPORT QSGContextPlugin : public QObject, public QSGContextFactoryInterface
 {
     Q_OBJECT
     Q_INTERFACES(QSGContextFactoryInterface:QFactoryInterface)

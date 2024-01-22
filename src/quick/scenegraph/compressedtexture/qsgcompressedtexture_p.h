@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TEXTUREIO);
 
-class Q_QUICK_PRIVATE_EXPORT QSGCompressedTexture : public QSGTexture
+class Q_QUICK_EXPORT QSGCompressedTexture : public QSGTexture
 {
     Q_OBJECT
 public:
@@ -63,7 +63,7 @@ namespace QSGOpenGLAtlasTexture {
     class Manager;
 }
 
-class Q_QUICK_PRIVATE_EXPORT QSGCompressedTextureFactory : public QQuickTextureFactory
+class Q_QUICK_EXPORT QSGCompressedTextureFactory : public QQuickTextureFactory
 {
 public:
     QSGCompressedTextureFactory(const QTextureFileData& texData);

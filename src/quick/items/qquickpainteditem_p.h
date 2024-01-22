@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 class QQuickPaintedItemTextureProvider;
 class QSGPainterNode;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPaintedItemPrivate : public QQuickItemPrivate
+class Q_QUICK_EXPORT QQuickPaintedItemPrivate : public QQuickItemPrivate
 {
 public:
     QQuickPaintedItemPrivate();

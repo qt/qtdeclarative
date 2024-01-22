@@ -203,6 +203,37 @@ QVector2D QQuadPath::Element::pointAtFraction(float t) const
     }
 }
 
+QQuadPath::Element QQuadPath::Element::segmentFromTo(float t0, float t1) const
+{
+    if (t0 <= 0 && t1 >= 1)
+        return *this;
+
+    Element part;
+    part.sp = pointAtFraction(t0);
+    part.ep = pointAtFraction(t1);
+
+    if (isLine()) {
+        part.cp = 0.5f * (part.sp + part.ep);
+        part.m_isLine = true;
+    } else {
+        // Split curve right at t0, yields { t0, rcp, endPoint } quad segment
+        const QVector2D rcp = (1 - t0) * controlPoint() + t0 * endPoint();
+        // Split that left at t1, yields  { t0, lcp, t1 } quad segment
+        float segmentT = (t1 - t0) / (1 - t0);
+        part.cp = (1 - segmentT) * part.sp + segmentT * rcp;
+    }
+    return part;
+}
+
+QQuadPath::Element QQuadPath::Element::reversed() const {
+    Element swappedElement;
+    swappedElement.ep = sp;
+    swappedElement.cp = cp;
+    swappedElement.sp = ep;
+    swappedElement.m_isLine = m_isLine;
+    return swappedElement;
+}
+
 float QQuadPath::Element::extent() const
 {
     // TBD: cache this value if we start using it a lot
@@ -217,13 +248,15 @@ float QQuadPath::Element::extent() const
 
 // Returns the number of intersections between element and a horizontal line at y.
 // The t values of max 2 intersection(s) are stored in the fractions array
-int QQuadPath::Element::intersectionsAtY(float y, float *fractions) const
+int QQuadPath::Element::intersectionsAtY(float y, float *fractions, bool swapXY) const
 {
     Q_ASSERT(!isLine());
 
-    const float y0 = startPoint().y() - y;
-    const float y1 = controlPoint().y() - y;
-    const float y2 = endPoint().y() - y;
+    auto getY = [=](QVector2D p) -> float { return swapXY ? -p.x() : p.y(); };
+
+    const float y0 = getY(startPoint()) - y;
+    const float y1 = getY(controlPoint()) - y;
+    const float y2 = getY(endPoint()) - y;
 
     int numRoots = 0;
     const float a = y0 - (2 * y1) + y2;
@@ -333,6 +366,86 @@ bool QQuadPath::contains(const QVector2D &point) const
     return (fillRule() == Qt::WindingFill ? (winding_number != 0) : ((winding_number % 2) != 0));
 }
 
+// similar as contains. But we treat the element with the index elementIdx in a special way
+// that should be numerically more stable. The result is a contains for a point on the left
+// and for the right side of the element.
+QQuadPath::Element::FillSide QQuadPath::fillSideOf(int elementIdx, float elementT) const
+{
+    constexpr float toleranceT = 1e-3f;
+    const QVector2D point = m_elements.at(elementIdx).pointAtFraction(elementT);
+
+    const bool swapXY = qAbs(m_elements.at(elementIdx).tangentAtFraction(elementT).x()) > qAbs(m_elements.at(elementIdx).tangentAtFraction(elementT).y());
+    auto getX = [=](QVector2D p) -> float { return swapXY ? p.y() : p.x(); };
+    auto getY = [=](QVector2D p) -> float { return swapXY ? -p.x() : p.y(); };
+
+    int winding_number = 0;
+    for (int i = 0; i < elementCount(); i++) {
+        const Element &e = m_elements.at(i);
+        int dir =  1;
+        float y1 = getY(e.startPoint());
+        float y2 = getY(e.endPoint());
+        if (y2 < y1) {
+            qSwap(y1, y2);
+            dir = -1;
+        }
+        if (e.m_isLine) {
+            if (getY(point) < y1 || getY(point) >= y2 || y1 == y2)
+                continue;
+            const float t = (getY(point) - getY(e.startPoint())) / (getY(e.endPoint()) - getY(e.startPoint()));
+            const float x = getX(e.startPoint()) + t * (getX(e.endPoint()) - getX(e.startPoint()));
+            if ((elementIdx != i && x <= getX(point)) ||
+                (elementIdx == i && x <= getX(point) && qAbs(t - elementT) > toleranceT)) {
+                winding_number += dir;
+            }
+        } else {
+            y1 = qMin(y1, getY(e.controlPoint()));
+            y2 = qMax(y2, getY(e.controlPoint()));
+            if (getY(point) < y1 || getY(point) >= y2)
+                continue;
+            float ts[2];
+            const int numRoots = e.intersectionsAtY(getY(point), ts, swapXY);
+            // Count if there is exactly one intersection to the left
+            bool oneHit = false;
+            float tForHit = -1;
+            for (int j = 0; j < numRoots; j++) {
+                const float x = getX(e.pointAtFraction(ts[j]));
+                if ((elementIdx != i && x <= getX(point)) ||
+                    (elementIdx == i && x <= getX(point) && qAbs(ts[j] - elementT) > toleranceT)) {
+                    oneHit = !oneHit;
+                    tForHit = ts[j];
+                }
+            }
+            if (oneHit) {
+                dir = getY(e.tangentAtFraction(tForHit)) < 0 ? -1 : 1;
+                winding_number += dir;
+            }
+        }
+    };
+
+    int left_winding_number = winding_number;
+    int right_winding_number = winding_number;
+
+    int dir = getY(m_elements.at(elementIdx).tangentAtFraction(elementT)) < 0 ? -1 : 1;
+
+    if (dir > 0) {
+        left_winding_number += dir;
+    } else {
+        right_winding_number += dir;
+    }
+
+    bool leftInside = (fillRule() == Qt::WindingFill ? (left_winding_number != 0) : ((left_winding_number % 2) != 0));
+    bool rightInside = (fillRule() == Qt::WindingFill ? (right_winding_number != 0) : ((right_winding_number % 2) != 0));
+
+    if (leftInside && rightInside)
+        return QQuadPath::Element::FillSideBoth;
+    else if (leftInside)
+        return QQuadPath::Element::FillSideLeft;
+    else if (rightInside)
+        return QQuadPath::Element::FillSideRight;
+    else
+        return QQuadPath::Element::FillSideUndetermined; //should not happen except for numerical error.
+}
+
 void QQuadPath::addElement(const QVector2D &control, const QVector2D &endPoint, bool isLine)
 {
     if (qFuzzyCompare(currentPoint, endPoint))
@@ -367,11 +480,13 @@ QQuadPath::Element::CurvatureFlags QQuadPath::coordinateOrderOfElement(const QQu
     return pathContainsPoint ? Element::FillOnRight : Element::CurvatureFlags(0);
 }
 
-QQuadPath QQuadPath::fromPainterPath(const QPainterPath &path)
+QQuadPath QQuadPath::fromPainterPath(const QPainterPath &path, PathHints hints)
 {
     QQuadPath res;
     res.reserve(path.elementCount());
     res.setFillRule(path.fillRule());
+
+    const bool isQuadratic = hints & PathQuadratic;
 
     QPolygonF quads;
     QPointF sp;
@@ -390,12 +505,18 @@ QQuadPath QQuadPath::fromPainterPath(const QPainterPath &path)
             QPointF cp1 = ep;
             QPointF cp2(path.elementAt(++i));
             ep = path.elementAt(++i);
-            QBezier b = QBezier::fromPoints(sp, cp1, cp2, ep);
-            qt_toQuadratics(b, &quads);
-            for (int i = 1; i < quads.size(); i += 2) {
-                QVector2D cp(quads[i]);
-                QVector2D ep(quads[i + 1]);
-                res.quadTo(cp, ep);
+            if (isQuadratic) {
+                const qreal f = 3.0 / 2.0;
+                const QPointF cp = sp + f * (cp1 - sp);
+                res.quadTo(QVector2D(cp), QVector2D(ep));
+            } else {
+                QBezier b = QBezier::fromPoints(sp, cp1, cp2, ep);
+                qt_toQuadratics(b, &quads);
+                for (int i = 1; i < quads.size(); i += 2) {
+                    QVector2D cp(quads[i]);
+                    QVector2D ep(quads[i + 1]);
+                    res.quadTo(cp, ep);
+                }
             }
             break;
         }
@@ -406,6 +527,7 @@ QQuadPath QQuadPath::fromPainterPath(const QPainterPath &path)
         sp = ep;
     }
 
+    res.setPathHints(hints | PathQuadratic);
     return res;
 }
 
@@ -420,12 +542,16 @@ void QQuadPath::addCurvatureData()
     // can easily detect curvature of all subsequent elements in the subpath.
 
     static bool checkAnomaly = qEnvironmentVariableIntValue("QT_QUICKSHAPES_CHECK_ALL_CURVATURE") != 0;
+    const bool pathHasFillOnRight = testHint(PathFillOnRight);
 
     Element::CurvatureFlags flags = Element::CurvatureUndetermined;
     for (QQuadPath::Element &element : m_elements) {
         Q_ASSERT(element.childCount() == 0);
         if (element.isSubpathStart()) {
-            flags = coordinateOrderOfElement(element);
+            if (pathHasFillOnRight && !checkAnomaly)
+                flags = Element::FillOnRight;
+            else
+                flags = coordinateOrderOfElement(element);
         } else if (checkAnomaly) {
             Element::CurvatureFlags newFlags = coordinateOrderOfElement(element);
             if (flags != newFlags) {
@@ -494,6 +620,22 @@ QPainterPath QQuadPath::toPainterPath() const
     return res;
 }
 
+QString QQuadPath::asSvgString() const
+{
+    QString res;
+    QTextStream str(&res);
+    for (const Element &element : m_elements) {
+        if (element.isSubpathStart())
+            str << "M " << element.startPoint().x() << " " << element.startPoint().y() << " ";
+        if (element.isLine())
+            str << "L " << element.endPoint().x() << " " << element.endPoint().y() << " ";
+        else
+            str << "Q " << element.controlPoint().x() << " " << element.controlPoint().y() << " "
+                << element.endPoint().x() << " " << element.endPoint().y() << " ";
+    }
+    return res;
+}
+
 // Returns a new path since doing it inline would probably be less efficient
 // (technically changing it from O(n) to O(n^2))
 // Note that this function should be called before splitting any elements,
@@ -553,6 +695,8 @@ QQuadPath QQuadPath::flattened() const
     QQuadPath res;
     res.reserve(elementCountRecursive());
     iterateElements([&](const QQuadPath::Element &element) { res.m_elements.append(element); });
+    res.setPathHints(pathHints());
+    res.setFillRule(fillRule());
     return res;
 }
 
@@ -720,6 +864,8 @@ QQuadPath QQuadPath::dashed(qreal lineWidth, const QList<qreal> &dashPattern, qr
             }
         }
     }
+    res.setFillRule(fillRule());
+    res.setPathHints(pathHints());
     return res;
 }
 

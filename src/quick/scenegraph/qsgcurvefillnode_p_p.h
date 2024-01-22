@@ -4,7 +4,7 @@
 #ifndef QSGCURVEFILLNODE_P_P_H
 #define QSGCURVEFILLNODE_P_P_H
 
-#include <QtQuick/private/qtquickexports_p.h>
+#include <QtQuick/qtquickexports.h>
 #include <QtQuick/qsgmaterial.h>
 
 //
@@ -21,7 +21,7 @@
 QT_BEGIN_NAMESPACE
 
 class QSGCurveFillNode;
-class Q_QUICK_PRIVATE_EXPORT QSGCurveFillMaterial : public QSGMaterial
+class Q_QUICK_EXPORT QSGCurveFillMaterial : public QSGMaterial
 {
 public:
     QSGCurveFillMaterial(QSGCurveFillNode *node);

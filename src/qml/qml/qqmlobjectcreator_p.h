@@ -101,7 +101,7 @@ struct QQmlObjectCreatorSharedState final : QQmlRefCounted<QQmlObjectCreatorShar
     bool hadTopLevelRequiredProperties;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlObjectCreator
+class Q_QML_EXPORT QQmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlObjectCreator)
 public:

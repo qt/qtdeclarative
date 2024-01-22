@@ -1,4 +1,4 @@
-# Copyright (C) 2022 The Qt Company Ltd.
+# Copyright (C) 2023 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
 cmake_minimum_required(VERSION 3.16)
@@ -27,9 +27,9 @@ target_link_libraries(chattutorial-chapter1 PRIVATE
 
 qt_policy(SET QTP0001 NEW)
 qt_add_qml_module(chattutorial-chapter1
-    URI chapter1
+    URI chattutorial
     QML_FILES
-        "main.qml"
+        "Main.qml"
 )
 
 qt6_add_resources(chattutorial-chapter1 "conf"

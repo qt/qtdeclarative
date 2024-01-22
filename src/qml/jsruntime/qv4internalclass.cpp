@@ -122,6 +122,11 @@ PropertyKey SharedInternalClassDataPrivate<PropertyKey>::at(uint i) const
 void SharedInternalClassDataPrivate<PropertyKey>::set(uint i, PropertyKey t)
 {
     Q_ASSERT(data && i < size());
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack) {
+        if constexpr (QV4::WriteBarrier::isInsertionBarrier)
+            if (auto string = t.asStringOrSymbol())
+                string->mark(stack);
+    });
     data->values.values[i].rawValueRef() = t.id();
 }
 
@@ -256,6 +261,11 @@ void InternalClass::init(Heap::InternalClass *other)
     protoId = engine->newProtoId();
 
     internalClass.set(engine, other->internalClass);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack) {
+        if constexpr (QV4::WriteBarrier::isInsertionBarrier) {
+            other->mark(stack);
+        }
+    });
 }
 
 void InternalClass::destroy()
@@ -476,6 +486,10 @@ Heap::InternalClass *InternalClass::changePrototypeImpl(Heap::Object *proto)
 
     // create a new class and add it to the tree
     Heap::InternalClass *newClass = engine->newClass(this);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack) {
+        if (proto && QV4::WriteBarrier::isInsertionBarrier)
+            proto->mark(stack);
+    });
     newClass->prototype = proto;
 
     t.lookup = newClass;

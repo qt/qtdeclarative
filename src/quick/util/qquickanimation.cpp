@@ -1188,7 +1188,7 @@ QVariant QQuickPropertyAction::value() const
 void QQuickPropertyAction::setValue(const QVariant &v)
 {
     Q_D(QQuickPropertyAction);
-    if (d->value.isNull || d->value != v) {
+    if (!d->value.isValid() || d->value != v) {
         d->value = v;
         emit valueChanged(v);
     }

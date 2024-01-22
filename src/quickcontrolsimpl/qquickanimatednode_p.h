@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickWindow;
 
-class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickAnimatedNode : public QObject, public QSGTransformNode
+class Q_QUICKCONTROLS2IMPL_EXPORT QQuickAnimatedNode : public QObject, public QSGTransformNode
 {
     Q_OBJECT
 

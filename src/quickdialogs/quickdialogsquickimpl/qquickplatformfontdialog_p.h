@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuickFontDialogImpl;
 class QWindow;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickPlatformFontDialog
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickPlatformFontDialog
     : public QPlatformFontDialogHelper
 {
     Q_OBJECT

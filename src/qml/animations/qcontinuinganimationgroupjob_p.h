@@ -21,7 +21,7 @@ QT_REQUIRE_CONFIG(qml_animation);
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QContinuingAnimationGroupJob : public QAnimationGroupJob
+class Q_QML_EXPORT QContinuingAnimationGroupJob : public QAnimationGroupJob
 {
     Q_DISABLE_COPY(QContinuingAnimationGroupJob)
 public:

@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPinch : public QObject
+class Q_QUICK_EXPORT QQuickPinch : public QObject
 {
     Q_OBJECT
 
@@ -160,7 +160,7 @@ private:
     bool m_active;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPinchEvent : public QObject
+class Q_QUICK_EXPORT QQuickPinchEvent : public QObject
 {
     Q_OBJECT
 
@@ -231,7 +231,7 @@ private:
 
 
 class QQuickPinchAreaPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPinchArea : public QQuickItem
+class Q_QUICK_EXPORT QQuickPinchArea : public QQuickItem
 {
     Q_OBJECT
 

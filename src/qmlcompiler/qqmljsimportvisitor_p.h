@@ -15,7 +15,7 @@
 // We mean it.
 
 #include <private/qqmljscontextualtypes_p.h>
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include "qqmljsannotation_p.h"
 #include "qqmljsimporter_p.h"
@@ -39,7 +39,7 @@ class QQmlDomAstCreatorWithQQmlJSScope;
 }
 
 struct QQmlJSResourceFileMapper;
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSImportVisitor : public QQmlJS::AST::Visitor
+class Q_QMLCOMPILER_EXPORT QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 {
 public:
     QQmlJSImportVisitor();

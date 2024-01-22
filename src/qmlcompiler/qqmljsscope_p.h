@@ -14,7 +14,7 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include "qqmljsmetatypes_p.h"
 #include "qdeferredpointer_p.h"
@@ -127,7 +127,7 @@ struct ContextualTypes;
 
 } // namespace QQmlJS
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSScope
+class Q_QMLCOMPILER_EXPORT QQmlJSScope
 {
     friend QQmlSA::Element;
 
@@ -624,7 +624,7 @@ inline QQmlJSScope::ConstPtr QQmlJSScope::nonCompositeBaseType(const ConstPtr &t
 Q_DECLARE_TYPEINFO(QQmlJSScope::QmlIRCompatibilityBindingData, Q_RELOCATABLE_TYPE);
 
 template<>
-class Q_QMLCOMPILER_PRIVATE_EXPORT QDeferredFactory<QQmlJSScope>
+class Q_QMLCOMPILER_EXPORT QDeferredFactory<QQmlJSScope>
 {
 public:
     QDeferredFactory() = default;

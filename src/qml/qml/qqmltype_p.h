@@ -40,7 +40,7 @@ namespace QV4 {
 struct String;
 }
 
-class Q_QML_PRIVATE_EXPORT QQmlType
+class Q_QML_EXPORT QQmlType
 {
 public:
     QQmlType();
@@ -119,7 +119,7 @@ public:
 
     bool isInlineComponentType() const;
 
-    struct Q_QML_PRIVATE_EXPORT SingletonInstanceInfo final
+    struct Q_QML_EXPORT SingletonInstanceInfo final
         : public QQmlRefCounted<SingletonInstanceInfo>
     {
         using Ptr = QQmlRefPointer<SingletonInstanceInfo>;
@@ -148,8 +148,7 @@ public:
     int scopedEnumIndex(QQmlEnginePrivate *engine, const QString &, bool *ok) const;
     int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *, bool *ok) const;
     int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &, bool *ok) const;
-    int scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &, const QByteArray &, bool *ok) const;
-    int scopedEnumValue(QQmlEnginePrivate *engine, QStringView, QStringView, bool *ok) const;
+    int scopedEnumValue(QQmlEnginePrivate *engine, const QHashedStringRef &, const QHashedStringRef &, bool *ok) const;
 
     const QQmlTypePrivate *priv() const { return d.data(); }
     static void refHandle(const QQmlTypePrivate *priv);

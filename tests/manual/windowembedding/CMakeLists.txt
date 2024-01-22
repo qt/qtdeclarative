@@ -59,17 +59,13 @@ if(APPLE)
         "-framework AVFoundation"
         "-framework AVKit"
     )
-    # Xcode fails to sign Contents/PlugIns/shared/qmldir
-    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
+    if(NOT CMAKE_SYSTEM_NAME STREQUAL "iOS")
+        # Xcode fails to sign Contents/PlugIns/shared/qmldir
+        set_target_properties(windowembedding PROPERTIES
+            XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
+        )
+    endif()
 endif()
-
-# The add_qml_module_to_macos_app_bundle helper from 'shared'
-# fails top copy the qmldir file from the right place.
-add_custom_command(TARGET windowembedding POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_PROPERTY:windowembedding_shared,RUNTIME_OUTPUT_DIRECTORY>/qmldir
-        $<TARGET_FILE_DIR:windowembedding_shared>/qmldir
-)
 
 install(TARGETS windowembedding
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

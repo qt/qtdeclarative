@@ -23,7 +23,7 @@ class QQuickItem;
 
 class QQuickAnimatorJob;
 class QQuickAnimatorPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnimator : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickAnimator : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnimator)
@@ -73,7 +73,7 @@ Q_SIGNALS:
     void fromChanged(qreal from);
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickScaleAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickScaleAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(ScaleAnimator)
@@ -85,7 +85,7 @@ protected:
     QString propertyName() const override { return QStringLiteral("scale"); }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickXAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickXAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(XAnimator)
@@ -97,7 +97,7 @@ protected:
     QString propertyName() const override { return QStringLiteral("x"); }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickYAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickYAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(YAnimator)
@@ -109,7 +109,7 @@ protected:
     QString propertyName() const override { return QStringLiteral("y"); }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickOpacityAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickOpacityAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(OpacityAnimator)
@@ -122,7 +122,7 @@ protected:
 };
 
 class QQuickRotationAnimatorPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickRotationAnimator : public QQuickAnimator
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickRotationAnimator)
@@ -149,7 +149,7 @@ protected:
 
 #if QT_CONFIG(quick_shadereffect)
 class QQuickUniformAnimatorPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickUniformAnimator : public QQuickAnimator
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickUniformAnimator)

@@ -32,7 +32,7 @@ namespace QSGRhiAtlasTexture {
     class Manager;
 }
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultRenderContext : public QSGRenderContext
+class Q_QUICK_EXPORT QSGDefaultRenderContext : public QSGRenderContext
 {
     Q_OBJECT
 public:

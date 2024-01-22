@@ -39,7 +39,7 @@ class QSGRenderContext;
 
 class QQuickTextNodeEngine;
 
-class Q_QUICK_PRIVATE_EXPORT QSGInternalTextNode : public QSGTextNode
+class Q_QUICK_EXPORT QSGInternalTextNode : public QSGTextNode
 {
 public:
     QSGInternalTextNode(QSGRenderContext *renderContext);
@@ -83,14 +83,14 @@ public:
         return m_styleColor;
     }
 
-    void setAnchorColor(const QColor &anchorColor) override
+    void setLinkColor(const QColor &linkColor) override
     {
-        m_anchorColor = anchorColor;
+        m_linkColor = linkColor;
     }
 
-    QColor anchorColor() const override
+    QColor linkColor() const override
     {
-        return m_anchorColor;
+        return m_linkColor;
     }
 
     void setSelectionColor(const QColor &selectionColor) override
@@ -158,7 +158,7 @@ public:
     void addRectangleNode(const QRectF &rect, const QColor &color);
     virtual void addDecorationNode(const QRectF &rect, const QColor &color);
     void addImage(const QRectF &rect, const QImage &image);
-    void deleteContent();
+    void clear() override;
     QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
                             QQuickText::TextStyle style = QQuickText::Normal, const QColor &styleColor = QColor(),
                             QSGNode *parentNode = 0);
@@ -175,7 +175,7 @@ private:
     QRectF m_viewport;
     QColor m_color = QColor(0, 0, 0);
     QColor m_styleColor = QColor(0, 0, 0);
-    QColor m_anchorColor = QColor(0, 0, 255);
+    QColor m_linkColor = QColor(0, 0, 255);
     QColor m_selectionColor = QColor(0, 0, 128);
     QColor m_selectionTextColor = QColor(255, 255, 255);
     bool m_smooth = false;

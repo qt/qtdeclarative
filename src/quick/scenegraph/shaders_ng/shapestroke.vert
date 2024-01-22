@@ -15,7 +15,11 @@ layout(location = 5) out float offset;
 
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 qt_Matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 qt_Matrix;
+#endif
 
     float matrixScale;
     float opacity;
@@ -29,8 +33,6 @@ layout(std140, binding = 0) uniform buf {
     float reserved5;
     float reserved6;
 } ubuf;
-
-out gl_PerVertex { vec4 gl_Position; };
 
 #define SQRT2 1.41421356237
 
@@ -72,5 +74,9 @@ void main()
 
 
 
+#if QSHADER_VIEW_COUNT >= 2
+    gl_Position = ubuf.qt_Matrix[gl_ViewIndex] * P;
+#else
     gl_Position = ubuf.qt_Matrix * P;
+#endif
 }

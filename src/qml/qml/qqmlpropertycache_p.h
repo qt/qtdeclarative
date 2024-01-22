@@ -116,7 +116,7 @@ private:
     mutable QBasicAtomicInteger<quintptr> d = 0;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlPropertyCache final
+class Q_QML_EXPORT QQmlPropertyCache final
     : public QQmlRefCounted<QQmlPropertyCache>
 {
 public:

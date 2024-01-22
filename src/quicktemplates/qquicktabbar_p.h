@@ -25,7 +25,7 @@ class QQuickTabBarPrivate;
 class QQuickTabBarAttached;
 class QQuickTabBarAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTabBar : public QQuickContainer
+class Q_QUICKTEMPLATES2_EXPORT QQuickTabBar : public QQuickContainer
 {
     Q_OBJECT
     Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)
@@ -73,7 +73,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickTabBar)
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTabBarAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickTabBarAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)

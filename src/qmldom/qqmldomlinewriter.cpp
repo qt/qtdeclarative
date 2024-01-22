@@ -50,8 +50,9 @@ void PendingSourceLocation::commit()
         updater(value);
 }
 
-LineWriter::LineWriter(SinkF innerSink, QString fileName, const LineWriterOptions &options,
-                       int lineNr, int columnNr, int utf16Offset, QString currentLine)
+LineWriter::LineWriter(
+        const SinkF &innerSink, const QString &fileName, const LineWriterOptions &options,
+        int lineNr, int columnNr, int utf16Offset, const QString &currentLine)
     : m_innerSinks({ innerSink }),
       m_fileName(fileName),
       m_lineNr(lineNr),
@@ -320,7 +321,7 @@ void LineWriter::handleTrailingSpace(LineWriterOptions::TrailingSpace trailingSp
     }
 }
 
-void LineWriter::reindentAndSplit(QString eol, bool eof)
+void LineWriter::reindentAndSplit(const QString &eol, bool eof)
 {
     // maybe write out
     if (!eol.isEmpty() || eof) {
@@ -370,7 +371,7 @@ void LineWriter::textAddCallback(LineWriter::TextAddType t)
     }
 }
 
-void LineWriter::commitLine(QString eol, TextAddType tType, int untilChar)
+void LineWriter::commitLine(const QString &eol, TextAddType tType, int untilChar)
 {
     if (untilChar == -1)
         untilChar = m_currentLine.size();

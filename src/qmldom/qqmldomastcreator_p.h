@@ -187,17 +187,17 @@ private:
     void removeCurrentNode(std::optional<DomType> expectedType);
     void removeCurrentScriptNode(std::optional<DomType> expectedType);
 
-    void pushEl(Path p, const DomValue &it, AST::Node *n)
+    void pushEl(const Path &p, const DomValue &it, AST::Node *n)
     {
         nodeStack.append({ p, it, createMap(it.kind, p, n) });
     }
 
-    FileLocations::Tree createMap(FileLocations::Tree base, Path p, AST::Node *n);
+    FileLocations::Tree createMap(const FileLocations::Tree &base, const Path &p, AST::Node *n);
 
-    FileLocations::Tree createMap(DomType k, Path p, AST::Node *n);
+    FileLocations::Tree createMap(DomType k, const Path &p, AST::Node *n);
 
     const ScriptElementVariant &
-    finalizeScriptExpression(const ScriptElementVariant &element, Path pathFromOwner,
+    finalizeScriptExpression(const ScriptElementVariant &element, const Path &pathFromOwner,
                              const FileLocations::Tree &ownerFileLocations);
 
     void setScriptExpression (const std::shared_ptr<ScriptExpression>& value);
@@ -284,7 +284,7 @@ private:
     }
 
     template<typename ScriptElementT>
-    void pushScriptElement(ScriptElementT element)
+    void pushScriptElement(const ScriptElementT &element)
     {
         Q_ASSERT_X(m_enableScriptExpressions, "pushScriptElement",
                    "Cannot create script elements when they are disabled!");
@@ -479,6 +479,12 @@ public:
 
     bool visit(AST::PreIncrementExpression *) override;
     void endVisit(AST::PreIncrementExpression *) override;
+
+    bool visit(AST::EmptyStatement *) override;
+    void endVisit(AST::EmptyStatement *) override;
+
+    bool visit(AST::NestedExpression *) override;
+    void endVisit(AST::NestedExpression *) override;
 
     // lists of stuff whose children do not need a qqmljsscope: visitation order can be custom
     bool visit(AST::ArgumentList *) override;

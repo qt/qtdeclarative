@@ -44,10 +44,10 @@ public:
     inline Token(int o, int l, int lexKind) : offset(o), length(l), lexKind(lexKind) { }
     inline int begin() const { return offset; }
     inline int end() const { return offset + length; }
-    void dump(Sink s, QStringView line = QStringView()) const;
+    void dump(const Sink &s, QStringView line = QStringView()) const;
     QString toString(QStringView line = QStringView()) const
     {
-        return dumperToString([line, this](Sink s) { this->dump(s, line); });
+        return dumperToString([line, this](const Sink &s) { this->dump(s, line); });
     }
 
     static int compare(const Token &t1, const Token &t2)

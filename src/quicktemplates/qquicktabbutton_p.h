@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTabButtonPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTabButton : public QQuickAbstractButton
+class Q_QUICKTEMPLATES2_EXPORT QQuickTabButton : public QQuickAbstractButton
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(TabButton)

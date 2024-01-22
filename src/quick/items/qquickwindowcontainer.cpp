@@ -155,7 +155,7 @@ QQuickWindowContainer::~QQuickWindowContainer()
 
     disconnect(this);
     if (d->window) {
-        auto ownership = qmlEngine(this)->objectOwnership(d->window);
+        auto ownership = QJSEngine::objectOwnership(d->window);
         qCDebug(lcWindowContainer) << "Contained window" << d->window
             << "has" << (ownership == QQmlEngine::JavaScriptOwnership ?
                          "JavaScript" : "C++") << "ownership";
@@ -236,6 +236,8 @@ void QQuickWindowContainer::setContainedWindow(QWindow *window)
         connect(d->window, &QWindow::widthChanged, this, &QQuickWindowContainer::windowUpdated);
         connect(d->window, &QWindow::heightChanged, this, &QQuickWindowContainer::windowUpdated);
         connect(d->window, &QWindow::visibleChanged, this, &QQuickWindowContainer::windowUpdated);
+
+        connect(d->window, &QObject::destroyed, this, &QQuickWindowContainer::windowDestroyed);
 
         d->window->installEventFilter(this);
 
@@ -496,6 +498,18 @@ bool QQuickWindowContainer::eventFilter(QObject *object, QEvent *event)
     return QQuickImplicitSizeItem::eventFilter(object, event);
 }
 
+void QQuickWindowContainer::windowDestroyed()
+{
+    Q_D(QQuickWindowContainer);
+    qCDebug(lcWindowContainer) << "Window" << (void*)d->window << "destroyed";
+
+    d->window->removeEventFilter(this);
+    d->window = nullptr;
+
+    syncWindowToItem(); // Reset state based on not having a window
+    emit containedWindowChanged(d->window);
+}
+
 // ----------------------- Item updates -----------------------
 
 /*!
@@ -541,7 +555,28 @@ void QQuickWindowContainer::parentWindowChanged(QQuickWindow *parentWindow)
 {
     qCDebug(lcWindowContainer) << this << "parent window changed to" << parentWindow;
 
-    polish();
+    Q_D(QQuickWindowContainer);
+
+    if (!parentWindow) {
+        // We have been removed from the window we were part of,
+        // possibly because the window is going away. We need to
+        // make sure the contained window is no longer a child of
+        // former window, as otherwise it will be wiped out along
+        // with it. We can't wait for updatePolish() to do that
+        // as polish has no effect when an item is not part of a
+        // window.
+        if (d->window) {
+            // The window should already be destroyed from the
+            // call to releaseResources(), which is part of the
+            // removal of an item from a scene, but just in case
+            // we do it here as well.
+            d->window->destroy();
+
+            d->window->setParent(nullptr);
+        }
+    } else {
+        polish();
+    }
 }
 
 bool QQuickWindowContainerPrivate::transformChanged(QQuickItem *transformedItem)

@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGPlainTexture;
 
-class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldTextMaterial: public QSGMaterial
+class Q_QUICK_EXPORT QSGDistanceFieldTextMaterial: public QSGMaterial
 {
 public:
     QSGDistanceFieldTextMaterial();
@@ -61,7 +61,7 @@ protected:
     QSGPlainTexture *m_sgTexture;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldStyledTextMaterial : public QSGDistanceFieldTextMaterial
+class Q_QUICK_EXPORT QSGDistanceFieldStyledTextMaterial : public QSGDistanceFieldTextMaterial
 {
 public:
     QSGDistanceFieldStyledTextMaterial();
@@ -78,7 +78,7 @@ protected:
     QVector4D m_styleColor;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldOutlineTextMaterial : public QSGDistanceFieldStyledTextMaterial
+class Q_QUICK_EXPORT QSGDistanceFieldOutlineTextMaterial : public QSGDistanceFieldStyledTextMaterial
 {
 public:
     QSGDistanceFieldOutlineTextMaterial();
@@ -88,7 +88,7 @@ public:
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldShiftedStyleTextMaterial : public QSGDistanceFieldStyledTextMaterial
+class Q_QUICK_EXPORT QSGDistanceFieldShiftedStyleTextMaterial : public QSGDistanceFieldStyledTextMaterial
 {
 public:
     QSGDistanceFieldShiftedStyleTextMaterial();
@@ -105,7 +105,7 @@ protected:
     QPointF m_shift;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGHiQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
+class Q_QUICK_EXPORT QSGHiQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
 {
 public:
     QSGMaterialType *type() const override;
@@ -116,7 +116,7 @@ public:
     }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGLoQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
+class Q_QUICK_EXPORT QSGLoQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
 {
 public:
     QSGMaterialType *type() const override;

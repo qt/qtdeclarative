@@ -351,7 +351,7 @@ void tst_qmlcachegen::signalHandlerParameters()
         };
 
         QVERIFY(isStringIndexInStringTable(compilationUnit->objectAt(0)->signalAt(0)->parameterAt(0)->nameIndex));
-        QVERIFY(!compilationUnit->dynamicStrings.isEmpty());
+        QVERIFY(!compilationUnit->baseCompilationUnit()->dynamicStrings.isEmpty());
     }
 }
 
@@ -716,7 +716,8 @@ void tst_qmlcachegen::moduleScriptImport()
     {
         auto componentPrivate = QQmlComponentPrivate::get(&component);
         QVERIFY(componentPrivate);
-        auto compilationUnit = componentPrivate->compilationUnit->dependentScripts.first()->compilationUnit();
+        auto compilationUnit = componentPrivate->compilationUnit->dependentScriptsPtr()
+                                       ->first()->compilationUnit();
         QVERIFY(compilationUnit);
         auto unitData = compilationUnit->unitData();
         QVERIFY(unitData);

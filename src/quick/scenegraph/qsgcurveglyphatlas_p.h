@@ -17,14 +17,14 @@
 
 #include <QtGui/qrawfont.h>
 #include <QtGui/private/qtextengine_p.h>
-#include <QtQuick/private/qtquickexports_p.h>
+#include <QtQuick/qtquickexports.h>
 
 QT_BEGIN_NAMESPACE
 
 class QSGCurveFillNode;
 class QSGCurveStrokeNode;
 
-class Q_QUICK_PRIVATE_EXPORT QSGCurveGlyphAtlas
+class Q_QUICK_EXPORT QSGCurveGlyphAtlas
 {
 public:
     QSGCurveGlyphAtlas(const QRawFont &font);

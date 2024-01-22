@@ -89,6 +89,9 @@ private slots:
     void setSelectedFile();
     void selectNewFileViaTextField_data();
     void selectNewFileViaTextField();
+    void selectExistingFileShouldWarnUserWhenFileModeEqualsSaveFile();
+    void fileNameTextFieldOnlyChangesWhenSelectingFiles();
+    void setSchemeForSelectedFile();
 
 private:
     enum DelegateOrderPolicy
@@ -1374,6 +1377,9 @@ void tst_QQuickFileDialogImpl::setSelectedFile()
     };
     FileDialogTestHelper dialogHelper(
         this, "setSelectedFile.qml", {}, initialProperties);
+
+    dialogHelper.dialog->setOptions(QFileDialogOptions::DontConfirmOverwrite);
+
     OPEN_QUICK_DIALOG();
 
     // The selected file should be what we set.
@@ -1478,6 +1484,176 @@ void tst_QQuickFileDialogImpl::selectNewFileViaTextField()
             QTest::keyClick(dialogHelper.window(), Qt::Key_Backspace);
         QCOMPARE(acceptButton->isEnabled(), false);
     }
+}
+
+void tst_QQuickFileDialogImpl::selectExistingFileShouldWarnUserWhenFileModeEqualsSaveFile()
+{
+    FileDialogTestHelper dialogHelper(this, "fileDialog.qml");
+    dialogHelper.dialog->setFileMode(QQuickFileDialog::SaveFile);
+    dialogHelper.dialog->setSelectedFile(QUrl::fromLocalFile(tempFile1->fileName()));
+
+    OPEN_QUICK_DIALOG();
+    QQuickTest::qWaitForPolish(dialogHelper.window());
+
+    QSignalSpy acceptedSpy(dialogHelper.dialog, SIGNAL(accepted()));
+
+    auto *dialogButtonBox = dialogHelper.quickDialog->footer()->findChild<QQuickDialogButtonBox *>();
+    QVERIFY(dialogButtonBox);
+
+    auto *confirmationDialog = dialogHelper.quickDialog->findChild<QQuickDialog *>("confirmationDialog");
+    QVERIFY(confirmationDialog);
+
+    auto *openButton = dialogButtonBox->standardButton(QPlatformDialogHelper::Open);
+    QVERIFY(openButton);
+
+    auto *confirmationButtonBox = qobject_cast<QQuickDialogButtonBox *>(confirmationDialog->footer());
+    QVERIFY(confirmationButtonBox);
+
+    const QPoint openButtonCenterPos =
+            openButton->mapToScene({ openButton->width() / 2, openButton->height() / 2 }).toPoint();
+
+    QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, openButtonCenterPos);
+
+    QTRY_VERIFY(confirmationDialog->isOpened());
+    QVERIFY(dialogHelper.dialog->isVisible());
+
+    // Yes button should have focus by default
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Space, Qt::NoModifier);
+
+    QTRY_VERIFY(!confirmationDialog->isOpened());
+    QVERIFY(!dialogHelper.dialog->isVisible());
+    QCOMPARE(acceptedSpy.count(), 1);
+
+    // Try again, but click "No" this time.
+    QVERIFY(dialogHelper.openDialog());
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Enter, Qt::NoModifier);
+
+    QTRY_VERIFY(confirmationDialog->isOpened());
+    QVERIFY(dialogHelper.dialog->isVisible());
+
+    // Make No button trigger a clicked() event.
+    auto *confirmationNoButton = confirmationButtonBox->standardButton(QPlatformDialogHelper::No);
+    QVERIFY(confirmationNoButton);
+    QVERIFY(clickButton(confirmationNoButton));
+
+    // FileDialog is still opened
+    QTRY_VERIFY(!confirmationDialog->isOpened());
+    QVERIFY(dialogHelper.dialog->isVisible());
+    QCOMPARE(acceptedSpy.count(), 1);
+
+    // Try again
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Enter, Qt::NoModifier);
+
+    QTRY_VERIFY(confirmationDialog->isOpened());
+    QVERIFY(dialogHelper.dialog->isVisible());
+
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Space, Qt::NoModifier);
+
+    QTRY_VERIFY(!confirmationDialog->isOpened());
+    QVERIFY(!dialogHelper.dialog->isVisible());
+    QCOMPARE(acceptedSpy.count(), 2);
+
+    // Make sure that DontConfirmOverwrite works
+    dialogHelper.dialog->setOptions(QFileDialogOptions::DontConfirmOverwrite);
+
+    QVERIFY(dialogHelper.openDialog());
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Enter, Qt::NoModifier);
+    QTRY_VERIFY(!confirmationDialog->isOpened());
+    QVERIFY(!dialogHelper.dialog->isVisible());
+    QCOMPARE(acceptedSpy.count(), 3);
+}
+
+void tst_QQuickFileDialogImpl::fileNameTextFieldOnlyChangesWhenSelectingFiles()
+{
+    const auto tempSubFile1Url = QUrl::fromLocalFile(tempSubFile1->fileName());
+    const auto tempSubDirUrl = QUrl::fromLocalFile(tempSubDir.path());
+    const auto tempFile11Url = QUrl::fromLocalFile(tempFile1->fileName());
+
+    const QVariantMap initialProperties = {
+        { "tempFile1Url", QVariant::fromValue(tempSubFile1Url) },
+        { "fileMode", QVariant::fromValue(QQuickFileDialog::SaveFile) }
+    };
+    FileDialogTestHelper dialogHelper(this, "setSelectedFile.qml", {}, initialProperties);
+
+    OPEN_QUICK_DIALOG();
+    QQuickTest::qWaitForPolish(dialogHelper.window());
+
+    QQuickTextField *fileNameTextField =
+            dialogHelper.quickDialog->findChild<QQuickTextField *>("fileNameTextField");
+    QVERIFY(fileNameTextField);
+
+    auto getSelectedFileInfo = [&dialogHelper]() {
+        return QFileInfo(dialogHelper.dialog->selectedFile().toLocalFile());
+    };
+
+    QVERIFY(getSelectedFileInfo().isFile());
+    QCOMPARE(fileNameTextField->text(), tempSubFile1Url.fileName());
+    QCOMPARE(dialogHelper.dialog->selectedFile(), tempSubFile1Url);
+
+    auto *breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar *>();
+    QVERIFY(breadcrumbBar);
+
+    // Pressing the up button causes tempSubDir to be selected
+    QVERIFY(clickButton(breadcrumbBar->upButton()));
+
+    QVERIFY(getSelectedFileInfo().isDir());
+    QCOMPARE(fileNameTextField->text(), tempSubFile1Url.fileName());
+    QCOMPARE(dialogHelper.dialog->selectedFile(), tempSubDirUrl);
+
+    // Change the selected file from the outside
+    dialogHelper.dialog->close();
+    dialogHelper.dialog->setSelectedFile(tempFile11Url);
+    dialogHelper.openDialog();
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
+    QVERIFY(getSelectedFileInfo().isFile());
+    QCOMPARE(fileNameTextField->text(), tempFile11Url.fileName());
+    QCOMPARE(dialogHelper.dialog->selectedFile(), tempFile11Url);
+}
+
+void tst_QQuickFileDialogImpl::setSchemeForSelectedFile()
+{
+    const auto tempSubFile1Url = QUrl::fromLocalFile(tempSubFile1->fileName());
+
+    const QVariantMap initialProperties = {
+        { "tempFile1Url", QVariant::fromValue(tempSubFile1Url) },
+        { "fileMode", QVariant::fromValue(QQuickFileDialog::SaveFile) }
+    };
+    FileDialogTestHelper dialogHelper(this, "setSelectedFile.qml", {}, initialProperties);
+
+    OPEN_QUICK_DIALOG();
+    QQuickTest::qWaitForPolish(dialogHelper.window());
+
+    QQuickTextField *fileNameTextField =
+            dialogHelper.quickDialog->findChild<QQuickTextField *>("fileNameTextField");
+    QVERIFY(fileNameTextField);
+
+    QVERIFY(!tempSubFile1Url.scheme().isEmpty());
+    QVERIFY(!dialogHelper.dialog->selectedFile().scheme().isEmpty());
+    QCOMPARE(tempSubFile1Url, dialogHelper.dialog->selectedFile());
+
+    fileNameTextField->clear();
+
+    const QPoint textFieldCenterPos =
+            fileNameTextField->mapToScene({ fileNameTextField->width() / 2, fileNameTextField->height() / 2 }).toPoint();
+    QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, textFieldCenterPos);
+
+    const QByteArray newFileName("helloworld.txt");
+    for (const auto &c : newFileName)
+        QTest::keyClick(dialogHelper.window(), c);
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Enter, Qt::NoModifier);
+
+    QTRY_COMPARE(fileNameTextField->text(), QString::fromLatin1(newFileName));
+
+    const auto newFilePath =
+        QUrl::fromLocalFile(QFileInfo(tempSubFile1Url.toLocalFile()).dir().absolutePath() + u'/' + newFileName);
+    QVERIFY(!newFilePath.scheme().isEmpty());
+    QVERIFY(!dialogHelper.dialog->selectedFile().scheme().isEmpty());
+    QCOMPARE(dialogHelper.dialog->selectedFile(), newFilePath);
 }
 
 QTEST_MAIN(tst_QQuickFileDialogImpl)

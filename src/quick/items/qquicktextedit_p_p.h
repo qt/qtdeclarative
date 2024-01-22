@@ -39,7 +39,7 @@ class QQuickTextControl;
 class QSGInternalTextNode;
 class QQuickTextNodeEngine;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
+class Q_QUICK_EXPORT QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
@@ -52,7 +52,7 @@ public:
     struct Node {
         explicit Node(int startPos = std::numeric_limits<int>::max(),
                       QSGInternalTextNode *node = nullptr)
-            : m_startPos(startPos), m_node(node) { }
+            : m_node(node), m_startPos(startPos) { }
         QSGInternalTextNode *textNode() const { return m_node; }
         void moveStartPos(int delta) { Q_ASSERT(m_startPos + delta > 0); m_startPos += delta; }
         int startPos() const { return m_startPos; }
@@ -60,12 +60,12 @@ public:
         bool dirty() const { return m_dirty; }
 
     private:
-        int m_startPos;
         QSGInternalTextNode *m_node;
+        int m_startPos;
         bool m_dirty = false;
 
 #ifndef QT_NO_DEBUG_STREAM
-        friend QDebug Q_QUICK_PRIVATE_EXPORT operator<<(QDebug, const Node &);
+        friend QDebug Q_QUICK_EXPORT operator<<(QDebug, const Node &);
 #endif
     };
     typedef QList<Node>::iterator TextNodeIterator;
@@ -223,7 +223,7 @@ public:
 };
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug Q_QUICK_PRIVATE_EXPORT operator<<(QDebug debug, const QQuickTextEditPrivate::Node &);
+QDebug Q_QUICK_EXPORT operator<<(QDebug debug, const QQuickTextEditPrivate::Node &);
 #endif
 
 QT_END_NAMESPACE

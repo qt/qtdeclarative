@@ -297,7 +297,8 @@ void QQmlComponentPrivate::typeDataProgress(QQmlTypeData *, qreal p)
 void QQmlComponentPrivate::fromTypeData(const QQmlRefPointer<QQmlTypeData> &data)
 {
     url = data->finalUrl();
-    compilationUnit.reset(data->compilationUnit());
+    if (auto cu = data->compilationUnit())
+        compilationUnit = engine->handle()->executableCompilationUnit(std::move(cu));
 
     if (!compilationUnit) {
         Q_ASSERT(data->isError());

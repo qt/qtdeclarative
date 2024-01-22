@@ -318,7 +318,14 @@ TestCase {
         verify(tableView.selectionModel.isSelected(tableView.selectionModel.model.index(0, 1)))
     }
 
-    function test_tableView_contiguousSelection() {
+    function test_tableView_contiguousSelection_data() {
+        return [
+            { startFromCurrentIndex: false },
+            { startFromCurrentIndex: true },
+        ]
+    }
+
+    function test_tableView_contiguousSelection(data) {
         let tableView = createTemporaryObject(tableviewComp, testCase)
         verify(tableView)
         let selectionRectangle = tableView.selectionRectangle
@@ -327,13 +334,21 @@ TestCase {
         selectionRectangle.selectionMode = SelectionRectangle.Drag
         tableView.selectionMode = TableView.ContiguousSelection
 
-        // Select two cells by dragging
-        verify(!tableView.selectionModel.hasSelection)
-        mouseDrag(tableView, 1, 1, (cellWidth * 2) - 2, 1, Qt.LeftButton)
-        verify(tableView.selectionModel.hasSelection)
-        compare(tableView.selectionModel.selectedIndexes.length, 2)
-        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
-        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
+        if (data.startFromCurrentIndex) {
+            // Click on a cell to set current index, but set no selection.
+            // A later shift-click should then start a new selection from the
+            // current cell.
+            mouseClick(tableView, 1, 1, Qt.LeftButton, Qt.NoModifier)
+            verify(!tableView.selectionModel.hasSelection)
+            compare(tableView.selectionModel.currentIndex, tableView.index(0, 0))
+        } else {
+            // Start a new selection by dragging on two cells
+            mouseDrag(tableView, 1, 1, (cellWidth * 2) - 2, 1, Qt.LeftButton)
+            verify(tableView.selectionModel.hasSelection)
+            compare(tableView.selectionModel.selectedIndexes.length, 2)
+            verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
+            verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
+        }
 
         // A shift click should extend the selection
         mouseClick(tableView, (cellWidth * 4) - 3, 1, Qt.LeftButton, Qt.ShiftModifier)
@@ -397,6 +412,23 @@ TestCase {
         verify(tableView.selectionModel.isSelected(tableView.model.index(1, 0)))
 
         // A shift click should further extend the selection from the last cell selected
+        mouseClick(tableView, (cellWidth * 3) - 2, (cellHeight * 2) - 1, Qt.LeftButton, Qt.ShiftModifier)
+        compare(tableView.selectionModel.selectedIndexes.length, 6)
+        for (let r = 0; r < 2; ++r)
+            for (let c = 0; c < 3; ++c)
+                verify(tableView.selectionModel.isSelected(tableView.model.index(r, c)))
+
+        // Shift click the second selection so that it overlaps with the first
+        mouseClick(tableView, 1, 1, Qt.LeftButton, Qt.ShiftModifier)
+        compare(tableView.selectionModel.selectedIndexes.length, 4)
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 2)))
+        verify(tableView.selectionModel.isSelected(tableView.model.index(1, 0)))
+
+        // Shift click the selection back again. The first selection on
+        // row 0 should still be present, even if the second selection
+        // no longer overlaps it.
         mouseClick(tableView, (cellWidth * 3) - 2, (cellHeight * 2) - 1, Qt.LeftButton, Qt.ShiftModifier)
         compare(tableView.selectionModel.selectedIndexes.length, 6)
         for (let r = 0; r < 2; ++r)
@@ -556,6 +588,31 @@ TestCase {
         // Ensure that a drag doesn't start a selection
         mouseDrag(tableView, 1, 1, (cellWidth * 2) - 2, 1, Qt.LeftButton)
         verify(!tableView.selectionModel.hasSelection)
+    }
+
+    function test_pressAndHoldPlussShift() {
+        let tableView = createTemporaryObject(tableviewComp, testCase)
+        verify(tableView)
+        let selectionRectangle = tableView.selectionRectangle
+        verify(selectionRectangle)
+
+        selectionRectangle.selectionMode = SelectionRectangle.Drag
+
+        verify(!tableView.selectionModel.hasSelection)
+        verify(!tableView.selectionModel.currentIndex.isValid)
+
+        // select cell 0,0
+        mouseClick(tableView, 1, 1, Qt.LeftButton)
+        compare(tableView.selectionModel.currentIndex, tableView.index(0, 0))
+
+        // do a long press on cell 1,0 while holding down Shift. This will
+        // select both cells.
+        mousePress(tableView, cellWidth + 1, 1, Qt.LeftButton, Qt.ShiftModifier)
+        mouseRelease(tableView, cellWidth + 1, 1, Qt.LeftButton, Qt.ShiftModifier, 2000)
+        verify(tableView.selectionModel.hasSelection)
+        compare(tableView.selectionModel.selectedIndexes.length, 2)
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
     }
 
     function test_pressAndHold_on_top_of_handle() {

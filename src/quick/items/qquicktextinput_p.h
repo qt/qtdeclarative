@@ -25,7 +25,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickTextInputPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem, public QQuickTextInterface
+class Q_QUICK_EXPORT QQuickTextInput : public QQuickImplicitSizeItem, public QQuickTextInterface
 {
     Q_OBJECT
     Q_INTERFACES(QQuickTextInterface)
@@ -350,6 +350,7 @@ protected:
 #endif
 
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

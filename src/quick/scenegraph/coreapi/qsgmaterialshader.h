@@ -40,8 +40,11 @@ public:
 
         float opacity() const;
         QMatrix4x4 combinedMatrix() const;
+        QMatrix4x4 combinedMatrix(int index) const;
         QMatrix4x4 modelViewMatrix() const;
         QMatrix4x4 projectionMatrix() const;
+        QMatrix4x4 projectionMatrix(int index) const;
+        int projectionMatrixCount() const;
         QRect viewportRect() const;
         QRect deviceRect() const;
         float determinant() const;
@@ -147,6 +150,7 @@ protected:
 
     // filename is for a file containing a serialized QShader.
     void setShaderFileName(Stage stage, const QString &filename);
+    void setShaderFileName(Stage stage, const QString &filename, int viewCount);
 
     void setShader(Stage stage, const QShader &shader);
 

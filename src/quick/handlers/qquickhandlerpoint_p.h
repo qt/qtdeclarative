@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 class QQuickMultiPointHandler;
 class QQuickSinglePointHandler;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickHandlerPoint {
+class Q_QUICK_EXPORT QQuickHandlerPoint {
     Q_GADGET
     Q_PROPERTY(int id READ id FINAL)
     Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId FINAL)

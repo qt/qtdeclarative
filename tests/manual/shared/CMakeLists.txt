@@ -42,10 +42,8 @@ include(QtBundleQmlModuleForMacOS.cmake)
 # Puts the shared qml module plugin and qmldir into the macOS app bundle directory.
 # Only call this function if your main project has the MACOSX_BUNDLE option set.
 function(bundle_shared app_target)
-    set(qml_plugin_target "${PROJECT_NAME}_shared")
-    set(qml_module_uri "shared")
-    add_qml_module_to_macos_app_bundle(
-        "${app_target}" "${qml_plugin_target}" "${qml_module_uri}")
+    set(qml_module_target "${PROJECT_NAME}_shared")
+    add_qml_module_to_macos_app_bundle("${app_target}" "${qml_module_target}")
 endfunction()
 
 set(INSTALL_SHAREDDIR "${INSTALL_EXAMPLESDIR}/quick/${PROJECT_NAME}/shared")

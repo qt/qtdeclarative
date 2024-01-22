@@ -117,7 +117,7 @@ private:
 };
 
 class QQuickDropAreaPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickDropArea : public QQuickItem
+class Q_QUICK_EXPORT QQuickDropArea : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(bool containsDrag READ containsDrag NOTIFY containsDragChanged FINAL)

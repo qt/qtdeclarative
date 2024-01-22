@@ -22,7 +22,7 @@
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_DEBUG
-Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_material_failure();
+Q_QUICK_EXPORT bool qsg_test_and_clear_material_failure();
 #endif
 
 int qt_sg_envInt(const char *name, int defaultValue);
@@ -201,18 +201,26 @@ QRhiGraphicsPipeline::Topology qsg_topology(int geomDrawMode)
     return topology;
 }
 
+void qsg_setMultiViewFlagsOnMaterial(QSGMaterial *material, int multiViewCount)
+{
+    material->setFlag(QSGMaterial::MultiView2, multiViewCount == 2);
+    material->setFlag(QSGMaterial::MultiView3, multiViewCount == 3);
+    material->setFlag(QSGMaterial::MultiView4, multiViewCount == 4);
+}
+
 ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material,
                                                       const QSGGeometry *geometry,
-                                                      QSGRendererInterface::RenderMode renderMode)
+                                                      QSGRendererInterface::RenderMode renderMode,
+                                                      int multiViewCount)
 {
     QSGMaterialType *type = material->type();
-
-    ShaderKey key = qMakePair(type, renderMode);
+    ShaderKey key = { type, renderMode, multiViewCount };
     Shader *shader = rewrittenShaders.value(key, nullptr);
     if (shader)
         return shader;
 
     shader = new Shader;
+    qsg_setMultiViewFlagsOnMaterial(material, multiViewCount);
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader(renderMode));
     context->initializeRhiShader(s, QShader::BatchableVertexShader);
     shader->materialShader = s;
@@ -231,16 +239,17 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material,
 
 ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *material,
                                                                const QSGGeometry *geometry,
-                                                               QSGRendererInterface::RenderMode renderMode)
+                                                               QSGRendererInterface::RenderMode renderMode,
+                                                               int multiViewCount)
 {
     QSGMaterialType *type = material->type();
-
-    ShaderKey key = qMakePair(type, renderMode);
+    ShaderKey key = { type, renderMode, multiViewCount };
     Shader *shader = stockShaders.value(key, nullptr);
     if (shader)
         return shader;
 
     shader = new Shader;
+    qsg_setMultiViewFlagsOnMaterial(material, multiViewCount);
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader(renderMode));
     context->initializeRhiShader(s, QShader::StandardShader);
     shader->materialShader = s;
@@ -2293,6 +2302,8 @@ QRhiGraphicsPipeline *Renderer::buildStencilPipeline(const Batch *batch, bool fi
 
     ps->setTopology(m_stencilClipCommon.topology);
 
+    ps->setMultiViewCount(renderTarget().multiViewCount);
+
     ps->setShaderStages({ QRhiShaderStage(QRhiShaderStage::Vertex, m_stencilClipCommon.vs),
                           QRhiShaderStage(QRhiShaderStage::Fragment, m_stencilClipCommon.fs) });
     ps->setVertexInputLayout(m_stencilClipCommon.inputLayout);
@@ -2341,7 +2352,7 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch)
     const quint32 StencilClipUbufSize = 64;
 
     while (clip) {
-        QMatrix4x4 m = m_current_projection_matrix_native_ndc;
+        QMatrix4x4 m = m_current_projection_matrix_native_ndc[0]; // never hit for 3D and so multiview
         if (clip->matrix())
             m *= *clip->matrix();
 
@@ -2512,7 +2523,7 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch)
             drawCall.ubufOffset = aligned(uOffset, m_ubufAlignment);
             uOffset = drawCall.ubufOffset + StencilClipUbufSize;
 
-            QMatrix4x4 matrixYUpNDC = m_current_projection_matrix;
+            QMatrix4x4 matrixYUpNDC = m_current_projection_matrix[0];
             if (clip->matrix())
                 matrixYUpNDC *= *clip->matrix();
 
@@ -2686,6 +2697,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     ps->setTopology(qsg_topology(m_gstate.drawMode));
     ps->setCullMode(m_gstate.cullMode);
     ps->setPolygonMode(m_gstate.polygonMode);
+    ps->setMultiViewCount(m_gstate.multiViewCount);
 
     QRhiGraphicsPipeline::TargetBlend blend;
     blend.colorWrite = m_gstate.colorWrite;
@@ -3129,16 +3141,24 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     else
         m_current_model_view_matrix.setToIdentity();
     m_current_determinant = m_current_model_view_matrix.determinant();
-    m_current_projection_matrix = projectionMatrix();
-    m_current_projection_matrix_native_ndc = projectionMatrixWithNativeNDC();
+
+    const int viewCount = projectionMatrixCount();
+    m_current_projection_matrix.resize(viewCount);
+    for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+        m_current_projection_matrix[viewIndex] = projectionMatrix(viewIndex);
+
+    m_current_projection_matrix_native_ndc.resize(projectionMatrixWithNativeNDCCount());
+    for (int viewIndex = 0; viewIndex < projectionMatrixWithNativeNDCCount(); ++viewIndex)
+        m_current_projection_matrix_native_ndc[viewIndex] = projectionMatrixWithNativeNDC(viewIndex);
 
     QSGMaterial *material = gn->activeMaterial();
     if (m_renderMode != QSGRendererInterface::RenderMode3D)
         updateClipState(gn->clipList(), batch);
 
     const QSGGeometry *g = gn->geometry();
-    ShaderManager::Shader *sms = useDepthBuffer() ? m_shaderManager->prepareMaterial(material, g, m_renderMode)
-                                                  : m_shaderManager->prepareMaterialNoRewrite(material, g, m_renderMode);
+    const int multiViewCount = renderTarget().multiViewCount;
+    ShaderManager::Shader *sms = useDepthBuffer() ? m_shaderManager->prepareMaterial(material, g, m_renderMode, multiViewCount)
+                                                  : m_shaderManager->prepareMaterialNoRewrite(material, g, m_renderMode, multiViewCount);
     if (!sms)
         return false;
 
@@ -3302,8 +3322,14 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         batch->uploadedThisFrame = false;
     }
 
-    m_current_projection_matrix = projectionMatrix();
-    m_current_projection_matrix_native_ndc = projectionMatrixWithNativeNDC();
+    const int viewCount = projectionMatrixCount();
+    m_current_projection_matrix.resize(viewCount);
+    for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+        m_current_projection_matrix[viewIndex] = projectionMatrix(viewIndex);
+
+    m_current_projection_matrix_native_ndc.resize(projectionMatrixWithNativeNDCCount());
+    for (int viewIndex = 0; viewIndex < projectionMatrixWithNativeNDCCount(); ++viewIndex)
+        m_current_projection_matrix_native_ndc[viewIndex] = projectionMatrixWithNativeNDC(viewIndex);
 
     QSGGeometryNode *gn = e->node;
     if (m_renderMode != QSGRendererInterface::RenderMode3D)
@@ -3316,7 +3342,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
     // unmerged batch since the material (and so the shaders) is the same.
     QSGGeometry *g = gn->geometry();
     QSGMaterial *material = gn->activeMaterial();
-    ShaderManager::Shader *sms = m_shaderManager->prepareMaterialNoRewrite(material, g, m_renderMode);
+    ShaderManager::Shader *sms = m_shaderManager->prepareMaterialNoRewrite(material, g, m_renderMode, renderTarget().multiViewCount);
     if (!sms)
         return false;
 
@@ -3376,11 +3402,19 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         m_current_model_view_matrix = rootMatrix * *gn->matrix();
         m_current_determinant = m_current_model_view_matrix.determinant();
 
-        m_current_projection_matrix = projectionMatrix();
-        m_current_projection_matrix_native_ndc = projectionMatrixWithNativeNDC();
+        const int viewCount = projectionMatrixCount();
+        m_current_projection_matrix.resize(viewCount);
+        for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+            m_current_projection_matrix[viewIndex] = projectionMatrix(viewIndex);
+
+        m_current_projection_matrix_native_ndc.resize(projectionMatrixWithNativeNDCCount());
+        for (int viewIndex = 0; viewIndex < projectionMatrixWithNativeNDCCount(); ++viewIndex)
+            m_current_projection_matrix_native_ndc[viewIndex] = projectionMatrixWithNativeNDC(viewIndex);
+
         if (useDepthBuffer()) {
-            m_current_projection_matrix(2, 2) = m_zRange;
-            m_current_projection_matrix(2, 3) = calculateElementZOrder(e, m_zRange);
+            // this cannot be multiview
+            m_current_projection_matrix[0](2, 2) = m_zRange;
+            m_current_projection_matrix[0](2, 3) = calculateElementZOrder(e, m_zRange);
         }
 
         QSGMaterialShader::RenderState renderState = state(QSGMaterialShader::RenderState::DirtyStates(int(dirty)));
@@ -3773,6 +3807,7 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     m_gstate.stencilTest = false;
 
     m_gstate.sampleCount = renderTarget().rt->sampleCount();
+    m_gstate.multiViewCount = renderTarget().multiViewCount;
 
     ctx->opaqueRenderBatches.clear();
     if (Q_LIKELY(renderOpaque)) {
@@ -4008,10 +4043,15 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
 
     rd->m_rt = renderTarget();
 
-    rd->m_projectionMatrix = projectionMatrix();
+    const int viewCount = projectionMatrixCount();
+    rd->m_projectionMatrix.resize(viewCount);
+    for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+        rd->m_projectionMatrix[viewIndex] = projectionMatrix(viewIndex);
+
     if (useDepthBuffer()) {
-        rd->m_projectionMatrix(2, 2) = m_zRange;
-        rd->m_projectionMatrix(2, 3) = calculateElementZOrder(e, m_zRange);
+        // this cannot be multiview
+        rd->m_projectionMatrix[0](2, 2) = m_zRange;
+        rd->m_projectionMatrix[0](2, 3) = calculateElementZOrder(e, m_zRange);
     }
 
     e->renderNode->prepare();
@@ -4031,7 +4071,9 @@ void Renderer::renderRhiRenderNode(const Batch *batch)
     QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(e->renderNode);
 
     RenderNodeState state;
-    state.m_projectionMatrix = &rd->m_projectionMatrix;
+    // Expose only the first matrix through the state object, the rest are
+    // queriable through the QSGRenderNode getters anyway.
+    state.m_projectionMatrix = &rd->m_projectionMatrix[0];
     const std::array<int, 4> scissor = batch->clipState.scissor.scissor();
     state.m_scissorRect = QRect(scissor[0], scissor[1], scissor[2], scissor[3]);
     state.m_stencilValue = batch->clipState.stencilRef;
@@ -4102,7 +4144,8 @@ bool operator==(const GraphicsState &a, const GraphicsState &b) noexcept
             && a.sampleCount == b.sampleCount
             && a.drawMode == b.drawMode
             && a.lineWidth == b.lineWidth
-            && a.polygonMode == b.polygonMode;
+            && a.polygonMode == b.polygonMode
+            && a.multiViewCount == b.multiViewCount;
 }
 
 bool operator!=(const GraphicsState &a, const GraphicsState &b) noexcept
@@ -4122,7 +4165,8 @@ size_t qHash(const GraphicsState &s, size_t seed) noexcept
             + s.cullMode
             + s.usesScissor
             + s.stencilTest
-            + s.sampleCount;
+            + s.sampleCount
+            + s.multiViewCount;
 }
 
 bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) noexcept
@@ -4144,6 +4188,23 @@ size_t qHash(const GraphicsPipelineStateKey &k, size_t seed) noexcept
         ^ qHash(k.sms->materialShader)
         ^ k.extra.renderTargetDescriptionHash
         ^ k.extra.srbLayoutDescriptionHash;
+}
+
+bool operator==(const ShaderKey &a, const ShaderKey &b) noexcept
+{
+    return a.type == b.type
+           && a.renderMode == b.renderMode
+           && a.multiViewCount == b.multiViewCount;
+}
+
+bool operator!=(const ShaderKey &a, const ShaderKey &b) noexcept
+{
+    return !(a == b);
+}
+
+size_t qHash(const ShaderKey &k, size_t seed) noexcept
+{
+    return qHash(k.type, seed) ^ int(k.renderMode) ^ k.multiViewCount;
 }
 
 Visualizer::Visualizer(Renderer *renderer)

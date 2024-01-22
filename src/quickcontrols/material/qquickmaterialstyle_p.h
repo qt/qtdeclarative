@@ -76,9 +76,12 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(QColor textFieldFilledContainerColor READ textFieldFilledContainerColor NOTIFY themeChanged FINAL)
 
     Q_PROPERTY(int touchTarget READ touchTarget CONSTANT FINAL)
+    Q_PROPERTY(int buttonVerticalPadding READ buttonVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int buttonHeight READ buttonHeight CONSTANT FINAL)
     Q_PROPERTY(int delegateHeight READ delegateHeight CONSTANT FINAL)
     Q_PROPERTY(int dialogButtonBoxHeight READ dialogButtonBoxHeight CONSTANT FINAL)
+    Q_PROPERTY(int dialogTitleFontPixelSize READ dialogTitleFontPixelSize CONSTANT FINAL)
+    Q_PROPERTY(RoundedScale dialogRoundedScale READ dialogRoundedScale CONSTANT FINAL)
     Q_PROPERTY(int frameVerticalPadding READ frameVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int menuItemHeight READ menuItemHeight CONSTANT FINAL)
     Q_PROPERTY(int menuItemVerticalPadding READ menuItemVerticalPadding CONSTANT FINAL)
@@ -269,9 +272,14 @@ public:
     Q_INVOKABLE QColor shade(const QColor &color, Shade shade) const;
 
     int touchTarget() const;
+    int buttonVerticalPadding() const;
+    Q_INVOKABLE int buttonLeftPadding(bool flat, bool hasIcon) const;
+    Q_INVOKABLE int buttonRightPadding(bool flat, bool hasIcon, bool hasText) const;
     int buttonHeight() const;
     int delegateHeight() const;
     int dialogButtonBoxHeight() const;
+    int dialogTitleFontPixelSize() const;
+    RoundedScale dialogRoundedScale() const;
     int frameVerticalPadding() const;
     int menuItemHeight() const;
     int menuItemVerticalPadding() const;

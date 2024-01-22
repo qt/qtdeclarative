@@ -26,7 +26,7 @@ class QQuickItem;
 class QQuickTransition;
 class QQuickSwipePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipe : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickSwipe : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)

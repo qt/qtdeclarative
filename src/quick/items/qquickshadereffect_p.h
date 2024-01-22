@@ -27,7 +27,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickShaderEffectPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
+class Q_QUICK_EXPORT QQuickShaderEffect : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QUrl fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged FINAL)

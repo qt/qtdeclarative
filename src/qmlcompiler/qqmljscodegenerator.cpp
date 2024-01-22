@@ -3723,22 +3723,31 @@ QString QQmlJSCodeGenerator::conversion(
 {
     const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
 
-    // If both types are stored in QJSPrimitiveValue we coerce using QJSPrimitiveValue
+    // If from is QJSPrimitiveValue and to contains a primitive we coerce using QJSPrimitiveValue
     if (m_typeResolver->registerIsStoredIn(from, m_typeResolver->jsPrimitiveType())
-            && m_typeResolver->registerIsStoredIn(to, m_typeResolver->jsPrimitiveType())) {
-        if (m_typeResolver->equals(contained, m_typeResolver->jsPrimitiveType()))
-            return variable;
+            && m_typeResolver->isPrimitive(to)) {
 
-        const QString conversion = variable + u".to<QJSPrimitiveValue::%1>()"_s;
-        if (m_typeResolver->equals(contained, m_typeResolver->boolType()))
-            return conversion.arg(u"Boolean"_s);
-        if (m_typeResolver->isIntegral(to))
-            return conversion.arg(u"Integer"_s);
-        if (m_typeResolver->equals(contained, m_typeResolver->realType()))
-            return conversion.arg(u"Double"_s);
-        if (m_typeResolver->equals(contained, m_typeResolver->stringType()))
-            return conversion.arg(u"String"_s);
-        reject(u"Conversion of QJSPrimitiveValue to "_s + contained->internalName());
+        QString primitive = [&]() {
+            if (m_typeResolver->equals(contained, m_typeResolver->jsPrimitiveType()))
+                return variable;
+
+            const QString conversion = variable + u".to<QJSPrimitiveValue::%1>()"_s;
+            if (m_typeResolver->equals(contained, m_typeResolver->boolType()))
+                return conversion.arg(u"Boolean"_s);
+            if (m_typeResolver->isIntegral(to))
+                return conversion.arg(u"Integer"_s);
+            if (m_typeResolver->isNumeric(to))
+                return conversion.arg(u"Double"_s);
+            if (m_typeResolver->equals(contained, m_typeResolver->stringType()))
+                return conversion.arg(u"String"_s);
+            reject(u"Conversion of QJSPrimitiveValue to "_s + contained->internalName());
+            return QString();
+        }();
+
+        if (primitive.isEmpty())
+            return primitive;
+
+        return convertStored(m_typeResolver->jsPrimitiveType(), to.storedType(), primitive);
     }
 
     if (m_typeResolver->registerIsStoredIn(to, contained)
@@ -3879,10 +3888,8 @@ QString QQmlJSCodeGenerator::convertStored(
             return variable + u".toDouble()"_s;
         if (m_typeResolver->equals(to, boolType))
             return variable + u".toBoolean()"_s;
-        if (m_typeResolver->isSignedInteger(to))
-            return variable + u".toInteger()"_s;
-        if (m_typeResolver->isUnsignedInteger(to))
-            return u"uint("_s + variable + u".toInteger())"_s;
+        if (m_typeResolver->isIntegral(to))
+            return u"%1(%2.toInteger())"_s.arg(to->internalName(), variable);
         if (m_typeResolver->equals(to, m_typeResolver->stringType()))
             return variable + u".toString()"_s;
         if (m_typeResolver->equals(to, jsValueType))
@@ -4054,12 +4061,14 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
     if (!m_typeResolver->registerIsStoredIn(to, m_typeResolver->varType()) &&
             !m_typeResolver->registerIsStoredIn(to, m_typeResolver->jsPrimitiveType())) {
         reject(u"internal conversion into unsupported wrapper type."_s);
+        return QString();
     }
 
     bool isExtension = false;
     if (m_typeResolver->canPopulate(containedTo, containedFrom, &isExtension)) {
         reject(u"populating "_s + containedTo->internalName()
                + u" from "_s + containedFrom->internalName());
+        return QString();
     } else if (const auto ctor = m_typeResolver->selectConstructor(
                 containedTo, containedFrom, &isExtension); ctor.isValid()) {
         const auto argumentTypes = ctor.parameters();

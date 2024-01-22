@@ -486,6 +486,15 @@ QT_BEGIN_NAMESPACE
 
     \li Samplers must use binding points starting from 1.
 
+    \li When Qt Quick is rendering with \c multiview enabled, e.g. because it is
+    part of a 3D scene rendering in a VR/AR environment where the left and right
+    eye content are generated in a single pass, the ShaderEffect's shaders have
+    to be written with this in mind. With a view count of 2 for example, there
+    will be \c 2 matrices (qt_Matrix is an array of mat4 with two elements). The
+    vertex shader is expected to take \c gl_ViewIndex into account. See the \c
+    Multiview section in the \l{QSB Manual} for general information on creating
+    multiview-capable shaders.
+
     \endlist
 
     \sa {Item Layers}, {QSB Manual}, {Qt Shader Tools Build System Integration}
@@ -1035,6 +1044,7 @@ QSGNode *QQuickShaderEffectPrivate::handleUpdatePaintNode(QSGNode *oldNode, QQui
     sd.fragment.dirtyConstants = &m_dirtyConstants[Fragment];
     sd.fragment.dirtyTextures = &m_dirtyTextures[Fragment];
     sd.materialTypeCacheKey = q->window();
+    sd.viewCount = QQuickWindowPrivate::get(q->window())->multiViewCount();
 
     node->syncMaterial(&sd);
 
@@ -1117,6 +1127,7 @@ bool QQuickShaderEffectPrivate::updateUniformValue(const QByteArray &name, const
     sd.fragment.dirtyConstants = &dirtyConstants[Fragment];
     sd.fragment.dirtyTextures = {};
     sd.materialTypeCacheKey = q->window();
+    sd.viewCount = QQuickWindowPrivate::get(q->window())->multiViewCount();
 
     node->syncMaterial(&sd);
 

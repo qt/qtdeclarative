@@ -28,7 +28,7 @@ class QQuickTextEditPrivate;
 class QQuickTextSelection;
 class QTextBlock;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, public QQuickTextInterface
+class Q_QUICK_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, public QQuickTextInterface
 {
     Q_OBJECT
     Q_INTERFACES(QQuickTextInterface)
@@ -379,6 +379,7 @@ protected:
 #endif
 
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
     bool event(QEvent *) override;
     void keyPressEvent(QKeyEvent *) override;

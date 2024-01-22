@@ -81,7 +81,7 @@ Item {
 
             ShapePath {
                 id: shapePath
-                fillRule: ShapePath.WindingFill
+                fillRule: controlPanel.fillRule
                 fillGradient: gradients[controlPanel.gradientType]
                 strokeColor: controlPanel.outlineColor
                 fillColor: controlPanel.fillColor

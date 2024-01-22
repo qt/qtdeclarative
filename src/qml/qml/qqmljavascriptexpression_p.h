@@ -62,7 +62,7 @@ private:
     QQmlDelayedError **prevError;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlJavaScriptExpression
+class Q_QML_EXPORT QQmlJavaScriptExpression
 {
     Q_DISABLE_COPY_MOVE(QQmlJavaScriptExpression)
 public:
@@ -185,7 +185,7 @@ protected:
     TriggerList *qpropertyChangeTriggers = nullptr;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlPropertyCapture
+class Q_QML_EXPORT QQmlPropertyCapture
 {
 public:
     QQmlPropertyCapture(QQmlEngine *engine, QQmlJavaScriptExpression *e, QQmlJavaScriptExpression::DeleteWatcher *w)

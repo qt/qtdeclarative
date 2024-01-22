@@ -22,7 +22,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickImageBasePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
+class Q_QUICK_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
 {
     Q_OBJECT
 

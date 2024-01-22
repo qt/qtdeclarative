@@ -34,7 +34,7 @@ namespace Heap {
     struct Base;
 }
 
-struct Q_QML_PRIVATE_EXPORT Value : public StaticValue
+struct Q_QML_EXPORT Value : public StaticValue
 {
     using ManagedPtr = Managed *;
 

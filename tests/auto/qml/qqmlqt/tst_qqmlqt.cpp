@@ -28,6 +28,7 @@
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <private/qtenvironmentvariables_p.h> // for qTzSet()
+#include <private/qqmlengine_p.h>
 
 class tst_qqmlqt : public QQmlDataTest
 {
@@ -1280,6 +1281,7 @@ void tst_qqmlqt::later_data()
 
 void tst_qqmlqt::later()
 {
+    QQmlEngine engine;
     QFETCH(QString, function);
     QFETCH(QStringList, expectedWarnings);
     QFETCH(QStringList, propNames);

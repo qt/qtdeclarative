@@ -67,6 +67,7 @@ public:
     Qt::DropAction startDrag(Qt::DropActions supportedActions);
     void setTarget(QQuickItem *item);
     QMimeData *createMimeData() const;
+    void loadPixmap();
 
     QQuickDragGrabber dragGrabber;
 

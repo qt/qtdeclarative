@@ -16,7 +16,8 @@ namespace {
     public:
         QSGCurveFillMaterialShader(QGradient::Type gradientType,
                                        bool includeStroke,
-                                       bool useDerivatives);
+                                       bool useDerivatives,
+                                       int viewCount);
 
         bool updateUniformData(RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
         void updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
@@ -25,7 +26,8 @@ namespace {
 
     QSGCurveFillMaterialShader::QSGCurveFillMaterialShader(QGradient::Type gradientType,
                                                                    bool includeStroke,
-                                                                   bool useDerivatives)
+                                                                   bool useDerivatives,
+                                                                   int viewCount)
     {
         QString baseName = QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shapecurve");
 
@@ -43,8 +45,8 @@ namespace {
         if (useDerivatives)
             baseName += QStringLiteral("_derivatives");
 
-        setShaderFileName(VertexStage, baseName + QStringLiteral(".vert.qsb"));
-        setShaderFileName(FragmentStage, baseName + QStringLiteral(".frag.qsb"));
+        setShaderFileName(VertexStage, baseName + QStringLiteral(".vert.qsb"), viewCount);
+        setShaderFileName(FragmentStage, baseName + QStringLiteral(".frag.qsb"), viewCount);
     }
 
     void QSGCurveFillMaterialShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
@@ -68,20 +70,22 @@ namespace {
         bool changed = false;
         QByteArray *buf = state.uniformData();
         Q_ASSERT(buf->size() >= 80);
+        const int matrixCount = qMin(state.projectionMatrixCount(), newEffect->viewCount());
 
         int offset = 0;
         float matrixScale = 0.0f;
         if (state.isMatrixDirty()) {
-            const QMatrix4x4 m = state.combinedMatrix();
-
-            memcpy(buf->data() + offset, m.constData(), 64);
+            for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+                const QMatrix4x4 m = state.combinedMatrix(viewIndex);
+                memcpy(buf->data() + offset + viewIndex * 64, m.constData(), 64);
+            }
 
             matrixScale = qSqrt(qAbs(state.determinant()));
-            memcpy(buf->data() + offset + 64, &matrixScale, 4);
+            memcpy(buf->data() + offset + matrixCount * 64, &matrixScale, 4);
 
             changed = true;
         }
-        offset += 68;
+        offset += matrixCount * 64 + 4;
 
         if (state.isOpacityDirty()) {
             const float opacity = state.opacity();
@@ -338,7 +342,8 @@ QSGMaterialShader *QSGCurveFillMaterial::createShader(QSGRendererInterface::Rend
 {
     return new QSGCurveFillMaterialShader(node()->gradientType(),
                                           node()->hasStroke(),
-                                          renderMode == QSGRendererInterface::RenderMode3D);
+                                          renderMode == QSGRendererInterface::RenderMode3D,
+                                          viewCount());
 }
 
 

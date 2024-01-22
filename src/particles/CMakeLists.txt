@@ -64,8 +64,7 @@ qt_internal_add_qml_module(QuickParticlesPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-)
+    )
 
 # Resources:
 set(particles_resource_files
@@ -87,6 +86,7 @@ qt_internal_add_shaders(QuickParticlesPrivate "particles_shaders1"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL
         "150,120,100es,300es"
     PREFIX
@@ -106,6 +106,7 @@ qt_internal_add_shaders(QuickParticlesPrivate "particles_shaders2"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL
         "150,120,100es,300es"
     PREFIX
@@ -126,6 +127,7 @@ qt_internal_add_shaders(QuickParticlesPrivate "particles_shaders3"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL
         "150,120,100es,300es"
     PREFIX
@@ -165,6 +167,7 @@ qt_internal_add_shaders(QuickParticlesPrivate "particles_shaders5"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL
         "150,120,100es,300es"
     PREFIX
@@ -186,6 +189,7 @@ qt_internal_add_shaders(QuickParticlesPrivate "particles_shaders6"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL
         "150,120,100es,300es"
     PREFIX

@@ -372,8 +372,11 @@ bool QJSValue::isError() const
 }
 
 /*!
-  Returns true if this QJSValue is an object of the URL class;
+  Returns true if this QJSValue is an object of the URL JavaScript class;
   otherwise returns false.
+
+  \note For a QJSValue that contains a QUrl, this function returns false.
+  However, \c{toVariant().value<QUrl>()} works in both cases.
 */
 bool QJSValue::isUrl() const
 {
@@ -635,8 +638,11 @@ QVariant QJSValue::toVariant(QJSValue::ObjectConversionBehavior behavior) const
     if (val.isString())
         return QVariant(val.toQString());
     if (val.as<QV4::Managed>()) {
-        return QV4::ExecutionEngine::toVariant(
-                    val, /*typeHint*/ QMetaType{}, behavior == RetainJSObjects);
+        if (behavior == RetainJSObjects)
+            return QV4::ExecutionEngine::toVariant(
+                    val, /*typeHint*/ QMetaType{}, /*createJSValueForObjectsAndSymbols=*/ true);
+        else
+            return QV4::ExecutionEngine::toVariantLossy(val);
     }
 
     Q_ASSERT(false);

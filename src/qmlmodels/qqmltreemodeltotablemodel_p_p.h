@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 class QAbstractItemModel;
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlTreeModelToTableModel : public QAbstractItemModel
+class Q_QMLMODELS_EXPORT QQmlTreeModelToTableModel : public QAbstractItemModel
 {
     Q_OBJECT
     Q_PROPERTY(QAbstractItemModel *model READ model WRITE setModel NOTIFY modelChanged FINAL)

@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickPlaceholderText : public QQuickText
+class Q_QUICKCONTROLS2IMPL_EXPORT QQuickPlaceholderText : public QQuickText
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(PlaceholderText)

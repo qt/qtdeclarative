@@ -28,7 +28,9 @@ class QQmlPropertyValidator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
 public:
-    QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports *imports, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit);
+    QQmlPropertyValidator(
+            QQmlEnginePrivate *enginePrivate, const QQmlImports *imports,
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
 
     QVector<QQmlError> validate();
 
@@ -58,12 +60,12 @@ private:
     }
 
     QQmlEnginePrivate *enginePrivate;
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
     const QQmlImports *imports;
     const QV4::CompiledData::Unit *qmlUnit;
     const QQmlPropertyCacheVector &propertyCaches;
 
-    QVector<QV4::BindingPropertyData> * const bindingPropertyDataPerObject;
+    QVector<QV4::CompiledData::BindingPropertyData> * const bindingPropertyDataPerObject;
 };
 
 QT_END_NAMESPACE

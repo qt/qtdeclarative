@@ -74,7 +74,7 @@ public:
  * We save it in objectDestroyFn to save space
  * (implemented in qqmlengine.cpp)
  */
-void Q_QML_PRIVATE_EXPORT hasJsOwnershipIndicator(QQmlGuardImpl *);
+void Q_QML_EXPORT hasJsOwnershipIndicator(QQmlGuardImpl *);
 
 template <typename T>
 class QQmlStrongJSQObjectReference final : protected QQmlGuardImpl

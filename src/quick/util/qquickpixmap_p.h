@@ -54,7 +54,7 @@ public:
 };
 
 // ### Qt 6: Make public moving to qquickimageprovider.h
-class Q_QUICK_PRIVATE_EXPORT QQuickImageProviderOptions
+class Q_QUICK_EXPORT QQuickImageProviderOptions
 {
 public:
     enum AutoTransform {
@@ -97,7 +97,7 @@ private:
     QQuickPixmapCache::shrinkCache() sweeps away the least-recently-released
     instances until the remaining bytes are less than cache_limit.)
 */
-class Q_QUICK_PRIVATE_EXPORT QQuickPixmap
+class Q_QUICK_EXPORT QQuickPixmap
 {
     Q_DECLARE_TR_FUNCTIONS(QQuickPixmap)
 public:
@@ -176,7 +176,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPixmap::Options)
 
 // ### Qt 6: This should be made public in Qt 6. It's functionality can't be merged into
 // QQuickImageProvider without breaking source compatibility.
-class Q_QUICK_PRIVATE_EXPORT QQuickImageProviderWithOptions : public QQuickAsyncImageProvider
+class Q_QUICK_EXPORT QQuickImageProviderWithOptions : public QQuickAsyncImageProvider
 {
 public:
     QQuickImageProviderWithOptions(ImageType type, Flags flags = Flags());

@@ -110,17 +110,17 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QSGTextNode::setAnchorColor(const QColor &anchorColor)
+    \fn void QSGTextNode::setLinkColor(const QColor &linkColor)
 
-    Sets the color of anchors (or hyperlinks) to \a anchorColor in the text.
+    Sets the color of or hyperlinks to \a linkColor in the text.
 
     The default is blue: \c QColor(0, 0, 255).
 */
 
 /*!
-    \fn QColor QSGTextNode::anchorColor() const
+    \fn QColor QSGTextNode::linkColor() const
 
-    Returns the color of anchors (or hyperlinks) in the text.
+    Returns the color of hyperlinks in the text.
 */
 
 /*!
@@ -243,6 +243,8 @@ QT_BEGIN_NAMESPACE
     objects to include from the layout. This can be useful, for instance, when creating elided
     layouts. If \a lineCount is < 0, then the the node will include the lines from \a lineStart to
     the end of the layout.
+
+    \sa clear()
 */
 
 /*!
@@ -252,6 +254,17 @@ QT_BEGIN_NAMESPACE
     then this marks the first character in a selected area of \a selectionCount number of
     characters. The selection is represented as a background fill with the \l selectionColor() and
     the selected text is rendered in the \l selectionTextColor().
+
+    \sa clear()
+*/
+
+/*!
+    \fn QSGTextNode::clear()
+
+    Clears the contents of the node, deleting nodes and other data that represents the layouts
+    and documents that have been added to it.
+
+    \sa addTextLayout(), addTextDocument()
 */
 
 QT_END_NAMESPACE
