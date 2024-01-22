@@ -70,6 +70,8 @@ QT_BEGIN_NAMESPACE
     \l {Container::moveItem()}{move}, and \l {Container::removeItem()}{remove}
     pages dynamically at run time.
 
+    \include container-currentindex.qdocinc {file} {SwipeView} {TabBar}
+
     It is generally not advisable to add excessive amounts of pages to a
     SwipeView. However, when the amount of pages grows larger, or individual
     pages are relatively complex, it may be desirable to free up resources by

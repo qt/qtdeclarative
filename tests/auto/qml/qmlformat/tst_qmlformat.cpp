@@ -252,6 +252,9 @@ void TestQmlformat::testFormat_data()
                                   << "emptyObject.formatted.qml" << QStringList {};
     QTest::newRow("arrow functions") << "arrowFunctions.qml"
                                      << "arrowFunctions.formatted.qml" << QStringList {};
+    QTest::newRow("ecmaScriptClassInQml")
+            << "ecmaScriptClassInQml.qml"
+            << "ecmaScriptClassInQml.formatted.qml" << QStringList {};
 }
 
 void TestQmlformat::testFormat()

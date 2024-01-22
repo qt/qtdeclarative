@@ -6,6 +6,7 @@ CanvasTestCase {
    function init_data() { return testData("2d"); }
    function test_basic(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#0f0';
@@ -18,6 +19,7 @@ CanvasTestCase {
 
    function test_interpolate(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -166,6 +168,7 @@ CanvasTestCase {
    }
    function test_radial(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#0f0';
@@ -788,6 +791,7 @@ CanvasTestCase {
   }
    function test_linear(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        try { var err = false;
@@ -907,6 +911,7 @@ CanvasTestCase {
   }
    function test_object(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        var g1 = ctx.createLinearGradient(0, 0, 100, 0);
@@ -978,6 +983,7 @@ CanvasTestCase {
 
    function test_conical(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        var g = ctx.createConicalGradient(10, 10, 50);

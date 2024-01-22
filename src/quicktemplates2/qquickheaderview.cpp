@@ -439,7 +439,7 @@ void QHeaderDataProxyModel::connectToModel()
     if (m_model.isNull())
         return;
     connect(m_model, &QAbstractItemModel::headerDataChanged,
-        [this](Qt::Orientation orient, int first, int last) {
+        this, [this](Qt::Orientation orient, int first, int last) {
             if (orient != orientation())
                 return;
             if (orient == Qt::Horizontal) {

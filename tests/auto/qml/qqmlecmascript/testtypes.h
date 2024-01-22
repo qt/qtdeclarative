@@ -833,12 +833,38 @@ public:
 
     Q_INVOKABLE void method_unknown(NonRegisteredType) { invoke(28); }
 
+    Q_PROPERTY(QFont someFont READ someFont WRITE setSomeFont NOTIFY someFontChanged);
+    QFont someFont() { return m_someFont; }
+    void setSomeFont(const QFont &f)
+    {
+        if (f == m_someFont)
+            return;
+        m_someFont = f;
+        emit someFontChanged();
+    }
+    Q_INVOKABLE void method_gadget(QFont f)
+    {
+        invoke(40);
+        m_actuals << f;
+    }
+    Q_INVOKABLE void method_qobject(QObject *o)
+    {
+        invoke(41);
+        m_actuals << QVariant::fromValue(o);
+    }
+
 private:
     friend class MyInvokableBaseObject;
     void invoke(int idx) { if (m_invoked != -1) m_invokedError = true; m_invoked = idx;}
     int m_invoked;
     bool m_invokedError;
     QVariantList m_actuals;
+
+    QFont m_someFont;
+
+public:
+Q_SIGNALS:
+    void someFontChanged();
 };
 
 MyInvokableBaseObject::~MyInvokableBaseObject() {}
@@ -1845,6 +1871,25 @@ struct Receiver : QObject
     Q_OBJECT
 public slots:
     int slot1(int i, int j, int k) {return i+j+k;}
+};
+
+class ReadOnlyBindable : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int x READ x WRITE setX BINDABLE bindableX)
+    Q_OBJECT_BINDABLE_PROPERTY(ReadOnlyBindable, int, _xProp)
+
+public:
+    ReadOnlyBindable(QObject *parent = nullptr)
+        : QObject(parent)
+    {
+        setX(7);
+    }
+
+    int x() const { return _xProp.value(); }
+    void setX(int x) { _xProp.setValue(x); }
+    QBindable<int> bindableX() const { return &_xProp; }
 };
 
 void registerTypes();

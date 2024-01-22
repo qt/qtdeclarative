@@ -19,6 +19,7 @@ qt_internal_add_test(tst_qquickwidget
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickTemplates2Private
         Qt::QuickWidgets
         Qt::QuickWidgetsPrivate
         Qt::WidgetsPrivate

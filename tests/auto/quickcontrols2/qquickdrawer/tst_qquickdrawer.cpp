@@ -46,14 +46,16 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
+#include <QtQuick/qquickview.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
-#include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#include <QtQuickTemplates2/private/qquickoverlay_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickslider_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
@@ -120,6 +122,8 @@ private slots:
     void slider();
 
     void topEdgeScreenEdge();
+
+    void touchOutsideOverlay();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice;
@@ -1391,6 +1395,41 @@ void tst_QQuickDrawer::topEdgeScreenEdge()
 
     QVERIFY(QMetaObject::invokeMethod(drawer, "open"));
     QTRY_COMPARE(drawer->position(), 1.0);
+}
+
+void tst_QQuickDrawer::touchOutsideOverlay() // QTBUG-103811
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("itemPartialOverlayModal.qml")));
+    auto *drawer = window.rootObject()->findChild<QQuickDrawer*>();
+    QVERIFY(drawer);
+    QSignalSpy openedSpy(drawer, &QQuickDrawer::opened);
+    QSignalSpy closedSpy(drawer, &QQuickDrawer::closed);
+
+    drawer->open();
+    QVERIFY(openedSpy.size() == 1 || openedSpy.wait());
+    QVERIFY(drawer->isOpened());
+
+    // tap-dance in bottom area beyond the overlay
+    QPoint p1(100, 250);
+    QPoint p2(300, 250);
+    QTest::touchEvent(&window, touchDevice.data()).press(1, p1);
+    p1 -= QPoint(1, 0);
+    QTest::touchEvent(&window, touchDevice.data()).move(1, p1).press(2, p2);
+    p2 -= QPoint(1, 0);
+    QTest::touchEvent(&window, touchDevice.data()).release(1, p1).move(2, p2);
+    QTest::touchEvent(&window, touchDevice.data()).press(1, p1).stationary(2);
+    QTest::touchEvent(&window, touchDevice.data()).release(1, p1).release(2, p2);
+    QQuickTouchUtils::flush(&window);
+
+    // tap the overlay to try to close the drawer
+    QVERIFY(drawer->closePolicy().testFlag(QQuickPopup::CloseOnReleaseOutside));
+    const QPoint p3(300, 100);
+    QTest::touchEvent(&window, touchDevice.data()).press(3, p3);
+    QTest::touchEvent(&window, touchDevice.data()).release(3, p3);
+    QQuickTouchUtils::flush(&window);
+    QVERIFY(closedSpy.size() == 1 || closedSpy.wait());
+    QCOMPARE(drawer->isOpened(), false);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickDrawer)

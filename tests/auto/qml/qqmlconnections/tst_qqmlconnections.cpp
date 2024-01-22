@@ -78,6 +78,7 @@ private slots:
     void noAcceleratedGlobalLookup();
 
     void bindToPropertyWithUnderscoreChangeHandler();
+    void invalidTarget();
 
 private:
     QQmlEngine engine;
@@ -488,6 +489,25 @@ void tst_qqmlconnections::bindToPropertyWithUnderscoreChangeHandler()
     underscoreProperty.write(42);
     QVERIFY(root->property("sanityCheck").toBool());
     QVERIFY(root->property("success").toBool());
+}
+
+void tst_qqmlconnections::invalidTarget()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("invalidTarget.qml");
+    QQmlComponent component(&engine, url);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> root {component.create()};
+    QVERIFY(root);
+    QCOMPARE(root->objectName(), QStringLiteral("button"));
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(
+                    url.toString()
+                    + QLatin1String(":5:5: TypeError: Cannot read property 'objectName' of null")));
+    QTRY_VERIFY(root->objectName().isEmpty());
 }
 
 QTEST_MAIN(tst_qqmlconnections)

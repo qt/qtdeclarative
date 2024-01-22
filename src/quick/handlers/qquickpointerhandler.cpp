@@ -92,7 +92,7 @@ QQuickPointerHandler::~QQuickPointerHandler()
      \qmlproperty real PointerHandler::margin
 
      The margin beyond the bounds of the \l {PointerHandler::parent}{parent}
-     item within which an event point can activate this handler. For example, on
+     item within which an \l eventPoint can activate this handler. For example, on
      a PinchHandler where the \l {PointerHandler::target}{target} is also the
      \c parent, it's useful to set this to a distance at least half the width
      of a typical user's finger, so that if the \c parent has been scaled down
@@ -125,7 +125,7 @@ void QQuickPointerHandler::setMargin(qreal pointDistanceThreshold)
     \qmlproperty int PointerHandler::dragThreshold
     \since 5.15
 
-    The distance in pixels that the user must drag an event point in order to
+    The distance in pixels that the user must drag an \l eventPoint in order to
     have it treated as a drag gesture.
 
     The default value depends on the platform and screen resolution.
@@ -252,8 +252,8 @@ bool QQuickPointerHandler::isCursorShapeExplicitlySet() const
     The \a grabber (subject) will be the Input Handler whose state is changing,
     or null if the state change regards an Item.
     The \a transition (verb) tells what happened.
-    The \a point (object) is the point that was grabbed or ungrabbed.
-    EventPoint has the sole responsibility to call this function.
+    The \a point (object) is the \l eventPoint that was grabbed or ungrabbed.
+    QQuickDeliveryAgent calls this function.
     The Input Handler must react in whatever way is appropriate, and must
     emit the relevant signals (for the benefit of QML code).
     A subclass is allowed to override this virtual function, but must always
@@ -707,9 +707,9 @@ bool QQuickPointerHandler::wantsEventPoint(const QPointerEvent *event, const QEv
     \qmlproperty bool QtQuick::PointerHandler::active
 
     This holds true whenever this Input Handler has taken sole responsibility
-    for handing one or more EventPoints, by successfully taking an exclusive
-    grab of those points. This means that it is keeping its properties
-    up-to-date according to the movements of those Event Points and actively
+    for handing one or more \l {eventPoint}{eventPoints}, by successfully taking an
+    exclusive grab of those points. This means that it is keeping its properties
+    up-to-date according to the movements of those eventPoints and actively
     manipulating its \l target (if any).
 */
 void QQuickPointerHandler::setActive(bool active)
@@ -733,7 +733,7 @@ void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *)
 
     The \l Item which is the scope of the handler; the Item in which it was declared.
     The handler will handle events on behalf of this Item, which means a
-    pointer event is relevant if at least one of its event points occurs within
+    pointer event is relevant if at least one of its \l {eventPoint}{eventPoints} occurs within
     the Item's interior.  Initially \l [QML] {target} {target()} is the same, but it
     can be reassigned.
 
@@ -744,7 +744,7 @@ void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *)
 */
 
 /*!
-    \qmlsignal QtQuick::PointerHandler::grabChanged(GrabTransition transition, EventPoint point)
+    \qmlsignal QtQuick::PointerHandler::grabChanged(PointerDevice::GrabTransition transition, eventPoint point)
 
     This signal is emitted when the grab has changed in some way which is
     relevant to this handler.

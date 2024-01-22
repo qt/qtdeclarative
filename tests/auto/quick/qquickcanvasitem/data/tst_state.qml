@@ -6,6 +6,7 @@ CanvasTestCase {
    function init_data() { return testData("2d"); }
    function test_bitmap(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#f00';
@@ -19,6 +20,7 @@ CanvasTestCase {
   }
    function test_clip(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -35,6 +37,7 @@ CanvasTestCase {
    }
    function test_fillStyle(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        // Test that restore() undoes any modifications
@@ -56,6 +59,7 @@ CanvasTestCase {
    }
    function test_font(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -78,6 +82,7 @@ CanvasTestCase {
    }
    function test_globalAlpha(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -100,6 +105,7 @@ CanvasTestCase {
     }
    function test_globalCompositeOperation(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -122,6 +128,7 @@ CanvasTestCase {
    }
    function test_lineCap(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -144,6 +151,7 @@ CanvasTestCase {
    }
    function test_lineJoin(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -166,6 +174,7 @@ CanvasTestCase {
    }
    function test_lineWidth(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -188,6 +197,7 @@ CanvasTestCase {
    }
    function test_miterLimit(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -210,6 +220,7 @@ CanvasTestCase {
    }
    function test_path(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -225,6 +236,7 @@ CanvasTestCase {
    }
    function test_shadow(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -295,6 +307,7 @@ CanvasTestCase {
    }
    function test_stack(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -330,6 +343,7 @@ CanvasTestCase {
    }
    function test_strokeStyle(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -353,6 +367,7 @@ CanvasTestCase {
 
    function test_text(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -392,6 +407,7 @@ CanvasTestCase {
 
    function test_transform(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 

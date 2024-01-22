@@ -65,6 +65,11 @@ public:
         s_staticUnits.insert(file, staticUnit);
     }
 
+    void remove(const QString &file)
+    {
+        s_staticUnits.remove(file);
+    }
+
 private:
     QMutexLocker<QMutex> m_lock;
 
@@ -103,6 +108,12 @@ CompiledData::Unit *CompilationUnitMapper::get(
         cache.set(cacheFilePath, *this);
 
     return data;
+}
+
+void CompilationUnitMapper::invalidate(const QString &cacheFilePath)
+{
+    StaticUnitCache cache;
+    cache.remove(cacheFilePath);
 }
 
 QT_END_NAMESPACE

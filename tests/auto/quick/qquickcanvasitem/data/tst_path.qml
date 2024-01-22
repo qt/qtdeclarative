@@ -6,6 +6,7 @@ CanvasTestCase {
    function init_data() { return testData("2d"); }
        function test_basic(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -36,6 +37,7 @@ CanvasTestCase {
        }
        function test_beginPath(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.fillStyle = '#0f0';
            ctx.fillRect(0, 0, 100, 50);
@@ -48,6 +50,7 @@ CanvasTestCase {
        }
        function test_closePath(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -86,6 +89,7 @@ CanvasTestCase {
 
        function test_isPointInPath(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.arc(50, 25, 10, 0, Math.PI, false);
@@ -256,6 +260,7 @@ CanvasTestCase {
 
        function test_fill(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -378,6 +383,7 @@ CanvasTestCase {
        }
        function test_stroke(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -662,6 +668,7 @@ CanvasTestCase {
        }
        function test_clip(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -784,6 +791,7 @@ CanvasTestCase {
 
        function test_moveTo(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -839,6 +847,7 @@ CanvasTestCase {
        }
        function test_lineTo(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -904,6 +913,7 @@ CanvasTestCase {
        }
        function test_bezierCurveTo(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1072,6 +1082,7 @@ CanvasTestCase {
        }
        function test_quadraticCurveTo(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1173,6 +1184,7 @@ CanvasTestCase {
        }
        function test_rect(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -1371,6 +1383,7 @@ CanvasTestCase {
 
        function test_clearRect(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -1383,6 +1396,7 @@ CanvasTestCase {
        }
        function test_fillRect(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.beginPath();
@@ -1397,6 +1411,7 @@ CanvasTestCase {
 
        function test_strokeRect(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.beginPath();
@@ -1412,6 +1427,7 @@ CanvasTestCase {
        }
        function test_transform(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';

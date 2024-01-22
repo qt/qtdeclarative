@@ -47,7 +47,7 @@ private slots:
     void basicTest();
     void basicTestCached();
     void applicationEngineTest();
-
+    void qmldirCompatibility();
 };
 
 void tst_qqmlfileselector::basicTest()
@@ -93,6 +93,23 @@ void tst_qqmlfileselector::applicationEngineTest()
     QObject *object = engine.rootObjects().at(0);
     QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toString(), QString("selected"));
+}
+
+void tst_qqmlfileselector::qmldirCompatibility()
+{
+    QQmlApplicationEngine engine;
+    engine.addImportPath(dataDirectory());
+    engine.load(testFileUrl("qmldirtest/main.qml"));
+    QVERIFY(!engine.rootObjects().isEmpty());
+    QObject *object = engine.rootObjects().at(0);
+    auto color = object->property("color").value<QColor>();
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+    QCOMPARE(color, QColorConstants::Svg::blue);
+#elif defined(Q_OS_DARWIN)
+    QCOMPARE(color, QColorConstants::Svg::yellow);
+#else
+    QCOMPARE(color, QColorConstants::Svg::green);
+#endif
 }
 
 QTEST_MAIN(tst_qqmlfileselector)

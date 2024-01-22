@@ -175,7 +175,7 @@ void QQuickPointerDeviceHandler::setAcceptedDevices(QPointingDevice::DeviceTypes
     By default, this property is set to
     \l {QPointingDevice::PointerType} {PointerDevice.AllPointerTypes}.
     If you set it to an OR combination of device types, it will ignore events
-    from non-matching events.
+    from non-matching \l {PointerDevice}{devices}.
 
     For example, a control could be made to respond to mouse, touch, and stylus clicks
     in some way, but delete itself if tapped with an eraser tool on a graphics tablet,

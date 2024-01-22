@@ -7,6 +7,7 @@ CanvasTestCase {
 
    function test_coincide(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#f00';
@@ -44,6 +45,7 @@ CanvasTestCase {
    }
    function test_collinear(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -109,6 +111,7 @@ CanvasTestCase {
    }
    function test_subpath(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -135,6 +138,7 @@ CanvasTestCase {
 
    function test_negative(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -152,6 +156,7 @@ CanvasTestCase {
 
    function test_nonfinite(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -208,6 +213,7 @@ CanvasTestCase {
    }
    function test_scale(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -237,6 +243,7 @@ CanvasTestCase {
 
    function test_shape(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -348,6 +355,7 @@ CanvasTestCase {
 
    function test_transform(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -374,6 +382,7 @@ CanvasTestCase {
    }
    function test_zero(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 

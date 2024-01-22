@@ -6,6 +6,7 @@ CanvasTestCase {
    function init_data() { return testData("2d"); }
    function test_svgpath(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        var svgs = [
                    // Absolute coordinates, explicit commands.

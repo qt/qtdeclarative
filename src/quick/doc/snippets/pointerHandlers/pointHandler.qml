@@ -48,8 +48,7 @@
 **
 ****************************************************************************/
 //![0]
-import QtQuick 2.12
-import QtQuick.Window 2.2
+import QtQuick
 
 Window {
     width: 480
@@ -61,6 +60,7 @@ Window {
         z: 10000
         anchors.fill: parent
 
+        //![1]
         PointHandler {
             id: handler
             acceptedDevices: PointerDevice.TouchScreen | PointerDevice.TouchPad
@@ -73,6 +73,7 @@ Window {
                 width: 20; height: width; radius: width / 2
             }
         }
+        //![1]
     }
 }
 //![0]

@@ -72,6 +72,8 @@ private slots:
 
     void enumsInRecursiveImport_data();
     void enumsInRecursiveImport();
+
+    void clearPropertyCaches();
 };
 
 class TestType : public QObject
@@ -732,6 +734,24 @@ void tst_qqmlmetatype::enumsInRecursiveImport()
     QScopedPointer<QObject> obj(c.create());
     QVERIFY(!obj.isNull());
     QTRY_COMPARE(obj->property("color").toString(), QString("green"));
+}
+
+void tst_qqmlmetatype::clearPropertyCaches()
+{
+    qmlClearTypeRegistrations();
+    qmlRegisterType<TestType>("ClearPropertyCaches", 1, 0, "A");
+
+    QQmlRefPointer<QQmlPropertyCache> oldCache(
+                QQmlMetaType::propertyCache(&TestType::staticMetaObject));
+    QVERIFY(oldCache);
+
+    qmlClearTypeRegistrations();
+    qmlRegisterType<TestType>("ClearPropertyCaches", 1, 0, "B");
+    QQmlRefPointer<QQmlPropertyCache> newCache(
+                QQmlMetaType::propertyCache(&TestType::staticMetaObject));
+    QVERIFY(newCache);
+
+    QVERIFY(oldCache.data() != newCache.data());
 }
 
 QTEST_MAIN(tst_qqmlmetatype)

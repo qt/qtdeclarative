@@ -494,6 +494,8 @@ qreal QQuickImage::paintedHeight() const
 
     \note \e {Changing this property dynamically causes the image source to be reloaded,
     potentially even from the network, if it is not in the disk cache.}
+
+    \sa {Pointer Handlers Example}
 */
 
 /*!

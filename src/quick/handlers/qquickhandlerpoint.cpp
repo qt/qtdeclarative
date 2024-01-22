@@ -49,7 +49,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
     \inqmlmodule QtQuick
     \brief An event point.
 
-    A QML representation of a QEventPoint.
+    A handler-owned QML representation of a QEventPoint.
 
     It's possible to make bindings to properties of a handler's current
     \l {SinglePointHandler::point}{point} or
@@ -58,12 +58,12 @@ Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
     \snippet pointerHandlers/dragHandlerNullTarget.qml 0
 
     The point is kept up-to-date when the DragHandler is actively responding to
-    an EventPoint; but after the point is released, or when the current point is
+    an \l eventPoint; but after the point is released, or when the current point is
     being handled by a different handler, \c position.x and \c position.y are 0.
 
-    \note This is practically identical to QtQuick::EventPoint; however an
-    EventPoint is a long-lived QObject which is invalidated between gestures
-    and reused for subsequent event deliveries. Continuous bindings to its
+    \note This is practically identical to \l eventPoint; however an eventPoint
+    is a short-lived copy of a long-lived Q_GADGET which is invalidated between
+    gestures and reused for subsequent event deliveries. Continuous bindings to its
     properties are not possible, and an individual handler cannot rely on it
     outside the period when that point is part of an active gesture which that
     handler is handling. HandlerPoint is a Q_GADGET that the handler owns.
@@ -186,7 +186,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     During a touch gesture, from the time that the first finger is pressed
     until the last finger is released, each touchpoint will have a unique ID
     number. Likewise, if input from multiple devices occurs (for example
-    simultaneous mouse and touch presses), all the current event points from
+    simultaneous mouse and touch presses), all the current \l{eventPoint}{eventPoints} from
     all the devices will have unique IDs.
 
     \note Do not assume that id numbers start at zero or that they are
@@ -223,7 +223,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     \qmlproperty QPointF QtQuick::HandlerPoint::position
     \brief The position within the \c parent Item
 
-    This is the position of the event point relative to the bounds of
+    This is the position of the \l eventPoint relative to the bounds of
     the \l {PointerHandler::parent} {parent}.
 */
 
@@ -232,7 +232,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     \qmlproperty QPointF QtQuick::HandlerPoint::scenePosition
     \brief The position within the scene
 
-    This is the position of the event point relative to the bounds of the Qt
+    This is the position of the \l eventPoint relative to the bounds of the Qt
     Quick scene (typically the whole window).
 */
 
@@ -290,7 +290,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     This is a velocity vector pointing in the direction of movement, in logical
     pixels per second. It has x and y components, at least one of which will be
     nonzero when this point is in motion. It holds the average recent velocity:
-    how fast and in which direction the event point has been moving recently.
+    how fast and in which direction the \l eventPoint has been moving recently.
 
     \sa QtQuick::TouchPoint::velocity, QEventPoint::velocity
 */
@@ -343,6 +343,13 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     these values will be zero.
 
     \sa QtQuick::TouchPoint::ellipseDiameters, QEventPoint::ellipseDiameters
+*/
+
+/*!
+    \readonly
+    \qmlproperty PointerDevice QtQuick::handlerPoint::device
+
+    This property holds the device that the point (and its event) came from.
 */
 
 QT_END_NAMESPACE

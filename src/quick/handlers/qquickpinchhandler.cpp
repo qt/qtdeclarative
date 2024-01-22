@@ -92,7 +92,7 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
     but if it's a disallowed number, it does not scale or rotate
     its \l target, and the \l active property remains \c false.
 
-    \sa PinchArea, QPointerEvent::pointCount(), QNativeGestureEvent::fingerCount()
+    \sa PinchArea, QPointerEvent::pointCount(), QNativeGestureEvent::fingerCount(), {Pointer Handlers Example}
 */
 
 QQuickPinchHandler::QQuickPinchHandler(QQuickItem *parent)
@@ -462,6 +462,13 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
 }
 
 /*!
+    \internal
+    \qmlproperty flags QtQuick::PinchHandler::acceptedButtons
+
+    This property is not used in PinchHandler.
+*/
+
+/*!
     \readonly
     \qmlproperty QtQuick::HandlerPoint QtQuick::PinchHandler::centroid
 
@@ -508,6 +515,9 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
 
     The translation of the gesture \l centroid. It is \c (0, 0) when the
     gesture begins.
+
+    \note On some touchpads, such as on a \macos trackpad, native gestures do
+    not generate any translation values, and this property stays at \c (0, 0).
 */
 
 QT_END_NAMESPACE

@@ -398,6 +398,17 @@ public:
     Q_INVOKABLE QQmlComponent *createAThing(int) { return nullptr; }
 };
 
+class Invisible : public QObject
+{
+};
+
+struct InvisibleForeign
+{
+    Q_GADGET
+    QML_FOREIGN(Invisible)
+    QML_NAMED_ELEMENT(Invisible)
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -429,6 +440,7 @@ private slots:
     void namespacesAndValueTypes();
     void derivedFromForeignPrivate();
     void methodReturnType();
+    void omitInvisible();
 
 private:
     QByteArray qmltypesData;

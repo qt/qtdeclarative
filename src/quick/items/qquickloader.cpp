@@ -804,7 +804,7 @@ void QQuickLoader::componentComplete()
 {
     Q_D(QQuickLoader);
     QQuickItem::componentComplete();
-    if (active()) {
+    if (active() && (status() != Ready)) {
         if (d->loadingFromSource)
             d->createComponent();
         d->load();

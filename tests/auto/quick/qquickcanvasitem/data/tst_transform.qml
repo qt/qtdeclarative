@@ -6,6 +6,7 @@ CanvasTestCase {
    function init_data() { return testData("2d"); }
    function test_order(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#f00';
@@ -20,6 +21,7 @@ CanvasTestCase {
   }
    function test_rotate(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#f00';
@@ -90,6 +92,7 @@ CanvasTestCase {
   }
    function test_scale(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -182,6 +185,7 @@ CanvasTestCase {
    }
    function test_setTransform(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#f00';
@@ -325,6 +329,7 @@ CanvasTestCase {
   }
    function test_transform(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#f00';
@@ -460,6 +465,7 @@ CanvasTestCase {
   }
    function test_translate(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#f00';

@@ -972,7 +972,11 @@ protected:
 
     // to check
     bool visit(TypeExpression *) override { return true; }
-    bool visit(SuperLiteral *) override { return true; }
+    bool visit(SuperLiteral *) override
+    {
+        out("super");
+        return true;
+    }
     bool visit(PatternProperty *) override { return true; }
     bool visit(ComputedPropertyName *) override
     {
@@ -989,7 +993,61 @@ protected:
     }
     bool visit(YieldExpression *) override { return true; }
     bool visit(ClassExpression *) override { return true; }
-    bool visit(ClassDeclaration *) override { return true; }
+
+    // Return false because we want to omit default function calls in accept0 implementation.
+    bool visit(ClassDeclaration *ast) override
+    {
+        preVisit(ast);
+        out(ast->classToken);
+        out(" ");
+        out(ast->name);
+        if (ast->heritage) {
+            out(" extends ");
+            accept(ast->heritage);
+        }
+        out(" {");
+        int baseIndent = lw.increaseIndent();
+        for (ClassElementList *it = ast->elements; it; it = it->next) {
+            PatternProperty *property = it->property;
+            lw.newline();
+            preVisit(property);
+            if (it->isStatic)
+                out("static ");
+            if (property->type == PatternProperty::Getter)
+                out("get ");
+            else if (property->type == PatternProperty::Setter)
+                out("set ");
+            FunctionExpression *f = AST::cast<FunctionExpression *>(property->initializer);
+            const bool scoped = f->lbraceToken.length != 0;
+            out(f->functionToken);
+            out(f->lparenToken);
+            accept(f->formals);
+            out(f->rparenToken);
+            out(f->lbraceToken);
+            if (scoped)
+                ++expressionDepth;
+            if (f->body) {
+                if (f->body->next || scoped) {
+                    lnAcceptIndented(f->body);
+                    lw.newline();
+                } else {
+                    baseIndent = lw.increaseIndent(1);
+                    accept(f->body);
+                    lw.decreaseIndent(1, baseIndent);
+                }
+            }
+            if (scoped)
+                --expressionDepth;
+            out(f->rbraceToken);
+            lw.newline();
+            postVisit(property);
+        }
+        lw.decreaseIndent(1, baseIndent);
+        out("}");
+        postVisit(ast);
+        return false;
+    }
+
     bool visit(ClassElementList *) override { return true; }
     bool visit(Program *) override { return true; }
     bool visit(NameSpaceImport *) override { return true; }

@@ -67,3 +67,4 @@ qt_add_qml_module(tst-qmltyperegistrar-with-dashes
     SOURCES
         foo.cpp foo.h
 )
+qt_autogen_tools_initial_setup(tst-qmltyperegistrar-with-dashesplugin)

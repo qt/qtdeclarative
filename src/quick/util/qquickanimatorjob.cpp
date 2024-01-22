@@ -394,10 +394,11 @@ void QQuickTransformAnimatorJob::Helper::sync()
         wasSynced = true;
     }
 
+    // We update the node before checking on dirty, as the node might have changed without the animator running
+    node = d->itemNode();
+
     if (dirty == 0)
         return;
-
-    node = d->itemNode();
 
     if (dirty & QQuickItemPrivate::Position) {
         dx = item->x();

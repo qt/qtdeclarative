@@ -2741,7 +2741,8 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
 
     \c section.delegate holds the delegate component for each section. The
     default \l {QQuickItem::z}{stacking order} of section delegate instances
-    is \c 2.
+    is \c 2. If you declare a \c required property named "section" in it,
+    that property will contain the section's title.
 
     \c section.labelPositioning determines whether the current and/or
     next section labels stick to the start/end of the view, and whether

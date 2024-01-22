@@ -288,7 +288,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     QPainter instead of the more expensive and likely less performing
     JavaScript and Context2D approach.
 
-    \sa Context2D QQuickPaintedItem
+    \sa Context2D, QQuickPaintedItem, {Pointer Handlers Example}
 */
 
 QQuickCanvasItem::QQuickCanvasItem(QQuickItem *parent)
@@ -652,6 +652,10 @@ void QQuickCanvasItem::invalidateSceneGraph()
     d->textureProvider = nullptr;
     delete d->nodeTexture;
     d->nodeTexture = nullptr;
+
+    // As we can expect(/hope) that the SG will be "good again", we can requestPaint ( which does 'markDirty(canvasWindow);' )
+    // Otherwise this Canvas will be "blank" when SG comes back
+    requestPaint();
 }
 
 void QQuickCanvasItem::schedulePolish()

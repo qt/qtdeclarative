@@ -1475,16 +1475,24 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         void *argv[] = { &bindable };
         // allow interception
         target->metaObject()->metacall(target, QMetaObject::BindableProperty, index, argv);
-        bindable.setBinding(qmlBinding);
+        const bool success = bindable.setBinding(qmlBinding);
+
+        // Only pop_front after setting the binding as the bindings are refcounted.
         sharedState->allQPropertyBindings.pop_front();
-        if (auto priv = QPropertyBindingPrivate::get(qmlBinding); priv->hasCustomVTable()) {
-            auto qmlBindingPriv = static_cast<QQmlPropertyBinding *>(priv);
-            auto jsExpression = qmlBindingPriv->jsExpression();
-            const bool canRemove = !qmlBinding.error().hasError() && !qmlBindingPriv->hasDependencies()
-                    && !jsExpression->hasUnresolvedNames();
-            if (canRemove)
-                bindable.takeBinding();
+
+        // If the binding was actually not set, it's deleted now.
+        if (success) {
+            if (auto priv = QPropertyBindingPrivate::get(qmlBinding); priv->hasCustomVTable()) {
+                auto qmlBindingPriv = static_cast<QQmlPropertyBinding *>(priv);
+                auto jsExpression = qmlBindingPriv->jsExpression();
+                const bool canRemove = !qmlBinding.error().hasError()
+                        && !qmlBindingPriv->hasDependencies()
+                        && !jsExpression->hasUnresolvedNames();
+                if (canRemove)
+                    bindable.takeBinding();
+            }
         }
+
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return false;
     }

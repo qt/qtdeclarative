@@ -7,6 +7,7 @@ CanvasTestCase {
    function init_data() { return testData("2d"); }
    function test_createImageData(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        var imageData = ctx.createImageData(1, 1);
        var imageDataValues = imageData.data;
@@ -20,24 +21,28 @@ CanvasTestCase {
   }
    function test_getImageData(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        canvas.destroy()
   }
    function test_object(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        canvas.destroy()
   }
    function test_putImageData(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        canvas.destroy()
   }
    function test_filters(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        canvas.destroy()

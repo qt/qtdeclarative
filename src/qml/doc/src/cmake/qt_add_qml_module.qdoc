@@ -59,6 +59,7 @@ qt_add_qml_module(
     [RESOURCES ...]
     [OUTPUT_TARGETS out_targets_var]
     [DESIGNER_SUPPORTED]
+    [NO_PLUGIN]
     [NO_PLUGIN_OPTIONAL]
     [NO_CREATE_PLUGIN_TARGET]
     [NO_GENERATE_PLUGIN_SOURCE]
@@ -324,8 +325,12 @@ been created. When  \c NO_CREATE_PLUGIN_TARGET is given, \c PLUGIN_TARGET must
 also be provided to explicitly name the plugin target.
 
 Every QML module must define a \c URI. It should be specified in dotted URI
-notation, such as \c{QtQuick.Layouts}. It must not contain anything other than
-alphanumeric or dot characters. Other QML modules may use this name in
+notation, such as \c{QtQuick.Layouts}. Each segment must be a well-formed
+ECMAScript Identifier Name. This means, for example, the segments
+must not start with a number and they must not contain \e{-} (minus)
+characters. As the \c URI will be translated into directory names, you
+should restrict it to alphanumeric characters of the latin alphabet,
+underscores, and dots. Other QML modules may use this name in
 \l{qtqml-syntax-imports.html}{import statements} to import the module. The
 \c URI will be used in the \c module line of the generated
 \l{Module Definition qmldir Files}{qmldir} file. The \c URI is also used to
@@ -412,7 +417,21 @@ plugin class, the \c NO_GENERATE_PLUGIN_SOURCE option should be given. Where no
 \c CLASS_NAME is provided, it defaults to the \c URI with dots replaced by
 underscores, then \c Plugin appended. Unless the QML module has no plugin, the
 class name will be recorded as a \c classname line in the generated
-\l{Module Definition qmldir Files}{qmldir} file.
+\l{Module Definition qmldir Files}{qmldir} file. You need to add any C++ files
+with custom plugin code to the plugin target. Since the plugin then likely
+contains functionality that goes beyond simply loading the backing library, you
+will probably want to add \l{NO_PLUGIN_OPTIONAL}, too. Otherwise the QML engine
+may skip loading the plugin if it detects that the backing library is already
+linked.
+
+\target NO_PLUGIN
+If the \c NO_PLUGIN keyword is given, then no plugin will be built. This
+keyword is thus incompatible with all the options that customize the plugin
+target, in particular \l{NO_GENERATE_PLUGIN_SOURCE}, \l{NO_PLUGIN_OPTIONAL},
+\l{PLUGIN_TARGET}, \l{NO_CREATE_PLUGIN_TARGET}, and \l{CLASS_NAME}. If you do
+not provide a plugin for your module, it will only be fully usable if its
+backing library has been linked into the executable. It is generally hard to
+guarantee that a linker preserves the linkage to a library it considers unused.
 
 \target NO_PLUGIN_OPTIONAL
 If the \c NO_PLUGIN_OPTIONAL keyword is given, then the plugin is recorded in

@@ -68,6 +68,8 @@ QT_BEGIN_NAMESPACE
     items dynamically at run time. The items can be accessed using
     \l {Container::}{itemAt()} or \l {Container::}{contentChildren}.
 
+    \include container-currentindex.qdocinc {file} {TabBar} {SwipeView}
+
     \section2 Resizing Tabs
 
     By default, TabBar resizes its buttons to fit the width of the control.

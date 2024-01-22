@@ -88,7 +88,7 @@ Q_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
 
     At this time, drag-and-drop is not yet supported.
 
-    \sa Drag, MouseArea
+    \sa Drag, MouseArea, {Pointer Handlers Example}
 */
 
 QQuickDragHandler::QQuickDragHandler(QQuickItem *parent)
@@ -131,13 +131,13 @@ void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDe
 
     This property holds the snap mode.
 
-    The snap mode configures snapping of the \l target item's center to the event point.
+    The snap mode configures snapping of the \l target item's center to the \l eventPoint.
 
     Possible values:
     \value DragHandler.SnapNever Never snap
-    \value DragHandler.SnapAuto The \l target snaps if the event point was pressed outside of the \l target
-                                item \e and the \l target is a descendant of \l parentItem (default)
-    \value DragHandler.SnapWhenPressedOutsideTarget The \l target snaps if the event point was pressed outside of the \l target
+    \value DragHandler.SnapAuto The \l target snaps if the \l eventPoint was pressed outside of the \l target
+                                item \e and the \l target is a descendant of \l {PointerHandler::}{parent} item (default)
+    \value DragHandler.SnapWhenPressedOutsideTarget The \l target snaps if the \l eventPoint was pressed outside of the \l target
     \value DragHandler.SnapAlways Always snap
 */
 QQuickDragHandler::SnapMode QQuickDragHandler::snapMode() const

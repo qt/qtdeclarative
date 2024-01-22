@@ -63,6 +63,8 @@ private slots:
     void tapDelegateDuringFlicking();
     void flickDuringFlicking_data();
     void flickDuringFlicking();
+    void isCurrentItem_DelegateModel();
+    void isCurrentItem_NoRegressionWithDelegateModelGroups();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -421,6 +423,45 @@ void tst_QQuickListView2::delegateModelRefresh()
     QVERIFY(!engine.rootObjects().isEmpty());
     // needs event loop iteration for callLater to execute
     QTRY_VERIFY(engine.rootObjects().first()->property("done").toBool());
+}
+
+void tst_QQuickListView2::isCurrentItem_DelegateModel()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("qtbug86744.qml"));
+    window->resize(640, 480);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QQuickListView* listView = window->rootObject()->findChild<QQuickListView*>("listView");
+    QVERIFY(listView);
+    QVariant value = listView->itemAtIndex(1)->property("isCurrent");
+    QVERIFY(value.toBool() == true);
+}
+
+void tst_QQuickListView2::isCurrentItem_NoRegressionWithDelegateModelGroups()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("qtbug98315.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QQuickListView* listView = window->rootObject()->findChild<QQuickListView*>("listView");
+    QVERIFY(listView);
+
+    QQuickItem *item3 = listView->itemAtIndex(1);
+    QVERIFY(item3);
+    QCOMPARE(item3->property("isCurrent").toBool(), true);
+
+    QObject *item0 = listView->itemAtIndex(0);
+    QVERIFY(item0);
+    QCOMPARE(item0->property("isCurrent").toBool(), false);
+
+    // Press left arrow key -> Item 1 should become current, Item 3 should not
+    // be current anymore. After a previous fix of QTBUG-86744 it was working
+    // incorrectly - see QTBUG-98315
+    QTest::keyPress(window.get(), Qt::Key_Left);
+
+    QTRY_COMPARE(item0->property("isCurrent").toBool(), true);
+    QCOMPARE(item3->property("isCurrent").toBool(), false);
 }
 
 QTEST_MAIN(tst_QQuickListView2)
