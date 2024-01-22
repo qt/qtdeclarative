@@ -1013,6 +1013,23 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
         return -1;
     };
 
+    // Helper to ensure that index i and position t are valid:
+    auto ensureInBounds = [&](int *i, float *t, float deltaT) {
+        if (*t <= 0.f) {
+            if (path.elementAt(*i).isSubpathStart())
+                *i = subPathEndPoints.at(subPathIndex(*i));
+            else
+                *i = *i - 1;
+            *t = 1.f - deltaT;
+        } else if (*t >= 1.f) {
+            if (path.elementAt(*i).isSubpathEnd())
+                *i = subPathStartPoints.at(subPathIndex(*i));
+            else
+                *i = *i + 1;
+            *t = deltaT;
+        }
+    };
+
     // Helper function to find a siutable starting point between start and end.
     // A suitable starting point is where right is inside and left is outside
     // If left is inside and right is outside it works too, just move in the
@@ -1219,27 +1236,58 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
                 // For winding fill we take the left most path forward, so the inside stays on the right side
                 // For odd even fill we take the right most path forward so we cut of the smallest area.
                 // We come back at the intersection and add the missing pieces as subpaths later on.
-                QVector2D tangent1 = elem1.tangentAtFraction(t1);
-                if (!forward)
-                    tangent1 = -tangent1;
-                const QQuadPath::Element &elem2 = path.elementAt(i2);
-                const QVector2D tangent2 = elem2.tangentAtFraction(t2);
-                const float angle = angleBetween(-tangent1, tangent2);
-                qCDebug(lcSGCurveIntersectionSolver) << "    Angle at intersection is" << angle;
-                // A small angle. Everything smaller is interpreted as tangent
-                constexpr float deltaAngle = 1e-3f;
-                if ((angle > deltaAngle && path.fillRule() == Qt::WindingFill) || (angle < -deltaAngle && path.fillRule() == Qt::OddEvenFill)) {
-                    forward = true;
-                    i1 = i2;
-                    t = t2;
-                    qCDebug(lcSGCurveIntersectionSolver) << "    Next going forward from" << t << "on" << i1;
-                } else if ((angle < -deltaAngle && path.fillRule() == Qt::WindingFill) || (angle > deltaAngle && path.fillRule() == Qt::OddEvenFill)) {
-                    forward = false;
-                    i1 = i2;
-                    t = t2;
-                    qCDebug(lcSGCurveIntersectionSolver) << "    Next going backward from" << t << "on" << i1;
-                } else { // this is basically a tangential touch and and no crossing. So stay on the current path, keep direction
-                    qCDebug(lcSGCurveIntersectionSolver) << "    Found tangent. Staying on element";
+                if (t2 != 0 && t2 != 1) {
+                    QVector2D tangent1 = elem1.tangentAtFraction(t1);
+                    if (!forward)
+                        tangent1 = -tangent1;
+                    const QQuadPath::Element &elem2 = path.elementAt(i2);
+                    const QVector2D tangent2 = elem2.tangentAtFraction(t2);
+                    const float angle = angleBetween(-tangent1, tangent2);
+                    qCDebug(lcSGCurveIntersectionSolver) << "    Angle at intersection is" << angle;
+                    // A small angle. Everything smaller is interpreted as tangent
+                    constexpr float deltaAngle = 1e-3f;
+                    if ((angle > deltaAngle && path.fillRule() == Qt::WindingFill) || (angle < -deltaAngle && path.fillRule() == Qt::OddEvenFill)) {
+                        forward = true;
+                        i1 = i2;
+                        t = t2;
+                        qCDebug(lcSGCurveIntersectionSolver) << "    Next going forward from" << t << "on" << i1;
+                    } else if ((angle < -deltaAngle && path.fillRule() == Qt::WindingFill) || (angle > deltaAngle && path.fillRule() == Qt::OddEvenFill)) {
+                        forward = false;
+                        i1 = i2;
+                        t = t2;
+                        qCDebug(lcSGCurveIntersectionSolver) << "    Next going backward from" << t << "on" << i1;
+                    } else { // this is basically a tangential touch and and no crossing. So stay on the current path, keep direction
+                        qCDebug(lcSGCurveIntersectionSolver) << "    Found tangent. Staying on element";
+                    }
+                } else {
+                    // If we are intersecting exactly at a corner, the trick with the angle does not help.
+                    // Therefore we have to rely on finding the next path by looking forward and see if the
+                    // path there is valid. This is more expensive than the method above and is therefore
+                    // just used as a fallback for corner cases.
+                    constexpr float deltaT = 1e-4f;
+                    int i2after = i2;
+                    float t2after = t2 + deltaT;
+                    ensureInBounds(&i2after, &t2after, deltaT);
+                    QQuadPath::Element::FillSide fillSideForwardNew = path.fillSideOf(i2after, t2after);
+                    if (fillSideForwardNew == QQuadPath::Element::FillSideRight) {
+                        forward = true;
+                        i1 = i2;
+                        t = t2;
+                        qCDebug(lcSGCurveIntersectionSolver) << "    Next going forward from" << t << "on" << i1;
+                    } else {
+                        int i2before = i2;
+                        float t2before = t2 - deltaT;
+                        ensureInBounds(&i2before, &t2before, deltaT);
+                        QQuadPath::Element::FillSide fillSideBackwardNew = path.fillSideOf(i2before, t2before);
+                        if (fillSideBackwardNew == QQuadPath::Element::FillSideLeft) {
+                            forward = false;
+                            i1 = i2;
+                            t = t2;
+                            qCDebug(lcSGCurveIntersectionSolver) << "    Next going backward from" << t << "on" << i1;
+                        } else {
+                            qCDebug(lcSGCurveIntersectionSolver) << "    Staying on element.";
+                        }
+                    }
                 }
             }
 
@@ -1300,51 +1348,35 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
                 // Searching for the correct direction to go forward.
                 // That requires that the intersection + small delta (here 1e-4)
                 // is a valid starting point (filling only on one side)
-                constexpr float deltaT = 1e-4f;
-                if (!unhandledIntersec.in1) {
-                    QQuadPath::Element::FillSide fillSide = path.fillSideOf(unhandledIntersec.e1, unhandledIntersec.t1 - deltaT);
-                    if (fillSide == QQuadPath::Element::FillSideLeft) {
-                        fixedPath.moveTo(path.elementAt(unhandledIntersec.e1).pointAtFraction(unhandledIntersec.t1));
-                        i1 = startedAtIndex = unhandledIntersec.e1;
-                        t = startedAtT = unhandledIntersec.t1;
-                        forward = false;
-                        unhandledIntersec.in1 = true;
-                        break;
+                auto lookForwardOnIntersection = [&](bool *handledPath, int nextE, float nextT, bool nextForward) {
+                    if (*handledPath)
+                        return false;
+                    constexpr float deltaT = 1e-4f;
+                    int eForward = nextE;
+                    float tForward = nextT + (nextForward ? deltaT : -deltaT);
+                    ensureInBounds(&eForward, &tForward, deltaT);
+                    QQuadPath::Element::FillSide fillSide = path.fillSideOf(eForward, tForward);
+                    if ((nextForward && fillSide == QQuadPath::Element::FillSideRight) ||
+                        (!nextForward && fillSide == QQuadPath::Element::FillSideLeft)) {
+                        fixedPath.moveTo(path.elementAt(nextE).pointAtFraction(nextT));
+                        i1 = startedAtIndex = nextE;
+                        t = startedAtT = nextT;
+                        forward = nextForward;
+                        *handledPath = true;
+                        return true;
                     }
-                }
-                if (!unhandledIntersec.in2) {
-                    QQuadPath::Element::FillSide fillSide = path.fillSideOf(unhandledIntersec.e2, unhandledIntersec.t2 - deltaT);
-                    if (fillSide == QQuadPath::Element::FillSideLeft) {
-                        fixedPath.moveTo(path.elementAt(unhandledIntersec.e1).pointAtFraction(unhandledIntersec.t1));
-                        i1 = startedAtIndex = unhandledIntersec.e2;
-                        t = startedAtT = unhandledIntersec.t2;
-                        forward = false;
-                        unhandledIntersec.in2 = true;
-                        break;
-                    }
-                }
-                if (!unhandledIntersec.out1) {
-                    QQuadPath::Element::FillSide fillSide = path.fillSideOf(unhandledIntersec.e1, unhandledIntersec.t1 + deltaT);
-                    if (fillSide == QQuadPath::Element::FillSideRight) {
-                        fixedPath.moveTo(path.elementAt(unhandledIntersec.e1).pointAtFraction(unhandledIntersec.t1));
-                        i1 = startedAtIndex = unhandledIntersec.e1;
-                        t = startedAtT = unhandledIntersec.t1;
-                        forward = true;
-                        unhandledIntersec.out1 = true;
-                        break;
-                    }
-                }
-                if (!unhandledIntersec.out2) {
-                    QQuadPath::Element::FillSide fillSide = path.fillSideOf(unhandledIntersec.e2, unhandledIntersec.t2 + deltaT);
-                    if (fillSide == QQuadPath::Element::FillSideRight) {
-                        fixedPath.moveTo(path.elementAt(unhandledIntersec.e1).pointAtFraction(unhandledIntersec.t1));
-                        i1 = startedAtIndex = unhandledIntersec.e2;
-                        t = startedAtT = unhandledIntersec.t2;
-                        forward = true;
-                        unhandledIntersec.out2 = true;
-                        break;
-                    }
-                }
+                    return false;
+                };
+
+                if (lookForwardOnIntersection(&unhandledIntersec.in1, unhandledIntersec.e1, unhandledIntersec.t1, false))
+                    break;
+                if (lookForwardOnIntersection(&unhandledIntersec.in2, unhandledIntersec.e2, unhandledIntersec.t2, false))
+                    break;
+                if (lookForwardOnIntersection(&unhandledIntersec.out1, unhandledIntersec.e1, unhandledIntersec.t1, true))
+                    break;
+                if (lookForwardOnIntersection(&unhandledIntersec.out2, unhandledIntersec.e2, unhandledIntersec.t2, true))
+                    break;
+
                 intersections.removeFirst();
                 qCDebug(lcSGCurveIntersectionSolver) << "Found no way to move forward at this intersection and removed it.";
             }
