@@ -1534,11 +1534,13 @@ void DomEnvironment::loadModuleDependency(const DomItem &self, const QString &ur
                 loadCallback(p, DomItem::empty, DomItem::empty);
         }
     }
-    if (endCallback)
-        addAllLoadedCallback(self, [p, endCallback](Path, const DomItem &, const DomItem &env) {
+    if (endCallback) {
+        addAllLoadedCallback(self, [p = std::move(p), endCallback = std::move(endCallback)](
+                                           Path, const DomItem &, const DomItem &env) {
             DomItem el = env.path(p);
             endCallback(p, el, el);
         });
+    }
 }
 
 void DomEnvironment::loadBuiltins(const Callback &callback, const ErrorHandler &h)
@@ -2245,7 +2247,7 @@ void DomEnvironment::loadPendingDependencies()
             loadInfo = m_loadInfos.value(elToDo);
         }
         if (loadInfo) {
-            auto cleanup = qScopeGuard([this, elToDo, &self] {
+            auto cleanup = qScopeGuard([this, &elToDo, &self] {
                 QList<Callback> endCallbacks;
                 {
                     QMutexLocker l(mutex());
