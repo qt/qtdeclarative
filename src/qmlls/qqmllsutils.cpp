@@ -510,6 +510,9 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
             default:
                 // is a type annotation, like Item in `function f(x: Item) { ... }`
                 typeDefinition = object.path(Paths::lookupTypePath(name));
+                if (typeDefinition.internalKind() == DomType::Export) {
+                    typeDefinition = typeDefinition.field(Fields::type).get();
+                }
             }
             break;
         }

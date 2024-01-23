@@ -184,7 +184,7 @@ void tst_qmlls_utils::findItemFromLocation_data()
                                     // start of the "property"-token of the "e" property
                                     << -1 << positionAfterOneIndent;
 
-    QTest::addRow("property-in-ic") << file1Qml << 28 << 36 << firstResult << outOfOne
+    QTest::addRow("property-in-ic") << file1Qml << 28 << 38 << firstResult << outOfOne
                                     << QQmlJS::Dom::DomType::PropertyDefinition << -1 << 26;
 
     QTest::addRow("onCChild") << file1Qml << 16 << positionAfterOneIndent << firstResult << outOfOne
@@ -460,12 +460,12 @@ void tst_qmlls_utils::findLocationOfItem_data()
 
     QTest::addRow("root-element") << file1Qml << 6 << 2 << -1 << 1;
 
-    QTest::addRow("property-a") << file1Qml << 9 << 17 << -1 << positionAfterOneIndent;
+    QTest::addRow("property-a") << file1Qml << 9 << 18 << -1 << positionAfterOneIndent;
     QTest::addRow("property-a2") << file1Qml << 9 << 10 << -1 << positionAfterOneIndent;
     QTest::addRow("nested-C") << file1Qml << 20 << 9 << -1 << -1;
     QTest::addRow("nested-C2") << file1Qml << 23 << 13 << -1 << -1;
     QTest::addRow("D") << file1Qml << 17 << 33 << -1 << 32;
-    QTest::addRow("property-d") << file1Qml << 12 << 15 << -1 << positionAfterOneIndent;
+    QTest::addRow("property-d-var-type") << file1Qml << 12 << 15 << -1 << 14;
 
     QTest::addRow("import") << file1Qml << 4 << 6 << -1 << 1;
 }
@@ -1052,7 +1052,7 @@ void tst_qmlls_utils::findUsages_data()
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 13, 20, strlen("patronChanged"));
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 20, 23, strlen("\"patronChanged\""));
         const auto bindings = makeUsages(testFileName, expectedUsages);
-        QTest::addRow("propertyInBindingsFromDecl") << 11 << 22 << bindings;
+        QTest::addRow("propertyInBindingsFromDecl") << 11 << 23 << bindings;
         QTest::addRow("generalizedGroupPropertyBindings") << 27 << 19 << bindings;
     }
     {
@@ -1092,6 +1092,64 @@ void tst_qmlls_utils::findUsages_data()
             QTest::addRow("findICUsagesFromDefinition2") << 4 << 9 << inlineComponents;
             QTest::addRow("findICUsagesFromUsage") << 5 << 19 << inlineComponents;
             QTest::addRow("findICUsagesFromTypeUsage") << 6 << 19 << inlineComponents;
+        }
+    }
+    {
+        const auto testFileName = testFile("findUsages/inlineComponents.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        const auto providerFileName = testFile("findUsages/InlineComponentProvider.qml");
+        const auto providerFileContent = readFileContent(providerFileName);
+        {
+            QList<QQmlLSUtilsLocation> expectedUsagesInProviderFile;
+            QList<QQmlLSUtilsLocation> expectedUsagesInTestFile;
+            expectedUsagesInProviderFile << QQmlLSUtilsLocation::from(
+                    providerFileName, providerFileContent, 4, 15, strlen("IC1"));
+            expectedUsagesInProviderFile << QQmlLSUtilsLocation::from(
+                    providerFileName, providerFileContent, 5, 36, strlen("IC1"));
+            expectedUsagesInProviderFile << QQmlLSUtilsLocation::from(
+                    providerFileName, providerFileContent, 7, 5, strlen("IC1"));
+            expectedUsagesInProviderFile << QQmlLSUtilsLocation::from(
+                    providerFileName, providerFileContent, 17, 13, strlen("IC1"));
+
+            expectedUsagesInTestFile << QQmlLSUtilsLocation::from(testFileName, testFileContent, 25,
+                                                                  38, strlen("IC1"));
+            expectedUsagesInTestFile << QQmlLSUtilsLocation::from(testFileName, testFileContent, 25,
+                                                                  84, strlen("IC1"));
+
+            QList<QQmlLSUtilsLocation> allExpectedUsages{ expectedUsagesInProviderFile
+                                                          + expectedUsagesInTestFile };
+
+            {
+                // usages in the same file
+                const auto usagesInTestFile = makeUsages(testFileName, expectedUsagesInTestFile);
+                // for the future: we want to support finding usages from other qml files
+                const auto allUsagesForTestFile = makeUsages(testFileName, allExpectedUsages);
+                QTest::addRow("findICUsagesFromTypeAnnotation") << 25 << 39 << usagesInTestFile;
+                QTest::addRow("findICUsagesFromInstantiation") << 25 << 84 << usagesInTestFile;
+                QTest::addRow("findICUsagesFromTypeAnnotationInOtherFiles")
+                        << 25 << 39 << allUsagesForTestFile;
+                QTest::addRow("findICUsagesFromInstantiationInOtherFiles")
+                        << 25 << 84 << allUsagesForTestFile;
+            }
+
+            {
+                // usages in the same file
+                const auto usagesInProviderFile =
+                        makeUsages(providerFileName, expectedUsagesInProviderFile);
+                // for the future: we want to support finding usages from other qml files
+                const auto allUsagesInProviderFile =
+                        makeUsages(providerFileName, allExpectedUsages);
+                QTest::addRow("findICUsagesFromDefinition")
+                        << 4 << 16 << usagesInProviderFile;
+                QTest::addRow("findICUsagesFromInstantiation")
+                        << 17 << 14 << usagesInProviderFile;
+
+                QTest::addRow("findICUsagesFromDefinitionInOtherFiles")
+                        << 4 << 16 << allUsagesInProviderFile;
+                QTest::addRow("findICUsagesFromInstantiationInOtherFiles")
+                        << 17 << 14 << allUsagesInProviderFile;
+
+            }
         }
     }
 }
@@ -1134,6 +1192,13 @@ void tst_qmlls_utils::findUsages()
             }
         }
     }
+    QEXPECT_FAIL("findICUsagesFromTypeAnnotationInOtherFiles",
+                 "Finding usages from different files is not supported yet!", Continue);
+    QEXPECT_FAIL("findICUsagesFromInstantiationInOtherFiles",
+                 "Finding usages from different files is not supported yet!", Continue);
+    QEXPECT_FAIL("findICUsagesFromDefinitionInOtherFiles",
+                 "Finding usages from different files is not supported yet!", Continue);
+
     QCOMPARE(usages, data.expectedUsages);
 }
 

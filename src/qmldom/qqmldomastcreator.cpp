@@ -484,6 +484,14 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
         PropertyDefinition *pPtr;
         Path pPathFromOwner =
                 current<QmlObject>().addPropertyDef(p, AddOption::KeepExisting, &pPtr);
+        if (m_enableScriptExpressions) {
+            auto qmlObjectType = makeGenericScriptElement(el->memberType, DomType::ScriptType);
+            qmlObjectType->insertChild(Fields::typeName,
+                                       fieldMemberExpressionForQualifiedId(el->memberType));
+            pPtr->setNameIdentifiers(finalizeScriptExpression(
+                    ScriptElementVariant::fromElement(qmlObjectType),
+                    pPathFromOwner.field(Fields::nameIdentifiers), rootMap));
+        }
         pushEl(pPathFromOwner, *pPtr, el);
         FileLocations::addRegion(nodeStack.last().fileLocations, PropertyKeywordRegion,
                                  el->propertyToken());

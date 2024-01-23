@@ -672,6 +672,11 @@ public:
         cont = cont && self.dvValueField(visitor, Fields::bindable, bindable);
         cont = cont && self.dvValueField(visitor, Fields::notify, notify);
         cont = cont && self.dvReferenceField(visitor, Fields::type, typePath());
+        if (m_nameIdentifiers) {
+            cont = cont && self.dvItemField(visitor, Fields::nameIdentifiers, [this, &self]() {
+                return self.subScriptElementWrapperItem(m_nameIdentifiers);
+            });
+        }
         return cont;
     }
 
@@ -680,6 +685,8 @@ public:
     bool isAlias() const { return typeName == u"alias"; }
     bool isParametricType() const;
     void writeOut(const DomItem &self, OutWriter &lw) const;
+    ScriptElementVariant nameIdentifiers() const { return m_nameIdentifiers; }
+    void setNameIdentifiers(const ScriptElementVariant &name) { m_nameIdentifiers = name; }
 
     QString read;
     QString write;
@@ -690,6 +697,7 @@ public:
     bool isDefaultMember = false;
     bool isRequired = false;
     QQmlJSScope::ConstPtr scope;
+    ScriptElementVariant m_nameIdentifiers;
 };
 
 class QMLDOM_EXPORT PropertyInfo
