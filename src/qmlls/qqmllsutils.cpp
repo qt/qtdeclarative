@@ -3639,4 +3639,18 @@ QPair<QString, QStringList> QQmlLSUtils::cmakeBuildCommand(const QString &path)
     return result;
 }
 
+
+QByteArray QQmlLSUtils::getDocumentationFromLocation(const DomItem &file, const QQmlLSUtilsTextPosition &position)
+{
+    QByteArray result;
+    const auto [line, character] = position;
+    const auto itemLocation = itemsFromTextLocation(file,  line, character);
+
+    // TODO:
+    // Process found item's internalKind and fetch its documentation.
+    Q_UNUSED(itemLocation);
+
+    return result;
+}
+
 QT_END_NAMESPACE

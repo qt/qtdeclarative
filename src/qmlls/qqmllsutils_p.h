@@ -178,6 +178,9 @@ public:
     static QList<CompletionItem>
     suggestVariableDeclarationStatementCompletion(QQmlLSUtilsAppendOption option = AppendSemicolon);
     static QPair<QString, QStringList> cmakeBuildCommand(const QString &path);
+
+    // Documentation Hints
+    static QByteArray getDocumentationFromLocation(const DomItem &file, const QQmlLSUtilsTextPosition &position);
 };
 QT_END_NAMESPACE
 
