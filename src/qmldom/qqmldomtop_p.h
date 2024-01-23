@@ -838,6 +838,56 @@ public:
     void clearReferenceCache();
     void setLoadPaths(const QStringList &v);
 
+    // Helper structure reflecting the change in the map once ExternalItemInfo is added
+    // formerItem - DomItem representing value existing in the map before.
+    // Might be empty (if didn't exist / failure) or equal to currentItem
+    // currentItem - DomItem representing current map value
+    struct LoadResult
+    {
+        DomItem formerItem;
+        DomItem currentItem;
+    };
+    // TODO(QTBUG-121171)
+    template <typename T>
+    LoadResult insertOrUpdateExternalItemInfo(const QString &path, std::shared_ptr<T> extItem)
+    {
+        // maybe in the next revision this all can be just substituted by the addExternalItem
+        DomItem env(shared_from_this());
+        // try to fetch from the current env.
+        if (auto curValue = lookup<T>(path, EnvLookup::NoBase)) {
+            // found in the "initial" env
+            return { env.copy(curValue), env.copy(curValue) };
+        }
+        std::shared_ptr<ExternalItemInfo<T>> newCurValue;
+        // try to fetch from the base env
+        auto valueInBase = lookup<T>(path, EnvLookup::BaseOnly);
+        if (!valueInBase) {
+            // Nothing found. Just create an externalItemInfo which will be inserted
+            newCurValue = std::make_shared<ExternalItemInfo<T>>(std::move(extItem),
+                                                                QDateTime::currentDateTimeUtc());
+        } else {
+            // prepare updated value as a copy of the value from the Base to be inserted
+            newCurValue = valueInBase->makeCopy(env);
+            if (newCurValue->current != extItem) {
+                newCurValue->current = std::move(extItem);
+                newCurValue->setCurrentExposedAt(QDateTime::currentDateTimeUtc());
+            }
+        }
+        // Before inserting new or updated value, check one more time, if ItemInfo is already
+        // present
+        // lookup<> can't be used here because of the data-race
+        {
+            QMutexLocker l(mutex());
+            auto &map = getMutableRefToMap<T>();
+            const auto &it = map.find(path);
+            if (it != map.end())
+                return { env.copy(*it), env.copy(*it) };
+            // otherwise insert
+            map.insert(path, newCurValue);
+        }
+        return { env.copy(valueInBase), env.copy(newCurValue) };
+    }
+
 private:
     friend class RefCacheEntry;
 

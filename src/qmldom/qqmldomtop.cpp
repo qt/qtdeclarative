@@ -905,19 +905,15 @@ newItem is a DomItem representing ExternalItemPair, currently existed/updated or
 to the DomUniverse
 */
 template <typename T>
-DomTop::Callback
-envCallbackForFile(const DomItem &self,
-                   QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> DomEnvironment::*map,
-                   std::shared_ptr<ExternalItemInfo<T>> (DomEnvironment::*lookupF)(const DomItem &,
-                                                                                   const QString &,
-                                                                                   EnvLookup) const,
-                   DomTop::Callback loadCallback, DomTop::Callback endCallback)
+DomTop::Callback envCallbackForFile(
+        const DomItem &self, QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> DomEnvironment::*,
+        std::shared_ptr<ExternalItemInfo<T>> (DomEnvironment::*)(const DomItem &, const QString &,
+                                                                 EnvLookup) const,
+        DomTop::Callback loadCallback, DomTop::Callback endCallback)
 {
     std::shared_ptr<DomEnvironment> ePtr = self.ownerAs<DomEnvironment>();
     std::weak_ptr<DomEnvironment> selfPtr = ePtr;
-    std::shared_ptr<DomEnvironment> basePtr = ePtr->base();
-    return [selfPtr, basePtr, map, lookupF, loadCallback, endCallback](Path, const DomItem &,
-                                                                       const DomItem &newItem) {
+    return [selfPtr, loadCallback, endCallback](Path, const DomItem &, const DomItem &newItem) {
         shared_ptr<DomEnvironment> envPtr = selfPtr.lock();
         if (!envPtr)
             return;
@@ -934,48 +930,9 @@ envCallbackForFile(const DomItem &self,
             newItemPtr = newItem.field(Fields::currentItem).ownerAs<T>();
         Q_ASSERT(newItemPtr && "envCallbackForFile reached without current file");
 
-        // try to fetch from the "initial" env.
-        {
-            QMutexLocker l(envPtr->mutex());
-            oldValue = ((*envPtr).*map).value(newItem.canonicalFilePath());
-        }
-        if (oldValue) {
-            // found in the "initial" env
-            newValue = oldValue;
-        } else {
-            if (basePtr) {
-                // try to find ExternalItemInfo for the newItem inside the parent of the initial env
-                DomItem baseObj(basePtr);
-                oldValue = ((*basePtr).*lookupF)(baseObj, newItem.canonicalFilePath(),
-                                                 EnvLookup::BaseOnly);
-            }
-            if (oldValue) {
-                // prepare newValue as copy from the Base to be inserted
-                DomItem oldValueObj = env.copy(oldValue);
-                newValue = oldValue->makeCopy(oldValueObj);
-                if (newValue->current != newItemPtr) {
-                    newValue->current = newItemPtr;
-                    newValue->setCurrentExposedAt(QDateTime::currentDateTimeUtc());
-                }
-            } else {
-                // Nothing found. Just create which will be inserted
-                newValue = std::make_shared<ExternalItemInfo<T>>(
-                        newItemPtr, QDateTime::currentDateTimeUtc());
-            }
-            {
-                // Before inserting new / updated value, check one more time, if ItemInfo is already
-                // present
-                QMutexLocker l(envPtr->mutex());
-                auto value = ((*envPtr).*map).value(newItem.canonicalFilePath());
-                if (value) {
-                    oldValue = newValue = value;
-                } else {
-                    ((*envPtr).*map).insert(newItem.canonicalFilePath(), newValue);
-                }
-            }
-        }
-
-        Path p = env.copy(newValue).canonicalPath();
+        auto loadResult = envPtr->insertOrUpdateExternalItemInfo(newItem.canonicalFilePath(),
+                                                                 std::move(newItemPtr));
+        Path p = loadResult.currentItem.canonicalPath();
         {
             auto depLoad = qScopeGuard([p, &env, envPtr, endCallback] {
                 envPtr->addDependenciesToLoad(p);
