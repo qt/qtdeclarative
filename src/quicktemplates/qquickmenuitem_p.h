@@ -72,6 +72,10 @@ private:
     Q_DECLARE_PRIVATE(QQuickMenuItem)
 };
 
+#ifndef QT_NO_DEBUG_STREAM
+Q_QUICKTEMPLATES2_EXPORT QDebug operator<<(QDebug debug, const QQuickMenuItem *menuItem);
+#endif
+
 QT_END_NAMESPACE
 
 #endif // QQUICKMENUITEM_P_H

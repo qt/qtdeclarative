@@ -56,6 +56,15 @@ tst_NativeMenus::tst_NativeMenus()
     qputenv("QT_QUICK_CONTROLS_USE_NATIVE_MENUS", "1");
 }
 
+// This allows us to use QQuickMenuItem's more descriptive operator<< output
+// for the QCOMPARE failure message. It doesn't seem possible to use toString
+// overloads or template specialization when types declared in QML are involved,
+// as is the case for the MenuItems created from Menu's delegate.
+#define COMPARE_MENUITEMS(actualMenuItem, expectedMenuItem) \
+QVERIFY2(actualMenuItem == expectedMenuItem, \
+    qPrintable(QString::fromLatin1("\n   Actual:    %1\n   Expected:  %2") \
+        .arg(QDebug::toString(actualMenuItem), QDebug::toString(expectedMenuItem))));
+
 void tst_NativeMenus::defaults()
 {
     QQuickControlsApplicationHelper helper(this, QLatin1String("emptyMenu.qml"));
@@ -84,21 +93,35 @@ void tst_NativeMenus::staticActionsAndSubmenus()
     auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
 
     // Check that the actions of the parent menu can be accessed
-    // and are in the appropriate places in contentData.
+    // and are in the appropriate places in contentModel and contentData.
     auto *action1 = contextMenu->actionAt(0);
     QVERIFY(action1);
-    QCOMPARE(contextMenuPrivate->contentData.at(0), action1);
+    auto *action1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+    QVERIFY(action1MenuItem);
+    QCOMPARE(action1MenuItem->action(), action1);
+    COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(0)),
+        action1MenuItem);
 
     auto *action2 = contextMenu->actionAt(1);
     QVERIFY(action2);
-    QCOMPARE(contextMenuPrivate->contentData.at(1), action2);
+    auto *action2MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(1));
+    QVERIFY(action2MenuItem);
+    QCOMPARE(action2MenuItem->action(), action2);
+    COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(1)),
+        action2MenuItem);
 
     // Check that the sub-menu can be accessed and is in the
     // appropriate place in contentData.
     auto *subMenu = contextMenu->menuAt(2);
     QVERIFY(subMenu);
-
-    // TODO: check that sub-menus exist
+    auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
+    auto *subMenuAction1 = subMenu->actionAt(0);
+    QVERIFY(subMenuAction1);
+    auto *subMenuAction1MenuItem = qobject_cast<QQuickMenuItem *>(subMenu->itemAt(0));
+    QVERIFY(subMenuAction1MenuItem);
+    QCOMPARE(subMenuAction1MenuItem->action(), subMenuAction1);
+    COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(subMenuPrivate->contentData.at(0)),
+        subMenuAction1MenuItem);
 }
 
 void tst_NativeMenus::dynamicActions()
@@ -121,7 +144,11 @@ void tst_NativeMenus::dynamicActions()
         auto action1 = contextMenu->actionAt(0);
         QVERIFY(action1);
         QCOMPARE(action1->text(), "action1");
-        QCOMPARE(contextMenuPrivate->contentData.at(0), action1);
+        auto *action1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+        QVERIFY(action1MenuItem);
+        QCOMPARE(action1MenuItem->action(), action1);
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(0)),
+            action1MenuItem);
     }
 
     // Check that actions can be appended after existing items in the parent menu.
@@ -132,7 +159,11 @@ void tst_NativeMenus::dynamicActions()
         auto action2 = contextMenu->actionAt(1);
         QVERIFY(action2);
         QCOMPARE(action2->text(), "action2");
-        QCOMPARE(contextMenuPrivate->contentData.at(1), action2);
+        auto *action2MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(1));
+        QVERIFY(action2MenuItem);
+        QCOMPARE(action2MenuItem->action(), action2);
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(1)),
+            action2MenuItem);
     }
 
     // Check that actions can be inserted before existing items in the parent menu.
@@ -142,7 +173,13 @@ void tst_NativeMenus::dynamicActions()
         auto action0 = contextMenu->actionAt(0);
         QVERIFY(action0);
         QCOMPARE(action0->text(), "action0");
-        QCOMPARE(contextMenuPrivate->contentData.at(0), action0);
+        auto *action0MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+        QVERIFY(action0MenuItem);
+        QCOMPARE(action0MenuItem->action(), action0);
+        // New items are always appended to contentData, regardless of the actual insertion index
+        // in contentModel.
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(2)),
+            action0MenuItem);
     }
 }
 
@@ -166,13 +203,20 @@ void tst_NativeMenus::dynamicSubmenus()
     auto *subMenu1Private = QQuickMenuPrivate::get(subMenu1);
     QVERIFY(subMenu1);
     QCOMPARE(subMenu1->title(), "subMenu1");
-    QCOMPARE(contextMenuPrivate->contentData.at(0), subMenu1);
+    auto *subMenu1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+    QVERIFY(subMenu1MenuItem);
+    COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(0)),
+        subMenu1MenuItem);
     QCOMPARE(contextMenuPrivate->contentData.size(), 1);
     {
         auto subMenuAction1 = subMenu1->actionAt(0);
         QVERIFY(subMenuAction1);
         QCOMPARE(subMenuAction1->text(), "subMenu1Action1");
-        QCOMPARE(subMenu1Private->contentData.at(0), subMenuAction1);
+        auto *subMenuAction1MenuItem = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
+        QVERIFY(subMenuAction1MenuItem);
+        QCOMPARE(subMenuAction1MenuItem->action(), subMenuAction1);
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(subMenu1Private->contentData.at(0)),
+            subMenuAction1MenuItem);
     }
 
     // Check that actions can be appended after existing items in the sub-menu.
@@ -183,7 +227,11 @@ void tst_NativeMenus::dynamicSubmenus()
         auto subMenu1Action2 = subMenu1->actionAt(1);
         QVERIFY(subMenu1Action2);
         QCOMPARE(subMenu1Action2->text(), "subMenu1Action2");
-        QCOMPARE(subMenu1Private->contentData.at(1), subMenu1Action2);
+        auto *subMenu1Action2MenuItem = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(1));
+        QVERIFY(subMenu1Action2MenuItem);
+        QCOMPARE(subMenu1Action2MenuItem->action(), subMenu1Action2);
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(subMenu1Private->contentData.at(1)),
+            subMenu1Action2MenuItem);
         QCOMPARE(subMenu1Private->contentData.size(), 2);
     }
 
@@ -194,7 +242,13 @@ void tst_NativeMenus::dynamicSubmenus()
         auto subMenu1Action0 = subMenu1->actionAt(0);
         QVERIFY(subMenu1Action0);
         QCOMPARE(subMenu1Action0->text(), "subMenu1Action0");
-        QCOMPARE(subMenu1Private->contentData.at(0), subMenu1Action0);
+        auto *subMenu1Action0MenuItem = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
+        QVERIFY(subMenu1Action0MenuItem);
+        QCOMPARE(subMenu1Action0MenuItem->action(), subMenu1Action0);
+        // New items are always appended to contentData, regardless of the actual insertion index
+        // in contentModel.
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(subMenu1Private->contentData.at(2)),
+            subMenu1Action0MenuItem);
         QCOMPARE(subMenu1Private->contentData.size(), 3);
     }
 
@@ -207,6 +261,9 @@ void tst_NativeMenus::dynamicSubmenus()
         // Check that the sub-menu can be added back in to the menu.
         contextMenu->addMenu(takenSubMenu);
         QCOMPARE(contextMenuPrivate->contentData.size(), 1);
+        auto *subMenu1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+        QVERIFY(subMenu1MenuItem);
+        QCOMPARE(subMenu1MenuItem->text(), "subMenu1");
     }
 
     // Check that removeMenu works.

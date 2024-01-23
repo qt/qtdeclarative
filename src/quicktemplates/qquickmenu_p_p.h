@@ -51,26 +51,20 @@ public:
     bool usingNativeMenu();
     bool createNativeMenu();
     void syncWithNativeMenu();
-    void destroyNativeMenu();
+    void recursivelyDestroyNativeSubMenus();
     void setNativeMenuVisible(bool visible);
 
     QQuickItem *itemAt(int index) const;
     void insertItem(int index, QQuickItem *item);
     void moveItem(int from, int to);
-    void removeItem(int index, QQuickItem *item);
-
-    int indexOfActionInNativeItems(QQuickAction *action) const;
-    int indexOfMenuInNativeItems(QQuickMenu *menu) const;
-    void insertNativeItem(int index, QQuickAction *action);
-    void insertNativeItem(int index, QQuickMenu *menu);
-
-    enum class DestroyPolicy {
+    enum class DestructionPolicy {
         Destroy,
         DoNotDestroy
     };
-    void removeNativeItem(QQuickNativeMenuItem *nativeItem, DestroyPolicy destroyPolicy = DestroyPolicy::Destroy);
-    void removeNativeItem(QQuickAction *action, DestroyPolicy destroyPolicy = DestroyPolicy::Destroy);
-    void removeNativeItem(QQuickMenu *menu, DestroyPolicy destroyPolicy = DestroyPolicy::Destroy);
+    void removeItem(int index, QQuickItem *item,
+        DestructionPolicy destructionPolicy = DestructionPolicy::DoNotDestroy);
+
+    QQuickNativeMenuItem *maybeCreateNativeMenuItemFor(QQuickItem *item);
 
     QQuickItem *beginCreateItem();
     void completeCreateItem();

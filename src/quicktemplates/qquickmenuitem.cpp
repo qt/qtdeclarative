@@ -247,6 +247,25 @@ QAccessible::Role QQuickMenuItem::accessibleRole() const
 }
 #endif
 
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug debug, const QQuickMenuItem *menuItem)
+{
+    QDebugStateSaver saver(debug);
+    debug.nospace();
+    if (!menuItem) {
+        debug << "QQuickMenuItem(nullptr)";
+        return debug;
+    }
+
+    debug << menuItem->metaObject()->className() << '(' << static_cast<const void *>(menuItem);
+    if (!menuItem->objectName().isEmpty())
+        debug << ", name=" << menuItem->objectName();
+    debug << ", text=" << menuItem->text();
+    debug << ')';
+    return debug;
+}
+#endif // QT_NO_DEBUG_STREAM
+
 QT_END_NAMESPACE
 
 #include "moc_qquickmenuitem_p.cpp"
