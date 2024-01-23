@@ -682,13 +682,6 @@ QQuadPath QQuadPath::subPathsClosed(bool *didClose) const
         endElement.ep = m_elements[subStart].sp;
     }
 
-    // ### Workaround for triangulator issue: Avoid 3-element paths
-    if (res.elementCount() == 3) {
-        res.splitElementAt(2);
-        res = res.flattened();
-        Q_ASSERT(res.elementCount() == 4);
-    }
-
     if (didClose)
         *didClose = closed;
     return res;

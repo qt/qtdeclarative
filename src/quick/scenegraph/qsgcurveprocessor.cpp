@@ -1684,6 +1684,9 @@ void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
     };
 
     QTriangleSet triangles = qTriangulate(internalHull);
+    // Workaround issue in qTriangulate() for single-triangle path
+    if (triangles.indices.size() == 3)
+        triangles.indices.setDataUint({ 0, 1, 2 });
 
     const quint32 *idxTable = static_cast<const quint32 *>(triangles.indices.data());
     for (int triangle = 0; triangle < triangles.indices.size() / 3; ++triangle) {
