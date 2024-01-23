@@ -811,6 +811,7 @@ public:
     bool commitToBase(
             const DomItem &self, const std::shared_ptr<DomEnvironment> &validEnv = nullptr);
 
+    void addDependenciesToLoad(const Path &path);
     void addLoadInfo(
             const DomItem &self, const std::shared_ptr<LoadInfo> &loadInfo);
     std::shared_ptr<LoadInfo> loadInfo(const Path &path) const;

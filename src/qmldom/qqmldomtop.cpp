@@ -978,14 +978,7 @@ envCallbackForFile(const DomItem &self,
         Path p = env.copy(newValue).canonicalPath();
         {
             auto depLoad = qScopeGuard([p, &env, envPtr, endCallback] {
-                if (!(envPtr->options() & DomEnvironment::Option::NoDependencies)) {
-                    // add dependencies to the queue to be loaded.
-                    auto loadInfo = std::make_shared<LoadInfo>(p);
-                    if (!p)
-                        Q_ASSERT(false);
-                    DomItem loadInfoObj = env.copy(loadInfo);
-                    envPtr->addLoadInfo(env, loadInfo);
-                }
+                envPtr->addDependenciesToLoad(p);
                 // add EndCallback to the queue, which should be called once all dependencies are
                 // loaded
                 if (endCallback)
@@ -1863,6 +1856,25 @@ QSet<QString> DomEnvironment::globalScopeNames(const DomItem &, EnvLookup lookup
     return res;
 }
 
+/*!
+    \internal
+    Depending on the creation options, this function adds LoadInfo of the provided path
+*/
+void DomEnvironment::addDependenciesToLoad(const Path &path)
+{
+    if (options() & Option::NoDependencies) {
+        return;
+    }
+    Q_ASSERT(path);
+    const auto loadInfo = std::make_shared<LoadInfo>(path);
+    return addLoadInfo(DomItem(shared_from_this()), loadInfo);
+}
+
+/*!
+    \internal
+    Enqueues path to the m_loadsWithWork (queue of the pending "load" jobs).
+    In simpler words, schedule the load of the dependencies of the path from loadInfo.
+*/
 void DomEnvironment::addLoadInfo(const DomItem &self, const std::shared_ptr<LoadInfo> &loadInfo)
 {
     if (!loadInfo)
