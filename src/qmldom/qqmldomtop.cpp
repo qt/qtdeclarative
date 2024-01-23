@@ -872,30 +872,6 @@ void LoadInfo::addDependency(const DomItem &self, const Dependency &dep)
 \brief Represents a consistent set of types organized in modules, it is the top level of the DOM
  */
 
-/*!
-\internal
-\brief Once file is being loaded inside the DomUniverse this callback will be called to pull/add
-item to the DomEnvironment, which initiated the load.
-If the file needs to be loaded with dependencies, they will be added to
-the "loading queue" here.
-
-newItem is a DomItem representing ExternalItemPair, currently existed/updated or newly added value
-to the DomUniverse
-*/
-template <typename T>
-DomTop::Callback envCallbackForFile(const DomItem &self, DomTop::Callback loadCallback,
-                                    DomTop::Callback endCallback)
-{
-    std::shared_ptr<DomEnvironment> ePtr = self.ownerAs<DomEnvironment>();
-    std::weak_ptr<DomEnvironment> selfPtr = ePtr;
-    return [selfPtr, loadCallback, endCallback](Path, const DomItem &, const DomItem &newItem) {
-        shared_ptr<DomEnvironment> envPtr = selfPtr.lock();
-        if (!envPtr)
-            return;
-        envPtr->addExternalItemInfo<T>(newItem, loadCallback, endCallback);
-    };
-}
-
 ErrorGroups DomEnvironment::myErrors()
 {
     static ErrorGroups res = {{NewErrorGroup("Dom")}};
@@ -1835,66 +1811,6 @@ DomItem::Callback DomEnvironment::getLoadCallbackFor(DomType fileType, const Cal
         };
     }
     return loadCallback;
-}
-
-DomItem::Callback DomEnvironment::getCallbackFor(DomType fileType, const DomItem &self,
-                                                 const Callback &loadCallback,
-                                                 const Callback &endCallback)
-{
-    switch (fileType) {
-    case DomType::QmlDirectory:
-        return callbackForQmlDirectory(self, loadCallback, endCallback);
-    case DomType::QmlFile:
-        return callbackForQmlFile(self, loadCallback, endCallback);
-    case DomType::QmltypesFile:
-        return callbackForQmltypesFile(self, loadCallback, endCallback);
-    case DomType::QmldirFile:
-        return callbackForQmldirFile(self, loadCallback, endCallback);
-    case DomType::JsFile:
-        return callbackForJSFile(self, loadCallback, endCallback);
-    default:
-        return DomTop::Callback();
-    }
-}
-
-DomItem::Callback DomEnvironment::callbackForQmlDirectory(const DomItem &self,
-                                                          Callback loadCallback,
-                                                          Callback endCallback)
-{
-    return envCallbackForFile<QmlDirectory>(
-            self, getLoadCallbackFor(DomType::QmlDirectory, loadCallback), endCallback);
-}
-
-DomItem::Callback DomEnvironment::callbackForQmlFile(const DomItem &self, Callback loadCallback,
-
-                                                     Callback endCallback)
-{
-    return envCallbackForFile<QmlFile>(self, getLoadCallbackFor(DomType::QmlFile, loadCallback),
-                                       endCallback);
-}
-
-DomTop::Callback DomEnvironment::callbackForQmltypesFile(const DomItem &self,
-                                                         DomTop::Callback loadCallback,
-
-                                                         DomTop::Callback endCallback)
-{
-    return envCallbackForFile<QmltypesFile>(
-            self, getLoadCallbackFor(DomType::QmltypesFile, loadCallback), endCallback);
-}
-
-DomTop::Callback DomEnvironment::callbackForQmldirFile(const DomItem &self,
-                                                       DomTop::Callback loadCallback,
-                                                       DomTop::Callback endCallback)
-{
-    return envCallbackForFile<QmldirFile>(
-            self, getLoadCallbackFor(DomType::QmldirFile, loadCallback), endCallback);
-}
-
-DomItem::Callback DomEnvironment::callbackForJSFile(const DomItem &self, Callback loadCallback,
-                                                    Callback endCallback)
-{
-    return envCallbackForFile<JsFile>(self, getLoadCallbackFor(DomType::JsFile, loadCallback),
-                                      endCallback);
 }
 
 DomEnvironment::DomEnvironment(

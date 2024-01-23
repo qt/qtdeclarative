@@ -1063,16 +1063,6 @@ private:
     }
 
     Callback getLoadCallbackFor(DomType fileType, const Callback &loadCallback);
-    Callback getCallbackFor(DomType fileType, const DomItem &self, const Callback &loadCallback,
-                            const Callback &endCallback);
-    Callback callbackForQmlDirectory(const DomItem &self, Callback loadCallback,
-                                     Callback endCallback);
-    Callback callbackForQmlFile(const DomItem &self, Callback loadCallback, Callback endCallback);
-    Callback callbackForQmltypesFile(const DomItem &self, Callback loadCallback,
-                                     Callback endCallback);
-    Callback callbackForQmldirFile(const DomItem &self, Callback loadCallback,
-                                   Callback endCallback);
-    Callback callbackForJSFile(const DomItem &self, Callback loadCallback, Callback endCallback);
 
     std::shared_ptr<ModuleIndex> lookupModuleInEnv(const QString &uri, int majorVersion) const;
     // ModuleLookupResult contains the ModuleIndex pointer, and an indicator whether it was found
