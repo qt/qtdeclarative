@@ -63,6 +63,7 @@ public:
     void writeTo(const QUrl &fileUrl);
     QTextDocument *document() const;
     void setDocument(QTextDocument *doc);
+    void setStatus(QQuickTextDocument::Status s);
 
     // so far the QQuickItem given to the QQuickTextDocument ctor is always a QQuickTextEdit
     QQuickTextEdit *editor = nullptr;
@@ -71,6 +72,7 @@ public:
     QMimeType mimeType;
 #endif
     std::optional<QStringConverter::Encoding> encoding; // only relevant for HTML
+    QQuickTextDocument::Status status = QQuickTextDocument::Status::Null;
 };
 
 namespace QtPrivate {

@@ -67,6 +67,67 @@ QQuickTextDocument::QQuickTextDocument(QQuickItem *parent)
 }
 
 /*!
+    \qmlproperty enumeration QtQuick::TextDocument::status
+    \readonly
+    \since 6.7
+
+    This property holds the status of document loading or saving.  It can be one of:
+
+    \value TextDocument.Null        No file has been loaded
+    \value TextDocument.Loading     Reading from \l source has begun
+    \value TextDocument.Loaded      Reading has successfully finished
+    \value TextDocument.Saving      File writing has begun after save() or saveAs()
+    \value TextDocument.SaveDone    Writing has successfully finished
+    \value TextDocument.ReadError   An error occurred while reading from \l source
+    \value TextDocument.WriteError  An error occurred in save() or saveAs()
+    \value TextDocument.NonLocalFileError saveAs() was called with a URL pointing
+                                    to a remote resource rather than a local file
+
+    Use this status to provide an update or respond to the status change in some way.
+    For example, you could:
+
+    \list
+    \li Trigger a state change:
+    \qml
+    State {
+        name: 'loaded'
+        when: textEdit.textDocument.status == textEdit.textDocument.Loaded
+    }
+    \endqml
+
+    \li Implement an \c onStatusChanged signal handler:
+    \qml
+    TextEdit {
+        onStatusChanged: {
+            if (textDocument.status === textDocument.Loaded)
+                console.log('Loaded')
+        }
+    }
+    \endqml
+
+    \li Bind to the status value:
+
+    \snippet qml/textEditStatusSwitch.qml 0
+
+    \endlist
+*/
+QQuickTextDocument::Status QQuickTextDocument::status() const
+{
+    Q_D(const QQuickTextDocument);
+    return d->status;
+}
+
+void QQuickTextDocumentPrivate::setStatus(QQuickTextDocument::Status s)
+{
+    Q_Q(QQuickTextDocument);
+    if (status == s)
+        return;
+
+    status = s;
+    emit q->statusChanged();
+}
+
+/*!
     \qmlproperty url QtQuick::TextDocument::source
     \since 6.7
 
@@ -152,6 +213,7 @@ void QQuickTextDocumentPrivate::load()
 #endif
         QFile file(filePath);
         if (file.open(QFile::ReadOnly | QFile::Text)) {
+            setStatus(QQuickTextDocument::Status::Loading);
             QByteArray data = file.readAll();
             if (auto *doc = editor->document()) {
                 doc->setBaseUrl(resolvedUrl.adjusted(QUrl::RemoveFilename));
@@ -177,10 +239,12 @@ void QQuickTextDocumentPrivate::load()
                 {
                     doc->setPlainText(QString::fromUtf8(data));
                 }
+                setStatus(QQuickTextDocument::Status::Loaded);
                 doc->setModified(false);
             }
         } else {
-            emit q->error(QQuickTextDocument::tr("Cannot load: %1").arg(file.errorString()));
+            qmlWarning(q) << QQuickTextDocument::tr("Cannot load:") << file.errorString();
+            setStatus(QQuickTextDocument::Status::ReadError);
         }
     }
 }
@@ -206,9 +270,11 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
 #endif
     QFile file(filePath);
     if (!file.open(QFile::WriteOnly | QFile::Truncate | (isHtml ? QFile::NotOpen : QFile::Text))) {
-        emit q->error(QQuickTextDocument::tr("Cannot save: %1").arg(file.errorString()));
+        qmlWarning(q) << QQuickTextDocument::tr("Cannot save:") << file.errorString();
+        setStatus(QQuickTextDocument::Status::WriteError);
         return;
     }
+    setStatus(QQuickTextDocument::Status::Saving);
     QByteArray raw;
 #if QT_CONFIG(textmarkdownwriter)
     if (isMarkdown) {
@@ -232,6 +298,7 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
 
     file.write(raw);
     file.close();
+    setStatus(QQuickTextDocument::Status::SaveDone);
     doc->setModified(false);
 }
 
@@ -318,7 +385,8 @@ void QQuickTextDocument::saveAs(const QUrl &url)
 {
     Q_D(QQuickTextDocument);
     if (!url.isLocalFile()) {
-        emit error(tr("Can only save to local files"));
+        qmlWarning(this) << QQuickTextDocument::tr("Can only save to local files");
+        d->setStatus(QQuickTextDocument::Status::NonLocalFileError);
         return;
     }
     d->writeTo(url);
