@@ -207,7 +207,7 @@ public:
         DomItem currentItem;
     };
 
-    LoadResult loadFile(const FileToLoad &file, DomType fileType, LoadOptions loadOptions);
+    LoadResult loadFile(const FileToLoad &file, DomType fileType);
 
     void removePath(const QString &dir);
 
@@ -742,7 +742,7 @@ public:
 
     std::shared_ptr<DomEnvironment> makeCopy(const DomItem &self) const;
 
-    void loadFile(const FileToLoad &file, const Callback &callback, LoadOptions loadOptions,
+    void loadFile(const FileToLoad &file, const Callback &callback,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr /* used only in loadPendingDependencies*/);
     void loadBuiltins(const Callback &callback = nullptr, const ErrorHandler &h = nullptr);
@@ -928,7 +928,6 @@ private:
     friend class RefCacheEntry;
 
     void loadFile(const FileToLoad &file, const Callback &loadCallback, const Callback &endCallback,
-                  LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr);
 

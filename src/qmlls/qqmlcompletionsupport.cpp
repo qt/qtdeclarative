@@ -133,8 +133,7 @@ DomItem CompletionRequest::patchInvalidFileForParser(const DomItem &file, qsizet
                                                        patchedCode, options),
                                 [&result](Path, const DomItem &, const DomItem &newValue) {
                                     result = newValue.fileObject();
-                                },
-                                {});
+                                });
         newCurrentPtr->loadPendingDependencies();
         return result;
     }

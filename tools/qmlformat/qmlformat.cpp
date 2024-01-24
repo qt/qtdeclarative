@@ -133,14 +133,12 @@ static std::pair<DomItem, bool> parse(const QString &filename)
     // placeholder for a node
     // containing metadata (ExternalItemInfo) about the loaded file
     DomItem fMetadataItem;
-    envPtr->loadFile(
-            FileToLoad::fromFileSystem(envPtr, filename),
-            // callback called when everything is loaded that receives the
-            // loaded external file pair (path, oldValue, newValue)
-            [&fMetadataItem](Path, const DomItem &, const DomItem &extItemInfo) {
-                fMetadataItem = extItemInfo;
-            },
-            LoadOption::DefaultLoad);
+    envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, filename),
+                     // callback called when everything is loaded that receives the
+                     // loaded external file pair (path, oldValue, newValue)
+                     [&fMetadataItem](Path, const DomItem &, const DomItem &extItemInfo) {
+                         fMetadataItem = extItemInfo;
+                     });
     auto fItem = fMetadataItem.fileObject();
     auto filePtr = getFileItemOwner(fItem);
     return { fItem, filePtr && filePtr->isValid() };

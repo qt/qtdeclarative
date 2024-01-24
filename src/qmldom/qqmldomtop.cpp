@@ -231,7 +231,7 @@ static DomType fileTypeForPath(const DomItem &self, const QString &canonicalFile
     return DomType::Empty;
 }
 
-DomUniverse::LoadResult DomUniverse::loadFile(const FileToLoad &file, DomType fileType, LoadOptions)
+DomUniverse::LoadResult DomUniverse::loadFile(const FileToLoad &file, DomType fileType)
 {
     DomItem univ(shared_from_this());
     switch (fileType) {
@@ -661,7 +661,7 @@ void LoadInfo::advanceLoad(const DomItem &self)
                             // call it later.
                             finishedLoadingDep(copiedSelf, dep);
                         },
-                        LoadOption::DefaultLoad, dep.fileType, self.errorHandler());
+                        dep.fileType, self.errorHandler());
             } else {
                 Q_ASSERT(false && "dependency without uri and filePath");
             }
@@ -1119,16 +1119,15 @@ std::shared_ptr<OwningItem> DomEnvironment::doCopy(const DomItem &) const
 }
 
 void DomEnvironment::loadFile(const FileToLoad &file, const Callback &callback,
-                              LoadOptions loadOptions, std::optional<DomType> fileType,
-                              const ErrorHandler &h)
+                              std::optional<DomType> fileType, const ErrorHandler &h)
 {
     if (options() & DomEnvironment::Option::NoDependencies)
-        loadFile(file, callback, DomTop::Callback(), loadOptions, fileType, h);
+        loadFile(file, callback, DomTop::Callback(), fileType, h);
     else {
         // When the file is required to be loaded with dependencies, those dependencies
         // will be added to the "pending" queue through envCallbackForFile
         // then those should not be forgotten to be loaded.
-        loadFile(file, DomTop::Callback(), callback, loadOptions, fileType, h);
+        loadFile(file, DomTop::Callback(), callback, fileType, h);
     }
 }
 
@@ -1146,8 +1145,7 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &callback,
 */
 // TODO(QTBUG-119550) refactor this
 void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallback,
-                              const Callback &endCallback,
-                              LoadOptions loadOptions, std::optional<DomType> fileType,
+                              const Callback &endCallback, std::optional<DomType> fileType,
                               const ErrorHandler &h)
 {
     DomItem self(shared_from_this());
@@ -1179,7 +1177,7 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         oldValue = fetchResult.first;
         newValue = fetchResult.second;
         if (!newValue) {
-            const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
+            const auto &loadRes = universe()->loadFile(file, fType);
             addExternalItemInfo<QmlDirectory>(loadRes.currentItem,
                                               getLoadCallbackFor(fType, loadCallback), endCallback);
             return;
@@ -1190,7 +1188,7 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         oldValue = fetchResult.first;
         newValue = fetchResult.second;
         if (!newValue) {
-            const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
+            const auto &loadRes = universe()->loadFile(file, fType);
             addExternalItemInfo<QmlFile>(loadRes.currentItem,
                                          getLoadCallbackFor(fType, loadCallback), endCallback);
             return;
@@ -1201,7 +1199,7 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         oldValue = fetchResult.first;
         newValue = fetchResult.second;
         if (!newValue) {
-            const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
+            const auto &loadRes = universe()->loadFile(file, fType);
             addExternalItemInfo<QmltypesFile>(loadRes.currentItem,
                                               getLoadCallbackFor(fType, loadCallback), endCallback);
             return;
@@ -1212,14 +1210,14 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         oldValue = fetchResult.first;
         newValue = fetchResult.second;
         if (!newValue) {
-            const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
+            const auto &loadRes = universe()->loadFile(file, fType);
             addExternalItemInfo<QmldirFile>(loadRes.currentItem,
                                             getLoadCallbackFor(fType, loadCallback), endCallback);
             return;
         }
     } break;
     case DomType::JsFile: {
-        const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
+        const auto &loadRes = universe()->loadFile(file, fType);
         addExternalItemInfo<JsFile>(loadRes.currentItem, getLoadCallbackFor(fType, loadCallback),
                                     endCallback);
         return;
@@ -1382,7 +1380,7 @@ void DomEnvironment::loadBuiltins(const Callback &callback, const ErrorHandler &
         QFileInfo fInfo(dir.filePath(builtinsName));
         if (fInfo.isFile()) {
             loadFile(FileToLoad::fromFileSystem(shared_from_this(), fInfo.canonicalFilePath()),
-                     callback, LoadOption::DefaultLoad);
+                     callback);
             return;
         }
     }

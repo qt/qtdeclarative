@@ -152,10 +152,8 @@ private slots:
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         DomItem tFile;
         envPtr->loadBuiltins();
-        envPtr->loadFile(
-                FileToLoad::fromFileSystem(envPtr, testFilePath),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
-                LoadOption::DefaultLoad);
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, testFilePath),
+                         [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; });
         envPtr->loadPendingDependencies();
 
         MutableDomItem myFile = tFile.field(Fields::currentItem);
@@ -259,10 +257,8 @@ private slots:
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         DomItem tFile;
         envPtr->loadBuiltins();
-        envPtr->loadFile(
-                FileToLoad::fromFileSystem(envPtr, testFilePath),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
-                LoadOption::DefaultLoad);
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, testFilePath),
+                         [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; });
         envPtr->loadPendingDependencies();
 
         QString resultStr;

@@ -84,8 +84,7 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
             FileToLoad::fromMemory(newCurrentPtr, file.canonicalFilePath(), code, creationOptions),
             [&fileWithoutScriptExpressions](Path, const DomItem &, const DomItem &newValue) {
                 fileWithoutScriptExpressions = newValue.fileObject();
-            },
-            {});
+            });
     newCurrentPtr->loadPendingDependencies();
 
     // TODO: implement formatting options

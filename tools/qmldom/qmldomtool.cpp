@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
                 [&loadedFiles, iPos](Path, const DomItem &, const DomItem &newIt) {
                     loadedFiles[iPos] = newIt;
                 },
-                LoadOption::DefaultLoad, fileType);
+                fileType);
     }
     envPtr->loadPendingDependencies();
     bool hadFailures = false;

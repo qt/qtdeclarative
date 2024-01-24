@@ -50,8 +50,7 @@ int main()
             [&tFile](Path, const DomItem &, const DomItem &newIt) {
                 tFile = newIt; // callback called when everything is loaded that receives the loaded
                                // external file pair (path, oldValue, newValue)
-            },
-            LoadOption::DefaultLoad);
+            });
 
     // trigger the load
     envPtr->loadPendingDependencies();

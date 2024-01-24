@@ -666,10 +666,8 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
             QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                     | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
     DomItem tFile;
-    env->loadFile(
-            FileToLoad::fromFileSystem(env, fileToFormat),
-            [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
-            LoadOption::DefaultLoad);
+    env->loadFile(FileToLoad::fromFileSystem(env, fileToFormat),
+                  [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; });
     env->loadPendingDependencies();
     MutableDomItem myFile = tFile.field(Fields::currentItem);
 

@@ -2551,7 +2551,7 @@ DomItem DomItem::fromCode(const QString &code, DomType fileType)
     env->loadFile(
             FileToLoad::fromMemory(env, QString(), code),
             [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
-            LoadOption::DefaultLoad, std::make_optional(fileType));
+            std::make_optional(fileType));
     env->loadPendingDependencies();
     return tFile.fileObject();
 }
