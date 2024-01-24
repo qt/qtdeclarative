@@ -1503,86 +1503,72 @@ findPropertyDefinitionOf(const DomItem &file, QQmlJS::SourceLocation propertyDef
 
 std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(const DomItem &item)
 {
+    auto resolvedExpression =
+            resolveExpressionType(item, QQmlLSUtilsResolveOptions::ResolveOwnerType);
 
-    switch (item.internalKind()) {
-    case QQmlJS::Dom::DomType::ScriptIdentifierExpression: {
-        const QString name = item.value().toString();
-        if (isFieldMemberAccess(item)) {
-            if (auto ownerScope = QQmlLSUtils::resolveExpressionType(
-                        item, QQmlLSUtilsResolveOptions::ResolveOwnerType)) {
-                const DomItem ownerFile = item.goToFile(ownerScope->semanticScope->filePath());
-                const QQmlJS::SourceLocation ownerLocation =
-                        ownerScope->semanticScope->sourceLocation();
-                if (auto methodDefinition =
-                            findMethodDefinitionOf(ownerFile, ownerLocation, name)) {
-                    return methodDefinition;
-                }
-                if (auto propertyDefinition =
-                            findPropertyDefinitionOf(ownerFile, ownerLocation, name)) {
-                    return propertyDefinition;
-                }
-            }
-            return {};
-        }
-
-        // check: is it a JS identifier?
-        if (DomItem definitionOfItem = findJSIdentifierDefinition(item, name)) {
-            return locationFromJSIdentifierDefinition(definitionOfItem, name);
-        }
-
-        // not a JS identifier, check for ids and properties and methods
-        const auto referrerScope = item.nearestSemanticScope();
-        if (!referrerScope)
-            return {};
-
-        // check: is it a method name?
-        if (auto scope = methodFromReferrerScope(referrerScope, name)) {
-            const QString canonicalPath = scope->semanticScope->filePath();
-            DomItem file = item.goToFile(canonicalPath);
-            return findMethodDefinitionOf(file, scope->semanticScope->sourceLocation(), name);
-        }
-
-        if (auto scope = propertyFromReferrerScope(referrerScope, name,
-                                                   QQmlLSUtilsResolveOptions::ResolveOwnerType)) {
-            const QString canonicalPath = scope->semanticScope->filePath();
-            DomItem file = item.goToFile(canonicalPath);
-            return findPropertyDefinitionOf(file, scope->semanticScope->sourceLocation(), name);
-        }
-
-        // check if its an id
-        auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
-        if (!resolver)
-            return {};
-        QQmlJSRegisterContent fromId = resolver->scopedType(referrerScope, name);
-        if (fromId.variant() == QQmlJSRegisterContent::ObjectById) {
-            DomItem qmlObject = QQmlLSUtils::sourceLocationToDomItem(
-                    item.containingFile(), fromId.type()->sourceLocation());
-            // in the Dom, the id is saved in a QMultiHash inside the Component of an QmlObject.
-            DomItem domId = qmlObject.component()
-                                    .field(Fields::ids)
-                                    .key(name)
-                                    .index(0)
-                                    .field(Fields::value);
-            if (!domId) {
-                qCDebug(QQmlLSUtilsLog)
-                        << "QmlComponent in Dom structure has no id, was it misconstructed?";
-                return {};
-            }
-
-            QQmlLSUtilsLocation result;
-            result.sourceLocation = FileLocations::treeOf(domId)->info().fullRegion;
-            result.filename = domId.canonicalFilePath();
-            return result;
-        }
-        return {};
-    }
-    default:
-        qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::findDefinitionOf: Found unimplemented Type "
-                                << item.internalKindStr();
+    if (!resolvedExpression || !resolvedExpression->name || !resolvedExpression->semanticScope) {
+        qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::findDefinitionOf: Type could not be resolved.";
         return {};
     }
 
-    Q_UNREACHABLE_RETURN(std::nullopt);
+    switch (resolvedExpression->type) {
+    case JavaScriptIdentifier: {
+        const QQmlJS::SourceLocation location =
+                resolvedExpression->semanticScope->ownJSIdentifier(*resolvedExpression->name)
+                        .value()
+                        .location;
+
+        return QQmlLSUtilsLocation{ resolvedExpression->semanticScope->filePath(), location };
+    }
+
+    case PropertyIdentifier: {
+        const DomItem ownerFile = item.goToFile(resolvedExpression->semanticScope->filePath());
+        const QQmlJS::SourceLocation ownerLocation =
+                resolvedExpression->semanticScope->sourceLocation();
+        return findPropertyDefinitionOf(ownerFile, ownerLocation, *resolvedExpression->name);
+    }
+    case PropertyChangedSignalIdentifier:
+    case PropertyChangedHandlerIdentifier:
+    case SignalIdentifier:
+    case SignalHandlerIdentifier:
+    case MethodIdentifier: {
+        const DomItem ownerFile = item.goToFile(resolvedExpression->semanticScope->filePath());
+        const QQmlJS::SourceLocation ownerLocation =
+                resolvedExpression->semanticScope->sourceLocation();
+        return findMethodDefinitionOf(ownerFile, ownerLocation, *resolvedExpression->name);
+    }
+    case QmlObjectIdIdentifier: {
+        DomItem qmlObject = QQmlLSUtils::sourceLocationToDomItem(
+                item.containingFile(), resolvedExpression->semanticScope->sourceLocation());
+        // in the Dom, the id is saved in a QMultiHash inside the Component of an QmlObject.
+        const DomItem domId = qmlObject.component()
+                                      .field(Fields::ids)
+                                      .key(*resolvedExpression->name)
+                                      .index(0)
+                                      .field(Fields::value);
+        if (!domId) {
+            qCDebug(QQmlLSUtilsLog)
+                    << "QmlComponent in Dom structure has no id, was it misconstructed?";
+            return {};
+        }
+
+        QQmlLSUtilsLocation result;
+        result.sourceLocation = FileLocations::treeOf(domId)->info().fullRegion;
+        result.filename = domId.canonicalFilePath();
+        return result;
+    }
+    case QmlObjectIdentifier:
+    case SingletonIdentifier:
+    case EnumeratorIdentifier:
+    case EnumeratorValueIdentifier:
+    case AttachedTypeIdentifier:
+    case GroupedPropertyIdentifier:
+    case QmlComponentIdentifier:
+        qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::findDefinitionOf was not implemented for type"
+                                << resolvedExpression->type;
+        return {};
+    }
+    Q_UNREACHABLE_RETURN({});
 }
 
 static QQmlJSScope::ConstPtr propertyOwnerFrom(const QQmlJSScope::ConstPtr &type,
