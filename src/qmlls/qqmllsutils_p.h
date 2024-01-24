@@ -113,6 +113,14 @@ struct QQmlLSUtilsEdit
    \internal
     Choose whether to resolve the owner type or the entire type (the latter is only required to
     resolve the types of qualified names and property accesses).
+
+    For properties, methods, enums and co:
+    * ResolveOwnerType returns the base type of the owner that owns the property, method, enum
+      and co. For example, resolving "x" in "myRectangle.x" will return the Item as the owner, as
+      Item is the base type of Rectangle that defines the "x" property.
+    * ResolveActualTypeForFieldMemberExpression is used to resolve field member expressions, and
+      might lose some information about the owner. For example, resolving "x" in "myRectangle.x"
+      will return the JS type for float that was used to define the "x" property.
  */
 enum QQmlLSUtilsResolveOptions {
     ResolveOwnerType,
