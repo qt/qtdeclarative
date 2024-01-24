@@ -1834,6 +1834,20 @@ QList<Path> DomEnvironment::loadInfoPaths() const
     return lInfos.keys();
 }
 
+DomItem::Callback DomEnvironment::getLoadCallbackFor(DomType fileType, const Callback &loadCallback)
+{
+    if (fileType == DomType::QmltypesFile) {
+        return [loadCallback](const Path &p, const DomItem &oldV, const DomItem &newV) {
+            DomItem newFile = newV.field(Fields::currentItem);
+            if (std::shared_ptr<QmltypesFile> newFilePtr = newFile.ownerAs<QmltypesFile>())
+                newFilePtr->ensureInModuleIndex(newFile);
+            if (loadCallback)
+                loadCallback(p, oldV, newV);
+        };
+    }
+    return loadCallback;
+}
+
 DomItem::Callback DomEnvironment::getCallbackFor(DomType fileType, const DomItem &self,
                                                  const Callback &loadCallback,
                                                  const Callback &endCallback)
@@ -1858,14 +1872,16 @@ DomItem::Callback DomEnvironment::callbackForQmlDirectory(const DomItem &self,
                                                           Callback loadCallback,
                                                           Callback endCallback)
 {
-    return envCallbackForFile<QmlDirectory>(self, loadCallback, endCallback);
+    return envCallbackForFile<QmlDirectory>(
+            self, getLoadCallbackFor(DomType::QmlDirectory, loadCallback), endCallback);
 }
 
 DomItem::Callback DomEnvironment::callbackForQmlFile(const DomItem &self, Callback loadCallback,
 
                                                      Callback endCallback)
 {
-    return envCallbackForFile<QmlFile>(self, loadCallback, endCallback);
+    return envCallbackForFile<QmlFile>(self, getLoadCallbackFor(DomType::QmlFile, loadCallback),
+                                       endCallback);
 }
 
 DomTop::Callback DomEnvironment::callbackForQmltypesFile(const DomItem &self,
@@ -1874,28 +1890,22 @@ DomTop::Callback DomEnvironment::callbackForQmltypesFile(const DomItem &self,
                                                          DomTop::Callback endCallback)
 {
     return envCallbackForFile<QmltypesFile>(
-            self,
-            [loadCallback](const Path &p, const DomItem &oldV, const DomItem &newV) {
-                DomItem newFile = newV.field(Fields::currentItem);
-                if (std::shared_ptr<QmltypesFile> newFilePtr = newFile.ownerAs<QmltypesFile>())
-                    newFilePtr->ensureInModuleIndex(newFile);
-                if (loadCallback)
-                    loadCallback(p, oldV, newV);
-            },
-            endCallback);
+            self, getLoadCallbackFor(DomType::QmltypesFile, loadCallback), endCallback);
 }
 
 DomTop::Callback DomEnvironment::callbackForQmldirFile(const DomItem &self,
                                                        DomTop::Callback loadCallback,
                                                        DomTop::Callback endCallback)
 {
-    return envCallbackForFile<QmldirFile>(self, loadCallback, endCallback);
+    return envCallbackForFile<QmldirFile>(
+            self, getLoadCallbackFor(DomType::QmldirFile, loadCallback), endCallback);
 }
 
 DomItem::Callback DomEnvironment::callbackForJSFile(const DomItem &self, Callback loadCallback,
                                                     Callback endCallback)
 {
-    return envCallbackForFile<JsFile>(self, loadCallback, endCallback);
+    return envCallbackForFile<JsFile>(self, getLoadCallbackFor(DomType::JsFile, loadCallback),
+                                      endCallback);
 }
 
 DomEnvironment::DomEnvironment(

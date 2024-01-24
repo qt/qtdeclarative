@@ -1062,6 +1062,7 @@ private:
         return qMakePair(nullptr, nullptr);
     }
 
+    Callback getLoadCallbackFor(DomType fileType, const Callback &loadCallback);
     Callback getCallbackFor(DomType fileType, const DomItem &self, const Callback &loadCallback,
                             const Callback &endCallback);
     Callback callbackForQmlDirectory(const DomItem &self, Callback loadCallback,
