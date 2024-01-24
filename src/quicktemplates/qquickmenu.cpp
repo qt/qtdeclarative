@@ -264,7 +264,6 @@ QPlatformMenu *QQuickMenuPrivate::nativeHandle() const
     if (!handle && !triedToCreateNativeMenu) {
         auto self = const_cast<QQuickMenuPrivate *>(this);
         self->createNativeMenu();
-        Q_ASSERT(handle);
     }
     return handle.get();
 }
@@ -347,10 +346,11 @@ QString nativeMenuItemListToString(const QList<QQuickNativeMenuItem *> &nativeIt
 void QQuickMenuPrivate::syncWithNativeMenu()
 {
     Q_Q(QQuickMenu);
+    if (!complete || !handle)
+        return;
+
     qCDebug(lcNativeMenu) << "syncWithNativeMenu called on" << q
         << "complete:" << complete << "visible:" << visible;
-    if (!complete || !usingNativeMenu())
-        return;
 
     // TODO: call this function when any of the variables below change
 
@@ -1929,6 +1929,8 @@ void QQuickMenu::componentComplete()
     Q_D(QQuickMenu);
     QQuickPopup::componentComplete();
     d->resizeItems();
+    if (d->usingNativeMenu())
+        d->syncWithNativeMenu();
 }
 
 void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
