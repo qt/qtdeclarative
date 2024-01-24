@@ -48,7 +48,6 @@ enum QQmlLSUtilsIdentifierType : char {
     SignalHandlerIdentifier,
     MethodIdentifier,
     QmlObjectIdIdentifier,
-    QmlObjectIdentifier,
     SingletonIdentifier,
     EnumeratorIdentifier,
     EnumeratorValueIdentifier,

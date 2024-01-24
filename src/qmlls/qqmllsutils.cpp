@@ -1544,7 +1544,6 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(const DomItem &
         result.filename = domId.canonicalFilePath();
         return result;
     }
-    case QmlObjectIdentifier:
     case SingletonIdentifier:
     case EnumeratorIdentifier:
     case EnumeratorValueIdentifier:
@@ -1621,7 +1620,6 @@ expressionTypeWithDefinition(const QQmlLSUtilsExpressionType &ownerType)
     }
     case JavaScriptIdentifier:
     case QmlObjectIdIdentifier:
-    case QmlObjectIdentifier:
     case SingletonIdentifier:
     case EnumeratorIdentifier:
     case EnumeratorValueIdentifier:
@@ -1686,7 +1684,6 @@ std::optional<QQmlLSUtilsErrorMessage> QQmlLSUtils::checkNameForRename(
     case PropertyIdentifier:
     case SignalIdentifier:
     case MethodIdentifier:
-    case QmlObjectIdentifier:
     default:
         break;
     };
