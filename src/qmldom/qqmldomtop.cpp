@@ -1197,7 +1197,6 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
     shared_ptr<ExternalItemInfoBase> oldValue, newValue;
     const DomType fType =
             (bool(fileType) ? (*fileType) : fileTypeForPath(self, file.canonicalPath()));
-    const auto callback = getCallbackFor(fType, self, loadCallback, endCallback);
     switch (fType) {
     case DomType::QmlDirectory: {
         const auto &fetchResult = fetchFileFromEnvs<QmlDirectory>(file);
@@ -1205,10 +1204,8 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         newValue = fetchResult.second;
         if (!newValue) {
             const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
-            if (callback) {
-                callback(Paths::qmlDirectoryInfoPath(file.canonicalPath()), loadRes.formerItem,
-                         loadRes.currentItem);
-            }
+            addExternalItemInfo<QmlDirectory>(loadRes.currentItem,
+                                              getLoadCallbackFor(fType, loadCallback), endCallback);
             return;
         }
     } break;
@@ -1218,10 +1215,8 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         newValue = fetchResult.second;
         if (!newValue) {
             const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
-            if (callback) {
-                callback(Paths::qmlFileInfoPath(file.canonicalPath()), loadRes.formerItem,
-                         loadRes.currentItem);
-            }
+            addExternalItemInfo<QmlFile>(loadRes.currentItem,
+                                         getLoadCallbackFor(fType, loadCallback), endCallback);
             return;
         }
     } break;
@@ -1231,10 +1226,8 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         newValue = fetchResult.second;
         if (!newValue) {
             const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
-            if (callback) {
-                callback(Paths::qmltypesFileInfoPath(file.canonicalPath()), loadRes.formerItem,
-                         loadRes.currentItem);
-            }
+            addExternalItemInfo<QmltypesFile>(loadRes.currentItem,
+                                              getLoadCallbackFor(fType, loadCallback), endCallback);
             return;
         }
     } break;
@@ -1244,19 +1237,15 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         newValue = fetchResult.second;
         if (!newValue) {
             const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
-            if (callback) {
-                callback(Paths::qmldirFileInfoPath(file.canonicalPath()), loadRes.formerItem,
-                         loadRes.currentItem);
-            }
+            addExternalItemInfo<QmldirFile>(loadRes.currentItem,
+                                            getLoadCallbackFor(fType, loadCallback), endCallback);
             return;
         }
     } break;
     case DomType::JsFile: {
         const auto &loadRes = universe()->loadFile(file, fType, loadOptions);
-        if (callback) {
-            callback(Paths::jsFileInfoPath(file.canonicalPath()), loadRes.formerItem,
-                     loadRes.currentItem);
-        }
+        addExternalItemInfo<JsFile>(loadRes.currentItem, getLoadCallbackFor(fType, loadCallback),
+                                    endCallback);
         return;
     } break;
     default: {
