@@ -293,8 +293,11 @@ bool QQuickMenuPrivate::createNativeMenu()
     if (parentMenuBar && parentMenuBar->requestNative()) {
         qCDebug(lcNativeMenu) << "- creating native menu from native menubar";
         auto menuBarPrivate = QQuickMenuBarPrivate::get(parentMenuBar);
-        handle.reset(menuBarPrivate->nativeHandle()->createMenu());
-    } else {
+        if (QPlatformMenuBar *menuBarHandle = menuBarPrivate->nativeHandle())
+            handle.reset(menuBarHandle->createMenu());
+    }
+
+    if (!handle) {
         QPlatformMenu *parentMenuHandle(parentMenu ? get(parentMenu)->handle.get() : nullptr);
         if (parentMenu && parentMenuHandle) {
             qCDebug(lcNativeMenu) << "- creating native sub-menu";

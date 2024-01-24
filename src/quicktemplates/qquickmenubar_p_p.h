@@ -56,6 +56,7 @@ public:
     QWindow *window() const;
     QPlatformMenuBar *nativeHandle() const;
     QPlatformMenuBar *maybeNativeHandle() const;
+    bool usingNativeMenuBar() const;
 
     void insertNativeMenu(QQuickMenu *menu);
     void removeNativeMenu(QQuickMenu *menu);
@@ -79,6 +80,7 @@ public:
     bool triggering = false;
     bool altPressed = false;
     bool requestNative = false;
+    bool triedToCreateNativeMenuBar = false;
     QQmlComponent *delegate = nullptr;
     QPointer<QQuickMenuBarItem> currentItem;
     QPointer<QQuickItem> windowContentItem;

@@ -224,12 +224,11 @@ void QQuickMenuBarPrivate::contentData_append(QQmlListProperty<QObject> *prop, Q
 {
     auto menuBar = static_cast<QQuickMenuBar *>(prop->object);
     auto menuBarPriv = QQuickMenuBarPrivate::get(menuBar);
-    const bool requestNative = menuBar->requestNative();
 
     if (auto menu = qobject_cast<QQuickMenu *>(obj)) {
         if (QQuickItem *menuBarItem = menuBarPriv->createItem(menu)) {
             menuBar->addItem(menuBarItem);
-            if (requestNative && menu)
+            if (menuBarPriv->usingNativeMenuBar())
                 menuBarPriv->insertNativeMenu(menu);
             QQuickContainerPrivate::contentData_append(prop, menuBarItem);
         }
@@ -239,7 +238,7 @@ void QQuickMenuBarPrivate::contentData_append(QQmlListProperty<QObject> *prop, Q
     if (auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(obj)) {
         menuBar->addItem(menuBarItem);
         QQuickMenu *menu = menuBarItem->menu();
-        if (requestNative && menu)
+        if (menu && menuBarPriv->usingNativeMenuBar())
             menuBarPriv->insertNativeMenu(menu);
         QQuickContainerPrivate::contentData_append(prop, menuBarItem);
         return;
@@ -300,13 +299,23 @@ QWindow* QQuickMenuBarPrivate::window() const
 QPlatformMenuBar* QQuickMenuBarPrivate::nativeHandle() const
 {
     Q_ASSERT(requestNative);
-    if (!handle) {
-        auto self = const_cast<QQuickMenuBarPrivate *>(this);
-        self->handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenuBar());
+
+    if (handle)
+        return handle.get();
+    if (triedToCreateNativeMenuBar)
+        return nullptr;
+
+    auto self = const_cast<QQuickMenuBarPrivate *>(this);
+    self->handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenuBar());
+    self->triedToCreateNativeMenuBar = true;
+
+    if (handle) {
         self->handle->handleReparent(window());
         qCDebug(lcMenuBar) << "created QPlatformMenuBar:" << bool(handle.get()) << "parent window:" << handle->parentWindow();
+    } else {
+        qCDebug(lcMenuBar) << "QPlatformTheme failed to create a QPlatformMenuBar!";
     }
-    Q_ASSERT(handle);
+
     return handle.get();
 }
 
@@ -315,10 +324,23 @@ QPlatformMenuBar *QQuickMenuBarPrivate::maybeNativeHandle() const
     return handle.get();
 }
 
+bool QQuickMenuBarPrivate::usingNativeMenuBar() const
+{
+    // This function will, compared to nativeHandle(), only try
+    // to create a native menubar if a native menubar is requested.
+    if (handle)
+        return true;
+    if (triedToCreateNativeMenuBar)
+        return false;
+    if (!requestNative)
+        return false;
+    return bool(nativeHandle());
+}
+
 void QQuickMenuBarPrivate::insertNativeMenu(QQuickMenu *menu)
 {
     Q_Q(QQuickMenuBar);
-    Q_ASSERT(requestNative);
+    Q_ASSERT(usingNativeMenuBar());
     Q_ASSERT(menu);
 
     QQuickMenu *insertBefore = nullptr;
@@ -351,11 +373,13 @@ void QQuickMenuBarPrivate::insertNativeMenu(QQuickMenu *menu)
 
 void QQuickMenuBarPrivate::removeNativeMenu(QQuickMenu *menu)
 {
-    if (!maybeNativeHandle())
-        return;
+    Q_ASSERT(usingNativeMenuBar());
+    Q_ASSERT(menu);
+
     QQuickMenuPrivate *menuPrivate = QQuickMenuPrivate::get(menu);
     if (!menuPrivate->maybeNativeHandle())
         return;
+
     qCDebug(lcMenuBar) << "remove native menu:" << menu << menu->title();
     nativeHandle()->removeMenu(menuPrivate->nativeHandle());
 }
@@ -434,7 +458,7 @@ void QQuickMenuBar::insertMenu(int index, QQuickMenu *menu)
     // menubars are available, but fail to show one everywhere else.
     if (QQuickItem *item = d->createItem(menu)) {
         insertItem(index, item);
-        if (d->requestNative)
+        if (d->usingNativeMenuBar())
             d->insertNativeMenu(menu);
     }
 }
@@ -460,7 +484,8 @@ void QQuickMenuBar::removeMenu(QQuickMenu *menu)
         break;
     }
 
-    d->removeNativeMenu(menu);
+    if (d->usingNativeMenuBar())
+        d->removeNativeMenu(menu);
     menu->deleteLater();
 }
 
