@@ -204,7 +204,7 @@ public:
         return &m_compilationUnit->bindingPropertyDataPerObject.at(objectIndex);
     }
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> baseCompilationUnit() const
+    const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &baseCompilationUnit() const
     {
         return m_compilationUnit;
     }
