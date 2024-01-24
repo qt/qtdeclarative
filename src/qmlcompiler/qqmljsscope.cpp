@@ -172,15 +172,19 @@ bool QQmlJSScope::hasEnumeration(const QString &name) const
             this, [&](const QQmlJSScope *scope) { return scope->m_enumerations.contains(name); });
 }
 
+bool QQmlJSScope::hasOwnEnumerationKey(const QString &name) const
+{
+    for (const auto &e : m_enumerations) {
+        if (e.keys().contains(name))
+            return true;
+    }
+    return false;
+}
+
 bool QQmlJSScope::hasEnumerationKey(const QString &name) const
 {
-    return QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        for (const auto &e : scope->m_enumerations) {
-            if (e.keys().contains(name))
-                return true;
-        }
-        return false;
-    });
+    return QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope) { return scope->hasOwnEnumerationKey(name); });
 }
 
 QQmlJSMetaEnum QQmlJSScope::enumeration(const QString &name) const

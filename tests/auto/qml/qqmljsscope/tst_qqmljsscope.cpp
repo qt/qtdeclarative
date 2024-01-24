@@ -106,6 +106,7 @@ private Q_SLOTS:
     void scriptIndices();
     void extensions();
     void emptyBlockBinding();
+    void hasOwnEnumerationKeys();
     void resolvedNonUniqueScopes();
     void compilationUnitsAreCompatible();
     void attachedTypeResolution_data();
@@ -675,6 +676,25 @@ void tst_qqmljsscope::emptyBlockBinding()
     QVERIFY(root);
     QVERIFY(root->hasOwnPropertyBindings(u"x"_s));
     QVERIFY(root->hasOwnPropertyBindings(u"y"_s));
+}
+
+void tst_qqmljsscope::hasOwnEnumerationKeys()
+{
+    QQmlJSScope::ConstPtr root = run(u"extensions.qml"_s);
+    QVERIFY(root);
+    QQmlJSScope::ConstPtr extendedDerived = root->childScopes().front();
+    QVERIFY(extendedDerived);
+    // test that enumeration keys from base cannot be found
+    QVERIFY(!extendedDerived->hasOwnEnumerationKey(u"ThisIsTheEnumFromExtended"_s));
+    QVERIFY(!extendedDerived->hasOwnEnumerationKey(u"ThisIsTheFlagFromExtended"_s));
+
+    QQmlJSScope::ConstPtr extended = extendedDerived->baseType();
+    QVERIFY(extended);
+
+    QVERIFY(extended->hasOwnEnumerationKey(u"ThisIsTheEnumFromExtended"_s));
+    QVERIFY(extended->hasOwnEnumerationKey(u"ThisIsTheFlagFromExtended"_s));
+    QVERIFY(!extended->hasOwnEnumerationKey(u"ThisIsTheEnumFromExtension"_s));
+    QVERIFY(!extended->hasOwnEnumerationKey(u"ThisIsTheFlagFromExtension"_s));
 }
 
 void tst_qqmljsscope::resolvedNonUniqueScopes()
