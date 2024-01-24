@@ -1644,6 +1644,63 @@ void tst_qmlls_utils::resolveExpressionType_data()
                 << JSUsagesQml << 65 << 46 << ResolveOwnerType << JSUsagesQml
                 << nestedComponent4Line;
     }
+
+    {
+        const QString derivedType = testFile(u"resolveExpressionType/DerivedType.qml"_s);
+        const QString derived2Type = testFile(u"resolveExpressionType/Derived2.qml"_s);
+        const QString baseType = testFile(u"resolveExpressionType/BaseType.qml"_s);
+        const QString qQuickValueTypes = u"private/qquickvaluetypes_p.h"_s;
+        const QString qQuickKeysAttachedType = u"private/qquickitem_p.h"_s;
+
+        const int baseTypeLine = 6;
+        const int derivedTypeLine = 6;
+        const int noLine = -1;
+        const int keysLine = 29;
+
+        QTest::addRow("ownerOfMethod")
+                << derivedType << 9 << 13 << ResolveOwnerType << baseType << baseTypeLine;
+        QTest::addRow("ownerOfMethod2")
+                << derivedType << 15 << 33 << ResolveOwnerType << baseType << baseTypeLine;
+        QTest::addRow("ownerOfQualifiedMethod")
+                << derivedType << 22 << 46 << ResolveOwnerType << baseType << baseTypeLine;
+
+        QTest::addRow("ownerOfProperty")
+                << derivedType << 10 << 22 << ResolveOwnerType << baseType << baseTypeLine;
+        QTest::addRow("ownerOfProperty2")
+                << derivedType << 16 << 37 << ResolveOwnerType << baseType << baseTypeLine;
+        QTest::addRow("ownerOfQualifiedProperty")
+                << derivedType << 23 << 46 << ResolveOwnerType << baseType << baseTypeLine;
+
+        QTest::addRow("ownerOfOwnProperty")
+                << derivedType << 16 << 23 << ResolveOwnerType << derivedType << derivedTypeLine;
+
+        QTest::addRow("ownerOfSignal")
+                << derivedType << 11 << 13 << ResolveOwnerType << baseType << baseTypeLine;
+        QTest::addRow("ownerOfSignal2")
+                << derivedType << 18 << 37 << ResolveOwnerType << baseType << baseTypeLine;
+        QTest::addRow("ownerOfSignalHandler")
+                << derivedType << 19 << 10 << ResolveOwnerType << baseType << baseTypeLine;
+        QTest::addRow("ownerOfQualifiedSignal")
+                << derivedType << 25 << 22 << ResolveOwnerType << baseType << baseTypeLine;
+
+        QTest::addRow("ownerOfGroupedProperty")
+                << derivedType << 28 << 7 << ResolveOwnerType << baseType << baseTypeLine;
+        QTest::addRow("ownerOfGroupedProperty2")
+                << derivedType << 28 << 17 << ResolveOwnerType << qQuickValueTypes << noLine;
+
+        QTest::addRow("ownerOfAttachedProperty")
+                << derivedType << 29 << 6 << ResolveOwnerType << derivedType << keysLine;
+        QTest::addRow("ownerOfAttachedProperty2")
+                << derivedType << 29 << 14 << ResolveOwnerType << qQuickKeysAttachedType << noLine;
+
+        QTest::addRow("id")
+                << derivedType << 7 << 10 << ResolveOwnerType << derivedType << 6;
+        QTest::addRow("propertyBinding")
+                << derivedType << 31 << 13 << ResolveOwnerType << baseType << baseTypeLine;
+
+        QTest::addRow("qmlObject")
+                << derivedType << 6 << 4 << ResolveOwnerType << derived2Type << 4;
+    }
 }
 
 void tst_qmlls_utils::resolveExpressionType()
@@ -1670,9 +1727,12 @@ void tst_qmlls_utils::resolveExpressionType()
     auto definition = QQmlLSUtils::resolveExpressionType(locations.front().domItem, resolveOption);
 
     QVERIFY(definition);
+    QVERIFY(definition->semanticScope);
     QCOMPARE(definition->semanticScope->filePath(), expectedFile);
-    QQmlJS::SourceLocation location = definition->semanticScope->sourceLocation();
-    QCOMPARE((int)location.startLine, expectedLine);
+    if (expectedLine != -1) {
+        QQmlJS::SourceLocation location = definition->semanticScope->sourceLocation();
+        QCOMPARE((int)location.startLine, expectedLine);
+    }
 }
 
 void tst_qmlls_utils::isValidEcmaScriptIdentifier_data()
