@@ -905,11 +905,8 @@ newItem is a DomItem representing ExternalItemPair, currently existed/updated or
 to the DomUniverse
 */
 template <typename T>
-DomTop::Callback envCallbackForFile(
-        const DomItem &self, QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> DomEnvironment::*,
-        std::shared_ptr<ExternalItemInfo<T>> (DomEnvironment::*)(const DomItem &, const QString &,
-                                                                 EnvLookup) const,
-        DomTop::Callback loadCallback, DomTop::Callback endCallback)
+DomTop::Callback envCallbackForFile(const DomItem &self, DomTop::Callback loadCallback,
+                                    DomTop::Callback endCallback)
 {
     std::shared_ptr<DomEnvironment> ePtr = self.ownerAs<DomEnvironment>();
     std::weak_ptr<DomEnvironment> selfPtr = ePtr;
@@ -917,10 +914,6 @@ DomTop::Callback envCallbackForFile(
         shared_ptr<DomEnvironment> envPtr = selfPtr.lock();
         if (!envPtr)
             return;
-        DomItem env = DomItem(envPtr);
-        // values reflecting the change inside the DomEnvironment path map
-        shared_ptr<ExternalItemInfo<T>> oldValue;
-        shared_ptr<ExternalItemInfo<T>> newValue;
 
         // get either Valid "file" from the ExternalItemPair or the current (wip) "file"
         shared_ptr<T> newItemPtr;
@@ -934,22 +927,22 @@ DomTop::Callback envCallbackForFile(
                                                                  std::move(newItemPtr));
         Path p = loadResult.currentItem.canonicalPath();
         {
-            auto depLoad = qScopeGuard([p, &env, envPtr, endCallback] {
+            auto depLoad = qScopeGuard([p, envPtr, endCallback] {
                 envPtr->addDependenciesToLoad(p);
                 // add EndCallback to the queue, which should be called once all dependencies are
                 // loaded
-                if (endCallback)
-                    envPtr->addAllLoadedCallback(env,
-                                                 [p, endCallback](Path, const DomItem &, const DomItem &env) {
-                                                     DomItem el = env.path(p);
-                                                     endCallback(p, el, el);
-                                                 });
+                if (endCallback) {
+                    DomItem env = DomItem(envPtr);
+                    envPtr->addAllLoadedCallback(
+                            env, [p, endCallback](Path, const DomItem &, const DomItem &env) {
+                                DomItem el = env.path(p);
+                                endCallback(p, el, el);
+                            });
+                }
             });
             // call loadCallback
             if (loadCallback) {
-                DomItem oldValueObj = env.copy(oldValue);
-                DomItem newValueObj = env.copy(newValue);
-                loadCallback(p, oldValueObj, newValueObj);
+                loadCallback(p, loadResult.formerItem, loadResult.currentItem);
             }
         }
     };
@@ -1896,17 +1889,14 @@ DomItem::Callback DomEnvironment::callbackForQmlDirectory(const DomItem &self,
                                                           Callback loadCallback,
                                                           Callback endCallback)
 {
-    return envCallbackForFile<QmlDirectory>(self, &DomEnvironment::m_qmlDirectoryWithPath,
-                                            &DomEnvironment::qmlDirectoryWithPath, loadCallback,
-                                            endCallback);
+    return envCallbackForFile<QmlDirectory>(self, loadCallback, endCallback);
 }
 
 DomItem::Callback DomEnvironment::callbackForQmlFile(const DomItem &self, Callback loadCallback,
 
                                                      Callback endCallback)
 {
-    return envCallbackForFile<QmlFile>(self, &DomEnvironment::m_qmlFileWithPath,
-                                       &DomEnvironment::qmlFileWithPath, loadCallback, endCallback);
+    return envCallbackForFile<QmlFile>(self, loadCallback, endCallback);
 }
 
 DomTop::Callback DomEnvironment::callbackForQmltypesFile(const DomItem &self,
@@ -1915,7 +1905,7 @@ DomTop::Callback DomEnvironment::callbackForQmltypesFile(const DomItem &self,
                                                          DomTop::Callback endCallback)
 {
     return envCallbackForFile<QmltypesFile>(
-            self, &DomEnvironment::m_qmltypesFileWithPath, &DomEnvironment::qmltypesFileWithPath,
+            self,
             [loadCallback](const Path &p, const DomItem &oldV, const DomItem &newV) {
                 DomItem newFile = newV.field(Fields::currentItem);
                 if (std::shared_ptr<QmltypesFile> newFilePtr = newFile.ownerAs<QmltypesFile>())
@@ -1930,16 +1920,13 @@ DomTop::Callback DomEnvironment::callbackForQmldirFile(const DomItem &self,
                                                        DomTop::Callback loadCallback,
                                                        DomTop::Callback endCallback)
 {
-    return envCallbackForFile<QmldirFile>(self, &DomEnvironment::m_qmldirFileWithPath,
-                                          &DomEnvironment::qmldirFileWithPath, loadCallback,
-                                          endCallback);
+    return envCallbackForFile<QmldirFile>(self, loadCallback, endCallback);
 }
 
 DomItem::Callback DomEnvironment::callbackForJSFile(const DomItem &self, Callback loadCallback,
                                                     Callback endCallback)
 {
-    return envCallbackForFile<JsFile>(self, &DomEnvironment::m_jsFileWithPath,
-                                      &DomEnvironment::jsFileWithPath, loadCallback, endCallback);
+    return envCallbackForFile<JsFile>(self, loadCallback, endCallback);
 }
 
 DomEnvironment::DomEnvironment(
