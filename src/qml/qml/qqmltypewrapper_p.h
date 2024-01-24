@@ -38,7 +38,9 @@ struct QQmlTypeWrapper : Object {
         ExcludeEnums
     };
 
-    void init();
+    void init(TypeNameMode m, QObject *o, const QQmlTypePrivate *type);
+    void init(TypeNameMode m, QObject *o, QQmlTypeNameCache *type, const QQmlImportRef *import);
+
     void destroy();
     TypeNameMode mode;
     QV4QPointer<QObject> object;
