@@ -920,15 +920,22 @@ QList<QPair<int, int>> QSGCurveProcessor::findOverlappingCandidates(const QQuadP
             //if (r1.xmax <= newR.xmin || newR.xmax <= r1.xmin)
             //    continue;
 
+            bool isNeighbor = false;
+            if (i - addIndex == 1) {
+                if (!path.elementAt(addIndex).isSubpathEnd())
+                    isNeighbor = true;
+            } else if (addIndex - i == 1) {
+                if (!path.elementAt(i).isSubpathEnd())
+                    isNeighbor = true;
+            }
             // Neighbors need to be completely different (otherwise they just share a point)
-            if (qAbs(i - addIndex) == 1 && (r1.ymax <= newR.ymin || newR.ymax <= r1.ymin))
+            if (isNeighbor && (r1.ymax <= newR.ymin || newR.ymax <= r1.ymin))
                 continue;
             // Non-neighbors can also just touch
-            if (qAbs(i - addIndex) > 1 && (r1.ymax < newR.ymin || newR.ymax < r1.ymin))
+            if (!isNeighbor && (r1.ymax < newR.ymin || newR.ymax < r1.ymin))
                 continue;
             // If the bounding boxes are overlapping it is a candidate for an intersection.
-            if (isOverlap(path, i, addIndex)) // Another test to see if the triangles overlap
-                overlappingBB.append(QPair<int, int>(i, addIndex));
+            overlappingBB.append(QPair<int, int>(i, addIndex));
         }
         bRpool.append(addIndex); //Add the new element to the pool.
     }
