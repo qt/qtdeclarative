@@ -985,6 +985,7 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
 
     if (intersections.isEmpty() && !alwaysReorder) {
         qCDebug(lcSGCurveIntersectionSolver) << "Returning the path unchanged.";
+        path.setHint(QQuadPath::PathNonIntersecting);
         return false;
     }
 
