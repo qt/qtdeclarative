@@ -7,7 +7,9 @@ import QtQuick.Controls
 ApplicationWindow {
     id: root
     property bool requestNative: false
+    property bool menuBarVisible: true
     property alias fileMenu: fileMenu
+    property alias contents: contents
 
     width: 400
     height: 400
@@ -15,6 +17,7 @@ ApplicationWindow {
 
     header: MenuBar {
         requestNative: root.requestNative
+        visible: root.menuBarVisible
         Menu {
             id: fileMenu
             title: "&File"
@@ -53,5 +56,11 @@ ApplicationWindow {
             title: "&Help"
             MenuItem { text: "&About" }
         }
+    }
+
+    Rectangle {
+        id: contents
+        anchors.fill: parent
+        color: "green"
     }
 }

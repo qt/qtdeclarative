@@ -44,10 +44,12 @@ private slots:
     void requestNative();
     void containerItems_data();
     void containerItems();
+    void applicationWindow_data();
+    void applicationWindow();
 
 private:
     static bool hasWindowActivation();
-
+    bool nativeMenuBarSupported = false;
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 };
 
@@ -60,6 +62,8 @@ tst_qquickmenubar::tst_qquickmenubar()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
+    std::unique_ptr<QPlatformMenuBar> pmb(QGuiApplicationPrivate::platformTheme()->createPlatformMenuBar());
+    nativeMenuBarSupported = pmb != nullptr;
 }
 
 bool tst_qquickmenubar::hasWindowActivation()
@@ -942,6 +946,59 @@ void tst_qquickmenubar::containerItems()
         auto menusMenu = menus.at(&menus, i);
         QVERIFY(menusMenu);
         QCOMPARE(menusMenu, menu);
+    }
+}
+
+void tst_qquickmenubar::applicationWindow_data()
+{
+    QTest::addColumn<bool>("initialRequestNative");
+    QTest::addColumn<bool>("initialVisible");
+    QTest::newRow("initially not native, visible") << false << true;
+    QTest::newRow("initially not native, hidden") << false << false;
+    QTest::newRow("initially native, visible") << true << true;
+    QTest::newRow("initially native, hidden") << true << false;
+}
+
+void tst_qquickmenubar::applicationWindow()
+{
+    // Check that ApplicationWindow adds or removes the non-native
+    // menubar in response to toggling MenuBar.requestNative and
+    // MenuBar.visible.
+    QFETCH(bool, initialRequestNative);
+    QFETCH(bool, initialVisible);
+
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", initialRequestNative }, { "visible", initialVisible }});
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+    QQuickItem *contents = window->property("contents").value<QQuickItem *>();
+    QVERIFY(contents);
+
+    for (const bool visible : {initialVisible, !initialVisible, initialVisible})
+    for (const bool requestNative : {initialRequestNative, !initialRequestNative, initialRequestNative}) {
+        menuBar->setRequestNative(requestNative);
+        menuBar->setVisible(visible);
+
+        const bool nativeMenuBarVisible = bool(menuBarPrivate->nativeHandle());
+        QCOMPARE(nativeMenuBarVisible, nativeMenuBarSupported && requestNative && visible);
+
+        if (!visible) {
+            QVERIFY(!menuBar->isVisible());
+            QVERIFY(!nativeMenuBarVisible);
+            QCOMPARE(contents->height(), window->height());
+        } else if (nativeMenuBarVisible) {
+            QVERIFY(menuBar->isVisible());
+            QCOMPARE(contents->height(), window->height());
+        } else {
+            QVERIFY(menuBar->isVisible());
+            QVERIFY(menuBar->height() > 0);
+            QCOMPARE(contents->height(), window->height() - menuBar->height());
+        }
     }
 }
 

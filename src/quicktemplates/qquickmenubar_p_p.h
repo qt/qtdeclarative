@@ -55,14 +55,14 @@ public:
 
     void insertMenu(int index, QQuickMenu *menu, QQuickItem *delegateItem);
     QQuickMenu *takeMenu(int index);
+    void insertNativeMenu(QQuickMenu *menu);
+    void removeNativeMenu(QQuickMenu *menu);
 
     QWindow *window() const;
     QPlatformMenuBar *nativeHandle() const;
-    QPlatformMenuBar *maybeNativeHandle() const;
-    bool usingNativeMenuBar() const;
-
-    void insertNativeMenu(QQuickMenu *menu);
-    void removeNativeMenu(QQuickMenu *menu);
+    void syncNativeMenuBarVisible();
+    void createNativeMenuBar();
+    void removeNativeMenuBar();
 
     qreal getContentWidth() const override;
     qreal getContentHeight() const override;
@@ -83,7 +83,6 @@ public:
     bool triggering = false;
     bool altPressed = false;
     bool requestNative = false;
-    bool triedToCreateNativeMenuBar = false;
     QQmlComponent *delegate = nullptr;
     QPointer<QQuickMenuBarItem> currentItem;
     QPointer<QQuickItem> windowContentItem;
