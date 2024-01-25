@@ -135,6 +135,7 @@ set(qml_files
     extendedTypes.qml
     failures.qml
     fallbacklookups.qml
+    fallbackresettable.qml
     fileDialog.qml
     flagEnum.qml
     fromBoolValue.qml

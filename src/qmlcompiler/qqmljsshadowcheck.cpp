@@ -87,11 +87,11 @@ void QQmlJSShadowCheck::handleStore(int base, const QString &memberName)
     if (checkShadowing(baseType, memberName, base) == Shadowable)
         return;
 
-    // If the property isn't shadowable but resettable, we have to turn the read register into
+    // If the property isn't shadowable, we have to turn the read register into
     // var if the accumulator can hold undefined. This has to be done in a second pass
     // because the accumulator may still turn into var due to its own shadowing.
     const QQmlJSRegisterContent member = m_typeResolver->memberType(baseType, memberName);
-    if (member.isProperty() && !member.property().reset().isEmpty())
+    if (member.isProperty())
         m_resettableStores.append({m_state.accumulatorIn(), instructionOffset});
 }
 

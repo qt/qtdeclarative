@@ -5,34 +5,44 @@
 #define DYNAMICMETA_H
 
 #include <private/qobject_p.h>
+#include <private/qmetaobjectbuilder_p.h>
 #include <QtQmlIntegration/qqmlintegration.h>
-
-struct FreeDeleter {
-    void operator()(QMetaObject *meta) { free(meta); }
-};
 
 template<typename T>
 class MetaObjectData : public QDynamicMetaObjectData
 {
     Q_DISABLE_COPY_MOVE(MetaObjectData)
 public:
-    MetaObjectData() = default;
-    ~MetaObjectData() = default;
+    MetaObjectData()
+    {
+        QMetaObjectBuilder builder;
+        builder.setSuperClass(&T::staticMetaObject);
+        builder.setFlags(builder.flags() | DynamicMetaObject);
+        metaObject = builder.toMetaObject();
+    };
+
+    ~MetaObjectData() {
+        free(metaObject);
+    };
 
     QMetaObject *toDynamicMetaObject(QObject *) override
     {
-        return const_cast<QMetaObject *>(&T::staticMetaObject);
+        return metaObject;
     }
     int metaCall(QObject *o, QMetaObject::Call call, int idx, void **argv) override
     {
         return o->qt_metacall(call, idx, argv);
     }
+
+    QMetaObject *metaObject = nullptr;
 };
 
 class DynamicMeta : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int foo READ foo WRITE setFoo NOTIFY fooChanged FINAL)
+    Q_PROPERTY(qreal value READ value WRITE setValue RESET resetValue NOTIFY valueChanged FINAL)
+    Q_PROPERTY(qreal shadowable READ shadowable CONSTANT)
     QML_ELEMENT
 public:
 
@@ -54,11 +64,26 @@ public:
 
     Q_INVOKABLE int bar(int baz) { return baz + 12; }
 
+    qreal value() const { return m_value; }
+    qreal shadowable() const { return 25; }
+
+public slots:
+    void resetValue() { setValue(0); }
+    void setValue(qreal value)
+    {
+        if (m_value == value)
+            return;
+        m_value = value;
+        emit valueChanged();
+    }
+
 Q_SIGNALS:
     void fooChanged();
+    void valueChanged();
 
 private:
     int m_foo = 0;
+    qreal m_value = 0;
 };
 
 class DynamicMetaSingleton : public DynamicMeta

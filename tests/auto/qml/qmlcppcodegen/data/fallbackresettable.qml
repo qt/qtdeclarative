@@ -2,14 +2,14 @@ pragma Strict
 import QtQml
 import TestTypes
 
-Resettable {
+DynamicMeta {
     id: self
     value: 999
 
     property double notResettable: 10
     property double notResettable2: { return undefined }
 
-    property Resettable shadowing: Resettable {
+    property DynamicMeta shadowing: DynamicMeta {
         property var shadowable: undefined
     }
 
