@@ -67,6 +67,8 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickpopupitem_p_p.h
         qquickpopuppositioner.cpp
         qquickpopuppositioner_p_p.h
+        qquickpopupwindow.cpp
+        qquickpopupwindow_p_p.h
         qquickpresshandler.cpp
         qquickpresshandler_p_p.h
         qquickprogressbar.cpp qquickprogressbar_p.h

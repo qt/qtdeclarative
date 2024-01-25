@@ -34,6 +34,7 @@ class QQuickTransitionManager;
 class QQuickPopup;
 class QQuickPopupAnchors;
 class QQuickPopupItem;
+class QQuickPopupWindow;
 class QQuickPopupPrivate;
 class QQuickPopupPositioner;
 
@@ -94,6 +95,8 @@ public:
 
     void reposition();
 
+    bool usePopupWindow() const;
+    void adjustPopupItemParentAndWindow();
     void createOverlay();
     void destroyDimmer();
     void toggleOverlay();
@@ -108,6 +111,8 @@ public:
     virtual void finalizeExitTransition();
 
     virtual void opened();
+
+    virtual Qt::WindowFlags popupWindowType() const;
 
     QMarginsF getMargins() const;
 
@@ -157,6 +162,7 @@ public:
     bool outsideParentPressed = false;
     bool inDestructor = false;
     bool relaxEdgeConstraint = false;
+    bool popupWindowDirty = false;
     int touchId = -1;
     qreal x = 0;
     qreal y = 0;
@@ -176,6 +182,7 @@ public:
     QQuickTransition *enter = nullptr;
     QQuickTransition *exit = nullptr;
     QQuickPopupItem *popupItem = nullptr;
+    QQuickPopupWindow *popupWindow = nullptr;
     QQuickPopupPositioner *positioner = nullptr;
     QList<QQuickStateAction> enterActions;
     QList<QQuickStateAction> exitActions;
@@ -184,6 +191,7 @@ public:
     qreal explicitDimmerOpacity = 0;
     qreal prevOpacity = 0;
     qreal prevScale = 0;
+    QString m_title;
 
     friend class QQuickPopupTransitionManager;
 };

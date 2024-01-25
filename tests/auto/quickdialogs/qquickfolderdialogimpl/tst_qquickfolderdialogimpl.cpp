@@ -814,7 +814,6 @@ void tst_QQuickFolderDialogImpl::itemsDisabledWhenNecessary()
     QVERIFY(breadcrumbBar->textField()->isVisible());
     QCOMPARE(openButton->isEnabled(), false);
 #endif
-
     // Hide it with the escape key. The Open button should now be enabled.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Escape);
     QVERIFY(!breadcrumbBar->textField()->isVisible());

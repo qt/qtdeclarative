@@ -5,6 +5,7 @@
 #include "qquickpopuppositioner_p_p.h"
 #include "qquickpopupanchors_p.h"
 #include "qquickpopupitem_p_p.h"
+#include "qquickpopupwindow_p_p.h"
 #include "qquickpopup_p_p.h"
 
 #include <QtCore/qloggingcategory.h>
@@ -72,7 +73,32 @@ void QQuickPopupPositioner::setParentItem(QQuickItem *parent)
 
 void QQuickPopupPositioner::reposition()
 {
+    if (auto p = QQuickPopupPrivate::get(popup()); p->usePopupWindow()) {
+        if (!p->popupWindow || !p->parentItem) {
+            p->effectiveX = p->x;
+            p->effectiveY = p->y;
+            return;
+        }
+
+        const QQuickItem *centerInParent = p->anchors ? p->getAnchors()->centerIn() : nullptr;
+        const QQuickOverlay *centerInOverlay = qobject_cast<const QQuickOverlay *>(centerInParent);
+        QPoint pos(p->x, p->y);
+
+        if (centerInParent == p->parentItem || centerInOverlay) {
+            pos = centerInOverlay ? QPoint(qRound(centerInOverlay->width() / 2.0), qRound(centerInOverlay->height() / 2.0))
+                                  : QPoint(qRound(p->parentItem->width() / 2.0), qRound(p->parentItem->height() / 2.0));
+            pos -= QPoint(qRound(p->popupItem->width() / 2.0), qRound(p->popupItem->height() / 2.0));
+
+        } else if (centerInParent)
+            qmlWarning(popup()) << "Popup can only be centered within its immediate parent or Overlay.overlay";
+
+        const QPointF globalCoords = p->parentItem->mapToGlobal(pos.x(), pos.y());
+        p->popupWindow->setPosition(globalCoords.x(), globalCoords.y());
+        return;
+    }
+
     QQuickItem *popupItem = m_popup->popupItem();
+
     if (!popupItem->isVisible())
         return;
 
@@ -96,8 +122,7 @@ void QQuickPopupPositioner::reposition()
     const QQuickOverlay *centerInOverlay = qobject_cast<const QQuickOverlay*>(centerInParent);
     QRectF rect(!centerInParent ? p->allowHorizontalMove ? p->x : popupItem->x() : 0,
                 !centerInParent ? p->allowVerticalMove ? p->y : popupItem->y() : 0,
-                !p->hasWidth && iw > 0 ? iw : w,
-                !p->hasHeight && ih > 0 ? ih : h);
+                !p->hasWidth && iw > 0 ? iw : w, !p->hasHeight && ih > 0 ? ih : h);
     bool relaxEdgeConstraint = p->relaxEdgeConstraint;
     if (m_parentItem) {
         // m_parentItem is the parent that the popup should open in,
@@ -236,6 +261,7 @@ void QQuickPopupPositioner::reposition()
     // so we need to map its top left back to item coordinates.
     // However, if centering within the overlay, the coordinates will be relative
     // to the window, so we don't need to do anything.
+    // The same applies to popups that are in their own dedicated window.
     const QPointF effectivePos = m_parentItem && !centerInOverlay ? m_parentItem->mapFromScene(rect.topLeft()) : rect.topLeft();
     if (!qFuzzyCompare(p->effectiveX, effectivePos.x())) {
         p->effectiveX = effectivePos.x();

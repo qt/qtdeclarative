@@ -226,7 +226,7 @@ public:
     virtual void setVisible(bool visible);
 
     qreal opacity() const;
-    void setOpacity(qreal opacity);
+    virtual void setOpacity(qreal opacity);
 
     qreal scale() const;
     void setScale(qreal scale);
@@ -433,6 +433,8 @@ protected:
     bool setAccessibleProperty(const char *propertyName, const QVariant &value);
 
 private:
+    QQuickItem *findParentItem() const;
+
     Q_DISABLE_COPY(QQuickPopup)
     Q_DECLARE_PRIVATE(QQuickPopup)
     friend class QQuickPopupItem;

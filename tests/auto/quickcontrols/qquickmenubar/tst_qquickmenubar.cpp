@@ -30,7 +30,7 @@ public:
     tst_qquickmenubar();
 
 private slots:
-    void init();
+    void init() override;
     void delegate();
     void mouse_data();
     void mouse();
@@ -98,7 +98,6 @@ void tst_qquickmenubar::init()
     // Note that some tests will set this property to 'true', which
     // is why we need to set it back to 'false' here.
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, false);
-    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, false);
 }
 
 void tst_qquickmenubar::delegate()
