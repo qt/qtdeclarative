@@ -30,11 +30,9 @@
 using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
 
-/*
-    We have a separate test project for native menus because we don't
-    want to run them for every style, just the platforms that have
-    native menu support.
-*/
+#if defined(Q_OS_WIN) || defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_OS_ANDROID)
+#define HAVE_NATIVE_MENU_SUPPORT
+#endif
 
 class tst_NativeMenus : public QQmlDataTest
 {
@@ -75,8 +73,12 @@ void tst_NativeMenus::defaults()
 
     QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
     QVERIFY(contextMenu);
+    QVERIFY(contextMenu->requestNative());
+    // The GTK+ platform theme does support native menus, but for now we just skip the check.
+#ifdef HAVE_NATIVE_MENU_SUPPORT
     auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
     QVERIFY(contextMenuPrivate->usingNativeMenu());
+#endif
 }
 
 void tst_NativeMenus::staticActionsAndSubmenus()
@@ -200,9 +202,13 @@ void tst_NativeMenus::dynamicSubmenus()
     // So, this adds an already-populated menu as a sub-menu.
     QVERIFY(QMetaObject::invokeMethod(window, "addSubMenu", Q_ARG(QString, "subMenu1")));
     auto subMenu1 = contextMenu->menuAt(0);
-    auto *subMenu1Private = QQuickMenuPrivate::get(subMenu1);
     QVERIFY(subMenu1);
     QCOMPARE(subMenu1->title(), "subMenu1");
+    auto *subMenu1Private = QQuickMenuPrivate::get(subMenu1);
+#ifdef HAVE_NATIVE_MENU_SUPPORT
+    QVERIFY(subMenu1Private->handle);
+    QCOMPARE(subMenu1Private->nativeItems.size(), 1);
+#endif
     auto *subMenu1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
     QVERIFY(subMenu1MenuItem);
     COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(0)),
@@ -217,6 +223,9 @@ void tst_NativeMenus::dynamicSubmenus()
         QCOMPARE(subMenuAction1MenuItem->action(), subMenuAction1);
         COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(subMenu1Private->contentData.at(0)),
             subMenuAction1MenuItem);
+#ifdef HAVE_NATIVE_MENU_SUPPORT
+        QCOMPARE(subMenu1Private->nativeItems.size(), 1);
+#endif
     }
 
     // Check that actions can be appended after existing items in the sub-menu.
@@ -257,6 +266,10 @@ void tst_NativeMenus::dynamicSubmenus()
         auto *takenSubMenu = contextMenu->takeMenu(0);
         QCOMPARE(takenSubMenu, subMenu1);
         QCOMPARE(contextMenuPrivate->contentData.size(), 0);
+#ifdef HAVE_NATIVE_MENU_SUPPORT
+        QVERIFY(!subMenu1Private->handle);
+        QCOMPARE(subMenu1Private->nativeItems.size(), 0);
+#endif
 
         // Check that the sub-menu can be added back in to the menu.
         contextMenu->addMenu(takenSubMenu);
@@ -264,6 +277,14 @@ void tst_NativeMenus::dynamicSubmenus()
         auto *subMenu1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
         QVERIFY(subMenu1MenuItem);
         QCOMPARE(subMenu1MenuItem->text(), "subMenu1");
+#ifdef HAVE_NATIVE_MENU_SUPPORT
+        QVERIFY(subMenu1Private->handle);
+        QCOMPARE(subMenu1Private->nativeItems.size(), 3);
+#endif
+        QCOMPARE(subMenu1Private->contentData.size(), 3);
+
+        auto *subMenu1Action0MenuItem = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
+        QVERIFY(subMenu1Action0MenuItem);
     }
 
     // Check that removeMenu works.
