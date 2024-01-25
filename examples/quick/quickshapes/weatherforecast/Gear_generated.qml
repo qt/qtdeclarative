@@ -1,6 +1,5 @@
-// Copyright (C) 2024 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
-
+// Copyright (C) 2023 Framework7
+// SPDX-License-Identifier: MIT
 // Generated from: assets/gear-alt-stroke.svg
 import QtQuick
 import QtQuick.Shapes
