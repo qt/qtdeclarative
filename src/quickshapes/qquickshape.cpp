@@ -520,6 +520,7 @@ void QQuickShapePath::resetFillGradient()
 
 /*!
     \qmlproperty PathHints QtQuick.Shapes::ShapePath::pathHints
+    \since 6.7
 
     This property describes characteristics of the shape. If set, these hints may allow
     optimized rendering. By default, no hints are set. It can be a combination of the following
@@ -1011,12 +1012,15 @@ void QQuickShape::setFillMode(FillMode newFillMode)
 /*!
     \qmlproperty enumeration QtQuick.Shapes::Shape::horizontalAlignment
     \qmlproperty enumeration QtQuick.Shapes::Shape::verticalAlignment
+    \since 6.7
 
- Sets the horizontal and vertical alignment of the shape within the item. By default, the shape is aligned with \c{(0,0)} on the top left corner.
+    Sets the horizontal and vertical alignment of the shape within the item.
+    By default, the shape is aligned with \c{(0,0)} on the top left corner.
 
- The valid values for \c horizontalAlignment are \c Shape.AlignLeft, \c Shape.AlignRight and \c Shape.AlignHCenter.
- The valid values for \c verticalAlignment are \c Shape.AlignTop, \c Shape.AlignBottom
- and \c Shape.AlignVCenter.
+    The valid values for \c horizontalAlignment are \c Shape.AlignLeft,
+    \c Shape.AlignRight and \c Shape.AlignHCenter. The valid values for
+    \c verticalAlignment are \c Shape.AlignTop, \c Shape.AlignBottom and
+    \c Shape.AlignVCenter.
 */
 
 QQuickShape::HAlignment QQuickShape::horizontalAlignment() const
