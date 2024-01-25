@@ -1195,10 +1195,17 @@ static ObjectPropertyResult changeObjectProperty(QV4::Lookup *l, QObject *object
 }
 
 template<bool StrictType = false>
-static ObjectPropertyResult resetObjectProperty(QV4::Lookup *l, QObject *object)
+static ObjectPropertyResult resetObjectProperty(
+        QV4::Lookup *l, QObject *object, QV4::ExecutionEngine *v4)
 {
     return changeObjectProperty<StrictType>(l, object, [&](const QQmlPropertyData *property) {
-        property->resetProperty(object, {});
+        if (property->isResettable()) {
+            property->resetProperty(object, {});
+        } else {
+            v4->throwError(
+                    QLatin1String("Cannot assign [undefined] to ") +
+                    QLatin1String(property->propType().name()));
+        }
     });
 }
 
@@ -1232,11 +1239,18 @@ static ObjectPropertyResult storeFallbackProperty(QV4::Lookup *l, QObject *objec
     });
 }
 
-static ObjectPropertyResult resetFallbackProperty(QV4::Lookup *l, QObject *object)
+static ObjectPropertyResult resetFallbackProperty(
+        QV4::Lookup *l, QObject *object, const QMetaProperty *property, QV4::ExecutionEngine *v4)
 {
     return changeFallbackProperty(l, object, [&](const QMetaObject *metaObject, int coreIndex) {
-        void *args[] = { nullptr };
-        metaObject->metacall(object, QMetaObject::ResetProperty, coreIndex, args);
+        if (property->isResettable()) {
+            void *args[] = { nullptr };
+            metaObject->metacall(object, QMetaObject::ResetProperty, coreIndex, args);
+        } else {
+            v4->throwError(
+                    QLatin1String("Cannot assign [undefined] to ") +
+                    QLatin1String(property->typeName()));
+        }
     });
 }
 
@@ -1313,7 +1327,7 @@ static ObjectPropertyResult storeObjectAsVariant(
         return storeObjectProperty<true>(l, object, variant);
 
     if (!variant->isValid())
-        return resetObjectProperty<true>(l, object);
+        return resetObjectProperty<true>(l, object, v4);
 
     if (isTypeCompatible(variant->metaType(), propType))
         return storeObjectProperty<true>(l, object, variant->data());
@@ -1332,12 +1346,13 @@ static ObjectPropertyResult storeFallbackAsVariant(
             = reinterpret_cast<const QMetaObject *>(l->qobjectFallbackLookup.metaObject - 1);
     Q_ASSERT(metaObject);
 
-    const QMetaType propType = metaObject->property(l->qobjectFallbackLookup.coreIndex).metaType();
+    const QMetaProperty property = metaObject->property(l->qobjectFallbackLookup.coreIndex);
+    const QMetaType propType = property.metaType();
     if (propType == QMetaType::fromType<QVariant>())
         return storeFallbackProperty(l, object, variant);
 
-    if (!propType.isValid())
-        return resetFallbackProperty(l, object);
+    if (!variant->isValid())
+        return resetFallbackProperty(l, object, &property, v4);
 
     if (isTypeCompatible(variant->metaType(), propType))
         return storeFallbackProperty(l, object, variant->data());
@@ -1590,7 +1605,7 @@ void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value, QMetaType 
         if (isTypeCompatible(type, propType)) {
             storeResult = storeObjectProperty(&l, qmlScopeObject, value);
         } else if (isUndefined(value, type)) {
-            storeResult = resetObjectProperty(&l, qmlScopeObject);
+            storeResult = resetObjectProperty(&l, qmlScopeObject, engine->handle());
         } else {
             QVariant var(propType);
             QV4::ExecutionEngine *v4 = engine->handle();
@@ -1605,12 +1620,12 @@ void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value, QMetaType 
     case ObjectLookupResult::Fallback: {
         const QMetaObject *metaObject
                 = reinterpret_cast<const QMetaObject *>(l.qobjectFallbackLookup.metaObject - 1);
-        const QMetaType propType
-                = metaObject->property(l.qobjectFallbackLookup.coreIndex).metaType();
+        const QMetaProperty property = metaObject->property(l.qobjectFallbackLookup.coreIndex);
+        const QMetaType propType = property.metaType();
         if (isTypeCompatible(type, propType)) {
             storeResult = storeFallbackProperty(&l, qmlScopeObject, value);
         } else if (isUndefined(value, type)) {
-            storeResult = resetFallbackProperty(&l, qmlScopeObject);
+            storeResult = resetFallbackProperty(&l, qmlScopeObject, &property, engine->handle());
         } else {
             QVariant var(propType);
             QV4::ExecutionEngine *v4 = engine->handle();

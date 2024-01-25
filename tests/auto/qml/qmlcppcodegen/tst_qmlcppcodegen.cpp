@@ -188,7 +188,10 @@ private slots:
     void registerElimination();
     void registerPropagation();
     void renameAdjust();
+
     void resettableProperty();
+    void resettableProperty_data();
+
     void returnAfterReject();
     void revisions();
     void scopeIdLookup();
@@ -3854,23 +3857,46 @@ void tst_QmlCppCodegen::renameAdjust()
 
 void tst_QmlCppCodegen::resettableProperty()
 {
+    QFETCH(QString, url);
+
     QQmlEngine engine;
-    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/resettable.qml"_s));
+    QQmlComponent c(&engine, QUrl(url));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+            QtWarningMsg, qPrintable(url + u":10:5: Unable to assign [undefined] to double"_s));
+
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
 
-    ResettableProperty *resettable = qobject_cast<ResettableProperty *>(o.data());
-    QVERIFY(resettable);
+    QCOMPARE(o->property("value").toDouble(), 999);
+    QMetaObject::invokeMethod(o.data(), "doReset");
+    QCOMPARE(o->property("value").toDouble(), 0);
 
-    QCOMPARE(resettable->value(), 999);
-    QMetaObject::invokeMethod(resettable, "doReset");
-    QCOMPARE(resettable->value(), 0);
+    o->setProperty("value", double(82));
+    QCOMPARE(o->property("value").toDouble(), 82);
+    QMetaObject::invokeMethod(o.data(), "doReset2");
+    QCOMPARE(o->property("value").toDouble(), 0);
 
-    resettable->setValue(82);
-    QCOMPARE(resettable->value(), 82);
-    QMetaObject::invokeMethod(resettable, "doReset2");
-    QCOMPARE(resettable->value(), 0);
+    QTest::ignoreMessage(
+            QtWarningMsg, qPrintable(url + u":18: Error: Cannot assign [undefined] to double"_s));
+    QCOMPARE(o->property("notResettable").toDouble(), 10);
+    QMetaObject::invokeMethod(o.data(), "doNotReset");
+    QCOMPARE(o->property("notResettable").toDouble(), 10);
+    QCOMPARE(o->property("notResettable2").toDouble(), 0); // not NaN
+
+    o->setObjectName(u"namename"_s);
+    QTest::ignoreMessage(
+            QtWarningMsg, qPrintable(url + u":22: Error: Cannot assign [undefined] to QString"_s));
+    QMetaObject::invokeMethod(o.data(), "aaa");
+    QCOMPARE(o->objectName(), u"namename"_s);
+}
+
+void tst_QmlCppCodegen::resettableProperty_data()
+{
+    QTest::addColumn<QString>("url");
+    QTest::addRow("object lookups") << u"qrc:/qt/qml/TestTypes/resettable.qml"_s;
+    QTest::addRow("fallback lookups") << u"qrc:/qt/qml/TestTypes/fallbackresettable.qml"_s;
 }
 
 void tst_QmlCppCodegen::returnAfterReject()

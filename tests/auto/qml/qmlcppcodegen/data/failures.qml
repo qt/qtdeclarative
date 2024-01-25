@@ -35,12 +35,6 @@ QtObject {
         onPartyStarted: (foozle) => { objectName = foozle }
     }
 
-    signal foo()
-    signal bar()
-
-    // Cannot assign potential undefined
-    onFoo: objectName = self.bar()
-
     property int enumFromGadget1: GadgetWithEnum.CONNECTED + 1
     property int enumFromGadget2: TT2.GadgetWithEnum.CONNECTED + 1
 
