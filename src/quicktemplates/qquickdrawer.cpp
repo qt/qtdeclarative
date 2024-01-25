@@ -391,10 +391,11 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
         // QStyleHints::startDragDistance for dragging. Drawer uses a bit
         // larger threshold to avoid being too eager to steal touch (QTBUG-50045)
         const int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
+        const Qt::Edge effEdge = effectiveEdge();
         if (position > 0 || dragMargin > 0) {
             const bool xOverThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, &point, threshold);
             const bool yOverThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, &point, threshold);
-            if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
+            if (effEdge == Qt::LeftEdge || effEdge == Qt::RightEdge)
                 overThreshold = xOverThreshold && !yOverThreshold;
             else
                 overThreshold = yOverThreshold && !xOverThreshold;
@@ -402,7 +403,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
 
         // Don't be too eager to steal presses outside the drawer (QTBUG-53929)
         if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !contains(movePoint)) {
-            if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
+            if (effEdge == Qt::LeftEdge || effEdge == Qt::RightEdge)
                 overThreshold = qAbs(movePoint.x() - q->width()) < dragMargin;
             else
                 overThreshold = qAbs(movePoint.y() - q->height()) < dragMargin;
