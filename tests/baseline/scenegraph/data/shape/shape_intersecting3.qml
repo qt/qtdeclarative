@@ -20,7 +20,6 @@ Item {
         ListElement { renderer: Shape.CurveRenderer }
     }
 
-    // The last two paths don't work yet
     ListModel {
         id: svgstrings
         ListElement { scaleToFit: 1; offsetX: 20; offsetY: 20; pathString: "M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 M 5 40 L 100 40 L 100 60 L 5 60 Z" }
