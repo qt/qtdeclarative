@@ -67,7 +67,7 @@ public:
     };
     Q_ENUM(TextureFormat)
 
-    QQuickRhiItem(QQuickItem *parent = nullptr);
+    explicit QQuickRhiItem(QQuickItem *parent = nullptr);
     ~QQuickRhiItem();
 
     int sampleCount() const;
