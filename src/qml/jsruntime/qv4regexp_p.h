@@ -66,8 +66,6 @@ struct RegExp : Base {
     int subPatternCount;
     uint flags;
     bool valid;
-    bool jitFailed;
-    quint8 matchCount;
 
     QString flagsAsString() const;
     int captureCount() const { return subPatternCount + 1; }
