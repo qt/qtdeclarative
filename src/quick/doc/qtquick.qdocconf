@@ -55,7 +55,8 @@ depends += \
     qtshadertools \
     qtsvg \
     qmake \
-    qtcmake
+    qtcmake \
+    qtquickeffectmaker
 
 {headerdirs,sourcedirs} += \
     .. \
@@ -107,6 +108,8 @@ navigation.qmltypespage = "Qt Quick QML Types"
 # \svgcolor {#ffdead}
 macro.svgcolor.HTML = "<div style=\"padding:10px;color:#fff;background:\1;\"></div>"
 macro.svgcolor.DocBook = "<db:phrase role=\"color:\1\">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</db:phrase>"
+
+macro.QQEM = "Qt Quick Effect Maker"
 
 # YouTube video thumbnail that show up in offline docs
 {HTML.extraimages,DocBook.extraFiles,qhp.QtQuick.extraFiles} += images/9BcAYDlpuT8.jpg

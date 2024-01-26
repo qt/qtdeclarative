@@ -24,11 +24,11 @@ UIs using simple drag-n-drop gestures that most designers are familiar with.
 It offers UI elements from the Qt Quick and Qt Quick Controls modules, as well
 as integration for custom UI elements.
 
-\section1 Qt Quick Effect Maker
+\section1 Qt Quick Effect Maker (QQEM)
 
-\l{Qt Quick Effect Maker} is a tool for creating shader effects for Qt Quick with
+\l{\QQEM} is a tool for creating shader effects for Qt Quick with
 high productivity and performance. You can run Qt Quick Effect Maker as a
-standalone tool but it is also included in Qt Design Studio.
+standalone tool.
 
 \section1 QML Debugger
 
