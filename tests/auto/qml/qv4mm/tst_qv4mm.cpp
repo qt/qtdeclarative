@@ -10,6 +10,7 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qjsvalue_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qv4identifiertable_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -30,6 +31,7 @@ private slots:
     void accessParentOnDestruction();
     void cleanInternalClasses();
     void createObjectsOnDestruction();
+    void sharedInternalClassDataMarking();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -305,6 +307,50 @@ void tst_qv4mm::createObjectsOnDestruction()
     QVERIFY(obj);
     QCOMPARE(obj->property("numChecked").toInt(), 1000);
     QCOMPARE(obj->property("ok").toBool(), true);
+}
+
+void tst_qv4mm::sharedInternalClassDataMarking()
+{
+    QV4::ExecutionEngine engine;
+    QV4::Scope scope(engine.rootContext());
+    QV4::ScopedObject object(scope, engine.newObject());
+    QVERIFY(!engine.memoryManager->gcBlocked);
+    // no scoped classes, as that would defeat the point of the test
+    // we block the gc instead so that the allocation can't trigger the gc
+    engine.memoryManager->gcBlocked = true;
+    QV4::Heap::String *s = engine.newString(QString::fromLatin1("test"));
+    QV4::PropertyKey id = engine.identifierTable->asPropertyKeyImpl(s);
+    engine.memoryManager->gcBlocked = false;
+    QVERIFY(!id.asStringOrSymbol()->isMarked());
+
+    auto sm = engine.memoryManager->gcStateMachine.get();
+    sm->reset();
+    while (sm->state != QV4::GCState::MarkGlobalObject) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+
+    // simulate partial marking caused by drain due mark stack running out of space
+    // and running out of time during drain phase for complete marking
+    // the last part is necessary for us to find not-already marked name/value pair to put into
+    // the object
+
+    QVERIFY(engine.memoryManager->markStack()->isEmpty());
+    QVERIFY(!id.asStringOrSymbol()->isMarked());
+    {
+
+        // for simplcity's sake we create a new PropertyKey - if gc were actually ongoing that would
+        // already mark it. In practice we would need to retrieve an existing one from an unmarked
+        // object, and then make that object unreachable afterwards.
+        object->put(id, QV4::Value::fromUInt32(42));
+        engine.memoryManager->markStack()->drain();
+        QVERIFY(id.asStringOrSymbol()->isMarked());
+    }
+    gc(engine);
+    // sanity check that we still can lookup the value
+    QV4::ScopedString s2(scope, engine.newString(QString::fromLatin1("test")));
+    auto val = QV4::Value::fromReturnedValue(object->get(s2->toPropertyKey()));
+    QCOMPARE(val.toUInt32(), 42u);
 }
 
 QTEST_MAIN(tst_qv4mm)
