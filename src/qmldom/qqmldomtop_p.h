@@ -412,7 +412,7 @@ private:
                     curValue->currentExposedAt = now;
                     if (curValue->current->isValid()) {
                         curValue->valid = curValue->current;
-                        curValue->validExposedAt = now;
+                        curValue->validExposedAt = std::move(now);
                     }
                     newCurValue = curValue;
                 }

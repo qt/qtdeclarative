@@ -63,7 +63,7 @@ public:
         Dumper(QStringView(string)) {}
 
     template <typename U, if_compatible_dumper<U> = true>
-    Dumper(U f): dumper(f) {}
+    Dumper(U f): dumper(std::move(f)) {}
 
     void operator()(const Sink &s) const { dumper(s); }
 };

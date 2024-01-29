@@ -293,7 +293,7 @@ DomUniverse::LoadResult DomUniverse::load(const ContentWithDate &codeWithDate,
     } else {
         Q_ASSERT(false);
     }
-    return { oldValue, newValue };
+    return { std::move(oldValue), std::move(newValue) };
 }
 
 /*!
@@ -324,7 +324,7 @@ DomUniverse::PreloadResult DomUniverse::preload(const DomItem &univ, const FileT
         if (std::holds_alternative<ErrorMessage>(readResult)) {
             DomItem newValue;
             newValue.addError(std::move(std::get<ErrorMessage>(readResult)));
-            return LoadResult{ DomItem(), newValue }; // read failed, nothing to parse
+            return LoadResult{ DomItem(), std::move(newValue) }; // read failed, nothing to parse
         } else {
             codeWithDate = std::get<ContentWithDate>(readResult);
         }
@@ -1247,7 +1247,8 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
             loadCallback(self.canonicalPath(), DomItem::empty, DomItem::empty);
     }
     if (endCallback)
-        addAllLoadedCallback(self, [p, endCallback](Path, const DomItem &, const DomItem &env) {
+        addAllLoadedCallback(self, [p = std::move(p), endCallback](
+                                           const Path &, const DomItem &, const DomItem &env) {
             DomItem el = env.path(p);
             endCallback(p, el, el);
         });

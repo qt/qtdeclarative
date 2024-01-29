@@ -290,13 +290,14 @@ DomItem OutWriter::restoreWrittenFileItem(const DomItem &fileItem)
     }
 }
 
-DomItem OutWriter::writtenQmlFileItem(const DomItem &fileItem, Path filePath)
+DomItem OutWriter::writtenQmlFileItem(const DomItem &fileItem, const Path &filePath)
 {
     Q_ASSERT(fileItem.internalKind() == DomType::QmlFile);
     auto mutableFile = fileItem.makeCopy(DomItem::CopyOption::EnvDisconnected);
     // QmlFile specific visitor for reformattedScriptExpressions tree
     // lambda function responsible for the update of the initial expression by the formatted one
-    auto exprUpdater = [&mutableFile, filePath](Path p, UpdatedScriptExpression::Tree t) {
+    auto exprUpdater = [&mutableFile, filePath](
+                               const Path &p, const UpdatedScriptExpression::Tree &t) {
         if (std::shared_ptr<ScriptExpression> formattedExpr = t->info().expr) {
             Q_ASSERT(p.mid(0, filePath.length()) == filePath);
             MutableDomItem originalExprItem = mutableFile.path(p.mid(filePath.length()));
@@ -322,13 +323,13 @@ DomItem OutWriter::writtenQmlFileItem(const DomItem &fileItem, Path filePath)
     return mutableFile.item();
 }
 
-DomItem OutWriter::writtenJsFileItem(const DomItem &fileItem, Path filePath)
+DomItem OutWriter::writtenJsFileItem(const DomItem &fileItem, const Path &filePath)
 {
     Q_ASSERT(fileItem.internalKind() == DomType::JsFile);
     auto mutableFile = fileItem.makeCopy(DomItem::CopyOption::EnvDisconnected);
     UpdatedScriptExpression::visitTree(
             reformattedScriptExpressions,
-            [&mutableFile, filePath](Path p, UpdatedScriptExpression::Tree t) {
+            [&mutableFile, filePath](const Path &p, const UpdatedScriptExpression::Tree &t) {
                 if (std::shared_ptr<ScriptExpression> formattedExpr = t->info().expr) {
                     Q_ASSERT(p.mid(0, filePath.length()) == filePath);
                     mutableFile.mutableAs<JsFile>()->setExpression(formattedExpr);
@@ -338,8 +339,9 @@ DomItem OutWriter::writtenJsFileItem(const DomItem &fileItem, Path filePath)
     return mutableFile.item();
 }
 
-void OutWriter::logScriptExprUpdateSkipped(DomItem exprItem, Path exprPath,
-                                           std::shared_ptr<ScriptExpression> formattedExpr)
+void OutWriter::logScriptExprUpdateSkipped(
+        const DomItem &exprItem, const Path &exprPath,
+        const std::shared_ptr<ScriptExpression> &formattedExpr)
 {
     qCWarning(writeOutLog).noquote() << "Skipped update of reformatted ScriptExpression with "
                                         "code:\n---------------\n"

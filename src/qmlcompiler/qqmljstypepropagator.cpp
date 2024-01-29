@@ -1000,7 +1000,7 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
     const QQmlJSScope::ConstPtr varType = m_typeResolver->varType();
     const QQmlJSRegisterContent readType = m_typeResolver->canHoldUndefined(m_state.accumulatorIn())
             ? property.storedIn(varType).castTo(varType)
-            : property;
+            : std::move(property);
     addReadAccumulator(readType);
     addReadRegister(base, callBase);
     m_state.setHasSideEffects(true);

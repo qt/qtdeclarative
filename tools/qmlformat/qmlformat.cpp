@@ -158,7 +158,7 @@ static bool parseFile(const QString &filename, const Options &options)
     if (options.verbose)
         qWarning().noquote() << "Dumping" << filename;
 
-    const auto code = getFileItemOwner(fileItem)->code();
+    const auto &code = getFileItemOwner(fileItem)->code();
     auto lwOptions = composeLwOptions(options, code);
     WriteOutChecks checks = WriteOutCheck::Default;
     //Disable writeOutChecks for some usecases
