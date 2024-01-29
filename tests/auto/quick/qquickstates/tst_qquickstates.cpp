@@ -191,6 +191,7 @@ private slots:
     void rewindAnchorChange();
     void rewindAnchorChangeSize();
     void bindingProperlyRemovedWithTransition();
+    void doNotCrashOnBroken();
 };
 
 void tst_qquickstates::initTestCase()
@@ -2034,6 +2035,21 @@ void tst_qquickstates::bindingProperlyRemovedWithTransition()
 
     item->setProperty("toggle", true);
     QTRY_COMPARE(item->width(), 100);
+}
+
+void tst_qquickstates::doNotCrashOnBroken()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("broken.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> root(c.create());
+    QVERIFY(root);
+    QQuickItem *item = qobject_cast<QQuickItem *>(root.get());
+    QVERIFY(item);
+
+    QQmlListReference states(item, "states");
+    QCOMPARE(states.size(), 1);
+    QCOMPARE(states.at(0), nullptr);
 }
 
 QTEST_MAIN(tst_qquickstates)
