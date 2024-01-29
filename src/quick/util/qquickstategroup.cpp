@@ -181,19 +181,25 @@ void QQuickStateGroupPrivate::replace_states(QQmlListProperty<QQuickState> *list
     if (oldState != state) {
         if (oldState)
             oldState->setStateGroup(nullptr);
-        state->setStateGroup(self);
+
+        if (state)
+            state->setStateGroup(self);
         d->states.replace(index, state);
         if (!oldState || d->currentState == oldState->name())
-            d->setCurrentStateInternal(state->name(), true);
+            d->setCurrentStateInternal(state ? state->name() : QString(), true);
     }
 }
 
 void QQuickStateGroupPrivate::removeLast_states(QQmlListProperty<QQuickState> *list)
 {
     auto *d = static_cast<QQuickStateGroup *>(list->object)->d_func();
-    if (d->currentState == d->states.last()->name())
-        d->setCurrentStateInternal(d->states.size() > 1 ? d->states.first()->name() : QString(), true);
-    d->states.last()->setStateGroup(nullptr);
+    if (QQuickState *last = d->states.last()) {
+        if (d->currentState == last->name()) {
+            QQuickState *first = d->states.size() > 1 ? d->states.first() : nullptr;
+            d->setCurrentStateInternal(first ? first->name() : QString(), true);
+        }
+        last->setStateGroup(nullptr);
+    }
     d->states.removeLast();
 }
 
@@ -304,6 +310,9 @@ void QQuickStateGroup::componentComplete()
     names.reserve(d->states.size());
     for (int ii = 0; ii < d->states.size(); ++ii) {
         QQuickState *state = d->states.at(ii);
+        if (!state)
+            continue;
+
         if (!state->isNamed())
             state->setName(QLatin1String("anonymousState") + QString::number(++d->unnamedCount));
 
@@ -342,7 +351,7 @@ bool QQuickStateGroupPrivate::updateAutoState()
     bool revert = false;
     for (int ii = 0; ii < states.size(); ++ii) {
         QQuickState *state = states.at(ii);
-        if (state->isWhenKnown()) {
+        if (state && state->isWhenKnown()) {
             if (state->isNamed()) {
                 bool whenValue = state->when();
                 const QQmlPropertyIndex whenIndex(state->metaObject()->indexOfProperty("when"));
@@ -477,9 +486,9 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
 
     QQuickState *oldState = nullptr;
     if (!currentState.isEmpty()) {
-        for (int ii = 0; ii < states.size(); ++ii) {
-            if (states.at(ii)->name() == currentState) {
-                oldState = states.at(ii);
+        for (QQuickState *state : std::as_const(states)) {
+            if (state && state->name() == currentState) {
+                oldState = state;
                 break;
             }
         }
@@ -489,9 +498,9 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
     emit q->stateChanged(currentState);
 
     QQuickState *newState = nullptr;
-    for (int ii = 0; ii < states.size(); ++ii) {
-        if (states.at(ii)->name() == currentState) {
-            newState = states.at(ii);
+    for (QQuickState *state : std::as_const(states)) {
+        if (state && state->name() == currentState) {
+            newState = state;
             break;
         }
     }
@@ -513,9 +522,8 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
 QQuickState *QQuickStateGroup::findState(const QString &name) const
 {
     Q_D(const QQuickStateGroup);
-    for (int i = 0; i < d->states.size(); ++i) {
-        QQuickState *state = d->states.at(i);
-        if (state->name() == name)
+    for (QQuickState *state : std::as_const(d->states)) {
+        if (state && state->name() == name)
             return state;
     }
 
