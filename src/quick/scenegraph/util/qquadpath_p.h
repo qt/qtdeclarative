@@ -236,6 +236,7 @@ public:
     QQuadPath dashed(qreal lineWidth, const QList<qreal> &dashPattern, qreal dashOffset = 0) const;
     void splitElementAt(int index);
     bool contains(const QVector2D &point) const;
+    bool contains(const QVector2D &point, int fromIndex, int toIndex) const;
     Element::FillSide fillSideOf(int elementIdx, float elementT) const;
 
     template<typename Func>
@@ -313,6 +314,7 @@ public:
 
 private:
     void addElement(const QVector2D &control, const QVector2D &to, bool isLine = false);
+    void addElement(const Element &e);
     Element::CurvatureFlags coordinateOrderOfElement(const Element &element) const;
 
     friend Q_QUICK_EXPORT QDebug operator<<(QDebug, const QQuadPath &);
@@ -323,6 +325,8 @@ private:
     QVector2D currentPoint;
     QList<Element> m_elements;
     QList<Element> m_childElements;
+
+    friend class QSGCurveProcessor;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuadPath::PathHints);
