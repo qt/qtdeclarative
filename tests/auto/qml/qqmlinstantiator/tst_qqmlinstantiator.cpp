@@ -36,6 +36,8 @@ private slots:
 
     void handlerWithParent();
     void boundDelegateComponent();
+
+    void listDataDestruction();
 };
 
 tst_qqmlinstantiator::tst_qqmlinstantiator()
@@ -306,6 +308,16 @@ void tst_qqmlinstantiator::boundDelegateComponent()
     QCOMPARE(b->objectAt(0)->objectName(), QStringLiteral("root1"));
     QCOMPARE(b->objectAt(1)->objectName(), QStringLiteral("root2"));
     QCOMPARE(b->objectAt(2)->objectName(), QStringLiteral("root3"));
+}
+
+void tst_qqmlinstantiator::listDataDestruction()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("listDataDestruction.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), QLatin1String("A"));
 }
 
 class SingleBoolItemModel : public QAbstractListModel
