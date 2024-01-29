@@ -29,8 +29,11 @@ class QQmlDMListAccessorData : public QQmlDelegateModelItem
     Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged FINAL)
     QT_ANONYMOUS_PROPERTY(QVariant READ modelData WRITE setModelData NOTIFY modelDataChanged)
 public:
-    QQmlDMListAccessorData(const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
-            VDMListDelegateDataType *dataType, int index, int row, int column, const QVariant &value);
+    QQmlDMListAccessorData(
+            const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
+            VDMListDelegateDataType *dataType, int index, int row, int column,
+            const QVariant &value);
+    ~QQmlDMListAccessorData();
 
     QVariant modelData() const
     {
@@ -271,11 +274,6 @@ public:
             listModelItem->setModelData(updatedModelData);
         }
         return true;
-    }
-
-    void objectDestroyed(QObject *) override
-    {
-        release();
     }
 
     void emitAllSignals(QQmlDMListAccessorData *accessor) const;
