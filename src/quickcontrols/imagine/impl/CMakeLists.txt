@@ -9,12 +9,11 @@ set(qml_files
     "OpacityMask.qml"
 )
 
-qt_internal_add_qml_module(qtquickcontrols2imaginestyleimplplugin
+qt_internal_add_qml_module(QuickControls2ImagineStyleImpl
     URI "QtQuick.Controls.Imagine.impl"
     VERSION "${PROJECT_VERSION}"
     CLASS_NAME QtQuickControls2ImagineStyleImplPlugin
     PLUGIN_TARGET qtquickcontrols2imaginestyleimplplugin
-    NO_PLUGIN_OPTIONAL
     QML_FILES
         ${qml_files}
     IMPORTS
@@ -31,7 +30,7 @@ qt_internal_add_qml_module(qtquickcontrols2imaginestyleimplplugin
         Qt::QuickTemplates2Private
 )
 
-qt_internal_add_shaders(qtquickcontrols2imaginestyleimplplugin "qtquickcontrols2imaginestyleimplplugin_shaders"
+qt_internal_add_shaders(QuickControls2ImagineStyleImpl "qtquickcontrols2imaginestyleimplplugin_shaders"
     SILENT
     BATCHABLE
     PRECOMPILE

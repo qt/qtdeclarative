@@ -14,7 +14,7 @@ set(qml_files
     "SwitchIndicator.qml"
 )
 
-qt_internal_add_qml_module(qtquickcontrols2fusionstyleimplplugin
+qt_internal_add_qml_module(QuickControls2FusionStyleImpl
     URI "QtQuick.Controls.Fusion.impl"
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
@@ -22,7 +22,6 @@ qt_internal_add_qml_module(qtquickcontrols2fusionstyleimplplugin
     DEPENDENCIES
         QtQuick/auto
     PLUGIN_TARGET qtquickcontrols2fusionstyleimplplugin
-    NO_PLUGIN_OPTIONAL
     SOURCES
         qquickfusionbusyindicator.cpp qquickfusionbusyindicator_p.h
         qquickfusiondial.cpp qquickfusiondial_p.h

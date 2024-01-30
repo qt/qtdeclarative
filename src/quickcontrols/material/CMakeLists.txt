@@ -120,6 +120,7 @@ qt_internal_add_qml_module(qtquickcontrols2materialstyleplugin
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickControls2ImplPrivate
+        Qt::QuickControls2MaterialStyleImpl
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
