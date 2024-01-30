@@ -36,6 +36,7 @@ private slots:
     void keys();
     void mnemonics();
     void altNavigation();
+    void addRemove_data();
     void addRemove();
     void checkHighlightWhenMenuDismissed();
     void hoverAfterClosingWithEscape();
@@ -675,12 +676,26 @@ void tst_qquickmenubar::altNavigation()
     QVERIFY(editMenuBarMenu->hasActiveFocus());
 }
 
+void tst_qquickmenubar::addRemove_data()
+{
+    QTest::addColumn<QString>("testUrl");
+    QTest::addColumn<bool>("requestNative");
+    QTest::newRow("menuitems, not native") << QStringLiteral("empty.qml") << false;
+    QTest::newRow("menuitems, native") << QStringLiteral("empty.qml") << true;
+}
+
 void tst_qquickmenubar::addRemove()
 {
-    QQmlApplicationEngine engine(testFileUrl("empty.qml"));
+    QFETCH(QString, testUrl);
+    QFETCH(bool, requestNative);
 
-    QScopedPointer<QQuickMenuBar> menuBar(qobject_cast<QQuickMenuBar *>(engine.rootObjects().value(0)));
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", requestNative }});
+    engine.load(testFileUrl(testUrl));
+
+    QQuickMenuBar *menuBar = qobject_cast<QQuickMenuBar *>(engine.rootObjects().value(0));
     QVERIFY(menuBar);
+    QCOMPARE(menuBar->requestNative(), requestNative);
 
     QQmlComponent component(&engine);
     component.setData("import QtQuick.Controls; Menu { }", QUrl());
@@ -696,7 +711,7 @@ void tst_qquickmenubar::addRemove()
     QCOMPARE(menuBarItem1->menu(), menu1.data());
     QCOMPARE(menuBar->itemAt(0), menuBarItem1.data());
 
-    QScopedPointer<QQuickMenu> menu2(qobject_cast<QQuickMenu *>(component.create()));
+    QPointer<QQuickMenu> menu2(qobject_cast<QQuickMenu *>(component.create()));
     QVERIFY(!menu2.isNull());
     menuBar->insertMenu(0, menu2.data());
     QCOMPARE(menuBar->count(), 2);
@@ -718,6 +733,15 @@ void tst_qquickmenubar::addRemove()
     QVERIFY(!menu1.isNull());
     QCoreApplication::sendPostedEvents(menuBarItem1, QEvent::DeferredDelete);
     QVERIFY(menuBarItem1.isNull());
+
+    // check that it's safe to call takeMenu(int) with
+    // an index that is out of range.
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*out of range"));
+    QCOMPARE(menuBar->takeMenu(-1), nullptr);
+    QCOMPARE(menuBar->count(), 1);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*out of range"));
+    QCOMPARE(menuBar->takeMenu(10), nullptr);
+    QCOMPARE(menuBar->count(), 1);
 
     // addMenu(Menu) re-creates the respective item in the menubar
     menuBar->addMenu(menu1.data());

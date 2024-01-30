@@ -53,6 +53,9 @@ public:
     void onItemTriggered();
     void onMenuAboutToHide();
 
+    void insertMenu(int index, QQuickMenu *menu, QQuickItem *delegateItem);
+    QQuickMenu *takeMenu(int index);
+
     QWindow *window() const;
     QPlatformMenuBar *nativeHandle() const;
     QPlatformMenuBar *maybeNativeHandle() const;
