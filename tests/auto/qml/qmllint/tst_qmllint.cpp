@@ -2022,6 +2022,11 @@ void TestQmllint::quickPlugin()
                       12, 30
                 },
                 Message {
+                      u"You should remove any bindings on the \"target\" property and avoid "
+                       "custom-parsed bindings in PropertyChanges."_s,
+                      11, 29
+                },
+                Message {
                       u"Unknown property \"notThere\" in PropertyChanges."_s,
                       13, 31
                 }
