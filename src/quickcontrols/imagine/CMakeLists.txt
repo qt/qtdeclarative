@@ -108,6 +108,7 @@ qt_internal_add_qml_module(qtquickcontrols2imaginestyleplugin
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
+        Qt::QuickControls2ImagineStyleImpl
         Qt::QuickControls2ImplPrivate
         Qt::QuickControls2Private
         Qt::QuickPrivate

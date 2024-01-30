@@ -117,6 +117,7 @@ qt_internal_add_qml_module(qtquickcontrols2fusionstyleplugin
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
+        Qt::QuickControls2FusionStyleImpl
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private

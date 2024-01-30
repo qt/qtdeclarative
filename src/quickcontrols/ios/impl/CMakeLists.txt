@@ -10,11 +10,10 @@ set(qml_files
     "DialogButtonBoxDelegate.qml"
 )
 
-qt_internal_add_qml_module(qtquickcontrols2iosstyleimplplugin
+qt_internal_add_qml_module(QuickControls2IOSStyleImpl
     URI "QtQuick.Controls.iOS.impl"
     VERSION "${PROJECT_VERSION}"
     PLUGIN_TARGET qtquickcontrols2iosstyleimplplugin
-    NO_PLUGIN_OPTIONAL
     SOURCES
         qquickiosstyle.cpp qquickiosstyle_p.h
         qquickioscursorflashtimer_p.h qquickioscursorflashtimer.cpp

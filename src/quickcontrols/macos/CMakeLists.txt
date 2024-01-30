@@ -67,6 +67,7 @@ qt_internal_add_qml_module(qtquickcontrols2macosstyleplugin
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
+        Qt::QuickControls2MacOSStyleImpl
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
