@@ -10,7 +10,6 @@ ApplicationWindow {
     height: 400
 
     property alias contextMenu: contextMenu
-//    property alias buttonMenu: buttonMenu
 
     Menu {
         id: contextMenu
@@ -30,7 +29,8 @@ ApplicationWindow {
 
         Menu {
             id: subMenu
-            objectName: "subMenu"
+            title: "subMenu"
+            objectName: title
 
             Action {
                 objectName: text
@@ -40,17 +40,8 @@ ApplicationWindow {
         }
     }
 
-//    Button {
-//        text: "Menu button"
-
-//        Menu {
-//            id: buttonMenu
-
-//            Action {
-//                objectName: text
-//                text: "buttonMenuAction1"
-//                shortcut: "Z"
-//            }
-//        }
-//    }
+    TapHandler {
+        acceptedButtons: Qt.RightButton
+        onTapped: contextMenu.popup()
+    }
 }

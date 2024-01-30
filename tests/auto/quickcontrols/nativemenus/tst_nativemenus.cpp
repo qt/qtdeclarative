@@ -15,6 +15,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
@@ -48,6 +49,7 @@ private slots:
     void dynamicActions();
     void dynamicSubmenus();
     void menuSeparator();
+    void requestNativeChanges();
 };
 
 tst_NativeMenus::tst_NativeMenus()
@@ -331,6 +333,127 @@ void tst_NativeMenus::menuSeparator()
     auto *subMenuSeparatorNativeItem = subMenuPrivate->nativeItems.at(1);
     QVERIFY(subMenuSeparatorNativeItem);
     QVERIFY(subMenuSeparatorNativeItem->separator());
+#endif
+}
+
+void tst_NativeMenus::requestNativeChanges()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("staticActionsAndSubmenus.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(contextMenu);
+    QVERIFY(contextMenu->requestNative());
+    QCOMPARE(contextMenu->count(), 3);
+    // Sub-menus should respect the value of requestNative of their parents.
+    auto *subMenu = contextMenu->menuAt(2);
+    auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
+    QVERIFY(subMenuPrivate->useNativeMenu());
+#ifdef HAVE_NATIVE_MENU_SUPPORT
+    QVERIFY(subMenuPrivate->usingNativeMenu());
+#else
+    QVERIFY(!subMenuPrivate->usingNativeMenu());
+#endif
+
+    // Ensure that the menu and its sub-menu have enough room to open.
+    if (window->width() / 2 <= contextMenu->width())
+        window->setWidth(contextMenu->width() * 2 + 1);
+    if (window->height() <= contextMenu->height())
+        window->setHeight(contextMenu->height() + 1);
+    QTRY_COMPARE(window->contentItem()->size(), window->size());
+
+    // We can't test that aboutToShow/aboutToHide is emitted for native menus
+    // because when they are shown, the event loop is blocked until they are closed.
+    // So we just check that a native menu is actually in use before going on to test
+    // non-native menus.
+    auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
+#ifdef HAVE_NATIVE_MENU_SUPPORT
+    QVERIFY(contextMenuPrivate->usingNativeMenu());
+#else
+    QVERIFY(!contextMenuPrivate->usingNativeMenu());
+#endif
+    contextMenu->setRequestNative(false);
+    QVERIFY(!contextMenu->requestNative());
+    QVERIFY(!contextMenuPrivate->usingNativeMenu());
+    QVERIFY(!subMenuPrivate->useNativeMenu());
+    QVERIFY(!subMenuPrivate->usingNativeMenu());
+
+    // Check that we can open the menu by right-clicking (or just open it manually
+    // if the platform doesn't support (moving) QCursor).
+    QSignalSpy aboutToShowSpy(contextMenu, &QQuickMenu::aboutToShow);
+    QVERIFY(aboutToShowSpy.isValid());
+    bool couldMoveCursorPos = false;
+    const QPoint cursorPos(1, 1);
+#if QT_CONFIG(cursor)
+    // Try moving the cursor from the current position to test if the platform
+    // supports moving the cursor.
+    const QPoint point = QCursor::pos() + QPoint(1, 1);
+    QCursor::setPos(point);
+    if (QTest::qWaitFor([point]{ return QCursor::pos() == point; })) {
+        couldMoveCursorPos = true;
+        const QPoint globalCursorPos = window->mapToGlobal(cursorPos);
+        QCursor::setPos(globalCursorPos);
+        QTest::mouseClick(window, Qt::RightButton, Qt::NoModifier, cursorPos);
+    }
+#endif
+    if (!couldMoveCursorPos) {
+        contextMenu->setX(cursorPos.x());
+        contextMenu->setY(cursorPos.y());
+        contextMenu->open();
+    }
+    QVERIFY(contextMenu->isVisible());
+    QTRY_VERIFY(contextMenu->isOpened());
+    QCOMPARE(aboutToShowSpy.size(), 1);
+    // Check that it opened at the mouse cursor and actually has menu items.
+    QCOMPARE(contextMenu->x(), cursorPos.x());
+    QCOMPARE(contextMenu->y(), cursorPos.y());
+    auto *action1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+    QVERIFY(action1MenuItem);
+    QCOMPARE(action1MenuItem->text(), "action1");
+
+    // Test that we warn if trying to set requestNative while visible.
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Cannot set requestNative while menu is visible"));
+    contextMenu->setRequestNative(true);
+    // Shouldn't have changed.
+    QVERIFY(!contextMenu->requestNative());
+
+    // Also check the submenu.
+    auto *subAction1MenuItem = qobject_cast<QQuickMenuItem *>(subMenu->itemAt(0));
+    QVERIFY(subAction1MenuItem);
+    QCOMPARE(subAction1MenuItem->text(), "subAction1");
+
+    // Test closing the non-native menu by clicking on an item.
+    QSignalSpy aboutToHideSpy(contextMenu, &QQuickMenu::aboutToHide);
+    QVERIFY(aboutToHideSpy.isValid());
+    QVERIFY(clickButton(action1MenuItem));
+    QVERIFY(!contextMenu->isOpened());
+    QTRY_VERIFY(!contextMenu->isVisible());
+    QCOMPARE(aboutToShowSpy.size(), 1);
+
+    // Although we can't open the native menu, we can at least check that
+    // making the menu native again doesn't e.g. crash.
+    contextMenu->setRequestNative(true);
+    QVERIFY(contextMenuPrivate->useNativeMenu());
+    QVERIFY(subMenuPrivate->useNativeMenu());
+#ifdef HAVE_NATIVE_MENU_SUPPORT
+    QVERIFY(contextMenuPrivate->usingNativeMenu());
+    QVERIFY(subMenuPrivate->usingNativeMenu());
+#else
+    QVERIFY(!contextMenuPrivate->usingNativeMenu());
+    QVERIFY(!subMenuPrivate->usingNativeMenu());
+#endif
+
+    // Check that we warn when requestNative is set on a sub-menu.
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Cannot set requestNative on a sub-menu"));
+    subMenu->setRequestNative(false);
+    QVERIFY(subMenuPrivate->useNativeMenu());
+#ifdef HAVE_NATIVE_MENU_SUPPORT
+    QVERIFY(subMenuPrivate->usingNativeMenu());
+#else
+    QVERIFY(!subMenuPrivate->usingNativeMenu());
 #endif
 }
 

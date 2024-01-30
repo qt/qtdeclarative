@@ -244,19 +244,29 @@ void QQuickMenuPrivate::init()
 bool QQuickMenuPrivate::useNativeMenu() const
 {
     Q_Q(const QQuickMenu);
-    if (requestNative)
-        return true;
+    // If we're a sub-menu or inside a menubar, we need to
+    // respect what our parent has set.
+    QObject *p = q->parent();
+    QQuickMenu *rootMenu = nullptr;
 
-    // If the menu is inside a menubar, and the menubar is
-    // native, the menu needs to be native as well.
-    QQuickItem *p = q->parentItem();
     while (p) {
+        if (auto menu = qobject_cast<QQuickMenu *>(p))
+            rootMenu = menu;
+
         if (auto menuBar = qobject_cast<QQuickMenuBar *>(p))
             return menuBar->requestNative();
-        p = p->parentItem();
+        else if (auto item = qobject_cast<QQuickItem *>(p))
+            p = item->parentItem();
+        else
+            p = p->parent();
     }
 
-    return false;
+    if (rootMenu) {
+        // This is the root parent menu; use its value.
+        return rootMenu->requestNative();
+    }
+
+    return requestNative;
 }
 
 QPlatformMenu *QQuickMenuPrivate::nativeHandle() const
@@ -322,18 +332,14 @@ bool QQuickMenuPrivate::createNativeMenu()
     for (QQuickNativeMenuItem *item : std::as_const(nativeItems))
         handle->insertMenuItem(item->create(), nullptr);
 
-    // TODO: we call setMenu in QQuickNativeMenuItem::create()
-    // for sub-menus. do we also need to do it here?
-//    if (m_menuItem) {
-//        if (QPlatformMenuItem *handle = m_menuItem->create())
-//            handle->setMenu(d->handle);
-//    }
-
     return true;
 }
 
 QString nativeMenuItemListToString(const QList<QQuickNativeMenuItem *> &nativeItems)
 {
+    if (nativeItems.isEmpty())
+        return QStringLiteral("(Empty)");
+
     QString str;
     QTextStream debug(&str);
     for (const auto *nativeItem : nativeItems)
@@ -350,8 +356,9 @@ void QQuickMenuPrivate::syncWithNativeMenu()
     if (!complete || !handle)
         return;
 
-    qCDebug(lcNativeMenu) << "syncWithNativeMenu called on" << q
-        << "complete:" << complete << "visible:" << visible;
+    qCDebug(lcNativeMenu).nospace() << "syncWithNativeMenu called on " << q
+        << " (complete: " << complete << " visible: " << visible << ") - "
+        << "syncing " << nativeItems.size() << " item(s)...";
 
     // TODO: call this function when any of the variables below change
 
@@ -369,23 +376,50 @@ void QQuickMenuPrivate::syncWithNativeMenu()
 //        m_systemTrayIcon->handle()->updateMenu(handle);
 //#endif
 
-    qCDebug(lcNativeMenu) << "syncing" << nativeItems.size() << "item(s)...";
     for (QQuickNativeMenuItem *item : std::as_const(nativeItems)) {
         qCDebug(lcNativeMenu) << "- syncing" << item << "action" << item->action()
             << "sub-menu" << item->subMenu() << item->debugText();
         item->sync();
     }
+
+    qCDebug(lcNativeMenu) << "... finished syncing" << q;
 }
 
-void QQuickMenuPrivate::recursivelyDestroyNativeSubMenus()
-{
-    Q_ASSERT(handle);
+/*!
+    \internal
 
-    for (QQuickNativeMenuItem *item : std::as_const(nativeItems)) {
+    Recursively destroys native sub-menus of \a menu.
+
+    This function checks if each native item in \c menu has a sub-menu,
+    and if so:
+    \list
+    \li Calls itself with that sub-menu
+    \li Resets the item's data (important to avoid accessing a deleted QQuickAction
+        when printing in QQuickNativeMenuItem's destructor)
+    \li Deletes (eventually) the native item
+    \endlist
+
+    Similar (besides the recursion) to removeNativeItem(), except that
+    we can avoid repeated calls to syncWithNativeMenu().
+*/
+void QQuickMenuPrivate::recursivelyDestroyNativeSubMenus(QQuickMenu *menu)
+{
+    auto *menuPrivate = QQuickMenuPrivate::get(menu);
+    Q_ASSERT(menuPrivate->handle);
+    qCDebug(lcNativeMenu) << "recursivelyDestroyNativeSubMenus called with" << menu << "...";
+
+    while (!menuPrivate->nativeItems.isEmpty()) {
+        QQuickNativeMenuItem *item = menuPrivate->nativeItems.takeFirst();
+        qCDebug(lcNativeMenu) << "- taking and destroying" << item->debugText();
         if (QQuickMenu *subMenu = item->subMenu())
-            QQuickMenuPrivate::get(subMenu)->recursivelyDestroyNativeSubMenus();
-        item->clearSubMenu();
+            recursivelyDestroyNativeSubMenus(subMenu);
+        item->reset();
+        item->deleteLater();
     }
+
+    menuPrivate->resetNativeData();
+
+    qCDebug(lcNativeMenu) << "... finished destroying native sub-menus of" << menu;
 }
 
 static QWindow *effectiveWindow(QWindow *window, QPoint *offset)
@@ -455,30 +489,47 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
         QObjectPrivate::connect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
 
-    if (usingNativeMenu()) {
-        std::unique_ptr<QQuickNativeMenuItem> nativeMenuItem(maybeCreateNativeMenuItemFor(item));
-        if (nativeMenuItem) {
-            // It's a MenuItem created from Menu/Action or a MenuSeparator,
-            // and so we were able to create an equivalent QQuickNativeMenuItem for it.
-            if (nativeMenuItem->handle()) {
-                // Having a QQuickNativeMenuItem doesn't mean that we were able to create a native item,
-                // which is why we check the handle above.
-                nativeItems.insert(index, nativeMenuItem.get());
+    if (usingNativeMenu())
+        maybeCreateAndInsertNativeItem(index, item);
+}
 
-                QQuickNativeMenuItem *before = nativeItems.value(index + 1);
-                handle->insertMenuItem(nativeMenuItem->handle(), before ? before->create() : nullptr);
-                qCDebug(lcNativeMenu) << "- inserted native menu item at index" << index
-                    << "before" << (before ? before->debugText() : QStringLiteral("null"));
+void QQuickMenuPrivate::maybeCreateAndInsertNativeItem(int index, QQuickItem *item)
+{
+    Q_Q(QQuickMenu);
+    Q_ASSERT(useNativeMenu());
+    std::unique_ptr<QQuickNativeMenuItem> nativeMenuItem(maybeCreateNativeMenuItemFor(item));
+    if (!nativeMenuItem)
+        return;
 
-                nativeMenuItem.release();
-            } else {
-                // Warn and clean up the pointer.
-                qmlWarning(q) << "Native menu failed to create a native menu item for item at index" << index;
-            }
+    // It's a MenuItem created from Menu/Action or a MenuSeparator,
+    // and so we were able to create an equivalent QQuickNativeMenuItem for it.
+    if (nativeMenuItem->handle()) {
+        // Having a QQuickNativeMenuItem doesn't mean that we were able to create a native item,
+        // which is why we check the handle above.
+        nativeItems.insert(index, nativeMenuItem.get());
+
+        QQuickNativeMenuItem *before = nativeItems.value(index + 1);
+        handle->insertMenuItem(nativeMenuItem->handle(), before ? before->create() : nullptr);
+        qCDebug(lcNativeMenu) << "inserted native menu item at index" << index
+            << "before" << (before ? before->debugText() : QStringLiteral("null"));
+
+        if (nativeMenuItem->subMenu() && QQuickMenuPrivate::get(nativeMenuItem->subMenu())->nativeItems.count()
+                < nativeMenuItem->subMenu()->count()) {
+            // We're inserting a sub-menu item, and it hasn't had native items added yet,
+            // which probably means it's a menu that's been added back in after being removed
+            // with takeMenu(). Sub-menus added for the first time have their native items already
+            // constructed by virtue of contentData_append. Sub-menus that are removed always
+            // have their native items destroyed and removed too.
+            recursivelyCreateNativeMenuItems(nativeMenuItem->subMenu());
         }
 
-        qCDebug(lcNativeMenu) << "- nativeItems now contains the following items:"
+        nativeMenuItem.release();
+
+        qCDebug(lcNativeMenu) << "nativeItems now contains the following items:"
             << nativeMenuItemListToString(nativeItems);
+    } else {
+        // Warn and clean up the pointer.
+        qmlWarning(q) << "Native menu failed to create a native menu item for item at index" << index;
     }
 }
 
@@ -502,24 +553,10 @@ void QQuickMenuPrivate::moveItem(int from, int to)
 */
 void QQuickMenuPrivate::removeItem(int index, QQuickItem *item, DestructionPolicy destructionPolicy)
 {
-    if (usingNativeMenu()) {
-        QQuickNativeMenuItem *nativeItem = nativeItems.takeAt(index);
-        if (destructionPolicy == DestructionPolicy::Destroy) {
-            if (QQuickMenu *subMenu = nativeItem->subMenu())
-                QQuickMenuPrivate::get(subMenu)->recursivelyDestroyNativeSubMenus();
-            nativeItem->clearSubMenu();
-        }
-
-        handle->removeMenuItem(nativeItem->handle());
-        // We call deleteLater on the native item, but our QObject destructor will
-        // synchronously destroy any Actions we own before the native item is destroyed.
-        // In the meantime, QQuickNativeMenuItem code that uses the action could be executed,
-        // so we need to make sure that the native items don't have a reference to the actions,
-        // hence the call to reset().
-        nativeItem->reset();
-        nativeItem->deleteLater();
-        syncWithNativeMenu();
-    }
+    // We are called when destroying menus and sub-menus, and if we check usingNativeMenu() here instead,
+    // it can cause createNativeMenu to be called when it shouldn't be, so check the handle instead.
+    if (maybeNativeHandle())
+        removeNativeItem(index);
 
     contentData.removeOne(item);
 
@@ -540,6 +577,58 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item, DestructionPolic
 
     if (destructionPolicy == DestructionPolicy::Destroy)
         item->deleteLater();
+}
+
+void QQuickMenuPrivate::removeNativeItem(int index)
+{
+    // Either we're still using native menus and are removing item(s),
+    // or we've switched to a non-native menu (hence we can't check usingNativeMenu(),
+    // because that checks requestNative, which could have already been set to false);
+    // either way, we should actually have items to remove before we're called.
+    Q_ASSERT(handle);
+    Q_ASSERT_X(index >= 0 && index < nativeItems.size(), Q_FUNC_INFO, qPrintable(QString::fromLatin1(
+        "index %1 is less than 0 or greater than or equal to %2").arg(index).arg(nativeItems.size())));
+
+    QQuickNativeMenuItem *nativeItem = nativeItems.takeAt(index);
+    qCDebug(lcNativeMenu) << "removing native item" << nativeItem->debugText() << "at index" << index
+        << "from" << q_func() << "...";
+    if (QQuickMenu *subMenu = nativeItem->subMenu())
+        recursivelyDestroyNativeSubMenus(subMenu);
+    nativeItem->clearSubMenu();
+
+    handle->removeMenuItem(nativeItem->handle());
+    // We call deleteLater on the native item, but our QObject destructor will
+    // synchronously destroy any Actions we own before the native item is destroyed.
+    // In the meantime, QQuickNativeMenuItem code that uses the action could be executed,
+    // so we need to make sure that the native items don't have a reference to the actions,
+    // hence the call to reset().
+    nativeItem->reset();
+    nativeItem->deleteLater();
+    syncWithNativeMenu();
+
+    qCDebug(lcNativeMenu).nospace() << "... after removing item at index " << index
+        << ", nativeItems now contains the following items: " << nativeMenuItemListToString(nativeItems);
+}
+
+void QQuickMenuPrivate::resetNativeData()
+{
+    qCDebug(lcNativeMenu) << "resetNativeData called on" << q_func();
+    handle.reset();
+    triedToCreateNativeMenu = false;
+}
+
+void QQuickMenuPrivate::recursivelyCreateNativeMenuItems(QQuickMenu *menu)
+{
+    auto *menuPrivate = QQuickMenuPrivate::get(menu);
+    qCDebug(lcNativeMenu) << "recursively creating" << menuPrivate->contentModel->count()
+        << "menu item(s) for" << menu;
+    for (int i = 0; i < menuPrivate->contentModel->count(); ++i) {
+        QQuickItem *item = menu->itemAt(i);
+        menuPrivate->maybeCreateAndInsertNativeItem(i, item);
+        auto *menuItem = qobject_cast<QQuickMenuItem *>(item);
+        if (menuItem && menuItem->subMenu())
+            recursivelyCreateNativeMenuItems(menuItem->subMenu());
+    }
 }
 
 QQuickNativeMenuItem *QQuickMenuPrivate::maybeCreateNativeMenuItemFor(QQuickItem *item)
@@ -1526,8 +1615,35 @@ void QQuickMenu::setRequestNative(bool native)
     if (d->requestNative == native)
         return;
 
+    if (isVisible()) {
+        qmlWarning(this) << "Cannot set requestNative while menu is visible";
+        return;
+    }
+
+    if (d->parentMenu) {
+        qmlWarning(this) << "Cannot set requestNative on a sub-menu";
+        return;
+    }
+
     d->requestNative = native;
-    // TODO: do stuff
+
+    if (d->usingNativeMenu() && !native) {
+        // Switch to a non-native menu.
+        const int qtyItemsToRemove = d->nativeItems.size();
+        Q_ASSERT(count() == qtyItemsToRemove);
+        for (int i = 0; i < qtyItemsToRemove; ++i)
+            d->removeNativeItem(0);
+        Q_ASSERT(d->nativeItems.isEmpty());
+
+        // removeNativeItem will take care of destroying sub-menus and resetting their native data,
+        // but as the root menu, we have to take care of our own.
+        d->resetNativeData();
+    } else {
+        Q_ASSERT(d->nativeItems.isEmpty());
+        if (d->usingNativeMenu())
+            d->recursivelyCreateNativeMenuItems(this);
+    }
+
     emit requestNativeChanged();
 }
 

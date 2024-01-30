@@ -104,10 +104,10 @@ QPlatformMenuItem *QQuickNativeMenuItem::handle() const
 
 QPlatformMenuItem *QQuickNativeMenuItem::create()
 {
-    qCDebug(lcNativeMenuItem) << "create called on" << debugText() << "m_handle" << m_handle.get();
     if (m_handle)
         return m_handle.get();
 
+    qCDebug(lcNativeMenuItem) << "create called on" << debugText() << "m_handle" << m_handle.get();
     auto *parentMenuPrivate = QQuickMenuPrivate::get(m_parentMenu);
     m_handle.reset(parentMenuPrivate->handle->createMenuItem());
 
@@ -177,6 +177,7 @@ void QQuickNativeMenuItem::sync()
 
 void QQuickNativeMenuItem::reset()
 {
+    qCDebug(lcNativeMenuItem) << "reset called on" << debugText();
     m_parentMenu = nullptr;
     m_subMenu = nullptr;
     m_action = nullptr;
@@ -229,7 +230,13 @@ void QQuickNativeMenuItem::removeShortcut()
 
 QString QQuickNativeMenuItem::debugText() const
 {
-    return m_action ? m_action->text() : (m_subMenu ? m_subMenu->title() : QStringLiteral("(No text)"));
+    if (m_action)
+        return m_action->text().isEmpty() ? QStringLiteral("(No action text)") : m_action->text();
+
+    if (m_subMenu)
+        return m_subMenu->title().isEmpty() ? QStringLiteral("(No menu title)") : m_subMenu->title();
+
+    return QStringLiteral("(Unknown)");
 }
 
 QT_END_NAMESPACE

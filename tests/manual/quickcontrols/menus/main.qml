@@ -30,6 +30,8 @@ ApplicationWindow {
     }
 
     menuBar: MenuBar {
+        requestNative: requestNativeAction.checked
+
         Menu {
             title: qsTr("Edit")
 
@@ -45,15 +47,17 @@ ApplicationWindow {
                 text: qsTr("Paste")
                 enabled: textArea.activeFocus
             }
+        }
 
-    //        MenuSeparator { }
+        Menu {
+            title: qsTr("Options")
 
-    //        Menu {
-    //            title: "Find/Replace"
-    //            Action { text: "Find Next" }
-    //            Action { text: "Find Previous" }
-    //            Action { text: "Replace" }
-    //        }
+            Action {
+                id: requestNativeAction
+                text: qsTr("Request native")
+                checkable: true
+                checked: true
+            }
         }
     }
 
@@ -121,7 +125,7 @@ ApplicationWindow {
             TapHandler {
                 objectName: "textAreaTapHandler"
                 acceptedButtons: Qt.RightButton
-                onTapped: editContextMenu.open()
+                onTapped: editContextMenu.popup()
             }
         }
     }
@@ -129,7 +133,7 @@ ApplicationWindow {
     TapHandler {
         objectName: "backgroundTapHandler"
         acceptedButtons: Qt.RightButton
-        onTapped: backgroundContextMenu.open()
+        onTapped: backgroundContextMenu.popup()
     }
 
     Component {
@@ -146,6 +150,7 @@ ApplicationWindow {
 
     Menu {
         id: backgroundContextMenu
+        requestNative: requestNativeAction.checked
 
         function appendAction() {
             let action = actionComponent.createObject(null, { text: qsTr("Extra context menu item") })
@@ -229,6 +234,7 @@ ApplicationWindow {
 
     Menu {
         id: editContextMenu
+        requestNative: requestNativeAction.checked
 
         ContextAction {
             text: qsTr("Cut")

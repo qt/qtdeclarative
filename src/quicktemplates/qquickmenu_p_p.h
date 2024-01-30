@@ -51,11 +51,12 @@ public:
     bool usingNativeMenu();
     bool createNativeMenu();
     void syncWithNativeMenu();
-    void recursivelyDestroyNativeSubMenus();
+    static void recursivelyDestroyNativeSubMenus(QQuickMenu *menu);
     void setNativeMenuVisible(bool visible);
 
     QQuickItem *itemAt(int index) const;
     void insertItem(int index, QQuickItem *item);
+    void maybeCreateAndInsertNativeItem(int index, QQuickItem *item);
     void moveItem(int from, int to);
     enum class DestructionPolicy {
         Destroy,
@@ -63,7 +64,10 @@ public:
     };
     void removeItem(int index, QQuickItem *item,
         DestructionPolicy destructionPolicy = DestructionPolicy::DoNotDestroy);
+    void removeNativeItem(int index);
+    void resetNativeData();
 
+    static void recursivelyCreateNativeMenuItems(QQuickMenu *menu);
     QQuickNativeMenuItem *maybeCreateNativeMenuItemFor(QQuickItem *item);
 
     QQuickItem *beginCreateItem();
