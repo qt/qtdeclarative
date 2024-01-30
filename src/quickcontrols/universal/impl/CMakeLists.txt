@@ -11,7 +11,7 @@ set(qml_files
     "SwitchIndicator.qml"
 )
 
-qt_internal_add_qml_module(qtquickcontrols2universalstyleimplplugin
+qt_internal_add_qml_module(QuickControls2UniversalStyleImpl
     URI "QtQuick.Controls.Universal.impl"
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
@@ -19,7 +19,6 @@ qt_internal_add_qml_module(qtquickcontrols2universalstyleimplplugin
     DEPENDENCIES
         QtQuick/auto
     PLUGIN_TARGET qtquickcontrols2universalstyleimplplugin
-    NO_PLUGIN_OPTIONAL
     SOURCES
         qquickuniversalbusyindicator.cpp qquickuniversalbusyindicator_p.h
         qquickuniversalfocusrectangle.cpp qquickuniversalfocusrectangle_p.h

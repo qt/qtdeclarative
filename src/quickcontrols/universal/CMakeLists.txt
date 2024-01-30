@@ -119,6 +119,7 @@ qt_internal_add_qml_module(qtquickcontrols2universalstyleplugin
         Qt::QmlPrivate
         Qt::QuickControls2ImplPrivate
         Qt::QuickControls2Private
+        Qt::QuickControls2UniversalStyleImpl
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
 )
