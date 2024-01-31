@@ -19,7 +19,7 @@ namespace Dom {
 
 using namespace AST;
 
-class Rewriter : protected BaseVisitor
+class Rewriter final : protected JSVisitor
 {
     OutWriter &lw;
     std::shared_ptr<AstComments> comments;
@@ -90,125 +90,6 @@ protected:
             lnAcceptIndented(ast);
             return false;
         }
-    }
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
-    // we are not supposed to handle the ui
-    bool visit(UiPragmaValueList *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-#endif
-    bool visit(UiPragma *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiEnumDeclaration *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiEnumMemberList *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiImport *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiObjectDefinition *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiObjectInitializer *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiParameterList *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiPublicMember *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiObjectBinding *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiScriptBinding *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiArrayBinding *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiHeaderItemList *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiObjectMemberList *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiArrayMemberList *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiQualifiedId *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiProgram *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiSourceElement *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiVersionSpecifier *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiInlineComponent *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiAnnotation *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiAnnotationList *) override
-    {
-        Q_ASSERT(false);
-        return false;
-    }
-    bool visit(UiRequired *) override
-    {
-        Q_ASSERT(false);
-        return false;
     }
 
     bool visit(ThisExpression *ast) override
@@ -995,19 +876,16 @@ protected:
     }
 
     // to check
-    bool visit(TypeExpression *) override { return true; }
     bool visit(SuperLiteral *) override
     {
         out("super");
         return true;
     }
-    bool visit(PatternProperty *) override { return true; }
     bool visit(ComputedPropertyName *) override
     {
         out("[");
         return true;
     }
-    bool visit(TaggedTemplate *) override { return true; }
     bool visit(Expression *el) override
     {
         accept(el->left);
@@ -1021,8 +899,6 @@ protected:
             postOps[el->expression].append([this]() { out(";"); });
         return true;
     }
-    bool visit(YieldExpression *) override { return true; }
-    bool visit(ClassExpression *) override { return true; }
 
     // Return false because we want to omit default function calls in accept0 implementation.
     bool visit(ClassDeclaration *ast) override
@@ -1078,142 +954,7 @@ protected:
         return false;
     }
 
-    bool visit(ClassElementList *) override { return true; }
-    bool visit(Program *) override { return true; }
-    bool visit(NameSpaceImport *) override { return true; }
-    bool visit(ImportSpecifier *) override { return true; }
-    bool visit(ImportsList *) override { return true; }
-    bool visit(NamedImports *) override { return true; }
-    bool visit(FromClause *) override { return true; }
-    bool visit(ImportClause *) override { return true; }
-    bool visit(ImportDeclaration *) override { return true; }
-    bool visit(ExportSpecifier *) override { return true; }
-    bool visit(ExportsList *) override { return true; }
-    bool visit(ExportClause *) override { return true; }
-    bool visit(ExportDeclaration *) override { return true; }
-    bool visit(ESModule *) override { return true; }
-    bool visit(DebuggerStatement *) override { return true; }
-    bool visit(Type *) override { return true; }
-    bool visit(TypeAnnotation *) override { return true; }
-
-    // overridden to use BasicVisitor (and ensure warnings about new added AST)
-    void endVisit(UiProgram *) override { }
-    void endVisit(UiImport *) override { }
-    void endVisit(UiHeaderItemList *) override { }
-#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
-    void endVisit(UiPragmaValueList *) override { }
-#endif
-    void endVisit(UiPragma *) override { }
-    void endVisit(UiPublicMember *) override { }
-    void endVisit(UiSourceElement *) override { }
-    void endVisit(UiObjectDefinition *) override { }
-    void endVisit(UiObjectInitializer *) override { }
-    void endVisit(UiObjectBinding *) override { }
-    void endVisit(UiScriptBinding *) override { }
-    void endVisit(UiArrayBinding *) override { }
-    void endVisit(UiParameterList *) override { }
-    void endVisit(UiObjectMemberList *) override { }
-    void endVisit(UiArrayMemberList *) override { }
-    void endVisit(UiQualifiedId *) override { }
-    void endVisit(UiEnumDeclaration *) override { }
-    void endVisit(UiEnumMemberList *) override { }
-    void endVisit(UiVersionSpecifier *) override { }
-    void endVisit(UiInlineComponent *) override { }
-    void endVisit(UiAnnotation *) override { }
-    void endVisit(UiAnnotationList *) override { }
-    void endVisit(UiRequired *) override { }
-    void endVisit(TypeExpression *) override { }
-    void endVisit(ThisExpression *) override { }
-    void endVisit(IdentifierExpression *) override { }
-    void endVisit(NullExpression *) override { }
-    void endVisit(TrueLiteral *) override { }
-    void endVisit(FalseLiteral *) override { }
-    void endVisit(SuperLiteral *) override { }
-    void endVisit(StringLiteral *) override { }
-    void endVisit(TemplateLiteral *) override { }
-    void endVisit(NumericLiteral *) override { }
-    void endVisit(RegExpLiteral *) override { }
-    void endVisit(ArrayPattern *) override { }
-    void endVisit(ObjectPattern *) override { }
-    void endVisit(PatternElementList *) override { }
-    void endVisit(PatternPropertyList *) override { }
-    void endVisit(PatternElement *) override { }
-    void endVisit(PatternProperty *) override { }
-    void endVisit(Elision *) override { }
-    void endVisit(NestedExpression *) override { }
-    void endVisit(IdentifierPropertyName *) override { }
-    void endVisit(StringLiteralPropertyName *) override { }
-    void endVisit(NumericLiteralPropertyName *) override { }
     void endVisit(ComputedPropertyName *) override { out("]"); }
-    void endVisit(ArrayMemberExpression *) override { }
-    void endVisit(FieldMemberExpression *) override { }
-    void endVisit(TaggedTemplate *) override { }
-    void endVisit(NewMemberExpression *) override { }
-    void endVisit(NewExpression *) override { }
-    void endVisit(CallExpression *) override { }
-    void endVisit(ArgumentList *) override { }
-    void endVisit(PostIncrementExpression *) override { }
-    void endVisit(PostDecrementExpression *) override { }
-    void endVisit(DeleteExpression *) override { }
-    void endVisit(VoidExpression *) override { }
-    void endVisit(TypeOfExpression *) override { }
-    void endVisit(PreIncrementExpression *) override { }
-    void endVisit(PreDecrementExpression *) override { }
-    void endVisit(UnaryPlusExpression *) override { }
-    void endVisit(UnaryMinusExpression *) override { }
-    void endVisit(TildeExpression *) override { }
-    void endVisit(NotExpression *) override { }
-    void endVisit(BinaryExpression *) override { }
-    void endVisit(ConditionalExpression *) override { }
-    void endVisit(Expression *) override { }
-    void endVisit(Block *) override { }
-    void endVisit(StatementList *) override { }
-    void endVisit(VariableStatement *) override { }
-    void endVisit(VariableDeclarationList *) override { }
-    void endVisit(EmptyStatement *) override { }
-    void endVisit(ExpressionStatement *) override { }
-    void endVisit(IfStatement *) override { }
-    void endVisit(DoWhileStatement *) override { }
-    void endVisit(WhileStatement *) override { }
-    void endVisit(ForStatement *) override { }
-    void endVisit(ForEachStatement *) override { }
-    void endVisit(ContinueStatement *) override { }
-    void endVisit(BreakStatement *) override { }
-    void endVisit(ReturnStatement *) override { }
-    void endVisit(YieldExpression *) override { }
-    void endVisit(WithStatement *) override { }
-    void endVisit(SwitchStatement *) override { }
-    void endVisit(CaseBlock *) override { }
-    void endVisit(CaseClauses *) override { }
-    void endVisit(CaseClause *) override { }
-    void endVisit(DefaultClause *) override { }
-    void endVisit(LabelledStatement *) override { }
-    void endVisit(ThrowStatement *) override { }
-    void endVisit(TryStatement *) override { }
-    void endVisit(Catch *) override { }
-    void endVisit(Finally *) override { }
-    void endVisit(FunctionDeclaration *) override { }
-    void endVisit(FunctionExpression *) override { }
-    void endVisit(FormalParameterList *) override { }
-    void endVisit(ClassExpression *) override { }
-    void endVisit(ClassDeclaration *) override { }
-    void endVisit(ClassElementList *) override { }
-    void endVisit(Program *) override { }
-    void endVisit(NameSpaceImport *) override { }
-    void endVisit(ImportSpecifier *) override { }
-    void endVisit(ImportsList *) override { }
-    void endVisit(NamedImports *) override { }
-    void endVisit(FromClause *) override { }
-    void endVisit(ImportClause *) override { }
-    void endVisit(ImportDeclaration *) override { }
-    void endVisit(ExportSpecifier *) override { }
-    void endVisit(ExportsList *) override { }
-    void endVisit(ExportClause *) override { }
-    void endVisit(ExportDeclaration *) override { }
-    void endVisit(ESModule *) override { }
-    void endVisit(DebuggerStatement *) override { }
-    void endVisit(Type *) override { }
-    void endVisit(TypeAnnotation *) override { }
 
     void throwRecursionDepthError() override
     {
