@@ -2542,6 +2542,13 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
         }
     }
 
+    if (!(m_error->isValid() && m_error->isError())
+        && instr != QV4::Moth::Instr::Type::DeadTemporalZoneCheck) {
+        // An instruction needs to have side effects or write to another register otherwise it's a
+        // noop. DeadTemporalZoneCheck is not needed by the compiler and is ignored.
+        Q_ASSERT(m_state.hasSideEffects() || m_state.changedRegisterIndex() != -1);
+    }
+
     if (m_state.changedRegisterIndex() != InvalidRegister) {
         Q_ASSERT(m_error->isValid() || m_state.changedRegister().isValid());
         VirtualRegister &r = m_state.registers[m_state.changedRegisterIndex()];
