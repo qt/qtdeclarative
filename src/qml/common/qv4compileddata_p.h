@@ -707,6 +707,8 @@ struct Binding
     }
     bool evaluatesToString() const { return type() == Type_String || isTranslationBinding(); }
 
+    bool isNumberBinding() const { return type() == Type_Number; }
+
     bool valueAsBoolean() const
     {
         if (type() == Type_Boolean)
