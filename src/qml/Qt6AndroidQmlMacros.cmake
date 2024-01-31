@@ -1,10 +1,11 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
-# The function collects qml root paths and sets the QT_QML_ROOT_PATH property to the ${target}
-# based on the provided qml source files.
+# The function collects qml root paths and sets the _qt_internal_qml_root_path property to the
+# ${target} based on the provided qml source files. _qt_internal_qml_root_path is used on purpose
+# to not trigger the the QTP0002 warning without user intention.
 function(_qt_internal_collect_qml_root_paths target)
-    get_target_property(qml_root_paths ${target} QT_QML_ROOT_PATH)
+    get_target_property(qml_root_paths ${target} _qt_internal_qml_root_path)
     if(NOT qml_root_paths)
         set(qml_root_paths "")
     endif()
@@ -20,7 +21,7 @@ function(_qt_internal_collect_qml_root_paths target)
     endforeach()
 
     list(REMOVE_DUPLICATES qml_root_paths)
-    set_target_properties(${target} PROPERTIES QT_QML_ROOT_PATH "${qml_root_paths}")
+    set_target_properties(${target} PROPERTIES _qt_internal_qml_root_path "${qml_root_paths}")
 endfunction()
 
 # The function extracts the required QML properties from the 'target' and
