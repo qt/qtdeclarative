@@ -24,7 +24,8 @@ SUBDIRS =   quick-accessibility \
             window \
             particles \
             itemvariablerefreshrate \
-            multieffect
+            multieffect \
+            quickshapes
 
 #OpenGL Support Required
 qtConfig(opengl(es1|es2)?) {
