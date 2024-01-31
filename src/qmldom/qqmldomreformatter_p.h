@@ -27,19 +27,12 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-class Rewriter final : protected AST::JSVisitor
+class ScriptFormatter final : protected AST::JSVisitor
 {
-    OutWriter &lw;
-    std::shared_ptr<AstComments> comments;
-    std::function<QStringView(SourceLocation)> loc2Str;
-    QHash<AST::Node *, QList<std::function<void()>>> postOps;
-    int expressionDepth = 0;
-
-    bool addSemicolons() const { return expressionDepth > 0; }
-
 public:
-    Rewriter(OutWriter &lw, const std::shared_ptr<AstComments> &comments,
-             const std::function<QStringView(SourceLocation)> &loc2Str, AST::Node *node)
+    // TODO QTBUG-121988
+    ScriptFormatter(OutWriter &lw, const std::shared_ptr<AstComments> &comments,
+                    const std::function<QStringView(SourceLocation)> &loc2Str, AST::Node *node)
         : lw(lw), comments(comments), loc2Str(loc2Str)
     {
         accept(node);
@@ -187,6 +180,15 @@ protected:
     void endVisit(AST::ComputedPropertyName *) override;
 
     void throwRecursionDepthError() override;
+
+private:
+    bool addSemicolons() const { return expressionDepth > 0; }
+
+    OutWriter &lw;
+    std::shared_ptr<AstComments> comments;
+    std::function<QStringView(SourceLocation)> loc2Str;
+    QHash<AST::Node *, QList<std::function<void()>>> postOps;
+    int expressionDepth = 0;
 };
 
 QMLDOM_EXPORT void reformatAst(

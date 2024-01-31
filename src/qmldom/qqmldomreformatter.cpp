@@ -19,7 +19,7 @@ namespace Dom {
 
 using namespace AST;
 
-bool Rewriter::preVisit(Node *n)
+bool ScriptFormatter::preVisit(Node *n)
 {
     if (CommentedElement *c = comments->commentForNode(n)) {
         c->writePre(lw);
@@ -27,7 +27,7 @@ bool Rewriter::preVisit(Node *n)
     }
     return true;
 }
-void Rewriter::postVisit(Node *n)
+void ScriptFormatter::postVisit(Node *n)
 {
     for (auto &op : postOps[n]) {
         op();
@@ -35,7 +35,7 @@ void Rewriter::postVisit(Node *n)
     postOps.remove(n);
 }
 
-void Rewriter::lnAcceptIndented(Node *node)
+void ScriptFormatter::lnAcceptIndented(Node *node)
 {
     int indent = lw.increaseIndent(1);
     lw.ensureNewline();
@@ -43,7 +43,7 @@ void Rewriter::lnAcceptIndented(Node *node)
     lw.decreaseIndent(1, indent);
 }
 
-bool Rewriter::acceptBlockOrIndented(Node *ast, bool finishWithSpaceOrNewline)
+bool ScriptFormatter::acceptBlockOrIndented(Node *ast, bool finishWithSpaceOrNewline)
 {
     if (cast<Block *>(ast)) {
         out(" ");
@@ -59,7 +59,7 @@ bool Rewriter::acceptBlockOrIndented(Node *ast, bool finishWithSpaceOrNewline)
     }
 }
 
-void Rewriter::outputScope(VariableScope scope)
+void ScriptFormatter::outputScope(VariableScope scope)
 {
     switch (scope) {
     case VariableScope::Const:
@@ -76,34 +76,34 @@ void Rewriter::outputScope(VariableScope scope)
     }
 }
 
-bool Rewriter::visit(ThisExpression *ast)
+bool ScriptFormatter::visit(ThisExpression *ast)
 {
     out(ast->thisToken);
     return true;
 }
 
-bool Rewriter::visit(NullExpression *ast)
+bool ScriptFormatter::visit(NullExpression *ast)
 {
     out(ast->nullToken);
     return true;
 }
-bool Rewriter::visit(TrueLiteral *ast)
+bool ScriptFormatter::visit(TrueLiteral *ast)
 {
     out(ast->trueToken);
     return true;
 }
-bool Rewriter::visit(FalseLiteral *ast)
+bool ScriptFormatter::visit(FalseLiteral *ast)
 {
     out(ast->falseToken);
     return true;
 }
 
-bool Rewriter::visit(IdentifierExpression *ast)
+bool ScriptFormatter::visit(IdentifierExpression *ast)
 {
     out(ast->identifierToken);
     return true;
 }
-bool Rewriter::visit(StringLiteral *ast)
+bool ScriptFormatter::visit(StringLiteral *ast)
 {
     // correctly handle multiline literals
     if (ast->literalToken.length == 0)
@@ -119,18 +119,18 @@ bool Rewriter::visit(StringLiteral *ast)
     }
     return true;
 }
-bool Rewriter::visit(NumericLiteral *ast)
+bool ScriptFormatter::visit(NumericLiteral *ast)
 {
     out(ast->literalToken);
     return true;
 }
-bool Rewriter::visit(RegExpLiteral *ast)
+bool ScriptFormatter::visit(RegExpLiteral *ast)
 {
     out(ast->literalToken);
     return true;
 }
 
-bool Rewriter::visit(ArrayPattern *ast)
+bool ScriptFormatter::visit(ArrayPattern *ast)
 {
     out(ast->lbracketToken);
     int baseIndent = lw.increaseIndent(1);
@@ -149,7 +149,7 @@ bool Rewriter::visit(ArrayPattern *ast)
     return false;
 }
 
-bool Rewriter::visit(ObjectPattern *ast)
+bool ScriptFormatter::visit(ObjectPattern *ast)
 {
     out(ast->lbraceToken);
     ++expressionDepth;
@@ -162,7 +162,7 @@ bool Rewriter::visit(ObjectPattern *ast)
     return false;
 }
 
-bool Rewriter::visit(PatternElementList *ast)
+bool ScriptFormatter::visit(PatternElementList *ast)
 {
     for (PatternElementList *it = ast; it; it = it->next) {
         const bool isObjectInitializer =
@@ -185,7 +185,7 @@ bool Rewriter::visit(PatternElementList *ast)
     return false;
 }
 
-bool Rewriter::visit(PatternPropertyList *ast)
+bool ScriptFormatter::visit(PatternPropertyList *ast)
 {
     for (PatternPropertyList *it = ast; it; it = it->next) {
         PatternProperty *assignment = AST::cast<PatternProperty *>(it->property);
@@ -245,7 +245,7 @@ bool Rewriter::visit(PatternPropertyList *ast)
     return false;
 }
 
-bool Rewriter::visit(NestedExpression *ast)
+bool ScriptFormatter::visit(NestedExpression *ast)
 {
     out(ast->lparenToken);
     int baseIndent = lw.increaseIndent(1);
@@ -255,23 +255,23 @@ bool Rewriter::visit(NestedExpression *ast)
     return false;
 }
 
-bool Rewriter::visit(IdentifierPropertyName *ast)
+bool ScriptFormatter::visit(IdentifierPropertyName *ast)
 {
     out(ast->id.toString());
     return true;
 }
-bool Rewriter::visit(StringLiteralPropertyName *ast)
+bool ScriptFormatter::visit(StringLiteralPropertyName *ast)
 {
     out(ast->propertyNameToken);
     return true;
 }
-bool Rewriter::visit(NumericLiteralPropertyName *ast)
+bool ScriptFormatter::visit(NumericLiteralPropertyName *ast)
 {
     out(QString::number(ast->id));
     return true;
 }
 
-bool Rewriter::visit(TemplateLiteral *ast)
+bool ScriptFormatter::visit(TemplateLiteral *ast)
 {
     // correctly handle multiline literals
     if (ast->literalToken.length != 0) {
@@ -289,7 +289,7 @@ bool Rewriter::visit(TemplateLiteral *ast)
     return true;
 }
 
-bool Rewriter::visit(ArrayMemberExpression *ast)
+bool ScriptFormatter::visit(ArrayMemberExpression *ast)
 {
     accept(ast->base);
     out(ast->lbracketToken);
@@ -300,7 +300,7 @@ bool Rewriter::visit(ArrayMemberExpression *ast)
     return false;
 }
 
-bool Rewriter::visit(FieldMemberExpression *ast)
+bool ScriptFormatter::visit(FieldMemberExpression *ast)
 {
     accept(ast->base);
     out(ast->dotToken);
@@ -308,7 +308,7 @@ bool Rewriter::visit(FieldMemberExpression *ast)
     return false;
 }
 
-bool Rewriter::visit(NewMemberExpression *ast)
+bool ScriptFormatter::visit(NewMemberExpression *ast)
 {
     out("new "); // ast->newToken
     accept(ast->base);
@@ -318,14 +318,14 @@ bool Rewriter::visit(NewMemberExpression *ast)
     return false;
 }
 
-bool Rewriter::visit(NewExpression *ast)
+bool ScriptFormatter::visit(NewExpression *ast)
 {
     out("new "); // ast->newToken
     accept(ast->expression);
     return false;
 }
 
-bool Rewriter::visit(CallExpression *ast)
+bool ScriptFormatter::visit(CallExpression *ast)
 {
     accept(ast->base);
     out(ast->lparenToken);
@@ -334,84 +334,84 @@ bool Rewriter::visit(CallExpression *ast)
     return false;
 }
 
-bool Rewriter::visit(PostIncrementExpression *ast)
+bool ScriptFormatter::visit(PostIncrementExpression *ast)
 {
     accept(ast->base);
     out(ast->incrementToken);
     return false;
 }
 
-bool Rewriter::visit(PostDecrementExpression *ast)
+bool ScriptFormatter::visit(PostDecrementExpression *ast)
 {
     accept(ast->base);
     out(ast->decrementToken);
     return false;
 }
 
-bool Rewriter::visit(PreIncrementExpression *ast)
+bool ScriptFormatter::visit(PreIncrementExpression *ast)
 {
     out(ast->incrementToken);
     accept(ast->expression);
     return false;
 }
 
-bool Rewriter::visit(PreDecrementExpression *ast)
+bool ScriptFormatter::visit(PreDecrementExpression *ast)
 {
     out(ast->decrementToken);
     accept(ast->expression);
     return false;
 }
 
-bool Rewriter::visit(DeleteExpression *ast)
+bool ScriptFormatter::visit(DeleteExpression *ast)
 {
     out("delete "); // ast->deleteToken
     accept(ast->expression);
     return false;
 }
 
-bool Rewriter::visit(VoidExpression *ast)
+bool ScriptFormatter::visit(VoidExpression *ast)
 {
     out("void "); // ast->voidToken
     accept(ast->expression);
     return false;
 }
 
-bool Rewriter::visit(TypeOfExpression *ast)
+bool ScriptFormatter::visit(TypeOfExpression *ast)
 {
     out("typeof "); // ast->typeofToken
     accept(ast->expression);
     return false;
 }
 
-bool Rewriter::visit(UnaryPlusExpression *ast)
+bool ScriptFormatter::visit(UnaryPlusExpression *ast)
 {
     out(ast->plusToken);
     accept(ast->expression);
     return false;
 }
 
-bool Rewriter::visit(UnaryMinusExpression *ast)
+bool ScriptFormatter::visit(UnaryMinusExpression *ast)
 {
     out(ast->minusToken);
     accept(ast->expression);
     return false;
 }
 
-bool Rewriter::visit(TildeExpression *ast)
+bool ScriptFormatter::visit(TildeExpression *ast)
 {
     out(ast->tildeToken);
     accept(ast->expression);
     return false;
 }
 
-bool Rewriter::visit(NotExpression *ast)
+bool ScriptFormatter::visit(NotExpression *ast)
 {
     out(ast->notToken);
     accept(ast->expression);
     return false;
 }
 
-bool Rewriter::visit(BinaryExpression *ast)
+bool ScriptFormatter::visit(BinaryExpression *ast)
 {
     accept(ast->left);
     out(" ");
@@ -421,7 +421,7 @@ bool Rewriter::visit(BinaryExpression *ast)
     return false;
 }
 
-bool Rewriter::visit(ConditionalExpression *ast)
+bool ScriptFormatter::visit(ConditionalExpression *ast)
 {
     accept(ast->expression);
     out(" ? "); // ast->questionToken
@@ -431,7 +431,7 @@ bool Rewriter::visit(ConditionalExpression *ast)
     return false;
 }
 
-bool Rewriter::visit(Block *ast)
+bool ScriptFormatter::visit(Block *ast)
 {
     out(ast->lbraceToken);
     if (ast->statements) {
@@ -444,7 +444,7 @@ bool Rewriter::visit(Block *ast)
     return false;
 }
 
-bool Rewriter::visit(VariableStatement *ast)
+bool ScriptFormatter::visit(VariableStatement *ast)
 {
     out(ast->declarationKindToken);
     out(" ");
@@ -454,7 +454,7 @@ bool Rewriter::visit(VariableStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(PatternElement *ast)
+bool ScriptFormatter::visit(PatternElement *ast)
 {
     if (ast->isForDeclaration) {
         outputScope(ast->scope);
@@ -486,13 +486,13 @@ bool Rewriter::visit(PatternElement *ast)
     return false;
 }
 
-bool Rewriter::visit(EmptyStatement *ast)
+bool ScriptFormatter::visit(EmptyStatement *ast)
 {
     out(ast->semicolonToken);
     return false;
 }
 
-bool Rewriter::visit(IfStatement *ast)
+bool ScriptFormatter::visit(IfStatement *ast)
 {
     out(ast->ifToken);
     out(" ");
@@ -514,7 +514,7 @@ bool Rewriter::visit(IfStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(DoWhileStatement *ast)
+bool ScriptFormatter::visit(DoWhileStatement *ast)
 {
     out(ast->doToken);
     acceptBlockOrIndented(ast->statement, true);
@@ -526,7 +526,7 @@ bool Rewriter::visit(DoWhileStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(WhileStatement *ast)
+bool ScriptFormatter::visit(WhileStatement *ast)
 {
     out(ast->whileToken);
     out(" ");
@@ -537,7 +537,7 @@ bool Rewriter::visit(WhileStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(ForStatement *ast)
+bool ScriptFormatter::visit(ForStatement *ast)
 {
     out(ast->forToken);
     out(" ");
@@ -557,7 +557,7 @@ bool Rewriter::visit(ForStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(ForEachStatement *ast)
+bool ScriptFormatter::visit(ForEachStatement *ast)
 {
     out(ast->forToken);
     out(" ");
@@ -572,7 +572,7 @@ bool Rewriter::visit(ForEachStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(ContinueStatement *ast)
+bool ScriptFormatter::visit(ContinueStatement *ast)
 {
     out(ast->continueToken);
     if (!ast->label.isNull()) {
@@ -584,7 +584,7 @@ bool Rewriter::visit(ContinueStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(BreakStatement *ast)
+bool ScriptFormatter::visit(BreakStatement *ast)
 {
     out(ast->breakToken);
     if (!ast->label.isNull()) {
@@ -596,7 +596,7 @@ bool Rewriter::visit(BreakStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(ReturnStatement *ast)
+bool ScriptFormatter::visit(ReturnStatement *ast)
 {
     out(ast->returnToken);
     if (ast->expression) {
@@ -609,7 +609,7 @@ bool Rewriter::visit(ReturnStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(ThrowStatement *ast)
+bool ScriptFormatter::visit(ThrowStatement *ast)
 {
     out(ast->throwToken);
     if (ast->expression) {
@@ -621,7 +621,7 @@ bool Rewriter::visit(ThrowStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(WithStatement *ast)
+bool ScriptFormatter::visit(WithStatement *ast)
 {
     out(ast->withToken);
     out(" ");
@@ -632,7 +632,7 @@ bool Rewriter::visit(WithStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(SwitchStatement *ast)
+bool ScriptFormatter::visit(SwitchStatement *ast)
 {
     out(ast->switchToken);
     out(" ");
@@ -644,7 +644,7 @@ bool Rewriter::visit(SwitchStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(CaseBlock *ast)
+bool ScriptFormatter::visit(CaseBlock *ast)
 {
     out(ast->lbraceToken);
     ++expressionDepth;
@@ -662,7 +662,7 @@ bool Rewriter::visit(CaseBlock *ast)
     return false;
 }
 
-bool Rewriter::visit(CaseClause *ast)
+bool ScriptFormatter::visit(CaseClause *ast)
 {
     out("case "); // ast->caseToken
     accept(ast->expression);
@@ -672,7 +672,7 @@ bool Rewriter::visit(CaseClause *ast)
     return false;
 }
 
-bool Rewriter::visit(DefaultClause *ast)
+bool ScriptFormatter::visit(DefaultClause *ast)
 {
     out(ast->defaultToken);
     out(ast->colonToken);
@@ -680,7 +680,7 @@ bool Rewriter::visit(DefaultClause *ast)
     return false;
 }
 
-bool Rewriter::visit(LabelledStatement *ast)
+bool ScriptFormatter::visit(LabelledStatement *ast)
 {
     out(ast->identifierToken);
     out(": "); // ast->colonToken
@@ -688,7 +688,7 @@ bool Rewriter::visit(LabelledStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(TryStatement *ast)
+bool ScriptFormatter::visit(TryStatement *ast)
 {
     out("try "); // ast->tryToken
     accept(ast->statement);
@@ -703,7 +703,7 @@ bool Rewriter::visit(TryStatement *ast)
     return false;
 }
 
-bool Rewriter::visit(Catch *ast)
+bool ScriptFormatter::visit(Catch *ast)
 {
     out(ast->catchToken);
     out(" ");
@@ -714,19 +714,19 @@ bool Rewriter::visit(Catch *ast)
     return false;
 }
 
-bool Rewriter::visit(Finally *ast)
+bool ScriptFormatter::visit(Finally *ast)
 {
     out("finally "); // ast->finallyToken
     accept(ast->statement);
     return false;
 }
 
-bool Rewriter::visit(FunctionDeclaration *ast)
+bool ScriptFormatter::visit(FunctionDeclaration *ast)
 {
-    return Rewriter::visit(static_cast<FunctionExpression *>(ast));
+    return ScriptFormatter::visit(static_cast<FunctionExpression *>(ast));
 }
 
-bool Rewriter::visit(FunctionExpression *ast)
+bool ScriptFormatter::visit(FunctionExpression *ast)
 {
     if (!ast->isArrowFunction) {
         out("function "); // ast->functionToken
@@ -770,7 +770,7 @@ bool Rewriter::visit(FunctionExpression *ast)
     return false;
 }
 
-bool Rewriter::visit(Elision *ast)
+bool ScriptFormatter::visit(Elision *ast)
 {
     for (Elision *it = ast; it; it = it->next) {
         if (it->next)
@@ -779,7 +779,7 @@ bool Rewriter::visit(Elision *ast)
     return false;
 }
 
-bool Rewriter::visit(ArgumentList *ast)
+bool ScriptFormatter::visit(ArgumentList *ast)
 {
     for (ArgumentList *it = ast; it; it = it->next) {
         if (it->isSpreadElement)
@@ -792,7 +792,7 @@ bool Rewriter::visit(ArgumentList *ast)
     return false;
 }
 
-bool Rewriter::visit(StatementList *ast)
+bool ScriptFormatter::visit(StatementList *ast)
 {
     ++expressionDepth;
     for (StatementList *it = ast; it; it = it->next) {
@@ -810,7 +810,7 @@ bool Rewriter::visit(StatementList *ast)
     return false;
 }
 
-bool Rewriter::visit(VariableDeclarationList *ast)
+bool ScriptFormatter::visit(VariableDeclarationList *ast)
 {
     for (VariableDeclarationList *it = ast; it; it = it->next) {
         accept(it->declaration);
@@ -820,7 +820,7 @@ bool Rewriter::visit(VariableDeclarationList *ast)
     return false;
 }
 
-bool Rewriter::visit(CaseClauses *ast)
+bool ScriptFormatter::visit(CaseClauses *ast)
 {
     for (CaseClauses *it = ast; it; it = it->next) {
         accept(it->clause);
@@ -830,7 +830,7 @@ bool Rewriter::visit(CaseClauses *ast)
     return false;
 }
 
-bool Rewriter::visit(FormalParameterList *ast)
+bool ScriptFormatter::visit(FormalParameterList *ast)
 {
     for (FormalParameterList *it = ast; it; it = it->next) {
         // compare FormalParameterList::finish
@@ -845,24 +845,24 @@ bool Rewriter::visit(FormalParameterList *ast)
 }
 
 // to check
-bool Rewriter::visit(SuperLiteral *)
+bool ScriptFormatter::visit(SuperLiteral *)
 {
     out("super");
     return true;
 }
-bool Rewriter::visit(ComputedPropertyName *)
+bool ScriptFormatter::visit(ComputedPropertyName *)
 {
     out("[");
     return true;
 }
-bool Rewriter::visit(Expression *el)
+bool ScriptFormatter::visit(Expression *el)
 {
     accept(el->left);
     out(", ");
     accept(el->right);
     return false;
 }
-bool Rewriter::visit(ExpressionStatement *el)
+bool ScriptFormatter::visit(ExpressionStatement *el)
 {
     if (addSemicolons())
         postOps[el->expression].append([this]() { out(";"); });
@@ -870,7 +870,7 @@ bool Rewriter::visit(ExpressionStatement *el)
 }
 
 // Return false because we want to omit default function calls in accept0 implementation.
-bool Rewriter::visit(ClassDeclaration *ast)
+bool ScriptFormatter::visit(ClassDeclaration *ast)
 {
     preVisit(ast);
     out(ast->classToken);
@@ -923,21 +923,21 @@ bool Rewriter::visit(ClassDeclaration *ast)
     return false;
 }
 
-void Rewriter::endVisit(ComputedPropertyName *)
+void ScriptFormatter::endVisit(ComputedPropertyName *)
 {
     out("]");
 }
 
-void Rewriter::throwRecursionDepthError()
+void ScriptFormatter::throwRecursionDepthError()
 {
-    out("/* ERROR: Hit recursion limit  Rewriter::visiting AST, rewrite failed */");
+    out("/* ERROR: Hit recursion limit  ScriptFormatter::visiting AST, rewrite failed */");
 }
 
 void reformatAst(OutWriter &lw, const std::shared_ptr<AstComments> &comments,
                  const std::function<QStringView(SourceLocation)> &loc2Str, AST::Node *n)
 {
     if (n) {
-        Rewriter rewriter(lw, comments, loc2Str, n);
+        ScriptFormatter formatter(lw, comments, loc2Str, n);
     }
 }
 
