@@ -35,6 +35,7 @@ endif()
 if(TARGET Qt6::QuickWidgets AND TARGET Qt6::Widgets AND (QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3))
     add_subdirectory(quickwidgets)
 endif()
+add_subdirectory(quickshapes)
 
 # qt_examples_build_end() misses at least some of these due to some
 # source subdirectories being added multiple times. See QTBUG-96159.

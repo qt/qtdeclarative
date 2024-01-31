@@ -4,7 +4,7 @@ QT += quick qml
 SOURCES += main.cpp
 RESOURCES += \
     shapes.qrc \
-    ../../quick/shared/shared.qrc
+    ../../shared/shared.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quickshapes/shapes
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/quickshapes/shapes
 INSTALLS += target
