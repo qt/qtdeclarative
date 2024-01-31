@@ -243,22 +243,18 @@ void PersistentValueStorage::freePage(void *page)
 PersistentValue::PersistentValue(const PersistentValue &other)
     : val(nullptr)
 {
-    if (other.val) {
-        val = other.engine()->memoryManager->m_persistentValues->allocate();
-        *val = *other.val;
-    }
+    if (other.val)
+        set(other.engine(), *other.val);
 }
 
 PersistentValue::PersistentValue(ExecutionEngine *engine, const Value &value)
 {
-    val = engine->memoryManager->m_persistentValues->allocate();
-    *val = value;
+    set(engine, value);
 }
 
 PersistentValue::PersistentValue(ExecutionEngine *engine, ReturnedValue value)
 {
-    val = engine->memoryManager->m_persistentValues->allocate();
-    *val = value;
+    set(engine, value);
 }
 
 PersistentValue::PersistentValue(ExecutionEngine *engine, Object *object)
@@ -266,9 +262,7 @@ PersistentValue::PersistentValue(ExecutionEngine *engine, Object *object)
 {
     if (!object)
         return;
-
-    val = engine->memoryManager->m_persistentValues->allocate();
-    *val = object;
+    set(engine, *object);
 }
 
 PersistentValue &PersistentValue::operator=(const PersistentValue &other)
@@ -291,19 +285,16 @@ PersistentValue &PersistentValue::operator=(const PersistentValue &other)
 
 PersistentValue &PersistentValue::operator=(const WeakValue &other)
 {
-    if (!val) {
-        if (!other.valueRef())
-            return *this;
-        val = other.engine()->memoryManager->m_persistentValues->allocate();
-    }
+    if (!val && !other.valueRef())
+        return *this;
     if (!other.valueRef()) {
         *val = Encode::undefined();
         return *this;
     }
 
-    Q_ASSERT(engine() == other.engine());
+    Q_ASSERT(!engine() || engine() == other.engine());
 
-    *val = *other.valueRef();
+    set(other.engine(), *other.valueRef());
     return *this;
 }
 
@@ -313,10 +304,7 @@ PersistentValue &PersistentValue::operator=(Object *object)
         PersistentValueStorage::free(val);
         return *this;
     }
-    if (!val)
-        val = object->engine()->memoryManager->m_persistentValues->allocate();
-
-    *val = object;
+    set(object->engine(), *object);
     return *this;
 }
 
@@ -326,7 +314,7 @@ void PersistentValue::set(ExecutionEngine *engine, const Value &value)
         val = engine->memoryManager->m_persistentValues->allocate();
     QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack){
         if (QV4::WriteBarrier::isInsertionBarrier && value.isManaged())
-            stack->push(value.heapObject());
+            value.heapObject()->mark(stack);
     });
     *val = value;
 }
@@ -340,7 +328,7 @@ void PersistentValue::set(ExecutionEngine *engine, ReturnedValue value)
             return;
         auto val = Value::fromReturnedValue(value);
         if (val.isManaged())
-            stack->push(val.heapObject());
+            val.heapObject()->mark(stack);
     });
     *val = value;
 }
@@ -351,7 +339,7 @@ void PersistentValue::set(ExecutionEngine *engine, Heap::Base *obj)
         val = engine->memoryManager->m_persistentValues->allocate();
     QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack){
         if constexpr (QV4::WriteBarrier::isInsertionBarrier)
-            stack->push(obj);
+            obj->mark(stack);
     });
 
     *val = obj;

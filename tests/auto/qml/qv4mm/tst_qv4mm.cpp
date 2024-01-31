@@ -24,6 +24,8 @@ public:
 
 private slots:
     void gcStats();
+    void persistentValueMarking_data();
+    void persistentValueMarking();
     void multiWrappedQObjects();
     void accessParentOnDestruction();
     void cleanInternalClasses();
@@ -33,6 +35,8 @@ private slots:
 tst_qv4mm::tst_qv4mm()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
+    QV4::ExecutionEngine engine;
+    QV4::Scope scope(engine.rootContext());
 }
 
 void tst_qv4mm::gcStats()
@@ -41,6 +45,94 @@ void tst_qv4mm::gcStats()
     QQmlEngine engine;
     gc(engine);
     QLoggingCategory::setFilterRules("qt.qml.gc.*=false");
+}
+
+enum PVSetOption {
+    CopyCtor,
+    ValueCtor,
+    ObjectCtor,
+    ReturnedValueCtor,
+    WeakValueAssign,
+    ObjectAssign,
+};
+
+void tst_qv4mm::persistentValueMarking_data()
+{
+    QTest::addColumn<PVSetOption>("setOption");
+
+    QTest::addRow("copy") << CopyCtor;
+    QTest::addRow("valueCtor") << ValueCtor;
+    QTest::addRow("ObjectCtor") << ObjectCtor;
+    QTest::addRow("ReturnedValueCtor") << ReturnedValueCtor;
+    QTest::addRow("WeakValueAssign") << WeakValueAssign;
+    QTest::addRow("ObjectAssign") << ObjectAssign;
+}
+
+void tst_qv4mm::persistentValueMarking()
+{
+    QFETCH(PVSetOption, setOption);
+    QV4::ExecutionEngine engine;
+    QV4::PersistentValue persistentOrigin; // used for copy ctor
+    QV4::Heap::Object *unprotectedObject = engine.newObject();
+    {
+        QV4::Scope scope(engine.rootContext());
+        QV4::ScopedObject object {scope, unprotectedObject};
+        persistentOrigin.set(&engine, object);
+        QVERIFY(!unprotectedObject->isMarked());
+    }
+    auto sm = engine.memoryManager->gcStateMachine.get();
+    sm->reset();
+    while (sm->state != QV4::GCState::MarkGlobalObject) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+    QVERIFY(engine.isGCOngoing);
+    QVERIFY(!unprotectedObject->isMarked());
+    switch (setOption) {
+    case CopyCtor: {
+        QV4::PersistentValue persistentCopy(persistentOrigin);
+        QVERIFY(unprotectedObject->isMarked());
+        break;
+    }
+    case ValueCtor: {
+        QV4::Value val = QV4::Value::fromHeapObject(unprotectedObject);
+        QV4::PersistentValue persistent(&engine, val);
+        QVERIFY(unprotectedObject->isMarked());
+        break;
+    }
+    case ObjectCtor: {
+        QV4::Scope scope(&engine);
+        QV4::ScopedObject o(scope, unprotectedObject);
+        // scoped object without scan shouldn't result in marking
+        QVERIFY(!unprotectedObject->isMarked());
+        QV4::PersistentValue persistent(&engine, o.getPointer());
+        QVERIFY(unprotectedObject->isMarked());
+        break;
+    }
+    case ReturnedValueCtor: {
+        QV4::PersistentValue persistent(&engine, unprotectedObject->asReturnedValue());
+        QVERIFY(unprotectedObject->isMarked());
+        break;
+    }
+    case WeakValueAssign: {
+        QV4::WeakValue wv;
+        wv.set(&engine, unprotectedObject);
+        QVERIFY(!unprotectedObject->isMarked());
+        QV4::PersistentValue persistent;
+        persistent = wv;
+        break;
+    }
+    case ObjectAssign: {
+        QV4::Scope scope(&engine);
+        QV4::ScopedObject o(scope, unprotectedObject);
+        // scoped object without scan shouldn't result in marking
+        QVERIFY(!unprotectedObject->isMarked());
+        QV4::PersistentValue persistent;
+        persistent = o;
+        QVERIFY(unprotectedObject->isMarked());
+        break;
+    }
+    }
 }
 
 void tst_qv4mm::multiWrappedQObjects()
