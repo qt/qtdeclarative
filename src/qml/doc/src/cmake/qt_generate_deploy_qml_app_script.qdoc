@@ -104,8 +104,9 @@ customized way.
 For Windows desktop applications, the required runtime files for the compiler
 are also installed by default. To prevent this, specify \c{NO_COMPILER_RUNTIME}.
 
-You can use \c{DEPLOY_TOOL_OPTIONS} to pass additional options to the underlying
-deployment tool.
+Since Qt 6.7, you can use \c{DEPLOY_TOOL_OPTIONS} to pass additional options to
+the underlying deployment tool. This only has an effect if the underlying
+deployment tool is either macdeployqt or windeployqt.
 
 The options \c{PRE_INCLUDE_REGEXES}, \c{PRE_EXCLUDE_REGEXES},
 \c{POST_INCLUDE_REGEXES}, \c{POST_EXCLUDE_REGEXES}, \c{POST_INCLUDE_FILES}, and
@@ -124,6 +125,8 @@ same target.
     {qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()}
 
 \section1 Example
+
+The following example shows how to deploy a QtQuick app.
 
 \badcode
 cmake_minimum_required(VERSION 3.16...3.22)
@@ -150,6 +153,24 @@ qt_generate_deploy_qml_app_script(
     MACOS_BUNDLE_POST_BUILD
     NO_UNSUPPORTED_PLATFORM_ERROR
     DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
+)
+install(SCRIPT ${deploy_script})
+\endcode
+
+The following example shows how to pass additional options to the underlying
+deployment tool.
+
+\badcode
+set(deploy_tool_options_arg "")
+if(APPLE)
+    set(deploy_tool_options_arg --hardened-runtime)
+elseif(WIN32)
+    set(deploy_tool_options_arg --no-compiler-runtime)
+endif()
+
+qt_generate_deploy_qml_app_script(
+    ...
+    DEPLOY_TOOL_OPTIONS ${deploy_tool_options_arg}
 )
 install(SCRIPT ${deploy_script})
 \endcode
