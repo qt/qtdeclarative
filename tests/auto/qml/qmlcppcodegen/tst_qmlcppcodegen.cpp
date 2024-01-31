@@ -119,6 +119,7 @@ private slots:
     void importsFromImportPath();
     void inPlaceDecrement();
     void inaccessibleProperty();
+    void indirectlyShadowable();
     void infinities();
     void infinitiesToInt();
     void innerObjectNonShadowable();
@@ -2241,6 +2242,69 @@ void tst_QmlCppCodegen::inaccessibleProperty()
     QScopedPointer<QObject> o(c.create());
 
     QCOMPARE(o->property("c").toInt(), 5);
+}
+
+void tst_QmlCppCodegen::indirectlyShadowable()
+{
+    QQmlEngine engine;
+
+    const QString url = u"qrc:/qt/qml/TestTypes/indirectlyShadowable.qml"_s;
+    QQmlComponent c(&engine, QUrl(url));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    const auto verifyShadowable = [&](const QString &objectName) {
+        QObject *outer = o->property("outer").value<QObject *>();
+        QVERIFY(outer);
+        QObject *inner = outer->property("inner").value<QObject *>();
+        QVERIFY(inner);
+        QObject *shadowable = inner->property("shadowable").value<QObject *>();
+        QVERIFY(shadowable);
+        QCOMPARE(shadowable->objectName(), objectName);
+    };
+
+    const auto verifyNotShadowable = [&](const QString &objectName) {
+        QObject *notShadowable = o->property("notShadowable").value<QObject *>();
+        QCOMPARE(notShadowable->objectName(), objectName);
+    };
+
+    const auto verifyEvil = [&]() {
+        QObject *outer = o->property("outer").value<QObject *>();
+        QVERIFY(outer);
+        QCOMPARE(outer->property("inner").toString(), u"evil"_s);
+    };
+
+    verifyShadowable(u"shadowable"_s);
+    verifyNotShadowable(u"notShadowable"_s);
+
+    QMetaObject::invokeMethod(o.data(), "setInnerShadowable");
+
+    verifyShadowable(u"self"_s);
+    verifyNotShadowable(u"notShadowable"_s);
+
+    QMetaObject::invokeMethod(o.data(), "getInnerShadowable");
+
+    verifyShadowable(u"self"_s);
+    verifyNotShadowable(u"self"_s);
+
+    QMetaObject::invokeMethod(o.data(), "turnEvil");
+
+    verifyEvil();
+    verifyNotShadowable(u"self"_s);
+
+    // Does not produce an error message because JavaScript.
+    QMetaObject::invokeMethod(o.data(), "setInnerShadowable");
+
+    verifyEvil();
+    verifyNotShadowable(u"self"_s);
+
+    QTest::ignoreMessage(
+            QtWarningMsg, qPrintable(url + u":29: Error: Cannot assign [undefined] to QObject*"_s));
+    QMetaObject::invokeMethod(o.data(), "getInnerShadowable");
+
+    verifyEvil();
+    verifyNotShadowable(u"self"_s);
 }
 
 void tst_QmlCppCodegen::infinities()

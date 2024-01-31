@@ -55,7 +55,12 @@ private:
 
     void checkResettable(const QQmlJSRegisterContent &accumulatorIn, int instructionOffset);
 
+    Shadowability checkBaseType(const QQmlJSRegisterContent &baseType);
+
     QList<ResettableStore> m_resettableStores;
+    QList<QQmlJSRegisterContent> m_baseTypes;
+    QSet<QQmlJSRegisterContent> m_adjustedTypes;
+
     InstructionAnnotations *m_annotations = nullptr;
     State m_state;
 };
