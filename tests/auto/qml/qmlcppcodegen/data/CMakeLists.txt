@@ -137,6 +137,7 @@ set(qml_files
     immediateQuit.qml
     imports/QmlBench/Globals.qml
     importsFromImportPath.qml
+    indirectlyShadowable.qml
     infinities.qml
     infinitiesToInt.qml
     intEnumCompare.qml
