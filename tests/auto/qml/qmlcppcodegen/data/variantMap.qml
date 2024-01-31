@@ -11,8 +11,14 @@ QtObject {
         QtObject {}
     }
 
+    // We need this extra function in order to coerce the result of the shadowable
+    // method call back to QtObject
+    function createShadowable() : QtObject {
+        return shadowable.createObject(this, {objectName: "a"})
+    }
+
     objectName: {
-        return shadowable.createObject(this, {objectName: "a"}).objectName
+        return createShadowable().objectName
             + " " + unshadowable.createObject(this, {objectName: "b"}).objectName
     }
 

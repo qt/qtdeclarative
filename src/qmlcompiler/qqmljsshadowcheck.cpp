@@ -46,6 +46,12 @@ void QQmlJSShadowCheck::run(
 
     for (const auto &store : m_resettableStores)
         checkResettable(store.accumulatorIn, store.instructionOffset);
+
+    // Re-check all base types. We may have made them var after detecting them.
+    for (const auto &base : m_baseTypes) {
+        if (checkBaseType(base) == Shadowable)
+            break;
+    }
 }
 
 void QQmlJSShadowCheck::generate_LoadProperty(int nameIndex)
@@ -78,12 +84,15 @@ void QQmlJSShadowCheck::handleStore(int base, const QString &memberName)
     const int instructionOffset = currentInstructionOffset();
     const QQmlJSRegisterContent &readAccumulator
             = (*m_annotations)[instructionOffset].readRegisters[Accumulator].content;
+    const auto baseType = m_state.registers[base].content;
 
     // If the accumulator is already read as var, we don't have to do anything.
-    if (m_typeResolver->registerContains(readAccumulator, m_typeResolver->varType()))
+    if (m_typeResolver->registerContains(readAccumulator, m_typeResolver->varType())) {
+        if (checkBaseType(baseType) == NotShadowable)
+            m_baseTypes.append(baseType);
         return;
+    }
 
-    const auto baseType = m_state.registers[base].content;
     if (checkShadowing(baseType, memberName, base) == Shadowable)
         return;
 
@@ -94,7 +103,6 @@ void QQmlJSShadowCheck::handleStore(int base, const QString &memberName)
     if (member.isProperty())
         m_resettableStores.append({m_state.accumulatorIn(), instructionOffset});
 }
-
 
 void QQmlJSShadowCheck::generate_StoreProperty(int nameIndex, int base)
 {
@@ -135,6 +143,11 @@ void QQmlJSShadowCheck::endInstruction(QV4::Moth::Instr::Type)
 QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
         const QQmlJSRegisterContent &baseType, const QString &memberName, int baseRegister)
 {
+    if (checkBaseType(baseType) == Shadowable)
+        return Shadowable;
+    else
+        m_baseTypes.append(baseType);
+
     if (baseType.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Reference)
         return NotShadowable;
 
@@ -177,6 +190,7 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
                     currentAnnotation.changedRegister.storedType(), varType);
             m_typeResolver->adjustOriginalType(
                     m_typeResolver->containedType(currentAnnotation.changedRegister), varType);
+            m_adjustedTypes.insert(currentAnnotation.changedRegister);
         }
 
         for (auto it = currentAnnotation.readRegisters.begin(),
@@ -212,6 +226,15 @@ void QQmlJSShadowCheck::checkResettable(
     QQmlJSRegisterContent &readAccumulator
             = (*m_annotations)[instructionOffset].readRegisters[Accumulator].content;
     readAccumulator = m_typeResolver->convert(readAccumulator, varContent);
+}
+
+QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkBaseType(
+        const QQmlJSRegisterContent &baseType)
+{
+    if (!m_adjustedTypes.contains(baseType))
+        return NotShadowable;
+    setError(u"Cannot use shadowable base type for further lookups: %1"_s.arg(baseType.descriptiveName()));
+    return Shadowable;
 }
 
 QT_END_NAMESPACE

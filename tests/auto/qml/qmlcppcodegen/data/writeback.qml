@@ -15,6 +15,7 @@ Person {
 
     property outer recursive
     property Person shadowable: Person {
+        id: notShadowable
         area.width: self.area.width
         area2.height: self.area2.height
     }
@@ -26,8 +27,10 @@ Person {
         self.area.x = 4
         self.area2.y = 5
 
-        shadowable.area.x = 40
-        shadowable.area2.y = 50
+        // You cannot do this on the shadowable Person because
+        // shadowable.area may not actually be a QRectF anymore.
+        notShadowable.area.x = 40
+        notShadowable.area2.y = 50
 
         self.recursive.inner.i = 99;
 
