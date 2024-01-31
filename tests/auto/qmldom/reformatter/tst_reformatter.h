@@ -8,6 +8,7 @@
 #include <QtQmlDom/private/qqmldomoutwriter_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
+#include <QtQmlDom/private/qqmldomreformatter_p.h>
 
 #include <QtTest/QtTest>
 #include <QCborValue>
@@ -24,6 +25,31 @@ class TestReformatter : public QObject
 {
     Q_OBJECT
 public:
+private:
+    QString formatJSModuleCode(const QString &jsCode)
+    {
+        return formatPlainJS(jsCode, ScriptExpression::ExpressionType::MJSCode);
+    }
+
+    // "Unix" LineWriter (with '\n' line endings) is used by default,
+    // under the assumption that line endings are properly tested in lineWriter() test.
+    QString formatPlainJS(const QString &jsCode, ScriptExpression::ExpressionType exprType)
+    {
+        QString resultStr;
+        QTextStream res(&resultStr);
+        LineWriterOptions opts;
+        opts.lineEndings = LineWriterOptions::LineEndings::Unix;
+        LineWriter lw([&res](QStringView s) { res << s; }, QLatin1String("*testStream*"), opts);
+        OutWriter ow(lw);
+
+        const ScriptExpression scriptItem(jsCode, exprType);
+        scriptItem.writeOut(DomItem(), ow);
+
+        lw.flush(); // flush instead of eof to protect traling spaces
+        res.flush();
+        return resultStr;
+    }
+
 private slots:
     void reindent_data()
     {
@@ -380,6 +406,64 @@ private slots:
             lw.write(u"\n");
             QCOMPARE(res, u"a\rbc\rde\rfg\rh\r\r");
         }
+    }
+
+    void exportDeclarations_data()
+    {
+        QTest::addColumn<QString>("exportToBeFormatted");
+        QTest::addColumn<QString>("expectedFormattedExport");
+        // not exhaustive list of ExportDeclarations as per
+        // https://262.ecma-international.org/7.0/#prod-ExportDeclaration
+
+        // LexicalDeclaration
+        QTest::newRow("LexicalDeclaration_let_Binding")
+                << QStringLiteral(u"export let name") << QStringLiteral(u"export let name;");
+        QTest::newRow("LexicalDeclaration_const_BindingList")
+                << QStringLiteral(u"export const "
+                                  u"n1=1,n2=2,n3=3,n4=4,n5=5")
+                << QStringLiteral(u"export const "
+                                  u"n1 = 1, n2 = 2, n3 = 3, n4 = 4, n5 = 5;");
+        QTest::newRow("LexicalDeclaration_const_ArrayBinding")
+                << QStringLiteral(u"export const "
+                                  u"[a,b]=a_and_b")
+                << QStringLiteral(u"export const "
+                                  u"[a, b] = a_and_b;");
+        QTest::newRow("LexicalDeclaration_let_ObjectBinding")
+                << QStringLiteral(u"export let "
+                                  u"{a,b:c}=a_and_b")
+                << QStringLiteral(u"export let "
+                                  u"{\na,\nb: c\n} = a_and_b;");
+
+        // ClassDeclaration
+        QTest::newRow("ClassDeclaration") << QStringLiteral(u"export "
+                                                            u"class A extends B{}")
+                                          << QStringLiteral(u"export "
+                                                            u"class A extends B {}");
+
+        // HoistableDeclaration
+        QTest::newRow("HoistableDeclaration_FunctionDeclaration")
+                << QStringLiteral(u"export "
+                                  u"function a(a,b){}")
+                << QStringLiteral(u"export "
+                                  u"function a(a, b) {}");
+        QTest::newRow("HoistableDeclaration_GeneratorDeclaration")
+                << QStringLiteral(u"export "
+                                  u"function * g(a,b){}")
+                << QStringLiteral(u"export "
+                                  u"function * g(a, b) {}");
+    }
+
+    // https://262.ecma-international.org/7.0/#prod-ExportDeclaration
+    void exportDeclarations()
+    {
+        QFETCH(QString, exportToBeFormatted);
+        QFETCH(QString, expectedFormattedExport);
+
+        QString formattedExport = formatJSModuleCode(exportToBeFormatted);
+
+        QEXPECT_FAIL("HoistableDeclaration_GeneratorDeclaration",
+                     "Generator functions are not yet supported", Abort);
+        QCOMPARE(formattedExport, expectedFormattedExport);
     }
 
 private:

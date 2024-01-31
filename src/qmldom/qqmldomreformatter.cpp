@@ -923,6 +923,13 @@ bool ScriptFormatter::visit(ClassDeclaration *ast)
     return false;
 }
 
+bool ScriptFormatter::visit(AST::ExportDeclaration *ast)
+{
+    out(ast->exportToken);
+    lw.space();
+    return true;
+}
+
 void ScriptFormatter::endVisit(ComputedPropertyName *)
 {
     out("]");
