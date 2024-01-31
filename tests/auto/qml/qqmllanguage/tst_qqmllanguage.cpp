@@ -442,6 +442,8 @@ private slots:
 
     void ambiguousComponents();
 
+    void writeNumberToEnumAlias();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8499,6 +8501,17 @@ void tst_qqmllanguage::ambiguousComponents()
     isInstanceOf = false;
     QMetaObject::invokeMethod(o2.data(), "testInstanceOf", Q_RETURN_ARG(bool, isInstanceOf));
     QVERIFY(isInstanceOf);
+}
+
+void tst_qqmllanguage::writeNumberToEnumAlias()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("aliasWriter.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("strokeStyle").toInt(), 1);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

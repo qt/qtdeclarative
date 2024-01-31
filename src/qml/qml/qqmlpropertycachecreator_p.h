@@ -902,10 +902,10 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
             resettable = property->isResettable();
             bindable = property->isBindable();
 
-            // Copy type flags
-            propertyFlags->copyPropertyTypeFlags(property->flags());
             if (property->isVarProperty())
                 propertyFlags->setType(QQmlPropertyData::Flags::QVariantType);
+            else
+                propertyFlags->copyPropertyTypeFlags(property->flags());
         };
 
         // for deep aliases, valueTypeIndex is always set

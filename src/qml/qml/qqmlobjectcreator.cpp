@@ -313,8 +313,11 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     QMetaType propertyType = property->propType();
 
     if (property->isEnum()) {
-        if (binding->hasFlag(QV4::CompiledData::Binding::IsResolvedEnum)) {
-            propertyType = QMetaType::fromType<int>();
+        if (binding->hasFlag(QV4::CompiledData::Binding::IsResolvedEnum) ||
+                // TODO: For historical reasons you can assign any number to an enum property alias
+                //       This can be fixed with an opt-out mechanism, for example a pragma.
+                (property->isAlias() && binding->isNumberBinding())) {
+            propertyType = property->propType().underlyingType();
         } else {
             // ### This should be resolved earlier at compile time and the binding value should be changed accordingly.
             QVariant value = compilationUnit->bindingValueAsString(binding);
