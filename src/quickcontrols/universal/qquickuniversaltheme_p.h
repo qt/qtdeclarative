@@ -15,13 +15,13 @@
 // We mean it.
 //
 
-#include <QtCore/private/qglobal_p.h>
+#include <QtQuickControls2Universal/qtquickcontrols2universalexports.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickTheme;
 
-class QQuickUniversalTheme
+class Q_QUICKCONTROLS2UNIVERSAL_EXPORT QQuickUniversalTheme
 {
 public:
     static void initialize(QQuickTheme *theme);

@@ -18,11 +18,13 @@
 #include <QtCore/qobject.h>
 #include <QtGui/qcolor.h>
 #include <QtQml/qqml.h>
-#include <QtQuick/private/qquickpalette_p.h>
+#include <QtQuickControls2Fusion/qtquickcontrols2fusionexports.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickFusionStyle : public QObject
+class QQuickPalette;
+
+class Q_QUICKCONTROLS2FUSION_EXPORT QQuickFusionStyle : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QColor lightShade READ lightShade CONSTANT FINAL)
