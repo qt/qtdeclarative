@@ -947,6 +947,10 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
 {
     if (path.testHint(QQuadPath::PathNonIntersecting))
         return false;
+    if (path.elementCount() < 2) {
+        path.setPathHints(path.pathHints() | QQuadPath::PathNonIntersecting);
+        return false;
+    }
 
     struct IntersectionData { int e1; int e2; float t1; float t2; bool in1 = false, in2 = false, out1 = false, out2 = false; };
     QList<IntersectionData> intersections;
