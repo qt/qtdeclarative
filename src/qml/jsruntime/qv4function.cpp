@@ -154,16 +154,23 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                                              base->stringAt(type), typeLoader).type
                 : QQmlType();
 
-        if (!qmltype.isValid() || qmltype.typeId().isValid())
+        if (!qmltype.isValid() || qmltype.isComposite())
             return qmltype;
 
-        if (!qmltype.isComposite()) {
-            return qmltype.isInlineComponentType()
-                ? base->qmlTypeForComponent(qmltype.elementName())
-                : QQmlType();
+        if (qmltype.isInlineComponentType()) {
+            if (qmltype.typeId().isValid()) {
+                // If it seems to be an IC type, make sure there is an actual
+                // compilation unit for it. We create inline component types speculatively.
+                return QQmlMetaType::obtainCompilationUnit(qmltype.typeId())
+                        ? qmltype
+                        : QQmlType();
+            } else {
+                // TODO: Can this actually happen?
+                return base->qmlTypeForComponent(qmltype.elementName());
+            }
         }
 
-        return qmltype;
+        return qmltype.typeId().isValid() ? qmltype : QQmlType();
     };
 
     for (quint16 i = 0; i < nFormals; ++i)
