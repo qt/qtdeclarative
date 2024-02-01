@@ -6815,14 +6815,12 @@ void tst_qqmllanguage::bareInlineComponent()
             QVERIFY(type.module().isEmpty());
             tab1Found = true;
 
-            const QQmlType leftTab = QQmlMetaType::inlineComponentTypeForUrl(
-                    type.sourceUrl(), "LeftTab");
+            const QQmlType leftTab = QQmlMetaType::inlineComponentType(type, "LeftTab");
             QUrl leftUrl = leftTab.sourceUrl();
             leftUrl.setFragment(QString());
             QCOMPARE(leftUrl, type.sourceUrl());
 
-            const QQmlType rightTab = QQmlMetaType::inlineComponentTypeForUrl(
-                    type.sourceUrl(), "RightTab");
+            const QQmlType rightTab = QQmlMetaType::inlineComponentType(type, "RightTab");
             QUrl rightUrl = rightTab.sourceUrl();
             rightUrl.setFragment(QString());
             QCOMPARE(rightUrl, type.sourceUrl());

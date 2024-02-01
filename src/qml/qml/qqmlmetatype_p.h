@@ -95,10 +95,14 @@ public:
     static QQmlType typeForUrl(const QString &urlString, const QHashedStringRef& typeName,
                                CompositeTypeLookupMode mode, QList<QQmlError> *errors,
                                QTypeRevision version = QTypeRevision());
-    static QQmlType inlineComponentTypeForUrl(const QUrl &url);
-    static QQmlType inlineComponentTypeForUrl(const QUrl &baseUrl, const QString &name)
+
+    static QQmlType fetchOrCreateInlineComponentTypeForUrl(const QUrl &url);
+    static QQmlType inlineComponentType(const QQmlType &outerType, const QString &name)
     {
-        return inlineComponentTypeForUrl(inlineComponentUrl(baseUrl, name));
+        return outerType.isComposite()
+                ? fetchOrCreateInlineComponentTypeForUrl(
+                        inlineComponentUrl(outerType.sourceUrl(), name))
+                : QQmlType();
     }
 
     static void unregisterType(int type);
