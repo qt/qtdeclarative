@@ -1334,14 +1334,14 @@ struct TypeReferenceMap : QHash<int, TypeReference>
                 if (!formal->type.indexIsBuiltinType()) {
                     TypeReference &r
                             = this->add(formal->type.typeNameIndexOrBuiltinType(), it->location);
-                    r.errorWhenNotFound = true;
+                    r.errorWhenNotFound = false;
                 }
             }
 
             if (!it->returnType.indexIsBuiltinType()) {
                 TypeReference &r
                     = this->add(it->returnType.typeNameIndexOrBuiltinType(), it->location);
-                r.errorWhenNotFound = true;
+                r.errorWhenNotFound = false;
             }
         }
     }
