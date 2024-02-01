@@ -26,16 +26,16 @@ class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 public:
     struct TypeReference
     {
-        TypeReference() : version(QTypeRevision::zero()), needsCreation(true) {}
-
         QV4::CompiledData::Location location;
         QQmlType type;
-        QTypeRevision version;
+        QTypeRevision version = QTypeRevision::zero();
         QQmlRefPointer<QQmlTypeData> typeData;
-        bool selfReference = false;
         QString prefix; // used by CompositeSingleton types
+        bool selfReference = false;
+        bool needsCreation = true;
+        bool errorWhenNotFound = true;
+
         QString qualifiedName() const;
-        bool needsCreation;
     };
 
     struct ScriptReference
