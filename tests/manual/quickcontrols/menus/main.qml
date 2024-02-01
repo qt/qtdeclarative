@@ -25,40 +25,79 @@ ApplicationWindow {
 
         property alias windowX: window.x
         property alias windowY: window.y
-        property alias windowWidth: window.width
-        property alias windowHeight: window.height
     }
 
     menuBar: MenuBar {
-        requestNative: requestNativeAction.checked
+        requestNative: requestNativeMenuBarSwitch.checked
+        visible: menuBarVisibleSwitch.checked
 
         Menu {
-            title: qsTr("Edit")
-            objectName: title
-
+            id: fileMenu
+            objectName: "file"
+            requestNative: true
+            title: qsTr("&File")
+            ContextAction { text: qsTr("&New...") }
+            ContextMenuItem { text: "menuItem" }
+            ContextAction { text: qsTr("&Open...") }
+            ContextAction { text: qsTr("&Save") }
+            ContextAction { text: qsTr("Save &As...") }
+            MenuSeparator { }
+            ContextAction { text: qsTr("&Quit") }
             Action {
+                text: qsTr("Remove menu")
+                onTriggered: menuBar.removeMenu(fileMenu)
+            }
+        }
+        Menu {
+            id: editMenu
+            objectName: "edit"
+            title: qsTr("&Edit")
+            ContextAction {
                 text: qsTr("Cut")
                 enabled: textArea.selectedText.length > 0
             }
-            Action {
+            ContextAction {
                 text: qsTr("Copy")
                 enabled: textArea.selectedText.length > 0
             }
-            Action {
+            ContextAction {
                 text: qsTr("Paste")
                 enabled: textArea.activeFocus
             }
-        }
-
-        Menu {
-            title: qsTr("Options")
-            objectName: title
-
             Action {
-                id: requestNativeAction
-                text: qsTr("Request native")
-                checkable: true
-                checked: true
+                text: qsTr("Remove menu")
+                onTriggered: menuBar.removeMenu(editMenu)
+            }
+            Menu {
+                id: editSubMenu
+                title: qsTr("Find / Replace")
+                Action { text: qsTr("&Find") }
+            }
+        }
+        MenuBarItem {
+            menu: Menu {
+                id: menuBarItemMenu
+                objectName: "MenuBarItem"
+                title: "MenuBarItem"
+                ContextAction { text: qsTr("Action") }
+                Action {
+                    text: qsTr("Remove menu")
+                    onTriggered: menuBar.removeMenu(menuBarItemMenu)
+                }
+            }
+        }
+    }
+
+    Component {
+        id: extraMenuComp
+        Menu {
+            id: extraMenu
+            objectName: "Extra"
+            title: qsTr("&Extra")
+            ContextAction { text: qsTr("&Trigger") }
+            Action {
+                text: qsTr("Remove Extra menu")
+                onTriggered: menuBar.removeMenu(extraMenu)
             }
         }
     }
@@ -76,7 +115,9 @@ ApplicationWindow {
                + " work as expected with the TextArea?\n"
                + "  - Are they enabled/disabled as expected?\n"
                + "  - Does the TextArea keep focus after interacting with the Edit menu items?\n"
-               + "- Does adding and removing menu items work?")
+               + "- Does adding and removing menu items work?"
+               + "- Do the menus in the MenuBar work?"
+               + "- Can you add and remove menus from the MenuBar?")
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.Wrap
 
@@ -90,29 +131,33 @@ ApplicationWindow {
 
             Layout.fillWidth: true
 
-            RowLayout {
+            ColumnLayout {
                 anchors.fill: parent
 
-                Button {
-                    text: qsTr("Add action")
-                    onClicked: backgroundContextMenu.appendAction()
-                }
-                Button {
-                    text: qsTr("Remove action")
-                    onClicked: backgroundContextMenu.removeLastAction()
+                Switch {
+                    id: requestNativeAction
+                    text: qsTr("Request native")
+                    checked: true
                 }
 
-                Button {
-                    text: qsTr("Add sub-menu action")
-                    onClicked: subMenu.appendAction()
-                }
-                Button {
-                    text: qsTr("Remove sub-menu action")
-                    onClicked: subMenu.removeLastAction()
-                }
+                Row {
+                    Button {
+                        text: qsTr("Add action")
+                        onClicked: backgroundContextMenu.appendAction()
+                    }
+                    Button {
+                        text: qsTr("Remove action")
+                        onClicked: backgroundContextMenu.removeLastAction()
+                    }
 
-                Item {
-                    Layout.fillWidth: true
+                    Button {
+                        text: qsTr("Add sub-menu action")
+                        onClicked: subMenu.appendAction()
+                    }
+                    Button {
+                        text: qsTr("Remove sub-menu action")
+                        onClicked: subMenu.removeLastAction()
+                    }
                 }
             }
         }
@@ -128,6 +173,49 @@ ApplicationWindow {
                 objectName: "textAreaTapHandler"
                 acceptedButtons: Qt.RightButton
                 onTapped: editContextMenu.popup()
+            }
+        }
+
+        GroupBox {
+            title: qsTr("MenuBar")
+
+            Layout.fillWidth: true
+
+            ColumnLayout {
+                anchors.fill: parent
+
+                Row {
+                    Switch {
+                        id: requestNativeMenuBarSwitch
+                        text: qsTr("Request native")
+                        checked: true
+                    }
+                    Switch {
+                        id: menuBarVisibleSwitch
+                        text: qsTr("MenuBar visible")
+                        checked: true
+                    }
+                }
+                Row {
+                    Button {
+                        text: "Append menu"
+                        onClicked: {
+                            let menu = extraMenuComp.createObject(menuBar, { title: "Extra " + menuBar.count })
+                            menuBar.addMenu(menu)
+                        }
+                    }
+                    Button {
+                        text: "Prepend menu"
+                        onClicked: {
+                            let menu = extraMenuComp.createObject(menuBar, { title: "Extra " + menuBar.count })
+                            menuBar.insertMenu(0, menu)
+                        }
+                    }
+                    Button {
+                        text: qsTr("Add file menu")
+                        onClicked: menuBar.addMenu(fileMenu)
+                    }
+                }
             }
         }
     }
