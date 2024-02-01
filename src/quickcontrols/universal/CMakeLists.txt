@@ -92,7 +92,9 @@ set_source_files_properties(VerticalHeaderView.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.15;6.0"
 )
 
-qt_internal_add_qml_module(qtquickcontrols2universalstyleplugin
+add_subdirectory(impl)
+
+qt_internal_add_qml_module(QuickControls2Universal
     URI "QtQuick.Controls.Universal"
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
@@ -107,7 +109,6 @@ qt_internal_add_qml_module(qtquickcontrols2universalstyleplugin
     SOURCES
         qquickuniversalstyle.cpp qquickuniversalstyle_p.h
         qquickuniversaltheme.cpp qquickuniversaltheme_p.h
-        qtquickcontrols2universalstyleplugin.cpp
     QML_FILES
         ${qml_files}
     DEFINES
@@ -122,9 +123,20 @@ qt_internal_add_qml_module(qtquickcontrols2universalstyleplugin
         Qt::QuickControls2UniversalStyleImpl
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
+    GENERATE_CPP_EXPORTS
 )
 
-qt_internal_add_resource(qtquickcontrols2universalstyleplugin "qtquickcontrols2universalstyleplugin"
+target_sources(qtquickcontrols2universalstyleplugin
+    PRIVATE
+        qtquickcontrols2universalstyleplugin.cpp
+)
+
+target_link_libraries(qtquickcontrols2universalstyleplugin
+    PRIVATE
+        Qt::QuickControls2Private
+)
+
+qt_internal_add_resource(QuickControls2Universal "qtquickcontrols2universalstyle"
     PREFIX
         "/qt-project.org/imports/QtQuick/Controls/Universal"
     FILES
@@ -145,8 +157,6 @@ qt_internal_add_resource(qtquickcontrols2universalstyleplugin "qtquickcontrols2u
         "images/rightarrow@3x.png"
         "images/rightarrow@4x.png"
 )
-
-add_subdirectory(impl)
 
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2universalstyleplugin quickwindow)
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2universalstyleplugin

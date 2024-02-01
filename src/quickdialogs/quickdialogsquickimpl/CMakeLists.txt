@@ -101,12 +101,12 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
-        Qt::QuickPrivate
-        Qt::QuickTemplates2
-        Qt::QuickTemplates2Private
         Qt::QuickControls2ImplPrivate
         Qt::QuickDialogs2Utils
         Qt::QuickDialogs2UtilsPrivate
+        Qt::QuickPrivate
+        Qt::QuickTemplates2
+        Qt::QuickTemplates2Private
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
@@ -114,6 +114,24 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
 )
+
+add_dependencies(QuickDialogs2QuickImpl Qt::QuickControls2Basic)
+
+if(QT_FEATURE_quickcontrols2_fusion)
+    add_dependencies(QuickDialogs2QuickImpl QuickControls2Fusion)
+endif()
+
+if(QT_FEATURE_quickcontrols2_imagine)
+    add_dependencies(QuickDialogs2QuickImpl QuickControls2Imagine)
+endif()
+
+if(QT_FEATURE_quickcontrols2_material)
+    add_dependencies(QuickDialogs2QuickImpl QuickControls2Material)
+endif()
+
+if(QT_FEATURE_quickcontrols2_universal)
+    add_dependencies(QuickDialogs2QuickImpl QuickControls2Universal)
+endif()
 
 qt_internal_extend_target(QuickDialogs2QuickImpl CONDITION QT_FEATURE_quick_listview
     SOURCES
