@@ -1375,14 +1375,14 @@ struct TypeReferenceMap : QHash<int, TypeReference>
                 if (!formal->type.indexIsCommonType()) {
                     TypeReference &r
                             = this->add(formal->type.typeNameIndexOrCommonType(), it->location);
-                    r.errorWhenNotFound = true;
+                    r.errorWhenNotFound = false;
                 }
             }
 
             if (!it->returnType.indexIsCommonType()) {
                 TypeReference &r
                     = this->add(it->returnType.typeNameIndexOrCommonType(), it->location);
-                r.errorWhenNotFound = true;
+                r.errorWhenNotFound = false;
             }
         }
     }

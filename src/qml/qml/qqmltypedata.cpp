@@ -395,7 +395,7 @@ void QQmlTypeData::done()
                 containingType, type.type.elementName());
 
             // Only if we create the IC from an actual CU, we have valid metatypes.
-            if (!ic.typeId().isValid()) {
+            if (type.errorWhenNotFound && !ic.typeId().isValid()) {
                 const QString &typeName = stringAt(it.key());
                 int lastDot = typeName.lastIndexOf(u'.');
                 createError(
@@ -405,7 +405,7 @@ void QQmlTypeData::done()
                 return;
             }
         }
-        if (type.typeData && type.typeData->isError()) {
+        if (type.errorWhenNotFound && type.typeData && type.typeData->isError()) {
             const QString &typeName = stringAt(it.key());
             createError(type, QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
             return;
@@ -962,6 +962,7 @@ void QQmlTypeData::resolveTypes()
         ref.version = version;
         ref.location = unresolvedRef->location;
         ref.needsCreation = unresolvedRef->needsCreation;
+        ref.errorWhenNotFound = unresolvedRef->errorWhenNotFound;
         m_resolvedTypes.insert(unresolvedRef.key(), ref);
     }
 
@@ -1003,8 +1004,9 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 Q_ASSERT(!icName.isEmpty());
 
                 const auto compilationUnit = resolvedType->typeData->compilationUnit();
-                ref->setTypePropertyCache(compilationUnit->propertyCaches.at(
-                    compilationUnit->inlineComponentId(icName)));
+                const int icId = compilationUnit->inlineComponentId(icName);
+                if (icId != -1)
+                    ref->setTypePropertyCache(compilationUnit->propertyCaches.at(icId));
                 ref->setType(qmlType);
                 Q_ASSERT(ref->type().isInlineComponentType());
             }
