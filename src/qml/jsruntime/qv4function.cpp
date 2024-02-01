@@ -148,16 +148,24 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
 
         const QQmlType qmltype = unit->typeNameCache->query<QQmlImport::AllowRecursion>(
                                                             unit->stringAt(type)).type;
-        if (!qmltype.isValid() || qmltype.typeId().isValid())
+
+        if (!qmltype.isValid() || qmltype.isComposite())
             return qmltype;
 
-        if (!qmltype.isComposite()) {
-            return qmltype.isInlineComponentType()
-                ? unit->qmlTypeForComponent(qmltype.elementName())
-                : QQmlType();
+        if (qmltype.isInlineComponentType()) {
+            if (qmltype.typeId().isValid()) {
+                // If it seems to be an IC type, make sure there is an actual
+                // compilation unit for it. We create inline component types speculatively.
+                return QQmlMetaType::obtainExecutableCompilationUnit(qmltype.typeId())
+                        ? qmltype
+                        : QQmlType();
+            } else {
+                // TODO: Can this actually happen?
+                return unit->qmlTypeForComponent(qmltype.elementName());
+            }
         }
 
-        return qmltype;
+        return qmltype.typeId().isValid() ? qmltype : QQmlType();
     };
 
     for (quint16 i = 0; i < nFormals; ++i)
