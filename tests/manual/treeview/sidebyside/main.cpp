@@ -26,6 +26,7 @@ int main(int c, char **args) {
 #endif
 
     QFileSystemModel model;
+    model.setIconProvider(nullptr); // save time: we don't need icons
     model.setRootPath("/");
 
     QQmlApplicationEngine engine("qrc:data/treeview.qml");
