@@ -582,7 +582,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
         bool ret = uri == typeStr;
         if (ret) {
             Q_ASSERT(!type_return->isValid());
-            *type_return = QQmlMetaType::inlineComponentTypeForUrl(QUrl(url));
+            *type_return = QQmlMetaType::fetchOrCreateInlineComponentTypeForUrl(QUrl(url));
         }
         return ret;
     }
@@ -745,8 +745,8 @@ bool QQmlImports::resolveType(
         } else {
             if (resolveTypeInNamespace(splitName.at(0), &m_unqualifiedset, nullptr)) {
                 // either simple type + inline component
-                *type_return = QQmlMetaType::inlineComponentTypeForUrl(
-                        type_return->sourceUrl(), splitName.at(1).toString());
+                *type_return = QQmlMetaType::inlineComponentType(
+                        *type_return, splitName.at(1).toString());
                 return true;
             } else {
                 // or a failure
@@ -767,8 +767,8 @@ bool QQmlImports::resolveType(
             error.setDescription(QQmlImportDatabase::tr("- %1 is not a namespace").arg(splitName.at(0).toString()));
         } else {
             if (resolveTypeInNamespace(splitName.at(1), s, nullptr)) {
-                *type_return = QQmlMetaType::inlineComponentTypeForUrl(
-                        type_return->sourceUrl(), splitName.at(2).toString());
+                *type_return = QQmlMetaType::inlineComponentType(
+                        *type_return, splitName.at(2).toString());
                 return true;
             } else {
                 error.setDescription(QQmlImportDatabase::tr("- %1 is not a type").arg(splitName.at(1).toString()));

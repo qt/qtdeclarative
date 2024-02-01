@@ -674,15 +674,11 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             }
 
             // inline components are not necessarily valid yet
-            Q_ASSERT(qmltype.isValid() || qmltype.isInlineComponentType());
+            Q_ASSERT(qmltype.isValid());
             if (qmltype.isComposite() || qmltype.isInlineComponentType()) {
                 QQmlType compositeType;
                 if (qmltype.isInlineComponentType()) {
-                    const QString icName = qmltype.elementName();
-                    compositeType = QQmlMetaType::inlineComponentTypeForUrl(
-                            qmltype.sourceUrl(), icName);
-                    if (!compositeType.isValid()) // type has not been registered yet, we must be in containing type
-                        compositeType = objectContainer->qmlTypeForComponent(icName);
+                    compositeType = qmltype;
                     Q_ASSERT(compositeType.isValid());
                 } else if (selfReference) {
                     compositeType = objectContainer->qmlTypeForComponent();

@@ -1360,7 +1360,7 @@ QQmlType QQmlMetaType::qmlType(const QUrl &unNormalizedUrl, bool includeNonFileI
         return QQmlType();
 }
 
-QQmlType QQmlMetaType::inlineComponentTypeForUrl(const QUrl &url)
+QQmlType QQmlMetaType::fetchOrCreateInlineComponentTypeForUrl(const QUrl &url)
 {
     QQmlMetaTypeDataPtr data;
     const auto it = data->inlineComponentTypes.constFind(url);
@@ -1369,7 +1369,6 @@ QQmlType QQmlMetaType::inlineComponentTypeForUrl(const QUrl &url)
 
     return doRegisterInlineComponentType(data, url);
 }
-
 
 /*!
 Returns a QQmlPropertyCache for \a obj if one is available.
