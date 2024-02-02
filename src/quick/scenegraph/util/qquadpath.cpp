@@ -658,6 +658,7 @@ QQuadPath QQuadPath::subPathsClosed(bool *didClose) const
     Q_ASSERT(m_childElements.isEmpty());
     bool closed = false;
     QQuadPath res = *this;
+    res.subPathToStart = false;
     res.m_elements = {};
     res.m_elements.reserve(elementCount());
     int subStart = -1;
