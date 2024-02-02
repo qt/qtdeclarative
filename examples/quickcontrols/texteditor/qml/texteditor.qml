@@ -496,9 +496,25 @@ ApplicationWindow {
                     textDocument.source = "qrc:/texteditor.html";
             }
 
-            textDocument.onError: function (message) {
-                errorDialog.text = message
-                errorDialog.open()
+            textDocument.onStatusChanged: {
+                var err = ""
+                switch (textDocument.status) {
+                case TextDocument.ReadError:
+                    err = qsTr("Failed to load ") + textDocument.source
+                    break
+                case TextDocument.WriteError:
+                    err = qsTr("Failed to save ") + textDocument.source
+                    break
+                case TextDocument.NonLocalFileError:
+                    err = qsTr("Not a local file: ") + textDocument.source
+                    break
+                default:
+                    break
+                }
+                if (err !== "") {
+                    errorDialog.text = err
+                    errorDialog.open()
+                }
             }
         }
 
