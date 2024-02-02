@@ -45,7 +45,7 @@ public:
     static void checkEnvQSgInfo();
 
 #if QT_CONFIG(opengl)
-    static QRhiTexture::Format toRhiTextureFormatFromGL(uint format);
+    static QRhiTexture::Format toRhiTextureFormatFromGL(uint format, QRhiTexture::Flags *flags);
 #endif
 
 #if QT_CONFIG(vulkan)
