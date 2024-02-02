@@ -242,38 +242,29 @@ void QQuickMenuPrivate::init()
     requestNative = qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_USE_NATIVE_MENUS");
 }
 
-QQuickMenuBar *QQuickMenuPrivate::resolveMenuBar() const
+QQuickMenu *QQuickMenuPrivate::rootMenu() const
 {
     Q_Q(const QQuickMenu);
-    QObject *p = q->parent();
-
+    const QQuickMenu *rootMenu = q;
+    const QObject *p = q->parent();
     while (p) {
-        if (auto menuBar = qobject_cast<QQuickMenuBar *>(p))
-            return menuBar;
-        p = p->parent();
-    }
-
-    return nullptr;
-}
-
-bool QQuickMenuPrivate::useNativeMenu() const
-{
-    Q_Q(const QQuickMenu);
-    // If we're a sub-menu or inside a menubar, we need to
-    // respect what our parent has set.
-    QObject *p = const_cast<QQuickMenu *>(q);
-    QQuickMenu *rootMenu = nullptr;
-
-    while (p) {
-        if (auto menuBar = qobject_cast<QQuickMenuBar *>(p))
-            return QQuickMenuBarPrivate::get(menuBar)->useNativeMenuBar();
-        if (auto menu = qobject_cast<QQuickMenu *>(p))
+        if (auto menu = qobject_cast<const QQuickMenu *>(p))
             rootMenu = menu;
         p = p->parent();
     }
 
-    Q_ASSERT(rootMenu);
-    return rootMenu->requestNative();
+    return const_cast<QQuickMenu *>(rootMenu);
+}
+
+bool QQuickMenuPrivate::useNativeMenu() const
+{
+    // If we're inside a MenuBar, the menubar will decide if we should be
+    // native or not. Otherwise, if we're a sub-menu, the root menu will
+    // decide. Otherwise, we use requestNative.
+    QQuickMenu *root = rootMenu();
+    if (auto menuBar = QQuickMenuPrivate::get(root)->menuBar.get())
+        return QQuickMenuBarPrivate::get(menuBar)->useNativeMenuBar();
+    return root->requestNative();
 }
 
 QPlatformMenu *QQuickMenuPrivate::nativeHandle()
@@ -295,7 +286,7 @@ bool QQuickMenuPrivate::createNativeMenu()
     Q_Q(QQuickMenu);
     qCDebug(lcNativeMenus) << "createNativeMenu called on" << q;
 
-    if (auto menuBar = resolveMenuBar()) {
+    if (auto menuBar = QQuickMenuPrivate::get(rootMenu())->menuBar) {
         auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
         if (menuBarPrivate->useNativeMenuBar()) {
             qCDebug(lcNativeMenus) << "- creating native menu from native menubar";

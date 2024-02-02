@@ -39,6 +39,10 @@ private slots:
     void altNavigation();
     void addRemove_data();
     void addRemove();
+    void addRemoveInlineMenus_data();
+    void addRemoveInlineMenus();
+    void addRemoveMenuFromQml_data();
+    void addRemoveMenuFromQml();
     void insert_data();
     void insert();
     void removeMenuThatIsOpen();
@@ -712,7 +716,10 @@ void tst_qquickmenubar::addRemove()
 
     QQuickMenuBar *menuBar = qobject_cast<QQuickMenuBar *>(engine.rootObjects().value(0));
     QVERIFY(menuBar);
+    QQuickMenuBarPrivate *menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
     QCOMPARE(menuBar->requestNative(), requestNative);
+    if (requestNative && nativeMenuBarSupported)
+        QVERIFY(menuBarPrivate->nativeHandle());
 
     QQmlComponent component(&engine);
     component.setData("import QtQuick.Controls; Menu { }", QUrl());
@@ -741,15 +748,17 @@ void tst_qquickmenubar::addRemove()
     QCOMPARE(menuBar->itemAt(0), menuBarItem2.data());
     QCOMPARE(menuBar->itemAt(1), menuBarItem1.data());
 
-    // takeMenu(int) does not destroy the menu, but does destroy the respective item in the menubar
+    // takeMenu(int) does not explicitly destroy the menu, but leave
+    // this to the garbage collector. The MenuBarItem, OTOH, is currently
+    // being destroyed from c++, but this might change in the future.
     QCOMPARE(menuBar->takeMenu(1), menu1.data());
     QCOMPARE(menuBar->count(), 1);
     QVERIFY(!menuBar->menuAt(1));
     QVERIFY(!menuBar->itemAt(1));
-    QCoreApplication::sendPostedEvents(menu1.data(), QEvent::DeferredDelete);
+    QTRY_VERIFY(menuBarItem1.isNull());
     QVERIFY(!menu1.isNull());
-    QCoreApplication::sendPostedEvents(menuBarItem1, QEvent::DeferredDelete);
-    QVERIFY(menuBarItem1.isNull());
+    gc(engine);
+    QVERIFY(!menu1.isNull());
 
     // check that it's safe to call takeMenu(int) with
     // an index that is out of range.
@@ -766,14 +775,111 @@ void tst_qquickmenubar::addRemove()
     menuBarItem1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(1));
     QVERIFY(!menuBarItem1.isNull());
 
-    // removeMenu(Menu) destroys both the menu and the respective item in the menubar
+    // removeMenu(menu) does not explicitly destroy the menu, but leave
+    // this to the garbage collector. The MenuBarItem, OTOH, is currently
+    // being destroyed from c++, but this might change in the future.
     menuBar->removeMenu(menu1.data());
     QCOMPARE(menuBar->count(), 1);
     QVERIFY(!menuBar->itemAt(1));
-    QCoreApplication::sendPostedEvents(menu1.data(), QEvent::DeferredDelete);
-    QVERIFY(menu1.isNull());
-    QCoreApplication::sendPostedEvents(menuBarItem1, QEvent::DeferredDelete);
-    QVERIFY(menuBarItem1.isNull());
+    QTRY_VERIFY(menuBarItem1.isNull());
+    QVERIFY(!menu1.isNull());
+    gc(engine);
+    QVERIFY(!menu1.isNull());
+}
+
+void tst_qquickmenubar::addRemoveInlineMenus_data()
+{
+    QTest::addColumn<bool>("requestNative");
+    QTest::newRow("not native") << false;
+    QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::addRemoveInlineMenus()
+{
+    // Check that it's safe to remove a menu from the menubar, that
+    // is an inline child from QML (fileMenu). Since it's owned by
+    // JavaScript, it should be deleted by the gc when appropriate, and
+    // not upon a call to removeMenu.
+    QFETCH(bool, requestNative);
+
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", requestNative }});
+    engine.load(testFileUrl("menus.qml"));
+
+    auto window = qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0));
+    QVERIFY(window);
+    auto menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    QPointer<QQuickMenu> fileMenu = window->property("fileMenu").value<QQuickMenu *>();
+    QVERIFY(fileMenu);
+    QCOMPARE(menuBar->menuAt(0), fileMenu);
+
+    QPointer<QQuickItem> menuBarItem = menuBar->itemAt(0);
+    QVERIFY(menuBarItem);
+
+    menuBar->removeMenu(fileMenu);
+    QVERIFY(menuBar->menuAt(0) != fileMenu);
+    QTRY_VERIFY(!menuBarItem);
+    QVERIFY(fileMenu);
+    gc(engine);
+    QVERIFY(fileMenu);
+
+    // Add it back again, but to the end. This should also be fine, even
+    // if it no longer matches the initial order in the QML file.
+    menuBar->addMenu(fileMenu);
+    QVERIFY(fileMenu);
+    QCOMPARE(menuBar->menuAt(menuBar->count() - 1), fileMenu);
+}
+
+void tst_qquickmenubar::addRemoveMenuFromQml_data()
+{
+    QTest::addColumn<bool>("requestNative");
+    QTest::newRow("not native") << false;
+    QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::addRemoveMenuFromQml()
+{
+    // Create a menu dynamically from QML, and add it to
+    // the menubar. Remove it again. Check that the
+    // garbage collector will then destruct it.
+    QFETCH(bool, requestNative);
+
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", requestNative }});
+    engine.load(testFileUrl("menus.qml"));
+
+    auto window = qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0));
+    QVERIFY(window);
+    auto menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    const int initialMenuCount = menuBar->count();
+    QVERIFY(initialMenuCount > 0);
+
+    QMetaObject::invokeMethod(window, "addTestMenu");
+
+    QCOMPARE(menuBar->count(), initialMenuCount + 1);
+
+    // The "extra" menu should have been added to
+    // the end of the menu bar. Verify this.
+    QQuickItem *item = menuBar->itemAt(menuBar->count() - 1);
+    QPointer<QQuickMenuBarItem> menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+    QVERIFY(menuBarItem);
+    QPointer<QQuickMenu> menu = menuBar->menuAt(menuBar->count() - 1);
+    QVERIFY(menu);
+    QCOMPARE(menu->title(), "extra");
+    QCOMPARE(menuBarItem->menu(), menu);
+
+    // Remove the menu again. Since we have no other references to
+    // it from QML, it should be collected by the gc.
+    menuBar->removeMenu(menu);
+    QCOMPARE(menuBar->count(), initialMenuCount);
+    QTRY_VERIFY(!menuBarItem);
+    QVERIFY(menu);
+    gc(engine);
+    QVERIFY(!menu);
 }
 
 void tst_qquickmenubar::insert_data()

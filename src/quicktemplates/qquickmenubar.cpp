@@ -363,16 +363,15 @@ void QQuickMenuBarPrivate::insertMenu(int index, QQuickMenu *menu, QQuickItem *d
         return;
     }
 
+    QQuickMenuPrivate::get(menu)->menuBar = q;
+
     // Always insert menu into the container, even when using a native
     // menubar, so that container API such as 'count' and 'itemAt'
     // continues to work as expected.
     q->insertItem(index, delegateItem);
 
-    if (menu) {
-        menu->setParent(delegateItem);
-        if (handle)
-            insertNativeMenu(menu);
-    }
+    if (handle)
+        insertNativeMenu(menu);
 }
 
 QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
@@ -401,11 +400,13 @@ QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
 
     removeItem(index, item);
 
-    // Set parent to nullptr on the menu, since it should
-    // no longer be under memory management of the menubar.
-    if (menu)
-        menu->setParent(nullptr);
+    // Delete the MenuBarItem. This will also cause the menu to be deleted by
+    // the garbage collector, unless other QML references are being held to it.
+    // Note: We might consider leaving it to the garbage collector to also
+    // delete the MenuBarItem in the future.
     item->deleteLater();
+
+    QQuickMenuPrivate::get(menu)->menuBar = nullptr;
 
     return menu;
 }
@@ -564,6 +565,8 @@ void QQuickMenuBar::insertMenu(int index, QQuickMenu *menu)
 
     Removes specified \a menu. If the menu is \l {QQuickMenu::popup(QQmlV4Function *)}{open},
     it will first be \l {QQuickMenu::dismiss()}{dismissed.}
+    The \a menu will eventually be deleted by the garbage collector when the
+    application no longer holds any QML references to it.
 */
 void QQuickMenuBar::removeMenu(QQuickMenu *menu)
 {
@@ -571,7 +574,7 @@ void QQuickMenuBar::removeMenu(QQuickMenu *menu)
     for (int i = 0; i < count(); ++i) {
         QQuickMenuBarItem *item = qobject_cast<QQuickMenuBarItem *>(itemAt(i));
         if (item && item->menu() == menu) {
-            d->takeMenu(i)->deleteLater();
+            d->takeMenu(i);
             return;
         }
     }
@@ -583,6 +586,8 @@ void QQuickMenuBar::removeMenu(QQuickMenu *menu)
     Removes and returns the menu at \a index. If the menu is
     \l {QQuickMenu::popup(QQmlV4Function *)}{open}, it will first be
     \l {QQuickMenu::dismiss()}{dismissed.}
+    The menu will eventually be deleted by the garbage collector when the
+    application no longer holds any QML references to it.
 */
 QQuickMenu *QQuickMenuBar::takeMenu(int index)
 {

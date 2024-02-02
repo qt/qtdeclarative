@@ -2450,6 +2450,7 @@ void tst_QQuickMenu::requestNativeChanges()
         QVERIFY(!contextMenuPrivate->handle);
     contextMenu->setRequestNative(false);
     QVERIFY(!contextMenu->requestNative());
+    QVERIFY(!contextMenuPrivate->useNativeMenu());
     QVERIFY(!contextMenuPrivate->handle);
     QVERIFY(!subMenuPrivate->useNativeMenu());
     QVERIFY(!subMenuPrivate->handle);

@@ -63,4 +63,25 @@ ApplicationWindow {
         anchors.fill: parent
         color: "green"
     }
+
+    Text {
+        // dummy binding to test that fileMenu will be kept alive
+        // after a call to menuBar.removeMenu(fileMenu) followed
+        // by running the garbage collector.
+        text: fileMenu.title
+    }
+
+    Component {
+        id: menuComp
+        Menu {
+            objectName: "Extra"
+            title: "extra"
+        }
+    }
+
+    function addTestMenu()
+    {
+        let menu = menuComp.createObject(null)
+        header.addMenu(menu)
+    }
 }

@@ -48,14 +48,13 @@ public:
 
     QPlatformMenu *nativeHandle();
     QPlatformMenu *maybeNativeHandle() const;
+    QQuickMenu *rootMenu() const;
     bool useNativeMenu() const;
     bool createNativeMenu();
     void syncWithNativeMenu();
     void syncWithRequestNative();
     static void recursivelyDestroyNativeSubMenus(QQuickMenu *menu);
     void setNativeMenuVisible(bool visible);
-
-    QQuickMenuBar *resolveMenuBar() const;
 
     QQuickItem *itemAt(int index) const;
     void insertItem(int index, QQuickItem *item);
@@ -138,6 +137,7 @@ public:
     // For native menu support.
     std::unique_ptr<QPlatformMenu> handle = nullptr;
     QList<QQuickNativeMenuItem *> nativeItems;
+    QPointer<QQuickMenuBar> menuBar;
 };
 
 QT_END_NAMESPACE
