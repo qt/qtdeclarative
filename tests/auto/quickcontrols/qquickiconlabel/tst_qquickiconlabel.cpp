@@ -308,6 +308,7 @@ void tst_qquickiconlabel::colorChanges()
 
 void tst_qquickiconlabel::iconSourceContext()
 {
+#if defined(QT_BUILD_INTERNAL)
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("iconSourceContext.qml"));
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
@@ -337,7 +338,7 @@ void tst_qquickiconlabel::iconSourceContext()
                 = static_cast<QQuickImagePrivate *>(QQuickItemPrivate::get(image));
         QCOMPARE(imagePrivate->pix.url(), testFileUrl("a.png"));
     }
-
+#endif
 }
 
 QTEST_MAIN(tst_qquickiconlabel)
