@@ -394,7 +394,7 @@ void QQuickViewTestUtils::StressTestModel::updateModel()
     }
 }
 
-#if QT_CONFIG(quick_itemview)
+#if QT_CONFIG(quick_itemview) && defined(QT_BUILD_INTERNAL)
 bool QQuickViewTestUtils::testVisibleItems(const QQuickItemViewPrivate *priv, bool *nonUnique, FxViewItem **failItem, int *expectedIdx)
 {
     QHash<QQuickItem*, int> uniqueItems;
