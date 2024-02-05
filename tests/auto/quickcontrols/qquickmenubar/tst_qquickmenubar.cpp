@@ -38,6 +38,8 @@ private slots:
     void altNavigation();
     void addRemove_data();
     void addRemove();
+    void insert_data();
+    void insert();
     void checkHighlightWhenMenuDismissed();
     void hoverAfterClosingWithEscape();
     void requestNative_data();
@@ -761,6 +763,45 @@ void tst_qquickmenubar::addRemove()
     QVERIFY(menu1.isNull());
     QCoreApplication::sendPostedEvents(menuBarItem1, QEvent::DeferredDelete);
     QVERIFY(menuBarItem1.isNull());
+}
+
+void tst_qquickmenubar::insert_data()
+{
+    QTest::addColumn<bool>("requestNative");
+    QTest::newRow("not native") << false;
+    QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::insert()
+{
+    QFETCH(bool, requestNative);
+
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", requestNative }});
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    const int initialMenuCount = menuBar->count();
+    QVERIFY(initialMenuCount > 0);
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick.Controls; Menu { }", QUrl());
+
+    QPointer<QQuickMenu> menu1(qobject_cast<QQuickMenu *>(component.create()));
+    QVERIFY(!menu1.isNull());
+    menuBar->insertMenu(0, menu1.data());
+    QCOMPARE(menuBar->count(), initialMenuCount + 1);
+    QCOMPARE(menuBar->menuAt(0), menu1.data());
+
+    QPointer<QQuickMenu> menu2(qobject_cast<QQuickMenu *>(component.create()));
+    QVERIFY(!menu2.isNull());
+    menuBar->insertMenu(2, menu2.data());
+    QCOMPARE(menuBar->count(), initialMenuCount + 2);
+    QCOMPARE(menuBar->menuAt(2), menu2.data());
 }
 
 void tst_qquickmenubar::checkHighlightWhenMenuDismissed()

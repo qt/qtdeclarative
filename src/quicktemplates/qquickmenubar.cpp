@@ -67,7 +67,6 @@ QQuickItem *QQuickMenuBarPrivate::beginCreateItem(QQuickMenu *menu)
 
     if (QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(item))
         menuBarItem->setMenu(menu);
-    item->setParentItem(q);
     QQml_setParent_noEvent(item, q);
 
     return item;
