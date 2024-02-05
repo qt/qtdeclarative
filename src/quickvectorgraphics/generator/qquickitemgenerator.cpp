@@ -216,7 +216,9 @@ void QQuickItemGenerator::generateGradient(const QGradient *grad, QQuickShapePat
 
 void QQuickItemGenerator::generateNode(NodeInfo &info)
 {
-    qCWarning(lcQuickVectorGraphics) << "//### SVG NODE NOT IMPLEMENTED: " << info.nodeId << " type: " << info.typeName;
+    qCWarning(lcQuickVectorGraphics) << "SVG NODE NOT IMPLEMENTED: "
+                                     << info.nodeId
+                                     << " type: " << info.typeName;
 }
 
 void QQuickItemGenerator::generateTextNode(TextNodeInfo &info)
