@@ -3570,10 +3570,18 @@ void QQmlJSCodeGenerator::generateInPlaceOperation(const QString &cppOperator)
 void QQmlJSCodeGenerator::generateLookup(const QString &lookup, const QString &initialization,
                                         const QString &resultPreparation)
 {
+    m_body += u"#ifndef QT_NO_DEBUG\n"_s;
+    generateSetInstructionPointer();
+    m_body += u"#endif\n"_s;
+
     if (!resultPreparation.isEmpty())
         m_body += resultPreparation + u";\n"_s;
     m_body += u"while (!"_s + lookup + u") {\n"_s;
+
+    m_body += u"#ifdef QT_NO_DEBUG\n"_s;
     generateSetInstructionPointer();
+    m_body += u"#endif\n"_s;
+
     m_body += initialization + u";\n"_s;
     generateExceptionCheck();
     if (!resultPreparation.isEmpty())
