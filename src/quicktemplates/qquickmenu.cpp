@@ -385,6 +385,28 @@ void QQuickMenuPrivate::syncWithNativeMenu()
     qCDebug(lcNativeMenu) << "... finished syncing" << q;
 }
 
+void QQuickMenuPrivate::syncWithRequestNative()
+{
+    Q_Q(QQuickMenu);
+    if (usingNativeMenu() && !useNativeMenu()) {
+        // Switch to a non-native menu by removing the native items.
+        const int qtyItemsToRemove = nativeItems.size();
+        if (qtyItemsToRemove != 0)
+            Q_ASSERT(q->count() == qtyItemsToRemove);
+        for (int i = 0; i < qtyItemsToRemove; ++i)
+            removeNativeItem(0);
+        Q_ASSERT(nativeItems.isEmpty());
+
+        // removeNativeItem will take care of destroying sub-menus and resetting their native data,
+        // but as the root menu, we have to take care of our own.
+        resetNativeData();
+    } else {
+        Q_ASSERT(nativeItems.isEmpty());
+        if (usingNativeMenu())
+            recursivelyCreateNativeMenuItems(q);
+    }
+}
+
 /*!
     \internal
 
@@ -489,14 +511,16 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
         QObjectPrivate::connect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
 
-    if (usingNativeMenu())
+    if (usingNativeMenu() && complete)
         maybeCreateAndInsertNativeItem(index, item);
 }
 
 void QQuickMenuPrivate::maybeCreateAndInsertNativeItem(int index, QQuickItem *item)
 {
     Q_Q(QQuickMenu);
-    Q_ASSERT(useNativeMenu());
+    Q_ASSERT(complete);
+    Q_ASSERT_X(handle, Q_FUNC_INFO, qPrintable(QString::fromLatin1(
+        "Expected %1 to be using a native menu").arg(QDebug::toString(q))));
     std::unique_ptr<QQuickNativeMenuItem> nativeMenuItem(maybeCreateNativeMenuItemFor(item));
     if (!nativeMenuItem)
         return;
@@ -620,9 +644,18 @@ void QQuickMenuPrivate::resetNativeData()
 void QQuickMenuPrivate::recursivelyCreateNativeMenuItems(QQuickMenu *menu)
 {
     auto *menuPrivate = QQuickMenuPrivate::get(menu);
-    qCDebug(lcNativeMenu) << "recursively creating" << menuPrivate->contentModel->count()
-        << "menu item(s) for" << menu;
-    for (int i = 0; i < menuPrivate->contentModel->count(); ++i) {
+    // If we're adding a sub-menu, we need to ensure its handle has been created
+    // before trying to create native items for it.
+    if (!menuPrivate->triedToCreateNativeMenu)
+        menuPrivate->createNativeMenu();
+
+    const int qtyItemsToCreate = menuPrivate->contentModel->count();
+    if (menuPrivate->nativeItems.count() == qtyItemsToCreate)
+        return;
+
+    qCDebug(lcNativeMenu) << "recursively creating" << qtyItemsToCreate << "menu item(s) for" << menu;
+    Q_ASSERT(menuPrivate->nativeItems.count() == 0);
+    for (int i = 0; i < qtyItemsToCreate; ++i) {
         QQuickItem *item = menu->itemAt(i);
         menuPrivate->maybeCreateAndInsertNativeItem(i, item);
         auto *menuItem = qobject_cast<QQuickMenuItem *>(item);
@@ -1626,24 +1659,8 @@ void QQuickMenu::setRequestNative(bool native)
     }
 
     d->requestNative = native;
-
-    if (d->usingNativeMenu() && !native) {
-        // Switch to a non-native menu.
-        const int qtyItemsToRemove = d->nativeItems.size();
-        Q_ASSERT(count() == qtyItemsToRemove);
-        for (int i = 0; i < qtyItemsToRemove; ++i)
-            d->removeNativeItem(0);
-        Q_ASSERT(d->nativeItems.isEmpty());
-
-        // removeNativeItem will take care of destroying sub-menus and resetting their native data,
-        // but as the root menu, we have to take care of our own.
-        d->resetNativeData();
-    } else {
-        Q_ASSERT(d->nativeItems.isEmpty());
-        if (d->usingNativeMenu())
-            d->recursivelyCreateNativeMenuItems(this);
-    }
-
+    if (d->complete)
+        d->syncWithRequestNative();
     emit requestNativeChanged();
 }
 
@@ -1910,6 +1927,7 @@ void QQuickMenu::componentComplete()
     Q_D(QQuickMenu);
     QQuickPopup::componentComplete();
     d->resizeItems();
+    d->syncWithRequestNative();
     if (d->usingNativeMenu())
         d->syncWithNativeMenu();
 }

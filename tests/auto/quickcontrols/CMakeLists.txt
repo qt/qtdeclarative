@@ -17,7 +17,6 @@ if(NOT ANDROID) # QTBUG-100258
 add_subdirectory(focus)
 endif()
 add_subdirectory(font)
-add_subdirectory(nativemenus)
 add_subdirectory(palette)
 add_subdirectory(platform)
 add_subdirectory(pointerhandlers)

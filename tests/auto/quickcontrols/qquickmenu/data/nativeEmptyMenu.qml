@@ -46,5 +46,6 @@ ApplicationWindow {
     Menu {
         id: contextMenu
         objectName: "menu"
+        requestNative: true
     }
 }

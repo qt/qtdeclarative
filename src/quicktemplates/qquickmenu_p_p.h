@@ -51,6 +51,7 @@ public:
     bool usingNativeMenu();
     bool createNativeMenu();
     void syncWithNativeMenu();
+    void syncWithRequestNative();
     static void recursivelyDestroyNativeSubMenus(QQuickMenu *menu);
     void setNativeMenuVisible(bool visible);
 
