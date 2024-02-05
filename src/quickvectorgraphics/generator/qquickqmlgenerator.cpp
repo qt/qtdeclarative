@@ -174,16 +174,7 @@ void QQuickQmlGenerator::generatePath(PathNodeInfo &info)
 
 void QQuickQmlGenerator::generateGradient(const QGradient *grad, QQuickShapePath *shapePath, const QRectF &boundingRect)
 {
-    auto setStops = [](QQuickShapeGradient *quickGrad, const QGradientStops &stops) {
-        auto stopsProp = quickGrad->stops();
-        for (auto &stop : stops) {
-            auto *stopObj = new QQuickGradientStop(quickGrad);
-            stopObj->setPosition(stop.first);
-            stopObj->setColor(stop.second);
-            stopsProp.append(&stopsProp, stopObj);
-        }
-    };
-
+    Q_UNUSED(shapePath);
     if (grad->type() == QGradient::LinearGradient) {
         auto *linGrad = static_cast<const QLinearGradient *>(grad);
         stream() << "fillGradient: LinearGradient {";
@@ -201,18 +192,6 @@ void QQuickQmlGenerator::generateGradient(const QGradient *grad, QQuickShapePath
         }
         m_indentLevel--;
         stream() << "}";
-
-        if (shapePath) {
-            auto *quickGrad = new QQuickShapeLinearGradient(shapePath);
-
-            quickGrad->setX1(logRect.left());
-            quickGrad->setY1(logRect.top());
-            quickGrad->setX2(logRect.right());
-            quickGrad->setY2(logRect.bottom());
-            setStops(quickGrad, linGrad->stops());
-
-            shapePath->setFillGradient(quickGrad);
-        }
     } else if (grad->type() == QGradient::RadialGradient) {
         auto *radGrad = static_cast<const QRadialGradient*>(grad);
         stream() << "fillGradient: RadialGradient {";
@@ -228,18 +207,6 @@ void QQuickQmlGenerator::generateGradient(const QGradient *grad, QQuickShapePath
         }
         m_indentLevel--;
         stream() << "}";
-
-        if (shapePath) {
-            auto *quickGrad = new QQuickShapeRadialGradient(shapePath);
-            quickGrad->setCenterX(radGrad->center().x());
-            quickGrad->setCenterY(radGrad->center().y());
-            quickGrad->setCenterRadius(radGrad->radius());
-            quickGrad->setFocalX(radGrad->focalPoint().x());
-            quickGrad->setFocalY(radGrad->focalPoint().y());
-            setStops(quickGrad, radGrad->stops());
-
-            shapePath->setFillGradient(quickGrad);
-        }
     }
 }
 
