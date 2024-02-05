@@ -66,9 +66,9 @@ class QQmlDelegateModelItem : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ modelIndex NOTIFY modelIndexChanged)
-    Q_PROPERTY(int row READ modelRow NOTIFY rowChanged REVISION(2, 12) FINAL)
-    Q_PROPERTY(int column READ modelColumn NOTIFY columnChanged REVISION(2, 12) FINAL)
-    Q_PROPERTY(QObject *model READ modelObject CONSTANT FINAL)
+    Q_PROPERTY(int row READ modelRow NOTIFY rowChanged REVISION(2, 12))
+    Q_PROPERTY(int column READ modelColumn NOTIFY columnChanged REVISION(2, 12))
+    Q_PROPERTY(QObject *model READ modelObject CONSTANT)
 public:
     QQmlDelegateModelItem(const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
                           QQmlAdaptorModel::Accessors *accessor, int modelIndex,
