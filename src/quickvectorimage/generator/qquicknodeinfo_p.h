@@ -56,6 +56,7 @@ struct PathNodeInfo : NodeInfo
 struct TextNodeInfo : NodeInfo
 {
     bool isTextArea;
+    bool needsRichText;
     QPointF position;
     QSizeF size;
     QString text;

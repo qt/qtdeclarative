@@ -331,9 +331,11 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
     counter++;
 
     stream() << "color: \"" << info.color << "\"";
-    stream() << "textFormat: Text.StyledText";
+    stream() << "textFormat:" << (info.needsRichText ? "Text.RichText" : "Text.StyledText");
 
-    stream() << "text: \"" << info.text << "\"";
+    QString s = info.text;
+    s.replace(QLatin1Char('"'), QLatin1String("\\\""));
+    stream() << "text: \"" << s << "\"";
     stream() << "font.family: \"" << info.font.family() << "\"";
     if (info.font.pixelSize() > 0)
         stream() << "font.pixelSize:" << info.font.pixelSize();

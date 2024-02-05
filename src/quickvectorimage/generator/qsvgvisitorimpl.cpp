@@ -264,21 +264,55 @@ void QSvgVisitorImpl::visitPolylineNode(const QSvgPolyline *node)
 
 void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 {
-    // TODO: font/size
     // TODO: fallback to path for gradient fill
 
     handleBaseNodeSetup(node);
     const bool isTextArea = node->type() == QSvgNode::Textarea;
 
     QString text;
+    bool needsRichText = false;
     for (const auto *tspan : node->tspans()) {
         if (!tspan) {
             text += QStringLiteral("<br>");
             continue;
         }
 
-        if (!tspan->style().font.isDefault()) // TODO: switch to rich text when we have more complex spans with fonts?
-            qCDebug(lcQuickVectorImage) << "Not implemented Tspan with font:" << tspan->style().font->qfont();
+        QFont font;
+        if (!tspan->style().font.isDefault())
+            font = tspan->style().font->qfont();
+        QString styleTagContent;
+
+        if ((font.resolveMask() & QFont::FamilyResolved)
+            || (font.resolveMask() & QFont::FamiliesResolved)) {
+            styleTagContent += QStringLiteral("font-family: %1;").arg(font.family());
+        }
+
+        if (font.resolveMask() & QFont::WeightResolved
+            && font.weight() != QFont::Normal
+            && font.weight() != QFont::Bold) {
+            styleTagContent += QStringLiteral("font-weight: %1;").arg(int(font.weight()));
+        }
+
+        if (font.resolveMask() & QFont::SizeResolved) {
+            // Pixel size stored as point size in SVG parser
+            styleTagContent += QStringLiteral("font-size: %1px;").arg(int(font.pointSizeF()));
+        }
+
+        if (font.resolveMask() & QFont::CapitalizationResolved
+            && font.capitalization() == QFont::SmallCaps) {
+            styleTagContent += QStringLiteral("font-variant: small-caps;");
+        }
+
+        needsRichText = needsRichText || !styleTagContent.isEmpty();
+        if (!styleTagContent.isEmpty())
+            text += QStringLiteral("<span style=\"%1\">").arg(styleTagContent);
+
+        if (font.resolveMask() & QFont::WeightResolved && font.bold())
+            text += QStringLiteral("<b>");
+
+        if (font.resolveMask() & QFont::StyleResolved && font.italic())
+            text += QStringLiteral("<i>");
+
         QString spanColor;
         if (!tspan->style().fill.isDefault()) {
             auto &b = tspan->style().fill->qbrush();
@@ -288,16 +322,43 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         }
         bool fontTag = !spanColor.isEmpty();
         if (fontTag)
-            text += QStringLiteral("<font color=\"%1\">").arg(spanColor); // TODO: size="1-7" ???
-        text += tspan->text().toHtmlEscaped();
+            text += QStringLiteral("<font color=\"%1\">").arg(spanColor);
+
+        QString content = tspan->text().toHtmlEscaped();
+        if (font.resolveMask() & QFont::CapitalizationResolved) {
+            switch (font.capitalization()) {
+            case QFont::AllLowercase:
+                content = content.toLower();
+                break;
+            case QFont::AllUppercase:
+                content = content.toUpper();
+                break;
+            case QFont::Capitalize:
+                // ### We need to iterate over the string and do the title case conversion,
+                // since this is not part of QString.
+                qCWarning(lcQuickVectorImage) << "Title case not implemented for tspan";
+                break;
+            default:
+                break;
+            }
+        }
+        text += content;
         if (fontTag)
             text += QStringLiteral("</font>");
+
+        if (font.resolveMask() & QFont::StyleResolved && font.italic())
+            text += QStringLiteral("</i>");
+
+        if (font.resolveMask() & QFont::WeightResolved && font.bold())
+            text += QStringLiteral("</b>");
+
+        if (needsRichText)
+            text += QStringLiteral("</span>");
     }
 
     QFont font = styleResolver->painter().font();
-
     if (font.pixelSize() <= 0 && font.pointSize() > 0)
-        font.setPixelSize(font.pointSize()); // ### TODO: this makes no sense ###
+        font.setPixelSize(font.pointSize()); // Pixel size stored as point size by SVG parser
 
     TextNodeInfo info;
     fillCommonNodeInfo(node, info);
@@ -307,6 +368,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     info.font = font;
     info.text = text;
     info.isTextArea = isTextArea;
+    info.needsRichText = needsRichText;
     info.color = styleResolver->currentFillColor();
     info.alignment = styleResolver->states().textAnchor;
     info.strokeColor = styleResolver->currentStrokeColor();

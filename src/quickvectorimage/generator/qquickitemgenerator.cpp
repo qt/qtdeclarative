@@ -266,7 +266,7 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
     }
 
     textItem->setColor(QColor::fromString(info.color));
-    textItem->setTextFormat(QQuickText::StyledText);
+    textItem->setTextFormat(info.needsRichText ? QQuickText::RichText : QQuickText::StyledText);
     textItem->setText(info.text);
     textItem->setFont(info.font);
 
