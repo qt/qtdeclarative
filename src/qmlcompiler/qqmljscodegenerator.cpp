@@ -3890,7 +3890,7 @@ QString QQmlJSCodeGenerator::convertStored(
         if (m_typeResolver->isUnsignedInteger(to))
             return u"uint(QJSNumberCoercion::toInteger("_s + variable + u"))"_s;
         if (m_typeResolver->equals(to, m_typeResolver->boolType()))
-            return u'(' + variable + u" && !std::isnan("_s + variable + u"))"_s;
+            return u"[](double moved){ return moved && !std::isnan(moved); }("_s + variable + u')';
     }
 
     if (isBoolOrNumber(from) && isBoolOrNumber(to))
