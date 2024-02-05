@@ -1228,8 +1228,6 @@ QQmlRefPointer<QQmlContextData> ExecutionEngine::callingQmlContext() const
 
 StackTrace ExecutionEngine::stackTrace(int frameLimit) const
 {
-    Scope scope(const_cast<ExecutionEngine *>(this));
-    ScopedString name(scope);
     StackTrace stack;
 
     CppStackFrame *f = currentStackFrame;
@@ -1238,7 +1236,7 @@ StackTrace ExecutionEngine::stackTrace(int frameLimit) const
         frame.source = f->source();
         frame.function = f->function();
         frame.line = f->lineNumber();
-        frame.column = -1;
+
         stack.append(frame);
         if (f->isJSTypesFrame()) {
             if (static_cast<JSTypesStackFrame *>(f)->isTailCalling()) {
