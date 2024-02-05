@@ -21,8 +21,11 @@ class GeneratorStream : public QTextStream
 {
 public:
     GeneratorStream() = default;
-    explicit GeneratorStream(QTextStream *stream): QTextStream(&m_output, QIODevice::ReadWrite), m_stream(stream) {}
-    ~GeneratorStream() {
+    explicit GeneratorStream(QTextStream *stream)
+        : QTextStream(&m_output, QIODevice::ReadWrite), m_stream(stream)
+    {}
+    ~GeneratorStream()
+    {
         flush();
         if (m_stream && !m_output.isEmpty())
             *m_stream << m_output << Qt::endl;
@@ -30,8 +33,11 @@ public:
 
     GeneratorStream(GeneratorStream &other) = delete;
     GeneratorStream &operator=(const GeneratorStream &other) = delete;
-    GeneratorStream(GeneratorStream &&other) : m_stream(std::exchange(other.m_stream, nullptr)), m_output(std::move(other.m_output)) {}
-    GeneratorStream &operator=(GeneratorStream &&other) {
+    GeneratorStream(GeneratorStream &&other) noexcept
+        : m_stream(std::exchange(other.m_stream, nullptr)), m_output(std::move(other.m_output))
+    {}
+    GeneratorStream &operator=(GeneratorStream &&other) noexcept
+    {
         std::swap(m_stream, other.m_stream);
         std::swap(m_output, other.m_output);
         return *this;
@@ -297,7 +303,7 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
 
     m_indentLevel++;
 
-    if (!info.isTextArea) {
+    if (info.isTextArea) {
         stream() << "x: " << info.position.x();
         stream() << "y: " << info.position.y();
         stream() << "width: " << info.size.width();
@@ -366,7 +372,7 @@ void QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
                 stream() << "Translate { x: " << -info.viewBox.x() << "; y: " << -info.viewBox.y() << " },";
             stream() << "Scale { xScale: width / " << info.viewBox.width() << "; yScale: height / " << info.viewBox.height() << " }";
             m_indentLevel--;
-            stream() << "]";;
+            stream() << "]";
             m_indentLevel--;
         }
 
@@ -381,9 +387,8 @@ void QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
 
 void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
 {
+    m_indentLevel = 0;
     if (info.stage == StructureNodeInfo::StructureNodeStage::Start) {
-        m_indentLevel = 0;
-
         const QStringList comments = m_commentString.split(u'\n');
         if (comments.isEmpty())
             stream() << "// Generated from SVG";
@@ -392,7 +397,7 @@ void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
                 stream() << "// " << comment;
 
         stream() << "import QtQuick";
-        stream() << "import QtQuick.Shapes";
+        stream() << "import QtQuick.Shapes" << Qt::endl;
 
         stream() << "Item {";
         m_indentLevel++;
@@ -405,7 +410,6 @@ void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
             stream() << "implicitHeight: " << h;
 
         if (!info.viewBox.isEmpty()) {
-            m_indentLevel++;
             stream() << "transform: [";
             m_indentLevel++;
             bool translate = !qFuzzyIsNull(info.viewBox.x()) || !qFuzzyIsNull(info.viewBox.y());
@@ -414,13 +418,10 @@ void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
             stream() << "Scale { xScale: width / " << info.viewBox.width() << "; yScale: height / " << info.viewBox.height() << " }";
             m_indentLevel--;
             stream() << "]";;
-            m_indentLevel--;
         }
 
         generateNodeBase(info);
-        m_indentLevel++;
     } else {
-        m_indentLevel--;
         stream() << "}";
         m_inShapeItem = false;
     }
