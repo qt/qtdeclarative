@@ -11,6 +11,7 @@
 #include <private/qjsvalue_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4identifiertable_p.h>
+#include <private/qv4arraydata_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -25,6 +26,7 @@ public:
 
 private slots:
     void gcStats();
+    void arrayDataWriteBarrierInteraction();
     void persistentValueMarking_data();
     void persistentValueMarking();
     void multiWrappedQObjects();
@@ -47,6 +49,38 @@ void tst_qv4mm::gcStats()
     QQmlEngine engine;
     gc(engine);
     QLoggingCategory::setFilterRules("qt.qml.gc.*=false");
+}
+
+void tst_qv4mm::arrayDataWriteBarrierInteraction()
+{
+    QV4::ExecutionEngine engine;
+    QCOMPARE(engine.memoryManager->gcBlocked, QV4::MemoryManager::Unblocked);
+    engine.memoryManager->gcBlocked = QV4::MemoryManager::InCriticalSection;
+    QV4::Heap::Object *unprotectedObject = engine.newObject();
+    QV4::Scope scope(&engine);
+    QV4::ScopedArrayObject array(scope, engine.newArrayObject());
+    constexpr int initialCapacity = 8; // compare qv4arraydata.cpp
+    for (int i = 0; i < initialCapacity; ++i) {
+        array->push_back(unprotectedObject->asReturnedValue());
+    }
+    QVERIFY(!unprotectedObject->isMarked());
+    engine.memoryManager->gcBlocked = QV4::MemoryManager::Unblocked;
+
+    // initialize gc
+    auto sm = engine.memoryManager->gcStateMachine.get();
+    sm->reset();
+    while (sm->state != QV4::GCState::MarkGlobalObject) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+
+    array->push_back(QV4::Value::fromUInt32(42));
+    QVERIFY(!unprotectedObject->isMarked());
+    // we should have pushed the new arraydata on the mark stack
+    // so if we call drain...
+    engine.memoryManager->markStack()->drain();
+    // the unprotectedObject should have been marked
+    QVERIFY(unprotectedObject->isMarked());
 }
 
 enum PVSetOption {
