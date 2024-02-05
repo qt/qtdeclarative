@@ -88,6 +88,7 @@ set(qml_files
     compositeTypeMethod.qml
     compositesingleton.qml
     consoleObject.qml
+    consoleTrace.qml
     construct.qml
     contextParam.qml
     conversionDecrement.qml

@@ -59,6 +59,7 @@ private slots:
     void compositeSingleton();
     void compositeTypeMethod();
     void consoleObject();
+    void consoleTrace();
     void construct();
     void contextParam();
     void conversionDecrement();
@@ -1035,6 +1036,32 @@ void tst_QmlCppCodegen::consoleObject()
 
     QScopedPointer<QObject> p(c.create());
     QVERIFY(!p.isNull());
+}
+
+void tst_QmlCppCodegen::consoleTrace()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/consoleTrace.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+
+#if !defined(QT_NO_DEBUG) || defined(QT_TEST_FORCE_INTERPRETER)
+    // All line numbers in debug mode or when interpreting
+
+    QTest::ignoreMessage(QtDebugMsg, R"(c (qrc:/qt/qml/TestTypes/consoleTrace.qml:6)
+b (qrc:/qt/qml/TestTypes/consoleTrace.qml:5)
+a (qrc:/qt/qml/TestTypes/consoleTrace.qml:4)
+expression for onCompleted (qrc:/qt/qml/TestTypes/consoleTrace.qml:7))");
+#else
+    // Only top-most line number otherwise
+
+    QTest::ignoreMessage(QtDebugMsg, R"(c (qrc:/qt/qml/TestTypes/consoleTrace.qml:6)
+b (qrc:/qt/qml/TestTypes/consoleTrace.qml)
+a (qrc:/qt/qml/TestTypes/consoleTrace.qml)
+expression for onCompleted (qrc:/qt/qml/TestTypes/consoleTrace.qml))");
+#endif
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
 }
 
 void tst_QmlCppCodegen::construct()
