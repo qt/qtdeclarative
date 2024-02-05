@@ -2778,10 +2778,11 @@ static QStringList qmldirFilesFrom(MutableDomItem &qmlFile)
     return {};
 }
 
-QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile,
+QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(const QQmlJSScope::Ptr &current,
+                                                                   MutableDomItem &qmlFile,
                                                                    QQmlJSLogger *logger,
                                                                    QQmlJSImporter *importer)
-    : m_root(QQmlJSScope::create()),
+    : m_root(current),
       m_logger(logger),
       m_importer(importer),
       m_implicitImportDirectory(QQmlJSImportVisitor::implicitImportDirectory(

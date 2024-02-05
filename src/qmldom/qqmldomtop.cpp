@@ -1831,6 +1831,30 @@ DomEnvironment::DomEnvironment(const QStringList &loadPaths, Options options,
 {
 }
 
+DomEnvironment::SemanticAnalysis &DomEnvironment::semanticAnalysis()
+{
+    if (m_semanticAnalysis)
+        return *m_semanticAnalysis;
+
+    Q_ASSERT(domCreationOptions().testFlag(DomCreationOption::WithSemanticAnalysis));
+
+    m_semanticAnalysis = SemanticAnalysis(m_loadPaths);
+    return *m_semanticAnalysis;
+}
+
+DomEnvironment::SemanticAnalysis::SemanticAnalysis(const QStringList &loadPaths)
+    : m_mapper(
+            std::make_shared<QQmlJSResourceFileMapper>(resourceFilesFromBuildFolders(loadPaths))),
+      m_importer(std::make_shared<QQmlJSImporter>(loadPaths, m_mapper.get(), true))
+{
+}
+
+void DomEnvironment::SemanticAnalysis::setLoadPaths(const QStringList &loadPaths)
+{
+    // TODO: maybe also update the build paths in m_mapper?
+    m_importer->setImportPaths(loadPaths);
+}
+
 std::shared_ptr<DomEnvironment> DomEnvironment::create(const QStringList &loadPaths,
                                                        Options options,
                                                        DomCreationOptions domCreationOptions,
@@ -2060,6 +2084,9 @@ void DomEnvironment::setLoadPaths(const QStringList &v)
 {
     QMutexLocker l(mutex());
     m_loadPaths = v;
+
+    if (m_semanticAnalysis)
+        m_semanticAnalysis->setLoadPaths(v);
 }
 
 QStringList DomEnvironment::loadPaths() const
@@ -2127,23 +2154,19 @@ void DomEnvironment::populateFromQmlFile(MutableDomItem &&qmlFile)
         };
 
         if (m_domCreationOptions.testFlag(DomCreationOption::WithSemanticAnalysis)) {
-            std::shared_ptr<QQmlJSResourceFileMapper> mapper;
-            if (auto environmentPtr = qmlFile.environment().ownerAs<DomEnvironment>()) {
-                const QStringList resourceFiles =
-                        resourceFilesFromBuildFolders(environmentPtr->loadPaths());
-                mapper = std::make_shared<QQmlJSResourceFileMapper>(resourceFiles);
-            }
-            auto importer = std::make_shared<QQmlJSImporter>(loadPaths(), mapper.get(), true);
-            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, &logger,
-                                                                        importer.get());
-            v->enableScriptExpressions(
-                    m_domCreationOptions.testFlag(DomCreationOption::WithScriptExpressions));
+            auto &analysis = semanticAnalysis();
+            auto scope = analysis.m_importer->importFile(qmlFile.canonicalFilePath());
+            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(scope, qmlFile, &logger,
+                                                                        analysis.m_importer.get());
+            v->enableScriptExpressions(m_domCreationOptions.testFlag(DomCreationOption::WithScriptExpressions));
 
             setupFile(v.get());
 
-            auto typeResolver = std::make_shared<QQmlJSTypeResolver>(importer.get());
+            auto typeResolver =
+                    std::make_shared<QQmlJSTypeResolver>(analysis.m_importer.get());
             typeResolver->init(&v->scopeCreator(), nullptr);
-            qmlFilePtr->setTypeResolverWithDependencies(typeResolver, { importer, mapper });
+            qmlFilePtr->setTypeResolverWithDependencies(typeResolver,
+                                                        { analysis.m_importer, analysis.m_mapper });
         } else {
             auto v = std::make_unique<QQmlDomAstCreator>(qmlFile);
             v->enableScriptExpressions(
