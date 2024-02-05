@@ -1754,19 +1754,21 @@ enum ConsoleLogTypes {
 static QString jsStack(QV4::ExecutionEngine *engine) {
     QString stack;
 
-    QVector<QV4::StackFrame> stackTrace = engine->stackTrace(10);
-
-    for (int i = 0; i < stackTrace.size(); i++) {
-        const QV4::StackFrame &frame = stackTrace.at(i);
-
+    int i = 0;
+    for (CppStackFrame *f = engine->currentStackFrame; f && i < 10; f = f->parentFrame(), ++i) {
         QString stackFrame;
-        if (frame.column >= 0) {
-            stackFrame = QStringLiteral("%1 (%2:%3:%4)").arg(
-                frame.function, frame.source,
-                QString::number(qAbs(frame.line)), QString::number(frame.column));
+
+        if (f->isJSTypesFrame() && static_cast<JSTypesStackFrame *>(f)->isTailCalling()) {
+            stackFrame = QStringLiteral("[elided tail calls]");
         } else {
-            stackFrame = QStringLiteral("%1 (%2:%3)").arg(
-                frame.function, frame.source, QString::number(qAbs(frame.line)));
+            const int line = f->lineNumber();
+            if (line != f->missingLineNumber()) {
+                stackFrame = QStringLiteral("%1 (%2:%3)").arg(
+                        f->function(), f->source(), QString::number(qAbs(line)));
+            } else {
+                stackFrame = QStringLiteral("%1 (%2)").arg(
+                        f->function(), f->source());
+            }
         }
 
         if (i)
