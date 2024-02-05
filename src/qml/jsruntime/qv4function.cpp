@@ -158,16 +158,13 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
             return qmltype;
 
         if (qmltype.isInlineComponentType()) {
-            if (qmltype.typeId().isValid()) {
-                // If it seems to be an IC type, make sure there is an actual
-                // compilation unit for it. We create inline component types speculatively.
-                return QQmlMetaType::obtainCompilationUnit(qmltype.typeId())
-                        ? qmltype
-                        : QQmlType();
-            } else {
-                // TODO: Can this actually happen?
-                return base->qmlTypeForComponent(qmltype.elementName());
-            }
+            Q_ASSERT(qmltype.typeId().isValid());
+
+            // If it seems to be an IC type, make sure there is an actual
+            // compilation unit for it. We create inline component types speculatively.
+            return QQmlMetaType::obtainCompilationUnit(qmltype.typeId())
+                    ? qmltype
+                    : QQmlType();
         }
 
         return qmltype.typeId().isValid() ? qmltype : QQmlType();
