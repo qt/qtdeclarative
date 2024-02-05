@@ -392,7 +392,7 @@ std::shared_ptr<QmlFile> DomUniverse::parseQmlFile(const QString &code, const Fi
     envPtr->addQmlFile(qmlFile);
     DomItem env(envPtr);
     if (qmlFile->isValid()) {
-        createDom(MutableDomItem(env.copy(qmlFile)), file.options());
+        envPtr->populateFromQmlFile(MutableDomItem(env.copy(qmlFile)), file.options());
     } else {
         QString errs;
         DomItem qmlFileObj = env.copy(qmlFile);
@@ -2093,6 +2093,50 @@ void DomEnvironment::addAllLoadedCallback(const DomItem &self, DomTop::Callback 
 void DomEnvironment::clearReferenceCache()
 {
     m_referenceCache.clear();
+}
+
+void DomEnvironment::populateFromQmlFile(MutableDomItem &&qmlFile, DomCreationOptions options)
+{
+    if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>()) {
+        QQmlJSLogger logger; // TODO
+        // the logger filename is used to populate the QQmlJSScope filepath.
+        logger.setFileName(qmlFile.canonicalFilePath());
+
+        auto setupFile = [&qmlFilePtr, &qmlFile, this](auto &&visitor) {
+            Q_UNUSED(this); // note: integrity requires "this" to be in the capture list, while
+                            // other compilers complain about "this" being unused in the lambda
+            AST::Node::accept(qmlFilePtr->ast(), visitor);
+            CommentCollector collector(qmlFile);
+            collector.collectComments();
+        };
+
+        if (options.testFlag(DomCreationOption::WithSemanticAnalysis)) {
+            std::shared_ptr<QQmlJSResourceFileMapper> mapper;
+            if (auto environmentPtr = qmlFile.environment().ownerAs<DomEnvironment>()) {
+                const QStringList resourceFiles =
+                        resourceFilesFromBuildFolders(environmentPtr->loadPaths());
+                mapper = std::make_shared<QQmlJSResourceFileMapper>(resourceFiles);
+            }
+            auto importer = std::make_shared<QQmlJSImporter>(loadPaths(), mapper.get(), true);
+            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, &logger,
+                                                                        importer.get());
+            v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
+
+            setupFile(v.get());
+
+            auto typeResolver = std::make_shared<QQmlJSTypeResolver>(importer.get());
+            typeResolver->init(&v->scopeCreator(), nullptr);
+            qmlFilePtr->setTypeResolverWithDependencies(typeResolver, { importer, mapper });
+        } else {
+            auto v = std::make_unique<QQmlDomAstCreator>(qmlFile);
+            v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
+
+            setupFile(v.get());
+        }
+    } else {
+        qCWarning(domLog) << "populateQmlFile called on non qmlFile";
+        return;
+    }
 }
 
 QString ExternalItemInfoBase::canonicalFilePath(const DomItem &self) const

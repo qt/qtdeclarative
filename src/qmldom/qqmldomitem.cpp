@@ -1305,7 +1305,7 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(const DomItem &origi
         DomItem newFile = newEnv.copy(newFilePtr, Path());
         if (newFilePtr->isValid()) {
             if (extraChecks & (WriteOutCheck::ReparseCompare | WriteOutCheck::ReparseStable)) {
-                createDom(MutableDomItem (newFile));
+                newEnvPtr->populateFromQmlFile(newFile, {});
                 if ((extraChecks & WriteOutCheck::ReparseCompare)
                     && !compare(reformatted, u"reformatted", newFile, u"reparsed",
                                 FieldFilter::compareNoCommentsFilter()))

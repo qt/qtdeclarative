@@ -923,6 +923,7 @@ public:
             }
         }
     }
+    void populateFromQmlFile(MutableDomItem &&qmlFile, DomCreationOptions options);
 
 private:
     friend class RefCacheEntry;
