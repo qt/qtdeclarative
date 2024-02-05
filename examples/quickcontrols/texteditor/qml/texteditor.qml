@@ -491,28 +491,22 @@ ApplicationWindow {
 
             Component.onCompleted: {
                 if (Qt.application.arguments.length === 2)
-                    textDocument.source = "file:" + Qt.application.arguments[1];
+                    textDocument.source = "file:" + Qt.application.arguments[1]
                 else
-                    textDocument.source = "qrc:/texteditor.html";
+                    textDocument.source = "qrc:/texteditor.html"
             }
 
             textDocument.onStatusChanged: {
-                var err = ""
-                switch (textDocument.status) {
-                case TextDocument.ReadError:
-                    err = qsTr("Failed to load ") + textDocument.source
-                    break
-                case TextDocument.WriteError:
-                    err = qsTr("Failed to save ") + textDocument.source
-                    break
-                case TextDocument.NonLocalFileError:
-                    err = qsTr("Not a local file: ") + textDocument.source
-                    break
-                default:
-                    break
+                // a message lookup table using computed properties:
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer
+                const statusMessages = {
+                    [ TextDocument.ReadError ]: qsTr("Failed to load “%1”"),
+                    [ TextDocument.WriteError ]: qsTr("Failed to save “%1”"),
+                    [ TextDocument.NonLocalFileError ]: qsTr("Not a local file: “%1”"),
                 }
-                if (err !== "") {
-                    errorDialog.text = err
+                const err = statusMessages[textDocument.status]
+                if (err) {
+                    errorDialog.text = err.arg(textDocument.source)
                     errorDialog.open()
                 }
             }
