@@ -25,9 +25,9 @@ class VDMAbstractItemModelDataType;
 class QQmlDMAbstractItemModelData : public QQmlDelegateModelItem
 {
     Q_OBJECT
-    Q_PROPERTY(bool hasModelChildren READ hasModelChildren CONSTANT FINAL)
-    Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged FINAL)
-    QT_ANONYMOUS_PROPERTY(QVariant READ modelData NOTIFY modelDataChanged)
+    Q_PROPERTY(bool hasModelChildren READ hasModelChildren CONSTANT)
+    Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged)
+    QT_ANONYMOUS_PROPERTY(QVariant READ modelData NOTIFY modelDataChanged FINAL)
 
 public:
     QQmlDMAbstractItemModelData(

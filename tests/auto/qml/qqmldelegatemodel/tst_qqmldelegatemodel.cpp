@@ -31,6 +31,7 @@ private slots:
     void nestedDelegates();
     void universalModelData();
     void typedModelData();
+    void overriddenModelData();
     void deleteRace();
     void persistedItemsStayInCache();
     void doNotUnrefObjectUnderConstruction();
@@ -446,9 +447,38 @@ void tst_QQmlDelegateModel::typedModelData()
             break;
         }
     }
-
 }
 
+void tst_QQmlDelegateModel::overriddenModelData()
+{
+    QTest::failOnWarning(QRegularExpression(
+            "Final member [^ ]+ is overridden in class [^\\.]+. The override won't be used."));
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("overriddenModelData.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel *>(o.data());
+    QVERIFY(delegateModel);
+
+    for (int i = 0; i < 3; ++i) {
+        delegateModel->setProperty("n", i);
+        QObject *delegate = delegateModel->object(0);
+        QVERIFY(delegate);
+
+        if (i == 1 || i == 2) {
+            // Someone is certainly relying on this.
+            // We need to find a migration mechanism to fix it.
+            QEXPECT_FAIL(
+                    "",
+                    "You can actually not override if the model is a QObject or a JavaScript array",
+                    Continue);
+        }
+
+        QCOMPARE(delegate->objectName(), QLatin1String("a b c d e f"));
+    }
+}
 
 void tst_QQmlDelegateModel::deleteRace()
 {
