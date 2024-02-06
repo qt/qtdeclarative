@@ -178,8 +178,14 @@ protected:
     bool visit(AST::ClassDeclaration *ast) override;
 
     bool visit(AST::ExportDeclaration *ast) override;
+    bool visit(AST::ExportClause *ast) override;
+    bool visit(AST::ExportSpecifier *ast) override;
+    bool visit(AST::ExportsList *ast) override;
 
     void endVisit(AST::ComputedPropertyName *) override;
+
+    void endVisit(AST::ExportDeclaration *ast) override;
+    void endVisit(AST::ExportClause *ast) override;
 
     void throwRecursionDepthError() override;
 

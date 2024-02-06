@@ -83,7 +83,7 @@ private:
         const ScriptExpression scriptItem(jsCode, exprType);
         scriptItem.writeOut(DomItem(), ow);
 
-        lwPtr->flush(); // flush instead of eof to protect traling spaces
+        lwPtr->flush(); // flush instead of eof to ignore line endings
         res.flush();
         return resultStr;
     }
@@ -517,6 +517,20 @@ private slots:
                                   u"function * g(a,b){}")
                 << QStringLiteral(u"export "
                                   u"function* g(a, b) {}");
+
+        // export ExportClause ;
+        QTest::newRow("ExportClause_Empty")
+                << QStringLiteral(u"export{}") << QStringLiteral(u"export {};");
+        QTest::newRow("ExportClause_1Specifier")
+                << QStringLiteral(u"export{one}") << QStringLiteral(u"export { one };");
+        QTest::newRow("ExportClause_Specifier_as")
+                << QStringLiteral(u"export{one as o}") << QStringLiteral(u"export { one as o };");
+        QTest::newRow("ExportClause_Specifier_as_StringLiteral")
+                << QStringLiteral(u"export{one as \"s\"}")
+                << QStringLiteral(u"export { one as \"s\" };");
+        QTest::newRow("ExportClause_ExportsList")
+                << QStringLiteral(u"export{one,two,three,four as fo,five}")
+                << QStringLiteral(u"export { one, two, three, four as fo, five };");
     }
 
     // https://262.ecma-international.org/7.0/#prod-ExportDeclaration
@@ -527,6 +541,8 @@ private slots:
 
         QString formattedExport = formatJSModuleCode(exportToBeFormatted);
 
+        QEXPECT_FAIL("ExportClause_Specifier_as_StringLiteral",
+                     "export {a as \"string name\"} declaration is not supported yet", Abort);
         QCOMPARE(formattedExport, expectedFormattedExport);
     }
 

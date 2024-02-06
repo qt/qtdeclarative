@@ -934,9 +934,57 @@ bool ScriptFormatter::visit(AST::ExportDeclaration *ast)
     return true;
 }
 
+bool ScriptFormatter::visit(AST::ExportClause *ast)
+{
+    out(ast->leftBraceToken);
+    if (ast->exportsList) {
+        lw.space();
+    }
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::ExportSpecifier *ast)
+{
+    out(ast->identifier);
+    if (ast->exportedIdentifierToken.isValid()) {
+        lw.space();
+        out("as");
+        lw.space();
+        out(ast->exportedIdentifier);
+    }
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::ExportsList *ast)
+{
+    for (ExportsList *it = ast; it; it = it->next) {
+        accept(it->exportSpecifier);
+        if (it->next) {
+            out(",");
+            lw.space();
+        }
+    }
+    return false;
+}
+
 void ScriptFormatter::endVisit(ComputedPropertyName *)
 {
     out("]");
+}
+
+void ScriptFormatter::endVisit(AST::ExportDeclaration *ast)
+{
+    if (ast->exportClause && !ast->fromClause) {
+        out(";");
+    }
+}
+
+void ScriptFormatter::endVisit(AST::ExportClause *ast)
+{
+    if (ast->exportsList) {
+        lw.space();
+    }
+    out(ast->rightBraceToken);
 }
 
 void ScriptFormatter::throwRecursionDepthError()
