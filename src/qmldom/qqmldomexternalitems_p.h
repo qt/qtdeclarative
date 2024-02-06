@@ -329,7 +329,6 @@ public:
 
     enum RecoveryOption { DisableParserRecovery, EnableParserRecovery };
 
-    QmlFile(const QmlFile &o);
     QmlFile(const QString &filePath = QString(), const QString &code = QString(),
             const QDateTime &lastDataUpdate = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
             int derivedFrom = 0, RecoveryOption option = DisableParserRecovery);
@@ -343,18 +342,21 @@ public:
     }
     void addError(const DomItem &self, ErrorMessage &&msg) override;
 
-    const QMultiMap<QString, QmlComponent> &components() const & { return m_components; }
+    const QMultiMap<QString, QmlComponent> &components() const &
+    {
+        return lazyMembers().m_components;
+    }
     void setComponents(const QMultiMap<QString, QmlComponent> &components)
     {
-        m_components = components;
+        lazyMembers().m_components = components;
     }
     Path addComponent(const QmlComponent &component, AddOption option = AddOption::Overwrite,
                       QmlComponent **cPtr = nullptr)
     {
         QStringList nameEls = component.name().split(QChar::fromLatin1('.'));
         QString key = nameEls.mid(1).join(QChar::fromLatin1('.'));
-        return insertUpdatableElementInMultiMap(Path::Field(Fields::components), m_components, key,
-                                                component, option, cPtr);
+        return insertUpdatableElementInMultiMap(Path::Field(Fields::components), lazyMembers().m_components,
+                                                key, component, option, cPtr);
     }
 
     void writeOut(const DomItem &self, OutWriter &lw) const override;
@@ -363,71 +365,117 @@ public:
     {
         return m_ast; // avoid making it public? would make moving away from it easier
     }
-    const QList<Import> &imports() const & { return m_imports; }
-    void setImports(const QList<Import> &imports) { m_imports = imports; }
+    const QList<Import> &imports() const &
+    {
+        return lazyMembers().m_imports;
+    }
+    void setImports(const QList<Import> &imports) { lazyMembers().m_imports = imports; }
     Path addImport(const Import &i)
     {
-        index_type idx = index_type(m_imports.size());
-        m_imports.append(i);
+        auto &members = lazyMembers();
+        index_type idx = index_type(members.m_imports.size());
+        members.m_imports.append(i);
         if (i.uri.isModule()) {
-            m_importScope.addImport((i.importId.isEmpty()
-                                             ? QStringList()
-                                             : i.importId.split(QChar::fromLatin1('.'))),
-                                    i.importedPath());
+            members.m_importScope.addImport((i.importId.isEmpty()
+                                                     ? QStringList()
+                                                     : i.importId.split(QChar::fromLatin1('.'))),
+                                            i.importedPath());
         } else {
             QString path = i.uri.absoluteLocalPath(canonicalFilePath());
             if (!path.isEmpty())
-                m_importScope.addImport((i.importId.isEmpty()
-                                                 ? QStringList()
-                                                 : i.importId.split(QChar::fromLatin1('.'))),
-                                        Paths::qmlDirPath(path));
+                members.m_importScope.addImport(
+                        (i.importId.isEmpty() ? QStringList()
+                                              : i.importId.split(QChar::fromLatin1('.'))),
+                        Paths::qmlDirPath(path));
         }
         return Path::Field(Fields::imports).index(idx);
     }
     std::shared_ptr<QQmlJS::Engine> engine() const { return m_engine; }
-    RegionComments &comments() { return m_comments; }
-    std::shared_ptr<AstComments> astComments() const { return m_astComments; }
-    void setAstComments(const std::shared_ptr<AstComments> &comm) { m_astComments = comm; }
-    FileLocations::Tree fileLocationsTree() const { return m_fileLocationsTree; }
-    void setFileLocationsTree(const FileLocations::Tree &v) { m_fileLocationsTree = v; }
-    const QList<Pragma> &pragmas() const & { return m_pragmas; }
-    void setPragmas(QList<Pragma> pragmas) { m_pragmas = pragmas; }
+    RegionComments &comments() { return lazyMembers().m_comments; }
+    std::shared_ptr<AstComments> astComments() const { return lazyMembers().m_astComments; }
+    void setAstComments(const std::shared_ptr<AstComments> &comm) { lazyMembers().m_astComments = comm; }
+    FileLocations::Tree fileLocationsTree() const { return lazyMembers().m_fileLocationsTree; }
+    void setFileLocationsTree(const FileLocations::Tree &v) { lazyMembers().m_fileLocationsTree = v; }
+    const QList<Pragma> &pragmas() const & { return lazyMembers().m_pragmas; }
+    void setPragmas(QList<Pragma> pragmas) { lazyMembers().m_pragmas = pragmas; }
     Path addPragma(const Pragma &pragma)
     {
-        int idx = m_pragmas.size();
-        m_pragmas.append(pragma);
+        auto &members = lazyMembers();
+        int idx = members.m_pragmas.size();
+        members.m_pragmas.append(pragma);
         return Path::Field(Fields::pragmas).index(idx);
     }
-    ImportScope &importScope() { return m_importScope; }
-    const ImportScope &importScope() const { return m_importScope; }
+    ImportScope &importScope() { return lazyMembers().m_importScope; }
+    const ImportScope &importScope() const { return lazyMembers().m_importScope; }
 
     std::shared_ptr<QQmlJSTypeResolver> typeResolver() const
     {
-        return m_typeResolver;
+        return lazyMembers().m_typeResolver;
     }
     void setTypeResolverWithDependencies(const std::shared_ptr<QQmlJSTypeResolver> &typeResolver,
                                          const QQmlJSTypeResolverDependencies &dependencies)
     {
-        m_typeResolver = typeResolver;
-        m_typeResolverDependencies = dependencies;
+        auto &members = lazyMembers();
+        members.m_typeResolver = typeResolver;
+        members.m_typeResolverDependencies = dependencies;
     }
 
-    DomCreationOptions creationOptions() const { return m_creationOptions; }
+    DomCreationOptions creationOptions() const { return lazyMembers().m_creationOptions; }
+
+    void setHandleForPopulation(const QQmlJSScope::ConstPtr &scope)
+    {
+        m_handleForPopulation = scope;
+    }
+
 
 private:
+    // The lazy parts of QmlFile are inside of QmlFileLazy.
+    struct QmlFileLazy
+    {
+        QmlFileLazy(FileLocations::Tree fileLocationsTree, AstComments *astComments)
+            : m_fileLocationsTree(fileLocationsTree), m_astComments(astComments)
+        {
+        }
+        RegionComments m_comments;
+        QMultiMap<QString, QmlComponent> m_components;
+        QList<Pragma> m_pragmas;
+        QList<Import> m_imports;
+        ImportScope m_importScope;
+        FileLocations::Tree m_fileLocationsTree;
+        std::shared_ptr<AstComments> m_astComments;
+        DomCreationOptions m_creationOptions;
+        std::shared_ptr<QQmlJSTypeResolver> m_typeResolver;
+        QQmlJSTypeResolverDependencies m_typeResolverDependencies;
+    };
     friend class QQmlDomAstCreator;
-    std::shared_ptr<Engine> m_engine;
     AST::UiProgram *m_ast; // avoid? would make moving away from it easier
-    std::shared_ptr<AstComments> m_astComments;
-    RegionComments m_comments;
-    FileLocations::Tree m_fileLocationsTree;
-    QMultiMap<QString, QmlComponent> m_components;
-    QList<Pragma> m_pragmas;
-    QList<Import> m_imports;
-    ImportScope m_importScope;
-    std::shared_ptr<QQmlJSTypeResolver> m_typeResolver;
-    QQmlJSTypeResolverDependencies m_typeResolverDependencies;
-    DomCreationOptions m_creationOptions;
+    std::shared_ptr<Engine> m_engine;
+    QQmlJSScope::ConstPtr m_handleForPopulation;
+    mutable std::optional<QmlFileLazy> m_lazyMembers;
+
+    void ensurePopulated() const
+    {
+        if (m_lazyMembers)
+            return;
+
+        m_lazyMembers.emplace(FileLocations::createTree(canonicalPath()), new AstComments(m_engine));
+
+        // populate via the QQmlJSScope by accessing the (lazy) pointer
+        if (m_handleForPopulation.factory()) {
+            // silence no-discard attribute:
+            Q_UNUSED(m_handleForPopulation.data());
+        }
+    }
+    const QmlFileLazy &lazyMembers() const
+    {
+        ensurePopulated();
+        return *m_lazyMembers;
+    }
+    QmlFileLazy &lazyMembers()
+    {
+        ensurePopulated();
+        return *m_lazyMembers;
+    }
 };
 
 class QMLDOM_EXPORT QmltypesFile final : public ExternalOwningItem

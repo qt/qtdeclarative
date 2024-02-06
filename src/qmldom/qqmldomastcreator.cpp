@@ -1247,7 +1247,7 @@ void QQmlDomAstCreator::endVisit(AST::UiInlineComponent *)
     QmlComponent &component = std::get<QmlComponent>(currentNode().value);
     QStringList nameEls = component.name().split(QChar::fromLatin1('.'));
     QString key = nameEls.mid(1).join(QChar::fromLatin1('.'));
-    QmlComponent *cPtr = valueFromMultimap(qmlFilePtr->m_components, key, currentIndex());
+    QmlComponent *cPtr = valueFromMultimap(qmlFilePtr->lazyMembers().m_components, key, currentIndex());
     Q_ASSERT(cPtr);
     *cPtr = component;
     removeCurrentNode(DomType::QmlComponent);

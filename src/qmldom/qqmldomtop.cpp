@@ -1877,6 +1877,11 @@ DomEnvironment::DomEnvironment(const shared_ptr<DomEnvironment> &parent,
 
 void DomEnvironment::addQmlFile(const std::shared_ptr<QmlFile> &file, AddOption options)
 {
+    if (domCreationOptions().testFlag(DomCreationOption::WithSemanticAnalysis)) {
+        const QQmlJSScope::Ptr &handle =
+                semanticAnalysis().m_importer->importFile(file->canonicalFilePath());
+        file->setHandleForPopulation(handle);
+    }
     addExternalItem(file, file->canonicalFilePath(), options);
 }
 
@@ -2144,6 +2149,8 @@ void DomEnvironment::populateFromQmlFile(MutableDomItem &&qmlFile)
         QQmlJSLogger logger; // TODO
         // the logger filename is used to populate the QQmlJSScope filepath.
         logger.setFileName(qmlFile.canonicalFilePath());
+
+        qmlFilePtr->setFileLocationsTree(FileLocations::createTree(qmlFile.canonicalPath()));
 
         auto setupFile = [&qmlFilePtr, &qmlFile, this](auto &&visitor) {
             Q_UNUSED(this); // note: integrity requires "this" to be in the capture list, while

@@ -418,30 +418,30 @@ std::shared_ptr<OwningItem> QmlFile::doCopy(const DomItem &) const
     return res;
 }
 
-QmlFile::QmlFile(const QmlFile &o)
-    : ExternalOwningItem(o),
-      m_engine(o.m_engine),
-      m_ast(o.m_ast),
-      m_astComments(o.m_astComments),
-      m_comments(o.m_comments),
-      m_fileLocationsTree(o.m_fileLocationsTree),
-      m_components(o.m_components),
-      m_pragmas(o.m_pragmas),
-      m_imports(o.m_imports),
-      m_importScope(o.m_importScope)
-{
-    if (m_astComments)
-        m_astComments = std::make_shared<AstComments>(*m_astComments);
-}
+/*!
+    \class QmlFile
+
+   A QmlFile, when loaded in a DomEnvironment that has the DomCreationOption::WithSemanticAnalysis,
+   will be lazily constructed. That means that its member m_lazyMembers is uninitialized, and will
+   only be populated when it is accessed (through a getter, a setter or the DomItem interface).
+
+   The reason for the laziness is that the qqmljsscopes are created lazily and at the same time as
+   the Dom QmlFile representations. So instead of eagerly generating all qqmljsscopes when
+   constructing the Dom, the QmlFile itself becomes lazy and will only be populated on demand at
+   the same time as the corresponding qqmljsscopes.
+
+   The QDeferredFactory<QQmlJSScope> will, when the qqmljsscope is populated, take care of
+   populating all fields of the QmlFile.
+   Therefore, population of the QmlFile is done by populating the qqmljsscope.
+
+*/
 
 QmlFile::QmlFile(
         const QString &filePath, const QString &code, const QDateTime &lastDataUpdateAt,
         int derivedFrom, RecoveryOption option)
     : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmlFilePath(filePath), derivedFrom,
                          code),
-      m_engine(new QQmlJS::Engine),
-      m_astComments(new AstComments(m_engine)),
-      m_fileLocationsTree(FileLocations::createTree(canonicalPath()))
+      m_engine(new QQmlJS::Engine)
 {
     QQmlJS::Lexer lexer(m_engine.get());
     lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/true);
@@ -468,21 +468,24 @@ ErrorGroups QmlFile::myParsingErrors()
 
 bool QmlFile::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
+    auto &members = lazyMembers();
     bool cont = ExternalOwningItem::iterateDirectSubpaths(self, visitor);
-    cont = cont && self.dvWrapField(visitor, Fields::components, m_components);
-    cont = cont && self.dvWrapField(visitor, Fields::pragmas, m_pragmas);
-    cont = cont && self.dvWrapField(visitor, Fields::imports, m_imports);
-    cont = cont && self.dvWrapField(visitor, Fields::importScope, m_importScope);
-    cont = cont && self.dvWrapField(visitor, Fields::fileLocationsTree, m_fileLocationsTree);
-    cont = cont && self.dvWrapField(visitor, Fields::comments, m_comments);
-    cont = cont && self.dvWrapField(visitor, Fields::astComments, m_astComments);
+    cont = cont && self.dvWrapField(visitor, Fields::components, members.m_components);
+    cont = cont && self.dvWrapField(visitor, Fields::pragmas, members.m_pragmas);
+    cont = cont && self.dvWrapField(visitor, Fields::imports, members.m_imports);
+    cont = cont && self.dvWrapField(visitor, Fields::importScope, members.m_importScope);
+    cont = cont
+            && self.dvWrapField(visitor, Fields::fileLocationsTree, members.m_fileLocationsTree);
+    cont = cont && self.dvWrapField(visitor, Fields::comments, members.m_comments);
+    cont = cont && self.dvWrapField(visitor, Fields::astComments, members.m_astComments);
     return cont;
 }
 
 DomItem QmlFile::field(const DomItem &self, QStringView name) const
 {
+    ensurePopulated();
     if (name == Fields::components)
-        return self.wrapField(Fields::components, m_components);
+        return self.wrapField(Fields::components, lazyMembers().m_components);
     return DomBase::field(self, name);
 }
 
@@ -493,6 +496,7 @@ void QmlFile::addError(const DomItem &self, ErrorMessage &&msg)
 
 void QmlFile::writeOut(const DomItem &self, OutWriter &ow) const
 {
+    ensurePopulated();
     for (const DomItem &p : self.field(Fields::pragmas).values()) {
         p.writeOut(ow);
     }
