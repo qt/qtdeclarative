@@ -307,7 +307,7 @@ JsFile::JsFile(
     QQmlJS::Lexer lexer(m_engine.get());
     lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/false);
     QQmlJS::Parser parser(m_engine.get());
-    //TODO(QTBUG-117849) add mjs support
+    // TODO(QTBUG-117849) add mjs support
     setIsValid(/*isESModule ? parser.parseModule() :*/ parser.parseProgram());
     const auto diagnostics = parser.diagnosticMessages();
     for (const DiagnosticMessage &msg : diagnostics) {
@@ -320,7 +320,7 @@ JsFile::JsFile(
     CommentCollector collector;
     collector.collectComments(m_engine, parser.rootNode(), astComments);
     m_script = std::make_shared<ScriptExpression>(code, m_engine, parser.rootNode(), astComments,
-                                                  ScriptExpression::ExpressionType::Code);
+                                                  ScriptExpression::ExpressionType::JSCode);
 }
 
 ErrorGroups JsFile::myParsingErrors()

@@ -1712,13 +1712,14 @@ AST::Node *ScriptExpression::parse(const ParseMode mode)
     QQmlJS::Lexer lexer(m_engine.get());
     lexer.setCode(m_codeStr, /*lineno = */ 1, /*qmlMode=*/mode == ParseMode::QML);
     QQmlJS::Parser parser(m_engine.get());
-
     const bool parserSucceeded = [mode, &parser]() {
         switch (mode) {
         case ParseMode::QML:
             return parser.parse();
         case ParseMode::JS:
             return parser.parseScript();
+        case ParseMode::MJS:
+            return parser.parseModule();
         default:
             Q_UNREACHABLE_RETURN(false);
         }

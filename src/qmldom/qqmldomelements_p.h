@@ -396,7 +396,8 @@ public:
         ArgInitializer,
         ArgumentStructure,
         ReturnType,
-        Code, // Used for storing the content of the whole file as "one" Expression
+        JSCode, // Used for storing the content of the whole .js file as "one" Expression
+        MJSCode, // Used for storing the content of the whole .mjs file as "one" Expression
     };
     Q_ENUM(ExpressionType);
     constexpr static DomType kindValue = DomType::ScriptExpression;
@@ -510,6 +511,7 @@ private:
     enum class ParseMode {
         QML,
         JS,
+        MJS, // module js
     };
 
     inline ParseMode resolveParseMode()
@@ -519,6 +521,8 @@ private:
             // unfortunately there are no documentation explaining this resolution
             // this was just moved from the original implementation
             return ParseMode::QML;
+        case ExpressionType::MJSCode:
+            return ParseMode::MJS;
         default:
             return ParseMode::JS;
         }

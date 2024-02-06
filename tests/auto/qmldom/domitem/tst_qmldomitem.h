@@ -3012,6 +3012,13 @@ private slots:
                  u"QQ");
     }
 
+    void mjsExpression()
+    {
+        const ScriptExpression mjsExpr("export function a(){}",
+                                       ScriptExpression::ExpressionType::MJSCode);
+        QVERIFY(mjsExpr.localErrors().empty());
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;
