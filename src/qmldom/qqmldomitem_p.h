@@ -1021,10 +1021,10 @@ public:
     void writeOutPre(OutWriter &lw) const;
     void writeOut(OutWriter &lw) const;
     void writeOutPost(OutWriter &lw) const;
-    DomItem writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks) const;
-    DomItem writeOut(const QString &path, int nBackups = 2,
-                     const LineWriterOptions &opt = LineWriterOptions(), FileWriter *fw = nullptr,
-                     WriteOutChecks extraChecks = WriteOutCheck::Default) const;
+    bool writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks) const;
+    bool writeOut(const QString &path, int nBackups = 2,
+                  const LineWriterOptions &opt = LineWriterOptions(), FileWriter *fw = nullptr,
+                  WriteOutChecks extraChecks = WriteOutCheck::Default) const;
 
     bool visitTree(const Path &basePath, ChildrenVisitor visitor,
                    VisitOptions options = VisitOption::Default,
@@ -1723,11 +1723,10 @@ public:
         return item().dump(path, filter, nBackups, indent, fw);
     }
     void writeOut(OutWriter &lw) { return item().writeOut(lw); }
-    MutableDomItem writeOut(const QString &path, int nBackups = 2,
-                            const LineWriterOptions &opt = LineWriterOptions(),
-                            FileWriter *fw = nullptr)
+    bool writeOut(const QString &path, int nBackups = 2,
+                  const LineWriterOptions &opt = LineWriterOptions(), FileWriter *fw = nullptr)
     {
-        return MutableDomItem(item().writeOut(path, nBackups, opt, fw));
+        return item().writeOut(path, nBackups, opt, fw);
     }
 
     MutableDomItem fileLocations() { return MutableDomItem(item().fileLocations()); }

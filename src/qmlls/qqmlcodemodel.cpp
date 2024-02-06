@@ -204,7 +204,7 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
         FileToLoad fileToLoad = FileToLoad::fromFileSystem(newCurrentPtr, fPath, options);
         if (!fileToLoad.canonicalPath().isEmpty()) {
             newCurrentPtr->loadBuiltins();
-            newCurrentPtr->loadFile(fileToLoad, [](Path, const DomItem &, const DomItem &) {}, {});
+            newCurrentPtr->loadFile(fileToLoad, [](Path, const DomItem &, const DomItem &) {});
             newCurrentPtr->loadPendingDependencies();
             newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());
         }
@@ -601,8 +601,7 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
                                 p = file.canonicalPath();
                                 if (m_cmakeStatus == HasCMake)
                                     addFileWatches(file);
-                            },
-                            {});
+                            });
     newCurrentPtr->loadPendingDependencies();
     if (p) {
         newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());

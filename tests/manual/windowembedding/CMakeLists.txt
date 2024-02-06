@@ -11,6 +11,7 @@ endif()
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/windowembedding")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Widgets)
+find_package(Qt6 QUIET OPTIONAL_COMPONENTS Multimedia)
 
 qt_standard_project_setup(REQUIRES 6.7)
 
@@ -49,6 +50,14 @@ qt_add_qml_module(windowembedding
         "qtlogo-green.png"
     NO_LINT
 )
+
+if(TARGET Qt::Multimedia)
+    target_link_libraries(windowembedding PRIVATE Qt6::Multimedia)
+    qt_target_qml_sources(windowembedding
+        QML_FILES "examples/hdr.qml"
+        RESOURCES "examples/hdrtest.mp4"
+    )
+endif()
 
 if(APPLE)
     enable_language(OBJCXX)

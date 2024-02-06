@@ -23,15 +23,32 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(QQmlTypeWrapper);
 DEFINE_OBJECT_VTABLE(QQmlScopedEnumWrapper);
 
-void Heap::QQmlTypeWrapper::init()
+
+void Heap::QQmlTypeWrapper::init(TypeNameMode m, QObject *o, const QQmlTypePrivate *type)
 {
+    Q_ASSERT(type);
     Object::init();
-    mode = IncludeEnums;
-    object.init();
+    mode = m;
+    object.init(o);
+    typePrivate = type;
+    QQmlType::refHandle(typePrivate);
+}
+
+void Heap::QQmlTypeWrapper::init(
+        TypeNameMode m, QObject *o, QQmlTypeNameCache *type, const QQmlImportRef *import)
+{
+    Q_ASSERT(type);
+    Object::init();
+    mode = m;
+    object.init(o);
+    typeNamespace = type;
+    typeNamespace->addref();
+    importNamespace = import;
 }
 
 void Heap::QQmlTypeWrapper::destroy()
 {
+    Q_ASSERT(typePrivate || typeNamespace);
     QQmlType::derefHandle(typePrivate);
     typePrivate = nullptr;
     if (typeNamespace)
@@ -127,25 +144,23 @@ ReturnedValue QQmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, 
     Q_ASSERT(t.isValid());
     Scope scope(engine);
 
-    Scoped<QQmlTypeWrapper> w(scope, engine->memoryManager->allocate<QQmlTypeWrapper>());
-    w->d()->mode = mode; w->d()->object = o;
-    w->d()->typePrivate = t.priv();
-    QQmlType::refHandle(w->d()->typePrivate);
+    Scoped<QQmlTypeWrapper> w(scope, engine->memoryManager->allocate<QQmlTypeWrapper>(
+                                             mode, o, t.priv()));
     return w.asReturnedValue();
 }
 
 // Returns a type wrapper for importNamespace (of t) on o.  This allows nested resolution of a type in a
 // namespace.
-ReturnedValue QQmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, const QQmlRefPointer<QQmlTypeNameCache> &t, const QQmlImportRef *importNamespace,
-                                     Heap::QQmlTypeWrapper::TypeNameMode mode)
+ReturnedValue QQmlTypeWrapper::create(
+        QV4::ExecutionEngine *engine, QObject *o, const QQmlRefPointer<QQmlTypeNameCache> &t,
+        const QQmlImportRef *importNamespace, Heap::QQmlTypeWrapper::TypeNameMode mode)
 {
     Q_ASSERT(t);
     Q_ASSERT(importNamespace);
     Scope scope(engine);
 
-    Scoped<QQmlTypeWrapper> w(scope, engine->memoryManager->allocate<QQmlTypeWrapper>());
-    w->d()->mode = mode; w->d()->object = o; w->d()->typeNamespace = t.data(); w->d()->importNamespace = importNamespace;
-    t->addref();
+    Scoped<QQmlTypeWrapper> w(scope, engine->memoryManager->allocate<QQmlTypeWrapper>(
+                                             mode, o, t.data(), importNamespace));
     return w.asReturnedValue();
 }
 
@@ -178,7 +193,7 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
     if (!id.isString())
         return Object::virtualGet(m, id, receiver, hasProperty);
 
-    QV4::ExecutionEngine *v4 = static_cast<const QQmlTypeWrapper *>(m)->engine();
+    QV4::ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
     ScopedString name(scope, id.asStringOrSymbol());
 

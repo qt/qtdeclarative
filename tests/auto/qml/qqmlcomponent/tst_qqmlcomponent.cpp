@@ -141,6 +141,7 @@ private slots:
     void removeBinding();
     void complexObjectArgument();
     void bindingEvaluationOrder();
+    void compilationUnitsWithSameUrl();
 
 private:
     QQmlEngine engine;
@@ -1490,6 +1491,41 @@ void tst_qqmlcomponent::bindingEvaluationOrder()
     QCOMPARE(myList[0].toString(), u"dummy"_s);
     QCOMPARE(myList[1].toString(), u"p1"_s);
     QCOMPARE(myList[2].toString(), u"p2"_s);
+}
+
+void tst_qqmlcomponent::compilationUnitsWithSameUrl()
+{
+    QQmlEngine engine;
+    engine.setUiLanguage("de_CH");
+
+    std::vector<std::unique_ptr<QObject>> objects;
+    for (int i = 0; i < 10; ++i) {
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQml
+            QtObject {
+                function returnThing() : string { return Qt.uiLanguage }
+            }
+        )", QUrl("duplicate.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+        std::unique_ptr<QObject> o(component.create());
+        QVERIFY(o.get());
+
+        QString result;
+        QMetaObject::invokeMethod(o.get(), "returnThing", Q_RETURN_ARG(QString, result));
+        QCOMPARE(result, "de_CH");
+
+        objects.push_back(std::move(o));
+    }
+
+    gc(engine);
+
+    for (const auto &o: objects) {
+        QString result;
+        QMetaObject::invokeMethod(o.get(), "returnThing", Q_RETURN_ARG(QString, result));
+        QCOMPARE(result, "de_CH");
+    }
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

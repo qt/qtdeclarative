@@ -25,6 +25,10 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols-page-wireframe.png
 
+    The \l {Popup::}{padding} properties only affect the contentItem. Use the
+    \l {Popup::}{spacing} property to affect the space between header,
+    contentItem and footer.
+
     By default, Dialogs have \l {QQuickItem::}{focus}.
 
     \section1 Dialog Title and Buttons

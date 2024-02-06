@@ -3,10 +3,12 @@
 
 #include "qv4compilationunitmapper_p.h"
 
-#include "qv4executablecompilationunit_p.h"
-#include <QScopeGuard>
-#include <QFileInfo>
-#include <QDateTime>
+#include <private/qv4compileddata_p.h>
+
+#include <QtCore/qdatetime.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qscopeguard.h>
+
 #include <qt_windows.h>
 
 QT_BEGIN_NAMESPACE
@@ -45,7 +47,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         return nullptr;
     }
 
-    if (!ExecutableCompilationUnit::verifyHeader(&header, sourceTimeStamp, errorString))
+    if (!header.verifyHeader(sourceTimeStamp, errorString))
         return nullptr;
 
     // Data structure and qt version matched, so now we can access the rest of the file safely.

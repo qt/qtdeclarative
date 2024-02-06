@@ -91,8 +91,8 @@ public:
     bool autoRenderTarget = true;
     bool mirrorVertically = false;
     bool blend = false;
-    int explicitTextureWidth = 0;
-    int explicitTextureHeight = 0;
+    int fixedTextureWidth = 0;
+    int fixedTextureHeight = 0;
     QSize effectiveTextureSize;
 };
 

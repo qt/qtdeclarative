@@ -249,14 +249,6 @@ enum class ListOptions {
 };
 Q_ENUM_NS(ListOptions)
 
-enum class LoadOption {
-    DefaultLoad = 0x0,
-    ForceLoad = 0x1,
-};
-Q_ENUM_NS(LoadOption)
-Q_DECLARE_FLAGS(LoadOptions, LoadOption)
-Q_DECLARE_OPERATORS_FOR_FLAGS(LoadOptions)
-
 enum class EscapeOptions{
     OuterQuotes,
     NoOuterQuotes

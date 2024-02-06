@@ -201,6 +201,7 @@ void tst_qquicktextdocument::sourceAndSave()
     QVERIFY(doc);
     QSignalSpy sourceChangedSpy(qqdoc, &QQuickTextDocument::sourceChanged);
     QSignalSpy modifiedChangedSpy(qqdoc, &QQuickTextDocument::modifiedChanged);
+    QSignalSpy statusChangedSpy(qqdoc, &QQuickTextDocument::statusChanged);
 
     QTemporaryDir tmpDir;
     QVERIFY(tmpDir.isValid());
@@ -211,9 +212,13 @@ void tst_qquicktextdocument::sourceAndSave()
     QVERIFY(sf.copy(tmpPath));
     qCDebug(lcTests) << source << "copy ->" << tmpDir.path() << ":" << tmpPath;
 
+    QCOMPARE(statusChangedSpy.size(), 0);
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Null);
     qqdoc->setProperty("source", QUrl::fromLocalFile(tmpPath));
     QCOMPARE(sourceChangedSpy.size(), 1);
     QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 1);
+    QCOMPARE(statusChangedSpy.size(), 2); // Loading, then Loaded
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Loaded);
     const auto *qqdp = QQuickTextDocumentPrivate::get(qqdoc);
     QVERIFY(qqdp->mimeType.inherits(expectedMimeType));
     const bool expectHtml = (expectedMimeType == "text/html");
@@ -231,6 +236,8 @@ void tst_qquicktextdocument::sourceAndSave()
     QCOMPARE(qqdoc->isModified(), true);
 
     qqdoc->save();
+    QCOMPARE(statusChangedSpy.size(), 4); // Saving, then SaveDone
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::SaveDone);
     QFile tf(tmpPath);
     QVERIFY(tf.open(QIODeviceBase::ReadOnly));
     auto readBack = tf.readAll();

@@ -2113,22 +2113,28 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(
         }
     }
 
-    return executableCompilationUnit(std::move(unit));
+    return insertCompilationUnit(std::move(unit));
 }
 
 QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compilationUnitForUrl(const QUrl &url) const
 {
+    // Gives the _most recently inserted_ CU of that URL. That's what we want.
     return m_compilationUnits.value(url);
 }
 
 QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::executableCompilationUnit(
         QQmlRefPointer<CompiledData::CompilationUnit> &&unit)
 {
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> &result = m_compilationUnits[unit->finalUrl()];
-    if (!result || result->baseCompilationUnit() != unit)
-        result = ExecutableCompilationUnit::create(std::move(unit), this);
+    const QUrl url = unit->finalUrl();
+    auto [begin, end] = std::as_const(m_compilationUnits).equal_range(url);
 
-    return result;
+    for (auto it = begin; it != end; ++it) {
+        if ((*it)->baseCompilationUnit() == unit)
+            return *it;
+    }
+
+    return *m_compilationUnits.insert(
+            url, ExecutableCompilationUnit::create(std::move(unit), this));
 }
 
 void ExecutionEngine::trimCompilationUnits()
@@ -2171,8 +2177,7 @@ ExecutionEngine::Module ExecutionEngine::loadModule(const QUrl &url, const Execu
         return Module { *existingModule, nullptr };
 
     auto newModule = compileModule(resolved);
-    if (newModule)
-        m_compilationUnits.insert(resolved, newModule);
+    Q_ASSERT(!newModule || m_compilationUnits.contains(resolved, newModule));
 
     return Module { newModule, nullptr };
 }

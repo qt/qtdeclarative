@@ -754,9 +754,18 @@ public:
             const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp);
 
     QQmlRefPointer<ExecutableCompilationUnit> compilationUnitForUrl(const QUrl &url) const;
+
     QQmlRefPointer<ExecutableCompilationUnit> executableCompilationUnit(
             QQmlRefPointer<QV4::CompiledData::CompilationUnit> &&unit);
-    QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> compilationUnits() const
+
+    QQmlRefPointer<ExecutableCompilationUnit> insertCompilationUnit(
+            QQmlRefPointer<QV4::CompiledData::CompilationUnit> &&unit) {
+        QUrl url = unit->finalUrl();
+        return *m_compilationUnits.insert(
+                std::move(url), ExecutableCompilationUnit::create(std::move(unit), this));
+    }
+
+    QMultiHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> compilationUnits() const
     {
         return m_compilationUnits;
     }
@@ -878,7 +887,7 @@ private:
 
     QVector<Deletable *> m_extensionData;
 
-    QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> m_compilationUnits;
+    QMultiHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> m_compilationUnits;
 
     // QV4::PersistentValue would be preferred, but using QHash will create copies,
     // and QV4::PersistentValue doesn't like creating copies.

@@ -72,7 +72,6 @@ excludedirs += \
 
 exampledirs += \
     ../../../examples/quick \
-    ../../../examples/quickshapes \
     ../../qmlmodels/doc/snippets \
     ../../quickcontrols/doc/snippets \
     snippets \

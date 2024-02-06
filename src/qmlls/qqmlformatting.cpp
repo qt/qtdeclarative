@@ -84,8 +84,7 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
             FileToLoad::fromMemory(newCurrentPtr, file.canonicalFilePath(), code, creationOptions),
             [&fileWithoutScriptExpressions](Path, const DomItem &, const DomItem &newValue) {
                 fileWithoutScriptExpressions = newValue.fileObject();
-            },
-            {});
+            });
     newCurrentPtr->loadPendingDependencies();
 
     // TODO: implement formatting options
@@ -97,7 +96,7 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
     QLspSpecification::TextEdit formattedText;
     LineWriter lw([&formattedText](QStringView s) {formattedText.newText += s.toUtf8(); }, QString(), options);
     OutWriter ow(lw);
-    MutableDomItem formatted = fileWithoutScriptExpressions.writeOutForFile(ow, WriteOutCheck::None);
+    fileWithoutScriptExpressions.writeOutForFile(ow, WriteOutCheck::None);
     ow.flush();
 
     const auto [endLine, endColumn] = QQmlLSUtils::textRowAndColumnFrom(code, code.length());

@@ -17,6 +17,8 @@ Item {
             addExample("🕸️ Web", "A native web view", Qt.resolvedUrl("examples/webview.qml"));
             addExample("🗺️ Map", "A native map view", Qt.resolvedUrl("examples/map.qml"));
             addExample("📽️ Video", "A native video player", Qt.resolvedUrl("examples/video.qml"));
+            if (haveQtMultimedia)
+                addExample("💡 HDR", "A HDR enabled video player", Qt.resolvedUrl("examples/hdr.qml"));
         }
     }
 }

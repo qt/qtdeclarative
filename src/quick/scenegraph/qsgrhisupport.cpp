@@ -215,12 +215,24 @@ void QSGRhiSupport::checkEnvQSgInfo()
 #define GL_RGB10_A2                       0x8059
 #endif
 
-QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromGL(uint format)
+#ifndef GL_SRGB_ALPHA
+#define GL_SRGB_ALPHA                     0x8C42
+#endif
+
+#ifndef GL_SRGB8_ALPHA8
+#define GL_SRGB8_ALPHA8                   0x8C43
+#endif
+
+QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromGL(uint format, QRhiTexture::Flags *flags)
 {
+    bool sRGB = false;
     auto rhiFormat = QRhiTexture::UnknownFormat;
     switch (format) {
-    case GL_RGBA:
+    case GL_SRGB_ALPHA:
+    case GL_SRGB8_ALPHA8:
+        sRGB = true;
         Q_FALLTHROUGH();
+    case GL_RGBA:
     case GL_RGBA8:
     case 0:
         rhiFormat = QRhiTexture::RGBA8;
@@ -282,6 +294,8 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromGL(uint format)
         qWarning("GL format %d is not supported", format);
         break;
     }
+    if (sRGB)
+        (*flags) |=(QRhiTexture::sRGB);
     return rhiFormat;
 }
 #endif
@@ -1574,7 +1588,7 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormat(uint nativeFormat, QRhiTex
 #if QT_CONFIG(opengl)
     case QRhi::OpenGLES2:
         Q_UNUSED(flags);
-        return toRhiTextureFormatFromGL(nativeFormat);
+        return toRhiTextureFormatFromGL(nativeFormat, flags);
 #endif
 #ifdef Q_OS_WIN
     case QRhi::D3D11:

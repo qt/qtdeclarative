@@ -1235,6 +1235,62 @@ void tst_qmlls_modules::rangeFormatting()
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
 }
 
+void tst_qmlls_modules::hover_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<QLspSpecification::Position>("hoveredPosition");
+    QTest::addColumn<QLspSpecification::MarkupContent>("expectedResult");
+
+    const QString filePath = u"hover/test.qml"_s;
+    {
+        QLspSpecification::MarkupContent content{ MarkupKind::PlainText, "should fail" };
+        QTest::addRow("hover") << filePath << QLspSpecification::Position{ 7, 24 } << content;
+    }
+}
+
+void tst_qmlls_modules::hover()
+{
+    QFETCH(QString, filePath);
+    QFETCH(QLspSpecification::Position, hoveredPosition);
+    QFETCH(QLspSpecification::MarkupContent, expectedResult);
+
+    ignoreDiagnostics();
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+
+    QLspSpecification::HoverParams params;
+    params.textDocument.uri = *uri;
+    params.position = hoveredPosition;
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    const auto clean = [didFinish]() { *didFinish = true; };
+
+    auto &&responseHandler = [&](auto res) {
+        QScopeGuard cleanup(clean);
+        const auto *const result = std::get_if<QLspSpecification::Hover>(&res);
+        QVERIFY(result);
+
+        const auto *const markupContent =
+                std::get_if<QLspSpecification::MarkupContent>(&result->contents);
+        QVERIFY(markupContent);
+
+        QEXPECT_FAIL("hover", "Should fail until we get the actual documentation for hovered items",
+                     Continue);
+        QCOMPARE(markupContent->value, expectedResult.value);
+        QCOMPARE(markupContent->kind, expectedResult.kind);
+    };
+
+    auto &&errorHandler = [&clean](auto &error) {
+        QScopeGuard cleanup(clean);
+        ProtocolBase::defaultResponseErrorHandler(error);
+        QVERIFY2(false, "error occurred on hovering");
+    };
+
+    m_protocol->requestHover(params, std::move(responseHandler), std::move(errorHandler));
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+}
+
 enum AddBuildDirOption : bool { AddBuildDir, DoNotAddBuildDir };
 
 void tst_qmlls_modules::qmldirImports_data()

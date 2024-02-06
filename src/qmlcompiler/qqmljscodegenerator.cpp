@@ -1403,6 +1403,9 @@ void QQmlJSCodeGenerator::generate_GetOptionalLookup(int index, int offset)
     } else if (annotation.changedRegisterIndex == Accumulator
                && annotation.changedRegister.variant() == QQmlJSRegisterContent::ObjectEnum) {
         // Nothing
+    } else if (m_typeResolver->equals(accumulatorIn.storedType(), m_typeResolver->jsValueType())) {
+        m_body += u"if (%1.isNull() || %1.isUndefined())\n"_s.arg(accumulatorVarIn);
+        generateJumpCodeWithTypeConversions(offset);
     } else {
         Q_UNREACHABLE(); // No other accumulatorIn stored types should be possible
     }

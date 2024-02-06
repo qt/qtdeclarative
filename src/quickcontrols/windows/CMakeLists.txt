@@ -52,6 +52,7 @@ qt_internal_add_qml_module(qtquickcontrols2windowsstyleplugin
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickControls2Private
+        Qt::QuickControls2WindowsStyleImpl
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
 )

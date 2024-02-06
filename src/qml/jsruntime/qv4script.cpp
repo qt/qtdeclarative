@@ -94,7 +94,7 @@ void Script::parse()
         if (v4->hasException)
             return;
 
-        compilationUnit = v4->executableCompilationUnit(cg.generateCompilationUnit());
+        compilationUnit = v4->insertCompilationUnit(cg.generateCompilationUnit());
         vmFunction = compilationUnit->rootFunction();
     }
 
@@ -197,7 +197,7 @@ Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlCo
                     &cacheError)
                 : nullptr) {
         QQmlRefPointer<QV4::ExecutableCompilationUnit> jsUnit
-                = engine->executableCompilationUnit(
+                = engine->insertCompilationUnit(
                     QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>(
                         cachedUnit->qmlData, cachedUnit->aotCompiledFunctions));
         return new QV4::Script(engine, qmlContext, jsUnit);

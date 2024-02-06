@@ -175,7 +175,9 @@ int main(int argc, char **argv)
     typeRegistrar.setTypes(processor.types(), processor.foreignTypes());
 
     if (!parser.isSet(jsroot)) {
-        if (parser.isSet(outputOption)) {
+        if (module.isEmpty()) {
+            warning(module) << "The module name is empty. Cannot generate C++ code";
+        } else if (parser.isSet(outputOption)) {
             // extract does its own file handling
             QString outputName = parser.value(outputOption);
             QFile file(outputName);

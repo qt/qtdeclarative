@@ -1514,9 +1514,7 @@ void QObjectWrapper::destroyObject(bool lastCall)
             if (!o->parent() && !ddata->indestructible) {
                 if (ddata && ddata->ownContext) {
                     Q_ASSERT(ddata->ownContext.data() == ddata->context);
-                    ddata->ownContext->emitDestruction();
-                    if (ddata->ownContext->contextObject() == o)
-                        ddata->ownContext->setContextObject(nullptr);
+                    ddata->ownContext->deepClearContextObject(o);
                     ddata->ownContext.reset();
                     ddata->context = nullptr;
                 }

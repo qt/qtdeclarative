@@ -82,9 +82,9 @@ public:
 
     void refreshedDataAt(QDateTime tNew) final override
     {
-        return OwningItem::refreshedDataAt(tNew);
         if (currentItem())
             currentItem()->refreshedDataAt(tNew);
+        return OwningItem::refreshedDataAt(tNew);
     }
 
     friend class DomUniverse;
@@ -197,9 +197,17 @@ public:
         return std::static_pointer_cast<DomUniverse>(doCopy(self));
     }
 
-    void loadFile(const FileToLoad &file, Callback callback, LoadOptions loadOptions,
-                  std::optional<DomType> fileType = std::optional<DomType>());
-    void parse(const FileToLoad &file, DomType fType, LoadOptions loadOptions, Callback callback);
+    // Helper structure reflecting the change in the map once loading && parsing is completed
+    // formerItem - DomItem representing value (ExternalItemPair) existing in the map before the
+    // loading && parsing. Might be empty (if didn't exist / failure) or equal to currentItem
+    // currentItem - DomItem representing current map value
+    struct LoadResult
+    {
+        DomItem formerItem;
+        DomItem currentItem;
+    };
+
+    LoadResult loadFile(const FileToLoad &file, DomType fileType);
 
     void removePath(const QString &dir);
 
@@ -313,6 +321,122 @@ public:
     }
 
 private:
+    struct ContentWithDate
+    {
+        QString content;
+        QDateTime date;
+    };
+    // contains either Content with the timestamp when it was read or an Error
+    using ReadResult = std::variant<ContentWithDate, ErrorMessage>;
+    ReadResult readFileContent(const QString &canonicalPath) const;
+
+    LoadResult load(const ContentWithDate &codeWithDate, const FileToLoad &file, DomType fType);
+
+    // contains either Content to be parsed or LoadResult if loading / parsing is not needed
+    using PreloadResult = std::variant<ContentWithDate, LoadResult>;
+    PreloadResult preload(const DomItem &univ, const FileToLoad &file, DomType fType) const;
+
+    std::shared_ptr<QmlFile> parseQmlFile(const QString &code, const FileToLoad &file,
+                                          const QDateTime &contentDate);
+    std::shared_ptr<JsFile> parseJsFile(const QString &code, const FileToLoad &file,
+                                        const QDateTime &contentDate);
+    std::shared_ptr<ExternalItemPairBase> getPathValueOrNull(DomType fType,
+                                                             const QString &path) const;
+    std::optional<DomItem> getItemIfMostRecent(const DomItem &univ, DomType fType,
+                                               const QString &path) const;
+    std::optional<DomItem> getItemIfHasSameCode(const DomItem &univ, DomType fType,
+                                                const QString &canonicalPath,
+                                                const ContentWithDate &codeWithDate) const;
+    static bool valueHasMostRecentItem(const ExternalItemPairBase *value,
+                                       const QDateTime &lastModified);
+    static bool valueHasSameContent(const ExternalItemPairBase *value, const QString &content);
+
+    // TODO better name / consider proper public get/set
+    template <typename T>
+    QMap<QString, std::shared_ptr<ExternalItemPair<T>>> &getMutableRefToMap()
+    {
+        Q_ASSERT(!mutex()->tryLock());
+        if constexpr (std::is_same_v<T, QmlDirectory>) {
+            return m_qmlDirectoryWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmldirFile>) {
+            return m_qmldirFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmlFile>) {
+            return m_qmlFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, JsFile>) {
+            return m_jsFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmltypesFile>) {
+            return m_qmltypesFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, GlobalScope>) {
+            return m_globalScopeWithName;
+        }
+        Q_UNREACHABLE();
+    }
+
+    // Inserts or updates an entry reflecting ExternalItem in the corresponding map
+    // Returns a pair of:
+    // - current ExternalItemPair, current value in the map (might be empty, or equal to curValue)
+    // - new current ExternalItemPair, value in the map after after the execution of this function
+    template <typename T>
+    QPair<std::shared_ptr<ExternalItemPair<T>>, std::shared_ptr<ExternalItemPair<T>>>
+    insertOrUpdateEntry(std::shared_ptr<T> newItem)
+    {
+        std::shared_ptr<ExternalItemPair<T>> curValue;
+        std::shared_ptr<ExternalItemPair<T>> newCurValue;
+        QString canonicalPath = newItem->canonicalFilePath();
+        QDateTime now = QDateTime::currentDateTimeUtc();
+        {
+            QMutexLocker l(mutex());
+            auto &map = getMutableRefToMap<T>();
+            auto it = map.find(canonicalPath);
+            if (it != map.cend() && (*it) && (*it)->current) {
+                curValue = *it;
+                if (valueHasSameContent(curValue.get(), newItem->code())) {
+                    // value in the map has same content as newItem, a.k.a. most recent
+                    newCurValue = curValue;
+                    if (newCurValue->current->lastDataUpdateAt() < newItem->lastDataUpdateAt()) {
+                        // update timestamp in the current, as if its content was refreshed by
+                        // NewItem
+                        newCurValue->current->refreshedDataAt(newItem->lastDataUpdateAt());
+                    }
+                } else if (curValue->current->lastDataUpdateAt() > newItem->lastDataUpdateAt()) {
+                    // value in the map is more recent than newItem, nothing to update
+                    newCurValue = curValue;
+                } else {
+                    // perform update with newItem
+                    curValue->current = std::move(newItem);
+                    curValue->currentExposedAt = now;
+                    if (curValue->current->isValid()) {
+                        curValue->valid = curValue->current;
+                        curValue->validExposedAt = std::move(now);
+                    }
+                    newCurValue = curValue;
+                }
+            } else {
+                // not found / invalid, just insert
+                newCurValue = std::make_shared<ExternalItemPair<T>>(
+                        (newItem->isValid() ? newItem : std::shared_ptr<T>()), newItem, now, now);
+                map.insert(canonicalPath, newCurValue);
+            }
+        }
+        return qMakePair(curValue, newCurValue);
+    }
+
+    // Inserts or updates an entry reflecting ExternalItem in the corresponding map
+    // returns LoadResult reflecting the change made to the map
+    template <typename T>
+    LoadResult insertOrUpdateExternalItem(std::shared_ptr<T> extItem)
+    {
+        auto change = insertOrUpdateEntry<T>(std::move(extItem));
+        DomItem univ(shared_from_this());
+        return { univ.copy(change.first), univ.copy(change.second) };
+    }
+
+private:
     QString m_name;
     QMap<QString, std::shared_ptr<ExternalItemPair<GlobalScope>>> m_globalScopeWithName;
     QMap<QString, std::shared_ptr<ExternalItemPair<QmlDirectory>>> m_qmlDirectoryWithPath;
@@ -368,9 +492,9 @@ public:
 
     void refreshedDataAt(QDateTime tNew) final override
     {
-        return OwningItem::refreshedDataAt(tNew);
         if (currentItem())
             currentItem()->refreshedDataAt(tNew);
+        return OwningItem::refreshedDataAt(tNew);
     }
 
     void ensureLogicalFilePath(const QString &path) {
@@ -618,7 +742,7 @@ public:
 
     std::shared_ptr<DomEnvironment> makeCopy(const DomItem &self) const;
 
-    void loadFile(const FileToLoad &file, const Callback &callback, LoadOptions loadOptions,
+    void loadFile(const FileToLoad &file, const Callback &callback,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr /* used only in loadPendingDependencies*/);
     void loadBuiltins(const Callback &callback = nullptr, const ErrorHandler &h = nullptr);
@@ -670,22 +794,24 @@ public:
                                                   Options options = Option::SingleThreaded,
                                                   const DomItem &universe = DomItem::empty);
 
-    std::shared_ptr<ExternalItemInfo<QmlFile>> addQmlFile(
-            const std::shared_ptr<QmlFile> &file, AddOption option = AddOption::KeepExisting);
-    std::shared_ptr<ExternalItemInfo<QmlDirectory>> addQmlDirectory(
-            const std::shared_ptr<QmlDirectory> &file, AddOption option = AddOption::KeepExisting);
-    std::shared_ptr<ExternalItemInfo<QmldirFile>> addQmldirFile(
-            const std::shared_ptr<QmldirFile> &file, AddOption option = AddOption::KeepExisting);
-    std::shared_ptr<ExternalItemInfo<QmltypesFile>> addQmltypesFile(
-            const std::shared_ptr<QmltypesFile> &file, AddOption option = AddOption::KeepExisting);
-    std::shared_ptr<ExternalItemInfo<JsFile>> addJsFile(
-            const std::shared_ptr<JsFile> &file, AddOption option = AddOption::KeepExisting);
-    std::shared_ptr<ExternalItemInfo<GlobalScope>> addGlobalScope(
-            const std::shared_ptr<GlobalScope> &file, AddOption option = AddOption::KeepExisting);
+    // TODO AddOption can easily be removed later. KeepExisting option only used in one
+    // place which will be removed in https://codereview.qt-project.org/c/qt/qtdeclarative/+/523217
+    void addQmlFile(const std::shared_ptr<QmlFile> &file,
+                    AddOption option = AddOption::KeepExisting);
+    void addQmlDirectory(const std::shared_ptr<QmlDirectory> &file,
+                         AddOption option = AddOption::KeepExisting);
+    void addQmldirFile(const std::shared_ptr<QmldirFile> &file,
+                       AddOption option = AddOption::KeepExisting);
+    void addQmltypesFile(const std::shared_ptr<QmltypesFile> &file,
+                         AddOption option = AddOption::KeepExisting);
+    void addJsFile(const std::shared_ptr<JsFile> &file, AddOption option = AddOption::KeepExisting);
+    void addGlobalScope(const std::shared_ptr<GlobalScope> &file,
+                        AddOption option = AddOption::KeepExisting);
 
     bool commitToBase(
             const DomItem &self, const std::shared_ptr<DomEnvironment> &validEnv = nullptr);
 
+    void addDependenciesToLoad(const Path &path);
     void addLoadInfo(
             const DomItem &self, const std::shared_ptr<LoadInfo> &loadInfo);
     std::shared_ptr<LoadInfo> loadInfo(const Path &path) const;
@@ -712,11 +838,96 @@ public:
     void clearReferenceCache();
     void setLoadPaths(const QStringList &v);
 
+    // Helper structure reflecting the change in the map once loading / fetching is completed
+    // formerItem - DomItem representing value (ExternalItemInfo) existing in the map before the
+    // loading && parsing. Might be empty (if didn't exist / failure) or equal to currentItem
+    // currentItem - DomItem representing current map value
+    struct LoadResult
+    {
+        DomItem formerItem;
+        DomItem currentItem;
+    };
+    // TODO(QTBUG-121171)
+    template <typename T>
+    LoadResult insertOrUpdateExternalItemInfo(const QString &path, std::shared_ptr<T> extItem)
+    {
+        // maybe in the next revision this all can be just substituted by the addExternalItem
+        DomItem env(shared_from_this());
+        // try to fetch from the current env.
+        if (auto curValue = lookup<T>(path, EnvLookup::NoBase)) {
+            // found in the "initial" env
+            return { env.copy(curValue), env.copy(curValue) };
+        }
+        std::shared_ptr<ExternalItemInfo<T>> newCurValue;
+        // try to fetch from the base env
+        auto valueInBase = lookup<T>(path, EnvLookup::BaseOnly);
+        if (!valueInBase) {
+            // Nothing found. Just create an externalItemInfo which will be inserted
+            newCurValue = std::make_shared<ExternalItemInfo<T>>(std::move(extItem),
+                                                                QDateTime::currentDateTimeUtc());
+        } else {
+            // prepare updated value as a copy of the value from the Base to be inserted
+            newCurValue = valueInBase->makeCopy(env);
+            if (newCurValue->current != extItem) {
+                newCurValue->current = std::move(extItem);
+                newCurValue->setCurrentExposedAt(QDateTime::currentDateTimeUtc());
+            }
+        }
+        // Before inserting new or updated value, check one more time, if ItemInfo is already
+        // present
+        // lookup<> can't be used here because of the data-race
+        {
+            QMutexLocker l(mutex());
+            auto &map = getMutableRefToMap<T>();
+            const auto &it = map.find(path);
+            if (it != map.end())
+                return { env.copy(*it), env.copy(*it) };
+            // otherwise insert
+            map.insert(path, newCurValue);
+        }
+        return { env.copy(valueInBase), env.copy(newCurValue) };
+    }
+
+    template <typename T>
+    void addExternalItemInfo(const DomItem &newExtItem, const Callback &loadCallback,
+                             const Callback &endCallback)
+    {
+        // get either Valid "file" from the ExternalItemPair or the current (wip) "file"
+        std::shared_ptr<T> newItemPtr;
+        if (options() & DomEnvironment::Option::KeepValid)
+            newItemPtr = newExtItem.field(Fields::validItem).ownerAs<T>();
+        if (!newItemPtr)
+            newItemPtr = newExtItem.field(Fields::currentItem).ownerAs<T>();
+        Q_ASSERT(newItemPtr && "envCallbackForFile reached without current file");
+
+        auto loadResult = insertOrUpdateExternalItemInfo(newExtItem.canonicalFilePath(),
+                                                         std::move(newItemPtr));
+        Path p = loadResult.currentItem.canonicalPath();
+        {
+            auto depLoad = qScopeGuard([p, this, endCallback] {
+                addDependenciesToLoad(p);
+                // add EndCallback to the queue, which should be called once all dependencies are
+                // loaded
+                if (endCallback) {
+                    DomItem env = DomItem(shared_from_this());
+                    addAllLoadedCallback(
+                            env, [p, endCallback](Path, const DomItem &, const DomItem &env) {
+                                DomItem el = env.path(p);
+                                endCallback(p, el, el);
+                            });
+                }
+            });
+            // call loadCallback
+            if (loadCallback) {
+                loadCallback(p, loadResult.formerItem, loadResult.currentItem);
+            }
+        }
+    }
+
 private:
     friend class RefCacheEntry;
 
-    void loadFile(const FileToLoad &file, Callback loadCallback, Callback directDepsCallback,
-                  Callback endCallback, LoadOptions loadOptions,
+    void loadFile(const FileToLoad &file, const Callback &loadCallback, const Callback &endCallback,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr);
 
@@ -728,17 +939,129 @@ private:
     QSet<QString> getStrings(function_ref<QSet<QString>()> getBase, const QMap<QString, T> &selfMap,
                              EnvLookup lookup) const;
 
-    Callback callbackForQmlDirectory(const DomItem &self, Callback loadCallback,
-                                     Callback directDepsCallback, Callback endCallback);
-    Callback callbackForQmlFile(const DomItem &self, Callback loadCallback, Callback directDepsCallback,
-                                Callback endCallback);
-    Callback callbackForQmltypesFile(const DomItem &self, Callback loadCallback,
-                                     Callback directDepsCallback, Callback endCallback);
-    Callback callbackForQmldirFile(const DomItem &self, Callback loadCallback,
-                                   Callback directDepsCallback, Callback endCallback);
-    Callback callbackForJSFile(const DomItem &self, Callback loadCallback, Callback directDepsCallback,
-                               Callback endCallback);
+    template <typename T>
+    const QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> &getConstRefToMap() const
+    {
+        Q_ASSERT(!mutex()->tryLock());
+        if constexpr (std::is_same_v<T, GlobalScope>) {
+            return m_globalScopeWithName;
+        }
+        if constexpr (std::is_same_v<T, QmlDirectory>) {
+            return m_qmlDirectoryWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmldirFile>) {
+            return m_qmldirFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmlFile>) {
+            return m_qmlFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, JsFile>) {
+            return m_jsFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmltypesFile>) {
+            return m_qmltypesFileWithPath;
+        }
+        Q_UNREACHABLE();
+    }
 
+    template <typename T>
+    std::shared_ptr<ExternalItemInfo<T>> lookup(const QString &path, EnvLookup options) const
+    {
+        if (options != EnvLookup::BaseOnly) {
+            QMutexLocker l(mutex());
+            const auto &map = getConstRefToMap<T>();
+            const auto &it = map.find(path);
+            if (it != map.end())
+                return *it;
+        }
+        if (options != EnvLookup::NoBase && m_base)
+            return m_base->lookup<T>(path, options);
+        return {};
+    }
+
+    template <typename T>
+    QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> &getMutableRefToMap()
+    {
+        Q_ASSERT(!mutex()->tryLock());
+        if constexpr (std::is_same_v<T, QmlDirectory>) {
+            return m_qmlDirectoryWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmldirFile>) {
+            return m_qmldirFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmlFile>) {
+            return m_qmlFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, JsFile>) {
+            return m_jsFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, QmltypesFile>) {
+            return m_qmltypesFileWithPath;
+        }
+        if constexpr (std::is_same_v<T, GlobalScope>) {
+            return m_globalScopeWithName;
+        }
+        Q_UNREACHABLE();
+    }
+
+    template <typename T>
+    void addExternalItem(std::shared_ptr<T> file, QString key, AddOption option)
+    {
+        if (!file)
+            return;
+
+        auto eInfo = std::make_shared<ExternalItemInfo<T>>(file, QDateTime::currentDateTimeUtc());
+        // Lookup helper can't be used here, because it introduces data-race otherwise
+        // (other modifications might happen between the lookup and the insert)
+        QMutexLocker l(mutex());
+        auto &map = getMutableRefToMap<T>();
+        const auto &it = map.find(key);
+        if (it != map.end() && option == AddOption::KeepExisting)
+            return;
+        map.insert(key, eInfo);
+    }
+
+    using FetchResult =
+            QPair<std::shared_ptr<ExternalItemInfoBase>, std::shared_ptr<ExternalItemInfoBase>>;
+    // This function tries to get an Info object about the ExternalItem from the current env
+    // and depending on the result and options tries to fetch it from the Parent env,
+    // saving a copy with an updated timestamp
+    template <typename T>
+    FetchResult fetchFileFromEnvs(const FileToLoad &file)
+    {
+        const auto &path = file.canonicalPath();
+        // lookup only in the current env
+        if (auto value = lookup<T>(path, EnvLookup::NoBase)) {
+            return qMakePair(value, value);
+        }
+        // try to find the file in the base(parent) Env and insert if found
+        if (options() & Option::NoReload) {
+            if (auto baseV = lookup<T>(path, EnvLookup::BaseOnly)) {
+                // Watch out! QTBUG-121171
+                // It's possible between the lookup and creation of curVal, baseV && baseV->current
+                // might have changed
+                // Prepare a value to be inserted as copy of the value from Base
+                auto curV = std::make_shared<ExternalItemInfo<T>>(
+                        baseV->current, QDateTime::currentDateTimeUtc(), baseV->revision(),
+                        baseV->lastDataUpdateAt());
+                // Lookup one more time if the value was already inserted to the current env
+                // Lookup can't be used here because of the data-race
+                {
+                    QMutexLocker l(mutex());
+                    auto &map = getMutableRefToMap<T>();
+                    const auto &it = map.find(path);
+                    if (it != map.end())
+                        return qMakePair(*it, *it);
+                    // otherwise insert
+                    map.insert(path, curV);
+                }
+                return qMakePair(baseV, curV);
+            }
+        }
+        return qMakePair(nullptr, nullptr);
+    }
+
+    Callback getLoadCallbackFor(DomType fileType, const Callback &loadCallback);
 
     std::shared_ptr<ModuleIndex> lookupModuleInEnv(const QString &uri, int majorVersion) const;
     // ModuleLookupResult contains the ModuleIndex pointer, and an indicator whether it was found

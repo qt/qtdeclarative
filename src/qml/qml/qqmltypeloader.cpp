@@ -602,6 +602,28 @@ bool QQmlTypeLoader::Blob::addFileImport(const QQmlTypeLoader::Blob::PendingImpo
     return true;
 }
 
+static void addDependencyImportError(
+        const QQmlTypeLoader::Blob::PendingImportPtr &import, QList<QQmlError> *errors)
+{
+    QQmlError error;
+    QString reason = errors->front().description();
+    if (reason.size() > 512)
+        reason = reason.first(252) + QLatin1String("... ...") + reason.last(252);
+    if (import->version.hasMajorVersion()) {
+        error.setDescription(QQmlImportDatabase::tr(
+                                     "module \"%1\" version %2.%3 cannot be imported because:\n%4")
+                                     .arg(import->uri).arg(import->version.majorVersion())
+                                     .arg(import->version.hasMinorVersion()
+                                                  ? QString::number(import->version.minorVersion())
+                                                  : QLatin1String("x"))
+                                     .arg(reason));
+    } else {
+        error.setDescription(QQmlImportDatabase::tr("module \"%1\" cannot be imported because:\n%2")
+                                     .arg(import->uri, reason));
+    }
+    errors->prepend(error);
+}
+
 bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingImportPtr &import, QList<QQmlError> *errors)
 {
     QQmlImportDatabase *importDatabase = typeLoader()->importDatabase();
@@ -627,23 +649,7 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
             import->version = actualVersion;
 
         if (!loadImportDependencies(import, qmldirFilePath, import->flags, errors)) {
-            QQmlError error;
-            QString reason = errors->front().description();
-            if (reason.size() > 512)
-                reason = reason.first(252) + QLatin1String("... ...") + reason.last(252);
-            if (import->version.hasMajorVersion()) {
-                error.setDescription(QQmlImportDatabase::tr(
-                                         "module \"%1\" version %2.%3 cannot be imported because:\n%4")
-                                     .arg(import->uri).arg(import->version.majorVersion())
-                                     .arg(import->version.hasMinorVersion()
-                                          ? QString::number(import->version.minorVersion())
-                                          : QLatin1String("x"))
-                                     .arg(reason));
-            } else {
-                error.setDescription(QQmlImportDatabase::tr("module \"%1\" cannot be imported because:\n%2")
-                                     .arg(import->uri, reason));
-            }
-            errors->prepend(error);
+            addDependencyImportError(import, errors);
             return false;
         }
 
@@ -654,7 +660,13 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
     switch (qmldirResult) {
     case QQmlImportDatabase::QmldirFound:
         return true;
-    case QQmlImportDatabase::QmldirNotFound:
+    case QQmlImportDatabase::QmldirNotFound: {
+        if (!loadImportDependencies(import, QString(), import->flags, errors)) {
+            addDependencyImportError(import, errors);
+            return false;
+        }
+        break;
+    }
     case QQmlImportDatabase::QmldirInterceptedToRemote:
         break;
     case QQmlImportDatabase::QmldirRejected:
@@ -815,10 +827,10 @@ bool QQmlTypeLoader::Blob::loadImportDependencies(
         const QQmlTypeLoader::Blob::PendingImportPtr &currentImport, const QString &qmldirUri,
         QQmlImports::ImportFlags flags, QList<QQmlError> *errors)
 {
-    const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirUri);
-    const QList<QQmlDirParser::Import> implicitImports
-            = QQmlMetaType::moduleImports(currentImport->uri, currentImport->version)
-            + qmldir.imports();
+    QList<QQmlDirParser::Import> implicitImports
+            = QQmlMetaType::moduleImports(currentImport->uri, currentImport->version);
+    if (!qmldirUri.isEmpty())
+        implicitImports += typeLoader()->qmldirContent(qmldirUri).imports();
 
     // Prevent overflow from one category of import into the other.
     switch (currentImport->precedence) {

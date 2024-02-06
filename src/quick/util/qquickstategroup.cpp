@@ -96,9 +96,9 @@ QQuickStateGroup::QQuickStateGroup(QObject *parent)
 QQuickStateGroup::~QQuickStateGroup()
 {
     Q_D(const QQuickStateGroup);
-    for (int i = 0; i < d->states.size(); ++i) {
-        if (d->states.at(i))
-            d->states.at(i)->setStateGroup(nullptr);
+    for (QQuickState *state : std::as_const(d->states)) {
+        if (state)
+            state->setStateGroup(nullptr);
     }
     if (d->nullState)
         d->nullState->setStateGroup(nullptr);
@@ -164,13 +164,13 @@ QQuickState *QQuickStateGroupPrivate::at_state(QQmlListProperty<QQuickState> *li
 
 void QQuickStateGroupPrivate::clear_states(QQmlListProperty<QQuickState> *list)
 {
-    QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
-    _this->d_func()->setCurrentStateInternal(QString(), true);
-    for (qsizetype i = 0; i < _this->d_func()->states.size(); ++i) {
-        if (_this->d_func()->states.at(i))
-            _this->d_func()->states.at(i)->setStateGroup(nullptr);
+    QQuickStateGroupPrivate *d = static_cast<QQuickStateGroup *>(list->object)->d_func();
+    d->setCurrentStateInternal(QString(), true);
+    for (QQuickState *state : std::as_const(d->states)) {
+        if (state)
+            state->setStateGroup(nullptr);
     }
-    _this->d_func()->states.clear();
+    d->states.clear();
 }
 
 void QQuickStateGroupPrivate::replace_states(QQmlListProperty<QQuickState> *list, qsizetype index, QQuickState *state)
@@ -181,19 +181,25 @@ void QQuickStateGroupPrivate::replace_states(QQmlListProperty<QQuickState> *list
     if (oldState != state) {
         if (oldState)
             oldState->setStateGroup(nullptr);
-        state->setStateGroup(self);
+
+        if (state)
+            state->setStateGroup(self);
         d->states.replace(index, state);
         if (!oldState || d->currentState == oldState->name())
-            d->setCurrentStateInternal(state->name(), true);
+            d->setCurrentStateInternal(state ? state->name() : QString(), true);
     }
 }
 
 void QQuickStateGroupPrivate::removeLast_states(QQmlListProperty<QQuickState> *list)
 {
     auto *d = static_cast<QQuickStateGroup *>(list->object)->d_func();
-    if (d->currentState == d->states.last()->name())
-        d->setCurrentStateInternal(d->states.size() > 1 ? d->states.first()->name() : QString(), true);
-    d->states.last()->setStateGroup(nullptr);
+    if (QQuickState *last = d->states.last()) {
+        if (d->currentState == last->name()) {
+            QQuickState *first = d->states.size() > 1 ? d->states.first() : nullptr;
+            d->setCurrentStateInternal(first ? first->name() : QString(), true);
+        }
+        last->setStateGroup(nullptr);
+    }
     d->states.removeLast();
 }
 
@@ -302,17 +308,18 @@ void QQuickStateGroup::componentComplete()
 
     QVarLengthArray<QString, 4> names;
     names.reserve(d->states.size());
-    for (int ii = 0; ii < d->states.size(); ++ii) {
-        QQuickState *state = d->states.at(ii);
+    for (QQuickState *state : std::as_const(d->states)) {
+        if (!state)
+            continue;
+
         if (!state->isNamed())
             state->setName(QLatin1String("anonymousState") + QString::number(++d->unnamedCount));
 
         QString stateName = state->name();
-        if (names.contains(stateName)) {
+        if (names.contains(stateName))
             qmlWarning(state->parent()) << "Found duplicate state name: " << stateName;
-        } else {
+        else
             names.append(std::move(stateName));
-        }
     }
 
     if (d->updateAutoState()) {
@@ -340,40 +347,38 @@ bool QQuickStateGroupPrivate::updateAutoState()
         return false;
 
     bool revert = false;
-    for (int ii = 0; ii < states.size(); ++ii) {
-        QQuickState *state = states.at(ii);
-        if (state->isWhenKnown()) {
-            if (state->isNamed()) {
-                bool whenValue = state->when();
-                const QQmlPropertyIndex whenIndex(state->metaObject()->indexOfProperty("when"));
-                const auto potentialWhenBinding = QQmlAnyBinding::ofProperty(state, whenIndex);
-                Q_ASSERT(!potentialWhenBinding.isUntypedPropertyBinding());
+    for (QQuickState *state : std::as_const(states)) {
+        if (!state || !state->isWhenKnown() || !state->isNamed())
+            continue;
 
-                // if there is a binding, the value in when might not be up-to-date at this point
-                // so we manually re-evaluate the binding
-                QQmlAbstractBinding *abstractBinding = potentialWhenBinding.asAbstractBinding();
-                if (abstractBinding && abstractBinding->kind() == QQmlAbstractBinding::QmlBinding) {
-                    QQmlBinding *binding = static_cast<QQmlBinding *>(abstractBinding);
-                    if (binding->hasValidContext()) {
-                        const auto boolType = QMetaType::fromType<bool>();
-                        const bool isUndefined = !binding->evaluate(&whenValue, boolType);
-                        if (isUndefined)
-                            whenValue = false;
-                    }
-                }
+        bool whenValue = state->when();
+        const QQmlPropertyIndex whenIndex(state->metaObject()->indexOfProperty("when"));
+        const auto potentialWhenBinding = QQmlAnyBinding::ofProperty(state, whenIndex);
+        Q_ASSERT(!potentialWhenBinding.isUntypedPropertyBinding());
 
-                if (whenValue) {
-                    qCDebug(lcStates) << "Setting auto state due to expression";
-                    if (currentState != state->name()) {
-                        q->setState(state->name());
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else if (state->name() == currentState) {
-                    revert = true;
-                }
+        // if there is a binding, the value in when might not be up-to-date at this point
+        // so we manually re-evaluate the binding
+        QQmlAbstractBinding *abstractBinding = potentialWhenBinding.asAbstractBinding();
+        if (abstractBinding && abstractBinding->kind() == QQmlAbstractBinding::QmlBinding) {
+            QQmlBinding *binding = static_cast<QQmlBinding *>(abstractBinding);
+            if (binding->hasValidContext()) {
+                const auto boolType = QMetaType::fromType<bool>();
+                const bool isUndefined = !binding->evaluate(&whenValue, boolType);
+                if (isUndefined)
+                    whenValue = false;
             }
+        }
+
+        if (whenValue) {
+            qCDebug(lcStates) << "Setting auto state due to expression";
+            if (currentState != state->name()) {
+                q->setState(state->name());
+                return true;
+            } else {
+                return false;
+            }
+        } else if (state->name() == currentState) {
+            revert = true;
         }
     }
     if (revert) {
@@ -477,9 +482,9 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
 
     QQuickState *oldState = nullptr;
     if (!currentState.isEmpty()) {
-        for (int ii = 0; ii < states.size(); ++ii) {
-            if (states.at(ii)->name() == currentState) {
-                oldState = states.at(ii);
+        for (QQuickState *state : std::as_const(states)) {
+            if (state && state->name() == currentState) {
+                oldState = state;
                 break;
             }
         }
@@ -489,9 +494,9 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
     emit q->stateChanged(currentState);
 
     QQuickState *newState = nullptr;
-    for (int ii = 0; ii < states.size(); ++ii) {
-        if (states.at(ii)->name() == currentState) {
-            newState = states.at(ii);
+    for (QQuickState *state : std::as_const(states)) {
+        if (state && state->name() == currentState) {
+            newState = state;
             break;
         }
     }
@@ -513,9 +518,8 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
 QQuickState *QQuickStateGroup::findState(const QString &name) const
 {
     Q_D(const QQuickStateGroup);
-    for (int i = 0; i < d->states.size(); ++i) {
-        QQuickState *state = d->states.at(i);
-        if (state->name() == name)
+    for (QQuickState *state : std::as_const(d->states)) {
+        if (state && state->name() == name)
             return state;
     }
 

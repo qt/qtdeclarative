@@ -7,6 +7,7 @@
 #include <QSGRendererInterface>
 #include <private/qsgrhisupport_p.h>
 #include <private/qquickrhiitem_p.h>
+#include "testrhiitem.h"
 
 class tst_QQuickRhiItem : public QQmlDataTest
 {
@@ -95,7 +96,7 @@ void tst_QQuickRhiItem::properties()
     // not quite safe in theory (threads etc.) but we know it works in practice
     QQuickRhiItemPrivate *d = QQuickRhiItemPrivate::get(item);
     QVERIFY(d->node);
-    QQuickRhiItemRenderer *r = d->node->m_renderer.get();
+    TestRenderer *r = static_cast<TestRenderer *>(d->node->m_renderer.get());
     QVERIFY(r);
     QRhi *rhi = r->rhi();
     QVERIFY(rhi);
@@ -104,7 +105,7 @@ void tst_QQuickRhiItem::properties()
     QVERIFY(!r->msaaColorBuffer());
     QVERIFY(r->depthStencilBuffer());
     QVERIFY(r->renderTarget());
-    QCOMPARE(item->effectiveTextureSize(), r->colorTexture()->pixelSize());
+    QCOMPARE(item->effectiveColorBufferSize(), r->colorTexture()->pixelSize());
 
     QCOMPARE(item->sampleCount(), 1);
     item->setSampleCount(4);
@@ -116,7 +117,7 @@ void tst_QQuickRhiItem::properties()
         QVERIFY(r->msaaColorBuffer());
         QCOMPARE(r->msaaColorBuffer()->sampleCount(), 4);
         QCOMPARE(r->depthStencilBuffer()->sampleCount(), 4);
-        QCOMPARE(item->effectiveTextureSize(), r->msaaColorBuffer()->pixelSize());
+        QCOMPARE(item->effectiveColorBufferSize(), r->msaaColorBuffer()->pixelSize());
     }
 
     QCOMPARE(item->alphaBlending(), false);
@@ -126,13 +127,13 @@ void tst_QQuickRhiItem::properties()
     item->setMirrorVertically(true);
 
     item->setSampleCount(1);
-    item->setExplicitTextureWidth(123);
-    item->setExplicitTextureHeight(456);
+    item->setFixedColorBufferWidth(123);
+    item->setFixedColorBufferHeight(456);
     view.grabWindow();
     QCOMPARE(r->colorTexture()->pixelSize(), QSize(123, 456));
-    QCOMPARE(item->explicitTextureWidth(), 123);
-    QCOMPARE(item->explicitTextureHeight(), 456);
-    QCOMPARE(item->effectiveTextureSize(), QSize(123, 456));
+    QCOMPARE(item->fixedColorBufferWidth(), 123);
+    QCOMPARE(item->fixedColorBufferHeight(), 456);
+    QCOMPARE(item->effectiveColorBufferSize(), QSize(123, 456));
 
     QImage result = view.grabWindow();
     QVERIFY(!result.isNull());

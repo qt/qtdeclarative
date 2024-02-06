@@ -96,6 +96,10 @@ int main(int argc, char* argv[])
     context->setContextProperty("webViewWindow", webViewWindow);
     context->setContextProperty("videoWindow", videoWindow);
 
+#if defined(QT_MULTIMEDIA_LIB)
+    context->setContextProperty("haveQtMultimedia", true);
+#endif
+
     view.setSource(QUrl("qrc:/qt/qml/windowembeddingexample/windowembedding.qml"));
     if (view.status() == QQuickView::Error)
         return -1;

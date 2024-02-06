@@ -8,6 +8,7 @@
 #include <data/enumproblems.h>
 #include <data/getOptionalLookup.h>
 #include <data/objectwithmethod.h>
+#include <data/resettable.h>
 #include <data/weathermoduleurl.h>
 #include <data/withlength.h>
 
@@ -111,12 +112,14 @@ private slots:
     void functionTakingVar();
     void getOptionalLookup();
     void getOptionalLookup_data();
+    void getOptionalLookupOnQJSValueNonStrict();
     void globals();
     void idAccess();
     void ignoredFunctionReturn();
     void importsFromImportPath();
     void inPlaceDecrement();
     void inaccessibleProperty();
+    void indirectlyShadowable();
     void infinities();
     void infinitiesToInt();
     void innerObjectNonShadowable();
@@ -186,6 +189,10 @@ private slots:
     void registerElimination();
     void registerPropagation();
     void renameAdjust();
+
+    void resettableProperty();
+    void resettableProperty_data();
+
     void returnAfterReject();
     void revisions();
     void scopeIdLookup();
@@ -2107,6 +2114,18 @@ void tst_QmlCppCodegen::getOptionalLookup()
     QCOMPARE(actual, expected);
 }
 
+void tst_QmlCppCodegen::getOptionalLookupOnQJSValueNonStrict()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/qt/qml/TestTypes/GetOptionalLookupOnQJSValueNonStrict.qml"_s);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QVERIFY(o->property("b").toBool());
+}
+
 void tst_QmlCppCodegen::globals()
 {
     QQmlEngine engine;
@@ -2223,6 +2242,69 @@ void tst_QmlCppCodegen::inaccessibleProperty()
     QScopedPointer<QObject> o(c.create());
 
     QCOMPARE(o->property("c").toInt(), 5);
+}
+
+void tst_QmlCppCodegen::indirectlyShadowable()
+{
+    QQmlEngine engine;
+
+    const QString url = u"qrc:/qt/qml/TestTypes/indirectlyShadowable.qml"_s;
+    QQmlComponent c(&engine, QUrl(url));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    const auto verifyShadowable = [&](const QString &objectName) {
+        QObject *outer = o->property("outer").value<QObject *>();
+        QVERIFY(outer);
+        QObject *inner = outer->property("inner").value<QObject *>();
+        QVERIFY(inner);
+        QObject *shadowable = inner->property("shadowable").value<QObject *>();
+        QVERIFY(shadowable);
+        QCOMPARE(shadowable->objectName(), objectName);
+    };
+
+    const auto verifyNotShadowable = [&](const QString &objectName) {
+        QObject *notShadowable = o->property("notShadowable").value<QObject *>();
+        QCOMPARE(notShadowable->objectName(), objectName);
+    };
+
+    const auto verifyEvil = [&]() {
+        QObject *outer = o->property("outer").value<QObject *>();
+        QVERIFY(outer);
+        QCOMPARE(outer->property("inner").toString(), u"evil"_s);
+    };
+
+    verifyShadowable(u"shadowable"_s);
+    verifyNotShadowable(u"notShadowable"_s);
+
+    QMetaObject::invokeMethod(o.data(), "setInnerShadowable");
+
+    verifyShadowable(u"self"_s);
+    verifyNotShadowable(u"notShadowable"_s);
+
+    QMetaObject::invokeMethod(o.data(), "getInnerShadowable");
+
+    verifyShadowable(u"self"_s);
+    verifyNotShadowable(u"self"_s);
+
+    QMetaObject::invokeMethod(o.data(), "turnEvil");
+
+    verifyEvil();
+    verifyNotShadowable(u"self"_s);
+
+    // Does not produce an error message because JavaScript.
+    QMetaObject::invokeMethod(o.data(), "setInnerShadowable");
+
+    verifyEvil();
+    verifyNotShadowable(u"self"_s);
+
+    QTest::ignoreMessage(
+            QtWarningMsg, qPrintable(url + u":29: Error: Cannot assign [undefined] to QObject*"_s));
+    QMetaObject::invokeMethod(o.data(), "getInnerShadowable");
+
+    verifyEvil();
+    verifyNotShadowable(u"self"_s);
 }
 
 void tst_QmlCppCodegen::infinities()
@@ -3835,6 +3917,50 @@ void tst_QmlCppCodegen::renameAdjust()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
+}
+
+void tst_QmlCppCodegen::resettableProperty()
+{
+    QFETCH(QString, url);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(url));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+            QtWarningMsg, qPrintable(url + u":10:5: Unable to assign [undefined] to double"_s));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("value").toDouble(), 999);
+    QMetaObject::invokeMethod(o.data(), "doReset");
+    QCOMPARE(o->property("value").toDouble(), 0);
+
+    o->setProperty("value", double(82));
+    QCOMPARE(o->property("value").toDouble(), 82);
+    QMetaObject::invokeMethod(o.data(), "doReset2");
+    QCOMPARE(o->property("value").toDouble(), 0);
+
+    QTest::ignoreMessage(
+            QtWarningMsg, qPrintable(url + u":18: Error: Cannot assign [undefined] to double"_s));
+    QCOMPARE(o->property("notResettable").toDouble(), 10);
+    QMetaObject::invokeMethod(o.data(), "doNotReset");
+    QCOMPARE(o->property("notResettable").toDouble(), 10);
+    QCOMPARE(o->property("notResettable2").toDouble(), 0); // not NaN
+
+    o->setObjectName(u"namename"_s);
+    QTest::ignoreMessage(
+            QtWarningMsg, qPrintable(url + u":22: Error: Cannot assign [undefined] to QString"_s));
+    QMetaObject::invokeMethod(o.data(), "aaa");
+    QCOMPARE(o->objectName(), u"namename"_s);
+}
+
+void tst_QmlCppCodegen::resettableProperty_data()
+{
+    QTest::addColumn<QString>("url");
+    QTest::addRow("object lookups") << u"qrc:/qt/qml/TestTypes/resettable.qml"_s;
+    QTest::addRow("fallback lookups") << u"qrc:/qt/qml/TestTypes/fallbackresettable.qml"_s;
 }
 
 void tst_QmlCppCodegen::returnAfterReject()

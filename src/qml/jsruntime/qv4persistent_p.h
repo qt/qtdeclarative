@@ -51,10 +51,13 @@ struct Q_QML_EXPORT PersistentValueStorage
     Iterator begin() { return Iterator(firstPage, 0); }
     Iterator end() { return Iterator(nullptr, 0); }
 
+    void clearFreePageHint();
+
     static ExecutionEngine *getEngine(const Value *v);
 
     ExecutionEngine *engine;
     void *firstPage;
+    void *freePageHint = nullptr;
 private:
     static void freeUnchecked(Value *v);
     static void freePage(void *page);

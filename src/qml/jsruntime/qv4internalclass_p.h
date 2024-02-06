@@ -133,6 +133,8 @@ struct SharedInternalClassDataPrivate<PropertyAttributes> {
 
     void grow();
 
+    void markIfNecessary(const PropertyAttributes &) {}
+
     uint alloc() const { return m_alloc; }
     uint size() const { return m_size; }
     void setSize(uint s) { m_size = s; }
@@ -180,6 +182,9 @@ struct SharedInternalClassDataPrivate<PropertyKey> {
     SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other, uint pos, PropertyKey value);
     ~SharedInternalClassDataPrivate() {}
 
+    template<typename StringOrSymbol = Heap::StringOrSymbol>
+    void markIfNecessary(const PropertyKey &value);
+
     void grow();
     uint alloc() const;
     uint size() const;
@@ -195,6 +200,17 @@ private:
     ExecutionEngine *engine;
     Heap::MemberData *data;
 };
+
+template<typename StringOrSymbol>
+void QV4::SharedInternalClassDataPrivate<PropertyKey>::markIfNecessary(const PropertyKey &value)
+{
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack) {
+        if constexpr (QV4::WriteBarrier::isInsertionBarrier) {
+            if (auto s = value.asStringOrSymbol<StringOrSymbol>())
+                s->mark(stack);
+        }
+    });
+}
 
 template <typename T>
 struct SharedInternalClassData {
@@ -223,6 +239,7 @@ struct SharedInternalClassData {
     }
 
     void add(uint pos, T value) {
+        d->markIfNecessary(value);
         if (pos < d->size()) {
             Q_ASSERT(d->refcount > 1);
             // need to detach
@@ -244,6 +261,7 @@ struct SharedInternalClassData {
 
     void set(uint pos, T value) {
         Q_ASSERT(pos < d->size());
+        d->markIfNecessary(value);
         if (d->refcount > 1) {
             // need to detach
             Private *dd = new Private(*d);

@@ -212,8 +212,9 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, uint fo
     d->pixelSize = pixelSize;
     d->sampleCount = qMax(1, sampleCount);
 
-    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromGL(format);
-    d->u.nativeTexture = { textureId, 0, uint(rhiFormat), 0 };
+    QRhiTexture::Flags rhiFlags;
+    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromGL(format, &rhiFlags);
+    d->u.nativeTexture = { textureId, 0, uint(rhiFormat), uint(rhiFlags) };
 
     return rt;
 }
@@ -277,8 +278,9 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTextureMultiView(uint textureId
     d->pixelSize = pixelSize;
     d->sampleCount = qMax(1, sampleCount);
 
-    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromGL(format);
-    d->u.nativeTextureArray = { textureId, 0, arraySize, uint(rhiFormat), 0 };
+    QRhiTexture::Flags rhiFlags;
+    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromGL(format, &rhiFlags);
+    d->u.nativeTextureArray = { textureId, 0, arraySize, uint(rhiFormat), uint(rhiFlags) };
 
     return rt;
 }

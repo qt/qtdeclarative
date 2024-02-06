@@ -230,7 +230,7 @@ public:
     QPainterPath toPainterPath() const;
     QString asSvgString() const;
 
-    QQuadPath subPathsClosed() const;
+    QQuadPath subPathsClosed(bool *didClose = nullptr) const;
     void addCurvatureData();
     QQuadPath flattened() const;
     QQuadPath dashed(qreal lineWidth, const QList<qreal> &dashPattern, qreal dashOffset = 0) const;

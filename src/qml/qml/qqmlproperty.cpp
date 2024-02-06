@@ -411,13 +411,14 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
     } else {
         signalName = QQmlSignalNames::badHandlerNameToSignalName(terminal);
         if (signalName) {
-            qWarning()
-                    << terminal
-                    << "is not a properly capitalized signal handler name."
-                    << QQmlSignalNames::signalNameToHandlerName(*signalName)
-                    << "would be correct.";
-            if (findSignal(*signalName))
+            if (findSignal(*signalName)) {
+                qWarning()
+                        << terminal
+                        << "is not a properly capitalized signal handler name."
+                        << QQmlSignalNames::signalNameToHandlerName(*signalName)
+                        << "would be correct.";
                 return;
+            }
         }
     }
 

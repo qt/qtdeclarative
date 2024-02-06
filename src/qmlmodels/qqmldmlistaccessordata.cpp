@@ -16,6 +16,13 @@ QQmlDMListAccessorData::QQmlDMListAccessorData(
     dataType->addref();
 }
 
+QQmlDMListAccessorData::~QQmlDMListAccessorData()
+{
+    QObjectPrivate *d = QObjectPrivate::get(this);
+    static_cast<VDMListDelegateDataType *>(d->metaObject)->release();
+    d->metaObject = nullptr;
+}
+
 void QQmlDMListAccessorData::setModelData(const QVariant &data) {
     if (data == cachedData)
         return;

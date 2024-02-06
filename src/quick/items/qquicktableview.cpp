@@ -1460,6 +1460,51 @@ static const char* kRequiredProperty_selected = "selected";
 static const char* kRequiredProperty_current = "current";
 static const char* kRequiredProperty_editing = "editing";
 
+QDebug operator<<(QDebug dbg, QQuickTableViewPrivate::RebuildState state)
+{
+#define TV_REBUILDSTATE(STATE) \
+    case QQuickTableViewPrivate::RebuildState::STATE: \
+        dbg << QStringLiteral(#STATE); break;
+
+    switch (state) {
+    TV_REBUILDSTATE(Begin);
+    TV_REBUILDSTATE(LoadInitalTable);
+    TV_REBUILDSTATE(VerifyTable);
+    TV_REBUILDSTATE(LayoutTable);
+    TV_REBUILDSTATE(CancelOvershoot);
+    TV_REBUILDSTATE(UpdateContentSize);
+    TV_REBUILDSTATE(PreloadColumns);
+    TV_REBUILDSTATE(PreloadRows);
+    TV_REBUILDSTATE(MovePreloadedItemsToPool);
+    TV_REBUILDSTATE(Done);
+    }
+
+    return dbg;
+}
+
+QDebug operator<<(QDebug dbg, QQuickTableViewPrivate::RebuildOptions options)
+{
+#define TV_REBUILDOPTION(OPTION) \
+    if (options & QQuickTableViewPrivate::RebuildOption::OPTION) \
+        dbg << QStringLiteral(#OPTION)
+
+    if (options == QQuickTableViewPrivate::RebuildOption::None) {
+        dbg << QStringLiteral("None");
+    } else {
+        TV_REBUILDOPTION(All);
+        TV_REBUILDOPTION(LayoutOnly);
+        TV_REBUILDOPTION(ViewportOnly);
+        TV_REBUILDOPTION(CalculateNewTopLeftRow);
+        TV_REBUILDOPTION(CalculateNewTopLeftColumn);
+        TV_REBUILDOPTION(CalculateNewContentWidth);
+        TV_REBUILDOPTION(CalculateNewContentHeight);
+        TV_REBUILDOPTION(PositionViewAtRow);
+        TV_REBUILDOPTION(PositionViewAtColumn);
+    }
+
+    return dbg;
+}
+
 QQuickTableViewPrivate::EdgeRange::EdgeRange()
     : startIndex(kEdgeIndexNotSet)
     , endIndex(kEdgeIndexNotSet)
@@ -3325,18 +3370,7 @@ void QQuickTableViewPrivate::processRebuildTable()
     Q_Q(QQuickTableView);
 
     if (rebuildState == RebuildState::Begin) {
-        if (Q_UNLIKELY(lcTableViewDelegateLifecycle().isDebugEnabled())) {
-            qCDebug(lcTableViewDelegateLifecycle()) << "begin rebuild:" << q;
-            if (rebuildOptions & RebuildOption::All)
-                qCDebug(lcTableViewDelegateLifecycle()) << "RebuildOption::All, options:" << rebuildOptions;
-            else if (rebuildOptions & RebuildOption::ViewportOnly)
-                qCDebug(lcTableViewDelegateLifecycle()) << "RebuildOption::ViewportOnly, options:" << rebuildOptions;
-            else if (rebuildOptions & RebuildOption::LayoutOnly)
-                qCDebug(lcTableViewDelegateLifecycle()) << "RebuildOption::LayoutOnly, options:" << rebuildOptions;
-            else
-                Q_TABLEVIEW_UNREACHABLE(rebuildOptions);
-        }
-
+        qCDebug(lcTableViewDelegateLifecycle()) << "begin rebuild:" << q << "options:" << rebuildOptions;
         tableSizeBeforeRebuild = tableSize;
         edgesBeforeRebuild = loadedItems.isEmpty() ? QMargins()
             : QMargins(q->leftColumn(), q->topRow(), q->rightColumn(), q->bottomRow());
@@ -3448,7 +3482,7 @@ bool QQuickTableViewPrivate::moveToNextRebuildState()
     else
         rebuildState = RebuildState(int(rebuildState) + 1);
 
-    qCDebug(lcTableViewDelegateLifecycle()) << int(rebuildState);
+    qCDebug(lcTableViewDelegateLifecycle()) << rebuildState;
     return true;
 }
 

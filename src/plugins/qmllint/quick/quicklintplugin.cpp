@@ -750,11 +750,13 @@ void PropertyChangesValidatorPass::run(const QQmlSA::Element &element)
         return;
 
     QString targetId = u"<id>"_s;
-    const QString targetBinding = sourceCode(target.value().sourceLocation());
+    const auto targetLocation = target.value().sourceLocation();
+    const QString targetBinding = sourceCode(targetLocation);
     const QQmlSA::Element targetElement = resolveIdToElement(targetBinding, element);
     if (!targetElement.isNull())
         targetId = targetBinding;
 
+    bool hadCustomParsedBindings = false;
     for (auto it = bindings.constBegin(); it != bindings.constEnd(); ++it) {
         const auto &propertyName = it.key();
         const auto &propertyBinding = it.value();
@@ -773,10 +775,17 @@ void PropertyChangesValidatorPass::run(const QQmlSA::Element &element)
         if (binding.length() > 16)
             binding = binding.left(13) + "..."_L1;
 
+        hadCustomParsedBindings = true;
         emitWarning("Property \"%1\" is custom-parsed in PropertyChanges. "
                     "You should phrase this binding as \"%2.%1: %3\""_L1.arg(propertyName, targetId,
                                                                              binding),
                     quickPropertyChangesParsed, bindingLocation);
+    }
+
+    if (hadCustomParsedBindings && !targetElement.isNull()) {
+        emitWarning("You should remove any bindings on the \"target\" property and avoid "
+                    "custom-parsed bindings in PropertyChanges.",
+                    quickPropertyChangesParsed, targetLocation);
     }
 }
 

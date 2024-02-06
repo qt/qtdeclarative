@@ -59,12 +59,10 @@ void tst_qmldomconstruction::domConstructionTime()
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
-        envPtr->loadFile(
-                FileToLoad::fromFileSystem(envPtr, fileName, withScope),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) {
-                    tFile = newIt.fileObject();
-                },
-                LoadOption::DefaultLoad);
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, fileName, withScope),
+                         [&tFile](Path, const DomItem &, const DomItem &newIt) {
+                             tFile = newIt.fileObject();
+                         });
         envPtr->loadPendingDependencies();
     }
 }

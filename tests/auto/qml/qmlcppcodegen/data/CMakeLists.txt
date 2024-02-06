@@ -17,6 +17,7 @@ set(cpp_sources
     multiforeign.h
     objectwithmethod.h
     person.cpp person.h
+    resettable.h
     sequenceToIterable.h
     sequencetypeexample.cpp sequencetypeexample.h
     state.h
@@ -31,6 +32,7 @@ set(cpp_sources
 
 set(qml_files
     AccessModelMethodsFromOutside.qml
+    Action.qml
     ArraySequenceLengthInterop.qml
     B.qml
     BadType.qml
@@ -46,6 +48,7 @@ set(qml_files
     Dummy2.qml
     Enums.qml
     Foozle.qml
+    GetOptionalLookupOnQJSValueNonStrict.qml
     Loopy.qml
     OkType.qml
     Panel.qml
@@ -134,6 +137,7 @@ set(qml_files
     extendedTypes.qml
     failures.qml
     fallbacklookups.qml
+    fallbackresettable.qml
     fileDialog.qml
     flagEnum.qml
     fromBoolValue.qml
@@ -150,6 +154,7 @@ set(qml_files
     immediateQuit.qml
     imports/QmlBench/Globals.qml
     importsFromImportPath.qml
+    indirectlyShadowable.qml
     infinities.qml
     infinitiesToInt.qml
     intEnumCompare.qml
@@ -219,6 +224,7 @@ set(qml_files
     registerPropagation.qml
     registerelimination.qml
     renameAdjust.qml
+    resettable.qml
     returnAfterReject.qml
     revisions.qml
     scopeIdLookup.qml
@@ -313,6 +319,7 @@ qt6_add_qml_module(codegen_test_module
     IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
     DEPENDENCIES
         QtQuick
+        QtQuick.Controls
         QtQuick.Templates
         QtQuick.Shapes
     SOURCES
@@ -345,6 +352,7 @@ qt6_add_qml_module(codegen_test_module_verify
     IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
     DEPENDENCIES
         QtQuick
+        QtQuick.Controls
         QtQuick.Templates
         QtQuick.Shapes
     SOURCES

@@ -1744,10 +1744,10 @@ void ScriptExpression::writeOut(const DomItem &self, OutWriter &lw) const
             QStringView reformattedCode =
                     QStringView(ow->writtenStr).mid(myLoc.offset, myLoc.length);
             if (reformattedCode != code()) {
-                //If some reformatting of the expression took place,
-                //it will be saved as an intermediate step.
-                //then it will be used to assemble the final reformatted file
-                //in the OutWriter::updatedFile
+                // If some reformatting of the expression took place,
+                // it will be saved as an intermediate step.
+                // then it will be used to restore writtenOut fileItem
+                // in the OutWriter::restoreWrittenFile
 
                 //Interestingly enough, this copyWithUpdatedCode will
                 //instantiate Engine and Parser and will parse "reformattedCode"

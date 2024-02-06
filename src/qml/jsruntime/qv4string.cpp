@@ -170,23 +170,38 @@ bool Heap::String::startsWithUpper() const
 
 void Heap::String::append(const String *data, QChar *ch)
 {
-    std::vector<const String *> worklist;
+    // in-order visitation with explicit stack
+    // where leaf nodes are "real" strings that get appended to ch
+
+    enum StatusTag : bool { NotVisited, Visited };
+    using Pointer = QTaggedPointer<const String, StatusTag>;
+
+    std::vector<Pointer> worklist;
     worklist.reserve(32);
-    worklist.push_back(data);
+    worklist.push_back(Pointer(data));
 
     while (!worklist.empty()) {
-        const String *item = worklist.back();
-        worklist.pop_back();
+        Pointer item = worklist.back();
+        if (item.tag() == Visited) {
+            Q_ASSERT(item->subtype == StringType_AddedString);
+            const ComplexString *cs = static_cast<const ComplexString *>(item.data());
+            worklist.pop_back();
+            worklist.push_back(Pointer(cs->right));
+            continue;
+        }
 
         if (item->subtype == StringType_AddedString) {
-            const ComplexString *cs = static_cast<const ComplexString *>(item);
-            worklist.push_back(cs->right);
-            worklist.push_back(cs->left);
+            // we need to keep the node in the worklist, as we still need to handle "right"
+            worklist.back().setTag(Visited);
+            const ComplexString *cs = static_cast<const ComplexString *>(item.data());
+            worklist.push_back(Pointer(cs->left));
         } else if (item->subtype == StringType_SubString) {
-            const ComplexString *cs = static_cast<const ComplexString *>(item);
+            worklist.pop_back();
+            const ComplexString *cs = static_cast<const ComplexString *>(item.data());
             memcpy(ch, cs->left->toQString().constData() + cs->from, cs->len*sizeof(QChar));
             ch += cs->len;
         } else {
+            worklist.pop_back();
             memcpy(static_cast<void *>(ch), item->text().data(), item->text().size * sizeof(QChar));
             ch += item->text().size;
         }

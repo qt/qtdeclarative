@@ -653,9 +653,7 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
 
 
     if (m_typeResolver->canHoldUndefined(in) && !m_typeResolver->canHoldUndefined(type)) {
-        if (type.property().reset().isEmpty())
-            setError(u"Cannot assign potential undefined to %1"_s.arg(type.descriptiveName()));
-        else if (m_typeResolver->registerIsStoredIn(in, m_typeResolver->voidType()))
+        if (m_typeResolver->registerIsStoredIn(in, m_typeResolver->voidType()))
             addReadAccumulator(m_typeResolver->globalType(m_typeResolver->varType()));
         else
             addReadAccumulator(in);
@@ -990,7 +988,20 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
                         getCurrentBindingSourceLocation()));
     }
 
-    addReadAccumulator(property);
+    // If the input can hold undefined we must not coerce it to the property type
+    // as that might eliminate an undefined value. For example, undefined -> string
+    // becomes "undefined".
+    // We need the undefined value for either resetting the property if that is supported
+    // or generating an exception otherwise. Therefore we explicitly require the value to
+    // be given as QVariant. This triggers the QVariant fallback path that's also used for
+    // shadowable properties. QVariant can hold undefined and the lookup functions will
+    // handle that appropriately.
+
+    const QQmlJSScope::ConstPtr varType = m_typeResolver->varType();
+    const QQmlJSRegisterContent readType = m_typeResolver->canHoldUndefined(m_state.accumulatorIn())
+            ? property.storedIn(varType).castTo(varType)
+            : std::move(property);
+    addReadAccumulator(readType);
     addReadRegister(base, callBase);
     m_state.setHasSideEffects(true);
 }
@@ -2665,6 +2676,13 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
             setError(u"Instruction is expected to populate the accumulator"_s);
             return;
         }
+    }
+
+    if (!(m_error->isValid() && m_error->isError())
+        && instr != QV4::Moth::Instr::Type::DeadTemporalZoneCheck) {
+        // An instruction needs to have side effects or write to another register otherwise it's a
+        // noop. DeadTemporalZoneCheck is not needed by the compiler and is ignored.
+        Q_ASSERT(m_state.hasSideEffects() || m_state.changedRegisterIndex() != -1);
     }
 
     if (m_state.changedRegisterIndex() != InvalidRegister) {

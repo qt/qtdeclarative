@@ -38,6 +38,11 @@ qt_add_qml_module(${PROJECT_NAME}_shared
         "images/tab.png"
 )
 
+qt_autogen_tools(${PROJECT_NAME}_shared ENABLE_AUTOGEN_TOOLS "moc" "rcc")
+if(TARGET Qt::Widgets)
+    qt_autogen_tools(${PROJECT_NAME}_shared ENABLE_AUTOGEN_TOOLS "uic")
+endif()
+
 include(QtBundleQmlModuleForMacOS.cmake)
 # Puts the shared qml module plugin and qmldir into the macOS app bundle directory.
 # Only call this function if your main project has the MACOSX_BUNDLE option set.

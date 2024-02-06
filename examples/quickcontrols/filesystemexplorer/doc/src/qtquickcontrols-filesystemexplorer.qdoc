@@ -6,8 +6,8 @@
     \meta tags {quickcontrols, layout, styling, treeview}
     \title File System Explorer
     \ingroup qtquickcontrols-examples
-    \brief A QML app utilizing customized Qt Quick Controls to display text
-    files from a filesystem.
+    \brief A desktop QML app utilizing customized Qt Quick Controls to display
+    text files from a filesystem.
 
     In this example, a modern layout is used that consists of three major
     components. There is an icon-based \e {Sidebar} to the left, followed by a

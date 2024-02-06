@@ -48,11 +48,9 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
 
     QQmlJS::Dom::DomItem file;
     QQmlJS::Dom::DomItem env(envPtr);
-    envPtr->loadFile(
-            QQmlJS::Dom::FileToLoad::fromFileSystem(envPtr, filePath, options),
-            [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &,
-                    const QQmlJS::Dom::DomItem &newIt) { file = newIt; },
-            QQmlJS::Dom::LoadOption::DefaultLoad);
+    envPtr->loadFile(QQmlJS::Dom::FileToLoad::fromFileSystem(envPtr, filePath, options),
+                     [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &,
+                             const QQmlJS::Dom::DomItem &newIt) { file = newIt; });
 
     envPtr->loadPendingDependencies();
     envPtr->loadBuiltins();

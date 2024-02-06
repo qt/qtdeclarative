@@ -1,0 +1,16 @@
+// Copyright (C) 2017 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+    \title Qt Quick Examples - Shapes
+    \example quickshapes/shapes
+    \image qml-shapes-example.png
+    \brief A Qt Quick example demonstrating the use of shape items.
+    \ingroup qtquickexamples
+    \examplecategory {Graphics}
+
+    This example demonstrates the usage of the \l Shape type in Qt Quick. Shapes
+    allow efficiently rendering stroked and filled lines, curves, and arcs in Qt
+    Quick scenes.
+
+    \include examples-run.qdocinc
+*/

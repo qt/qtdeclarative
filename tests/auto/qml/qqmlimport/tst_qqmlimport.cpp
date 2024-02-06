@@ -525,6 +525,25 @@ void tst_QQmlImport::registerModuleImport()
 
     qmlUnregisterModuleImport("MyPluginSupported", 2, "QtQuick", 2);
     qmlUnregisterModuleImport("MyPluginSupported", 2, "ShadowQuick", 1);
+
+    qmlRegisterTypesAndRevisions<NotItem>("NoQmldir", 2);
+    qmlRegisterModuleImport("NoQmldir", QQmlModuleImportModuleAny, "QtQml", QQmlModuleImportAuto);
+
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import NoQmldir 2.0
+            QtObject {
+                property Item item: Item {}
+            }
+        )", QUrl::fromLocalFile(""));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        std::unique_ptr<QObject> object { component.create() };
+        QVERIFY(object);
+        NotItem *item = object->property("item").value<NotItem *>();
+        QVERIFY(item);
+    }
 }
 
 void tst_QQmlImport::importDependenciesPrecedence()

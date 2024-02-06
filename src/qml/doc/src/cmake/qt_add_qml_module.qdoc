@@ -62,6 +62,9 @@ qt_add_qml_module(
 See \l {Building a QML application} and \l {Building a reusable QML module}
 for examples that define QML modules.
 
+See \l {QT_QML_GENERATE_QMLLS_INI} for configuring your project such that information about
+QML modules is exposed to the \l{QML Language Server}.
+
 \section1 Description
 
 This command defines a QML module that can consist of C++ sources, \c{.qml}

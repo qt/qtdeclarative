@@ -59,14 +59,6 @@ bool FileLocations::iterateDirectSubpaths(const DomItem &self, DirectVisitor vis
     return cont;
 }
 
-void FileLocations::ensureCommentLocations(const QList<FileLocationRegion> &keys)
-{
-    for (FileLocationRegion k : keys) {
-        preCommentLocations[k];
-        postCommentLocations[k];
-    }
-}
-
 FileLocations::Tree FileLocations::createTree(const Path &basePath){
     return AttachedInfoT<FileLocations>::createTree(basePath);
 }

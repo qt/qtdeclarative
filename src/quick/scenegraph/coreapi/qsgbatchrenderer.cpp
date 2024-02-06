@@ -213,6 +213,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material,
                                                       QSGRendererInterface::RenderMode renderMode,
                                                       int multiViewCount)
 {
+    qsg_setMultiViewFlagsOnMaterial(material, multiViewCount);
+
     QSGMaterialType *type = material->type();
     ShaderKey key = { type, renderMode, multiViewCount };
     Shader *shader = rewrittenShaders.value(key, nullptr);
@@ -220,7 +222,6 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material,
         return shader;
 
     shader = new Shader;
-    qsg_setMultiViewFlagsOnMaterial(material, multiViewCount);
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader(renderMode));
     context->initializeRhiShader(s, QShader::BatchableVertexShader);
     shader->materialShader = s;
@@ -242,6 +243,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
                                                                QSGRendererInterface::RenderMode renderMode,
                                                                int multiViewCount)
 {
+    qsg_setMultiViewFlagsOnMaterial(material, multiViewCount);
+
     QSGMaterialType *type = material->type();
     ShaderKey key = { type, renderMode, multiViewCount };
     Shader *shader = stockShaders.value(key, nullptr);
@@ -249,7 +252,6 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
         return shader;
 
     shader = new Shader;
-    qsg_setMultiViewFlagsOnMaterial(material, multiViewCount);
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader(renderMode));
     context->initializeRhiShader(s, QShader::StandardShader);
     shader->materialShader = s;
@@ -705,7 +707,7 @@ BatchCompatibility Batch::isMaterialCompatible(Element *e) const
 
     QSGMaterial *m = e->node->activeMaterial();
     QSGMaterial *nm = n->node->activeMaterial();
-    return (nm->type() == m->type() && nm->compare(m) == 0)
+    return (nm->type() == m->type() && nm->viewCount() == m->viewCount() && nm->compare(m) == 0)
             ? BatchIsCompatible
             : BatchBreaksOnCompare;
 }
@@ -1739,6 +1741,7 @@ void Renderer::prepareOpaqueBatches()
                     && gni->geometry()->attributes() == gnj->geometry()->attributes()
                     && gni->inheritedOpacity() == gnj->inheritedOpacity()
                     && gni->activeMaterial()->type() == gnj->activeMaterial()->type()
+                    && gni->activeMaterial()->viewCount() == gnj->activeMaterial()->viewCount()
                     && gni->activeMaterial()->compare(gnj->activeMaterial()) == 0) {
                 ej->batch = batch;
                 next->nextInBatch = ej;
@@ -1850,6 +1853,7 @@ void Renderer::prepareAlphaBatches()
                     && gni->geometry()->attributes() == gnj->geometry()->attributes()
                     && gni->inheritedOpacity() == gnj->inheritedOpacity()
                     && gni->activeMaterial()->type() == gnj->activeMaterial()->type()
+                    && gni->activeMaterial()->viewCount() == gnj->activeMaterial()->viewCount()
                     && gni->activeMaterial()->compare(gnj->activeMaterial()) == 0) {
                 if (!overlapBounds.intersects(ej->bounds) || !checkOverlap(i+1, j - 1, ej->bounds)) {
                     ej->batch = batch;

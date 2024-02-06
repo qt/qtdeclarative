@@ -55,8 +55,6 @@ private:
 public:
     ~QQmlTypeData() override;
 
-    const QList<ScriptReference> &resolvedScripts() const;
-
     QV4::CompiledData::CompilationUnit *compilationUnit() const;
 
     // Used by QQmlComponent to get notifications

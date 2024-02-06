@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include <QGuiApplication>
@@ -19,11 +19,6 @@ int main(int argc, char *argv[])
     //! [style]
     QQuickStyle::setStyle(QStringLiteral("WearableStyle"));
     //! [style]
-
-    //! [icons]
-    QIcon::setThemeSearchPaths(QStringList() << ":/qt/qml/Wearable/icons");
-    QIcon::setThemeName(QStringLiteral("wearable"));
-    //! [icons]
 
     QQmlApplicationEngine engine;
 #ifdef Q_OS_MACOS

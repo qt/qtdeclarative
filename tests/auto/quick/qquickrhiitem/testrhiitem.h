@@ -9,7 +9,7 @@
 
 class TestRenderer : public QQuickRhiItemRenderer
 {
-public:
+protected:
     void initialize(QRhiCommandBuffer *cb) override;
     void synchronize(QQuickRhiItem *item) override;
     void render(QRhiCommandBuffer *cb) override;
@@ -35,6 +35,8 @@ private:
 
     void initScene();
     void updateTexture();
+
+    friend class tst_QQuickRhiItem;
 };
 
 class TestRhiItem : public QQuickRhiItem

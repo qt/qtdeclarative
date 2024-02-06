@@ -14,7 +14,8 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/wearable/WearableSe
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
 
-set_source_files_properties(WearableSettings.qml
+set_source_files_properties(
+    WearableSettings.qml
     PROPERTIES
         QT_QML_SINGLETON_TYPE TRUE
 )
