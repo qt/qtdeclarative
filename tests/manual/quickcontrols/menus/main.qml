@@ -34,6 +34,7 @@ ApplicationWindow {
 
         Menu {
             title: qsTr("Edit")
+            objectName: title
 
             Action {
                 text: qsTr("Cut")
@@ -51,6 +52,7 @@ ApplicationWindow {
 
         Menu {
             title: qsTr("Options")
+            objectName: title
 
             Action {
                 id: requestNativeAction
@@ -150,6 +152,7 @@ ApplicationWindow {
 
     Menu {
         id: backgroundContextMenu
+        objectName: "backgroundContextMenu"
         requestNative: requestNativeAction.checked
 
         function appendAction() {
@@ -194,6 +197,7 @@ ApplicationWindow {
         Menu {
             id: subMenu
             title: qsTr("Sub-menu")
+            objectName: title
 
             function appendAction() {
                 let action = actionComponent.createObject(null, { text: qsTr("Extra sub-menu item") })
@@ -234,6 +238,7 @@ ApplicationWindow {
 
     Menu {
         id: editContextMenu
+        objectName: "editContextMenu"
         requestNative: requestNativeAction.checked
 
         ContextAction {

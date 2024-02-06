@@ -222,7 +222,7 @@ public:
     void setDim(bool dim);
     void resetDim();
 
-    bool isVisible() const;
+    virtual bool isVisible() const;
     virtual void setVisible(bool visible);
 
     qreal opacity() const;

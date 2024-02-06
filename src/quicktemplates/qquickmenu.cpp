@@ -284,15 +284,6 @@ QPlatformMenu *QQuickMenuPrivate::maybeNativeHandle() const
     return handle.get();
 }
 
-bool QQuickMenuPrivate::usingNativeMenu()
-{
-    if (useNativeMenu()) {
-        // ensure a native menu is created
-        (void)nativeHandle();
-    }
-    return bool(handle);
-}
-
 bool QQuickMenuPrivate::createNativeMenu()
 {
     Q_ASSERT(!handle);
@@ -388,8 +379,14 @@ void QQuickMenuPrivate::syncWithNativeMenu()
 void QQuickMenuPrivate::syncWithRequestNative()
 {
     Q_Q(QQuickMenu);
-    if (usingNativeMenu() && !useNativeMenu()) {
+    // Users can change requestNative on sub-menus and menus that are visible,
+    // but the changes won't take affect until the menu is re-opened.
+    if (q->isVisible() || parentMenu)
+        return;
+
+    if (maybeNativeHandle() && !useNativeMenu()) {
         // Switch to a non-native menu by removing the native items.
+        // Note that there's nothing to do if a native menu was requested but we failed to create it.
         const int qtyItemsToRemove = nativeItems.size();
         if (qtyItemsToRemove != 0)
             Q_ASSERT(q->count() == qtyItemsToRemove);
@@ -400,9 +397,10 @@ void QQuickMenuPrivate::syncWithRequestNative()
         // removeNativeItem will take care of destroying sub-menus and resetting their native data,
         // but as the root menu, we have to take care of our own.
         resetNativeData();
-    } else {
+    } else if (useNativeMenu()) {
         Q_ASSERT(nativeItems.isEmpty());
-        if (usingNativeMenu())
+        // Try to create a native menu.
+        if (nativeHandle())
             recursivelyCreateNativeMenuItems(q);
     }
 }
@@ -511,7 +509,7 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
         QObjectPrivate::connect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
 
-    if (usingNativeMenu() && complete)
+    if (maybeNativeHandle() && complete)
         maybeCreateAndInsertNativeItem(index, item);
 }
 
@@ -522,8 +520,10 @@ void QQuickMenuPrivate::maybeCreateAndInsertNativeItem(int index, QQuickItem *it
     Q_ASSERT_X(handle, Q_FUNC_INFO, qPrintable(QString::fromLatin1(
         "Expected %1 to be using a native menu").arg(QDebug::toString(q))));
     std::unique_ptr<QQuickNativeMenuItem> nativeMenuItem(maybeCreateNativeMenuItemFor(item));
-    if (!nativeMenuItem)
+    if (!nativeMenuItem) {
+        // TODO: fall back to non-native menu
         return;
+    }
 
     // It's a MenuItem created from Menu/Action or a MenuSeparator,
     // and so we were able to create an equivalent QQuickNativeMenuItem for it.
@@ -561,7 +561,7 @@ void QQuickMenuPrivate::moveItem(int from, int to)
 {
     contentModel->move(from, to);
 
-    if (usingNativeMenu())
+    if (maybeNativeHandle())
         nativeItems.move(from, to);
 }
 
@@ -577,8 +577,6 @@ void QQuickMenuPrivate::moveItem(int from, int to)
 */
 void QQuickMenuPrivate::removeItem(int index, QQuickItem *item, DestructionPolicy destructionPolicy)
 {
-    // We are called when destroying menus and sub-menus, and if we check usingNativeMenu() here instead,
-    // it can cause createNativeMenu to be called when it shouldn't be, so check the handle instead.
     if (maybeNativeHandle())
         removeNativeItem(index);
 
@@ -605,10 +603,8 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item, DestructionPolic
 
 void QQuickMenuPrivate::removeNativeItem(int index)
 {
-    // Either we're still using native menus and are removing item(s),
-    // or we've switched to a non-native menu (hence we can't check usingNativeMenu(),
-    // because that checks requestNative, which could have already been set to false);
-    // either way, we should actually have items to remove before we're called.
+    // Either we're still using native menus and are removing item(s), or we've switched
+    // to a non-native menu; either way, we should actually have items to remove before we're called.
     Q_ASSERT(handle);
     Q_ASSERT_X(index >= 0 && index < nativeItems.size(), Q_FUNC_INFO, qPrintable(QString::fromLatin1(
         "index %1 is less than 0 or greater than or equal to %2").arg(index).arg(nativeItems.size())));
@@ -667,7 +663,7 @@ void QQuickMenuPrivate::recursivelyCreateNativeMenuItems(QQuickMenu *menu)
 QQuickNativeMenuItem *QQuickMenuPrivate::maybeCreateNativeMenuItemFor(QQuickItem *item)
 {
     Q_Q(QQuickMenu);
-    if (!usingNativeMenu())
+    if (!maybeNativeHandle())
         return nullptr;
 
     QQuickNativeMenuItem *nativeMenuItem = nullptr;
@@ -678,6 +674,7 @@ QQuickNativeMenuItem *QQuickMenuPrivate::maybeCreateNativeMenuItemFor(QQuickItem
         } else if (menuItem->subMenu()) {
             nativeMenuItem = new QQuickNativeMenuItem(q, menuItem->subMenu());
         }
+        // TODO: handle MenuItem
     } else if (auto *separator = qobject_cast<QQuickMenuSeparator *>(item)) {
         nativeMenuItem = new QQuickNativeMenuItem(q, separator);
     }
@@ -1379,7 +1376,7 @@ QQuickMenu *QQuickMenu::takeMenu(int index)
 QQuickAction *QQuickMenu::actionAt(int index) const
 {
     Q_D(const QQuickMenu);
-    if (!const_cast<QQuickMenuPrivate *>(d)->usingNativeMenu()) {
+    if (!const_cast<QQuickMenuPrivate *>(d)->maybeNativeHandle()) {
         QQuickAbstractButton *item = qobject_cast<QQuickAbstractButton *>(d->itemAt(index));
         if (!item)
             return nullptr;
@@ -1469,13 +1466,30 @@ QQuickAction *QQuickMenu::takeAction(int index)
     return action;
 }
 
+bool QQuickMenu::isVisible() const
+{
+    Q_D(const QQuickMenu);
+    if (d->maybeNativeHandle())
+        return d->visible;
+    return QQuickPopup::isVisible();
+}
+
 void QQuickMenu::setVisible(bool visible)
 {
     Q_D(QQuickMenu);
     if (visible == d->visible)
         return;
 
-    if (d->usingNativeMenu()) {
+    if (visible && ((d->useNativeMenu() && !d->maybeNativeHandle())
+            || (!d->useNativeMenu() && d->maybeNativeHandle()))) {
+        // We've been made visible, and our actual native state doesn't match our requested state,
+        // which means requestNative was set while we were visible or had a parent. Try to sync our
+        // state again now that we're about to be re-opened.
+        qCDebug(lcNativeMenus) << "setVisible called - useNativeMenu:" << d->useNativeMenu()
+            << "maybeNativeHandle:" << d->maybeNativeHandle();
+        d->syncWithRequestNative();
+    }
+    if (d->maybeNativeHandle()) {
         d->setNativeMenuVisible(visible);
         return;
     }
@@ -1647,16 +1661,6 @@ void QQuickMenu::setRequestNative(bool native)
     Q_D(QQuickMenu);
     if (d->requestNative == native)
         return;
-
-    if (isVisible()) {
-        qmlWarning(this) << "Cannot set requestNative while menu is visible";
-        return;
-    }
-
-    if (d->parentMenu) {
-        qmlWarning(this) << "Cannot set requestNative on a sub-menu";
-        return;
-    }
 
     d->requestNative = native;
     if (d->complete)
@@ -1928,7 +1932,7 @@ void QQuickMenu::componentComplete()
     QQuickPopup::componentComplete();
     d->resizeItems();
     d->syncWithRequestNative();
-    if (d->usingNativeMenu())
+    if (d->maybeNativeHandle())
         d->syncWithNativeMenu();
 }
 

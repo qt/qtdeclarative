@@ -2428,9 +2428,9 @@ void tst_QQuickMenu::requestNativeChanges()
     auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
     QVERIFY(subMenuPrivate->useNativeMenu());
 #ifdef HAVE_NATIVE_MENU_SUPPORT
-    QVERIFY(subMenuPrivate->usingNativeMenu());
+    QVERIFY(subMenuPrivate->handle);
 #else
-    QVERIFY(!subMenuPrivate->usingNativeMenu());
+    QVERIFY(!subMenuPrivate->handle);
 #endif
 
     // Ensure that the menu and its sub-menu have enough room to open.
@@ -2446,15 +2446,15 @@ void tst_QQuickMenu::requestNativeChanges()
     // non-native menus.
     auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
 #ifdef HAVE_NATIVE_MENU_SUPPORT
-    QVERIFY(contextMenuPrivate->usingNativeMenu());
+    QVERIFY(contextMenuPrivate->handle);
 #else
-    QVERIFY(!contextMenuPrivate->usingNativeMenu());
+    QVERIFY(!contextMenuPrivate->handle);
 #endif
     contextMenu->setRequestNative(false);
     QVERIFY(!contextMenu->requestNative());
-    QVERIFY(!contextMenuPrivate->usingNativeMenu());
+    QVERIFY(!contextMenuPrivate->handle);
     QVERIFY(!subMenuPrivate->useNativeMenu());
-    QVERIFY(!subMenuPrivate->usingNativeMenu());
+    QVERIFY(!subMenuPrivate->handle);
 
     // Check that we can open the menu by right-clicking (or just open it manually
     // if the platform doesn't support (moving) QCursor).
@@ -2489,11 +2489,12 @@ void tst_QQuickMenu::requestNativeChanges()
     QVERIFY(action1MenuItem);
     QCOMPARE(action1MenuItem->text(), "action1");
 
-    // Test that we warn if trying to set requestNative while visible.
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Cannot set requestNative while menu is visible"));
+    // Test setting requestNative while visible has no effect (until it's re-opened, which we can't
+    // test because we can't test opening native menus).
     contextMenu->setRequestNative(true);
-    // Shouldn't have changed.
-    QVERIFY(!contextMenu->requestNative());
+    QVERIFY(contextMenu->requestNative());
+    QVERIFY(!contextMenuPrivate->handle);
+    QVERIFY(!subMenuPrivate->handle);
 
     // Also check the submenu.
     auto *subAction1MenuItem = qobject_cast<QQuickMenuItem *>(subMenu->itemAt(0));
@@ -2509,27 +2510,20 @@ void tst_QQuickMenu::requestNativeChanges()
     QCOMPARE(aboutToShowSpy.size(), 1);
 
     // Although we can't open the native menu, we can at least check that
-    // making the menu native again doesn't e.g. crash.
+    // attempting (the changes won't come into effect until it's re-opened)
+    // to make the menu native again doesn't e.g. crash.
     contextMenu->setRequestNative(true);
     QVERIFY(contextMenuPrivate->useNativeMenu());
     QVERIFY(subMenuPrivate->useNativeMenu());
-#ifdef HAVE_NATIVE_MENU_SUPPORT
-    QVERIFY(contextMenuPrivate->usingNativeMenu());
-    QVERIFY(subMenuPrivate->usingNativeMenu());
-#else
-    QVERIFY(!contextMenuPrivate->usingNativeMenu());
-    QVERIFY(!subMenuPrivate->usingNativeMenu());
-#endif
+    QVERIFY(!contextMenuPrivate->handle);
+    QVERIFY(!subMenuPrivate->handle);
 
-    // Check that we warn when requestNative is set on a sub-menu.
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Cannot set requestNative on a sub-menu"));
+    // Check that setting requestNative has no (immediate) effect on a sub-menu.
     subMenu->setRequestNative(false);
+    // Its parent still is still requesting to be native, otherwise this would be false.
     QVERIFY(subMenuPrivate->useNativeMenu());
-#ifdef HAVE_NATIVE_MENU_SUPPORT
-    QVERIFY(subMenuPrivate->usingNativeMenu());
-#else
-    QVERIFY(!subMenuPrivate->usingNativeMenu());
-#endif
+    QVERIFY(!subMenuPrivate->requestNative);
+    QVERIFY(!subMenuPrivate->handle);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)
