@@ -59,6 +59,8 @@ private slots:
     void mixedContainerItems();
     void applicationWindow_data();
     void applicationWindow();
+    void menubarAsHeader_data();
+    void menubarAsHeader();
 
 private:
     static bool hasWindowActivation();
@@ -123,7 +125,7 @@ void tst_qquickmenubar::mouse()
     moveMouseAway(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QQuickMenu *fileMenuBarMenu = menuBar->menuAt(0);
@@ -331,7 +333,7 @@ void tst_qquickmenubar::keys()
     moveMouseAway(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QQuickMenu *fileMenuBarMenu = menuBar->menuAt(0);
@@ -529,7 +531,7 @@ void tst_qquickmenubar::mnemonics()
 
     MnemonicKeySimulator keySim(window.data());
 
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QQuickMenu *fileMenuBarMenu = menuBar->menuAt(0);
@@ -676,7 +678,7 @@ void tst_qquickmenubar::altNavigation()
     moveMouseAway(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QQuickMenu *fileMenuBarMenu = menuBar->menuAt(0);
@@ -812,7 +814,7 @@ void tst_qquickmenubar::addRemoveInlineMenus()
 
     auto window = qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0));
     QVERIFY(window);
-    auto menuBar = window->property("header").value<QQuickMenuBar *>();
+    auto menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QPointer<QQuickMenu> fileMenu = window->property("fileMenu").value<QQuickMenu *>();
@@ -856,7 +858,7 @@ void tst_qquickmenubar::addRemoveMenuFromQml()
 
     auto window = qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0));
     QVERIFY(window);
-    auto menuBar = window->property("header").value<QQuickMenuBar *>();
+    auto menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     const int initialMenuCount = menuBar->count();
@@ -903,7 +905,7 @@ void tst_qquickmenubar::insert()
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     const int initialMenuCount = menuBar->count();
@@ -936,7 +938,7 @@ void tst_qquickmenubar::removeMenuThatIsOpen()
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QQuickMenu *fileMenu = window->property("fileMenu").value<QQuickMenu *>();
@@ -967,7 +969,7 @@ void tst_qquickmenubar::addRemoveExistingMenus()
 
     auto window = qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0));
     QVERIFY(window);
-    auto menuBar = window->property("header").value<QQuickMenuBar *>();
+    auto menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QPointer<QQuickMenu> fileMenu = window->property("fileMenu").value<QQuickMenu *>();
@@ -1096,7 +1098,7 @@ void tst_qquickmenubar::requestNative()
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QCOMPARE(menuBar->requestNative(), requestNative);
@@ -1120,7 +1122,7 @@ void tst_qquickmenubar::AA_DontUseNativeMenuBar()
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
     auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
     QQuickItem *contents = window->property("contents").value<QQuickItem *>();
@@ -1159,7 +1161,7 @@ void tst_qquickmenubar::containerItems()
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
     QCOMPARE(menuBar->requestNative(), requestNative);
 
@@ -1282,7 +1284,7 @@ void tst_qquickmenubar::applicationWindow()
 
     QPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
     auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
     QQuickItem *contents = window->property("contents").value<QQuickItem *>();
@@ -1308,6 +1310,43 @@ void tst_qquickmenubar::applicationWindow()
             QVERIFY(menuBar->height() > 0);
             QCOMPARE(contents->height(), window->height() - menuBar->height());
         }
+    }
+}
+
+void tst_qquickmenubar::menubarAsHeader_data()
+{
+    QTest::addColumn<bool>("requestNative");
+    QTest::newRow("not native") << false;
+    QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::menubarAsHeader()
+{
+    // ApplicationWindow.menuBar was added in Qt 5.10. Before that
+    // the menuBar was supposed to be assigned to ApplicationWindow.header.
+    // For backwards compatibility, check that you can still do that.
+    QFETCH(bool, requestNative);
+
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", requestNative }});
+    engine.load(testFileUrl("menubarAsHeader.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+    QQuickItem *contents = window->property("contents").value<QQuickItem *>();
+    QVERIFY(contents);
+    QVERIFY(menuBar->count() > 0);
+    QCOMPARE(menuBarPrivate->nativeHandle() != nullptr, nativeMenuBarSupported && requestNative);
+
+    if (menuBarPrivate->nativeHandle()) {
+        // Using native menubar
+        QCOMPARE(contents->height(), window->height());
+    } else {
+        // Not using native menubar
+        QCOMPARE(contents->height(), window->height() - menuBar->height());
     }
 }
 

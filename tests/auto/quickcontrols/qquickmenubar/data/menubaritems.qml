@@ -14,7 +14,7 @@ ApplicationWindow {
     height: 400
     visible: true
 
-    header: MenuBar {
+    menuBar: MenuBar {
         requestNative: root.requestNative
         MenuBarItem {
             menu: Menu {
