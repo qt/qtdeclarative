@@ -37,9 +37,6 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
     QStringList qmltypeDirs =
             QStringList({ dataDirectory(), QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
 
-    auto envPtr = QQmlJS::Dom::DomEnvironment::create(
-            qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded);
-
     // This should be exactly the same options as qmlls uses in qqmlcodemodel.
     // Otherwise, this test will not test the codepaths also used by qmlls and will be useless.
     const QQmlJS::Dom::DomCreationOptions options = QQmlJS::Dom::DomCreationOptions{}
@@ -47,9 +44,12 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
             | QQmlJS::Dom::DomCreationOption::WithScriptExpressions
             | QQmlJS::Dom::DomCreationOption::WithRecovery;
 
+    auto envPtr = QQmlJS::Dom::DomEnvironment::create(
+            qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, options);
+
     QQmlJS::Dom::DomItem file;
     QQmlJS::Dom::DomItem env(envPtr);
-    envPtr->loadFile(QQmlJS::Dom::FileToLoad::fromFileSystem(envPtr, filePath, options),
+    envPtr->loadFile(QQmlJS::Dom::FileToLoad::fromFileSystem(envPtr, filePath),
                      [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &,
                              const QQmlJS::Dom::DomItem &newIt) { file = newIt; });
 

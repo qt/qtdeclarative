@@ -868,29 +868,24 @@ public:
     };
 
     FileToLoad(const std::weak_ptr<DomEnvironment> &environment, const QString &canonicalPath,
-               const QString &logicalPath, const std::optional<InMemoryContents> &content,
-               DomCreationOptions options);
+               const QString &logicalPath, const std::optional<InMemoryContents> &content);
     FileToLoad() = default;
 
     static FileToLoad fromMemory(const std::weak_ptr<DomEnvironment> &environment,
-                                 const QString &path, const QString &data,
-                                 DomCreationOptions options = None);
+                                 const QString &path, const QString &data);
     static FileToLoad fromFileSystem(const std::weak_ptr<DomEnvironment> &environment,
-                                     const QString &canonicalPath,
-                                     DomCreationOptions options = None);
+                                     const QString &canonicalPath);
 
     std::weak_ptr<DomEnvironment> environment() const { return m_environment; }
     QString canonicalPath() const { return m_canonicalPath; }
     QString logicalPath() const { return m_logicalPath; }
     std::optional<InMemoryContents> content() const { return m_content; }
-    DomCreationOptions options() const { return m_options; }
 
 private:
     std::weak_ptr<DomEnvironment> m_environment;
     QString m_canonicalPath;
     QString m_logicalPath;
     std::optional<InMemoryContents> m_content;
-    DomCreationOptions m_options;
 };
 
 class QMLDOM_EXPORT DomItem {

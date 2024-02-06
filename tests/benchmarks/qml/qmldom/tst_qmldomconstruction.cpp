@@ -57,9 +57,9 @@ void tst_qmldomconstruction::domConstructionTime()
         auto envPtr = DomEnvironment::create(
                 importPaths,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies, withScope);
 
-        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, fileName, withScope),
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, fileName),
                          [&tFile](Path, const DomItem &, const DomItem &newIt) {
                              tFile = newIt.fileObject();
                          });

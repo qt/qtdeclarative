@@ -348,29 +348,37 @@ it every time it needs.
 
 FileToLoad::FileToLoad(const std::weak_ptr<DomEnvironment> &environment,
                        const QString &canonicalPath, const QString &logicalPath,
-                       const std::optional<InMemoryContents> &content, DomCreationOptions options)
+                       const std::optional<InMemoryContents> &content)
     : m_environment(environment),
       m_canonicalPath(canonicalPath),
       m_logicalPath(logicalPath),
-      m_content(content),
-      m_options(options)
+      m_content(content)
 {
 }
 
 FileToLoad FileToLoad::fromMemory(const std::weak_ptr<DomEnvironment> &environment,
-                                  const QString &path, const QString &code,
-                                  DomCreationOptions options)
+                                  const QString &path, const QString &code)
 {
     const QString canonicalPath = QFileInfo(path).canonicalFilePath();
-    return { environment, canonicalPath, path, InMemoryContents{ code }, options };
+    return {
+        environment,
+        canonicalPath,
+        path,
+        InMemoryContents{ code },
+    };
 }
 
 FileToLoad FileToLoad::fromFileSystem(const std::weak_ptr<DomEnvironment> &environment,
-                                      const QString &path, DomCreationOptions options)
+                                      const QString &path)
 {
     // make the path canonical so the file content can be loaded from it later
     const QString canonicalPath = QFileInfo(path).canonicalFilePath();
-    return { environment, canonicalPath, path, std::nullopt, options };
+    return {
+        environment,
+        canonicalPath,
+        path,
+        std::nullopt,
+    };
 }
 
 ErrorGroup DomItem::domErrorGroup = NewErrorGroup("Dom");
@@ -1305,7 +1313,7 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(const DomItem &origi
         DomItem newFile = newEnv.copy(newFilePtr, Path());
         if (newFilePtr->isValid()) {
             if (extraChecks & (WriteOutCheck::ReparseCompare | WriteOutCheck::ReparseStable)) {
-                newEnvPtr->populateFromQmlFile(newFile, {});
+                newEnvPtr->populateFromQmlFile(newFile);
                 if ((extraChecks & WriteOutCheck::ReparseCompare)
                     && !compare(reformatted, u"reformatted", newFile, u"reparsed",
                                 FieldFilter::compareNoCommentsFilter()))
@@ -2126,8 +2134,8 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option) const
     DomItem env = environment();
     std::shared_ptr<DomEnvironment> newEnvPtr;
     if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>()) {
-        newEnvPtr = std::make_shared<DomEnvironment>(
-                envPtr, envPtr->loadPaths(), envPtr->options());
+        newEnvPtr = std::make_shared<DomEnvironment>(envPtr, envPtr->loadPaths(), envPtr->options(),
+                                                     envPtr->domCreationOptions());
         DomBase *eBase = envPtr.get();
         if (std::holds_alternative<const DomEnvironment *>(m_element) && eBase
             && std::get<const DomEnvironment *>(m_element) == eBase)
@@ -2136,7 +2144,7 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option) const
         newEnvPtr = std::make_shared<DomEnvironment>(
                 QStringList(),
                 DomEnvironment::Option::SingleThreaded | DomEnvironment::Option::NoDependencies,
-                univPtr);
+                DomCreationOption::None, univPtr);
     } else {
         Q_ASSERT(false);
         return {};

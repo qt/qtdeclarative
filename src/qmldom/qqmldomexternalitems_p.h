@@ -412,6 +412,8 @@ public:
         m_typeResolverDependencies = dependencies;
     }
 
+    DomCreationOptions creationOptions() const { return m_creationOptions; }
+
 private:
     friend class QQmlDomAstCreator;
     std::shared_ptr<Engine> m_engine;
@@ -425,6 +427,7 @@ private:
     ImportScope m_importScope;
     std::shared_ptr<QQmlJSTypeResolver> m_typeResolver;
     QQmlJSTypeResolverDependencies m_typeResolverDependencies;
+    DomCreationOptions m_creationOptions;
 };
 
 class QMLDOM_EXPORT QmltypesFile final : public ExternalOwningItem
