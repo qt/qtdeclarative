@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick.Shapes
 
 Item {
-    width: 1200
+    width: 600
     height: 600
 
     ListModel {
@@ -26,10 +26,6 @@ Item {
         ListElement { scaleToFit: 0.035; offsetX: -60; offsetY: 0; pathString: "M 5000 3475 Q 5600 825 2290 245 Q 3635 -30 5360 3885 Q 730 2990 4685 390 L 2445 1435 L 5000 3475" }
         ListElement { scaleToFit: 0.11; offsetX: 10; offsetY: 10; pathString: "M 600 200 Q 1000 600 600 1000 Q 200 1200 200 600 Q 200 200 600 200 M 1000 200 Q 1400 600 1000 1000 Q 600 1200 600 600 Q 200 -200 1000 200" }
         ListElement { scaleToFit: 0.11; offsetX: -10; offsetY: 10; pathString: "M 865 270 Q 1000 600 955 820 Q 675 690 775 525 Q 200 200 865 270 M 1000 200 Q 1400 600 1000 1000 Q 600 1200 590 635 Q 200 -200 1000 200" }
-        ListElement { scaleToFit: 0.11; offsetX: -10; offsetY: 10; pathString: "M 568.243 506.927 Q 1000 600 955 820 Q 675 690 1007.14 396.964 Q 616.417 79.1432 568.243 506.927 M 1000 200 Q 1400 600 1000 1000 Q 600 1200 590 635 Q 200 -200 1000 200" }
-        ListElement { scaleToFit: 0.11; offsetX: -10; offsetY: 10; pathString: "M 562.26 285.556 Q 728.371 717.267 955 820 Q 1037.57 642.136 1007.14 396.964 Q 616.417 79.1432 562.26 285.556 M 1000 200 Q 1400 600 1000 1000 Q 600 1200 590 635 Q 200 -200 1000 200" }
-        ListElement { scaleToFit: 0.09; offsetX: -10; offsetY: 10; pathString: "M 550.789, 661.103 Q 1435.03, -8.14249 1668.28, 799.321 Q 1100, 1100 593.639, 527.481 Q 593.639 527.481 100 1100 100 600 Q 100 600 1208.1 876.376 2316.21, 1152.75 Q 2316.21 1152.75 1433.5 906.927 550.789 661.103" }
-        ListElement { scaleToFit: 0.04; offsetX: 35; offsetY: 10; pathString: "M 846.361 1397.06 Q 2485 -660 2485 1015 Q 1598.13 4529.81 975 290 Q -69.0821 3853.43 -568.237 1473.61 L 2515.73 2262.31 L 846.361 1397.06" }
     }
 
     Column {
