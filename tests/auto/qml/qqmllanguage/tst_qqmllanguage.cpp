@@ -444,6 +444,7 @@ private slots:
 
     void writeNumberToEnumAlias();
     void badInlineComponentAnnotation();
+    void manuallyCallSignalHandler();
 
 private:
     QQmlEngine engine;
@@ -8544,6 +8545,26 @@ void tst_qqmllanguage::badInlineComponentAnnotation()
     QCOMPARE(o->property("b").value<QObject *>(), ic);
     QCOMPARE(o->property("c").value<QObject *>(), ic);
     QCOMPARE(o->property("d").value<QObject *>(), nullptr);
+}
+
+void tst_qqmllanguage::manuallyCallSignalHandler()
+{
+    // TODO: This test verifies the absence of regression legacy behavior. See QTBUG-120573
+    //       Once we can get rid of the legacy behavior, delete this test!
+
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("manuallyCallSignalHandler.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    for (int i = 0; i < 10; ++i) {
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+            "Property 'onDestruction' of object QQmlComponentAttached\\(0x[0-9a-f]+\\) is a signal "
+            "handler\\. You should not call it directly\\. Make it a proper function and call that "
+            "or emit the signal\\."));
+        QTest::ignoreMessage(QtDebugMsg, "evil!");
+        QScopedPointer<QObject> o(c.create());
+        QTest::ignoreMessage(QtDebugMsg, "evil!");
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)

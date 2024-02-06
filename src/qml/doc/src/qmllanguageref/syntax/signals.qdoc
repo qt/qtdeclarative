@@ -54,6 +54,13 @@ Rectangle {
 }
 \endqml
 
+\note Even though signal handlers look a bit like JavaScript functions, you
+      should not call them directly. If you need to share code between signal
+      handlers and other functionality, refactor it into a separate function.
+      Otherwise always emit the signal if you want the signal handler to be
+      called. There can be multiple handlers, in different scopes, for the
+      same signal.
+
 \section2 Property change signal handlers
 
 A signal is automatically emitted when the value of a QML property changes.

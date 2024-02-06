@@ -37,6 +37,7 @@
 #include <private/qv4compileddata_p.h>
 #include <private/qqmlpropertybinding_p.h>
 #include <private/qqmlpropertycachemethodarguments_p.h>
+#include <private/qqmlsignalnames_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -60,6 +61,7 @@ Q_LOGGING_CATEGORY(lcBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcObjectConnect, "qt.qml.object.connect", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcOverloadResolution, "qt.qml.overloadresolution", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcMethodBehavior, "qt.qml.method.behavior")
+Q_LOGGING_CATEGORY(lcSignalHandler, "qt.qml.signalhandler")
 
 // The code in this file does not violate strict aliasing, but GCC thinks it does
 // so turn off the warnings for us to have a clean build
@@ -3164,6 +3166,26 @@ void Heap::QmlSignalHandler::init(QObject *object, int signalIndex)
 }
 
 DEFINE_OBJECT_VTABLE(QmlSignalHandler);
+
+ReturnedValue QmlSignalHandler::call(const Value *thisObject, const Value *argv, int argc) const
+{
+    const QString handlerName = QQmlSignalNames::signalNameToHandlerName(
+            object()->metaObject()->method(signalIndex()).name());
+    qCWarning(lcSignalHandler).noquote()
+            << QStringLiteral("Property '%1' of object %2 is a signal handler. You should "
+                              "not call it directly. Make it a proper function and call "
+                              "that or emit the signal.")
+                       .arg(handlerName, thisObject->toQStringNoThrow());
+
+    Scope scope(engine());
+    Scoped<QObjectMethod> method(
+            scope, QObjectMethod::create(
+                           scope.engine->rootContext(),
+                           static_cast<Heap::QObjectWrapper *>(nullptr),
+                           signalIndex()));
+
+    return method->call(thisObject, argv, argc);
+}
 
 void QmlSignalHandler::initProto(ExecutionEngine *engine)
 {
