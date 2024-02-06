@@ -1503,10 +1503,17 @@ ReturnedValue Runtime::CallPropertyLookup::call(ExecutionEngine *engine, const V
     // ok to have the value on the stack here
     Value f = Value::fromReturnedValue(l->getter(l, engine, base));
 
-    if (!f.isFunctionObject())
-        return engine->throwTypeError();
+    if (Q_LIKELY(f.isFunctionObject()))
+        return checkedResult(engine, static_cast<FunctionObject &>(f).call(&base, argv, argc));
 
-    return checkedResult(engine, static_cast<FunctionObject &>(f).call(&base, argv, argc));
+    if (QmlSignalHandler *handler = f.as<QmlSignalHandler>())
+        return checkedResult(engine, handler->call(&base, argv, argc));
+
+    const QString message = QStringLiteral("Property '%1' of object %2 is not a function")
+                                  .arg(engine->currentStackFrame->v4Function->compilationUnit
+                                               ->runtimeStrings[l->nameIndex]->toQString())
+                                  .arg(base.toQStringNoThrow());
+    return engine->throwTypeError(message);
 }
 
 ReturnedValue Runtime::CallValue::call(ExecutionEngine *engine, const Value &func, Value *argv, int argc)

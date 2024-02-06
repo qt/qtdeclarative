@@ -411,6 +411,8 @@ struct Q_QML_EXPORT QmlSignalHandler : public QV4::Object
     int signalIndex() const { return d()->signalIndex; }
     QObject *object() const { return d()->object(); }
 
+    ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const;
+
     static void initProto(ExecutionEngine *v4);
 };
 

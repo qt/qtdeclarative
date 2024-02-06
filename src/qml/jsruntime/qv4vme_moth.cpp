@@ -794,15 +794,19 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         // ok to have the value on the stack here
         Value f = Value::fromReturnedValue(l->getter(l, engine, STACK_VALUE(base)));
 
-        if (Q_UNLIKELY(!f.isFunctionObject())) {
-            QString message = QStringLiteral("Property '%1' of object %2 is not a function")
-                    .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString())
+        if (Q_LIKELY(f.isFunctionObject())) {
+            acc = static_cast<FunctionObject &>(f).call(stack + base, stack + argv, argc);
+        } else if (QmlSignalHandler *handler = f.as<QmlSignalHandler>()) {
+            acc = handler->call(stack + base, stack + argv, argc);
+        } else {
+            const QString message = QStringLiteral("Property '%1' of object %2 is not a function")
+                    .arg(engine->currentStackFrame->v4Function->compilationUnit
+                                                   ->runtimeStrings[l->nameIndex]->toQString())
                     .arg(STACK_VALUE(base).toQStringNoThrow());
             acc = engine->throwTypeError(message);
             goto handleUnwind;
         }
 
-        acc = static_cast<FunctionObject &>(f).call(stack + base, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallPropertyLookup)
 
