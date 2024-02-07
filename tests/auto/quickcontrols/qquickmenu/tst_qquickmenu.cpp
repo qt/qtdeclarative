@@ -9,6 +9,7 @@
 #endif
 #include <QtGui/qstylehints.h>
 #include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -99,11 +100,9 @@ private slots:
 
 private:
     static bool hasWindowActivation();
-};
 
-#if defined(Q_OS_WIN) || defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_OS_ANDROID)
-#define HAVE_NATIVE_MENU_SUPPORT
-#endif
+    bool nativeMenuSupported = false;
+};
 
 // This allows us to use QQuickMenuItem's more descriptive operator<< output
 // for the QCOMPARE failure message. It doesn't seem possible to use toString
@@ -117,6 +116,8 @@ QVERIFY2(actualMenuItem == expectedMenuItem, \
 tst_QQuickMenu::tst_QQuickMenu()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
+    std::unique_ptr<QPlatformMenu> platformMenu(QGuiApplicationPrivate::platformTheme()->createPlatformMenu());
+    nativeMenuSupported = platformMenu != nullptr;
 }
 
 bool tst_QQuickMenu::hasWindowActivation()
@@ -2282,10 +2283,10 @@ void tst_QQuickMenu::nativeDynamicSubmenus()
     QVERIFY(subMenu1);
     QCOMPARE(subMenu1->title(), "subMenu1");
     auto *subMenu1Private = QQuickMenuPrivate::get(subMenu1);
-#ifdef HAVE_NATIVE_MENU_SUPPORT
-    QVERIFY(subMenu1Private->handle);
-    QCOMPARE(subMenu1Private->nativeItems.size(), 1);
-#endif
+    if (nativeMenuSupported) {
+        QVERIFY(subMenu1Private->handle);
+        QCOMPARE(subMenu1Private->nativeItems.size(), 1);
+    }
     auto *subMenu1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
     QVERIFY(subMenu1MenuItem);
     COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(0)),
@@ -2300,9 +2301,8 @@ void tst_QQuickMenu::nativeDynamicSubmenus()
         QCOMPARE(subMenuAction1MenuItem->action(), subMenuAction1);
         COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(subMenu1Private->contentData.at(0)),
             subMenuAction1MenuItem);
-#ifdef HAVE_NATIVE_MENU_SUPPORT
-        QCOMPARE(subMenu1Private->nativeItems.size(), 1);
-#endif
+        if (nativeMenuSupported)
+            QCOMPARE(subMenu1Private->nativeItems.size(), 1);
     }
 
     // Check that actions can be appended after existing items in the sub-menu.
@@ -2343,10 +2343,10 @@ void tst_QQuickMenu::nativeDynamicSubmenus()
         auto *takenSubMenu = contextMenu->takeMenu(0);
         QCOMPARE(takenSubMenu, subMenu1);
         QCOMPARE(contextMenuPrivate->contentData.size(), 0);
-#ifdef HAVE_NATIVE_MENU_SUPPORT
-        QVERIFY(!subMenu1Private->handle);
-        QCOMPARE(subMenu1Private->nativeItems.size(), 0);
-#endif
+        if (nativeMenuSupported) {
+            QVERIFY(!subMenu1Private->handle);
+            QCOMPARE(subMenu1Private->nativeItems.size(), 0);
+        }
 
         // Check that the sub-menu can be added back in to the menu.
         contextMenu->addMenu(takenSubMenu);
@@ -2354,10 +2354,10 @@ void tst_QQuickMenu::nativeDynamicSubmenus()
         auto *subMenu1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
         QVERIFY(subMenu1MenuItem);
         QCOMPARE(subMenu1MenuItem->text(), "subMenu1");
-#ifdef HAVE_NATIVE_MENU_SUPPORT
-        QVERIFY(subMenu1Private->handle);
-        QCOMPARE(subMenu1Private->nativeItems.size(), 3);
-#endif
+        if (nativeMenuSupported) {
+            QVERIFY(subMenu1Private->handle);
+            QCOMPARE(subMenu1Private->nativeItems.size(), 3);
+        }
         QCOMPARE(subMenu1Private->contentData.size(), 3);
 
         auto *subMenu1Action0MenuItem = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
@@ -2385,13 +2385,13 @@ void tst_QQuickMenu::nativeMenuSeparator()
     QVERIFY(contextMenuSeparatorAsItem);
     auto *contextMenuSeparator = qobject_cast<QQuickMenuSeparator *>(contextMenuSeparatorAsItem);
     QVERIFY(contextMenuSeparator);
-#ifdef HAVE_NATIVE_MENU_SUPPORT
-    auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
-    QCOMPARE(contextMenuPrivate->nativeItems.size(), 3);
-    auto *contextMenuSeparatorNativeItem = contextMenuPrivate->nativeItems.at(1);
-    QVERIFY(contextMenuSeparatorNativeItem);
-    QVERIFY(contextMenuSeparatorNativeItem->separator());
-#endif
+    if (nativeMenuSupported) {
+        auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
+        QCOMPARE(contextMenuPrivate->nativeItems.size(), 3);
+        auto *contextMenuSeparatorNativeItem = contextMenuPrivate->nativeItems.at(1);
+        QVERIFY(contextMenuSeparatorNativeItem);
+        QVERIFY(contextMenuSeparatorNativeItem->separator());
+    }
 
     // Check that separators in sub-menus are where we expect them to be.
     QQuickMenu *subMenu = window->property("contextMenu").value<QQuickMenu*>();
@@ -2400,13 +2400,13 @@ void tst_QQuickMenu::nativeMenuSeparator()
     QVERIFY(subMenuSeparatorAsItem);
     auto *subMenuSeparator = qobject_cast<QQuickMenuSeparator *>(subMenuSeparatorAsItem);
     QVERIFY(subMenuSeparator);
-#ifdef HAVE_NATIVE_MENU_SUPPORT
-    auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
-    QCOMPARE(subMenuPrivate->nativeItems.size(), 3);
-    auto *subMenuSeparatorNativeItem = subMenuPrivate->nativeItems.at(1);
-    QVERIFY(subMenuSeparatorNativeItem);
-    QVERIFY(subMenuSeparatorNativeItem->separator());
-#endif
+    if (nativeMenuSupported) {
+        auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
+        QCOMPARE(subMenuPrivate->nativeItems.size(), 3);
+        auto *subMenuSeparatorNativeItem = subMenuPrivate->nativeItems.at(1);
+        QVERIFY(subMenuSeparatorNativeItem);
+        QVERIFY(subMenuSeparatorNativeItem->separator());
+    }
 }
 
 void tst_QQuickMenu::requestNativeChanges()
@@ -2425,11 +2425,10 @@ void tst_QQuickMenu::requestNativeChanges()
     auto *subMenu = contextMenu->menuAt(2);
     auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
     QVERIFY(subMenuPrivate->useNativeMenu());
-#ifdef HAVE_NATIVE_MENU_SUPPORT
-    QVERIFY(subMenuPrivate->handle);
-#else
-    QVERIFY(!subMenuPrivate->handle);
-#endif
+    if (nativeMenuSupported)
+        QVERIFY(subMenuPrivate->handle);
+    else
+        QVERIFY(!subMenuPrivate->handle);
 
     // Ensure that the menu and its sub-menu have enough room to open.
     if (window->width() / 2 <= contextMenu->width())
@@ -2443,11 +2442,10 @@ void tst_QQuickMenu::requestNativeChanges()
     // So we just check that a native menu is actually in use before going on to test
     // non-native menus.
     auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
-#ifdef HAVE_NATIVE_MENU_SUPPORT
-    QVERIFY(contextMenuPrivate->handle);
-#else
-    QVERIFY(!contextMenuPrivate->handle);
-#endif
+    if (nativeMenuSupported)
+        QVERIFY(contextMenuPrivate->handle);
+    else
+        QVERIFY(!contextMenuPrivate->handle);
     contextMenu->setRequestNative(false);
     QVERIFY(!contextMenu->requestNative());
     QVERIFY(!contextMenuPrivate->handle);
