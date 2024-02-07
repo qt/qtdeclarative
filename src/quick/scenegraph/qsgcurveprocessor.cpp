@@ -455,8 +455,9 @@ static void splitElementIfNecessary(QQuadPath &path, int index)
         if (needsSplit(e))
             path.splitElementAt(index);
     } else {
-        for (int i = 0; i < e.childCount(); ++i)
-            splitElementIfNecessary(path, e.indexOfChild(i));
+        const int childCount = e.childCount();
+        for (int i = 0; i < childCount; ++i)
+            splitElementIfNecessary(path, path.indexOfChildAt(index, i));
     }
 }
 
