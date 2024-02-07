@@ -618,6 +618,28 @@ private slots:
         QCOMPARE(formattedCode, expectedFormattedCode);
     }
 
+    void importDeclarations_data()
+    {
+        QTest::addColumn<QString>("importToBeFormatted");
+        QTest::addColumn<QString>("expectedFormattedImport");
+        // not exhaustive list of ExportDeclarations as per
+        // https://262.ecma-international.org/7.0/#prod-ImportDeclaration
+
+        QTest::newRow("ModuleSpecifier")
+                << QStringLiteral(u"import \"Module\"") << QStringLiteral(u"import \"Module\";");
+    }
+
+    // https://262.ecma-international.org/7.0/#prod-ImportDeclaration
+    void importDeclarations()
+    {
+        QFETCH(QString, importToBeFormatted);
+        QFETCH(QString, expectedFormattedImport);
+
+        QString formattedImport = formatJSModuleCode(importToBeFormatted);
+
+        QCOMPARE(formattedImport, expectedFormattedImport);
+    }
+
 private:
 };
 

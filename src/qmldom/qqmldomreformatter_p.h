@@ -177,6 +177,8 @@ protected:
 
     bool visit(AST::ClassDeclaration *ast) override;
 
+    bool visit(AST::ImportDeclaration *ast) override;
+
     bool visit(AST::ExportDeclaration *ast) override;
     bool visit(AST::ExportClause *ast) override;
     bool visit(AST::ExportSpecifier *ast) override;
@@ -188,6 +190,8 @@ protected:
 
     void endVisit(AST::ExportDeclaration *ast) override;
     void endVisit(AST::ExportClause *ast) override;
+
+    void endVisit(AST::ImportDeclaration *ast) override;
 
     void throwRecursionDepthError() override;
 

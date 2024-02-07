@@ -927,6 +927,16 @@ bool ScriptFormatter::visit(ClassDeclaration *ast)
     return false;
 }
 
+bool ScriptFormatter::visit(AST::ImportDeclaration *ast)
+{
+    out(ast->importToken);
+    lw.space();
+    if (!ast->moduleSpecifier.isNull()) {
+        out(ast->moduleSpecifierToken);
+    }
+    return true;
+}
+
 bool ScriptFormatter::visit(AST::ExportDeclaration *ast)
 {
     out(ast->exportToken);
@@ -1028,6 +1038,11 @@ void ScriptFormatter::endVisit(AST::ExportClause *ast)
         lw.space();
     }
     out(ast->rightBraceToken);
+}
+
+void ScriptFormatter::endVisit(AST::ImportDeclaration *)
+{
+    out(";");
 }
 
 void ScriptFormatter::throwRecursionDepthError()
