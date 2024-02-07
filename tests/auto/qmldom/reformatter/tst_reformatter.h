@@ -542,6 +542,30 @@ private slots:
         QTest::newRow("ExportClause")
                 << QStringLiteral(u"export {i1 as n1,i2 as n2,nN} from \"M\"")
                 << QStringLiteral(u"export { i1 as n1, i2 as n2, nN } from \"M\";");
+
+        // export default HoistableDeclaration
+        QTest::newRow("Default_AnonymousFunction")
+                << QStringLiteral(u"export default function(a,b){}")
+                << QStringLiteral(u"export default function (a, b) {}");
+        QTest::newRow("Default_AnonymousGenerator")
+                << QStringLiteral(u"export default function * (a,b){}")
+                << QStringLiteral(u"export default function* (a, b) {}");
+        QTest::newRow("Default_Function") << QStringLiteral(u"export default function a(a,b){}")
+                                          << QStringLiteral(u"export default function a(a, b) {}");
+
+        // export default ClassDeclaration
+        QTest::newRow("Default_Class") << QStringLiteral(u"export default class A{}")
+                                       << QStringLiteral(u"export default class A {}");
+        QTest::newRow("Default_AnonymousClass")
+                << QStringLiteral(u"export default class extends A{}")
+                << QStringLiteral(u"export default class extends A{}");
+
+        // export default Expression
+        QTest::newRow("Default_Expression") << QStringLiteral(u"export default 1+1")
+                                            << QStringLiteral(u"export default 1 + 1;");
+        QTest::newRow("Default_ArrowFunctionExpression")
+                << QStringLiteral(u"export default(x,y)=> x+2")
+                << QStringLiteral(u"export default (x, y) => x + 2;");
     }
 
     // https://262.ecma-international.org/7.0/#prod-ExportDeclaration
@@ -556,6 +580,9 @@ private slots:
                      "export {a as \"string name\"} declaration is not supported yet", Abort);
         QEXPECT_FAIL("star_as_Specifier", "export * as star declaration is not supported yet",
                      Abort);
+        QEXPECT_FAIL("Default_AnonymousClass", "QTBUG-122291", Abort);
+        QEXPECT_FAIL("Default_AnonymousFunction", "QTBUG-122291", Abort);
+        QEXPECT_FAIL("Default_AnonymousGenerator", "QTBUG-122291", Abort);
         QCOMPARE(formattedExport, expectedFormattedExport);
     }
 

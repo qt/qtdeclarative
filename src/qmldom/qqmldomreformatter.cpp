@@ -931,6 +931,10 @@ bool ScriptFormatter::visit(AST::ExportDeclaration *ast)
 {
     out(ast->exportToken);
     lw.space();
+    if (ast->exportDefault) {
+        out("default");
+        lw.space();
+    }
     if (ast->exportsAll()) {
         out("*");
     }
@@ -986,8 +990,28 @@ void ScriptFormatter::endVisit(ComputedPropertyName *)
 
 void ScriptFormatter::endVisit(AST::ExportDeclaration *ast)
 {
+    // handle cases with a semicolon at the end of the following expressions
+    // export ExportClause ;
     if (ast->exportClause && !ast->fromClause) {
         out(";");
+    }
+
+    // handle cases with a semicolon at the end of the following expressions
+    // export default [lookahead ∉ { function, class }] AssignmentExpression;
+    if (ast->exportDefault && ast->variableStatementOrDeclaration) {
+        // lookahead ∉ { function, class }
+        if (!(ast->variableStatementOrDeclaration->kind == Node::Kind_FunctionDeclaration
+              || ast->variableStatementOrDeclaration->kind == Node::Kind_ClassDeclaration)) {
+            out(";");
+        }
+        // ArrowFunction in QQmlJS::AST is handled with the help of FunctionDeclaration
+        // and not as part of AssignmentExpression (as per ECMA
+        // https://262.ecma-international.org/7.0/#prod-AssignmentExpression)
+        if (ast->variableStatementOrDeclaration->kind == Node::Kind_FunctionDeclaration
+            && static_cast<AST::FunctionDeclaration *>(ast->variableStatementOrDeclaration)
+                       ->isArrowFunction) {
+            out(";");
+        }
     }
 }
 
