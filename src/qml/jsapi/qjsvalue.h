@@ -80,7 +80,10 @@ public:
     bool isNull() const;
     bool isString() const;
     bool isUndefined() const;
+#if QT_DEPRECATED_SINCE(6, 9)
+    QT_DEPRECATED_VERSION_X_6_9("This might return unexpected results; consult documentation for more information")
     bool isVariant() const;
+#endif
     bool isQObject() const;
     bool isQMetaObject() const;
     bool isObject() const;
