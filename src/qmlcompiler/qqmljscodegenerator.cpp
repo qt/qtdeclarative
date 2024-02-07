@@ -3294,7 +3294,10 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
         if (lhsOriginal != lhsContent || rhsOriginal != rhsContent) {
             // If either side is simply a wrapping of a specific type into a more general one, we
             // can compare the original types instead. You can't nest wrappings after all.
-            generateEqualityOperation(lhsOriginal, rhsOriginal, lhsName, rhsName, function, invert);
+            generateEqualityOperation(lhsOriginal, rhsOriginal,
+                                      conversion(lhsContent.storedType(), lhsOriginal, lhsName),
+                                      conversion(rhsContent.storedType(), rhsOriginal, rhsName),
+                                      function, invert);
             return;
         }
 
