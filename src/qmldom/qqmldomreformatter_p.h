@@ -182,10 +182,14 @@ protected:
     bool visit(AST::ExportSpecifier *ast) override;
     bool visit(AST::ExportsList *ast) override;
 
+    bool visit(AST::FromClause *ast) override;
+
     void endVisit(AST::ComputedPropertyName *) override;
 
     void endVisit(AST::ExportDeclaration *ast) override;
     void endVisit(AST::ExportClause *ast) override;
+
+    void endVisit(AST::FromClause *) override;
 
     void throwRecursionDepthError() override;
 

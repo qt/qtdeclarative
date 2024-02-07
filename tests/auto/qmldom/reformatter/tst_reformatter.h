@@ -531,6 +531,17 @@ private slots:
         QTest::newRow("ExportClause_ExportsList")
                 << QStringLiteral(u"export{one,two,three,four as fo,five}")
                 << QStringLiteral(u"export { one, two, three, four as fo, five };");
+
+        // export * FromClause ;
+        QTest::newRow("star") << QStringLiteral(u"export * from \"design\"")
+                              << QStringLiteral(u"export * from \"design\";");
+        QTest::newRow("star_as_Specifier") << QStringLiteral(u"export * as star from \"design\"")
+                                           << QStringLiteral(u"export * as star from \"design\";");
+
+        // export ExportClause FromClause ;
+        QTest::newRow("ExportClause")
+                << QStringLiteral(u"export {i1 as n1,i2 as n2,nN} from \"M\"")
+                << QStringLiteral(u"export { i1 as n1, i2 as n2, nN } from \"M\";");
     }
 
     // https://262.ecma-international.org/7.0/#prod-ExportDeclaration
@@ -543,6 +554,8 @@ private slots:
 
         QEXPECT_FAIL("ExportClause_Specifier_as_StringLiteral",
                      "export {a as \"string name\"} declaration is not supported yet", Abort);
+        QEXPECT_FAIL("star_as_Specifier", "export * as star declaration is not supported yet",
+                     Abort);
         QCOMPARE(formattedExport, expectedFormattedExport);
     }
 
