@@ -202,6 +202,7 @@ private slots:
     void setLookupConversion();
     void shadowedAsCasts();
     void shadowedMethod();
+    void shadowedPrimitiveCmpEqNull();
     void shifts();
     void signalHandler();
     void signalIndexMismatch();
@@ -4097,6 +4098,15 @@ void tst_QmlCppCodegen::shadowedMethod()
     QCOMPARE(o->property("athing"), QVariant::fromValue<bool>(false));
     QCOMPARE(o->property("bthing"), QVariant::fromValue(u"b"_s));
     QCOMPARE(o->property("cthing"), QVariant::fromValue(u"c"_s));
+}
+
+void tst_QmlCppCodegen::shadowedPrimitiveCmpEqNull()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/shadowedPrimitiveCmpEqNull.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 void tst_QmlCppCodegen::shifts()

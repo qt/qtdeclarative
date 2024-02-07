@@ -235,6 +235,7 @@ set(qml_files
     setLookupConversion.qml
     shadowedAsCasts.qml
     shadowedMethod.qml
+    shadowedPrimitiveCmpEqNull.qml
     shared/Slider.qml
     shifts.qml
     signal.qml
