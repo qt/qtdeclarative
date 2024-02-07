@@ -2707,7 +2707,6 @@ void QQmlJSCodeGenerator::generate_Jump(int offset)
     INJECT_TRACE_INFO(generate_Jump);
 
     generateJumpCodeWithTypeConversions(offset);
-    m_body += u";\n"_s;
     m_skipUntilNextLabel = true;
     resetState();
 }
@@ -2721,7 +2720,6 @@ void QQmlJSCodeGenerator::generate_JumpTrue(int offset)
                             m_state.accumulatorVariableIn);
     m_body += u") "_s;
     generateJumpCodeWithTypeConversions(offset);
-    m_body += u";\n"_s;
 }
 
 void QQmlJSCodeGenerator::generate_JumpFalse(int offset)
@@ -2733,7 +2731,6 @@ void QQmlJSCodeGenerator::generate_JumpFalse(int offset)
                             m_state.accumulatorVariableIn);
     m_body += u") "_s;
     generateJumpCodeWithTypeConversions(offset);
-    m_body += u";\n"_s;
 }
 
 void QQmlJSCodeGenerator::generate_JumpNoException(int offset)
@@ -2742,7 +2739,6 @@ void QQmlJSCodeGenerator::generate_JumpNoException(int offset)
 
     m_body += u"if (!context->engine->hasException()) "_s;
     generateJumpCodeWithTypeConversions(offset);
-    m_body += u";\n"_s;
 }
 
 void QQmlJSCodeGenerator::generate_JumpNotUndefined(int offset)
@@ -3651,8 +3647,7 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
         conversionCode += u"    goto "_s + *labelIt + u";\n"_s;
     }
 
-    if (!conversionCode.isEmpty())
-        m_body += u"{\n"_s + conversionCode + u"}\n"_s;
+    m_body += u"{\n"_s + conversionCode + u"}\n"_s;
 }
 
 QString QQmlJSCodeGenerator::registerVariable(int index) const
