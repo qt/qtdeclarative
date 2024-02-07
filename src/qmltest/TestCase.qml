@@ -1313,7 +1313,16 @@ Item {
 
         Waits for \a ms milliseconds while processing Qt events.
 
-        \sa sleep(), waitForRendering()
+        \note This methods uses a precise timer to do the actual waiting. The
+              event you are waiting for may not. In particular, any animations as
+              well as the \l{Timer} QML type can use either precise or coarse
+              timers, depending on various factors. For a coarse timer you have
+              to expect a drift of around 5% in relation to the precise timer used
+              by TestCase::wait(). Qt cannot give hard guarantees on the drift,
+              though, because the operating system usually doesn't offer hard
+              guarantees on timers.
+
+        \sa sleep(), waitForRendering(), Qt::TimerType
     */
     function wait(ms) {
         qtest_results.wait(ms)
