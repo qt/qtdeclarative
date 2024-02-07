@@ -248,11 +248,11 @@ bool QQuickMenuPrivate::useNativeMenu() const
 
     // If the menu is inside a menubar, and the menubar is
     // native, the menu needs to be native as well.
-    QObject *p = q->parent();
+    QQuickItem *p = q->parentItem();
     while (p) {
         if (auto menuBar = qobject_cast<QQuickMenuBar *>(p))
             return menuBar->requestNative();
-        p = p->parent();
+        p = p->parentItem();
     }
 
     return false;
