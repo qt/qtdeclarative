@@ -17,15 +17,15 @@ static JSC::RegExpFlags jscFlags(uint flags)
 {
     JSC::RegExpFlags jscFlags = JSC::NoFlags;
     if (flags & CompiledData::RegExp::RegExp_Global)
-        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagGlobal);
+        jscFlags = static_cast<JSC::RegExpFlags>(jscFlags | JSC::FlagGlobal);
     if (flags & CompiledData::RegExp::RegExp_IgnoreCase)
-        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagIgnoreCase);
+        jscFlags = static_cast<JSC::RegExpFlags>(jscFlags | JSC::FlagIgnoreCase);
     if (flags & CompiledData::RegExp::RegExp_Multiline)
-        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagMultiline);
+        jscFlags = static_cast<JSC::RegExpFlags>(jscFlags | JSC::FlagMultiline);
     if (flags & CompiledData::RegExp::RegExp_Unicode)
-        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagUnicode);
+        jscFlags = static_cast<JSC::RegExpFlags>(jscFlags | JSC::FlagUnicode);
     if (flags & CompiledData::RegExp::RegExp_Sticky)
-        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagSticky);
+        jscFlags = static_cast<JSC::RegExpFlags>(jscFlags | JSC::FlagSticky);
     return jscFlags;
 }
 
