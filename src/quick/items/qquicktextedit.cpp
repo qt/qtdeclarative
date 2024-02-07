@@ -2932,7 +2932,13 @@ void QQuickTextEdit::updateSize()
 
     d->xoff = leftPadding() + qMax(qreal(0), QQuickTextUtil::alignedX(d->document->size().width(), width() - leftPadding() - rightPadding(), effectiveHAlign()));
     d->yoff = topPadding() + QQuickTextUtil::alignedY(d->document->size().height(), height() - topPadding() - bottomPadding(), d->vAlign);
-    setBaselineOffset(fm.ascent() + d->yoff + d->textMargin);
+
+    qreal baseline = fm.ascent();
+    QTextBlock firstBlock = d->document->firstBlock();
+    if (firstBlock.isValid() && firstBlock.layout() != nullptr && firstBlock.lineCount() > 0)
+        baseline = firstBlock.layout()->lineAt(0).ascent();
+
+    setBaselineOffset(baseline + d->yoff + d->textMargin);
 
     QSizeF size(newWidth, newHeight);
     if (d->contentSize != size) {
