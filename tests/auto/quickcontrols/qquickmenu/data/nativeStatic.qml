@@ -22,10 +22,13 @@ ApplicationWindow {
             shortcut: "A"
         }
 
-        Action {
+        MenuItem {
             objectName: text
-            text: "action2"
-            shortcut: "B"
+            action: Action {
+                text: "menuItemAction"
+                objectName: text
+                shortcut: "B"
+            }
         }
 
         Menu {

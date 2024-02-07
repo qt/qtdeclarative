@@ -321,7 +321,7 @@ bool QQuickMenuPrivate::createNativeMenu()
     });
 
     for (QQuickNativeMenuItem *item : std::as_const(nativeItems))
-        handle->insertMenuItem(item->create(), nullptr);
+        handle->insertMenuItem(item->handle(), nullptr);
 
     return true;
 }
@@ -519,7 +519,7 @@ void QQuickMenuPrivate::maybeCreateAndInsertNativeItem(int index, QQuickItem *it
     Q_ASSERT(complete);
     Q_ASSERT_X(handle, Q_FUNC_INFO, qPrintable(QString::fromLatin1(
         "Expected %1 to be using a native menu").arg(QDebug::toString(q))));
-    std::unique_ptr<QQuickNativeMenuItem> nativeMenuItem(maybeCreateNativeMenuItemFor(item));
+    std::unique_ptr<QQuickNativeMenuItem> nativeMenuItem(QQuickNativeMenuItem::createFromNonNativeItem(q, item));
     if (!nativeMenuItem) {
         // TODO: fall back to non-native menu
         return;
@@ -533,7 +533,7 @@ void QQuickMenuPrivate::maybeCreateAndInsertNativeItem(int index, QQuickItem *it
         nativeItems.insert(index, nativeMenuItem.get());
 
         QQuickNativeMenuItem *before = nativeItems.value(index + 1);
-        handle->insertMenuItem(nativeMenuItem->handle(), before ? before->create() : nullptr);
+        handle->insertMenuItem(nativeMenuItem->handle(), before ? before->handle() : nullptr);
         qCDebug(lcNativeMenus) << "inserted native menu item at index" << index
             << "before" << (before ? before->debugText() : QStringLiteral("null"));
 
@@ -614,7 +614,6 @@ void QQuickMenuPrivate::removeNativeItem(int index)
         << "from" << q_func() << "...";
     if (QQuickMenu *subMenu = nativeItem->subMenu())
         recursivelyDestroyNativeSubMenus(subMenu);
-    nativeItem->clearSubMenu();
 
     handle->removeMenuItem(nativeItem->handle());
     // We call deleteLater on the native item, but our QObject destructor will
@@ -658,32 +657,6 @@ void QQuickMenuPrivate::recursivelyCreateNativeMenuItems(QQuickMenu *menu)
         if (menuItem && menuItem->subMenu())
             recursivelyCreateNativeMenuItems(menuItem->subMenu());
     }
-}
-
-QQuickNativeMenuItem *QQuickMenuPrivate::maybeCreateNativeMenuItemFor(QQuickItem *item)
-{
-    Q_Q(QQuickMenu);
-    if (!maybeNativeHandle())
-        return nullptr;
-
-    QQuickNativeMenuItem *nativeMenuItem = nullptr;
-    auto *menuItem = qobject_cast<QQuickMenuItem *>(item);
-    if (menuItem) {
-        if (menuItem->action()) {
-            nativeMenuItem = new QQuickNativeMenuItem(q, menuItem->action());
-        } else if (menuItem->subMenu()) {
-            nativeMenuItem = new QQuickNativeMenuItem(q, menuItem->subMenu());
-        }
-        // TODO: handle MenuItem
-    } else if (auto *separator = qobject_cast<QQuickMenuSeparator *>(item)) {
-        nativeMenuItem = new QQuickNativeMenuItem(q, separator);
-    }
-
-    if (nativeMenuItem) {
-        // This may fail; calling code needs to check handle() for the result.
-        nativeMenuItem->create();
-    }
-    return nativeMenuItem;
 }
 
 QQuickItem *QQuickMenuPrivate::beginCreateItem()

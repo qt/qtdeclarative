@@ -145,8 +145,12 @@ ApplicationWindow {
     }
 
     component ContextAction: Action {
-        id: action
-        onCheckedChanged: print("checked of \"" + text + "\" changed to " + action.checked)
+        onCheckedChanged: (checked) => print("checked of \"" + text + "\" changed to " + checked)
+        onTriggered: print("triggered \"" + text + "\"")
+    }
+
+    component ContextMenuItem: MenuItem {
+        onCheckedChanged: (checked) => print("checked of \"" + text + "\" changed to " + checked)
         onTriggered: print("triggered \"" + text + "\"")
     }
 
@@ -172,7 +176,7 @@ ApplicationWindow {
         ContextAction {
             text: qsTr("Context menu item")
         }
-        ContextAction {
+        ContextMenuItem {
             text: qsTr("Checkable context menu item")
             checkable: true
         }

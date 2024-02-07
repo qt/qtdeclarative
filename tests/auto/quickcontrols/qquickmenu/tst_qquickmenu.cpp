@@ -91,7 +91,7 @@ private slots:
     void customMenuCullItems();
     void customMenuUseRepeaterAsTheContentItem();
     void invalidUrlInImgTag();
-    void nativeStaticActionsAndSubmenus();
+    void nativeStatic();
     void nativeDynamicActions();
     void nativeDynamicSubmenus();
     void nativeMenuSeparator();
@@ -2160,9 +2160,9 @@ void tst_QQuickMenu::invalidUrlInImgTag()
     QVERIFY(menuItemFirst);
 }
 
-void tst_QQuickMenu::nativeStaticActionsAndSubmenus()
+void tst_QQuickMenu::nativeStatic()
 {
-    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeStaticActionsAndSubmenus.qml"));
+    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeStatic.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -2183,13 +2183,11 @@ void tst_QQuickMenu::nativeStaticActionsAndSubmenus()
     COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(0)),
         action1MenuItem);
 
-    auto *action2 = contextMenu->actionAt(1);
-    QVERIFY(action2);
-    auto *action2MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(1));
-    QVERIFY(action2MenuItem);
-    QCOMPARE(action2MenuItem->action(), action2);
-    COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(1)),
-        action2MenuItem);
+    auto *menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(1));
+    QVERIFY(menuItem);
+    QVERIFY(menuItem->action());
+    QCOMPARE(menuItem->action()->text(), "menuItemAction");
+    COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(1)), menuItem);
 
     // Check that the sub-menu can be accessed and is in the
     // appropriate place in contentData.
@@ -2413,7 +2411,7 @@ void tst_QQuickMenu::nativeMenuSeparator()
 
 void tst_QQuickMenu::requestNativeChanges()
 {
-    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeStaticActionsAndSubmenus.qml"));
+    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeStatic.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();

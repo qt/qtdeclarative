@@ -1,7 +1,7 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qquicknativemenuitem_p.h"
+#include "qquickmenuitem_p.h"
 
 #include <QtCore/qloggingcategory.h>
 //#include <QtGui/qicon.h>
@@ -14,7 +14,9 @@
 //#include <QtQuickTemplates2/private/qquickshortcutcontext_p_p.h>
 #include <QtQuickTemplates2/private/qquickaction_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p_p.h>
+#include <QtQuickTemplates2/private/qquickmenuseparator_p.h>
 #include <QtQuickTemplates2/private/qquicknativeiconloader_p.h>
+#include <QtQuickTemplates2/private/qquicknativemenuitem_p.h>
 #include <QtQuickTemplates2/private/qquickshortcutcontext_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -27,47 +29,73 @@ Q_LOGGING_CATEGORY(lcNativeMenuItem, "qt.quick.controls.nativemenuitem")
     \since 6.7
     \internal
 
-    Provides a way to sync between the properties and signals of action
-    and the underlying native menu item.
-
-    It can also represent a sub-menu item or a MenuSeparator.
+    Creates a native menu item from an Action/MenuItem/Menu,
+    and syncs the properties and signals. It can also represent a
+    MenuSeparator.
 
     \sa Menu, Action
 */
 
-/*!
-    \internal
-
-    Adds \a action as a menu item of \a parentMenu.
-*/
-QQuickNativeMenuItem::QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickAction *action)
-    : QObject(parentMenu)
-    , m_parentMenu(parentMenu)
-    , m_action(action)
+QQuickNativeMenuItem *QQuickNativeMenuItem::createFromNonNativeItem(
+    QQuickMenu *parentMenu, QQuickItem *nonNativeItem)
 {
+    auto *menuItem = qobject_cast<QQuickMenuItem *>(nonNativeItem);
+    Type type = Type::Unknown;
+    if (menuItem) {
+        if (menuItem->action()) {
+            type = Type::Action;
+        } else if (menuItem->subMenu()) {
+            type = Type::SubMenu;
+        } else {
+            // It's a plain MenuItem, rather than a MenuItem created by us for an Action or Menu.
+            type = Type::MenuItem;
+        }
+    } else if (qobject_cast<QQuickMenuSeparator *>(nonNativeItem)) {
+        type = Type::Separator;
+    }
+
+    if (type == Type::Unknown)
+        return nullptr;
+
+    std::unique_ptr<QQuickNativeMenuItem> nativeMenuItemPtr(new QQuickNativeMenuItem(
+        parentMenu, nonNativeItem, type));
+    qCDebug(lcNativeMenuItem) << "attemping to create native menu item for"
+        << nativeMenuItemPtr->debugText();
+    auto *parentMenuPrivate = QQuickMenuPrivate::get(parentMenu);
+    nativeMenuItemPtr->m_handle.reset(parentMenuPrivate->handle->createMenuItem());
+    if (!nativeMenuItemPtr->m_handle)
+        nativeMenuItemPtr->m_handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenuItem());
+    if (!nativeMenuItemPtr->m_handle)
+        return nullptr;
+
+    auto *nativeMenuItem = nativeMenuItemPtr.release();
+    switch (type) {
+    case Type::Action:
+        connect(nativeMenuItem->m_handle.get(), &QPlatformMenuItem::activated,
+                nativeMenuItem->action(), [nativeMenuItem, parentMenu](){
+            nativeMenuItem->action()->trigger(parentMenu);
+        });
+        break;
+    case Type::SubMenu:
+        nativeMenuItem->m_handle->setMenu(QQuickMenuPrivate::get(
+            nativeMenuItem->subMenu())->handle.get());
+        break;
+    case Type::MenuItem:
+    case Type::Separator:
+        break;
+    case Type::Unknown:
+        Q_UNREACHABLE();
+    }
+
+    return nativeMenuItem;
 }
 
-/*!
-    \internal
-
-    Adds \a subMenu as a sub-menu menu item of \a parentMenu.
-*/
-QQuickNativeMenuItem::QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickMenu *subMenu)
+QQuickNativeMenuItem::QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickItem *nonNativeItem,
+        QQuickNativeMenuItem::Type type)
     : QObject(parentMenu)
     , m_parentMenu(parentMenu)
-    , m_subMenu(subMenu)
-{
-}
-
-/*!
-    \internal
-
- Adds \a separator a separator of \a parentMenu.
-*/
-QQuickNativeMenuItem::QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickMenuSeparator *separator)
-    : QObject(parentMenu)
-    , m_parentMenu(parentMenu)
-    , m_separator(separator)
+    , m_nonNativeItem(nonNativeItem)
+    , m_type(type)
 {
 }
 
@@ -78,23 +106,17 @@ QQuickNativeMenuItem::~QQuickNativeMenuItem()
 
 QQuickAction *QQuickNativeMenuItem::action() const
 {
-    return m_action;
+    return m_type == Type::Action ? qobject_cast<QQuickMenuItem *>(m_nonNativeItem)->action() : nullptr;
 }
 
 QQuickMenu *QQuickNativeMenuItem::subMenu() const
 {
-    return m_subMenu;
-}
-
-void QQuickNativeMenuItem::clearSubMenu()
-{
-    m_subMenu = nullptr;
-    m_handle->setMenu(nullptr);
+    return m_type == Type::SubMenu ? qobject_cast<QQuickMenuItem *>(m_nonNativeItem)->subMenu() : nullptr;
 }
 
 QQuickMenuSeparator *QQuickNativeMenuItem::separator() const
 {
-    return m_separator;
+    return m_type == Type::Separator ? qobject_cast<QQuickMenuSeparator *>(m_nonNativeItem) : nullptr;
 }
 
 QPlatformMenuItem *QQuickNativeMenuItem::handle() const
@@ -102,51 +124,27 @@ QPlatformMenuItem *QQuickNativeMenuItem::handle() const
     return m_handle.get();
 }
 
-QPlatformMenuItem *QQuickNativeMenuItem::create()
-{
-    if (m_handle)
-        return m_handle.get();
-
-    qCDebug(lcNativeMenuItem) << "create called on" << debugText() << "m_handle" << m_handle.get();
-    auto *parentMenuPrivate = QQuickMenuPrivate::get(m_parentMenu);
-    m_handle.reset(parentMenuPrivate->handle->createMenuItem());
-
-    if (!m_handle)
-        m_handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenuItem());
-
-    Q_ASSERT(m_action || m_subMenu || m_separator);
-
-    if (m_handle) {
-        if (m_action) {
-            connect(m_handle.get(), &QPlatformMenuItem::activated, m_action, [this](){
-                m_action->trigger(m_parentMenu);
-            });
-        } else if (m_subMenu) {
-            m_handle->setMenu(QQuickMenuPrivate::get(m_subMenu)->handle.get());
-            // TODO: do we need to call anything here? need to at least ensure
-            // that the QQuickMenu::isVisible returns true after this
-//            connect(m_handle.get(), &QPlatformMenuItem::activated, m_subMenu, &QQuickMenu::?
-        }
-    }
-
-    return m_handle.get();
-}
-
 void QQuickNativeMenuItem::sync()
 {
     qCDebug(lcNativeMenuItem) << "sync called on" << debugText() << "handle" << m_handle.get();
-    if (/* !m_complete || */!create())
-        return;
+    Q_ASSERT(m_type != Type::Unknown);
 
-    Q_ASSERT(m_action || m_subMenu || m_separator);
+    const auto *action = this->action();
+    const auto *separator = this->separator();
+    auto *subMenu = this->subMenu();
+    auto *menuItem = qobject_cast<QQuickMenuItem *>(m_nonNativeItem);
 
-    m_handle->setEnabled(m_action ? m_action->isEnabled() : m_subMenu && m_subMenu->isEnabled());
+    m_handle->setEnabled(action ? action->isEnabled()
+        : subMenu ? subMenu->isEnabled()
+        : menuItem && menuItem->isEnabled());
 //    m_handle->setVisible(isVisible());
-    m_handle->setIsSeparator(m_separator != nullptr);
-    m_handle->setCheckable(m_action && m_action->isCheckable());
-    m_handle->setChecked(m_action && m_action->isChecked());
+    m_handle->setIsSeparator(separator != nullptr);
+    m_handle->setCheckable(action ? action->isCheckable() : menuItem && menuItem->isCheckable());
+    m_handle->setChecked(action ? action->isChecked() : menuItem && menuItem->isChecked());
     m_handle->setRole(QPlatformMenuItem::TextHeuristicRole);
-    m_handle->setText(m_action ? m_action->text() : m_subMenu ? m_subMenu->title() : QString());
+    m_handle->setText(action ? action->text()
+        : subMenu ? subMenu->title()
+        : menuItem ? menuItem->text() : QString());
 
 //    m_handle->setFont(m_font);
 //    m_handle->setHasExclusiveGroup(m_group && m_group->isExclusive());
@@ -155,17 +153,17 @@ void QQuickNativeMenuItem::sync()
     if (m_iconLoader)
         m_handle->setIcon(m_iconLoader->toQIcon());
 
-    if (m_subMenu) {
+    if (subMenu) {
         // Sync first as dynamically created menus may need to get the handle recreated.
-        auto *subMenuPrivate = QQuickMenuPrivate::get(m_subMenu);
+        auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
         subMenuPrivate->syncWithNativeMenu();
         if (subMenuPrivate->handle)
             m_handle->setMenu(subMenuPrivate->handle.get());
     }
 
 #if QT_CONFIG(shortcut)
-    if (m_action)
-        m_handle->setShortcut(m_action->shortcut());
+    if (action)
+        m_handle->setShortcut(action->shortcut());
 #endif
 
     if (m_parentMenu) {
@@ -179,13 +177,11 @@ void QQuickNativeMenuItem::reset()
 {
     qCDebug(lcNativeMenuItem) << "reset called on" << debugText();
     m_parentMenu = nullptr;
-    m_subMenu = nullptr;
-    m_action = nullptr;
-    m_separator = nullptr;
     m_iconLoader = nullptr;
     m_handle->setMenu(nullptr);
     m_handle.reset();
     m_shortcutId = -1;
+    m_type = Type::Unknown;
 }
 
 QQuickNativeIconLoader *QQuickNativeMenuItem::iconLoader() const
@@ -207,8 +203,9 @@ void QQuickNativeMenuItem::updateIcon()
 void QQuickNativeMenuItem::addShortcut()
 {
 #if QT_CONFIG(shortcut)
-    const QKeySequence sequence = m_action->shortcut();
-    if (!sequence.isEmpty() && m_action->isEnabled()) {
+    const auto *action = this->action();
+    const QKeySequence sequence = action ? action->shortcut() : QKeySequence();
+    if (!sequence.isEmpty() && action->isEnabled()) {
         m_shortcutId = QGuiApplicationPrivate::instance()->shortcutMap.addShortcut(this, sequence,
             Qt::WindowShortcut, QQuickShortcutContext::matcher);
     } else {
@@ -223,18 +220,27 @@ void QQuickNativeMenuItem::removeShortcut()
     if (m_shortcutId == -1)
         return;
 
-    const QKeySequence sequence = m_action->shortcut();
+    QKeySequence sequence;
+    switch (m_type) {
+    case Type::Action:
+        sequence = action()->shortcut();
+        break;
+    default:
+        // TODO
+        break;
+    }
+
     QGuiApplicationPrivate::instance()->shortcutMap.removeShortcut(m_shortcutId, this, sequence);
 #endif
 }
 
 QString QQuickNativeMenuItem::debugText() const
 {
-    if (m_action)
-        return m_action->text().isEmpty() ? QStringLiteral("(No action text)") : m_action->text();
+    if (const auto *action = this->action())
+        return action->text().isEmpty() ? QStringLiteral("(No action text)") : action->text();
 
-    if (m_subMenu)
-        return m_subMenu->title().isEmpty() ? QStringLiteral("(No menu title)") : m_subMenu->title();
+    if (const auto *subMenu = this->subMenu())
+        return subMenu->title().isEmpty() ? QStringLiteral("(No menu title)") : subMenu->title();
 
     return QStringLiteral("(Unknown)");
 }

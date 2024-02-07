@@ -31,17 +31,14 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickNativeMenuItem : public QObject
     Q_OBJECT
 
 public:
-    explicit QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickAction *action);
-    explicit QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickMenu *subMenu);
-    explicit QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickMenuSeparator *separator);
+    static QQuickNativeMenuItem *createFromNonNativeItem(
+        QQuickMenu *parentMenu, QQuickItem *nonNativeItem);
     ~QQuickNativeMenuItem();
 
     QQuickAction *action() const;
     QQuickMenu *subMenu() const;
-    void clearSubMenu();
     QQuickMenuSeparator *separator() const;
     QPlatformMenuItem *handle() const;
-    QPlatformMenuItem *create();
     void sync();
     void reset();
 
@@ -53,13 +50,24 @@ private Q_SLOTS:
     void updateIcon();
 
 private:
+    enum class Type {
+        Unknown,
+        // It's an Action or a MenuItem with an Action.
+        Action,
+        // It's a MenuItem without an Action.
+        MenuItem,
+        Separator,
+        SubMenu
+    };
+
+    explicit QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickItem *nonNativeItem, Type type);
+
     void addShortcut();
     void removeShortcut();
 
     QQuickMenu *m_parentMenu = nullptr;
-    QQuickMenu *m_subMenu = nullptr;
-    QQuickAction *m_action = nullptr;
-    QQuickMenuSeparator *m_separator = nullptr;
+    QQuickItem *m_nonNativeItem = nullptr;
+    Type m_type = Type::Unknown;
     mutable QQuickNativeIconLoader *m_iconLoader = nullptr;
     std::unique_ptr<QPlatformMenuItem> m_handle = nullptr;
     int m_shortcutId = -1;

@@ -68,7 +68,6 @@ public:
     void resetNativeData();
 
     static void recursivelyCreateNativeMenuItems(QQuickMenu *menu);
-    QQuickNativeMenuItem *maybeCreateNativeMenuItemFor(QQuickItem *item);
 
     QQuickItem *beginCreateItem();
     void completeCreateItem();
