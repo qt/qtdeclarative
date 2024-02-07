@@ -178,6 +178,11 @@ protected:
     bool visit(AST::ClassDeclaration *ast) override;
 
     bool visit(AST::ImportDeclaration *ast) override;
+    bool visit(AST::ImportSpecifier *ast) override;
+    bool visit(AST::NameSpaceImport *ast) override;
+    bool visit(AST::ImportsList *ast) override;
+    bool visit(AST::NamedImports *ast) override;
+    bool visit(AST::ImportClause *ast) override;
 
     bool visit(AST::ExportDeclaration *ast) override;
     bool visit(AST::ExportClause *ast) override;
@@ -192,6 +197,7 @@ protected:
     void endVisit(AST::ExportClause *ast) override;
 
     void endVisit(AST::ImportDeclaration *ast) override;
+    void endVisit(AST::NamedImports *ast) override;
 
     void throwRecursionDepthError() override;
 

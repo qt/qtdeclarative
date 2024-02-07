@@ -625,8 +625,29 @@ private slots:
         // not exhaustive list of ExportDeclarations as per
         // https://262.ecma-international.org/7.0/#prod-ImportDeclaration
 
+        // import ModuleSpecifier;
         QTest::newRow("ModuleSpecifier")
                 << QStringLiteral(u"import \"Module\"") << QStringLiteral(u"import \"Module\";");
+
+        // import ImportClause FromClause ;
+        QTest::newRow("NameSpaceImport") << QStringLiteral(u"import * as d from \"design\";")
+                                         << QStringLiteral(u"import * as d from \"design\";");
+
+        QTest::newRow("NamedImports") << QStringLiteral(u"import {b,cd as c,d} from \"M\";")
+                                      << QStringLiteral(u"import { b, cd as c, d } from \"M\";");
+
+        QTest::newRow("DefaultBindung") << QStringLiteral(u"import defaultExport from \"M\"")
+                                        << QStringLiteral(u"import defaultExport from \"M\";");
+        QTest::newRow("DefaultBindung_NameSpaceImport")
+                << QStringLiteral(u"import defaultExport, * as m from \"M\";")
+                << QStringLiteral(u"import defaultExport, * as m from \"M\";");
+        QTest::newRow("DefaultBinding_NamedImports")
+                << QStringLiteral(u"import defaultExport,{b,cd as c,d} from \"M\";")
+                << QStringLiteral(u"import defaultExport, { b, cd as c, d } from \"M\";");
+
+        QTest::newRow("ImportClause_Specifier_as_StringLiteral")
+                << QStringLiteral(u"import{\"s\" as s} from \"M\"")
+                << QStringLiteral(u"import { \"s\" as s } from \"M\";");
     }
 
     // https://262.ecma-international.org/7.0/#prod-ImportDeclaration
@@ -637,6 +658,10 @@ private slots:
 
         QString formattedImport = formatJSModuleCode(importToBeFormatted);
 
+        QEXPECT_FAIL(
+                "ImportClause_Specifier_as_StringLiteral",
+                "import {\"string literal export\" as alias } declaration is not supported yet",
+                Abort);
         QCOMPARE(formattedImport, expectedFormattedImport);
     }
 

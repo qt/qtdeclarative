@@ -937,6 +937,60 @@ bool ScriptFormatter::visit(AST::ImportDeclaration *ast)
     return true;
 }
 
+bool ScriptFormatter::visit(AST::ImportSpecifier *ast)
+{
+    if (!ast->identifier.isNull()) {
+        out(ast->identifierToken);
+        lw.space();
+        out("as");
+        lw.space();
+    }
+    out(ast->importedBindingToken);
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::NameSpaceImport *ast)
+{
+    out(ast->starToken);
+    lw.space();
+    out("as");
+    lw.space();
+    out(ast->importedBindingToken);
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::ImportsList *ast)
+{
+    for (ImportsList *it = ast; it; it = it->next) {
+        accept(it->importSpecifier);
+        if (it->next) {
+            out(",");
+            lw.space();
+        }
+    }
+    return false;
+}
+bool ScriptFormatter::visit(AST::NamedImports *ast)
+{
+    out(ast->leftBraceToken);
+    if (ast->importsList) {
+        lw.space();
+    }
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::ImportClause *ast)
+{
+    if (!ast->importedDefaultBinding.isNull()) {
+        out(ast->importedDefaultBindingToken);
+        if (ast->nameSpaceImport || ast->namedImports) {
+            out(",");
+            lw.space();
+        }
+    }
+    return true;
+}
+
 bool ScriptFormatter::visit(AST::ExportDeclaration *ast)
 {
     out(ast->exportToken);
@@ -1035,6 +1089,14 @@ void ScriptFormatter::endVisit(AST::ExportDeclaration *ast)
 void ScriptFormatter::endVisit(AST::ExportClause *ast)
 {
     if (ast->exportsList) {
+        lw.space();
+    }
+    out(ast->rightBraceToken);
+}
+
+void ScriptFormatter::endVisit(AST::NamedImports *ast)
+{
+    if (ast->importsList) {
         lw.space();
     }
     out(ast->rightBraceToken);
