@@ -3033,6 +3033,38 @@ private slots:
         QVERIFY(esmExport.localErrors().empty());
     }
 
+    void semanticAnalysis()
+    {
+
+        DomItem baseItem;
+        DomItem derivedItem;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+
+        auto envPtr =
+                DomEnvironment::create(qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option{}, options);
+
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, baseDir + u"/Base.qml"_s),
+                [&baseItem](Path, const DomItem &, const DomItem &newIt) {
+                    baseItem = newIt.rootQmlObject(GoTo::MostLikely);
+                });
+
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, baseDir + u"/Derived.qml"_s),
+                [&derivedItem](Path, const DomItem &, const DomItem &newIt) {
+                    derivedItem = newIt.rootQmlObject(GoTo::MostLikely);
+                });
+        envPtr->loadPendingDependencies();
+
+        const auto baseScope = baseItem.semanticScope();
+        const auto derivedScope = derivedItem.semanticScope();
+
+        QCOMPARE_NE(baseScope, QQmlJSScope::ConstPtr{});
+        QCOMPARE(baseScope, derivedScope->baseType());
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

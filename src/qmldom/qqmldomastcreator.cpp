@@ -335,16 +335,34 @@ bool QQmlDomAstCreator::visit(UiProgram *program)
     FileLocations::addRegion(rootMap, MainRegion, combineLocations(program));
     pushEl(p, *cPtr, program);
 
-    // add implicit directory import
+    auto envPtr = qmlFile.environment().ownerAs<DomEnvironment>();
+    const bool loadDependencies =
+            !envPtr->options().testFlag(DomEnvironment::Option::NoDependencies);
+    // add implicit directory import and load them in the Dom
     if (!fInfo.canonicalPath().isEmpty()) {
         Import selfDirImport(QmlUri::fromDirectoryString(fInfo.canonicalPath()));
         selfDirImport.implicit = true;
         qmlFilePtr->addImport(selfDirImport);
+
+        if (loadDependencies) {
+            const QString currentFileDir =
+                    QFileInfo(qmlFile.canonicalFilePath()).dir().canonicalPath();
+            envPtr->loadFile(FileToLoad::fromFileSystem(
+                                     envPtr, selfDirImport.uri.absoluteLocalPath(currentFileDir)),
+                             DomItem::Callback(), DomType::QmlDirectory);
+        }
     }
-    // add implicit imports from the environment (QML, QtQml for example)
+    // add implicit imports from the environment (QML, QtQml for example) and load them in the Dom
     for (Import i : qmlFile.environment().ownerAs<DomEnvironment>()->implicitImports()) {
         i.implicit = true;
         qmlFilePtr->addImport(i);
+
+        if (loadDependencies)
+            envPtr->loadModuleDependency(i.uri.moduleUri(), i.version, DomItem::Callback());
+    }
+    if (m_loadFileLazily && loadDependencies) {
+        envPtr->loadPendingDependencies();
+        envPtr->commitToBase(qmlFile.environment().item());
     }
 
     return true;
@@ -386,16 +404,36 @@ bool QQmlDomAstCreator::visit(UiImport *el)
         v.majorVersion = el->version->version.majorVersion();
     if (el->version && el->version->version.hasMinorVersion())
         v.minorVersion = el->version->version.minorVersion();
-    if (el->importUri != nullptr)
-        createMap(DomType::Import,
-                  qmlFilePtr->addImport(Import::fromUriString(toString(el->importUri), v,
-                                                              el->importId.toString())),
-                  el);
-    else
-        createMap(DomType::Import,
-                  qmlFilePtr->addImport(
-                          Import::fromFileString(el->fileName.toString(), el->importId.toString())),
-                  el);
+
+    auto envPtr = qmlFile.environment().ownerAs<DomEnvironment>();
+    const bool loadDependencies =
+            !envPtr->options().testFlag(DomEnvironment::Option::NoDependencies);
+    if (el->importUri != nullptr) {
+        const Import import =
+                Import::fromUriString(toString(el->importUri), v, el->importId.toString());
+        createMap(DomType::Import, qmlFilePtr->addImport(import), el);
+
+        if (loadDependencies) {
+            envPtr->loadModuleDependency(import.uri.moduleUri(), import.version,
+                                         DomItem::Callback());
+        }
+    } else {
+        const Import import =
+                Import::fromFileString(el->fileName.toString(), el->importId.toString());
+        createMap(DomType::Import, qmlFilePtr->addImport(import), el);
+
+        if (loadDependencies) {
+            const QString currentFileDir =
+                    QFileInfo(qmlFile.canonicalFilePath()).dir().canonicalPath();
+            envPtr->loadFile(FileToLoad::fromFileSystem(
+                                     envPtr, import.uri.absoluteLocalPath(currentFileDir)),
+                             DomItem::Callback(), DomType::QmlDirectory);
+        }
+    }
+    if (m_loadFileLazily && loadDependencies) {
+        envPtr->loadPendingDependencies();
+        envPtr->commitToBase(qmlFile.environment().item());
+    }
     return true;
 }
 

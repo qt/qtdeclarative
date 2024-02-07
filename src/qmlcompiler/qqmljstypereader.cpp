@@ -44,23 +44,21 @@ bool QQmlJSTypeReader::operator ()(const QSharedPointer<QQmlJSScope> &scope)
     const bool success = isJavaScript ? (isESModule ? parser.parseModule()
                                                     : parser.parseProgram())
                                       : parser.parse();
-    if (!success)
-        return false;
 
     QQmlJS::AST::Node *rootNode = parser.rootNode();
-    if (!rootNode)
-        return false;
 
     QQmlJSLogger logger;
     logger.setFileName(m_file);
     logger.setCode(code);
     logger.setSilent(true);
 
-    auto membersVisitor = m_importer->makeImportVisitor(
-            scope, m_importer, &logger,
-            QQmlJSImportVisitor::implicitImportDirectory(m_file, m_importer->resourceFileMapper()));
-    rootNode->accept(membersVisitor.get());
-    return true;
+    m_importer->runImportVisitor(rootNode,
+                                 { scope,
+                                   &logger,
+                                   QQmlJSImportVisitor::implicitImportDirectory(
+                                           m_file, m_importer->resourceFileMapper()),
+                                   {} });
+    return success && rootNode;
 }
 
 QT_END_NAMESPACE

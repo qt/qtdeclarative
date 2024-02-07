@@ -150,11 +150,11 @@ QQmlJSImporter::QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFil
     : m_importPaths(importPaths),
       m_mapper(mapper),
       m_useOptionalImports(useOptionalImports),
-      m_createImportVisitor([](const QQmlJSScope::Ptr &target, QQmlJSImporter *importer,
-                               QQmlJSLogger *logger, const QString &implicitImportDirectory,
-                               const QStringList &qmldirFiles) {
-          return new QQmlJSImportVisitor(target, importer, logger, implicitImportDirectory,
-                                         qmldirFiles);
+      m_importVisitor([](QQmlJS::AST::Node *rootNode, QQmlJSImporter *self,
+                         const ImportVisitorPrerequisites &p) {
+          auto visitor = std::unique_ptr<QQmlJS::AST::BaseVisitor>(new QQmlJSImportVisitor(
+                  p.m_target, self, p.m_logger, p.m_implicitImportDirectory, p.m_qmldirFiles));
+          QQmlJS::AST::Node::accept(rootNode, visitor.get());
       })
 {
 }
@@ -876,13 +876,10 @@ void QQmlJSImporter::setQualifiedNamesOn(const Import &import)
     }
 }
 
-std::unique_ptr<QQmlJSImportVisitor>
-QQmlJSImporter::makeImportVisitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer,
-                                  QQmlJSLogger *logger, const QString &implicitImportDirectory,
-                                  const QStringList &qmldirFiles)
+void QQmlJSImporter::runImportVisitor(QQmlJS::AST::Node *rootNode,
+                                      const ImportVisitorPrerequisites &p)
 {
-    return std::unique_ptr<QQmlJSImportVisitor>(
-            m_createImportVisitor(target, importer, logger, implicitImportDirectory, qmldirFiles));
+    m_importVisitor(rootNode, this, p);
 }
 
 QT_END_NAMESPACE

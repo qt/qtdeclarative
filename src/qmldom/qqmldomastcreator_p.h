@@ -125,6 +125,7 @@ class QQmlDomAstCreator final : public AST::Visitor
 
 public:
     void enableScriptExpressions(bool enable = true) { m_enableScriptExpressions = enable; }
+    void enableLoadFileLazily(bool enable = true) { m_loadFileLazily = enable; }
 
 private:
 
@@ -135,6 +136,7 @@ private:
     QVector<int> arrayBindingLevels;
     FileLocations::Tree rootMap;
     bool m_enableScriptExpressions = false;
+    bool m_loadFileLazily = false;
 
     template<typename T>
     QmlStackElement &currentEl(int idx = 0)
@@ -541,6 +543,12 @@ public:
         m_domCreator.enableScriptExpressions(enable);
     }
 
+    void enableLoadFileLazily(bool enable = true)
+    {
+        m_loadFileLazily = enable;
+        m_domCreator.enableLoadFileLazily(enable);
+    }
+
     QQmlJSImportVisitor &scopeCreator() { return m_scopeCreator; }
 
 private:
@@ -683,6 +691,7 @@ private:
 
     std::optional<InactiveVisitorMarker> m_inactiveVisitorMarker;
     bool m_enableScriptExpressions = false;
+    bool m_loadFileLazily = false;
 };
 
 } // end namespace Dom

@@ -257,12 +257,12 @@ int main(int argc, char **argv)
 
     QQmlJSImporter importer { importPaths, &mapper };
     importer.setMetaDataMapper(&metaDataMapper);
-    auto createQmltcVisitor = [](const QQmlJSScope::Ptr &root, QQmlJSImporter *importer,
-                                 QQmlJSLogger *logger, const QString &implicitImportDirectory,
-                                 const QStringList &qmldirFiles) -> QQmlJSImportVisitor * {
-        return new QmltcVisitor(root, importer, logger, implicitImportDirectory, qmldirFiles);
+    auto qmltcVisitor = [](QQmlJS::AST::Node *rootNode, QQmlJSImporter *self,
+                                 const QQmlJSImporter::ImportVisitorPrerequisites &p) {
+        QmltcVisitor v(p.m_target, self, p.m_logger, p.m_implicitImportDirectory, p.m_qmldirFiles);
+        QQmlJS::AST::Node::accept(rootNode, &v);
     };
-    importer.setImportVisitorCreator(createQmltcVisitor);
+    importer.setImportVisitor(qmltcVisitor);
 
     QQmlJSLogger logger;
     logger.setFileName(url);
