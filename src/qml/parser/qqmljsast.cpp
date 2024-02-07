@@ -1158,8 +1158,8 @@ void ExportClause::accept0(BaseVisitor *visitor)
 void ExportDeclaration::accept0(BaseVisitor *visitor)
 {
     if (visitor->visit(this)) {
-        accept(fromClause, visitor);
         accept(exportClause, visitor);
+        accept(fromClause, visitor);
         accept(variableStatementOrDeclaration, visitor);
     }
 
