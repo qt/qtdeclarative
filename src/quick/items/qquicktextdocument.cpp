@@ -197,10 +197,17 @@ void QQuickTextDocument::setModified(bool modified)
 void QQuickTextDocumentPrivate::load()
 {
     Q_Q(QQuickTextDocument);
+    auto *doc = editor->document();
+    if (!doc) {
+        qmlWarning(q) << QQuickTextDocument::tr("Null document object: cannot load");
+        setStatus(QQuickTextDocument::Status::ReadError);
+        return;
+    }
     const QQmlContext *context = qmlContext(editor);
     const QUrl &resolvedUrl = context ? context->resolvedUrl(url) : url;
     const QString filePath = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
-    if (QFile::exists(filePath)) {
+    QFile file(filePath);
+    if (file.exists()) {
 #if QT_CONFIG(mimetype)
         mimeType = QMimeDatabase().mimeTypeForFile(filePath);
         const bool isHtml = mimeType.inherits("text/html"_L1);
@@ -211,42 +218,41 @@ void QQuickTextDocumentPrivate::load()
         const bool isMarkdown = filePath.endsWith(".md"_L1, Qt::CaseInsensitive) ||
                 filePath.endsWith(".markdown"_L1, Qt::CaseInsensitive);
 #endif
-        QFile file(filePath);
         if (file.open(QFile::ReadOnly | QFile::Text)) {
             setStatus(QQuickTextDocument::Status::Loading);
             QByteArray data = file.readAll();
-            if (auto *doc = editor->document()) {
-                doc->setBaseUrl(resolvedUrl.adjusted(QUrl::RemoveFilename));
+            doc->setBaseUrl(resolvedUrl.adjusted(QUrl::RemoveFilename));
 #if QT_CONFIG(textmarkdownreader)
-                if (isMarkdown) {
-                    doc->setMarkdown(QString::fromUtf8(data));
-                } else
+            if (isMarkdown) {
+                doc->setMarkdown(QString::fromUtf8(data));
+            } else
 #endif
 #ifndef QT_NO_TEXTHTMLPARSER
-                if (isHtml) {
-                    // If a user loads an HTML file, remember the encoding.
-                    // If the user then calls save() later, the same encoding will be used.
-                    encoding = QStringConverter::encodingForHtml(data);
-                    if (encoding) {
-                        QStringDecoder decoder(*encoding);
-                        doc->setHtml(decoder(data));
-                    } else {
-                        // fall back to utf8
-                        doc->setHtml(QString::fromUtf8(data));
-                    }
-                } else
-#endif
-                {
-                    doc->setPlainText(QString::fromUtf8(data));
+            if (isHtml) {
+                // If a user loads an HTML file, remember the encoding.
+                // If the user then calls save() later, the same encoding will be used.
+                encoding = QStringConverter::encodingForHtml(data);
+                if (encoding) {
+                    QStringDecoder decoder(*encoding);
+                    doc->setHtml(decoder(data));
+                } else {
+                    // fall back to utf8
+                    doc->setHtml(QString::fromUtf8(data));
                 }
-                setStatus(QQuickTextDocument::Status::Loaded);
-                doc->setModified(false);
+            } else
+#endif
+            {
+                doc->setPlainText(QString::fromUtf8(data));
             }
-        } else {
-            qmlWarning(q) << QQuickTextDocument::tr("Cannot load:") << file.errorString();
-            setStatus(QQuickTextDocument::Status::ReadError);
+            setStatus(QQuickTextDocument::Status::Loaded);
+            doc->setModified(false);
+            return;
         }
+        qmlWarning(q) << QQuickTextDocument::tr("Failed to read: %1").arg(file.errorString());
+    } else {
+        qmlWarning(q) << QQuickTextDocument::tr("%1 does not exist").arg(filePath);
     }
+    setStatus(QQuickTextDocument::Status::ReadError);
 }
 
 void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
