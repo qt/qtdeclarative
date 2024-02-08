@@ -49,6 +49,7 @@ set(qml_files
     Enums.qml
     Foozle.qml
     GetOptionalLookupOnQJSValueNonStrict.qml
+    GetOptionalLookupShadowed.qml
     Loopy.qml
     OkType.qml
     Panel.qml

@@ -79,6 +79,12 @@ void QQmlJSShadowCheck::generate_GetLookup(int index)
     }
 }
 
+void QQmlJSShadowCheck::generate_GetOptionalLookup(int index, int offset)
+{
+    Q_UNUSED(offset);
+    generate_GetLookup(index);
+}
+
 void QQmlJSShadowCheck::handleStore(int base, const QString &memberName)
 {
     const int instructionOffset = currentInstructionOffset();
