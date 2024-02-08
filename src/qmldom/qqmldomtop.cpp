@@ -244,7 +244,7 @@ DomUniverse::LoadResult DomUniverse::loadFile(const FileToLoad &file, DomType fi
         const auto &preLoadResult = preload(univ, file, fileType);
         if (std::holds_alternative<LoadResult>(preLoadResult)) {
             // universe already has the most recent version of the file
-            return std::move(std::get<LoadResult>(preLoadResult));
+            return std::get<LoadResult>(preLoadResult);
         } else {
             // content of the file needs to be parsed and value inside Universe needs to be updated
             return load(std::get<ContentWithDate>(preLoadResult), file, fileType);
