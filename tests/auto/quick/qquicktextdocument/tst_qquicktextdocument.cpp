@@ -16,6 +16,9 @@
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlFile>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#ifdef Q_OS_UNIX
+#include <unistd.h>
+#endif
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
@@ -32,6 +35,8 @@ private slots:
     void customDocument();
     void sourceAndSave_data();
     void sourceAndSave();
+    void loadErrorNoSuchFile();
+    void loadErrorPermissionDenied();
 };
 
 QString text = QStringLiteral("foo bar");
@@ -249,6 +254,73 @@ void tst_qquicktextdocument::sourceAndSave()
         QVERIFY(readBack.contains("hello!"));
     }
     QCOMPARE(textEdit->property("sourceChangeCount").toInt(), sourceChangedSpy.size());
+}
+
+void tst_qquicktextdocument::loadErrorNoSuchFile()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("text.qml"));
+    QScopedPointer<QQuickTextEdit> textEdit(qobject_cast<QQuickTextEdit*>(c.create()));
+    QCOMPARE(textEdit.isNull(), false);
+    QQuickTextDocument *qqdoc = textEdit->property("textDocument").value<QQuickTextDocument*>();
+    QVERIFY(qqdoc);
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 0);
+    QTextDocument *doc = qqdoc->textDocument();
+    QVERIFY(doc);
+    QSignalSpy sourceChangedSpy(qqdoc, &QQuickTextDocument::sourceChanged);
+    QSignalSpy statusChangedSpy(qqdoc, &QQuickTextDocument::statusChanged);
+
+    QCOMPARE(statusChangedSpy.size(), 0);
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Null);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*does not exist"));
+    qqdoc->setProperty("source", testFileUrl("nosuchfile.md"));
+    QCOMPARE(sourceChangedSpy.size(), 1);
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 1);
+    qCDebug(lcTests) << "status history" << textEdit->property("statusHistory").toList();
+    QCOMPARE(statusChangedSpy.size(), 1);
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::ReadError);
+}
+
+void tst_qquicktextdocument::loadErrorPermissionDenied()
+{
+#ifdef Q_OS_UNIX
+    if (geteuid() == 0)
+        QSKIP("Permission will not be denied with root privileges.");
+#endif
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("text.qml"));
+    QScopedPointer<QQuickTextEdit> textEdit(qobject_cast<QQuickTextEdit*>(c.create()));
+    QCOMPARE(textEdit.isNull(), false);
+    QQuickTextDocument *qqdoc = textEdit->property("textDocument").value<QQuickTextDocument*>();
+    QVERIFY(qqdoc);
+    const QQmlContext *ctxt = e.rootContext();
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 0);
+    QTextDocument *doc = qqdoc->textDocument();
+    QVERIFY(doc);
+    QSignalSpy sourceChangedSpy(qqdoc, &QQuickTextDocument::sourceChanged);
+    QSignalSpy statusChangedSpy(qqdoc, &QQuickTextDocument::statusChanged);
+
+    QTemporaryDir tmpDir;
+    QVERIFY(tmpDir.isValid());
+    const QString source("hello.md");
+    QFile sf(QQmlFile::urlToLocalFileOrQrc(ctxt->resolvedUrl(testFileUrl(source))));
+    qCDebug(lcTests) << source << "orig ->" << sf.fileName();
+    QVERIFY(sf.exists());
+    QString tmpPath = tmpDir.filePath(source);
+    QVERIFY(sf.copy(tmpPath));
+    qCDebug(lcTests) << source << "copy ->" << tmpDir.path() << ":" << tmpPath;
+    if (!QFile::setPermissions(tmpPath, QFileDevice::Permissions{})) // no permissions at all
+        QSKIP("Failed to change permissions of temporary file: cannot continue.");
+
+    QCOMPARE(statusChangedSpy.size(), 0);
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Null);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Failed to read: Permission denied"));
+    qqdoc->setProperty("source", QUrl::fromLocalFile(tmpPath));
+    QCOMPARE(sourceChangedSpy.size(), 1);
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 1);
+    qCDebug(lcTests) << "status history" << textEdit->property("statusHistory").toList();
+    QCOMPARE(statusChangedSpy.size(), 1);
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::ReadError);
 }
 
 QTEST_MAIN(tst_qquicktextdocument)
