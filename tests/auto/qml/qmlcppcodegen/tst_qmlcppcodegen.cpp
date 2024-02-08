@@ -113,6 +113,7 @@ private slots:
     void getOptionalLookup();
     void getOptionalLookup_data();
     void getOptionalLookupOnQJSValueNonStrict();
+    void getOptionalLookupShadowed();
     void globals();
     void idAccess();
     void ignoredFunctionReturn();
@@ -2125,6 +2126,18 @@ void tst_QmlCppCodegen::getOptionalLookupOnQJSValueNonStrict()
     QVERIFY(o);
 
     QVERIFY(o->property("b").toBool());
+}
+
+void tst_QmlCppCodegen::getOptionalLookupShadowed()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/qt/qml/TestTypes/GetOptionalLookupShadowed.qml"_s);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("res").toString(), "a");
 }
 
 void tst_QmlCppCodegen::globals()

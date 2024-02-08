@@ -41,6 +41,7 @@ private:
 
     void generate_LoadProperty(int nameIndex) override;
     void generate_GetLookup(int index) override;
+    void generate_GetOptionalLookup(int index, int offset) override;
     void generate_StoreProperty(int nameIndex, int base) override;
     void generate_SetLookup(int index, int base) override;
     void generate_CallProperty(int nameIndex, int base, int argc, int argv) override;
