@@ -88,6 +88,11 @@ protected:
     QStack<SectionSize> m_hiddenSectionSizes;
     bool m_modelExplicitlySetByUser = false;
     QString m_textRole;
+
+    int logicalRowIndex(const int visualIndex) const final;
+    int logicalColumnIndex(const int visualIndex) const final;
+    int visualRowIndex(const int logicalIndex) const final;
+    int visualColumnIndex(const int logicalIndex) const final;
 };
 
 class QQuickHorizontalHeaderViewPrivate : public QQuickHeaderViewBasePrivate
@@ -96,6 +101,8 @@ class QQuickHorizontalHeaderViewPrivate : public QQuickHeaderViewBasePrivate
 public:
     QQuickHorizontalHeaderViewPrivate();
     ~QQuickHorizontalHeaderViewPrivate();
+
+    bool m_movableColumns = false;
 };
 
 class QQuickVerticalHeaderViewPrivate : public QQuickHeaderViewBasePrivate
@@ -104,6 +111,8 @@ class QQuickVerticalHeaderViewPrivate : public QQuickHeaderViewBasePrivate
 public:
     QQuickVerticalHeaderViewPrivate();
     ~QQuickVerticalHeaderViewPrivate();
+
+    bool m_movableRows = false;
 };
 
 QT_END_NAMESPACE

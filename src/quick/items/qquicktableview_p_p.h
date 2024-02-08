@@ -124,7 +124,6 @@ public:
     friend class QQuickTableViewPrivate;
 };
 
-
 class Q_QUICK_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate, public QQuickSelectable
 {
 public:
@@ -239,6 +238,11 @@ public:
         PreloadRows,
         MovePreloadedItemsToPool,
         Done
+    };
+
+    enum class SectionState {
+        Idle = 0,
+        Moving
     };
 
     enum class RebuildOption {
@@ -404,6 +408,16 @@ public:
     QString forcedIncubationMode = qEnvironmentVariable("QT_TABLEVIEW_INCUBATION_MODE");
 #endif
 
+    struct SectionData {
+        int index = -1;
+        int prevIndex = -1;
+    };
+
+    QList<SectionData> visualIndices[Qt::Vertical];
+    QList<SectionData> logicalIndices[Qt::Vertical];
+
+    SectionState m_sectionState = SectionState::Idle;
+
 public:
     void init();
 
@@ -411,7 +425,7 @@ public:
 
     int modelIndexAtCell(const QPoint &cell) const;
     QPoint cellAtModelIndex(int modelIndex) const;
-    int modelIndexToCellIndex(const QModelIndex &modelIndex) const;
+    int modelIndexToCellIndex(const QModelIndex &modelIndex, bool visualIndex = true) const;
     inline bool cellIsValid(const QPoint &cell) const { return cell.x() != -1 && cell.y() != -1; }
 
     qreal sizeHintForColumn(int column) const;
@@ -598,6 +612,16 @@ public:
     virtual void updateSelection(const QRect &oldSelection, const QRect &newSelection);
     QRect selection() const;
     // ----------------
+
+    // Column reordering
+    void moveSection(int source , int destination, Qt::Orientations orientation);
+    void initializeIndexMapping();
+    void clearIndexMapping();
+    void clearSection(Qt::Orientations orientation);
+    virtual int logicalRowIndex(const int visualIndex) const;
+    virtual int logicalColumnIndex(const int visualIndex) const;
+    virtual int visualRowIndex(const int logicalIndex) const;
+    virtual int visualColumnIndex(const int logicalIndex) const;
 };
 
 class FxTableItem : public QQuickItemViewFxItem
