@@ -6,6 +6,7 @@
 #include <optional>
 
 #include <QtCore/private/qduplicatetracker_p.h>
+#include <QtQmlLS/private/qdochtmlparser_p.h>
 
 // some helper constants for the tests
 const static int positionAfterOneIndent = 5;
@@ -3639,5 +3640,63 @@ void tst_qmlls_utils::cmakeBuildCommand()
     QCOMPARE(QQmlLSUtils::cmakeBuildCommand(path), expected);
 }
 
+void tst_qmlls_utils::qdochtmlparser_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<QString>("keyword");
+    QTest::addColumn<QDocHtmlExtractor::ElementType>("elementType");
+    QTest::addColumn<QDocHtmlExtractor::ExtractionMode>("extractionMode");
+    QTest::addColumn<QString>("expectedDocumentation");
+
+    QTest::addRow("qml-object-type-extended-plaintext")
+            << testFile("qdochtmlparser/qml-qtqml-qtobject.html") << "QtObject"
+            << QDocHtmlExtractor::ElementType::QmlType
+            << QDocHtmlExtractor::ExtractionMode::Extended
+            << R"(The QtObject type is a non-visual element which contains only the objectName property.
+It can be useful to create a QtObject if you need an extremely lightweight type to enclose a set of custom properties:
+
+ import QtQuick
+
+ Item {
+     QtObject {
+         id: attributes
+         property string name
+         property int size
+         property variant attributes
+     }
+
+     Text { text: attributes.name }
+ }
+
+It can also be useful for C++ integration, as it is just a plain QObject. See the QObject documentation for further details.)";
+
+    QTest::addRow("qml-object-type-simplified-plaintext")
+            << testFile("qdochtmlparser/qml-qtqml-qtobject.html") << "QtObject"
+            << QDocHtmlExtractor::ElementType::QmlType
+            << QDocHtmlExtractor::ExtractionMode::Simplified
+            << R"(A basic QML type.)";
+
+}
+
+void tst_qmlls_utils::qdochtmlparser()
+{
+    QFETCH(QString, filePath);
+    QFETCH(QString, keyword);
+    QFETCH(QDocHtmlExtractor::ElementType, elementType);
+    QFETCH(QDocHtmlExtractor::ExtractionMode, extractionMode);
+    QFETCH(QString, expectedDocumentation);
+
+    const auto htmlCode = [](const QString &testFileName) {
+        QFile file(testFileName);
+        if (file.open(QIODeviceBase::ReadOnly | QIODevice::Text))
+            return QString::fromUtf8(file.readAll());
+        return QString{};
+    }(filePath);
+
+
+    QDocHtmlExtractor extractor(htmlCode);
+    const auto actual = extractor.extract(keyword, elementType, extractionMode);
+    QCOMPARE(actual, expectedDocumentation);
+}
 
 QTEST_MAIN(tst_qmlls_utils)
