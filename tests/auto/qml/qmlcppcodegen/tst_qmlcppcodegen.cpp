@@ -67,6 +67,7 @@ private slots:
     void compositeSingleton();
     void compositeTypeMethod();
     void consoleObject();
+    void consoleTrace();
     void construct();
     void contextParam();
     void conversionDecrement();
@@ -113,6 +114,7 @@ private slots:
     void getOptionalLookup();
     void getOptionalLookup_data();
     void getOptionalLookupOnQJSValueNonStrict();
+    void getOptionalLookupShadowed();
     void globals();
     void idAccess();
     void ignoredFunctionReturn();
@@ -202,6 +204,7 @@ private slots:
     void setLookupConversion();
     void shadowedAsCasts();
     void shadowedMethod();
+    void shadowedPrimitiveCmpEqNull();
     void shifts();
     void signalHandler();
     void signalIndexMismatch();
@@ -1106,6 +1109,32 @@ void tst_QmlCppCodegen::consoleObject()
 
     QScopedPointer<QObject> p(c.create());
     QVERIFY(!p.isNull());
+}
+
+void tst_QmlCppCodegen::consoleTrace()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/consoleTrace.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+
+#if !defined(QT_NO_DEBUG) || defined(QT_TEST_FORCE_INTERPRETER)
+    // All line numbers in debug mode or when interpreting
+
+    QTest::ignoreMessage(QtDebugMsg, R"(c (qrc:/qt/qml/TestTypes/consoleTrace.qml:6)
+b (qrc:/qt/qml/TestTypes/consoleTrace.qml:5)
+a (qrc:/qt/qml/TestTypes/consoleTrace.qml:4)
+expression for onCompleted (qrc:/qt/qml/TestTypes/consoleTrace.qml:7))");
+#else
+    // Only top-most line number otherwise
+
+    QTest::ignoreMessage(QtDebugMsg, R"(c (qrc:/qt/qml/TestTypes/consoleTrace.qml:6)
+b (qrc:/qt/qml/TestTypes/consoleTrace.qml)
+a (qrc:/qt/qml/TestTypes/consoleTrace.qml)
+expression for onCompleted (qrc:/qt/qml/TestTypes/consoleTrace.qml))");
+#endif
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
 }
 
 void tst_QmlCppCodegen::construct()
@@ -2124,6 +2153,18 @@ void tst_QmlCppCodegen::getOptionalLookupOnQJSValueNonStrict()
     QVERIFY(o);
 
     QVERIFY(o->property("b").toBool());
+}
+
+void tst_QmlCppCodegen::getOptionalLookupShadowed()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/qt/qml/TestTypes/GetOptionalLookupShadowed.qml"_s);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("res").toString(), "a");
 }
 
 void tst_QmlCppCodegen::globals()
@@ -4097,6 +4138,15 @@ void tst_QmlCppCodegen::shadowedMethod()
     QCOMPARE(o->property("athing"), QVariant::fromValue<bool>(false));
     QCOMPARE(o->property("bthing"), QVariant::fromValue(u"b"_s));
     QCOMPARE(o->property("cthing"), QVariant::fromValue(u"c"_s));
+}
+
+void tst_QmlCppCodegen::shadowedPrimitiveCmpEqNull()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/shadowedPrimitiveCmpEqNull.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 void tst_QmlCppCodegen::shifts()

@@ -443,6 +443,7 @@ private slots:
     void ambiguousComponents();
 
     void writeNumberToEnumAlias();
+    void badInlineComponentAnnotation();
 
 private:
     QQmlEngine engine;
@@ -6815,14 +6816,12 @@ void tst_qqmllanguage::bareInlineComponent()
             QVERIFY(type.module().isEmpty());
             tab1Found = true;
 
-            const QQmlType leftTab = QQmlMetaType::inlineComponentTypeForUrl(
-                    type.sourceUrl(), "LeftTab");
+            const QQmlType leftTab = QQmlMetaType::inlineComponentType(type, "LeftTab");
             QUrl leftUrl = leftTab.sourceUrl();
             leftUrl.setFragment(QString());
             QCOMPARE(leftUrl, type.sourceUrl());
 
-            const QQmlType rightTab = QQmlMetaType::inlineComponentTypeForUrl(
-                    type.sourceUrl(), "RightTab");
+            const QQmlType rightTab = QQmlMetaType::inlineComponentType(type, "RightTab");
             QUrl rightUrl = rightTab.sourceUrl();
             rightUrl.setFragment(QString());
             QCOMPARE(rightUrl, type.sourceUrl());
@@ -8512,6 +8511,39 @@ void tst_qqmllanguage::writeNumberToEnumAlias()
     QVERIFY(!o.isNull());
 
     QCOMPARE(o->property("strokeStyle").toInt(), 1);
+}
+
+void tst_qqmllanguage::badInlineComponentAnnotation()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("badICAnnotation.qml");
+    QQmlComponent c(&engine, testFileUrl("badICAnnotation.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+                QtCriticalMsg,
+                qPrintable(url.toString() + ":20: 5 should be coerced to void because the function "
+                                            "called is insufficiently annotated. The original "
+                                            "value is retained. This will change in a future "
+                                            "version of Qt."));
+    QTest::ignoreMessage(
+                QtCriticalMsg,
+                QRegularExpression(":22: IC\\([^\\)]+\\) should be coerced to void because the "
+                                   "function called is insufficiently annotated. The original "
+                                   "value is retained. This will change in a future version of "
+                                   "Qt\\."));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("a").toInt(), 5);
+
+    QObject *ic = o->property("ic").value<QObject *>();
+    QVERIFY(ic);
+
+    QCOMPARE(o->property("b").value<QObject *>(), ic);
+    QCOMPARE(o->property("c").value<QObject *>(), ic);
+    QCOMPARE(o->property("d").value<QObject *>(), nullptr);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

@@ -3294,7 +3294,10 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
         if (lhsOriginal != lhsContent || rhsOriginal != rhsContent) {
             // If either side is simply a wrapping of a specific type into a more general one, we
             // can compare the original types instead. You can't nest wrappings after all.
-            generateEqualityOperation(lhsOriginal, rhsOriginal, lhsName, rhsName, function, invert);
+            generateEqualityOperation(lhsOriginal, rhsOriginal,
+                                      conversion(lhsContent.storedType(), lhsOriginal, lhsName),
+                                      conversion(rhsContent.storedType(), rhsOriginal, rhsName),
+                                      function, invert);
             return;
         }
 
@@ -3567,10 +3570,18 @@ void QQmlJSCodeGenerator::generateInPlaceOperation(const QString &cppOperator)
 void QQmlJSCodeGenerator::generateLookup(const QString &lookup, const QString &initialization,
                                         const QString &resultPreparation)
 {
+    m_body += u"#ifndef QT_NO_DEBUG\n"_s;
+    generateSetInstructionPointer();
+    m_body += u"#endif\n"_s;
+
     if (!resultPreparation.isEmpty())
         m_body += resultPreparation + u";\n"_s;
     m_body += u"while (!"_s + lookup + u") {\n"_s;
+
+    m_body += u"#ifdef QT_NO_DEBUG\n"_s;
     generateSetInstructionPointer();
+    m_body += u"#endif\n"_s;
+
     m_body += initialization + u";\n"_s;
     generateExceptionCheck();
     if (!resultPreparation.isEmpty())

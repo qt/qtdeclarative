@@ -49,6 +49,7 @@ set(qml_files
     Enums.qml
     Foozle.qml
     GetOptionalLookupOnQJSValueNonStrict.qml
+    GetOptionalLookupShadowed.qml
     Loopy.qml
     OkType.qml
     Panel.qml
@@ -100,6 +101,7 @@ set(qml_files
     compositeTypeMethod.qml
     compositesingleton.qml
     consoleObject.qml
+    consoleTrace.qml
     construct.qml
     contextParam.qml
     conversionDecrement.qml
@@ -235,6 +237,7 @@ set(qml_files
     setLookupConversion.qml
     shadowedAsCasts.qml
     shadowedMethod.qml
+    shadowedPrimitiveCmpEqNull.qml
     shared/Slider.qml
     shifts.qml
     signal.qml

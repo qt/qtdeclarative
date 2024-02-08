@@ -455,8 +455,9 @@ static void splitElementIfNecessary(QQuadPath &path, int index)
         if (needsSplit(e))
             path.splitElementAt(index);
     } else {
-        for (int i = 0; i < e.childCount(); ++i)
-            splitElementIfNecessary(path, e.indexOfChild(i));
+        const int childCount = e.childCount();
+        for (int i = 0; i < childCount; ++i)
+            splitElementIfNecessary(path, path.indexOfChildAt(index, i));
     }
 }
 
@@ -942,13 +943,141 @@ QList<QPair<int, int>> QSGCurveProcessor::findOverlappingCandidates(const QQuadP
     return overlappingBB;
 }
 
-// Returns true if the path was changed
-bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
+// Remove paths that are nested inside another path and not required to fill the path correctly
+bool QSGCurveProcessor::removeNestedSubpaths(QQuadPath &path)
 {
-    if (path.testHint(QQuadPath::PathNonIntersecting))
+    // Ensure that the path is not intersecting first
+    Q_ASSERT(path.testHint(QQuadPath::PathNonIntersecting));
+
+    if (path.fillRule() != Qt::WindingFill) {
+        // If the fillingRule is odd-even, all internal subpaths matter
         return false;
+    }
+
+    // Store the starting and end elements of the subpaths to be able
+    // to jump quickly between them.
+    QList<int> subPathStartPoints;
+    QList<int> subPathEndPoints;
+    for (int i = 0; i < path.elementCount(); i++) {
+        if (path.elementAt(i).isSubpathStart())
+            subPathStartPoints.append(i);
+        if (path.elementAt(i).isSubpathEnd()) {
+            subPathEndPoints.append(i);
+        }
+    }
+    const int subPathCount = subPathStartPoints.size();
+
+    // If there is only one subpath, none have to be removed
+    if (subPathStartPoints.size() < 2)
+        return false;
+
+    // We set up a matrix that tells us which path is nested in which other path.
+    QList<bool> isInside;
+    bool isAnyInside = false;
+    isInside.reserve(subPathStartPoints.size() * subPathStartPoints.size());
+    for (int i = 0; i < subPathCount; i++) {
+        for (int j = 0; j < subPathCount; j++) {
+            if (i == j) {
+                isInside.append(false);
+            } else {
+                isInside.append(path.contains(path.elementAt(subPathStartPoints.at(i)).startPoint(),
+                                              subPathStartPoints.at(j), subPathEndPoints.at(j)));
+                if (isInside.last())
+                    isAnyInside = true;
+            }
+        }
+    }
+
+    // If no nested subpaths are present we can return early.
+    if (!isAnyInside)
+        return false;
+
+    // To find out which paths are filled and which not, we first calculate the
+    // rotation direction (clockwise - counterclockwise).
+    QList<bool> clockwise;
+    clockwise.reserve(subPathCount);
+    for (int i = 0; i < subPathCount; i++) {
+        float sumProduct = 0;
+        for (int j = subPathStartPoints.at(i); j <= subPathEndPoints.at(i); j++) {
+            const QVector2D startPoint = path.elementAt(j).startPoint();
+            const QVector2D endPoint = path.elementAt(j).endPoint();
+            sumProduct += (endPoint.x() - startPoint.x()) * (endPoint.y() + startPoint.y());
+        }
+        clockwise.append(sumProduct > 0);
+    }
+
+    // Set up a list that tells us which paths create filling and which path create holes.
+    // Holes in Holes and fillings in fillings can then be removed.
+    QList<bool> isFilled;
+    isFilled.reserve(subPathStartPoints.size() );
+    for (int i = 0; i < subPathCount; i++) {
+        int crossings = clockwise.at(i) ? 1 : -1;
+        for (int j = 0; j < subPathStartPoints.size(); j++) {
+            if (isInside.at(i * subPathCount + j))
+                crossings += clockwise.at(j) ? 1 : -1;
+        }
+        isFilled.append(crossings != 0);
+    }
+
+    // A helper function to find the most inner subpath that is around a subpath.
+    // Returns -1 if the subpath is a toplevel subpath.
+    auto findClosestOuterSubpath = [&](int subPath) {
+        // All paths that contain the current subPath are candidates.
+        QList<int> candidates;
+        for (int i = 0; i < subPathStartPoints.size(); i++) {
+            if (isInside.at(subPath * subPathCount + i))
+                candidates.append(i);
+        }
+        int maxNestingLevel = -1;
+        int maxNestingLevelIndex = -1;
+        for (int i = 0; i < candidates.size(); i++) {
+            int nestingLevel = 0;
+            for (int j = 0; j < candidates.size(); j++) {
+                if (isInside.at(candidates.at(i) * subPathCount + candidates.at(j))) {
+                    nestingLevel++;
+                }
+            }
+            if (nestingLevel > maxNestingLevel) {
+                maxNestingLevel = nestingLevel;
+                maxNestingLevelIndex = candidates.at(i);
+            }
+        }
+        return maxNestingLevelIndex;
+    };
+
+    bool pathChanged = false;
+    QQuadPath fixedPath;
+    fixedPath.setPathHints(path.pathHints());
+
+    // Go through all subpaths and find the closest surrounding subpath.
+    // If it is doing the same (create filling or create hole) we can remove it.
+    for (int i = 0; i < subPathCount; i++) {
+        int j = findClosestOuterSubpath(i);
+        if (j >= 0 && isFilled.at(i) == isFilled.at(j)) {
+            pathChanged = true;
+        } else {
+            for (int k = subPathStartPoints.at(i); k <= subPathEndPoints.at(i); k++)
+                fixedPath.addElement(path.elementAt(k));
+        }
+    }
+
+    if (pathChanged)
+        path = fixedPath;
+    return pathChanged;
+}
+
+// Returns true if the path was changed
+bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool removeNestedPaths)
+{
+    if (path.testHint(QQuadPath::PathNonIntersecting)) {
+        if (removeNestedPaths)
+            return removeNestedSubpaths(path);
+        else
+            return false;
+    }
+
     if (path.elementCount() < 2) {
-        path.setPathHints(path.pathHints() | QQuadPath::PathNonIntersecting);
+        path.setHint(QQuadPath::PathNonIntersecting);
         return false;
     }
 
@@ -994,11 +1123,17 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
         qCDebug(lcSGCurveIntersectionSolver) << "    between" << i.e1 << "and" << i.e2 << "at" << i.t1 << "/" << i.t2 << "->" << p1 << "/" << p2;
     }
 
-    if (intersections.isEmpty() && !alwaysReorder) {
-        qCDebug(lcSGCurveIntersectionSolver) << "Returning the path unchanged.";
+    if (intersections.isEmpty()) {
         path.setHint(QQuadPath::PathNonIntersecting);
-        return false;
+        if (removeNestedPaths) {
+            qCDebug(lcSGCurveIntersectionSolver) << "No Intersections found. Looking for enclosed subpaths.";
+            return removeNestedSubpaths(path);
+        } else {
+            qCDebug(lcSGCurveIntersectionSolver) << "Returning the path unchanged.";
+            return false;
+        }
     }
+
 
     // Store the starting and end elements of the subpaths to be able
     // to jump quickly between them. Also keep a list of handled paths,
@@ -1345,7 +1480,7 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
                 qCDebug(lcSGCurveIntersectionSolver) << "All subpaths handled. Looking for unhandled intersections.";
                 if (intersections.isEmpty()) {
                     qCDebug(lcSGCurveIntersectionSolver) << "All intersections handled. I am done.";
-                    fixedPath.setPathHints(path.pathHints() | QQuadPath::PathNonIntersecting);
+                    fixedPath.setHint(QQuadPath::PathNonIntersecting);
                     path = fixedPath;
                     return true;
                 }

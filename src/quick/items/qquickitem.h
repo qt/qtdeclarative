@@ -388,7 +388,7 @@ Q_SIGNALS:
     void stateChanged(const QString &);
     void focusChanged(bool);
     void activeFocusChanged(bool);
-    Q_REVISION(6, 7) void focusPolicyChanged();
+    Q_REVISION(6, 7) void focusPolicyChanged(Qt::FocusPolicy);
     Q_REVISION(2, 1) void activeFocusOnTabChanged(bool);
     void parentChanged(QQuickItem *);
     void transformOriginChanged(TransformOrigin);

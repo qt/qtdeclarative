@@ -183,27 +183,58 @@
 
     \section2 Style-specific C++ Extensions
 
-    Sometimes you may need to use C++ to extend your custom style. There are two
-    ways to expose such types to QML:
+    Sometimes you may need to use C++ to extend your custom style.
 
     \list
-    \li If the style that uses the type is the only style used by an application,
-        it's enough to register it with the QML engine via qmlRegisterType():
+    \li If the style that uses the type is the only style used by an
+    application, register the type with the QML engine by adding the QML_ELEMENT
+    macro and making the file part of your QML module:
+    \br
+    \br
 
+    \if defined(onlinedocs)
+        \tab {expose-cpp-to-qml}{tab-cmake}{CMake}{checked}
+        \tab {expose-cpp-to-qml}{tab-qmake}{qmake}{}
+        \tabcontent {tab-cmake}
+    \else
+        \section3 Using CMake
+    \endif
+        \badcode
+        qt_add_qml_module(ACoolItem
+            URI MyItems
+            VERSION 1.0
+            SOURCES
+                acoolcppitem.cpp acoolcppitem.h
+        )
+        \endcode
+    \if defined(onlinedocs)
+        \endtabcontent
+        \tabcontent {tab-qmake}
+    \else
+        \section3 Using QMake
+    \endif
         \code
-        qmlRegisterType<ACoolCppItem>("MyApp", 1, 0, "ACoolItem");
+        CONFIG += qmltypes
+        QML_IMPORT_NAME = MyItems
+        QML_IMPORT_MAJOR_VERSION = 1
         \endcode
 
-        See \l {Using C++ Data From QML} for more information about this.
-    \li If the style that uses the type is one of many styles used by an
-        application, it may be better to only register it when necessary. This
-        is the point at which it would make sense to implement your own
-        \l {Creating C++ Plugins for QML}{QML plugin}.
+        If the header the class is declared in is not accessible from your
+        project's include path, you may have to amend the include path so
+        that the generated registration code can be compiled.
 
-        Using a plugin as part of your style is not that much different from
-        using a set of QML files. The only difference is that the plugin and
-        its \c qmldir file must be present in the same directory as the QML
-        files.
+        \code
+        INCLUDEPATH += MyItems
+        \endcode
+    \if defined(onlinedocs)
+        \endtabcontent
+    \endif
+
+        See \l {Defining QML Types from C++} and \l {Building a QML application}
+        for more information.
+    \li If the style that uses the type is one of many styles used by an
+        application, consider putting each style into a separate module. The
+        modules will then be loaded on demand.
     \endlist
 
     \section3 Considerations for custom styles

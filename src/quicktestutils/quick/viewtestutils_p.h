@@ -168,7 +168,7 @@ namespace QQuickViewTestUtils
         int m_rowCount;
     };
 
-#if QT_CONFIG(quick_itemview)
+#if QT_CONFIG(quick_itemview) && defined(QT_BUILD_INTERNAL)
     [[nodiscard]] bool testVisibleItems(const QQuickItemViewPrivate *priv,
         bool *nonUnique, FxViewItem **failItem, int *expectedIdx);
 #endif

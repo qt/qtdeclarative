@@ -205,8 +205,8 @@ void QQuickItemGenerator::generateGradient(const QGradient *grad, QQuickShapePat
             quickGrad->setCenterX(radGrad->center().x());
             quickGrad->setCenterY(radGrad->center().y());
             quickGrad->setCenterRadius(radGrad->radius());
-            quickGrad->setFocalX(radGrad->center().x());
-            quickGrad->setFocalY(radGrad->center().y());
+            quickGrad->setFocalX(radGrad->focalPoint().x());
+            quickGrad->setFocalY(radGrad->focalPoint().y());
             setStops(quickGrad, radGrad->stops());
 
             shapePath->setFillGradient(quickGrad);
@@ -216,7 +216,9 @@ void QQuickItemGenerator::generateGradient(const QGradient *grad, QQuickShapePat
 
 void QQuickItemGenerator::generateNode(NodeInfo &info)
 {
-    qCWarning(lcQuickVectorGraphics) << "//### SVG NODE NOT IMPLEMENTED: " << info.nodeId << " type: " << info.typeName;
+    qCWarning(lcQuickVectorGraphics) << "SVG NODE NOT IMPLEMENTED: "
+                                     << info.nodeId
+                                     << " type: " << info.typeName;
 }
 
 void QQuickItemGenerator::generateTextNode(TextNodeInfo &info)

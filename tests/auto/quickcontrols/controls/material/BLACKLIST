@@ -11,3 +11,11 @@ qnx
 
 [ComboBox::test_keyClose]
 macos arm ci # QTBUG-102817
+
+# QTBUG-122067
+[ToolTip::test_attached]
+macos
+
+# QTBUG-122067
+[ToolTip::test_attachedSizeBug]
+macos

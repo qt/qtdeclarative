@@ -321,11 +321,17 @@ QVector2D QQuadPath::closestPointOnLine(const QVector2D &p, const QVector2D &sp,
 // NOTE: it is assumed that subpaths are closed
 bool QQuadPath::contains(const QVector2D &point) const
 {
+    return contains(point, 0, elementCount() - 1);
+}
+
+bool QQuadPath::contains(const QVector2D &point, int fromIndex, int toIndex) const
+{
     // if (!controlPointRect().contains(pt) : good opt when we add cpr caching
     //     return false;
 
     int winding_number = 0;
-    for (const Element &e : m_elements) {
+    for (int ei = fromIndex; ei <= toIndex; ei++) {
+        const Element &e = m_elements.at(ei);
         int dir = 1;
         float y1 = e.startPoint().y();
         float y2 = e.endPoint().y();
@@ -462,6 +468,13 @@ void QQuadPath::addElement(const QVector2D &control, const QVector2D &endPoint, 
     elem.m_isSubpathStart = subPathToStart;
     subPathToStart = false;
     currentPoint = endPoint;
+}
+
+void QQuadPath::addElement(const Element &e)
+{
+    subPathToStart = false;
+    currentPoint = e.endPoint();
+    m_elements.append(e);
 }
 
 #if !defined(QQUADPATH_CONVEX_CHECK_ERROR_MARGIN)
@@ -645,6 +658,7 @@ QQuadPath QQuadPath::subPathsClosed(bool *didClose) const
     Q_ASSERT(m_childElements.isEmpty());
     bool closed = false;
     QQuadPath res = *this;
+    res.subPathToStart = false;
     res.m_elements = {};
     res.m_elements.reserve(elementCount());
     int subStart = -1;

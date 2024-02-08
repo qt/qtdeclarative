@@ -511,8 +511,13 @@ void QQuickTextPrivate::updateSize()
         layedOutTextRect = QRectF(QPointF(0,0), dsize);
         size = QSizeF(extra->doc->idealWidth(),dsize.height());
 
-        QFontMetricsF fm(font);
-        updateBaseline(fm.ascent(), q->height() - size.height() - vPadding);
+
+        qreal baseline = QFontMetricsF(font).ascent();
+        QTextBlock firstBlock = extra->doc->firstBlock();
+        if (firstBlock.isValid() && firstBlock.layout() != nullptr && firstBlock.lineCount() > 0)
+            baseline = firstBlock.layout()->lineAt(0).ascent();
+
+        updateBaseline(baseline, q->height() - size.height() - vPadding);
 
         //### need to confirm cost of always setting these for richText
         internalWidthUpdate = true;

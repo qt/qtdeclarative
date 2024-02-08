@@ -44,7 +44,8 @@ public:
                               int subdivisions = 3);
     static bool solveOverlaps(QQuadPath &path);
     static QList<QPair<int, int>> findOverlappingCandidates(const QQuadPath &path);
-    static bool solveIntersections(QQuadPath &path, bool alwaysReorder = true);
+    static bool removeNestedSubpaths(QQuadPath &path);
+    static bool solveIntersections(QQuadPath &path, bool removeNestedPaths = true);
 };
 
 QT_END_NAMESPACE

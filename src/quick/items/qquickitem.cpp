@@ -2263,6 +2263,11 @@ void QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
 */
 
 /*!
+    \fn void QQuickItem::focusPolicyChanged(Qt::FocusPolicy)
+    \internal
+*/
+
+/*!
     \fn void QQuickItem::activeFocusOnTabChanged(bool)
     \internal
 */
@@ -7978,7 +7983,7 @@ void QQuickItem::setFocusPolicy(Qt::FocusPolicy policy)
 
     d->focusPolicy = policy;
     setActiveFocusOnTab(policy & Qt::TabFocus);
-    emit focusPolicyChanged();
+    emit focusPolicyChanged(policy);
 }
 
 /*!
