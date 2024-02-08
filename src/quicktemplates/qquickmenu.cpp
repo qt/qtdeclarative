@@ -353,10 +353,18 @@ void QQuickMenuPrivate::syncWithNativeMenu()
 
     handle->setText(title);
     handle->setEnabled(q->isEnabled());
-    handle->setVisible(visible);
     handle->setMinimumWidth(q->implicitWidth());
 //    nativeHandle->setMenuType(m_type);
     handle->setFont(q->font());
+
+    // Note: the QQuickMenu::visible property is used to open or close the menu.
+    // This is in contrast to QPlatformMenu::visible, which tells if the menu
+    // should be visible in the menubar or not (if it belongs to one). To control
+    // if a QPlatformMenu should be open, we instead use QPlatformMenu::showPopup()
+    // and dismiss(). As such, we don't want to call handle->setVisible(visible)
+    // from this function since we always want the menu to be visible in the menubar
+    // (if it belongs to one). The currently only way to hide a menu from a menubar is
+    // to instead call MenuBar.removeMenu(menu).
 
 //    if (m_menuBar && m_menuBar->handle())
 //        m_menuBar->handle()->syncMenu(handle);
