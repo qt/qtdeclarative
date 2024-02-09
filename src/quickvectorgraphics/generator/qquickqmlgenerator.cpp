@@ -84,7 +84,7 @@ QString QQuickQmlGenerator::commentString() const
     return m_commentString;
 }
 
-void QQuickQmlGenerator::generateNodeBase(NodeInfo &info)
+void QQuickQmlGenerator::generateNodeBase(const NodeInfo &info)
 {
     m_indentLevel++;
     if (!info.nodeId.isEmpty())
@@ -118,13 +118,13 @@ void QQuickQmlGenerator::generateNodeBase(NodeInfo &info)
     m_indentLevel--;
 }
 
-bool QQuickQmlGenerator::generateDefsNode(NodeInfo &info)
+bool QQuickQmlGenerator::generateDefsNode(const NodeInfo &info)
 {
     stream() << "// skipping DEFS \"" << info.nodeId << "\"";
     return false;
 }
 
-void QQuickQmlGenerator::generateImageNode(ImageNodeInfo &info)
+void QQuickQmlGenerator::generateImageNode(const ImageNodeInfo &info)
 {
     QString fn = info.image.hasAlphaChannel() ? QStringLiteral("svg_asset_%1.png").arg(info.image.cacheKey())
                                               : QStringLiteral("svg_asset_%1.jpg").arg(info.image.cacheKey());
@@ -148,7 +148,7 @@ void QQuickQmlGenerator::generateImageNode(ImageNodeInfo &info)
     stream() << "}";
 }
 
-void QQuickQmlGenerator::generatePath(PathNodeInfo &info)
+void QQuickQmlGenerator::generatePath(const PathNodeInfo &info)
 {
     if (m_inShapeItem) {
         if (!info.isDefaultTransform)
@@ -172,9 +172,8 @@ void QQuickQmlGenerator::generatePath(PathNodeInfo &info)
     }
 }
 
-void QQuickQmlGenerator::generateGradient(const QGradient *grad, QQuickShapePath *shapePath, const QRectF &boundingRect)
+void QQuickQmlGenerator::generateGradient(const QGradient *grad, const QRectF &boundingRect)
 {
-    Q_UNUSED(shapePath);
     if (grad->type() == QGradient::LinearGradient) {
         auto *linGrad = static_cast<const QLinearGradient *>(grad);
         stream() << "fillGradient: LinearGradient {";
@@ -253,7 +252,7 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     if (!(pathSelector & QQuickVectorGraphics::FillPath)) {
         stream() << "fillColor: \"transparent\"";
     } else if (auto *grad = info.grad) {
-        generateGradient(grad, nullptr, boundingRect);
+        generateGradient(grad, boundingRect);
     } else {
         stream() << "fillColor: \"" << info.fillColor << "\"";
 
@@ -277,7 +276,7 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     stream() << "}";
 }
 
-void QQuickQmlGenerator::generateNode(NodeInfo &info)
+void QQuickQmlGenerator::generateNode(const NodeInfo &info)
 {
     stream() << "// Missing Implementation for SVG Node: " << info.typeName;
     stream() << "// Adding an empty Item and skipping";
@@ -286,7 +285,7 @@ void QQuickQmlGenerator::generateNode(NodeInfo &info)
     stream() << "}";
 }
 
-void QQuickQmlGenerator::generateTextNode(TextNodeInfo &info)
+void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
 {
     static int counter = 0;
 
@@ -343,7 +342,7 @@ void QQuickQmlGenerator::generateTextNode(TextNodeInfo &info)
     stream() << "}";
 }
 
-void QQuickQmlGenerator::generateStructureNode(StructureNodeInfo &info)
+void QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
 {
     if (info.stage == StructureNodeInfo::StructureNodeStage::Start) {
         if (!info.forceSeparatePaths && info.isPathContainer) {
@@ -380,7 +379,7 @@ void QQuickQmlGenerator::generateStructureNode(StructureNodeInfo &info)
     }
 }
 
-void QQuickQmlGenerator::generateRootNode(StructureNodeInfo &info)
+void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
 {
     if (info.stage == StructureNodeInfo::StructureNodeStage::Start) {
         m_indentLevel = 0;

@@ -47,15 +47,14 @@ public:
     void generate();
 
 protected:
-    virtual void generateNodeBase(NodeInfo &info) = 0;
-    virtual bool generateDefsNode(NodeInfo &info) = 0;
-    virtual void generateImageNode(ImageNodeInfo &info) = 0;
-    virtual void generatePath(PathNodeInfo &info) = 0;
-    virtual void generateNode(NodeInfo &info) = 0;
-    virtual void generateTextNode(TextNodeInfo &info) = 0;
-    virtual void generateStructureNode(StructureNodeInfo &info) = 0;
-    virtual void generateRootNode(StructureNodeInfo &info) = 0;
-    virtual void generateGradient(const QGradient *grad, QQuickShapePath *shapePath, const QRectF &boundingRect) = 0;
+    virtual void generateNodeBase(const NodeInfo &info) = 0;
+    virtual bool generateDefsNode(const NodeInfo &info) = 0;
+    virtual void generateImageNode(const ImageNodeInfo &info) = 0;
+    virtual void generatePath(const PathNodeInfo &info) = 0;
+    virtual void generateNode(const NodeInfo &info) = 0;
+    virtual void generateTextNode(const TextNodeInfo &info) = 0;
+    virtual void generateStructureNode(const StructureNodeInfo &info) = 0;
+    virtual void generateRootNode(const StructureNodeInfo &info) = 0;
     virtual void outputShapePath(const PathNodeInfo &info, const QPainterPath *path, const QQuadPath *quadPath, QQuickVectorGraphics::PathSelector pathSelector, const QRectF &boundingRect) = 0;
     void optimizePaths(const PathNodeInfo &info);
 

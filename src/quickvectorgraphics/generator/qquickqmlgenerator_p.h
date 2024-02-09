@@ -36,18 +36,18 @@ public:
     QString commentString() const;
 
 protected:
-    void generateNodeBase(NodeInfo &info) override;
-    bool generateDefsNode(NodeInfo &info) override;
-    void generateImageNode(ImageNodeInfo &info) override;
-    void generatePath(PathNodeInfo &info) override;
-    void generateNode(NodeInfo &info) override;
-    void generateTextNode(TextNodeInfo &info) override;
-    void generateStructureNode(StructureNodeInfo &info) override;
-    void generateRootNode(StructureNodeInfo &info) override;
-    void generateGradient(const QGradient *grad, QQuickShapePath *shapePath, const QRectF &boundingRect) override;
+    void generateNodeBase(const NodeInfo &info) override;
+    bool generateDefsNode(const NodeInfo &info) override;
+    void generateImageNode(const ImageNodeInfo &info) override;
+    void generatePath(const PathNodeInfo &info) override;
+    void generateNode(const NodeInfo &info) override;
+    void generateTextNode(const TextNodeInfo &info) override;
+    void generateStructureNode(const StructureNodeInfo &info) override;
+    void generateRootNode(const StructureNodeInfo &info) override;
     void outputShapePath(const PathNodeInfo &info, const QPainterPath *path, const QQuadPath *quadPath, QQuickVectorGraphics::PathSelector pathSelector, const QRectF &boundingRect) override;
 
 private:
+    void generateGradient(const QGradient *grad, const QRectF &boundingRect);
     QString indent();
     GeneratorStream stream();
     const char *shapeName() const;

@@ -45,7 +45,7 @@ struct ImageNodeInfo : NodeInfo
 struct PathNodeInfo : NodeInfo
 {
     QPainterPath painterPath;
-    Qt::FillRule fillRule = Qt::FillRule::OddEvenFill;
+    Qt::FillRule fillRule = Qt::FillRule::WindingFill;
     Qt::PenCapStyle capStyle = Qt::SquareCap;
     QString strokeColor;
     qreal strokeWidth;
