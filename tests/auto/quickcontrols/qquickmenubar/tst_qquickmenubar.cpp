@@ -1012,7 +1012,7 @@ void tst_qquickmenubar::applicationWindow()
     engine.setInitialProperties({{ "requestNative", initialRequestNative }, { "visible", initialVisible }});
     engine.load(testFileUrl("menus.qml"));
 
-    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
     QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
