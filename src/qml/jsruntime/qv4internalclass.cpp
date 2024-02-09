@@ -67,12 +67,11 @@ void PropertyHash::detach(bool grow, int classSize)
 
 SharedInternalClassDataPrivate<PropertyKey>::SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate<PropertyKey> &other)
     : refcount(1),
-      engine(other.engine),
-      data(nullptr)
+      engine(other.engine)
 {
     if (other.alloc()) {
         const uint s = other.size();
-        data = MemberData::allocate(engine, other.alloc(), other.data);
+        data.set(engine, MemberData::allocate(engine, other.alloc(), other.data));
         setSize(s);
     }
 }
@@ -82,7 +81,7 @@ SharedInternalClassDataPrivate<PropertyKey>::SharedInternalClassDataPrivate(cons
     : refcount(1),
       engine(other.engine)
 {
-    data = MemberData::allocate(engine, other.alloc(), nullptr);
+    data.set(engine, MemberData::allocate(engine, other.alloc(), nullptr));
     memcpy(data, other.data, sizeof(Heap::MemberData) - sizeof(Value) + pos*sizeof(Value));
     data->values.size = pos + 1;
     data->values.set(engine, pos, Value::fromReturnedValue(value.id()));
@@ -92,7 +91,7 @@ void SharedInternalClassDataPrivate<PropertyKey>::grow()
 {
     const uint a = alloc() * 2;
     const uint s = size();
-    data = MemberData::allocate(engine, a, data);
+    data.set(engine, MemberData::allocate(engine, a, data));
     setSize(s);
     Q_ASSERT(alloc() >= a);
 }
