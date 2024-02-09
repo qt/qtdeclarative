@@ -370,6 +370,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     const size_t guardPages = 2 * WTF::pageSize();
 
     memoryManager = new QV4::MemoryManager(this);
+    // we don't want to run the gc while the initial setup is not done; not even in aggressive mode
+    memoryManager->gcBlocked = true;
+    auto cleanup = qScopeGuard([this] { memoryManager->gcBlocked = false; } );
     // reserve space for the JS stack
     // we allow it to grow to a bit more than m_maxJSStackSize, as we can overshoot due to ScopedValues
     // allocated outside of JIT'ed methods.
