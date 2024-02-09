@@ -320,12 +320,6 @@ public:
     typename ManagedType::Data *allocIC()
     {
         Heap::Base *b = *allocate(&icAllocator, align(sizeof(typename ManagedType::Data)));
-        if (m_markStack) {
-            // If the gc is running right now, it will not have a chance to mark the newly created item
-            // and may therefore sweep it right away.
-            // Protect the new object from the current GC run to avoid this.
-            b->setMarkBit();
-        }
         return static_cast<typename ManagedType::Data *>(b);
     }
 

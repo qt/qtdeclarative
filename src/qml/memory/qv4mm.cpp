@@ -882,13 +882,6 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
 
     HeapItem *m = allocate(&blockAllocator, stringSize);
     memset(m, 0, stringSize);
-    if (m_markStack) {
-        // If the gc is running right now, it will not have a chance to mark the newly created item
-        // and may therefore sweep it right away.
-        // Protect the new object from the current GC run to avoid this.
-        m->as<Heap::Base>()->setMarkBit();
-    }
-
     return *m;
 }
 
@@ -904,13 +897,6 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
 
     HeapItem *m = allocate(&blockAllocator, size);
     memset(m, 0, size);
-    if (m_markStack) {
-        // If the gc is running right now, it will not have a chance to mark the newly created item
-        // and may therefore sweep it right away.
-        // Protect the new object from the current GC run to avoid this.
-        m->as<Heap::Base>()->setMarkBit();
-    }
-
     return *m;
 }
 
@@ -942,16 +928,6 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(const QV4::VTable *vtable
             Chunk::setBit(c->objectBitmap, index);
             Chunk::clearBit(c->extendsBitmap, index);
         }
-        /* If the gc is running, then o will be black,as allocData allocates black during gc
-           However, m points to "clear" memory. We must mark it, too, otherwise it might be
-           collected. Note that this must happen after (un)setting the object and extends bit
-           otherwise we hit an assertion.
-           Actually, the write barrier of o->memberData would save us (at leas as long as we
-           keep using a Dijkstra style barrier; however, setting the mark bit directly avoids
-           some unnecessary work.
-         */
-        if (m_markStack) // gc running
-            m->setMarkBit();
         o->memberData.set(engine, m);
         m->internalClass.set(engine, engine->internalClasses(EngineBase::Class_MemberData));
         Q_ASSERT(o->memberData->internalClass);
