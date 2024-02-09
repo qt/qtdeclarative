@@ -1837,7 +1837,15 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     } else if (d->inDestructor) {
         d->destroyDimmer();
     } else {
-        // NOTE: if setParentItem is called from the dtor, this bypasses virtual dispatch and calls QQuickPopup::close() directly
+        // Reset transition manager state when its parent window destroyed
+        if (!d->window && d->transitionManager.isRunning()) {
+            if (d->transitionState == QQuickPopupPrivate::EnterTransition)
+                d->finalizeEnterTransition();
+            else if (d->transitionState == QQuickPopupPrivate::ExitTransition)
+                d->finalizeExitTransition();
+        }
+        // NOTE: if setParentItem is called from the dtor, this bypasses virtual dispatch and calls
+        // QQuickPopup::close() directly
         close();
     }
     d->setWindow(parent ? parent->window() : nullptr);
