@@ -12,6 +12,7 @@ set(cpp_sources
     enumProperty.h
     gadgetwithenum.h
     invisible.h
+    listprovider.h
     multiforeign.h
     objectwithmethod.h
     person.cpp person.h
@@ -39,6 +40,7 @@ set(qml_files
     Cycle1.qml
     Cycle2.qml
     Cycle3.qml
+    CppMethodListReturnType.qml
     Dummy.qml
     Enums.qml
     Foozle.qml

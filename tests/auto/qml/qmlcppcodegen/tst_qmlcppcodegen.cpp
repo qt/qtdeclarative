@@ -66,6 +66,7 @@ private slots:
     void conversionInDeadCode();
     void conversions();
     void convertToOriginalReadAcumulatorForUnaryOperators();
+    void cppMethodListReturnType();
     void cppValueTypeList();
     void dateConversions();
     void deadShoeSize();
@@ -1278,6 +1279,17 @@ void tst_QmlCppCodegen::convertToOriginalReadAcumulatorForUnaryOperators()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_QmlCppCodegen::cppMethodListReturnType()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/CppMethodListReturnType.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("list").toList()[2].toInt(), 2);
 }
 
 void tst_QmlCppCodegen::cppValueTypeList()
