@@ -414,7 +414,9 @@ public:
     std::size_t unmanagedHeapSizeGCLimit;
     std::size_t usedSlotsAfterLastFullSweep = 0;
 
-    bool gcBlocked = false;
+    enum Blockness : quint8 {Unblocked, NormalBlocked, InCriticalSection };
+
+    Blockness gcBlocked = Unblocked;
     bool aggressiveGC = false;
     bool gcStats = false;
     bool gcCollectorStats = false;

@@ -1006,7 +1006,13 @@ void MemoryManager::onEventLoop()
 {
     if (engine->inShutdown)
         return;
-    gcBlocked = false;
+    if (gcBlocked == InCriticalSection) {
+        QMetaObject::invokeMethod(engine->publicEngine, [this]{
+            onEventLoop();
+        }, Qt::QueuedConnection);
+        return;
+    }
+    gcBlocked = NormalBlocked;
     if (gcStateMachine->inProgress()) {
         runGC();
     }
@@ -1137,11 +1143,11 @@ static size_t dumpBins(BlockAllocator *b, const char *title)
 
 void MemoryManager::runGC()
 {
-    if (gcBlocked) {
+    if (gcBlocked != Unblocked) {
         return;
     }
 
-    gcBlocked = true;
+    gcBlocked = MemoryManager::NormalBlocked;
 
     if (gcStats) {
         statistics.maxReservedMem = qMax(statistics.maxReservedMem, getAllocatedMem());

@@ -317,10 +317,10 @@ void tst_qv4mm::sharedInternalClassDataMarking()
     QVERIFY(!engine.memoryManager->gcBlocked);
     // no scoped classes, as that would defeat the point of the test
     // we block the gc instead so that the allocation can't trigger the gc
-    engine.memoryManager->gcBlocked = true;
+    engine.memoryManager->gcBlocked = QV4::MemoryManager::InCriticalSection;
     QV4::Heap::String *s = engine.newString(QString::fromLatin1("test"));
     QV4::PropertyKey id = engine.identifierTable->asPropertyKeyImpl(s);
-    engine.memoryManager->gcBlocked = false;
+    engine.memoryManager->gcBlocked = QV4::MemoryManager::Unblocked;
     QVERIFY(!id.asStringOrSymbol()->isMarked());
 
     auto sm = engine.memoryManager->gcStateMachine.get();

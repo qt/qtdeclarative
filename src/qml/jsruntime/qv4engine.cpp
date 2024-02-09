@@ -371,8 +371,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     memoryManager = new QV4::MemoryManager(this);
     // we don't want to run the gc while the initial setup is not done; not even in aggressive mode
-    memoryManager->gcBlocked = true;
-    auto cleanup = qScopeGuard([this] { memoryManager->gcBlocked = false; } );
+    memoryManager->gcBlocked = MemoryManager::InCriticalSection;
+    auto cleanup = qScopeGuard([this] { memoryManager->gcBlocked = MemoryManager::Unblocked; } );
     // reserve space for the JS stack
     // we allow it to grow to a bit more than m_maxJSStackSize, as we can overshoot due to ScopedValues
     // allocated outside of JIT'ed methods.

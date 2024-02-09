@@ -72,20 +72,33 @@ static void dumpConstantTable(const StaticValue *constants, uint count)
 
 void ExecutableCompilationUnit::populate()
 {
+    /* In general, we should use QV4::Scope whenever we allocate heap objects, and employ write barriers
+       for member variables pointing to heap objects. However, ExecutableCompilationUnit is special, as it
+       is always part of the root set. So instead of using scopde allocations and write barriers, we use a
+       slightly different approach: We temporarily block the gc from running. Afterwards, at the end of the
+       function we check whether the gc was already running, and mark the ExecutableCompilationUnit. This
+       ensures that all the newly allocated objects of the compilation unit will be marked in turn.
+       If the gc was not running, we don't have to do anything, because everything will be marked when the
+       gc starts marking the root set at the start of a run.
+     */
     const CompiledData::Unit *data = m_compilationUnit->data;
+    auto oldState = std::exchange(engine->memoryManager->gcBlocked, MemoryManager::InCriticalSection);
+    auto cleanup = qScopeGuard([this, oldState]() {
+        engine->memoryManager->gcBlocked = oldState;
+        if (oldState != MemoryManager::Unblocked)
+            this->markObjects(engine->memoryManager->markStack());
+    });
 
     Q_ASSERT(!runtimeStrings);
     Q_ASSERT(engine);
     Q_ASSERT(data);
     const quint32 stringCount = totalStringCount();
-    // strings need to be 0 in case a GC run happens while we're within the loop below
     runtimeStrings = (QV4::Heap::String **)calloc(stringCount, sizeof(QV4::Heap::String*));
     for (uint i = 0; i < stringCount; ++i)
         runtimeStrings[i] = engine->newString(stringAt(i));
 
-    // zero-initialize regexps in case a GC run happens while we're within the loop below
     runtimeRegularExpressions
-            = new QV4::Value[data->regexpTableSize] {};
+            = new QV4::Value[data->regexpTableSize];
     for (uint i = 0; i < data->regexpTableSize; ++i) {
         const CompiledData::RegExp *re = data->regexpAt(i);
         uint f = re->flags();
@@ -117,7 +130,6 @@ void ExecutableCompilationUnit::populate()
     }
 
     if (data->jsClassTableSize) {
-        // zero the regexps with calloc in case a GC run happens while we're within the loop below
         runtimeClasses
                 = (QV4::Heap::InternalClass **)calloc(data->jsClassTableSize,
                                                       sizeof(QV4::Heap::InternalClass *));
