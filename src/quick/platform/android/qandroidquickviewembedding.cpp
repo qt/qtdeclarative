@@ -51,17 +51,23 @@ namespace QtAndroidQuickViewEmbedding
             QQuickView *view = new QQuickView(parentWindow);
             QQmlEngine *engine = view->engine();
             new SignalHelper(view);
-            view->setSource(qmlUrl);
+            QObject::connect(view, &QQuickView::statusChanged,
+                             [qtViewObject](QQuickView::Status status) {
+                                 qtViewObject.callMethod<void>("handleStatusChange", status);
+                             });
+
             view->setColor(QColor(Qt::transparent));
             view->setWidth(width);
             view->setHeight(height);
             for (const QString &path : importPaths)
                 engine->addImportPath(path);
+
             const QtJniTypes::QtWindow window = reinterpret_cast<jobject>(view->winId());
             qtViewObject.callMethod<void>("addQtWindow",
                                           window,
                                           reinterpret_cast<jlong>(view),
                                           parentWindowReference);
+            view->setSource(qmlUrl);
         });
     }
 
