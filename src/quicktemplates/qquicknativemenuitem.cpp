@@ -72,16 +72,28 @@ QQuickNativeMenuItem *QQuickNativeMenuItem::createFromNonNativeItem(
     auto *nativeMenuItem = nativeMenuItemPtr.release();
     switch (type) {
     case Type::Action:
+        // Ensure that the action is triggered when the user clicks on a native menu item.
         connect(nativeMenuItem->m_handle.get(), &QPlatformMenuItem::activated,
                 nativeMenuItem->action(), [nativeMenuItem, parentMenu](){
             nativeMenuItem->action()->trigger(parentMenu);
         });
+        // Handle programmatic changes in the Action.
+        connect(nativeMenuItem->action(), &QQuickAction::textChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
+        connect(nativeMenuItem->action(), &QQuickAction::iconChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
+        connect(nativeMenuItem->action(), &QQuickAction::enabledChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
+        connect(nativeMenuItem->action(), &QQuickAction::checkedChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
+        connect(nativeMenuItem->action(), &QQuickAction::checkableChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
         break;
     case Type::SubMenu:
         nativeMenuItem->m_handle->setMenu(QQuickMenuPrivate::get(
             nativeMenuItem->subMenu())->handle.get());
+
+        // Handle programmatic changes in the Menu.
+        connect(nativeMenuItem->subMenu(), &QQuickMenu::enabledChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
+        connect(nativeMenuItem->subMenu(), &QQuickMenu::titleChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
         break;
     case Type::MenuItem:
+        // Ensure that the MenuItem is clicked when the user clicks on a native menu item.
         connect(nativeMenuItem->m_handle.get(), &QPlatformMenuItem::activated,
                 menuItem, [menuItem](){
             // This changes the checked state, which we need when syncing but also to ensure that
@@ -90,6 +102,12 @@ QQuickNativeMenuItem *QQuickNativeMenuItem::createFromNonNativeItem(
             // The same applies here: allow users to respond to the MenuItem's clicked signal.
             QQuickAbstractButtonPrivate::get(menuItem)->click();
         });
+        // Handle programmatic changes in the MenuItem.
+        connect(menuItem, &QQuickMenuItem::textChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
+        connect(menuItem, &QQuickMenuItem::iconChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
+        connect(menuItem, &QQuickMenuItem::enabledChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
+        connect(menuItem, &QQuickMenuItem::checkedChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
+        connect(menuItem, &QQuickMenuItem::checkableChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
         break;
     case Type::Separator:
         break;
@@ -195,17 +213,6 @@ void QQuickNativeMenuItem::sync()
     qCDebug(lcNativeMenuItem) << "sync called on" << debugText() << "handle" << m_handle.get()
         << "enabled:" << enabled << "isSeparator" << isSeparator << "checkable" << checkable
         << "checked" << checked << "text" << text;
-}
-
-void QQuickNativeMenuItem::reset()
-{
-    qCDebug(lcNativeMenuItem) << "reset called on" << debugText();
-    m_parentMenu = nullptr;
-    m_iconLoader = nullptr;
-    m_handle->setMenu(nullptr);
-    m_handle.reset();
-    m_shortcutId = -1;
-    m_type = Type::Unknown;
 }
 
 QQuickNativeIconLoader *QQuickNativeMenuItem::iconLoader() const

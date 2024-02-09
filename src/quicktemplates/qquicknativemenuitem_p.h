@@ -40,7 +40,6 @@ public:
     QQuickMenuSeparator *separator() const;
     QPlatformMenuItem *handle() const;
     void sync();
-    void reset();
 
     QQuickNativeIconLoader *iconLoader() const;
 

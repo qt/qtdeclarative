@@ -429,12 +429,10 @@ void QQuickMenuPrivate::recursivelyDestroyNativeSubMenus(QQuickMenu *menu)
     qCDebug(lcNativeMenus) << "recursivelyDestroyNativeSubMenus called with" << menu << "...";
 
     while (!menuPrivate->nativeItems.isEmpty()) {
-        QQuickNativeMenuItem *item = menuPrivate->nativeItems.takeFirst();
+        std::unique_ptr<QQuickNativeMenuItem> item(menuPrivate->nativeItems.takeFirst());
         qCDebug(lcNativeMenus) << "- taking and destroying" << item->debugText();
         if (QQuickMenu *subMenu = item->subMenu())
             recursivelyDestroyNativeSubMenus(subMenu);
-        item->reset();
-        item->deleteLater();
     }
 
     menuPrivate->resetNativeData();
@@ -609,20 +607,15 @@ void QQuickMenuPrivate::removeNativeItem(int index)
     Q_ASSERT_X(index >= 0 && index < nativeItems.size(), Q_FUNC_INFO, qPrintable(QString::fromLatin1(
         "index %1 is less than 0 or greater than or equal to %2").arg(index).arg(nativeItems.size())));
 
-    QQuickNativeMenuItem *nativeItem = nativeItems.takeAt(index);
+    // We can delete the item synchronously because there aren't any external (e.g. QML)
+    // references to it.
+    std::unique_ptr<QQuickNativeMenuItem> nativeItem(nativeItems.takeAt(index));
     qCDebug(lcNativeMenus) << "removing native item" << nativeItem->debugText() << "at index" << index
         << "from" << q_func() << "...";
     if (QQuickMenu *subMenu = nativeItem->subMenu())
         recursivelyDestroyNativeSubMenus(subMenu);
 
     handle->removeMenuItem(nativeItem->handle());
-    // We call deleteLater on the native item, but our QObject destructor will
-    // synchronously destroy any Actions we own before the native item is destroyed.
-    // In the meantime, QQuickNativeMenuItem code that uses the action could be executed,
-    // so we need to make sure that the native items don't have a reference to the actions,
-    // hence the call to reset().
-    nativeItem->reset();
-    nativeItem->deleteLater();
     syncWithNativeMenu();
 
     qCDebug(lcNativeMenus).nospace() << "... after removing item at index " << index
