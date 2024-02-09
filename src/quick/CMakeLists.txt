@@ -646,8 +646,6 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_quick_positioners
     SOURCES
         items/qquickpositioners.cpp items/qquickpositioners_p.h
         items/qquickpositioners_p_p.h
-    NO_UNITY_BUILD_SOURCES
-        items/qquickpositioners.cpp # redefinition of 'watchedChanges' (from qquickloader.cpp)
 )
 
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_quick_flipable

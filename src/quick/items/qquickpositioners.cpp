@@ -12,7 +12,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static const QQuickItemPrivate::ChangeTypes watchedChanges
+static const QQuickItemPrivate::ChangeTypes positionerWatchedChanges
     = QQuickItemPrivate::Geometry
     | QQuickItemPrivate::SiblingOrder
     | QQuickItemPrivate::Visibility
@@ -21,13 +21,13 @@ static const QQuickItemPrivate::ChangeTypes watchedChanges
 void QQuickBasePositionerPrivate::watchChanges(QQuickItem *other)
 {
     QQuickItemPrivate *otherPrivate = QQuickItemPrivate::get(other);
-    otherPrivate->addItemChangeListener(this, watchedChanges);
+    otherPrivate->addItemChangeListener(this, positionerWatchedChanges);
 }
 
 void QQuickBasePositionerPrivate::unwatchChanges(QQuickItem* other)
 {
     QQuickItemPrivate *otherPrivate = QQuickItemPrivate::get(other);
-    otherPrivate->removeItemChangeListener(this, watchedChanges);
+    otherPrivate->removeItemChangeListener(this, positionerWatchedChanges);
 }
 
 
