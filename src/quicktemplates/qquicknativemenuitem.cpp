@@ -12,6 +12,7 @@
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 //#include <QtQuickTemplates2/private/qquickshortcutcontext_p_p.h>
+#include <QtQuickTemplates2/private/qquickabstractbutton_p_p.h>
 #include <QtQuickTemplates2/private/qquickaction_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenuseparator_p.h>
@@ -81,6 +82,15 @@ QQuickNativeMenuItem *QQuickNativeMenuItem::createFromNonNativeItem(
             nativeMenuItem->subMenu())->handle.get());
         break;
     case Type::MenuItem:
+        connect(nativeMenuItem->m_handle.get(), &QPlatformMenuItem::activated,
+                menuItem, [menuItem](){
+            // This changes the checked state, which we need when syncing but also to ensure that
+            // the user can still use MenuItem's API even though they can't actually interact with it.
+            menuItem->toggle();
+            // The same applies here: allow users to respond to the MenuItem's clicked signal.
+            QQuickAbstractButtonPrivate::get(menuItem)->click();
+        });
+        break;
     case Type::Separator:
         break;
     case Type::Unknown:
@@ -126,7 +136,6 @@ QPlatformMenuItem *QQuickNativeMenuItem::handle() const
 
 void QQuickNativeMenuItem::sync()
 {
-    qCDebug(lcNativeMenuItem) << "sync called on" << debugText() << "handle" << m_handle.get();
     Q_ASSERT(m_type != Type::Unknown);
 
     const auto *action = this->action();
@@ -134,17 +143,28 @@ void QQuickNativeMenuItem::sync()
     auto *subMenu = this->subMenu();
     auto *menuItem = qobject_cast<QQuickMenuItem *>(m_nonNativeItem);
 
-    m_handle->setEnabled(action ? action->isEnabled()
+    // Store the values in variables so that we can use it in the debug output below.
+    const bool enabled = action ? action->isEnabled()
         : subMenu ? subMenu->isEnabled()
-        : menuItem && menuItem->isEnabled());
+        : menuItem && menuItem->isEnabled();
+    m_handle->setEnabled(enabled);
 //    m_handle->setVisible(isVisible());
-    m_handle->setIsSeparator(separator != nullptr);
-    m_handle->setCheckable(action ? action->isCheckable() : menuItem && menuItem->isCheckable());
-    m_handle->setChecked(action ? action->isChecked() : menuItem && menuItem->isChecked());
+
+    const bool isSeparator = separator != nullptr;
+    m_handle->setIsSeparator(isSeparator);
+
+    const bool checkable = action ? action->isCheckable() : menuItem && menuItem->isCheckable();
+    m_handle->setCheckable(checkable);
+
+    const bool checked = action ? action->isChecked() : menuItem && menuItem->isChecked();
+    m_handle->setChecked(checked);
+
     m_handle->setRole(QPlatformMenuItem::TextHeuristicRole);
-    m_handle->setText(action ? action->text()
+
+    const QString text = action ? action->text()
         : subMenu ? subMenu->title()
-        : menuItem ? menuItem->text() : QString());
+        : menuItem ? menuItem->text() : QString();
+    m_handle->setText(text);
 
 //    m_handle->setFont(m_font);
 //    m_handle->setHasExclusiveGroup(m_group && m_group->isExclusive());
@@ -171,6 +191,10 @@ void QQuickNativeMenuItem::sync()
         if (menuPrivate->handle)
             menuPrivate->handle->syncMenuItem(m_handle.get());
     }
+
+    qCDebug(lcNativeMenuItem) << "sync called on" << debugText() << "handle" << m_handle.get()
+        << "enabled:" << enabled << "isSeparator" << isSeparator << "checkable" << checkable
+        << "checked" << checked << "text" << text;
 }
 
 void QQuickNativeMenuItem::reset()
@@ -236,13 +260,21 @@ void QQuickNativeMenuItem::removeShortcut()
 
 QString QQuickNativeMenuItem::debugText() const
 {
-    if (const auto *action = this->action())
-        return action->text().isEmpty() ? QStringLiteral("(No action text)") : action->text();
+    switch (m_type) {
+    case Type::Action:
+        return QString::fromLatin1("Action(text = %1)").arg(action()->text());
+    case Type::SubMenu:
+        return QString::fromLatin1("Sub-menu(title = %1)").arg(subMenu()->title());
+    case Type::MenuItem:
+        return QString::fromLatin1("MenuItem(text = %1)").arg(
+            qobject_cast<QQuickMenuItem *>(m_nonNativeItem)->text());
+    case Type::Separator:
+        return QStringLiteral("Separator");
+    case Type::Unknown:
+        return QStringLiteral("(Unknown)");
+    }
 
-    if (const auto *subMenu = this->subMenu())
-        return subMenu->title().isEmpty() ? QStringLiteral("(No menu title)") : subMenu->title();
-
-    return QStringLiteral("(Unknown)");
+    Q_UNREACHABLE();
 }
 
 QT_END_NAMESPACE

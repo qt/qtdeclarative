@@ -150,7 +150,7 @@ ApplicationWindow {
     }
 
     component ContextMenuItem: MenuItem {
-        onCheckedChanged: (checked) => print("checked of \"" + text + "\" changed to " + checked)
+        onCheckedChanged: print("checked of \"" + text + "\" changed to " + checked)
         onTriggered: print("triggered \"" + text + "\"")
     }
 
