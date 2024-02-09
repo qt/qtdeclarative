@@ -136,6 +136,8 @@ To find out more about using the QML language, see the \l{Qt Qml} module documen
                    - contains types for writing unit test for a QML application
             \li \l{Qt Quick Shapes QML Types}{Shapes}
                    - provides types for rendering vector shapes in a Qt Quick scene.
+            \li \l{Qt Quick Vector Image QML Types}{Vector Image} - provides types for displaying
+            vector image files.
         \endlist
 \endlist
 

@@ -83,7 +83,8 @@ imagedirs += images
 {headerdirs,sourcedirs} += \
     ../../particles \
     ../../quickshapes \
-    ../../effects
+    ../../effects \
+    ../../quickvectorimage
 
 # Add imports and plugins directories because of dependencies
 {headerdirs,sourcedirs} += \

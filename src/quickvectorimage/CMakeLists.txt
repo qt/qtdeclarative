@@ -22,3 +22,19 @@ qt_internal_add_module(QuickVectorImageGeneratorPrivate
         Qt::SvgPrivate
     GENERATE_CPP_EXPORTS
 )
+
+qt_internal_add_qml_module(QuickVectorImage
+    URI "QtQuick.VectorImage"
+    VERSION "${PROJECT_VERSION}"
+    PLUGIN_TARGET qquickvectorimageplugin
+    NO_PLUGIN_OPTIONAL
+    CLASS_NAME QtQuickVectorImagePlugin
+    SOURCES
+    qquickvectorimage_p.h qquickvectorimage.cpp
+    qquickvectorimage_p_p.h
+    LIBRARIES
+        Qt::QuickPrivate
+        Qt::QuickVectorImageGeneratorPrivate
+        Qt::SvgPrivate
+    GENERATE_CPP_EXPORTS
+)

@@ -37,6 +37,8 @@ information about the concepts that are central to \c QtQuick.
     one or more simple graphical effects to Qt Quick items.
     \li \l{Qt Quick Shapes QML Types}{Shapes} - provides types for rendering vector shapes in
     a Qt Quick scene.
+    \li \l{Qt Quick Vector Image QML Types}{Vector Image} - provides types for displaying vector
+    image files.
     \endlist
 
 \target value-types
