@@ -1115,7 +1115,8 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
             && !property->isVarProperty()
             && !property->isVMEFunction() // Handled by QObjectLookup
             && !property->isSignalHandler()) { // TODO: Optimize SignalHandler, too
-        setupQObjectMethodLookup(lookup, ddata, property, This, nullptr);
+        QV4::Heap::QObjectMethod *method = nullptr;
+        setupQObjectMethodLookup(lookup, ddata, property, This, method);
         lookup->getter = Lookup::getterQObjectMethod;
         return lookup->getter(lookup, engine, *object);
     }

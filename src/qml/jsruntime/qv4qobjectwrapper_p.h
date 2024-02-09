@@ -341,7 +341,7 @@ inline ReturnedValue QObjectWrapper::lookupMethodGetterImpl(
     if (!v->as<QObjectMethod>())
         return revertLookup();
 
-    lookup->qobjectMethodLookup.method = static_cast<Heap::QObjectMethod *>(v->heapObject());
+    lookup->qobjectMethodLookup.method.set(engine, static_cast<Heap::QObjectMethod *>(v->heapObject()));
     return v->asReturnedValue();
 }
 

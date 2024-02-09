@@ -477,8 +477,9 @@ ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, 
                             if (property) {
                                 ScopedValue val(scope, Value::fromReturnedValue(QV4::QObjectWrapper::wrap(engine, qobjectSingleton)));
                                 if (qualifiesForMethodLookup(property)) {
+                                    QV4::Heap::QObjectMethod *method = nullptr;
                                     setupQObjectMethodLookup(
-                                                lookup, ddata, property, val->objectValue(), nullptr);
+                                                lookup, ddata, property, val->objectValue(), method);
                                     lookup->getter = QQmlTypeWrapper::lookupSingletonMethod;
                                 } else {
                                     setupQObjectLookup(
@@ -502,7 +503,7 @@ ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, 
             bool ok = false;
             int value = type.enumValue(QQmlEnginePrivate::get(engine->qmlEngine()), name, &ok);
             if (ok) {
-                lookup->qmlEnumValueLookup.ic = This->internalClass();
+                lookup->qmlEnumValueLookup.ic.set(engine, This->internalClass());
                 lookup->qmlEnumValueLookup.encodedEnumValue
                         = QV4::Value::fromInt32(value).asReturnedValue();
                 lookup->getter = QQmlTypeWrapper::lookupEnumValue;
@@ -517,9 +518,9 @@ ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, 
                 QQmlType::refHandle(enumWrapper->d()->typePrivate);
                 enumWrapper->d()->scopeEnumIndex = value;
 
-                lookup->qmlScopedEnumWrapperLookup.ic = This->internalClass();
-                lookup->qmlScopedEnumWrapperLookup.qmlScopedEnumWrapper
-                        = static_cast<Heap::Object*>(enumWrapper->heapObject());
+                lookup->qmlScopedEnumWrapperLookup.ic.set(engine, This->internalClass());
+                lookup->qmlScopedEnumWrapperLookup.qmlScopedEnumWrapper.set(engine,
+                                                                            static_cast<Heap::Object*>(enumWrapper->heapObject()));
                 lookup->getter = QQmlTypeWrapper::lookupScopedEnum;
                 return enumWrapper.asReturnedValue();
             }
@@ -652,12 +653,12 @@ ReturnedValue QQmlTypeWrapper::lookupScopedEnum(Lookup *l, ExecutionEngine *engi
 {
     Scope scope(engine);
     Scoped<QQmlScopedEnumWrapper> enumWrapper(scope, static_cast<Heap::QQmlScopedEnumWrapper *>(
-                l->qmlScopedEnumWrapperLookup.qmlScopedEnumWrapper));
+                l->qmlScopedEnumWrapperLookup.qmlScopedEnumWrapper.get()));
 
     auto *o = static_cast<Heap::Object *>(base.heapObject());
     if (!o || o->internalClass != l->qmlScopedEnumWrapperLookup.ic) {
         QQmlType::derefHandle(enumWrapper->d()->typePrivate);
-        l->qmlScopedEnumWrapperLookup.qmlScopedEnumWrapper = nullptr;
+        l->qmlScopedEnumWrapperLookup.qmlScopedEnumWrapper.clear();
         l->getter = Lookup::getterGeneric;
         return Lookup::getterGeneric(l, engine, base);
     }

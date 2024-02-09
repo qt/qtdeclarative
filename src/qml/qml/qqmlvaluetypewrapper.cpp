@@ -644,7 +644,7 @@ ReturnedValue QQmlValueTypeWrapper::virtualResolveLookupGetter(const Object *obj
     if (!result.isValid())
         return QV4::Object::virtualResolveLookupGetter(object, engine, lookup);
 
-    lookup->qgadgetLookup.ic = r->internalClass();
+    lookup->qgadgetLookup.ic.set(engine, r->internalClass());
     // & 1 to tell the gc that this is not heap allocated; see markObjects in qv4lookup_p.h
     lookup->qgadgetLookup.metaObject = quintptr(r->d()->metaObject()) + 1;
     lookup->qgadgetLookup.metaType = result.propType().iface();

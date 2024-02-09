@@ -54,12 +54,12 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
         return engine->throwTypeError(message);
     }
     case Value::Boolean_Type:
-        primitiveLookup.proto = engine->booleanPrototype()->d();
+        primitiveLookup.proto.set(engine, engine->booleanPrototype()->d());
         break;
     case Value::Managed_Type: {
         // ### Should move this over to the Object path, as strings also have an internalClass
         Q_ASSERT(object.isStringOrSymbol());
-        primitiveLookup.proto = static_cast<const Managed &>(object).internalClass()->prototype;
+        primitiveLookup.proto.set(engine, static_cast<const Managed &>(object).internalClass()->prototype);
         Q_ASSERT(primitiveLookup.proto);
         Scope scope(engine);
         ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
@@ -72,7 +72,7 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
     }
     case Value::Integer_Type:
     default: // Number
-        primitiveLookup.proto = engine->numberPrototype()->d();
+        primitiveLookup.proto.set(engine, engine->numberPrototype()->d());
     }
 
     PropertyKey name = engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
@@ -122,9 +122,10 @@ static inline void setupObjectLookupTwoClasses(Lookup *l, const Lookup &first, c
     const uint offset1 = first.objectLookup.offset;
     Heap::InternalClass *ic2 = second.objectLookup.ic;
     const uint offset2 = second.objectLookup.offset;
+    auto engine = ic1->engine;
 
-    l->objectLookupTwoClasses.ic = ic1;
-    l->objectLookupTwoClasses.ic2 = ic2;
+    l->objectLookupTwoClasses.ic.set(engine, ic1);
+    l->objectLookupTwoClasses.ic2.set(engine, ic2);
     l->objectLookupTwoClasses.offset = offset1;
     l->objectLookupTwoClasses.offset2 = offset2;
 }
@@ -565,8 +566,9 @@ bool Lookup::setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object,
         }
 
         if (l->setter == Lookup::setter0MemberData || l->setter == Lookup::setter0Inline) {
-            l->objectLookupTwoClasses.ic = ic;
-            l->objectLookupTwoClasses.ic2 = ic;
+            auto engine = ic->engine;
+            l->objectLookupTwoClasses.ic.set(engine, ic);
+            l->objectLookupTwoClasses.ic2.set(engine, ic);
             l->objectLookupTwoClasses.offset = index;
             l->objectLookupTwoClasses.offset2 = index;
             l->setter = setter0setter0;
