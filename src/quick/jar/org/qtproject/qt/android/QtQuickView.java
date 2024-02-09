@@ -19,8 +19,21 @@ public class QtQuickView extends QtView {
         void onSignalEmitted(String signalName, T value);
     }
 
+    public interface StatusChangeListener
+    {
+        void onStatusChanged(int status);
+    }
+
+    public static final int STATUS_NULL = 0;
+    public static final int STATUS_READY = 1;
+    public static final int STATUS_LOADING = 2;
+    public static final int STATUS_ERROR = 3;
+
     private String m_qmlUri;
     private String[] m_qmlImportPaths = null;
+    private StatusChangeListener m_statusChangeListener = null;
+    private int m_lastStatus = STATUS_NULL;
+    private boolean m_hasQueuedStatus = false;
 
     native void createQuickView(String qmlUri, int width, int height, long parentWindowReference,
                                 String[] qmlImportPaths);
@@ -80,5 +93,30 @@ public class QtQuickView extends QtView {
     public boolean removeSignalListener(int signalListenerId)
     {
         return removeRootObjectSignalListener(windowReference(), signalListenerId);
+    }
+
+    public int getStatus()
+    {
+        return m_lastStatus;
+    }
+
+    public void setStatusChangeListener(StatusChangeListener listener)
+    {
+        m_statusChangeListener = listener;
+
+        if (m_hasQueuedStatus) {
+            QtNative.runAction(() -> { m_statusChangeListener.onStatusChanged(m_lastStatus); });
+            m_hasQueuedStatus = false;
+        }
+    }
+
+    private void handleStatusChange(int status)
+    {
+        m_lastStatus = status;
+
+        if (m_statusChangeListener != null)
+            QtNative.runAction(() -> { m_statusChangeListener.onStatusChanged(status); });
+        else
+            m_hasQueuedStatus = true;
     }
 }
