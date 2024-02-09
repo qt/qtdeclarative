@@ -359,10 +359,7 @@ T qjsvalue_cast(const QJSValue &value)
 {
     if (T t; QJSEngine::convertV2(value, QMetaType::fromType<T>(), &t))
         return t;
-    else if (value.isVariant())
-        return qvariant_cast<T>(value.toVariant());
-
-    return T();
+    return qvariant_cast<T>(value.toVariant());
 }
 
 template<typename T>
