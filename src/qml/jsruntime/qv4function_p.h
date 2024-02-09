@@ -32,15 +32,13 @@ namespace QV4 {
 
 struct Q_QML_EXPORT FunctionData
 {
-    CompilationUnitRuntimeData *compilationUnit;
+    WriteBarrier::HeapObjectWrapper<CompilationUnitRuntimeData, 1> compilationUnit;
 
     // Intentionally require an ExecutableCompilationUnit but save only a pointer to
     // CompilationUnitBase. This is so that we can take advantage of the standard layout
     // of CompilationUnitBase in the JIT. Furthermore we can safely static_cast to
     // ExecutableCompilationUnit where we need it.
-    FunctionData(ExecutableCompilationUnit *compilationUnit)
-        : compilationUnit(compilationUnit)
-    {}
+    FunctionData(EngineBase *engine, ExecutableCompilationUnit *compilationUnit_);
 };
 // Make sure this class can be accessed through offsetof (done by the assemblers):
 Q_STATIC_ASSERT(std::is_standard_layout< FunctionData >::value);
@@ -62,7 +60,7 @@ public:
     QV4::ExecutableCompilationUnit *executableCompilationUnit() const
     {
         // This is safe: We require an ExecutableCompilationUnit in the ctor.
-        return static_cast<QV4::ExecutableCompilationUnit *>(compilationUnit);
+        return static_cast<QV4::ExecutableCompilationUnit *>(compilationUnit.get());
     }
 
     QV4::Heap::String *runtimeString(uint i) const
@@ -86,7 +84,7 @@ public:
     };
 
     // first nArguments names in internalClass are the actual arguments
-    Heap::InternalClass *internalClass;
+    QV4::WriteBarrier::Pointer<Heap::InternalClass> internalClass;
     int interpreterCallCount = 0;
     quint16 nFormals;
     enum Kind : quint8 { JsUntyped, JsTyped, AotCompiled, Eval };
@@ -97,6 +95,8 @@ public:
                             const CompiledData::Function *function,
                             const QQmlPrivate::AOTCompiledFunction *aotFunction);
     void destroy();
+
+    void mark(QV4::MarkStack *ms);
 
     // used when dynamically assigning signal handlers (QQmlConnection)
     void updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters);
