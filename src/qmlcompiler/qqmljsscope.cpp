@@ -487,31 +487,30 @@ QTypeRevision QQmlJSScope::resolveType(
         }
     }
 
-    for (auto it = self->m_methods.begin(), end = self->m_methods.end(); it != end; ++it) {
-        const QString returnTypeName = it->returnTypeName();
-        if (!it->returnType() && !returnTypeName.isEmpty()) {
-            const auto returnType = findType(returnTypeName, context, usedTypes);
-            it->setReturnType(returnType.scope);
+    const auto resolveParameter = [&](QQmlJSMetaParameter &parameter) {
+        if (const QString typeName = parameter.typeName();
+            !parameter.type() && !typeName.isEmpty()) {
+            auto type = findType(typeName, context, usedTypes);
+            if (type.scope && parameter.isList()) {
+                type.scope = type.scope->listType();
+                parameter.setIsList(false);
+                parameter.setIsPointer(false);
+                parameter.setTypeName(type.scope ? type.scope->internalName() : QString());
+            } else if (type.scope && type.scope->isReferenceType()) {
+                parameter.setIsPointer(true);
+            }
+            parameter.setType({ type.scope });
         }
+    };
+
+    for (auto it = self->m_methods.begin(), end = self->m_methods.end(); it != end; ++it) {
+        auto returnValue = it->returnValue();
+        resolveParameter(returnValue);
+        it->setReturnValue(returnValue);
 
         auto parameters = it->parameters();
-        for (int i = 0, length = parameters.size(); i < length; ++i) {
-            auto &parameter = parameters[i];
-            if (const QString typeName = parameter.typeName();
-                !parameter.type() && !typeName.isEmpty()) {
-                auto type = findType(typeName, context, usedTypes);
-                if (type.scope && parameter.isList()) {
-                    type.scope = type.scope->listType();
-                    parameter.setIsList(false);
-                    parameter.setIsPointer(false);
-                    parameter.setTypeName(type.scope ? type.scope->internalName() : QString());
-                } else if (type.scope && type.scope->isReferenceType()) {
-                    parameter.setIsPointer(true);
-                }
-                parameter.setType({ type.scope });
-            }
-        }
-
+        for (int i = 0, length = parameters.size(); i < length; ++i)
+            resolveParameter(parameters[i]);
         it->setParameters(parameters);
     }
 

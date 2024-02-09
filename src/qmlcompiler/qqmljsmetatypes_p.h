@@ -130,7 +130,7 @@ public:
         Const,
     };
 
-    QQmlJSMetaParameter(const QString &name, const QString &typeName,
+    QQmlJSMetaParameter(const QString &name = QString(), const QString &typeName = QString(),
                         Constness typeQualifier = NonConst,
                         QWeakPointer<const QQmlJSScope> type = {})
         : m_name(name), m_typeName(typeName), m_type(type), m_typeQualifier(typeQualifier)
@@ -177,6 +177,8 @@ private:
     bool m_isList = false;
 };
 
+using QQmlJSMetaReturnType = QQmlJSMetaParameter;
+
 class QQmlJSMetaMethod
 {
 public:
@@ -203,20 +205,19 @@ public:
     QQmlJSMetaMethod() = default;
     explicit QQmlJSMetaMethod(QString name, QString returnType = QString())
         : m_name(std::move(name)),
-          m_returnTypeName(std::move(returnType)),
+          m_returnType(QString(), std::move(returnType)),
           m_methodType(MethodType::Method)
     {}
 
     QString methodName() const { return m_name; }
     void setMethodName(const QString &name) { m_name = name; }
 
-    QString returnTypeName() const { return m_returnTypeName; }
-    QSharedPointer<const QQmlJSScope> returnType() const { return m_returnType.toStrongRef(); }
-    void setReturnTypeName(const QString &type) { m_returnTypeName = type; }
-    void setReturnType(const QSharedPointer<const QQmlJSScope> &type)
-    {
-        m_returnType = type;
-    }
+    QQmlJSMetaReturnType returnValue() const { return m_returnType; }
+    void setReturnValue(const QQmlJSMetaReturnType returnValue) { m_returnType = returnValue; }
+    QString returnTypeName() const { return m_returnType.typeName(); }
+    void setReturnTypeName(const QString &typeName) { m_returnType.setTypeName(typeName); }
+    QSharedPointer<const QQmlJSScope> returnType() const { return m_returnType.type(); }
+    void setReturnType(QWeakPointer<const QQmlJSScope> type) { m_returnType.setType(type); }
 
     QList<QQmlJSMetaParameter> parameters() const { return m_parameters; }
 
@@ -290,11 +291,10 @@ public:
 
     friend bool operator==(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
     {
-        return a.m_name == b.m_name && a.m_returnTypeName == b.m_returnTypeName
-                && a.m_returnType.owner_equal(b.m_returnType) && a.m_parameters == b.m_parameters
-                && a.m_annotations == b.m_annotations && a.m_methodType == b.m_methodType
-                && a.m_methodAccess == b.m_methodAccess && a.m_revision == b.m_revision
-                && a.m_isConstructor == b.m_isConstructor;
+        return a.m_name == b.m_name && a.m_returnType == b.m_returnType
+                && a.m_parameters == b.m_parameters && a.m_annotations == b.m_annotations
+                && a.m_methodType == b.m_methodType && a.m_methodAccess == b.m_methodAccess
+                && a.m_revision == b.m_revision && a.m_isConstructor == b.m_isConstructor;
     }
 
     friend bool operator!=(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
@@ -307,8 +307,7 @@ public:
         QtPrivate::QHashCombine combine;
 
         seed = combine(seed, method.m_name);
-        seed = combine(seed, method.m_returnTypeName);
-        seed = combine(seed, method.m_returnType.owner_hash());
+        seed = combine(seed, method.m_returnType);
         seed = combine(seed, method.m_annotations);
         seed = combine(seed, method.m_methodType);
         seed = combine(seed, method.m_methodAccess);
@@ -324,9 +323,8 @@ public:
 
 private:
     QString m_name;
-    QString m_returnTypeName;
-    QWeakPointer<const QQmlJSScope> m_returnType;
 
+    QQmlJSMetaReturnType m_returnType;
     QList<QQmlJSMetaParameter> m_parameters;
     QList<QQmlJSAnnotation> m_annotations;
 
