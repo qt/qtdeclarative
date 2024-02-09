@@ -433,6 +433,8 @@ void QQuickMenuPrivate::recursivelyDestroyNativeSubMenus(QQuickMenu *menu)
         qCDebug(lcNativeMenus) << "- taking and destroying" << item->debugText();
         if (QQuickMenu *subMenu = item->subMenu())
             recursivelyDestroyNativeSubMenus(subMenu);
+
+        menuPrivate->handle->removeMenuItem(item->handle());
     }
 
     menuPrivate->resetNativeData();
