@@ -312,7 +312,9 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(
             } else if (name == QLatin1String("isJavaScriptFunction")) {
                 metaMethod.setIsJavaScriptFunction(true);
             } else if (name == QLatin1String("isList")) {
-                // TODO: Theoretically this can happen. QQmlJSMetaMethod should store it.
+                auto metaReturnType = metaMethod.returnValue();
+                metaReturnType.setIsList(true);
+                metaMethod.setReturnValue(metaReturnType);
             } else if (name == QLatin1String("isPointer")) {
                 // TODO: We don't need this information. We can probably drop all isPointer members
                 //       once we make sure that the type information is always complete. The
