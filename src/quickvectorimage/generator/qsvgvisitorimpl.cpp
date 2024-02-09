@@ -309,6 +309,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     info.isTextArea = isTextArea;
     info.color = styleResolver->currentFillColor();
     info.alignment = styleResolver->states().textAnchor;
+    info.strokeColor = styleResolver->currentStrokeColor();
 
     m_generator->generateTextNode(info);
 

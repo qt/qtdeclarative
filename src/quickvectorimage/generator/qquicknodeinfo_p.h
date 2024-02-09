@@ -62,6 +62,7 @@ struct TextNodeInfo : NodeInfo
     QFont font;
     Qt::Alignment alignment;
     QString color;
+    QString strokeColor;
 };
 
 struct StructureNodeInfo : NodeInfo

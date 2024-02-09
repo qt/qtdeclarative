@@ -270,6 +270,11 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
     textItem->setText(info.text);
     textItem->setFont(info.font);
 
+    if (!info.strokeColor.isEmpty()) {
+        textItem->setStyleColor(QColor::fromString(info.strokeColor));
+        textItem->setStyle(QQuickText::Outline);
+    }
+
     m_items.pop();
 }
 

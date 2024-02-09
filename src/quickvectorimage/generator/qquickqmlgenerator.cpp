@@ -344,6 +344,11 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
     if (info.font.weight() != QFont::Normal)
         stream() << "font.weight: " << int(info.font.weight());
 
+    if (!info.strokeColor.isEmpty()) {
+        stream() << "styleColor: \"" << info.strokeColor << "\"";
+        stream() << "style: Text.Outline";
+    }
+
     m_indentLevel--;
     stream() << "}";
 }
