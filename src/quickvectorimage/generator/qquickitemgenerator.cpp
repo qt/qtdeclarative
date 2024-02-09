@@ -237,8 +237,10 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
     if (info.isTextArea) {
         textItem->setX(info.position.x());
         textItem->setY(info.position.y());
-        textItem->setWidth(info.size.width());
-        textItem->setHeight(info.size.height());
+        if (info.size.width() > 0)
+            textItem->setWidth(info.size.width());
+        if (info.size.height() > 0)
+            textItem->setHeight(info.size.height());
         textItem->setWrapMode(QQuickText::Wrap);
         textItem->setClip(true);
     } else {
