@@ -2191,21 +2191,26 @@ QVariant QQuickTextEdit::loadResource(int type, const QUrl &source)
         // let QTextDocument::loadResource() handle local file loading
         return {};
     }
+
     // see if we already started a load job
-    for (auto it = d->pixmapsInProgress.cbegin(); it != d->pixmapsInProgress.cend(); ++it) {
-        const auto *job = *it;
-        if (job->url() == url) {
-            if (job->isError()) {
-                qmlWarning(this) << job->error();
-                delete *it;
-                it = d->pixmapsInProgress.erase(it);
-                return QImage();
-            }
+    auto existingJobIter = std::find_if(
+            d->pixmapsInProgress.cbegin(), d->pixmapsInProgress.cend(),
+            [&url](const auto *job) { return job->url() == url; } );
+    if (existingJobIter != d->pixmapsInProgress.cend()) {
+        const QQuickPixmap *job = *existingJobIter;
+        if (job->isError()) {
+            qmlWarning(this) << job->error();
+            d->pixmapsInProgress.erase(existingJobIter);
+            delete job;
+            return QImage();
+        } else {
             qCDebug(lcTextEdit) << "already downloading" << url;
             // existing job: return a null variant if it's not done yet
             return job->isReady() ? job->image() : QVariant();
         }
     }
+
+    // not found: start a new load job
     qCDebug(lcTextEdit) << "loading" << source << "resolved" << url
                         << "type" << static_cast<QTextDocument::ResourceType>(type);
     QQmlContext *context = qmlContext(this);
@@ -2224,27 +2229,26 @@ QVariant QQuickTextEdit::loadResource(int type, const QUrl &source)
 void QQuickTextEdit::resourceRequestFinished()
 {
     Q_D(QQuickTextEdit);
-    bool allDone = true;
-    for (auto it = d->pixmapsInProgress.cbegin(); it != d->pixmapsInProgress.cend();) {
+    for (auto it = d->pixmapsInProgress.cbegin(); it != d->pixmapsInProgress.cend(); ++it) {
         auto *job = *it;
         if (job->isError()) {
             // get QTextDocument::loadResource() to call QQuickTextEdit::loadResource() again, to return the placeholder
-            qCDebug(lcTextEdit) << "failed to load" << job->url();
+            qCDebug(lcTextEdit) << "failed to load (error)" << job->url();
             d->document->resource(QTextDocument::ImageResource, job->url());
+            // that will call QQuickTextEdit::loadResource() which will delete the job;
+            // so leave it in pixmapsInProgress for now, and stop this loop
+            break;
         } else if (job->isReady()) {
             // get QTextDocument::loadResource() to call QQuickTextEdit::loadResource() again, and cache the result
             auto res = d->document->resource(QTextDocument::ImageResource, job->url());
             // If QTextDocument::resource() returned a valid variant, it's been cached too. Either way, the job is done.
             qCDebug(lcTextEdit) << (res.isValid() ? "done downloading" : "failed to load") << job->url() << job->rect();
-            delete *it;
-            it = d->pixmapsInProgress.erase(it);
-        } else {
-            allDone = false;
-            ++it;
+            d->pixmapsInProgress.erase(it);
+            delete job;
+            break;
         }
     }
-    if (allDone) {
-        Q_ASSERT(d->pixmapsInProgress.isEmpty());
+    if (d->pixmapsInProgress.isEmpty()) {
         invalidate();
         updateSize();
         q_invalidate();
