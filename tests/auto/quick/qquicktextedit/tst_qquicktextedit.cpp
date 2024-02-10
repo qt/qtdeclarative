@@ -194,6 +194,7 @@ private slots:
     void baseUrl();
     void embeddedImages();
     void embeddedImages_data();
+    void remoteImagesInDocumentSource();
 
     void emptytags_QTBUG_22058();
     void cursorRectangle_QTBUG_38947();
@@ -6082,6 +6083,60 @@ void tst_qquicktextedit::embeddedImages()
         QCOMPARE(textObject->width(), 16); // default size of QTextDocument broken image icon
         QCOMPARE(textObject->height(), 16);
     }
+
+    // QTextDocument images are cached in QTextDocumentPrivate::cachedResources,
+    // so verify that we don't redundantly cache them in QQuickPixmapCache
+    QCOMPARE(QQuickPixmapCache::instance()->m_cache.size(), 0);
+}
+
+void tst_qquicktextedit::remoteImagesInDocumentSource()
+{
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+    server.serveDirectory(testFile("http"));
+    server.serveDirectory(testFile("httpfail"), TestHTTPServer::Disconnect);
+    server.serveDirectory(testFile("httpslow"), TestHTTPServer::Delay);
+
+    QTemporaryDir tmpDir;
+    QVERIFY(tmpDir.isValid());
+    QString tmpPath = tmpDir.filePath("multipleRemoteImages.md");
+    QByteArray markdownBuf;
+    {
+        QFile sf(QQmlFile::urlToLocalFileOrQrc(testFileUrl("multipleRemoteImages.md")));
+        QVERIFY(sf.open(QIODeviceBase::ReadOnly));
+        markdownBuf = sf.readAll();
+        qCDebug(lcTests) << sf.fileName() << "->" << tmpPath
+                         << "s/serverBaseUrl/" << server.baseUrl().toString()
+                         << "/ in markdown: size" << markdownBuf.size();
+    }
+    markdownBuf.replace("serverBaseUrl", server.baseUrl().toString().toLocal8Bit());
+    {
+        QFile of(tmpPath);
+        QVERIFY(of.open(QIODeviceBase::WriteOnly));
+        QCOMPARE(of.write(markdownBuf), markdownBuf.size());
+    }
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("textEdit.qml")));
+    auto *textEdit = qmlobject_cast<QQuickTextEdit *>(window.rootObject());
+    QVERIFY(textEdit);
+    QQuickTextEditPrivate *priv = QQuickTextEditPrivate::get(textEdit);
+    QSignalSpy implicitHeightChangedSpy(textEdit, &QQuickTextEdit::implicitHeightChanged);
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Protocol \"gopher\" is unknown"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Connection closed")); // httpfail/warning.png
+    textEdit->textDocument()->setSource(QUrl::fromLocalFile(tmpPath));
+
+    // the document gets loaded first, then the resources
+    QTRY_COMPARE(textEdit->textDocument()->status(), QQuickTextDocument::Status::Loaded);
+    const qreal implicitHeight = textEdit->implicitHeight();
+
+    // all resource-loading jobs complete or fail eventually
+    QTRY_COMPARE(priv->pixmapsInProgress.size(), 0);
+
+    // after httpslow/turtle.svg loads, implicitHeight increases
+    QCOMPARE(implicitHeightChangedSpy.size(), 2);
+    QCOMPARE_GT(textEdit->implicitHeight(), implicitHeight);
 
     // QTextDocument images are cached in QTextDocumentPrivate::cachedResources,
     // so verify that we don't redundantly cache them in QQuickPixmapCache
