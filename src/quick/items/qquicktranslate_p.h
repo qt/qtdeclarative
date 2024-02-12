@@ -28,8 +28,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTranslate : public QQuickTransform
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged FINAL)
-    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged FINAL)
+    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)
+    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged)
     QML_NAMED_ELEMENT(Translate)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -57,10 +57,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScale : public QQuickTransform
 {
     Q_OBJECT
 
-    Q_PROPERTY(QVector3D origin READ origin WRITE setOrigin NOTIFY originChanged FINAL)
-    Q_PROPERTY(qreal xScale READ xScale WRITE setXScale NOTIFY xScaleChanged FINAL)
-    Q_PROPERTY(qreal yScale READ yScale WRITE setYScale NOTIFY yScaleChanged FINAL)
-    Q_PROPERTY(qreal zScale READ zScale WRITE setZScale NOTIFY zScaleChanged FINAL)
+    Q_PROPERTY(QVector3D origin READ origin WRITE setOrigin NOTIFY originChanged)
+    Q_PROPERTY(qreal xScale READ xScale WRITE setXScale NOTIFY xScaleChanged)
+    Q_PROPERTY(qreal yScale READ yScale WRITE setYScale NOTIFY yScaleChanged)
+    Q_PROPERTY(qreal zScale READ zScale WRITE setZScale NOTIFY zScaleChanged)
     QML_NAMED_ELEMENT(Scale)
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -96,9 +96,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRotation : public QQuickTransform
 {
     Q_OBJECT
 
-    Q_PROPERTY(QVector3D origin READ origin WRITE setOrigin NOTIFY originChanged FINAL)
-    Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged FINAL)
-    Q_PROPERTY(QVector3D axis READ axis WRITE setAxis NOTIFY axisChanged FINAL)
+    Q_PROPERTY(QVector3D origin READ origin WRITE setOrigin NOTIFY originChanged)
+    Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged)
+    Q_PROPERTY(QVector3D axis READ axis WRITE setAxis NOTIFY axisChanged)
     QML_NAMED_ELEMENT(Rotation)
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -130,7 +130,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMatrix4x4 : public QQuickTransform
 {
     Q_OBJECT
 
-    Q_PROPERTY(QMatrix4x4 matrix READ matrix WRITE setMatrix NOTIFY matrixChanged FINAL)
+    Q_PROPERTY(QMatrix4x4 matrix READ matrix WRITE setMatrix NOTIFY matrixChanged)
     QML_NAMED_ELEMENT(Matrix4x4)
     QML_ADDED_IN_VERSION(2, 3)
 public:

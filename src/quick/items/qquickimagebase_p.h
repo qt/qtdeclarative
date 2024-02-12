@@ -26,16 +26,16 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged FINAL)
-    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged FINAL)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
-    Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged FINAL)
-    Q_PROPERTY(bool cache READ cache WRITE setCache NOTIFY cacheChanged FINAL)
-    Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged FINAL)
-    Q_PROPERTY(bool mirrorVertically READ mirrorVertically WRITE setMirrorVertically NOTIFY mirrorVerticallyChanged REVISION(6, 2) FINAL)
+    Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
+    Q_PROPERTY(bool cache READ cache WRITE setCache NOTIFY cacheChanged)
+    Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged)
+    Q_PROPERTY(bool mirrorVertically READ mirrorVertically WRITE setMirrorVertically NOTIFY mirrorVerticallyChanged REVISION(6, 2))
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged REVISION(2, 14))
     Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged REVISION(2, 14))
-    Q_PROPERTY(QColorSpace colorSpace READ colorSpace WRITE setColorSpace NOTIFY colorSpaceChanged REVISION(2, 15) FINAL)
+    Q_PROPERTY(QColorSpace colorSpace READ colorSpace WRITE setColorSpace NOTIFY colorSpaceChanged REVISION(2, 15))
 
     QML_NAMED_ELEMENT(ImageBase);
     QML_ADDED_IN_VERSION(2, 14)

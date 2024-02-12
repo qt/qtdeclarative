@@ -38,15 +38,15 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlP
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
 
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL)
-    Q_PROPERTY(bool active READ active NOTIFY activeChanged FINAL)
-    Q_PROPERTY(QQuickItem * target READ target WRITE setTarget NOTIFY targetChanged FINAL)
-    Q_PROPERTY(QQuickItem * parent READ parentItem WRITE setParentItem NOTIFY parentChanged FINAL)
-    Q_PROPERTY(GrabPermissions grabPermissions READ grabPermissions WRITE setGrabPermissions NOTIFY grabPermissionChanged FINAL)
-    Q_PROPERTY(qreal margin READ margin WRITE setMargin NOTIFY marginChanged FINAL)
-    Q_PROPERTY(int dragThreshold READ dragThreshold WRITE setDragThreshold RESET resetDragThreshold NOTIFY dragThresholdChanged REVISION(2, 15) FINAL)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
+    Q_PROPERTY(QQuickItem * target READ target WRITE setTarget NOTIFY targetChanged)
+    Q_PROPERTY(QQuickItem * parent READ parentItem WRITE setParentItem NOTIFY parentChanged)
+    Q_PROPERTY(GrabPermissions grabPermissions READ grabPermissions WRITE setGrabPermissions NOTIFY grabPermissionChanged)
+    Q_PROPERTY(qreal margin READ margin WRITE setMargin NOTIFY marginChanged)
+    Q_PROPERTY(int dragThreshold READ dragThreshold WRITE setDragThreshold RESET resetDragThreshold NOTIFY dragThresholdChanged REVISION(2, 15))
 #if QT_CONFIG(cursor)
-    Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape RESET resetCursorShape NOTIFY cursorShapeChanged REVISION(2, 15) FINAL)
+    Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape RESET resetCursorShape NOTIFY cursorShapeChanged REVISION(2, 15))
 #endif
 
     Q_CLASSINFO("ParentProperty", "parent")
