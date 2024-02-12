@@ -670,7 +670,7 @@ void QQmlLSCompletion::insideQmlObjectCompletion(const DomItem &parentForContext
         options.setFlag(LocalSymbolsType::ObjectType);
         suggestReachableTypes(positionInfo.itemAtPosition, options, CompletionItemKind::Constructor,
                               result);
-        suggestQuickSnippetsCompletion(positionInfo.itemAtPosition, result);
+        suggestSnippetsForLeftHandSideOfBinding(positionInfo.itemAtPosition, result);
 
         if (QQmlLSUtils::isFieldMemberExpression(positionInfo.itemAtPosition)) {
             /*!
@@ -744,7 +744,7 @@ void QQmlLSCompletion::insideQmlObjectCompletion(const DomItem &parentForContext
         const DomItem containingFile = parentForContext.containingFile();
         suggestReachableTypes(containingFile, LocalSymbolsType::ObjectType,
                               CompletionItemKind::Constructor, result);
-        suggestQuickSnippetsCompletion(positionInfo.itemAtPosition, result);
+        suggestSnippetsForLeftHandSideOfBinding(positionInfo.itemAtPosition, result);
         return;
     }
 }
@@ -832,7 +832,7 @@ void QQmlLSCompletion::insideBindingCompletion(const DomItem &currentItem,
                 options.setFlag(LocalSymbolsType::ObjectType);
                 suggestReachableTypes(positionInfo.itemAtPosition, options,
                                       CompletionItemKind::Constructor, result);
-                suggestQuickSnippetsCompletion(positionInfo.itemAtPosition, result);
+                suggestSnippetsForRightHandSideOfBinding(positionInfo.itemAtPosition, result);
             }
         }
         return;
@@ -851,7 +851,7 @@ void QQmlLSCompletion::insideBindingCompletion(const DomItem &currentItem,
     // add Qml Types for default binding
     suggestReachableTypes(positionInfo.itemAtPosition, LocalSymbolsType::ObjectType,
                           CompletionItemKind::Constructor, result);
-    suggestQuickSnippetsCompletion(positionInfo.itemAtPosition, result);
+    suggestSnippetsForLeftHandSideOfBinding(positionInfo.itemAtPosition, result);
 }
 
 void QQmlLSCompletion::insideImportCompletion(const DomItem &currentItem,
@@ -1631,144 +1631,6 @@ void QQmlLSCompletion::signalHandlerCompletion(const QQmlJSScope::ConstPtr &scop
     }
 }
 
-void QQmlLSCompletion::suggestQuickSnippetsCompletion(const DomItem &itemAtPosition,
-                                                      BackInsertIterator result) const
-{
-    auto file = itemAtPosition.containingFile().as<QmlFile>();
-    if (!file)
-        return;
-
-    // check if QtQuick has been imported
-    const auto &imports = file->imports();
-    auto it = std::find_if(imports.constBegin(), imports.constEnd(), [](const Import &import) {
-        return import.uri.moduleUri() == u"QtQuick";
-    });
-    if (it == imports.constEnd()) {
-        return;
-    }
-
-    // check if the user already typed some qualifier, remove its dot and compare it to QtQuick's
-    // qualified name
-    const QString userTypedQualifier = QQmlLSUtils::qualifiersFrom(itemAtPosition);
-    if (!userTypedQualifier.isEmpty()
-        && !it->importId.startsWith(QStringView(userTypedQualifier).chopped(1))) {
-        return;
-    }
-
-    const QByteArray prefixForSnippet =
-            userTypedQualifier.isEmpty() ? it->importId.toUtf8() : QByteArray();
-    const QByteArray prefixWithDotForSnippet =
-            prefixForSnippet.isEmpty() ? QByteArray() : QByteArray(prefixForSnippet).append(u'.');
-
-    // Quick completions from Qt Creator's code model
-    result = makeSnippet(prefixForSnippet, "BorderImage snippet",
-                         "BorderImage {\n"
-                         "\tid: ${1:name}\n"
-                         "\tsource: \"${2:file}\"\n"
-                         "\twidth: ${3:100}; height: ${4:100}\n"
-                         "\tborder.left: ${5: 5}; border.top: ${5}\n"
-                         "\tborder.right: ${5}; border.bottom: ${5}\n"
-                         "}");
-    result = makeSnippet(prefixForSnippet, "ColorAnimation snippet",
-                         "ColorAnimation {\n"
-                         "\tfrom: \"${1:white}\"\n"
-                         "\tto: \"${2:black}\"\n"
-                         "\tduration: ${3:200}\n"
-                         "}");
-    result = makeSnippet(prefixForSnippet, "Image snippet",
-                         "Image {\n"
-                         "\tid: ${1:name}\n"
-                         "\tsource: \"${2:file}\"\n"
-                         "}");
-    result = makeSnippet(prefixForSnippet, "Item snippet",
-                         "Item {\n"
-                         "\tid: ${1:name}\n"
-                         "}");
-    result = makeSnippet(prefixForSnippet, "NumberAnimation snippet",
-                         "NumberAnimation {\n"
-                         "\ttarget: ${1:object}\n"
-                         "\tproperty: \"${2:name}\"\n"
-                         "\tduration: ${3:200}\n"
-                         "\teasing.type: "_ba.append(prefixWithDotForSnippet)
-                                 .append("Easing.${4:InOutQuad}\n"
-                                         "}"));
-    result = makeSnippet(prefixForSnippet, "NumberAnimation with targets snippet",
-                         "NumberAnimation {\n"
-                         "\ttargets: [${1:object}]\n"
-                         "\tproperties: \"${2:name}\"\n"
-                         "\tduration: ${3:200}\n"
-                         "}");
-    result = makeSnippet(prefixForSnippet, "PauseAnimation snippet",
-                         "PauseAnimation {\n"
-                         "\tduration: ${1:200}\n"
-                         "}");
-    result = makeSnippet(prefixForSnippet, "PropertyAction snippet",
-                         "PropertyAction {\n"
-                         "\ttarget: ${1:object}\n"
-                         "\tproperty: \"${2:name}\"\n"
-                         "}");
-    result = makeSnippet(prefixForSnippet, "PropertyAction with targets snippet",
-                         "PropertyAction {\n"
-                         "\ttargets: [${1:object}]\n"
-                         "\tproperties: \"${2:name}\"\n"
-                         "}");
-    result = makeSnippet(prefixForSnippet, "PropertyChanges snippet",
-                         "PropertyChanges {\n"
-                         "\ttarget: ${1:object}\n"
-                         "}");
-    result = makeSnippet(prefixForSnippet, "State snippet",
-                         "State {\n"
-                         "\tname: ${1:name}\n"
-                         "\t"_ba.append(prefixWithDotForSnippet)
-                                 .append("PropertyChanges {\n"
-                                         "\t\ttarget: ${2:object}\n"
-                                         "\t}\n"
-                                         "}"));
-    result = makeSnippet(prefixForSnippet, "Text snippet",
-                         "Text {\n"
-                         "\tid: ${1:name}\n"
-                         "\ttext: qsTr(\"${2:text}\")\n"
-                         "}");
-    result = makeSnippet(prefixForSnippet, "Transition snippet",
-                         "Transition {\n"
-                         "\tfrom: \"${1:fromState}\"\n"
-                         "\tto: \"${2:toState}\"\n"
-                         "}");
-
-    if (!userTypedQualifier.isEmpty())
-        return;
-
-    auto resolver = file->typeResolver();
-    if (!resolver)
-        return;
-    const auto qquickItemScope = resolver->typeForName(prefixWithDotForSnippet + u"Item"_s);
-    const QQmlJSScope::ConstPtr ownerScope = itemAtPosition.qmlObject().semanticScope();
-    if (!ownerScope || !qquickItemScope)
-        return;
-
-    if (ownerScope->inherits(qquickItemScope)) {
-        result = makeSnippet("states binding with PropertyChanges in State",
-                             "states: [\n"
-                             "\t"_ba.append(prefixWithDotForSnippet)
-                                     .append("State {\n"
-                                             "\t\tname: \"${1:name}\"\n"
-                                             "\t\t"_ba.append(prefixWithDotForSnippet)
-                                                     .append("PropertyChanges {\n"
-                                                             "\t\t\ttarget: ${2:object}\n"
-                                                             "\t\t}\n"
-                                                             "\t}\n"
-                                                             "]")));
-        result = makeSnippet("transitions binding with Transition",
-                             "transitions: [\n"
-                             "\t"_ba.append(prefixWithDotForSnippet)
-                                     .append("Transition {\n"
-                                             "\t\tfrom: \"${1:fromState}\"\n"
-                                             "\t\tto: \"${2:fromState}\"\n"
-                                             "\t}\n"
-                                             "]"));
-    }
-}
-
 /*!
 \internal
 Decide which completions can be used at currentItem and compute them.
@@ -1975,6 +1837,52 @@ void QQmlLSCompletion::collectCompletions(const DomItem &currentItem,
     // no completion could be found
     qCDebug(QQmlLSUtilsLog) << "No completion was found for current request.";
     return;
+}
+
+QQmlLSCompletion::QQmlLSCompletion(const QFactoryLoader &pluginLoader)
+{
+    const auto keys = pluginLoader.metaDataKeys();
+    for (qsizetype i = 0; i < keys.size(); ++i) {
+        auto instance = std::unique_ptr<QQmlLSPlugin>(
+                qobject_cast<QQmlLSPlugin *>(pluginLoader.instance(i)));
+        if (!instance)
+            continue;
+        if (auto completionInstance = instance->createCompletionPlugin())
+            m_plugins.push_back(std::move(completionInstance));
+    }
+}
+
+/*!
+\internal
+Helper method to call a method on all loaded plugins.
+*/
+void QQmlLSCompletion::collectFromPlugins(qxp::function_ref<CompletionFromPluginFunction> f,
+                                          BackInsertIterator result) const
+{
+    for (const auto &plugin : m_plugins) {
+        Q_ASSERT(plugin);
+        f(plugin.get(), result);
+    }
+}
+
+void QQmlLSCompletion::suggestSnippetsForLeftHandSideOfBinding(const DomItem &itemAtPosition,
+                                                               BackInsertIterator result) const
+{
+    collectFromPlugins(
+            [&itemAtPosition](QQmlLSCompletionPlugin *p, BackInsertIterator result) {
+                p->suggestSnippetsForLeftHandSideOfBinding(itemAtPosition, result);
+            },
+            result);
+}
+
+void QQmlLSCompletion::suggestSnippetsForRightHandSideOfBinding(const DomItem &itemAtPosition,
+                                                                BackInsertIterator result) const
+{
+    collectFromPlugins(
+            [&itemAtPosition](QQmlLSCompletionPlugin *p, BackInsertIterator result) {
+                p->suggestSnippetsForRightHandSideOfBinding(itemAtPosition, result);
+            },
+            result);
 }
 
 QT_END_NAMESPACE

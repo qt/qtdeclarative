@@ -17,11 +17,15 @@
 
 #include "qqmlcompletioncontextstrings_p.h"
 #include "qqmllsutils_p.h"
+#include "qqmllsplugin_p.h"
 
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtCore/private/qduplicatetracker_p.h>
+#include <QtCore/private/qfactoryloader_p.h>
+#include <QtCore/qpluginloader.h>
+#include <QtCore/qxpfunctional.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -29,12 +33,11 @@ Q_DECLARE_LOGGING_CATEGORY(QQmlLSCompletionLog)
 
 enum QQmlLSUtilsAppendOption { AppendSemicolon, AppendNothing };
 
-
 class QQmlLSCompletion
 {
     using DomItem = QQmlJS::Dom::DomItem;
 public:
-    // TODO: constructor with build paths to load plugins
+    QQmlLSCompletion(const QFactoryLoader &pluginLoader);
 
     using CompletionItem = QLspSpecification::CompletionItem;
     using BackInsertIterator = std::back_insert_iterator<QList<CompletionItem>>;
@@ -201,8 +204,24 @@ private:
                                  QDuplicateTracker<QString> *usedNames,
                                  BackInsertIterator it) const;
 
-    // TODO: split + move to plugin
+    // TODO: split implementation into suggestSnippetsFor{Left,Right}HandSideOfBinding + move to plugin
     void suggestQuickSnippetsCompletion(const DomItem &itemAtPosition, BackInsertIterator it) const;
+
+    void suggestSnippetsForLeftHandSideOfBinding(const DomItem &items,
+                                                 BackInsertIterator result) const;
+
+    void suggestSnippetsForRightHandSideOfBinding(const DomItem &items,
+                                                  BackInsertIterator result) const;
+
+private:
+    using CompletionFromPluginFunction = void(QQmlLSCompletionPlugin *plugin,
+                                              BackInsertIterator result);
+    void collectFromPlugins(const qxp::function_ref<CompletionFromPluginFunction> f,
+                            BackInsertIterator result) const;
+
+    QStringList m_loadPaths;
+
+    std::vector<std::unique_ptr<QQmlLSCompletionPlugin>> m_plugins;
 };
 
 QT_END_NAMESPACE

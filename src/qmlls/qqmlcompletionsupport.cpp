@@ -39,6 +39,11 @@ bool CompletionRequest::fillFrom(QmlLsp::OpenDocument doc, const Parameters &par
     return true;
 }
 
+QmlCompletionSupport::QmlCompletionSupport(QmlLsp::QQmlCodeModel *codeModel)
+    : BaseT(codeModel), m_completionEngine(codeModel->pluginLoader())
+{
+}
+
 void QmlCompletionSupport::registerHandlers(QLanguageServer *, QLanguageServerProtocol *protocol)
 {
     protocol->registerCompletionRequestHandler(getRequestHandler());

@@ -7,6 +7,7 @@
 #include <QtJsonRpc/private/qjsonrpcprotocol_p.h>
 #include <QtLanguageServer/private/qlanguageserverprotocol_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtCore/private/qfactoryloader_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtCore/qprocess.h>
@@ -37,7 +38,11 @@ class tst_qmlls_utils : public QQmlDataTest
     using ExpectedDocumentations = QList<ExpectedDocumentation>;
 
 public:
-    tst_qmlls_utils() : QQmlDataTest(QT_QMLLS_UTILS_DATADIR) { }
+    tst_qmlls_utils()
+        : QQmlDataTest(QT_QMLLS_UTILS_DATADIR),
+          m_pluginLoader(QmlLSPluginInterface_iid, u"/qmlls"_s)
+    {
+    }
 
 private slots:
     void textOffsetRowColumnConversions_data();
@@ -83,6 +88,7 @@ private:
     using CacheKey = QString;
     // avoid loading the same file over and over when running all the tests
     QHash<CacheKey, EnvironmentAndFile> cache;
+    QFactoryLoader m_pluginLoader;
 
 };
 

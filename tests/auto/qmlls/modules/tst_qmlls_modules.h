@@ -66,6 +66,7 @@ private slots:
     void automaticSemicolonInsertionForCompletions();
     void hover_data();
     void hover();
+    void checkQuickSnippets();
 
 private:
     QProcess m_server;

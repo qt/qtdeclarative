@@ -4,6 +4,7 @@
 qt_internal_add_module(QmlLSPrivate
     STATIC
     INTERNAL_MODULE
+    PLUGIN_TYPES qmlls
     SOURCES
         qlspcustomtypes_p.h
         qlanguageserver_p.h qlanguageserver_p.h qlanguageserver.cpp
@@ -26,7 +27,9 @@ qt_internal_add_module(QmlLSPrivate
         qqmlrenamesymbolsupport_p.h qqmlrenamesymbolsupport.cpp
         qqmlcompletioncontextstrings_p.h qqmlcompletioncontextstrings.cpp
         qqmlhover_p.h qqmlhover.cpp
+        qqmllsplugin_p.h
         qqmllscompletion.cpp qqmllscompletion_p.h
+        qqmllscompletionplugin.cpp qqmllscompletionplugin_p.h
 
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate

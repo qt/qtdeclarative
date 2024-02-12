@@ -3525,7 +3525,7 @@ void tst_qmlls_utils::completions()
 
     qsizetype pos = QQmlLSUtils::textOffsetFrom(code, line - 1, character - 1);
     CompletionContextStrings ctxt{ code, pos };
-    QQmlLSCompletion completionEngine;
+    QQmlLSCompletion completionEngine(m_pluginLoader);
     QList<CompletionItem> completions =
             completionEngine.completions(locations.front().domItem, ctxt);
 
