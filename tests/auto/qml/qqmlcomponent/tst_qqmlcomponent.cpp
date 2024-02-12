@@ -21,7 +21,7 @@
 #include <private/qv4executablecompilationunit_p.h>
 #include <qcolor.h>
 #include <qsignalspy.h>
-
+#include "lifecyclewatcher.h"
 #include <algorithm>
 
 using namespace Qt::StringLiterals;
@@ -133,6 +133,7 @@ private slots:
     void boundComponent();
     void loadFromModule_data();
     void loadFromModule();
+    void loadFromModuleLifecycle();
     void loadFromModuleThenCreateWithIncubator();
     void loadFromModuleFailures_data();
     void loadFromModuleFailures();
@@ -1342,6 +1343,34 @@ void tst_qqmlcomponent::loadFromModule()
     const char *name = object->metaObject()->className();
     QVERIFY2(classNameMatcher.match(name).hasMatch(),
              name);
+}
+
+void tst_qqmlcomponent::loadFromModuleLifecycle()
+{
+    QQmlEngine engine;
+    QList<int> loadFromModuleOrder;
+    QList<int> plainLoadOrder;
+    const QList<int> expected {1, 2, 3};
+    {
+        QQmlComponent component(&engine);
+        component.loadFromModule("test", "LifeCycleWatcher");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        std::unique_ptr<QObject> root{ component.create() };
+        LifeCycleWatcher *watcher = qobject_cast<LifeCycleWatcher *>(root.get());
+        QVERIFY(watcher);
+        loadFromModuleOrder = watcher->states;
+        QCOMPARE(loadFromModuleOrder, expected);
+    }
+    {
+        QQmlComponent component(&engine);
+        component.setData("import test; LifeCycleWatcher {}", {});
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        std::unique_ptr<QObject> root{ component.create() };
+        LifeCycleWatcher *watcher = qobject_cast<LifeCycleWatcher *>(root.get());
+        QVERIFY(watcher);
+        plainLoadOrder = watcher->states;
+    }
+    QCOMPARE(loadFromModuleOrder, plainLoadOrder);
 }
 
 struct CallVerifyingIncubtor : QQmlIncubator
