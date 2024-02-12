@@ -388,6 +388,9 @@ QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
 void QQuickMenuBarPrivate::syncNativeMenuBarVisible()
 {
     Q_Q(QQuickMenuBar);
+    if (!componentComplete)
+        return;
+
     const bool shouldBeVisible = requestNative && q->isVisible();
     if (shouldBeVisible && !handle)
         createNativeMenuBar();

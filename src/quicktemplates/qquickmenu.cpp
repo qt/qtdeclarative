@@ -269,13 +269,11 @@ bool QQuickMenuPrivate::useNativeMenu() const
     return requestNative;
 }
 
-QPlatformMenu *QQuickMenuPrivate::nativeHandle() const
+QPlatformMenu *QQuickMenuPrivate::nativeHandle()
 {
     Q_ASSERT(handle || useNativeMenu());
-    if (!handle && !triedToCreateNativeMenu) {
-        auto self = const_cast<QQuickMenuPrivate *>(this);
-        self->createNativeMenu();
-    }
+    if (!handle && !triedToCreateNativeMenu)
+        createNativeMenu();
     return handle.get();
 }
 
@@ -320,8 +318,7 @@ bool QQuickMenuPrivate::createNativeMenu()
         q_func()->setVisible(false);
     });
 
-    for (QQuickNativeMenuItem *item : std::as_const(nativeItems))
-        handle->insertMenuItem(item->handle(), nullptr);
+    recursivelyCreateNativeMenuItems(q);
 
     return true;
 }
@@ -400,8 +397,7 @@ void QQuickMenuPrivate::syncWithRequestNative()
     } else if (useNativeMenu()) {
         Q_ASSERT(nativeItems.isEmpty());
         // Try to create a native menu.
-        if (nativeHandle())
-            recursivelyCreateNativeMenuItems(q);
+        nativeHandle();
     }
 }
 
