@@ -2393,8 +2393,8 @@ void QQmlJSCodeGenerator::generate_PopContext()
 {
     INJECT_TRACE_INFO(generate_PopContext);
 
-    // Add a semicolon before the closing brace, in case there was a bare label before it.
-    m_body += u";}\n"_s;
+    // Add an empty block before the closing brace, in case there was a bare label before it.
+    m_body += u"{}\n}\n"_s;
 }
 
 void QQmlJSCodeGenerator::generate_GetIterator(int iterator)
