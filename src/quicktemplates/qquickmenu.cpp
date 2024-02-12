@@ -319,6 +319,7 @@ bool QQuickMenuPrivate::createNativeMenu()
     });
 
     recursivelyCreateNativeMenuItems(q);
+    syncWithNativeMenu();
 
     return true;
 }
@@ -1896,8 +1897,6 @@ void QQuickMenu::componentComplete()
     QQuickPopup::componentComplete();
     d->resizeItems();
     d->syncWithRequestNative();
-    if (d->maybeNativeHandle())
-        d->syncWithNativeMenu();
 }
 
 void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
