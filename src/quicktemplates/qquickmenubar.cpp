@@ -289,6 +289,21 @@ QWindow* QQuickMenuBarPrivate::window() const
     return nullptr;
 }
 
+int QQuickMenuBarPrivate::menuIndex(QQuickMenu *menu) const
+{
+    // The Container API that MenuBar inherits allows for
+    // items other than MenuBarItems to be inserted. So when
+    // searching for a menu's index, we need to take this into account.
+    Q_Q(const QQuickMenuBar);
+    for (int i = 0; i < q->count(); ++i) {
+        QQuickMenuBarItem *item = qobject_cast<QQuickMenuBarItem *>(q->itemAt(i));
+        if (item && item->menu() == menu)
+            return i;
+    }
+
+    return -1;
+}
+
 QPlatformMenuBar* QQuickMenuBarPrivate::nativeHandle() const
 {
     return handle.get();
@@ -546,6 +561,11 @@ QQuickMenu *QQuickMenuBar::menuAt(int index) const
 void QQuickMenuBar::addMenu(QQuickMenu *menu)
 {
     Q_D(QQuickMenuBar);
+    if (d->menuIndex(menu) >= 0) {
+        qmlWarning(this) << "cannot add menu: '" << menu->title() << "' is already in the MenuBar.";
+        return;
+    }
+
     d->insertMenu(count(), menu, d->createItem(menu));
 }
 
@@ -557,6 +577,11 @@ void QQuickMenuBar::addMenu(QQuickMenu *menu)
 void QQuickMenuBar::insertMenu(int index, QQuickMenu *menu)
 {
     Q_D(QQuickMenuBar);
+    if (d->menuIndex(menu) >= 0) {
+        qmlWarning(this) << "cannot insert menu: '" << menu->title() << "' is already in the MenuBar.";
+        return;
+    }
+
     d->insertMenu(index, menu, d->createItem(menu));
 }
 
@@ -571,13 +596,13 @@ void QQuickMenuBar::insertMenu(int index, QQuickMenu *menu)
 void QQuickMenuBar::removeMenu(QQuickMenu *menu)
 {
     Q_D(QQuickMenuBar);
-    for (int i = 0; i < count(); ++i) {
-        QQuickMenuBarItem *item = qobject_cast<QQuickMenuBarItem *>(itemAt(i));
-        if (item && item->menu() == menu) {
-            d->takeMenu(i);
-            return;
-        }
+    const int index = d->menuIndex(menu);
+    if (index < 0) {
+        qmlWarning(this) << "cannot remove menu: '" << menu->title() << "' is not in the MenuBar.";
+        return;
     }
+
+    d->takeMenu(index);
 }
 
 /*!

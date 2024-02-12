@@ -59,6 +59,8 @@ public:
     void removeNativeMenu(QQuickMenu *menu);
 
     QWindow *window() const;
+    int menuIndex(QQuickMenu *menu) const;
+
     QPlatformMenuBar *nativeHandle() const;
     bool useNativeMenuBar() const;
     void syncNativeMenuBarVisible();

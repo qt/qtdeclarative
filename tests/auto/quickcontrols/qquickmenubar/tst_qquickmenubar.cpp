@@ -46,6 +46,8 @@ private slots:
     void insert_data();
     void insert();
     void removeMenuThatIsOpen();
+    void addRemoveExistingMenus_data();
+    void addRemoveExistingMenus();
     void checkHighlightWhenMenuDismissed();
     void hoverAfterClosingWithEscape();
     void requestNative_data();
@@ -942,6 +944,41 @@ void tst_qquickmenubar::removeMenuThatIsOpen()
     menuBar->removeMenu(fileMenu);
     QVERIFY(fileMenu);
     QTRY_VERIFY(!fileMenu->isVisible());
+}
+
+void tst_qquickmenubar::addRemoveExistingMenus_data()
+{
+    QTest::addColumn<bool>("requestNative");
+    QTest::newRow("not native") << false;
+    QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::addRemoveExistingMenus()
+{
+    // Check that you get warnings if trying to add menus that
+    // are already in the menubar, or remove menus that are not.
+    QFETCH(bool, requestNative);
+
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", requestNative }});
+    engine.load(testFileUrl("menus.qml"));
+
+    auto window = qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0));
+    QVERIFY(window);
+    auto menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    QPointer<QQuickMenu> fileMenu = window->property("fileMenu").value<QQuickMenu *>();
+    QVERIFY(fileMenu);
+    QCOMPARE(menuBar->menuAt(0), fileMenu);
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot add menu.*"));
+    menuBar->addMenu(fileMenu);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot insert menu.*"));
+    menuBar->insertMenu(0, fileMenu);
+    menuBar->removeMenu(fileMenu);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot remove menu.*"));
+    menuBar->removeMenu(fileMenu);
 }
 
 void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
