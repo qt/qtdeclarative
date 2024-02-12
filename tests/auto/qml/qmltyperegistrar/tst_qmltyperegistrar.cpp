@@ -901,4 +901,19 @@ void tst_qmltyperegistrar::javaScriptExtension()
     })"));
 }
 
+void tst_qmltyperegistrar::relatedAddedInVersion()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "AddedIn1_0"
+        accessSemantics: "reference"
+        prototype: "AddedIn1_5"
+        exports: [
+            "QmlTypeRegistrarTest/AddedIn1_0 1.0",
+            "QmlTypeRegistrarTest/AddedIn1_0 1.5"
+        ]
+        exportMetaObjectRevisions: [256, 261]
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

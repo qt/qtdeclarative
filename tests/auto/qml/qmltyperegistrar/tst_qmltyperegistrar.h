@@ -494,6 +494,23 @@ public:
     RemovedInEarlyVersion(QObject *parent = nullptr) : AddedInLateVersion(parent) {}
 };
 
+class AddedIn1_5 : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 5)
+};
+
+// Slightly absurd. The reason for such a thing may be a change in the versioning
+// scheme of the base class. We still have to retain all of the version information
+// so that you can at least use version 1.5.
+class AddedIn1_0 : public AddedIn1_5
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
+};
+
 class HasResettableProperty : public QObject
 {
     Q_OBJECT
@@ -786,6 +803,7 @@ private slots:
     void javaScriptExtension();
 
     void consistencyWarnings();
+    void relatedAddedInVersion();
 private:
     QByteArray qmltypesData;
 };

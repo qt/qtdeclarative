@@ -225,18 +225,25 @@ void QmlTypesClassDescription::collect(
             continue;
         }
 
-        if (const bool added = (name == S_ADDED_IN_VERSION);
-            added || name == S_REMOVED_IN_VERSION) {
-            QTypeRevision revision = QTypeRevision::fromEncodedVersion(toInt(value));
-            revision = handleInMinorVersion(revision, defaultRevision.majorVersion());
-            if (mode == TopLevel) {
-                (added ? addedInRevision : removedInRevision) = revision;
-            }
+        if (name == S_ADDED_IN_VERSION) {
+            const QTypeRevision revision = handleInMinorVersion(
+                    QTypeRevision::fromEncodedVersion(toInt(value)),
+                    defaultRevision.majorVersion());
+            revisions.append(revision);
+            if (mode == TopLevel)
+                addedInRevision = revision;
             continue;
         }
 
         if (mode != TopLevel)
             continue;
+
+        if (name == S_REMOVED_IN_VERSION) {
+            removedInRevision = handleInMinorVersion(
+                    QTypeRevision::fromEncodedVersion(toInt(value)),
+                    defaultRevision.majorVersion());
+            continue;
+        }
 
         // These only apply to the original class
         if (name == S_ELEMENT) {
