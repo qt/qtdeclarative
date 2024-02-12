@@ -40,6 +40,7 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcMenu, "qt.quick.controls.menu")
 Q_LOGGING_CATEGORY(lcNativeMenus, "qt.quick.controls.nativemenus")
 
 // copied from qfusionstyle.cpp
@@ -446,7 +447,8 @@ void QQuickMenuPrivate::recursivelyDestroyNativeSubMenus(QQuickMenu *menu)
         if (QQuickMenu *subMenu = item->subMenu())
             recursivelyDestroyNativeSubMenus(subMenu);
 
-        menuPrivate->handle->removeMenuItem(item->handle());
+        if (item->handle())
+            menuPrivate->handle->removeMenuItem(item->handle());
     }
 
     menuPrivate->resetNativeData();
@@ -501,6 +503,8 @@ QQuickItem *QQuickMenuPrivate::itemAt(int index) const
 
 void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
 {
+    qCDebug(lcMenu) << "insert called with index" << index << "item" << item;
+
     Q_Q(QQuickMenu);
     contentData.append(item);
     item->setParentItem(contentItem);
@@ -523,6 +527,9 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
 
     if (maybeNativeHandle() && complete)
         maybeCreateAndInsertNativeItem(index, item);
+
+    if (lcMenu().isDebugEnabled())
+        printContentModelItems();
 }
 
 void QQuickMenuPrivate::maybeCreateAndInsertNativeItem(int index, QQuickItem *item)
@@ -534,16 +541,15 @@ void QQuickMenuPrivate::maybeCreateAndInsertNativeItem(int index, QQuickItem *it
     std::unique_ptr<QQuickNativeMenuItem> nativeMenuItem(QQuickNativeMenuItem::createFromNonNativeItem(q, item));
     if (!nativeMenuItem) {
         // TODO: fall back to non-native menu
+        qmlWarning(q) << "Native menu failed to create a native menu item for item at index" << index;
         return;
     }
 
-    // It's a MenuItem created from Menu/Action or a MenuSeparator,
-    // and so we were able to create an equivalent QQuickNativeMenuItem for it.
-    if (nativeMenuItem->handle()) {
-        // Having a QQuickNativeMenuItem doesn't mean that we were able to create a native item,
-        // which is why we check the handle above.
-        nativeItems.insert(index, nativeMenuItem.get());
+    nativeItems.insert(index, nativeMenuItem.get());
 
+    // Having a QQuickNativeMenuItem doesn't mean that we were able to create a native handle:
+    // it could be e.g. a Rectangle. See comment in QQuickNativeMenuItem::createFromNonNativeItem.
+    if (nativeMenuItem->handle()) {
         QQuickNativeMenuItem *before = nativeItems.value(index + 1);
         handle->insertMenuItem(nativeMenuItem->handle(), before ? before->handle() : nullptr);
         qCDebug(lcNativeMenus) << "inserted native menu item at index" << index
@@ -558,15 +564,12 @@ void QQuickMenuPrivate::maybeCreateAndInsertNativeItem(int index, QQuickItem *it
             // have their native items destroyed and removed too.
             recursivelyCreateNativeMenuItems(nativeMenuItem->subMenu());
         }
-
-        nativeMenuItem.release();
-
-        qCDebug(lcNativeMenus) << "nativeItems now contains the following items:"
-            << nativeMenuItemListToString(nativeItems);
-    } else {
-        // Warn and clean up the pointer.
-        qmlWarning(q) << "Native menu failed to create a native menu item for item at index" << index;
     }
+
+    nativeMenuItem.release();
+
+    qCDebug(lcNativeMenus) << "nativeItems now contains the following items:"
+        << nativeMenuItemListToString(nativeItems);
 }
 
 void QQuickMenuPrivate::moveItem(int from, int to)
@@ -589,6 +592,8 @@ void QQuickMenuPrivate::moveItem(int from, int to)
 */
 void QQuickMenuPrivate::removeItem(int index, QQuickItem *item, DestructionPolicy destructionPolicy)
 {
+    qCDebug(lcMenu) << "removeItem called with index" << index << "item" << item;
+
     if (maybeNativeHandle())
         removeNativeItem(index);
 
@@ -611,6 +616,9 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item, DestructionPolic
 
     if (destructionPolicy == DestructionPolicy::Destroy)
         item->deleteLater();
+
+    if (lcMenu().isDebugEnabled())
+        printContentModelItems();
 }
 
 void QQuickMenuPrivate::removeNativeItem(int index)
@@ -629,8 +637,10 @@ void QQuickMenuPrivate::removeNativeItem(int index)
     if (QQuickMenu *subMenu = nativeItem->subMenu())
         recursivelyDestroyNativeSubMenus(subMenu);
 
-    handle->removeMenuItem(nativeItem->handle());
-    syncWithNativeMenu();
+    if (nativeItem->handle()) {
+        handle->removeMenuItem(nativeItem->handle());
+        syncWithNativeMenu();
+    }
 
     qCDebug(lcNativeMenus).nospace() << "... after removing item at index " << index
         << ", nativeItems now contains the following items: " << nativeMenuItemListToString(nativeItems);
@@ -664,6 +674,13 @@ void QQuickMenuPrivate::recursivelyCreateNativeMenuItems(QQuickMenu *menu)
         if (menuItem && menuItem->subMenu())
             recursivelyCreateNativeMenuItems(menuItem->subMenu());
     }
+}
+
+void QQuickMenuPrivate::printContentModelItems() const
+{
+    qCDebug(lcMenu) << "contentModel now contains:";
+    for (int i = 0; i < contentModel->count(); ++i)
+        qCDebug(lcMenu) << "-" << itemAt(i);
 }
 
 QQuickItem *QQuickMenuPrivate::beginCreateItem()

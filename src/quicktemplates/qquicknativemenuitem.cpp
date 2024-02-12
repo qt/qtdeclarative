@@ -55,11 +55,15 @@ QQuickNativeMenuItem *QQuickNativeMenuItem::createFromNonNativeItem(
         type = Type::Separator;
     }
 
-    if (type == Type::Unknown)
-        return nullptr;
-
     std::unique_ptr<QQuickNativeMenuItem> nativeMenuItemPtr(new QQuickNativeMenuItem(
         parentMenu, nonNativeItem, type));
+    if (type == Type::Unknown) {
+        // It's not a Menu/Action/MenuSeparator that we're dealing with, but we still need
+        // to create the QQuickNativeMenu item for it so that our container has the same
+        // indices as the menu's contentModel.
+        return nativeMenuItemPtr.release();
+    }
+
     qCDebug(lcNativeMenuItem) << "attemping to create native menu item for"
         << nativeMenuItemPtr->debugText();
     auto *parentMenuPrivate = QQuickMenuPrivate::get(parentMenu);
@@ -110,9 +114,8 @@ QQuickNativeMenuItem *QQuickNativeMenuItem::createFromNonNativeItem(
         connect(menuItem, &QQuickMenuItem::checkableChanged, nativeMenuItem, &QQuickNativeMenuItem::sync);
         break;
     case Type::Separator:
-        break;
     case Type::Unknown:
-        Q_UNREACHABLE();
+        break;
     }
 
     return nativeMenuItem;
@@ -154,7 +157,8 @@ QPlatformMenuItem *QQuickNativeMenuItem::handle() const
 
 void QQuickNativeMenuItem::sync()
 {
-    Q_ASSERT(m_type != Type::Unknown);
+    if (m_type == Type::Unknown)
+        return;
 
     const auto *action = this->action();
     const auto *separator = this->separator();

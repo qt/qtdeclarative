@@ -16,6 +16,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
@@ -97,6 +98,7 @@ private slots:
     void nativeDynamicSubmenus();
     void nativeMenuSeparator();
     void requestNativeChanges();
+    void nativeMixedItems();
 
 private:
     static bool hasWindowActivation();
@@ -2520,6 +2522,78 @@ void tst_QQuickMenu::requestNativeChanges()
     QVERIFY(subMenuPrivate->useNativeMenu());
     QVERIFY(!subMenuPrivate->requestNative);
     QVERIFY(!subMenuPrivate->handle);
+}
+
+// Check that non-menu items (e.g. Rectangles) can be inserted between menu items without issues.
+void tst_QQuickMenu::nativeMixedItems()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeMixedItems.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(contextMenu);
+    QVERIFY(contextMenu->requestNative());
+
+    // Insert a Rectangle between the Action and MenuItem in the top-level menu.
+    QVERIFY(QMetaObject::invokeMethod(window, "insertRectangle",
+        Q_ARG(QQuickMenu *, contextMenu), Q_ARG(int, 1), Q_ARG(QColor, QColorConstants::Red)));
+    {
+        auto *action = contextMenu->actionAt(0);
+        QVERIFY(action);
+        QCOMPARE(action->text(), "action");
+        auto *rectangle = qobject_cast<QQuickRectangle *>(contextMenu->itemAt(1));
+        QVERIFY(rectangle);
+        QCOMPARE(rectangle->color(), QColorConstants::Red);
+        auto *menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(2));
+        QVERIFY(menuItem);
+        QCOMPARE(menuItem->text(), "menuItem");
+        auto *subMenu = contextMenu->menuAt(3);
+        QVERIFY(subMenu);
+        QCOMPARE(subMenu->title(), "subMenu");
+    }
+
+    // Insert a Rectangle at the end of all of the items (which were: {Action, Rectangle, MenuItem, Menu}).
+    QVERIFY(QMetaObject::invokeMethod(window, "insertRectangle",
+        Q_ARG(QQuickMenu *, contextMenu), Q_ARG(int, 4), Q_ARG(QColor, QColorConstants::Blue)));
+    {
+        auto *action = contextMenu->actionAt(0);
+        QVERIFY(action);
+        QCOMPARE(action->text(), "action");
+        auto *rectangle1 = qobject_cast<QQuickRectangle *>(contextMenu->itemAt(1));
+        QVERIFY(rectangle1);
+        QCOMPARE(rectangle1->color(), QColorConstants::Red);
+        auto *menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(2));
+        QVERIFY(menuItem);
+        QCOMPARE(menuItem->text(), "menuItem");
+        auto *subMenu = contextMenu->menuAt(3);
+        QVERIFY(subMenu);
+        QCOMPARE(subMenu->title(), "subMenu");
+        auto *rectangle2 = qobject_cast<QQuickRectangle *>(contextMenu->itemAt(4));
+        QVERIFY(rectangle2);
+        QCOMPARE(rectangle2->color(), QColorConstants::Blue);
+    }
+
+    // Check that the sub-menu can be accessed and is in the
+    // appropriate place in contentData.
+    auto *subMenu = contextMenu->menuAt(3);
+    QVERIFY(subMenu);
+    // Insert a Rectangle between the Action and MenuItem in the top-level menu.
+    QVERIFY(QMetaObject::invokeMethod(window, "insertRectangle",
+        Q_ARG(QQuickMenu *, subMenu), Q_ARG(int, 1), Q_ARG(QColor, QColorConstants::Green)));
+    {
+        auto *action1 = subMenu->actionAt(0);
+        QVERIFY(action1);
+        QCOMPARE(action1->text(), "subAction1");
+        auto *rectangle = qobject_cast<QQuickRectangle *>(subMenu->itemAt(1));
+        QVERIFY(rectangle);
+        QCOMPARE(rectangle->color(), QColorConstants::Green);
+        auto *action2 = subMenu->actionAt(2);
+        QVERIFY(action2);
+        QCOMPARE(action2->text(), "subAction2");
+    }
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)

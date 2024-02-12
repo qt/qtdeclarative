@@ -72,6 +72,8 @@ public:
 
     static void recursivelyCreateNativeMenuItems(QQuickMenu *menu);
 
+    void printContentModelItems() const;
+
     QQuickItem *beginCreateItem();
     void completeCreateItem();
 
