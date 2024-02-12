@@ -17,8 +17,8 @@ class Q_QUICK_EXPORT QQuickFramebufferObject : public QQuickItem
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickFramebufferObject)
 
-    Q_PROPERTY(bool textureFollowsItemSize READ textureFollowsItemSize WRITE setTextureFollowsItemSize NOTIFY textureFollowsItemSizeChanged FINAL)
-    Q_PROPERTY(bool mirrorVertically READ mirrorVertically WRITE setMirrorVertically NOTIFY mirrorVerticallyChanged FINAL)
+    Q_PROPERTY(bool textureFollowsItemSize READ textureFollowsItemSize WRITE setTextureFollowsItemSize NOTIFY textureFollowsItemSizeChanged)
+    Q_PROPERTY(bool mirrorVertically READ mirrorVertically WRITE setMirrorVertically NOTIFY mirrorVerticallyChanged)
 
 public:
 

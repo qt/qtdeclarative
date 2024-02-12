@@ -114,8 +114,8 @@ class Q_QUICK_EXPORT QQuickMouseEvent : public QObject
 #if QT_DEPRECATED_SINCE(6, 6)
     Q_PROPERTY(int source READ source CONSTANT REVISION(2, 7) FINAL)
 #endif
-    Q_PROPERTY(bool wasHeld READ wasHeld CONSTANT FINAL)
     Q_PROPERTY(bool isClick READ isClick CONSTANT FINAL)
+    Q_PROPERTY(bool wasHeld READ wasHeld CONSTANT FINAL)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
     Q_PROPERTY(int flags READ flags CONSTANT REVISION(2, 11) FINAL)
     QML_NAMED_ELEMENT(MouseEvent)

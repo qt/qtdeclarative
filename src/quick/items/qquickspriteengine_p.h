@@ -37,12 +37,12 @@ class QQuickSprite;
 class Q_QUICK_EXPORT QQuickStochasticState : public QObject //Currently for internal use only - Sprite and ParticleGroup
 {
     Q_OBJECT
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged FINAL)
-    Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged FINAL)
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
+    Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged)
     //Note that manually advanced sprites need to query this variable and implement own behaviour for it
-    Q_PROPERTY(bool randomStart READ randomStart WRITE setRandomStart NOTIFY randomStartChanged FINAL)
-    Q_PROPERTY(QVariantMap to READ to WRITE setTo NOTIFY toChanged FINAL)
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
+    Q_PROPERTY(bool randomStart READ randomStart WRITE setRandomStart NOTIFY randomStartChanged)
+    Q_PROPERTY(QVariantMap to READ to WRITE setTo NOTIFY toChanged)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 
 public:
     QQuickStochasticState(QObject* parent = nullptr)

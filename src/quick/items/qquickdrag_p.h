@@ -126,7 +126,7 @@ class Q_QUICK_EXPORT QQuickDrag : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QQuickItem *target READ target WRITE setTarget NOTIFY targetChanged RESET resetTarget FINAL)
-    Q_PROPERTY(Axis axis READ axis WRITE setAxis NOTIFY axisChanged FINAL)
+    Q_PROPERTY(Axis axis READ axis WRITE setAxis NOTIFY axisChanged FINAL FINAL)
     Q_PROPERTY(qreal minimumX READ xmin WRITE setXmin NOTIFY minimumXChanged FINAL)
     Q_PROPERTY(qreal maximumX READ xmax WRITE setXmax NOTIFY maximumXChanged FINAL)
     Q_PROPERTY(qreal minimumY READ ymin WRITE setYmin NOTIFY minimumYChanged FINAL)
