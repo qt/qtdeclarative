@@ -1253,29 +1253,29 @@ void QQuickLayout::effectiveSizeHints_helper(QQuickItem *item, QSizeF *cachedSiz
  */
 QLayoutPolicy::Policy QQuickLayout::effectiveSizePolicy_helper(QQuickItem *item, Qt::Orientation orientation, QQuickLayoutAttached *info)
 {
-    bool fillExtent([&]{
-        QLayoutPolicy::Policy policy{QLayoutPolicy::Fixed};
-        if (item && QGuiApplication::testAttribute(Qt::AA_QtQuickUseDefaultSizePolicy)) {
-            QLayoutPolicy sizePolicy = QQuickItemPrivate::get(item)->sizePolicy();
-            policy = (orientation == Qt::Horizontal) ? sizePolicy.horizontalPolicy() : sizePolicy.verticalPolicy();
-        }
-        return (policy == QLayoutPolicy::Preferred);
-    }());
-
+    QLayoutPolicy::Policy pol{QLayoutPolicy::Fixed};
     bool isSet = false;
     if (info) {
         if (orientation == Qt::Horizontal) {
             isSet = info->isFillWidthSet();
-            if (isSet) fillExtent = info->fillWidth();
+            if (isSet && info->fillWidth())
+                pol = QLayoutPolicy::Preferred;
         } else {
             isSet = info->isFillHeightSet();
-            if (isSet) fillExtent = info->fillHeight();
+            if (isSet && info->fillHeight())
+                pol = QLayoutPolicy::Preferred;
         }
     }
-    if (!isSet && qobject_cast<QQuickLayout*>(item))
-        fillExtent = true;
+    if (!isSet && item) {
+        if (qobject_cast<QQuickLayout*>(item)) {
+            pol = QLayoutPolicy::Preferred;
+        } else if (QGuiApplication::testAttribute(Qt::AA_QtQuickUseDefaultSizePolicy)) {
+            QLayoutPolicy sizePolicy = QQuickItemPrivate::get(item)->sizePolicy();
+            pol = (orientation == Qt::Horizontal) ? sizePolicy.horizontalPolicy() : sizePolicy.verticalPolicy();
+        }
+    }
 
-    return fillExtent ? QLayoutPolicy::Preferred : QLayoutPolicy::Fixed;
+    return pol;
 }
 
 void QQuickLayout::_q_dumpLayoutTree() const

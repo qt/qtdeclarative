@@ -213,16 +213,20 @@ public:
     void setMaximumImplicitSize(const QSizeF &sz);
 
     bool fillWidth() const {
-        if (auto *itemPriv = itemForSizePolicy(m_isFillWidthSet))
-            return (itemPriv->sizePolicy().horizontalPolicy() == QLayoutPolicy::Preferred);
+        if (auto *itemPriv = itemForSizePolicy(m_isFillWidthSet)) {
+            QLayoutPolicy::Policy hPolicy = itemPriv->sizePolicy().horizontalPolicy();
+            return hPolicy & QLayoutPolicy::GrowFlag;
+        }
         return m_fillWidth;
     }
     void setFillWidth(bool fill);
     bool isFillWidthSet() const { return m_isFillWidthSet; }
 
     bool fillHeight() const {
-        if (auto *itemPriv = itemForSizePolicy(m_isFillHeightSet))
-            return (itemPriv->sizePolicy().verticalPolicy() == QLayoutPolicy::Preferred);
+        if (auto *itemPriv = itemForSizePolicy(m_isFillHeightSet)) {
+            QLayoutPolicy::Policy vPolicy = itemPriv->sizePolicy().verticalPolicy();
+            return vPolicy & QLayoutPolicy::GrowFlag;
+        }
         return m_fillHeight;
     }
     void setFillHeight(bool fill);
