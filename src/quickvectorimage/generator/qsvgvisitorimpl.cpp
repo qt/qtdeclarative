@@ -24,7 +24,7 @@
 #include <private/qquadpath_p.h>
 
 #include "utils_p.h"
-#include<QtCore/qloggingcategory.h>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -251,13 +251,13 @@ void QSvgVisitorImpl::visitLineNode(const QSvgLine *node)
 
 void QSvgVisitorImpl::visitPolygonNode(const QSvgPolygon *node)
 {
-    QPainterPath p = QQuickVectorGraphics::Utils::polygonToPath(node->polygon(), true);
+    QPainterPath p = QQuickVectorImageGenerator::Utils::polygonToPath(node->polygon(), true);
     handlePathNode(node, p);
 }
 
 void QSvgVisitorImpl::visitPolylineNode(const QSvgPolyline *node)
 {
-    QPainterPath p = QQuickVectorGraphics::Utils::polygonToPath(node->polygon(), false);
+    QPainterPath p = QQuickVectorImageGenerator::Utils::polygonToPath(node->polygon(), false);
     handlePathNode(node, p, Qt::FlatCap);
 }
 

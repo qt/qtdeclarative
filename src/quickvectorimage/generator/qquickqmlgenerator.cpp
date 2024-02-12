@@ -11,7 +11,7 @@
 #include <private/qquickitem_p.h>
 #include <private/qquickimagebase_p_p.h>
 
-#include<QtCore/qloggingcategory.h>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -48,7 +48,7 @@ private:
     QByteArray m_output;
 };
 
-QQuickQmlGenerator::QQuickQmlGenerator(const QString fileName, QQuickVectorGraphics::GeneratorFlags flags, const QString &outFileName)
+QQuickQmlGenerator::QQuickQmlGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags, const QString &outFileName)
     : QQuickGenerator(fileName, flags)
     , outputFileName(outFileName)
 {
@@ -168,7 +168,7 @@ void QQuickQmlGenerator::generatePath(const PathNodeInfo &info)
         generateNodeBase(info);
 
         m_indentLevel++;
-        if (m_flags.testFlag(QQuickVectorGraphics::GeneratorFlag::CurveRenderer))
+        if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer))
             stream() << "preferredRendererType: Shape.CurveRenderer";
         optimizePaths(info);
         //qCDebug(lcQuickVectorGraphics) << *node->qpath();
@@ -186,7 +186,7 @@ void QQuickQmlGenerator::generateGradient(const QGradient *grad, const QRectF &b
         m_indentLevel++;
 
         QRectF gradRect(linGrad->start(), linGrad->finalStop());
-        QRectF logRect = linGrad->coordinateMode() == QGradient::LogicalMode ? gradRect : QQuickVectorGraphics::Utils::mapToQtLogicalMode(gradRect, boundingRect);
+        QRectF logRect = linGrad->coordinateMode() == QGradient::LogicalMode ? gradRect : QQuickVectorImageGenerator::Utils::mapToQtLogicalMode(gradRect, boundingRect);
 
         stream() << "x1: " << logRect.left();
         stream() << "y1: " << logRect.top();
@@ -215,18 +215,18 @@ void QQuickQmlGenerator::generateGradient(const QGradient *grad, const QRectF &b
     }
 }
 
-void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainterPath *painterPath, const QQuadPath *quadPath, QQuickVectorGraphics::PathSelector pathSelector, const QRectF &boundingRect)
+void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainterPath *painterPath, const QQuadPath *quadPath, QQuickVectorImageGenerator::PathSelector pathSelector, const QRectF &boundingRect)
 {
     Q_UNUSED(pathSelector)
     Q_ASSERT(painterPath || quadPath);
 
     QString penName = info.strokeColor;
     const bool noPen = penName.isEmpty() || penName == u"transparent";
-    if (pathSelector == QQuickVectorGraphics::StrokePath && noPen)
+    if (pathSelector == QQuickVectorImageGenerator::StrokePath && noPen)
         return;
 
     const bool noFill = !info.grad && info.fillColor == u"transparent";
-    if (pathSelector == QQuickVectorGraphics::FillPath && noFill)
+    if (pathSelector == QQuickVectorImageGenerator::FillPath && noFill)
         return;
 
     auto fillRule = QQuickShapePath::FillRule(painterPath ? painterPath->fillRule() : quadPath->fillRule());
@@ -234,19 +234,19 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     m_indentLevel++;
     if (!info.nodeId.isEmpty()) {
         switch (pathSelector) {
-        case QQuickVectorGraphics::FillPath:
+        case QQuickVectorImageGenerator::FillPath:
             stream() << "objectName: \"svg_fill_path:" << info.nodeId << "\"";
             break;
-        case QQuickVectorGraphics::StrokePath:
+        case QQuickVectorImageGenerator::StrokePath:
             stream() << "objectName: \"svg_stroke_path:" << info.nodeId << "\"";
             break;
-        case QQuickVectorGraphics::FillAndStroke:
+        case QQuickVectorImageGenerator::FillAndStroke:
             stream() << "objectName: \"svg_path:" << info.nodeId << "\"";
             break;
         }
     }
 
-    if (noPen || !(pathSelector & QQuickVectorGraphics::StrokePath)) {
+    if (noPen || !(pathSelector & QQuickVectorImageGenerator::StrokePath)) {
         stream() << "strokeColor: \"transparent\"";
     } else {
         stream() << "strokeColor: \"" << penName << "\"";
@@ -255,7 +255,7 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     if (info.capStyle == Qt::FlatCap)
         stream() << "capStyle: ShapePath.FlatCap"; //### TODO Add the rest of the styles, as well as join styles etc.
 
-    if (!(pathSelector & QQuickVectorGraphics::FillPath)) {
+    if (!(pathSelector & QQuickVectorImageGenerator::FillPath)) {
         stream() << "fillColor: \"transparent\"";
     } else if (auto *grad = info.grad) {
         generateGradient(grad, boundingRect);
@@ -270,12 +270,12 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
 
     QString hintStr;
     if (quadPath)
-        hintStr = QQuickVectorGraphics::Utils::pathHintString(*quadPath);
+        hintStr = QQuickVectorImageGenerator::Utils::pathHintString(*quadPath);
     if (!hintStr.isEmpty())
         stream() << hintStr;
 
 
-    QString svgPathString = painterPath ? QQuickVectorGraphics::Utils::toSvgString(*painterPath) : QQuickVectorGraphics::Utils::toSvgString(*quadPath);
+    QString svgPathString = painterPath ? QQuickVectorImageGenerator::Utils::toSvgString(*painterPath) : QQuickVectorImageGenerator::Utils::toSvgString(*quadPath);
     stream() <<   "PathSvg { path: \"" << svgPathString << "\" }";
 
     m_indentLevel--;
@@ -354,7 +354,7 @@ void QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
         if (!info.forceSeparatePaths && info.isPathContainer) {
             stream() << shapeName() <<" {";
             m_indentLevel++;
-            if (m_flags.testFlag(QQuickVectorGraphics::GeneratorFlag::CurveRenderer))
+            if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer))
                 stream() << "preferredRendererType: Shape.CurveRenderer";
             m_indentLevel--;
 

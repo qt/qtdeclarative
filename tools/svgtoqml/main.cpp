@@ -7,9 +7,9 @@
 #include <QFile>
 #include <QQuickWindow>
 #include <QQuickItem>
-#include <QtQuickVectorGraphicsGenerator/private/qquickitemgenerator_p.h>
-#include <QtQuickVectorGraphicsGenerator/private/qquickqmlgenerator_p.h>
-#include <QtQuickVectorGraphicsGenerator/private/qquickvectorgraphicsglobal_p.h>
+#include <QtQuickVectorImageGenerator/private/qquickitemgenerator_p.h>
+#include <QtQuickVectorImageGenerator/private/qquickqmlgenerator_p.h>
+#include <QtQuickVectorImageGenerator/private/qquickvectorimageglobal_p.h>
 
 #define ENABLE_GUI
 
@@ -74,14 +74,14 @@ int main(int argc, char *argv[])
         commentString = copyrightString + u"\n" + commentString;
     }
 
-    QQuickVectorGraphics::GeneratorFlags flags;
+    QQuickVectorImageGenerator::GeneratorFlags flags;
     if (parser.isSet(curveRendererOption))
-        flags |= QQuickVectorGraphics::GeneratorFlag::CurveRenderer;
+        flags |= QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer;
     if (parser.isSet(optimizeOption))
-        flags |= QQuickVectorGraphics::GeneratorFlag::OptimizePaths;
+        flags |= QQuickVectorImageGenerator::GeneratorFlag::OptimizePaths;
     if (parser.isSet(outlineModeOption))
-        flags |= (QQuickVectorGraphics::GeneratorFlag::OutlineStrokeMode
-                  | QQuickVectorGraphics::GeneratorFlag::OptimizePaths);
+        flags |= (QQuickVectorImageGenerator::GeneratorFlag::OutlineStrokeMode
+                  | QQuickVectorImageGenerator::GeneratorFlag::OptimizePaths);
 
     QQuickQmlGenerator generator(inFileName, flags, outFileName);
     generator.setShapeTypeName(typeName);

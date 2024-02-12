@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include <private/qquickvectorgraphicsglobal_p.h>
+#include <private/qquickvectorimageglobal_p.h>
 #include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
@@ -35,14 +35,14 @@ struct PathNodeInfo;
 struct TextNodeInfo;
 struct StructureNodeInfo;
 
-class Q_QUICKVECTORGRAPHICSGENERATOR_EXPORT QQuickGenerator
+class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickGenerator
 {
 public:
-    QQuickGenerator(const QString fileName, QQuickVectorGraphics::GeneratorFlags flags);
+    QQuickGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags);
     virtual ~QQuickGenerator();
 
-    void setGeneratorFlags(QQuickVectorGraphics::GeneratorFlags flags);
-    QQuickVectorGraphics::GeneratorFlags generatorFlags();
+    void setGeneratorFlags(QQuickVectorImageGenerator::GeneratorFlags flags);
+    QQuickVectorImageGenerator::GeneratorFlags generatorFlags();
 
     void generate();
 
@@ -55,11 +55,11 @@ protected:
     virtual void generateTextNode(const TextNodeInfo &info) = 0;
     virtual void generateStructureNode(const StructureNodeInfo &info) = 0;
     virtual void generateRootNode(const StructureNodeInfo &info) = 0;
-    virtual void outputShapePath(const PathNodeInfo &info, const QPainterPath *path, const QQuadPath *quadPath, QQuickVectorGraphics::PathSelector pathSelector, const QRectF &boundingRect) = 0;
+    virtual void outputShapePath(const PathNodeInfo &info, const QPainterPath *path, const QQuadPath *quadPath, QQuickVectorImageGenerator::PathSelector pathSelector, const QRectF &boundingRect) = 0;
     void optimizePaths(const PathNodeInfo &info);
 
 protected:
-    QQuickVectorGraphics::GeneratorFlags m_flags;
+    QQuickVectorImageGenerator::GeneratorFlags m_flags;
 
 private:
     QString m_fileName;

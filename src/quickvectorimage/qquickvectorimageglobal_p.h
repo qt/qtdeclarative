@@ -1,8 +1,8 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QTQUICKVECTORGRAPHICSGLOBAL_P_H
-#define QTQUICKVECTORGRAPHICSGLOBAL_P_H
+#ifndef QTQUICKVECTORIMAGEGLOBAL_P_H
+#define QTQUICKVECTORIMAGEGLOBAL_P_H
 
 //
 //  W A R N I N G
@@ -16,11 +16,11 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQuickVectorGraphicsGenerator/qtquickvectorgraphicsgeneratorexports.h>
+#include <QtQuickVectorImageGenerator/qtquickvectorimagegeneratorexports.h>
 
 QT_BEGIN_NAMESPACE
 
-namespace QQuickVectorGraphics
+namespace QQuickVectorImageGenerator
 {
     enum PathSelector {
         FillPath = 0x1,
@@ -40,4 +40,4 @@ namespace QQuickVectorGraphics
 
 QT_END_NAMESPACE
 
-#endif //QTQUICKVECTORGRAPHICSGLOBAL_P_H
+#endif //QTQUICKVECTORIMAGEGLOBAL_P_H

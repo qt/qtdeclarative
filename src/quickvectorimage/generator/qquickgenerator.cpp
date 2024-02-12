@@ -11,13 +11,13 @@
 #include <private/qquickitem_p.h>
 #include <private/qquickimagebase_p_p.h>
 
-#include<QtCore/qloggingcategory.h>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcQuickVectorGraphics, "qt.quick.vectorgraphics", QtWarningMsg)
 
-QQuickGenerator::QQuickGenerator(const QString fileName, QQuickVectorGraphics::GeneratorFlags flags)
+QQuickGenerator::QQuickGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags)
     : m_flags(flags)
     , m_fileName(fileName)
     , m_loader(nullptr)
@@ -29,12 +29,12 @@ QQuickGenerator::~QQuickGenerator()
     delete m_loader;
 }
 
-void QQuickGenerator::setGeneratorFlags(QQuickVectorGraphics::GeneratorFlags flags)
+void QQuickGenerator::setGeneratorFlags(QQuickVectorImageGenerator::GeneratorFlags flags)
 {
     m_flags = flags;
 }
 
-QQuickVectorGraphics::GeneratorFlags QQuickGenerator::generatorFlags()
+QQuickVectorImageGenerator::GeneratorFlags QQuickGenerator::generatorFlags()
 {
     return m_flags;
 }
@@ -50,7 +50,7 @@ void QQuickGenerator::optimizePaths(const PathNodeInfo &info)
     QPainterPath pathCopy = info.painterPath;
     pathCopy.setFillRule(info.fillRule);
 
-    if (m_flags.testFlag(QQuickVectorGraphics::GeneratorFlag::OptimizePaths)) {
+    if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::OptimizePaths)) {
         QQuadPath strokePath = QQuadPath::fromPainterPath(pathCopy);
         bool fillPathNeededClose;
         QQuadPath fillPath = strokePath.subPathsClosed(&fillPathNeededClose);
@@ -58,14 +58,14 @@ void QQuickGenerator::optimizePaths(const PathNodeInfo &info)
         fillPath.addCurvatureData();
         QSGCurveProcessor::solveOverlaps(fillPath);
         const bool compatibleStrokeAndFill = !fillPathNeededClose && !intersectionsFound;
-        if (compatibleStrokeAndFill || m_flags.testFlag(QQuickVectorGraphics::GeneratorFlag::OutlineStrokeMode)) {
-            outputShapePath(info, nullptr, &fillPath, QQuickVectorGraphics::FillAndStroke, pathCopy.boundingRect());
+        if (compatibleStrokeAndFill || m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::OutlineStrokeMode)) {
+            outputShapePath(info, nullptr, &fillPath, QQuickVectorImageGenerator::FillAndStroke, pathCopy.boundingRect());
         } else {
-            outputShapePath(info, nullptr, &fillPath, QQuickVectorGraphics::FillPath, pathCopy.boundingRect());
-            outputShapePath(info, nullptr, &strokePath, QQuickVectorGraphics::StrokePath, pathCopy.boundingRect());
+            outputShapePath(info, nullptr, &fillPath, QQuickVectorImageGenerator::FillPath, pathCopy.boundingRect());
+            outputShapePath(info, nullptr, &strokePath, QQuickVectorImageGenerator::StrokePath, pathCopy.boundingRect());
         }
     } else {
-        outputShapePath(info, &pathCopy, nullptr, QQuickVectorGraphics::FillAndStroke, pathCopy.boundingRect());
+        outputShapePath(info, &pathCopy, nullptr, QQuickVectorImageGenerator::FillAndStroke, pathCopy.boundingRect());
     }
 }
 

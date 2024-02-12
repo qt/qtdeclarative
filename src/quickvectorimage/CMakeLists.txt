@@ -5,7 +5,7 @@
 ## QuickVectorGraphics Module:
 #####################################################################
 
-qt_internal_add_module(QuickVectorGraphicsGeneratorPrivate
+qt_internal_add_module(QuickVectorImageGeneratorPrivate
     INTERNAL_MODULE
     SOURCES
         generator/qsvgvisitorimpl_p.h generator/qsvgvisitorimpl.cpp
@@ -14,7 +14,7 @@ qt_internal_add_module(QuickVectorGraphicsGeneratorPrivate
         generator/qquickqmlgenerator_p.h generator/qquickqmlgenerator.cpp
         generator/qquicknodeinfo_p.h
         generator/utils_p.h
-        qquickvectorgraphicsglobal_p.h
+        qquickvectorimageglobal_p.h
     LIBRARIES
         Qt::Core
         Qt::QuickPrivate

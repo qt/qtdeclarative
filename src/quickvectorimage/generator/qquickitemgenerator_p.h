@@ -20,10 +20,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKVECTORGRAPHICSGENERATOR_EXPORT QQuickItemGenerator : public QQuickGenerator
+class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickGenerator
 {
 public:
-    QQuickItemGenerator(const QString fileName, QQuickVectorGraphics::GeneratorFlags flags, QQuickItem *parentItem);
+    QQuickItemGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags, QQuickItem *parentItem);
     ~QQuickItemGenerator();
 
 protected:
@@ -35,7 +35,7 @@ protected:
     void generateTextNode(const TextNodeInfo &info) override;
     void generateStructureNode(const StructureNodeInfo &info) override;
     void generateRootNode(const StructureNodeInfo &info) override;
-    void outputShapePath(const PathNodeInfo &info, const QPainterPath *path, const QQuadPath *quadPath, QQuickVectorGraphics::PathSelector pathSelector, const QRectF &boundingRect) override;
+    void outputShapePath(const PathNodeInfo &info, const QPainterPath *path, const QQuadPath *quadPath, QQuickVectorImageGenerator::PathSelector pathSelector, const QRectF &boundingRect) override;
 
 private:
     void generateGradient(const QGradient *grad, QQuickShapePath *shapePath, const QRectF &boundingRect);

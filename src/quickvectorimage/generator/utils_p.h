@@ -24,7 +24,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQuickVectorGraphics::Utils
+namespace QQuickVectorImageGenerator::Utils
 {
 
 class ViewBoxItem : public QQuickItem
