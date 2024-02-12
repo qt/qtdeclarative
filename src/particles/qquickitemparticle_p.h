@@ -25,8 +25,8 @@ class QQuickItemParticleAttached;
 class Q_QUICKPARTICLES_EXPORT QQuickItemParticle : public QQuickParticlePainter
 {
     Q_OBJECT
-    Q_PROPERTY(bool fade READ fade WRITE setFade NOTIFY fadeChanged FINAL)
-    Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    Q_PROPERTY(bool fade READ fade WRITE setFade NOTIFY fadeChanged)
+    Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     QML_NAMED_ELEMENT(ItemParticle)
     QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQuickItemParticleAttached)
