@@ -30,6 +30,7 @@ class QQmlComponent;
 class QQmlObjectModel;
 class QQuickMenuItem;
 class QQuickNativeMenuItem;
+class QQuickMenuBar;
 
 class Q_QUICKTEMPLATES2_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate
 {
@@ -53,6 +54,8 @@ public:
     void syncWithRequestNative();
     static void recursivelyDestroyNativeSubMenus(QQuickMenu *menu);
     void setNativeMenuVisible(bool visible);
+
+    QQuickMenuBar *resolveMenuBar() const;
 
     QQuickItem *itemAt(int index) const;
     void insertItem(int index, QQuickItem *item);
