@@ -1091,8 +1091,15 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
             state.appendCreatorErrors();
         enginePriv->dereferenceScarceResources();
     } else {
+        // TODO: extract into function
         rv = loadedType.createWithQQmlData();
         QQmlPropertyCache::ConstPtr propertyCache = QQmlData::ensurePropertyCache(rv);
+        QQmlParserStatus *parserStatus = nullptr;
+        const int parserStatusCast = loadedType.parserStatusCast();
+        if (parserStatusCast != -1) {
+            parserStatus = reinterpret_cast<QQmlParserStatus*>(reinterpret_cast<char *>(rv) + parserStatusCast);
+            parserStatus->classBegin();
+        }
         for (int i = 0, propertyCount = propertyCache->propertyCount(); i < propertyCount; ++i) {
             if (const QQmlPropertyData *propertyData = propertyCache->property(i); propertyData->isRequired()) {
                 state.ensureRequiredPropertyStorage();
@@ -1100,6 +1107,12 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
                 info.propertyName = propertyData->name(rv);
                 state.addPendingRequiredProperty(rv, propertyData, info);
             }
+        }
+        if (parserStatus)
+            parserStatus->componentComplete();
+        if (const int finalizerCast = loadedType.finalizerCast(); finalizerCast != -1) {
+            auto* hook = reinterpret_cast<QQmlFinalizerHook *>(reinterpret_cast<char *>(rv) + finalizerCast);
+            hook->componentFinalized();
         }
     }
 
