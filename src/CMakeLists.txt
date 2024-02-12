@@ -88,7 +88,9 @@ if(QT_FEATURE_xmlstreamwriter)
     add_subdirectory(../tools/qmlcachegen qmlcachegen)
 endif()
 
-if(QT_FEATURE_thread AND TARGET Qt::LanguageServerPrivate AND NOT WASM AND NOT IOS AND NOT ANDROID AND NOT QNX AND NOT INTEGRITY AND NOT WEBOS)
+if(QT_FEATURE_thread AND QT_FEATURE_filesystemwatcher AND QT_FEATURE_processenvironment
+        AND TARGET Qt::LanguageServerPrivate
+        AND NOT WASM AND NOT IOS AND NOT ANDROID AND NOT QNX AND NOT INTEGRITY AND NOT WEBOS)
     add_subdirectory(qmlls)
 endif()
 
