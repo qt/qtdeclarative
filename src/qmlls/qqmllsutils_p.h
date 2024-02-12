@@ -15,8 +15,6 @@
 // We mean it.
 //
 
-#include "qqmlcompletioncontextstrings_p.h"
-
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
@@ -27,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(QQmlLSCompletionLog);
+Q_DECLARE_LOGGING_CATEGORY(QQmlLSUtilsLog);
 
 struct QQmlLSUtilsItemLocation
 {
@@ -126,8 +124,6 @@ enum class ImportCompletionType { None, Module, Version };
 
 using DomItem = QQmlJS::Dom::DomItem;
 
-enum QQmlLSUtilsAppendOption { AppendSemicolon, AppendNothing };
-
 class QQmlLSUtils
 {
 public:
@@ -158,30 +154,17 @@ public:
             const DomItem &item, QQmlLSUtilsResolveOptions);
     static bool isValidEcmaScriptIdentifier(QStringView view);
 
-    // completion stuff
-    using CompletionItem = QLspSpecification::CompletionItem;
-    static QList<CompletionItem> idsCompletions(const DomItem& component);
-
-    static QString qualifiersFrom(const DomItem &el);
-    static QList<CompletionItem> reachableTypes(const DomItem &context,
-                                                QQmlJS::Dom::LocalSymbolsTypes typeCompletionType,
-                                                QLspSpecification::CompletionItemKind kind);
-
-    static QList<CompletionItem> suggestJSExpressionCompletion(const DomItem &context);
-    static QList<CompletionItem> completions(const DomItem& currentItem,
-                                             const CompletionContextStrings &ctx);
-
-
-    // JS statement completion
-    static QList<CompletionItem> suggestJSStatementCompletion(const DomItem &currentItem);
-    static QList<CompletionItem>
-    suggestCaseAndDefaultStatementCompletion();
-    static QList<CompletionItem>
-    suggestVariableDeclarationStatementCompletion(QQmlLSUtilsAppendOption option = AppendSemicolon);
     static QPair<QString, QStringList> cmakeBuildCommand(const QString &path);
 
     // Documentation Hints
     static QByteArray getDocumentationFromLocation(const DomItem &file, const QQmlLSUtilsTextPosition &position);
+
+    static bool isFieldMemberExpression(const DomItem &item);
+    static bool isFieldMemberAccess(const DomItem &item);
+    static QStringList fieldMemberExpressionBits(const DomItem &item,
+                                                 const DomItem &stopAtChild = {});
+
+    static QString qualifiersFrom(const DomItem &el);
 };
 QT_END_NAMESPACE
 

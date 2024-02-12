@@ -26,6 +26,7 @@ qt_internal_add_module(QmlLSPrivate
         qqmlrenamesymbolsupport_p.h qqmlrenamesymbolsupport.cpp
         qqmlcompletioncontextstrings_p.h qqmlcompletioncontextstrings.cpp
         qqmlhover_p.h qqmlhover.cpp
+        qqmllscompletion.cpp qqmllscompletion_p.h
 
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate

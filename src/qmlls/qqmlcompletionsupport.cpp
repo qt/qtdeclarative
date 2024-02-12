@@ -68,7 +68,7 @@ void QmlCompletionSupport::process(RequestPointerArgument req)
 {
     QmlLsp::OpenDocumentSnapshot doc =
             m_codeModel->snapshotByUrl(req->m_parameters.textDocument.uri);
-    req->sendCompletions(doc);
+    req->sendCompletions(req->completions(doc, m_completionEngine));
 }
 
 QString CompletionRequest::urlAndPos() const
@@ -78,10 +78,9 @@ QString CompletionRequest::urlAndPos() const
             + QString::number(m_parameters.position.character);
 }
 
-void CompletionRequest::sendCompletions(QmlLsp::OpenDocumentSnapshot &doc)
+void CompletionRequest::sendCompletions(const QList<CompletionItem> &completions)
 {
-    QList<CompletionItem> res = completions(doc);
-    m_response.sendResponse(res);
+    m_response.sendResponse(completions);
 }
 
 static bool positionIsFollowedBySpaces(qsizetype position, const QString &code)
@@ -144,7 +143,8 @@ DomItem CompletionRequest::patchInvalidFileForParser(const DomItem &file, qsizet
     return file;
 }
 
-QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapshot &doc) const
+QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapshot &doc,
+                                                     const QQmlLSCompletion &completionEngine) const
 {
     QList<CompletionItem> res;
 
@@ -188,7 +188,7 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
                                  << "validVersion:"
                                  << (doc.validDocVersion ? (*doc.validDocVersion) : -1) << "in"
                                  << currentItem.internalKindStr() << currentItem.canonicalPath();
-    auto result = QQmlLSUtils::completions(currentItem, ctx);
+    auto result = completionEngine.completions(currentItem, ctx);
     return result;
 }
 QT_END_NAMESPACE

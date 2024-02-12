@@ -15,6 +15,7 @@
 #include <QtTest/qtest.h>
 
 #include <QtQmlLS/private/qqmllsutils_p.h>
+#include <QtQmlLS/private/qqmllscompletion_p.h>
 
 #include <iostream>
 
