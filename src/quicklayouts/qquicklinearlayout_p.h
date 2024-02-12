@@ -33,7 +33,7 @@ class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickGridLayoutBase : public QQuickLayout
     Q_OBJECT
 
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection
-               NOTIFY layoutDirectionChanged REVISION(1, 1) FINAL)
+               NOTIFY layoutDirectionChanged REVISION(1, 1))
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(1, 1)
 
@@ -115,15 +115,16 @@ class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickGridLayout : public QQuickGridLayoutBa
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged FINAL)
-    Q_PROPERTY(qreal rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged FINAL)
-    Q_PROPERTY(int columns READ columns WRITE setColumns NOTIFY columnsChanged FINAL)
-    Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged FINAL)
-    Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged FINAL)
+    Q_PROPERTY(qreal columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged)
+    Q_PROPERTY(qreal rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged)
+    Q_PROPERTY(int columns READ columns WRITE setColumns NOTIFY columnsChanged)
+    Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged)
+    Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
     Q_PROPERTY(bool uniformCellWidths READ uniformCellWidths WRITE setUniformCellWidths
                NOTIFY uniformCellWidthsChanged REVISION(6, 6) FINAL)
     Q_PROPERTY(bool uniformCellHeights READ uniformCellHeights WRITE setUniformCellHeights
                NOTIFY uniformCellHeightsChanged REVISION(6, 6) FINAL)
+
     QML_NAMED_ELEMENT(GridLayout)
     QML_ADDED_IN_VERSION(1, 0)
 public:
@@ -185,7 +186,7 @@ class QQuickLinearLayoutPrivate;
 class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickLinearLayout : public QQuickGridLayoutBase
 {
     Q_OBJECT
-    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged FINAL)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
     Q_PROPERTY(bool uniformCellSizes READ uniformCellSizes WRITE setUniformCellSizes
                NOTIFY uniformCellSizesChanged REVISION(6, 6) FINAL)
 public:
