@@ -30,7 +30,7 @@ public:
 
 private:
     QString parseForQmlType(const QString &element, ExtractionMode mode);
-    QString parseForQmlProperty(const QString &element, ExtractionMode mode);
+    QString parseForQmlProperty(const QString &element, ExtractionMode mode = ExtractionMode::Simplified);
 
     const QString &m_code;
 };

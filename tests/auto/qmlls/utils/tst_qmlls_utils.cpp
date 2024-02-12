@@ -3676,6 +3676,29 @@ It can also be useful for C++ integration, as it is just a plain QObject. See th
             << QDocHtmlExtractor::ExtractionMode::Simplified
             << R"(A basic QML type.)";
 
+    QTest::addRow("qml-property-simplified-plaintext")
+            << testFile("qdochtmlparser/qml-qtqml-qtobject.html") << "objectName"
+            << QDocHtmlExtractor::ElementType::QmlProperty
+            << QDocHtmlExtractor::ExtractionMode::Simplified
+            << R"(This property holds the QObject::objectName for this specific object instance.)";
+
+    QTest::addRow("qml-property-simplified-plaintext-from-Qt5")
+            << testFile("qdochtmlparser/qml-qtqml-qtobject-qt-5.html") << "objectName"
+            << QDocHtmlExtractor::ElementType::QmlProperty
+            << QDocHtmlExtractor::ExtractionMode::Simplified
+            << R"(This property holds the QObject::objectName for this specific object instance.)";
+
+    QTest::addRow("qml-property-simplified-plaintext")
+            << testFile("qdochtmlparser/qml-qtquick-item.html") << "width"
+            << QDocHtmlExtractor::ElementType::QmlProperty
+            << QDocHtmlExtractor::ExtractionMode::Simplified
+            << R"(Defines the item's position and size. The default value is 0.)";
+
+    QTest::addRow("qml-group-property-simplified-plaintext")
+            << testFile("qdochtmlparser/qml-qtquick-item.html") << "anchors.fill"
+            << QDocHtmlExtractor::ElementType::QmlProperty
+            << QDocHtmlExtractor::ExtractionMode::Simplified
+            << R"(Anchors provide a way to position an item by specifying its relationship with other items.)";
 }
 
 void tst_qmlls_utils::qdochtmlparser()

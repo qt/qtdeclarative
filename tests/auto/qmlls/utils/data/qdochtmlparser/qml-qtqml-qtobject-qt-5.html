@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- qqmlengine.cpp -->
+  <title>QtObject QML Type | Qt QML 5.15.16</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="../qtdoc/index.html" translate="no">Qt 5.15</a></li>
+<li><a href="qtqml-index.html" translate="no">Qt QML</a></li>
+<li><a href="qtqml-qmlmodule.html" translate="no">QML Types</a></li>
+<li>QtObject QML Type</li>
+<li id="buildversion"><a href="qtqml-index.html" translate="no">Qt 5.15.16 Reference Documentation</a></li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+<div class="sidebar">
+<div class="toc">
+<h3><a name="toc">Contents</a></h3>
+<ul>
+<li class="level1"><a href="#properties">Properties</a></li>
+<li class="level1"><a href="#details">Detailed Description</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title" translate="no">QtObject QML Type</h1>
+<span class="subtitle" translate="no"></span>
+<!-- $$$QtObject-brief -->
+<p>A basic QML type. <a href="#details">More...</a></p>
+<!-- @@@QtObject -->
+<div class="table"><table class="alignedsummary" translate="no">
+<tr><td class="memItemLeft rightAlign topAlign"> Import Statement:</td><td class="memItemRight bottomAlign"> import QtQml 2.15</td></tr><tr><td class="memItemLeft rightAlign topAlign"> Instantiates:</td><td class="memItemRight bottomAlign"> <a href="qml-qtqml-qtobject.html" translate="no"><a href="../qtcore/qobject.html" translate="no">QObject</a></td></tr></table></div><ul>
+<li><a href="qml-qtqml-qtobject-members.html">List of all members, including inherited members</a></li>
+</ul>
+<a name="properties"></a>
+<h2 id="properties">Properties</h2>
+<ul>
+<li class="fn" translate="no"><b><b><a href="qml-qtqml-qtobject.html#objectName-prop" translate="no">objectName</a></b></b> : string</li>
+</ul>
+<!-- $$$QtObject-description -->
+<a name="details"></a>
+<h2 id="details">Detailed Description</h2>
+<p>The QtObject type is a non-visual element which contains only the <a href="qml-qtqml-qtobject.html#objectName-prop" translate="no">objectName</a> property.</p>
+<p>It can be useful to create a QtObject if you need an extremely lightweight type to enclose a set of custom properties:</p>
+<pre class="qml" translate="no">
+ import QtQuick 2.0
+
+ <span class="type"><a href="../qtquick/qml-qtquick-item.html" translate="no">Item</a></span> {
+     <span class="type"><a href="qml-qtqml-qtobject.html" translate="no">QtObject</a></span> {
+         <span class="name">id</span>: <span class="name">attributes</span>
+         property <span class="type"><a href="qml-string.html" translate="no">string</a></span> <span class="name">name</span>
+         property <span class="type"><a href="qml-int.html" translate="no">int</a></span> <span class="name">size</span>
+         property <span class="type"><a href="qml-variant.html" translate="no">variant</a></span> <span class="name">attributes</span>
+     }
+
+     <span class="type"><a href="../qtquick/qml-qtquick-text.html" translate="no">Text</a></span> { <span class="name">text</span>: <span class="name">attributes</span>.<span class="name">name</span> }
+ }
+</pre>
+<p>It can also be useful for C++ integration, as it is just a plain <a href="../qtcore/qobject.html" translate="no">QObject</a>. See the <a href="../qtcore/qobject.html" translate="no">QObject</a> documentation for further details.</p>
+<!-- @@@QtObject -->
+<h2>Property Documentation</h2>
+<!-- $$$objectName -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="objectName-prop">
+<td class="tblQmlPropNode"><p>
+<a name="objectName-prop"></a><span class="name">objectName</span> : <span class="type"><a href="qml-string.html" translate="no">string</a></span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property holds the <a href="../qtcore/qobject.html#objectName-prop" translate="no">QObject::objectName</a> for this specific object instance.</p>
+<p>This allows a C++ application to locate an item within a QML component using the <a href="../qtcore/qobject.html#findChild" translate="no">QObject::findChild()</a> method. For example, the following C++ application locates the child <a href="../qtquick/qml-qtquick-rectangle.html" translate="no">Rectangle</a> item and dynamically changes its <code translate="no">color</code> value:</p>
+<pre class="qml" translate="no">
+ <span class="comment">// MyRect.qml</span>
+
+ import QtQuick 2.0
+
+ <span class="type"><a href="../qtquick/qml-qtquick-item.html" translate="no">Item</a></span> {
+     <span class="name">width</span>: <span class="number">200</span>; <span class="name">height</span>: <span class="number">200</span>
+
+     <span class="type"><a href="../qtquick/qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+         <span class="name">anchors</span>.fill: <span class="name">parent</span>
+         <span class="name">color</span>: <span class="string">&quot;red&quot;</span>
+         <span class="name">objectName</span>: <span class="string">&quot;myRect&quot;</span>
+     }
+ }
+</pre>
+<pre class="cpp" translate="no">
+ <span class="comment">// main.cpp</span>
+
+ <span class="type">QQuickView</span> view;
+ view<span class="operator">.</span>setSource(<span class="type">QUrl</span><span class="operator">::</span>fromLocalFile(<span class="string">&quot;MyRect.qml&quot;</span>));
+ view<span class="operator">.</span>show();
+
+ <span class="type">QQuickItem</span> <span class="operator">*</span>item <span class="operator">=</span> view<span class="operator">.</span>rootObject()<span class="operator">-</span><span class="operator">&gt;</span>findChild<span class="operator">&lt;</span><span class="type">QQuickItem</span><span class="operator">*</span><span class="operator">&gt;</span>(<span class="string">&quot;myRect&quot;</span>);
+ <span class="keyword">if</span> (item)
+     item<span class="operator">-</span><span class="operator">&gt;</span>setProperty(<span class="string">&quot;color&quot;</span><span class="operator">,</span> <span class="type">QColor</span>(<span class="type"><a href="qml-qtqml-qt.html" translate="no">Qt</a></span><span class="operator">::</span>yellow));
+</pre>
+</div></div><!-- @@@objectName -->
+<br/>
+        </div>
+       </div>
+   </div>
+   </div>
+</div>
+<div class="footer">
+   <p>
+   <acronym title="Copyright">&copy;</acronym> 2023 The Qt Company Ltd.
+   Documentation contributions included herein are the copyrights of
+   their respective owners.<br/>    The documentation provided herein is licensed under the terms of the    <a href="http://www.gnu.org/licenses/fdl.html">GNU Free Documentation    License version 1.3</a> as published by the Free Software Foundation.<br/>    Qt and respective logos are <a href="https://doc.qt.io/qt/trademarks.html">    trademarks</a> of The Qt Company Ltd. in Finland and/or other countries
+   worldwide. All other trademarks are property of their respective owners. </p>
+</div>
+</body>
+</html>
