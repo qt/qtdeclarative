@@ -246,27 +246,19 @@ bool QQuickMenuPrivate::useNativeMenu() const
     Q_Q(const QQuickMenu);
     // If we're a sub-menu or inside a menubar, we need to
     // respect what our parent has set.
-    QObject *p = q->parent();
+    QObject *p = const_cast<QQuickMenu *>(q);
     QQuickMenu *rootMenu = nullptr;
 
     while (p) {
-        if (auto menu = qobject_cast<QQuickMenu *>(p))
-            rootMenu = menu;
-
         if (auto menuBar = qobject_cast<QQuickMenuBar *>(p))
             return menuBar->requestNative();
-        else if (auto item = qobject_cast<QQuickItem *>(p))
-            p = item->parentItem();
-        else
-            p = p->parent();
+        if (auto menu = qobject_cast<QQuickMenu *>(p))
+            rootMenu = menu;
+        p = p->parent();
     }
 
-    if (rootMenu) {
-        // This is the root parent menu; use its value.
-        return rootMenu->requestNative();
-    }
-
-    return requestNative;
+    Q_ASSERT(rootMenu);
+    return rootMenu->requestNative();
 }
 
 QPlatformMenu *QQuickMenuPrivate::nativeHandle()
