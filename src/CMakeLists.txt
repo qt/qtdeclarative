@@ -99,9 +99,10 @@ if(QT_FEATURE_xmlstreamwriter)
 endif()
 
 if(QT_FEATURE_thread AND QT_FEATURE_filesystemwatcher AND QT_FEATURE_processenvironment
-        AND TARGET Qt::LanguageServerPrivate
-        AND NOT WASM AND NOT IOS AND NOT ANDROID AND NOT QNX AND NOT INTEGRITY AND NOT WEBOS AND NOT VXWORKS)
-    add_subdirectory(qmlls)
+        AND TARGET Qt::LanguageServerPrivate)
+    if (NOT CMAKE_CROSSCOMPILING OR QT_FORCE_BUILD_TOOLS)
+        add_subdirectory(qmlls)
+    endif()
 endif()
 
 add_subdirectory(plugins)
