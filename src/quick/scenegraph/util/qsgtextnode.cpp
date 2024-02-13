@@ -200,18 +200,22 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QSGTextNode::setSmooth(bool smooth)
+    \fn void QSGTextNode::setFiltering(QSGTexture::Filtering filtering)
 
-    Sets the smoothness of the text node to \a smooth. This should typically match the item's
-    \l{QQuickItem::smooth} property.
+    Sets the sampling mode used when scaling images that are part of the displayed text to
+    \a filtering. For smoothly scaled images, use \l{QSGTexture::Linear} here.
 
-    The default is false.
+    The default is \l{QSGTexture::Nearest}.
+
+    \sa filtering()
 */
 
 /*!
-    \fn bool QSGTextNode::smooth() const
+    \fn QSGTexture::Filtering QSGTextNode::filtering() const
 
-    Returns whether the QSGTextNode will be rendered as smooth or not.
+    Returns the sampling mode used when scaling images that are part of the displayed text.
+
+    \sa setFiltering()
 */
 
 /*!

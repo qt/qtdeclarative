@@ -1994,7 +1994,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         node->setColor(d->color);
         node->setSelectionTextColor(d->selectedTextColor);
         node->setSelectionColor(d->selectionColor);
-        node->setSmooth(smooth());
+        node->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
 
         if (flags().testFlag(ItemObservesViewport))
             node->setViewport(clipRect());
