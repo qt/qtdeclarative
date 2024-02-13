@@ -2720,7 +2720,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     else
         node = static_cast<QSGInternalTextNode *>(oldNode);
 
-    node->setSmooth(smooth());
+    node->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
 
     node->setTextStyle(QSGTextNode::TextStyle(d->style));
     node->setRenderType(QSGTextNode::RenderType(d->renderType));

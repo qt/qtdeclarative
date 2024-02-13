@@ -6,6 +6,7 @@
 
 #include <QtGui/qtextlayout.h>
 #include <QtQuick/qsgnode.h>
+#include <QtQuick/qsgtexture.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,8 +56,8 @@ public:
     virtual void setRenderTypeQuality(int renderTypeQuality) = 0;
     virtual int renderTypeQuality() const = 0;
 
-    virtual void setSmooth(bool smooth) = 0;
-    virtual bool smooth() const = 0;
+    virtual void setFiltering(QSGTexture::Filtering) = 0;
+    virtual QSGTexture::Filtering filtering() const = 0;
 
     virtual void clear() = 0;
 

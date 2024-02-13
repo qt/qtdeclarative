@@ -132,14 +132,14 @@ public:
         return m_renderType;
     }
 
-    void setSmooth(bool smooth) override
+    void setFiltering(QSGTexture::Filtering filtering) override
     {
-        m_smooth = smooth;
+        m_filtering = filtering;
     }
 
-    bool smooth() const override
+    QSGTexture::Filtering filtering() const override
     {
-        return m_smooth;
+        return m_filtering;
     }
 
     void setViewport(const QRectF &viewport) override
@@ -178,7 +178,7 @@ private:
     QColor m_linkColor = QColor(0, 0, 255);
     QColor m_selectionColor = QColor(0, 0, 128);
     QColor m_selectionTextColor = QColor(255, 255, 255);
-    bool m_smooth = false;
+    QSGTexture::Filtering m_filtering = QSGTexture::Nearest;
     int m_renderTypeQuality = -1;
     int m_firstLineInViewport = -1;
     int m_firstLinePastViewport = -1;

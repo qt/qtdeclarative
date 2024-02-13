@@ -3148,7 +3148,7 @@ QSGInternalTextNode *QQuickTextEditPrivate::createTextNode()
     Q_Q(QQuickTextEdit);
     QSGInternalTextNode* node = sceneGraphContext()->createInternalTextNode(sceneGraphRenderContext());
     node->setRenderType(QSGTextNode::RenderType(renderType));
-    node->setSmooth(q->smooth());
+    node->setFiltering(q->smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
     return node;
 }
 
