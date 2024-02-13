@@ -11,6 +11,34 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(QQmlLSCompletionLog, "qt.languageserver.completions")
 
+/*!
+\class QQmlLSCompletion
+\internal
+\brief QQmlLSCompletion provides completions for all kinds of QML and JS constructs.
+
+Use the \l{completions} method to obtain completions at a certain DomItem.
+
+All the other methods in this class are helper methods: some compute completions for specific QML
+and JS constructs and some are shared between multiple QML or JS constructs to avoid code
+duplication. Most of the helper methods return lists of CompletionItems to simplify the collection
+of suggestions from different helper methods into one list.
+
+Some helper methods are called "suggest*" and will try to suggest code that does not exist yet. For
+example, any JS statement can be expected inside a Blockstatement so suggestJSStatementCompletion()
+is used to suggest JS statements inside of BlockStatements. Another example might be
+suggestReachableTypes() that will suggest Types for type annotations, attached types or Qml Object
+hierarchies, or suggestCaseAndDefaultStatementCompletion() that will only suggest "case" and
+"default" clauses for switch statements.
+
+Some helper methods are called "inside*" and will try to suggest code inside an existing structure.
+For example, insideForStatementCompletion() will try to suggest completion for the different code
+pieces initializer, condition, increment and statement that exist inside of:
+\badcode
+for(initializer; condition; increment)
+    statement
+\endcode
+*/
+
 CompletionItem QQmlLSCompletion::makeSnippet(QUtf8StringView qualifier, QUtf8StringView label,
                                              QUtf8StringView insertText)
 {
@@ -1796,7 +1824,7 @@ QQmlLSCompletion::suggestQuickSnippetsCompletion(const DomItem &itemAtPosition) 
 
 /*!
 \internal
-Use this method to obtain the completions one can get at currentItem.
+Decide which completions can be used at currentItem and compute them.
 */
 QList<CompletionItem>
 QQmlLSCompletion::completions(const DomItem &currentItem,
