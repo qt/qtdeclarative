@@ -9,7 +9,7 @@
     \examplecategory {Graphics}
 
     This example is designed to look like a weather forecast app for Europe. It demonstrates
-    a few different ways the \l{Qt Quick Shapes} API might be useful in an application, and how
+    a few different ways the \l{QtQuick.Shapes} API might be useful in an application, and how
     different properties can affect the quality and performance of the rendering.
 
     All graphics in the example originated as \c .svg files which were converted to QML
@@ -17,13 +17,13 @@
 
     \section1 Different Types of Shapes
 
-    The \l{Qt Quick Shapes} module provides APIs to render vector graphics in a Qt Quick
+    The \l{QtQuick.Shapes} module provides APIs to render vector graphics in a Qt Quick
     application. This is an alternative to using a raster \l{Image} for 2D graphics and is useful
     if the target size of the image is not known up front. With an \l{Image}, the rasterized pixmap
     is precreated at a specific size and scaling the image will either add or subtract information.
     This will result in pixelation or blurring, depending on whether its \c smooth property is set.
 
-    With \l{Qt Quick Shapes} the shapes are described mathematically, as a set of curves and line
+    With \l{QtQuick.Shapes} the shapes are described mathematically, as a set of curves and line
     segments, and thus they can be scaled arbitrarily without introducing artifacts.
 
     \image qml-weatherforecast-example.png
@@ -41,7 +41,7 @@
     While using appropriately sized raster images for icons is usually preferred for performance
     reasons, it may be inconvenient if the same application is targeting many different screen
     sizes. In order for the icons to look crisp on all screens, you have to pregenerate a large
-    set of different sizes. \l{Qt Quick Shapes} makes it possible for the application to do this
+    set of different sizes. \l{QtQuick.Shapes} makes it possible for the application to do this
     adaptation at runtime, by including the icons as shapes and rendering them at a size appropriate
     for the current screen size.
 
@@ -74,12 +74,12 @@
     \section2 Country Name Labels
 
     When zooming on a country, its name appears across the country shape. This label is also created
-    with \l{Qt Quick Shapes}, by using the \l{PathText} component type which converts a string into
+    with \l{QtQuick.Shapes}, by using the \l{PathText} component type which converts a string into
     renderable shape.
 
     This is not the typical way to create text labels in Qt Quick. For most purposes, using the
     \l{Text} element is the most efficient and convenient approach. However, there are certain
-    visualization effects supported by \l{Qt Quick Shapes} which is not supported by the regular
+    visualization effects supported by \l{QtQuick.Shapes} which is not supported by the regular
     \l{Text} element. Fill gradients is one such effect.
 
     \snippet quickshapes/weatherforecast/main.qml textShape
@@ -89,7 +89,7 @@
 
     \section1 Different Types of Renderers
 
-    The Weather Forecast example illustrates multiple different use cases for \l{Qt Quick Shapes}.
+    The Weather Forecast example illustrates multiple different use cases for \l{QtQuick.Shapes}.
     In addition, it can be used to see the upsides and downsides of the different renderers the
     module supports.
 
@@ -98,10 +98,10 @@
 
     \image settings.png
 
-    \l{Qt Quick Shapes} supports two different renderers, selectable using the
+    \l{QtQuick.Shapes} supports two different renderers, selectable using the
     \l{ QtQuick.Shapes::Shape::preferredRendererType}{preferredRendererType} property. The preferred
     renderer in the example is \c CurveRenderer. This supports hardware-accelerated curves and
-    built-in antialiasing. It is not the default renderer in \l{Qt Quick Shapes}, but in the example
+    built-in antialiasing. It is not the default renderer in \l{QtQuick.Shapes}, but in the example
     it is automatically selected on startup.
 
     The default renderer in Qt Quick Shapes is the \c GeometryRenderer. This flattens the curves of
