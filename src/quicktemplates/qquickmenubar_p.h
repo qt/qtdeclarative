@@ -31,7 +31,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickMenuBar : public QQuickContainer
     Q_PRIVATE_PROPERTY(QQuickMenuBar::d_func(), QQmlListProperty<QQuickMenu> menus READ menus NOTIFY menusChanged FINAL)
     Q_PRIVATE_PROPERTY(QQuickMenuBar::d_func(), QQmlListProperty<QObject> contentData READ contentData FINAL)
     Q_PROPERTY(bool requestNative READ requestNative WRITE setRequestNative RESET resetRequestNative
-        NOTIFY requestNativeChanged FINAL REVISION(6, 8))
+        NOTIFY requestNativeChanged REVISION(6, 8))
     QML_NAMED_ELEMENT(MenuBar)
     QML_ADDED_IN_VERSION(2, 3)
 
