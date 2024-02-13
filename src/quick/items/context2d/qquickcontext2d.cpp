@@ -3412,7 +3412,7 @@ bool QQuickJSContext2DPixelData::virtualPut(QV4::Managed *m, QV4::PropertyKey id
 /*!
     \qmlmethod CanvasImageData QtQuick::Context2D::createImageData(CanvasImageData imageData)
 
-    Creates a CanvasImageData object with the same dimensions as the argument.
+    Creates a CanvasImageData object with the same dimensions as the \a imageData argument.
 */
 /*!
     \qmlmethod CanvasImageData QtQuick::Context2D::createImageData(Url imageUrl)
