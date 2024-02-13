@@ -344,16 +344,28 @@ void QQuickMenuBarPrivate::removeNativeMenu(QQuickMenu *menu)
 void QQuickMenuBarPrivate::insertMenu(int index, QQuickMenu *menu, QQuickItem *delegateItem)
 {
     Q_Q(QQuickMenuBar);
-    if (!delegateItem)
+    if (!menu) {
+        qmlWarning(q) << "cannot insert menu: menu is null.";
         return;
+    }
+    if (!delegateItem) {
+        // To be 100% cross-platform, we require that a delegate item is successfully
+        // created in order to add a menu to the menubar, even if we use a native
+        // menubar. Otherwise an application can end up having a menubar on platforms
+        // where native menubars are available, but fail to show one on other platforms.
+        qmlWarning(q) << "cannot insert menu: could not create an item from the delegate.";
+        return;
+    }
+    if (!qobject_cast<QQuickMenuBarItem *>(delegateItem)) {
+        // We require the delegate to be a MenuBarItem, since we don't store the
+        // menus directly in the container, but indirectly using MenuBarItem.menu.
+        qmlWarning(q) << "cannot insert menu: the delegate is not a MenuBarItem.";
+        return;
+    }
 
     // Always insert menu into the container, even when using a native
     // menubar, so that container API such as 'count' and 'itemAt'
-    // continues to work as expected. To be 100% cross-platform, we
-    // also require that a delegate item has been successfully created
-    // in order to also add a native menu into the native menubar, otherwise
-    // an application can end up having a menubar on desktop where native
-    // menubars are available, but fail to show one everywhere else.
+    // continues to work as expected.
     q->insertItem(index, delegateItem);
 
     if (menu) {
@@ -369,7 +381,15 @@ QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
     QQuickItem *item = q->itemAt(index);
     Q_ASSERT(item);
     QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
-    QQuickMenu *menu = menuBarItem ? menuBarItem->menu() : nullptr;
+    if (!menuBarItem) {
+        qmlWarning(q) << "cannot take/remove menu: item at index " << index << " is not a MenuBarItem.";
+        return nullptr;
+    }
+    QQuickMenu *menu = menuBarItem->menu();
+    if (!menu) {
+        qmlWarning(q) << "cannot take/remove menu: MenuBarItem.menu at index " << index << " is null.";
+        return nullptr;
+    }
 
     // Dismiss the menu if it's open. Otherwise, when we now remove it from
     // the menubar, it will stay open without the user being able to dismiss
