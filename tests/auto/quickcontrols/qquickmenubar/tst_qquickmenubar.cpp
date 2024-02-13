@@ -40,6 +40,7 @@ private slots:
     void addRemove();
     void insert_data();
     void insert();
+    void removeMenuThatIsOpen();
     void checkHighlightWhenMenuDismissed();
     void hoverAfterClosingWithEscape();
     void requestNative_data();
@@ -802,6 +803,29 @@ void tst_qquickmenubar::insert()
     menuBar->insertMenu(2, menu2.data());
     QCOMPARE(menuBar->count(), initialMenuCount + 2);
     QCOMPARE(menuBar->menuAt(2), menu2.data());
+}
+
+void tst_qquickmenubar::removeMenuThatIsOpen()
+{
+    // Check that if we remove a menu that is open, it ends
+    // up being hidden / closed. This is mostly important for
+    // non-native menubars.
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", false }});
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    QQuickMenu *fileMenu = window->property("fileMenu").value<QQuickMenu *>();
+    QVERIFY(fileMenu);
+    fileMenu->open();
+    QVERIFY(fileMenu->isVisible());
+    menuBar->removeMenu(fileMenu);
+    QVERIFY(fileMenu);
+    QTRY_VERIFY(!fileMenu->isVisible());
 }
 
 void tst_qquickmenubar::checkHighlightWhenMenuDismissed()

@@ -371,6 +371,11 @@ QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
     QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
     QQuickMenu *menu = menuBarItem ? menuBarItem->menu() : nullptr;
 
+    // Dismiss the menu if it's open. Otherwise, when we now remove it from
+    // the menubar, it will stay open without the user being able to dismiss
+    // it (at least if it's non-native).
+    menu->dismiss();
+
     if (handle)
         removeNativeMenu(menu);
 
@@ -532,7 +537,8 @@ void QQuickMenuBar::insertMenu(int index, QQuickMenu *menu)
 /*!
     \qmlmethod void QtQuick.Controls::MenuBar::removeMenu(Menu menu)
 
-    Removes and destroys the specified \a menu.
+    Removes specified \a menu. If the menu is \l {QQuickMenu::popup(QQmlV4Function *)}{open},
+    it will first be \l {QQuickMenu::dismiss()}{dismissed.}
 */
 void QQuickMenuBar::removeMenu(QQuickMenu *menu)
 {
@@ -549,9 +555,9 @@ void QQuickMenuBar::removeMenu(QQuickMenu *menu)
 /*!
     \qmlmethod Menu QtQuick.Controls::MenuBar::takeMenu(int index)
 
-    Removes and returns the menu at \a index.
-
-    \note The ownership of the item is transferred to the caller.
+    Removes and returns the menu at \a index. If the menu is
+    \l {QQuickMenu::popup(QQmlV4Function *)}{open}, it will first be
+    \l {QQuickMenu::dismiss()}{dismissed.}
 */
 QQuickMenu *QQuickMenuBar::takeMenu(int index)
 {
