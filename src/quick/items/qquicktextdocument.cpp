@@ -276,7 +276,7 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
 #endif
     QFile file(filePath);
     if (!file.open(QFile::WriteOnly | QFile::Truncate | (isHtml ? QFile::NotOpen : QFile::Text))) {
-        qmlWarning(q) << QQuickTextDocument::tr("Cannot save:") << file.errorString();
+        qmlWarning(q) << QQuickTextDocument::tr("Cannot save: %1").arg(file.errorString());
         setStatus(QQuickTextDocument::Status::WriteError);
         return;
     }
