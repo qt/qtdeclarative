@@ -99,6 +99,13 @@ int main(int argc, char **argv)
         QCoreApplication::translate("main", "namespace")
     };
     parser.addOption(namespaceOption);
+    QCommandLineOption moduleOption{
+        u"module"_s,
+        QCoreApplication::translate("main",
+                                    "Name of the QML module that this QML code belongs to."),
+        QCoreApplication::translate("main", "module")
+    };
+    parser.addOption(moduleOption);
     QCommandLineOption exportOption{ u"export"_s,
                                      QCoreApplication::translate(
                                              "main", "Export macro used in the generated C++ code"),
@@ -262,7 +269,11 @@ int main(int argc, char **argv)
     logger.setCode(sourceCode);
     setupLogger(logger);
 
-    QmltcVisitor visitor(QQmlJSScope::create(), &importer, &logger,
+    auto currentScope = QQmlJSScope::create();
+    if (parser.isSet(moduleOption))
+        currentScope->setModuleName(parser.value(moduleOption));
+
+    QmltcVisitor visitor(currentScope, &importer, &logger,
                          QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
     visitor.setMode(QmltcVisitor::Compile);
     QmltcTypeResolver typeResolver { &importer };

@@ -701,6 +701,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
             NAMESPACE ${qmltc_namespace}
             EXPORT_MACRO_NAME ${arg_QMLTC_EXPORT_DIRECTIVE}
             EXPORT_FILE_NAME ${arg_QMLTC_EXPORT_FILE_NAME}
+            MODULE ${arg_URI}
         )
     endif()
 
@@ -1446,7 +1447,7 @@ endfunction()
 # Compile Qml files (.qml) to C++ source files with QML type compiler (qmltc).
 function(_qt_internal_target_enable_qmltc target)
     set(args_option "")
-    set(args_single NAMESPACE EXPORT_MACRO_NAME EXPORT_FILE_NAME)
+    set(args_single NAMESPACE EXPORT_MACRO_NAME EXPORT_FILE_NAME MODULE)
     set(args_multi QML_FILES IMPORT_PATHS)
 
     cmake_parse_arguments(PARSE_ARGV 1 arg
@@ -1478,6 +1479,9 @@ function(_qt_internal_target_enable_qmltc target)
     set(common_args "")
     if(arg_NAMESPACE)
         list(APPEND common_args --namespace "${arg_NAMESPACE}")
+    endif()
+    if(arg_MODULE)
+        list(APPEND common_args --module "${arg_MODULE}")
     endif()
     if(arg_EXPORT_MACRO_NAME)
         list(APPEND common_args --export "${arg_EXPORT_MACRO_NAME}")
