@@ -223,6 +223,11 @@ public:
     void setReturnType(QWeakPointer<const QQmlJSScope> type) { m_returnType.setType(type); }
 
     QList<QQmlJSMetaParameter> parameters() const { return m_parameters; }
+    QPair<QList<QQmlJSMetaParameter>::iterator, QList<QQmlJSMetaParameter>::iterator>
+    mutableParametersRange()
+    {
+        return { m_parameters.begin(), m_parameters.end() };
+    }
 
     QStringList parameterNames() const
     {

@@ -53,6 +53,7 @@ private slots:
     void invalidSignalHandlers();
     void exports();
     void qmlBaseFromAnotherModule();
+    void invalidTypeAnnotation();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -277,6 +278,19 @@ void tst_qmltc_qprocess::qmlBaseFromAnotherModule()
         // it should not complain about the usages of Item, a C++ defined QML element from another
         // module
         QVERIFY(!errors.contains(u"\"Item\""_s));
+    }
+}
+
+void tst_qmltc_qprocess::invalidTypeAnnotation()
+{
+    {
+        const auto errors = runQmltc(u"invalidTypeAnnotation.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"invalidTypeAnnotation.qml:5:17: \"Qt.point\" was not found for the return type of method \"f\"."_s));
+        QVERIFY(errors.contains(
+                u"invalidTypeAnnotation.qml:19:21: \"Qt.point\" was not found for the type of parameter \"a\" in method \"gamma\"."_s));
+        QVERIFY(!errors.contains(u"\"var\""_s));
+        QVERIFY(!errors.contains(u"\"void\""_s));
     }
 }
 
