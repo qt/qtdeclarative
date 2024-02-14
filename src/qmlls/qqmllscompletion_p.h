@@ -37,6 +37,7 @@ public:
     // TODO: constructor with build paths to load plugins
 
     using CompletionItem = QLspSpecification::CompletionItem;
+    using BackInsertIterator = std::back_insert_iterator<QList<CompletionItem>>;
     QList<CompletionItem> completions(const DomItem &currentItem,
                                       const CompletionContextStrings &ctx) const;
 
@@ -53,6 +54,9 @@ private:
         qsizetype offset() const { return cursorPosition.offset(); }
     };
 
+    void collectCompletions(const DomItem &currentItem, const CompletionContextStrings &ctx,
+                            BackInsertIterator result) const;
+
     bool betweenLocations(QQmlJS::SourceLocation left, const QQmlLSCompletionPosition &positionInfo,
                           QQmlJS::SourceLocation right) const;
     bool afterLocation(QQmlJS::SourceLocation left,
@@ -67,124 +71,138 @@ private:
     DomItem previousCaseOfCaseBlock(const DomItem &parentForContext,
                                     const QQmlLSCompletionPosition &positionInfo) const;
 
-    QList<CompletionItem> idsCompletions(const DomItem &component) const;
+    void idsCompletions(const DomItem &component, BackInsertIterator it) const;
 
-    QList<CompletionItem> suggestReachableTypes(const DomItem &context,
-                                                QQmlJS::Dom::LocalSymbolsTypes typeCompletionType,
-                                                QLspSpecification::CompletionItemKind kind) const;
+    void suggestReachableTypes(const DomItem &context,
+                               QQmlJS::Dom::LocalSymbolsTypes typeCompletionType,
+                               QLspSpecification::CompletionItemKind kind,
+                               BackInsertIterator it) const;
 
-    QList<CompletionItem> suggestJSStatementCompletion(const DomItem &currentItem) const;
-    QList<CompletionItem> suggestCaseAndDefaultStatementCompletion() const;
-    QList<CompletionItem> suggestVariableDeclarationStatementCompletion(
-            QQmlLSUtilsAppendOption option = AppendSemicolon) const;
+    void suggestJSStatementCompletion(const DomItem &currentItem, BackInsertIterator it) const;
+    void suggestCaseAndDefaultStatementCompletion(BackInsertIterator it) const;
+    void suggestVariableDeclarationStatementCompletion(
+            BackInsertIterator it, QQmlLSUtilsAppendOption option = AppendSemicolon) const;
 
-    QList<CompletionItem> suggestJSExpressionCompletion(const DomItem &context) const;
+    void suggestJSExpressionCompletion(const DomItem &context, BackInsertIterator it) const;
 
-    QList<CompletionItem> suggestBindingCompletion(const DomItem &itemAtPosition) const;
+    void suggestBindingCompletion(const DomItem &itemAtPosition, BackInsertIterator it) const;
 
-    QList<CompletionItem>
-    insideImportCompletionHelper(const DomItem &file,
-                                 const QQmlLSCompletionPosition &positionInfo) const;
+    void insideImportCompletionHelper(const DomItem &file,
+                                      const QQmlLSCompletionPosition &positionInfo,
+                                      BackInsertIterator it) const;
 
-    QList<CompletionItem> jsIdentifierCompletion(const QQmlJSScope::ConstPtr &scope,
-                                                 QDuplicateTracker<QString> *usedNames) const;
+    void jsIdentifierCompletion(const QQmlJSScope::ConstPtr &scope,
+                                QDuplicateTracker<QString> *usedNames, BackInsertIterator it) const;
 
-    QList<CompletionItem> methodCompletion(const QQmlJSScope::ConstPtr &scope,
-                                           QDuplicateTracker<QString> *usedNames) const;
-    QList<CompletionItem> propertyCompletion(const QQmlJSScope::ConstPtr &scope,
-                                             QDuplicateTracker<QString> *usedNames) const;
-    QList<CompletionItem> enumerationCompletion(const QQmlJSScope::ConstPtr &scope,
-                                                QDuplicateTracker<QString> *usedNames) const;
-    QList<CompletionItem> enumerationValueCompletionHelper(const QStringList &enumeratorKeys) const;
+    void methodCompletion(const QQmlJSScope::ConstPtr &scope, QDuplicateTracker<QString> *usedNames,
+                          BackInsertIterator it) const;
+    void propertyCompletion(const QQmlJSScope::ConstPtr &scope,
+                            QDuplicateTracker<QString> *usedNames, BackInsertIterator it) const;
+    void enumerationCompletion(const QQmlJSScope::ConstPtr &scope,
+                               QDuplicateTracker<QString> *usedNames, BackInsertIterator it) const;
+    void enumerationValueCompletionHelper(const QStringList &enumeratorKeys,
+                                          BackInsertIterator it) const;
 
-    QList<CompletionItem> enumerationValueCompletion(const QQmlJSScope::ConstPtr &scope,
-                                                     const QString &enumeratorName) const;
+    void enumerationValueCompletion(const QQmlJSScope::ConstPtr &scope,
+                                    const QString &enumeratorName, BackInsertIterator it) const;
 
     static bool cursorInFrontOfItem(const DomItem &parentForContext,
                                     const QQmlLSCompletionPosition &positionInfo);
     static bool cursorAfterColon(const DomItem &currentItem,
                                  const QQmlLSCompletionPosition &positionInfo);
-    QList<CompletionItem>
-    insidePragmaCompletion(QQmlJS::Dom::DomItem currentItem,
-                           const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideQmlObjectCompletion(const DomItem &parentForContext,
-                              const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insidePropertyDefinitionCompletion(const DomItem &currentItem,
-                                       const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideBindingCompletion(const DomItem &currentItem,
-                            const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideImportCompletion(const DomItem &currentItem,
-                           const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideQmlFileCompletion(const DomItem &currentItem,
-                            const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    suggestContinueAndBreakStatementIfNeeded(const DomItem &itemAtPosition) const;
-    QList<CompletionItem>
-    insideScriptLiteralCompletion(const DomItem &currentItem,
-                                  const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insideCallExpression(const DomItem &currentItem,
-                                               const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insideIfStatement(const DomItem &currentItem,
-                                            const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insideReturnStatement(const DomItem &currentItem,
-                                                const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insideWhileStatement(const DomItem &currentItem,
-                                               const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideDoWhileStatement(const DomItem &parentForContext,
-                           const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideForStatementCompletion(const DomItem &parentForContext,
-                                 const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideForEachStatement(const DomItem &parentForContext,
-                           const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insideSwitchStatement(const DomItem &parentForContext,
-                                                const QQmlLSCompletionPosition positionInfo) const;
-    QList<CompletionItem> insideCaseClause(const DomItem &parentForContext,
-                                           const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insideCaseBlock(const DomItem &parentForContext,
-                                          const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insideDefaultClause(const DomItem &parentForContext,
-                                              const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideBinaryExpressionCompletion(const DomItem &parentForContext,
-                                     const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insideScriptPattern(const DomItem &parentForContext,
-                                              const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideVariableDeclarationEntry(const DomItem &parentForContext,
-                                   const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insideThrowStatement(const DomItem &parentForContext,
-                                               const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideLabelledStatement(const DomItem &parentForContext,
-                            const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideContinueStatement(const DomItem &parentForContext,
-                            const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insideBreakStatement(const DomItem &parentForContext,
-                                               const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideConditionalExpression(const DomItem &parentForContext,
-                                const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insideUnaryExpression(const DomItem &parentForContext,
-                                                const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> insidePostExpression(const DomItem &parentForContext,
-                                               const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem>
-    insideParenthesizedExpression(const DomItem &parentForContext,
-                                  const QQmlLSCompletionPosition &positionInfo) const;
-    QList<CompletionItem> signalHandlerCompletion(const QQmlJSScope::ConstPtr &scope,
-                                                  QDuplicateTracker<QString> *usedNames) const;
+    void insidePragmaCompletion(QQmlJS::Dom::DomItem currentItem,
+                                const QQmlLSCompletionPosition &positionInfo,
+                                BackInsertIterator it) const;
+    void insideQmlObjectCompletion(const DomItem &parentForContext,
+                                   const QQmlLSCompletionPosition &positionInfo,
+                                   BackInsertIterator it) const;
+    void insidePropertyDefinitionCompletion(const DomItem &currentItem,
+                                            const QQmlLSCompletionPosition &positionInfo,
+                                            BackInsertIterator it) const;
+    void insideBindingCompletion(const DomItem &currentItem,
+                                 const QQmlLSCompletionPosition &positionInfo,
+                                 BackInsertIterator it) const;
+    void insideImportCompletion(const DomItem &currentItem,
+                                const QQmlLSCompletionPosition &positionInfo,
+                                BackInsertIterator it) const;
+    void insideQmlFileCompletion(const DomItem &currentItem,
+                                 const QQmlLSCompletionPosition &positionInfo,
+                                 BackInsertIterator it) const;
+    void suggestContinueAndBreakStatementIfNeeded(const DomItem &itemAtPosition,
+                                                  BackInsertIterator it) const;
+    void insideScriptLiteralCompletion(const DomItem &currentItem,
+                                       const QQmlLSCompletionPosition &positionInfo,
+                                       BackInsertIterator it) const;
+    void insideCallExpression(const DomItem &currentItem,
+                              const QQmlLSCompletionPosition &positionInfo,
+                              BackInsertIterator it) const;
+    void insideIfStatement(const DomItem &currentItem, const QQmlLSCompletionPosition &positionInfo,
+                           BackInsertIterator it) const;
+    void insideReturnStatement(const DomItem &currentItem,
+                               const QQmlLSCompletionPosition &positionInfo,
+                               BackInsertIterator it) const;
+    void insideWhileStatement(const DomItem &currentItem,
+                              const QQmlLSCompletionPosition &positionInfo,
+                              BackInsertIterator it) const;
+    void insideDoWhileStatement(const DomItem &parentForContext,
+                                const QQmlLSCompletionPosition &positionInfo,
+                                BackInsertIterator it) const;
+    void insideForStatementCompletion(const DomItem &parentForContext,
+                                      const QQmlLSCompletionPosition &positionInfo,
+                                      BackInsertIterator it) const;
+    void insideForEachStatement(const DomItem &parentForContext,
+                                const QQmlLSCompletionPosition &positionInfo,
+                                BackInsertIterator it) const;
+    void insideSwitchStatement(const DomItem &parentForContext,
+                               const QQmlLSCompletionPosition positionInfo,
+                               BackInsertIterator it) const;
+    void insideCaseClause(const DomItem &parentForContext,
+                          const QQmlLSCompletionPosition &positionInfo,
+                          BackInsertIterator it) const;
+    void insideCaseBlock(const DomItem &parentForContext,
+                         const QQmlLSCompletionPosition &positionInfo, BackInsertIterator it) const;
+    void insideDefaultClause(const DomItem &parentForContext,
+                             const QQmlLSCompletionPosition &positionInfo,
+                             BackInsertIterator it) const;
+    void insideBinaryExpressionCompletion(const DomItem &parentForContext,
+                                          const QQmlLSCompletionPosition &positionInfo,
+                                          BackInsertIterator it) const;
+    void insideScriptPattern(const DomItem &parentForContext,
+                             const QQmlLSCompletionPosition &positionInfo,
+                             BackInsertIterator it) const;
+    void insideVariableDeclarationEntry(const DomItem &parentForContext,
+                                        const QQmlLSCompletionPosition &positionInfo,
+                                        BackInsertIterator it) const;
+    void insideThrowStatement(const DomItem &parentForContext,
+                              const QQmlLSCompletionPosition &positionInfo,
+                              BackInsertIterator it) const;
+    void insideLabelledStatement(const DomItem &parentForContext,
+                                 const QQmlLSCompletionPosition &positionInfo,
+                                 BackInsertIterator it) const;
+    void insideContinueStatement(const DomItem &parentForContext,
+                                 const QQmlLSCompletionPosition &positionInfo,
+                                 BackInsertIterator it) const;
+    void insideBreakStatement(const DomItem &parentForContext,
+                              const QQmlLSCompletionPosition &positionInfo,
+                              BackInsertIterator it) const;
+    void insideConditionalExpression(const DomItem &parentForContext,
+                                     const QQmlLSCompletionPosition &positionInfo,
+                                     BackInsertIterator it) const;
+    void insideUnaryExpression(const DomItem &parentForContext,
+                               const QQmlLSCompletionPosition &positionInfo,
+                               BackInsertIterator it) const;
+    void insidePostExpression(const DomItem &parentForContext,
+                              const QQmlLSCompletionPosition &positionInfo,
+                              BackInsertIterator it) const;
+    void insideParenthesizedExpression(const DomItem &parentForContext,
+                                       const QQmlLSCompletionPosition &positionInfo,
+                                       BackInsertIterator it) const;
+    void signalHandlerCompletion(const QQmlJSScope::ConstPtr &scope,
+                                 QDuplicateTracker<QString> *usedNames,
+                                 BackInsertIterator it) const;
 
     // TODO: split + move to plugin
-    QList<CompletionItem> suggestQuickSnippetsCompletion(const DomItem &itemAtPosition) const;
+    void suggestQuickSnippetsCompletion(const DomItem &itemAtPosition, BackInsertIterator it) const;
 };
 
 QT_END_NAMESPACE

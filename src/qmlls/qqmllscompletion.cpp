@@ -20,8 +20,7 @@ Use the \l{completions} method to obtain completions at a certain DomItem.
 
 All the other methods in this class are helper methods: some compute completions for specific QML
 and JS constructs and some are shared between multiple QML or JS constructs to avoid code
-duplication. Most of the helper methods return lists of CompletionItems to simplify the collection
-of suggestions from different helper methods into one list.
+duplication. Most of the helper methods add their completion items via a BackInsertIterator.
 
 Some helper methods are called "suggest*" and will try to suggest code that does not exist yet. For
 example, any JS statement can be expected inside a Blockstatement so suggestJSStatementCompletion()
@@ -138,12 +137,11 @@ bool QQmlLSCompletion::ctxBeforeStatement(const QQmlLSCompletionPosition &positi
     return result;
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::suggestBindingCompletion(const DomItem &itemAtPosition) const
+void
+QQmlLSCompletion::suggestBindingCompletion(const DomItem &itemAtPosition, BackInsertIterator it) const
 {
-    QList<CompletionItem> res;
-    res << suggestReachableTypes(itemAtPosition, LocalSymbolsType::AttachedType,
-                          CompletionItemKind::Class);
+    suggestReachableTypes(itemAtPosition, LocalSymbolsType::AttachedType, CompletionItemKind::Class,
+                          it);
 
     const QQmlJSScope::ConstPtr scope = [&]() {
         if (!QQmlLSUtils::isFieldMemberAccess(itemAtPosition))
@@ -156,21 +154,18 @@ QQmlLSCompletion::suggestBindingCompletion(const DomItem &itemAtPosition) const
     }();
 
     if (!scope)
-        return res;
+        return;
 
-    res << propertyCompletion(scope, nullptr);
-    res << signalHandlerCompletion(scope, nullptr);
-
-    return res;
+    propertyCompletion(scope, nullptr, it);
+    signalHandlerCompletion(scope, nullptr, it);
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
-                                               const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
+                                                    const QQmlLSCompletionPosition &positionInfo,
+                                                    BackInsertIterator it) const
 {
-    const CompletionContextStrings &ctx = positionInfo.cursorPosition;
     // returns completions for import statements, ctx is supposed to be in an import statement
-    QList<CompletionItem> res;
+    const CompletionContextStrings &ctx = positionInfo.cursorPosition;
     ImportCompletionType importCompletionType = ImportCompletionType::None;
     QRegularExpression spaceRe(uR"(\W+)"_s);
     QList<QStringView> linePieces = ctx.preLine().split(spaceRe, Qt::SkipEmptyParts);
@@ -180,10 +175,10 @@ QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
         CompletionItem comp;
         comp.label = "import";
         comp.kind = int(CompletionItemKind::Keyword);
-        res.append(comp);
+        it = comp;
     }
     if (linePieces.isEmpty() || linePieces.first() != u"import")
-        return res;
+        return;
     if (effectiveLength == 2) {
         // the cursor is after the import, possibly in a partial module name
         importCompletionType = ImportCompletionType::Module;
@@ -193,7 +188,7 @@ QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
             CompletionItem comp;
             comp.label = "as";
             comp.kind = int(CompletionItemKind::Keyword);
-            res.append(comp);
+            it = comp;
             importCompletionType = ImportCompletionType::Version;
         }
     }
@@ -216,7 +211,7 @@ QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
                         CompletionItem comp;
                         comp.label = label.toUtf8();
                         comp.kind = int(CompletionItemKind::Module);
-                        res.append(comp);
+                        it = comp;
                     }
                 }
             }
@@ -229,7 +224,7 @@ QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
                     CompletionItem comp;
                     comp.label = QString::number(majorV).toUtf8();
                     comp.kind = int(CompletionItemKind::Constant);
-                    res.append(comp);
+                    it = comp;
                 }
             } else {
                 bool hasMajorVersion = ctx.base().endsWith(u'.');
@@ -244,27 +239,24 @@ QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
                         CompletionItem comp;
                         comp.label = QString::number(minorV).toUtf8();
                         comp.kind = int(CompletionItemKind::Constant);
-                        res.append(comp);
+                        it = comp;
                     }
                 }
             }
             break;
         }
     }
-    return res;
 }
 
-QList<CompletionItem> QQmlLSCompletion::idsCompletions(const DomItem &component) const
+void QQmlLSCompletion::idsCompletions(const DomItem &component, BackInsertIterator it) const
 {
     qCDebug(QQmlLSCompletionLog) << "adding ids completions";
-    QList<CompletionItem> res;
     for (const QString &k : component.field(Fields::ids).keys()) {
         CompletionItem comp;
         comp.label = k.toUtf8();
         comp.kind = int(CompletionItemKind::Value);
-        res.append(comp);
+        it = comp;
     }
-    return res;
 }
 
 static bool testScopeSymbol(const QQmlJSScope::ConstPtr &scope, LocalSymbolsTypes options,
@@ -292,19 +284,17 @@ static bool testScopeSymbol(const QQmlJSScope::ConstPtr &scope, LocalSymbolsType
 \internal
 Obtain the types reachable from \c{el} as a CompletionItems.
 */
-QList<CompletionItem> QQmlLSCompletion::suggestReachableTypes(const DomItem &el,
-                                                              LocalSymbolsTypes options,
-                                                              CompletionItemKind kind) const
+void QQmlLSCompletion::suggestReachableTypes(const DomItem &el, LocalSymbolsTypes options,
+                                             CompletionItemKind kind, BackInsertIterator it) const
 {
     auto file = el.containingFile().as<QmlFile>();
     if (!file)
-        return {};
+        return;
     auto resolver = file->typeResolver();
     if (!resolver)
-        return {};
+        return;
 
     const QString requiredQualifiers = QQmlLSUtils::qualifiersFrom(el);
-    QList<CompletionItem> res;
     const auto keyValueRange = resolver->importedTypes().asKeyValueRange();
     for (const auto &type : keyValueRange) {
         // ignore special QQmlJSImporterMarkers
@@ -323,16 +313,14 @@ QList<CompletionItem> QQmlLSCompletion::suggestReachableTypes(const DomItem &el,
         CompletionItem completion;
         completion.label = QStringView(type.first).sliced(requiredQualifiers.size()).toUtf8();
         completion.kind = int(kind);
-        res << completion;
+        it = completion;
     }
-    return res;
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::jsIdentifierCompletion(const QQmlJSScope::ConstPtr &scope,
-                                         QDuplicateTracker<QString> *usedNames) const
+void QQmlLSCompletion::jsIdentifierCompletion(const QQmlJSScope::ConstPtr &scope,
+                                              QDuplicateTracker<QString> *usedNames,
+                                              BackInsertIterator it) const
 {
-    QList<CompletionItem> result;
     for (const auto &[name, jsIdentifier] : scope->ownJSIdentifiers().asKeyValueRange()) {
         CompletionItem completion;
         if (usedNames && usedNames->hasSeen(name)) {
@@ -350,16 +338,14 @@ QQmlLSCompletion::jsIdentifierCompletion(const QQmlJSScope::ConstPtr &scope,
             detail.append(jsIdentifier.isConst ? u"const"_s : u"var"_s);
         }
         completion.detail = detail.toUtf8();
-        result.append(completion);
+        it = completion;
     }
-    return result;
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::methodCompletion(const QQmlJSScope::ConstPtr &scope,
-                                   QDuplicateTracker<QString> *usedNames) const
+void QQmlLSCompletion::methodCompletion(const QQmlJSScope::ConstPtr &scope,
+                                        QDuplicateTracker<QString> *usedNames,
+                                        BackInsertIterator it) const
 {
-    QList<CompletionItem> result;
     // JS functions in current and base scopes
     for (const auto &[name, method] : scope->methods().asKeyValueRange()) {
         if (method.access() != QQmlJSMetaMethod::Public)
@@ -370,18 +356,16 @@ QQmlLSCompletion::methodCompletion(const QQmlJSScope::ConstPtr &scope,
         CompletionItem completion;
         completion.label = name.toUtf8();
         completion.kind = int(CompletionItemKind::Method);
-        result.append(completion);
+        it = completion;
         // TODO: QQmlLSUtils::reachableSymbols seems to be able to do documentation and detail
         // and co, it should also be done here if possible.
     }
-    return result;
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::propertyCompletion(const QQmlJSScope::ConstPtr &scope,
-                                     QDuplicateTracker<QString> *usedNames) const
+void QQmlLSCompletion::propertyCompletion(const QQmlJSScope::ConstPtr &scope,
+                                          QDuplicateTracker<QString> *usedNames,
+                                          BackInsertIterator it) const
 {
-    QList<CompletionItem> result;
     for (const auto &[name, property] : scope->properties().asKeyValueRange()) {
         if (usedNames && usedNames->hasSeen(name)) {
             continue;
@@ -394,16 +378,14 @@ QQmlLSCompletion::propertyCompletion(const QQmlJSScope::ConstPtr &scope,
             detail.append(u"readonly "_s);
         detail.append(property.typeName().isEmpty() ? u"var"_s : property.typeName());
         completion.detail = detail.toUtf8();
-        result.append(completion);
+        it = completion;
     }
-    return result;
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::enumerationCompletion(const QQmlJSScope::ConstPtr &scope,
-                                        QDuplicateTracker<QString> *usedNames) const
+void QQmlLSCompletion::enumerationCompletion(const QQmlJSScope::ConstPtr &scope,
+                                             QDuplicateTracker<QString> *usedNames,
+                                             BackInsertIterator it) const
 {
-    QList<CompletionItem> result;
     for (const QQmlJSMetaEnum &enumerator : scope->enumerations()) {
         if (usedNames && usedNames->hasSeen(enumerator.name())) {
             continue;
@@ -411,22 +393,19 @@ QQmlLSCompletion::enumerationCompletion(const QQmlJSScope::ConstPtr &scope,
         CompletionItem completion;
         completion.label = enumerator.name().toUtf8();
         completion.kind = static_cast<int>(CompletionItemKind::Enum);
-        result.append(completion);
+        it = completion;
     }
-    return result;
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::enumerationValueCompletionHelper(const QStringList &enumeratorKeys) const
+void QQmlLSCompletion::enumerationValueCompletionHelper(const QStringList &enumeratorKeys,
+                                                        BackInsertIterator it) const
 {
-    QList<CompletionItem> result;
     for (const QString &enumeratorKey : enumeratorKeys) {
         CompletionItem completion;
         completion.label = enumeratorKey.toUtf8();
         completion.kind = static_cast<int>(CompletionItemKind::EnumMember);
-        result.append(completion);
+        it = completion;
     }
-    return result;
 }
 
 /*!
@@ -449,20 +428,19 @@ property var b: someItem.<complete World, ValueOne and ValueTwo here>
 ```
 */
 
-QList<CompletionItem>
-QQmlLSCompletion::enumerationValueCompletion(const QQmlJSScope::ConstPtr &scope,
-                                             const QString &enumeratorName) const
+void QQmlLSCompletion::enumerationValueCompletion(const QQmlJSScope::ConstPtr &scope,
+                                                  const QString &enumeratorName,
+                                                  BackInsertIterator result) const
 {
     auto enumerator = scope->enumeration(enumeratorName);
     if (enumerator.isValid()) {
-        return enumerationValueCompletionHelper(enumerator.keys());
+        enumerationValueCompletionHelper(enumerator.keys(), result);
+        return;
     }
 
-    QList<CompletionItem> result;
     for (const QQmlJSMetaEnum &enumerator : scope->enumerations()) {
-        result << enumerationValueCompletionHelper(enumerator.keys());
+        enumerationValueCompletionHelper(enumerator.keys(), result);
     }
-    return result;
 }
 
 /*!
@@ -479,15 +457,13 @@ collect all the JavaScript Identifiers from following code:
 ```
 */
 template<typename F>
-decltype(auto) collectFromAllJavaScriptParents(const F &&f, const QQmlJSScope::ConstPtr &scope)
+void collectFromAllJavaScriptParents(const F &&f, const QQmlJSScope::ConstPtr &scope)
 {
-    decltype(f(scope)) result;
     for (QQmlJSScope::ConstPtr current = scope; current; current = current->parentScope()) {
-        result << f(current);
+        f(current);
         if (current->scopeType() == QQmlSA::ScopeType::QMLScope)
-            break;
+            return;
     }
-    return result;
 }
 
 /*!
@@ -499,10 +475,9 @@ If scriptIdentifier is inside a Field Member Expression, like \c{onCompleted} in
 from the correct type. For the previous example that would be properties, methods, etc. from the
 Component attached type.
 */
-QList<CompletionItem>
-QQmlLSCompletion::suggestJSExpressionCompletion(const DomItem &scriptIdentifier) const
+void QQmlLSCompletion::suggestJSExpressionCompletion(const DomItem &scriptIdentifier,
+                                                     BackInsertIterator result) const
 {
-    QList<CompletionItem> result;
     QDuplicateTracker<QString> usedNames;
     QQmlJSScope::ConstPtr nearestScope;
 
@@ -515,21 +490,22 @@ QQmlLSCompletion::suggestJSExpressionCompletion(const DomItem &scriptIdentifier)
 
     if (!hasQualifier) {
         for (QUtf8StringView view : std::array<QUtf8StringView, 3>{ "null", "false", "true" }) {
-            result.emplaceBack();
-            result.back().label = view.data();
-            result.back().kind = int(CompletionItemKind::Value);
+            CompletionItem completion;
+            completion.label = view.data();
+            completion.kind = int(CompletionItemKind::Value);
+            result = completion;
         }
-        result << idsCompletions(scriptIdentifier.component())
-               << suggestReachableTypes(scriptIdentifier,
-                                 LocalSymbolsType::Singleton | LocalSymbolsType::AttachedType,
-                                 CompletionItemKind::Class);
+        idsCompletions(scriptIdentifier.component(), result);
+        suggestReachableTypes(scriptIdentifier,
+                              LocalSymbolsType::Singleton | LocalSymbolsType::AttachedType,
+                              CompletionItemKind::Class, result);
 
         auto scope = scriptIdentifier.nearestSemanticScope();
         if (!scope)
-            return result;
+            return;
         nearestScope = scope;
 
-        result << enumerationCompletion(nearestScope, &usedNames);
+        enumerationCompletion(nearestScope, &usedNames, result);
     } else {
         const DomItem owner =
                 (askForCompletionOnDot ? scriptIdentifier : scriptIdentifier.directParent())
@@ -537,7 +513,7 @@ QQmlLSCompletion::suggestJSExpressionCompletion(const DomItem &scriptIdentifier)
         auto expressionType = QQmlLSUtils::resolveExpressionType(
                 owner, ResolveActualTypeForFieldMemberExpression);
         if (!expressionType || !expressionType->semanticScope)
-            return result;
+            return;
         nearestScope = expressionType->semanticScope;
         // Use root element scope to use find the enumerations
         // This should be changed when we support usages in external files
@@ -545,54 +521,53 @@ QQmlLSCompletion::suggestJSExpressionCompletion(const DomItem &scriptIdentifier)
             nearestScope = owner.rootQmlObject(GoTo::MostLikely).semanticScope();
         if (expressionType->name) {
             // note: you only get enumeration values in qualified expressions, never alone
-            result << enumerationValueCompletion(nearestScope, *expressionType->name);
+            enumerationValueCompletion(nearestScope, *expressionType->name, result);
 
             // skip enumeration types if already inside an enumeration type
             if (auto enumerator = nearestScope->enumeration(*expressionType->name);
                 !enumerator.isValid()) {
-                result << enumerationCompletion(nearestScope, &usedNames);
+                enumerationCompletion(nearestScope, &usedNames, result);
             }
 
             if (expressionType->type == EnumeratorIdentifier)
-                return result;
+                return;
         }
     }
 
     Q_ASSERT(nearestScope);
 
-    result << methodCompletion(nearestScope, &usedNames)
-           << propertyCompletion(nearestScope, &usedNames);
+    methodCompletion(nearestScope, &usedNames, result);
+    propertyCompletion(nearestScope, &usedNames, result);
 
     if (!hasQualifier) {
         // collect all of the stuff from parents
-        result << collectFromAllJavaScriptParents(
-                [this, &usedNames](const QQmlJSScope::ConstPtr &scope) {
-                    return jsIdentifierCompletion(scope, &usedNames);
+        collectFromAllJavaScriptParents(
+                [this, &usedNames, result](const QQmlJSScope::ConstPtr &scope) {
+                    jsIdentifierCompletion(scope, &usedNames, result);
                 },
-                nearestScope)
-               << collectFromAllJavaScriptParents(
-                          [this, &usedNames](const QQmlJSScope::ConstPtr &scope) {
-                              return methodCompletion(scope, &usedNames);
-                          },
-                          nearestScope)
-               << collectFromAllJavaScriptParents(
-                          [this, &usedNames](const QQmlJSScope::ConstPtr &scope) {
-                              return propertyCompletion(scope, &usedNames);
-                          },
-                          nearestScope);
+                nearestScope);
+        collectFromAllJavaScriptParents(
+                [this, &usedNames, result](const QQmlJSScope::ConstPtr &scope) {
+                    methodCompletion(scope, &usedNames, result);
+                },
+                nearestScope);
+        collectFromAllJavaScriptParents(
+                [this, &usedNames, result](const QQmlJSScope::ConstPtr &scope) {
+                    propertyCompletion(scope, &usedNames, result);
+                },
+                nearestScope);
 
         auto file = scriptIdentifier.containingFile().as<QmlFile>();
         if (!file)
-            return result;
+            return;
         auto resolver = file->typeResolver();
         if (!resolver)
-            return result;
+            return;
 
         const auto globals = resolver->jsGlobalObject();
-        result << methodCompletion(globals, &usedNames) << propertyCompletion(globals, &usedNames);
+        methodCompletion(globals, &usedNames, result);
+        propertyCompletion(globals, &usedNames, result);
     }
-
-    return result;
 }
 
 static const QQmlJSScope *resolve(const QQmlJSScope *current, const QStringList &names)
@@ -650,27 +625,25 @@ static const QMap<QString, QList<QString>> valuesForPragmas{
     { u"ValueTypeBehavior"_s, { u"Addressable"_s, u"Inaddressable"_s } },
 };
 
-QList<CompletionItem>
-QQmlLSCompletion::insidePragmaCompletion(QQmlJS::Dom::DomItem currentItem,
-                                         const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insidePragmaCompletion(QQmlJS::Dom::DomItem currentItem,
+                                              const QQmlLSCompletionPosition &positionInfo,
+                                              BackInsertIterator result) const
 {
     if (cursorAfterColon(currentItem, positionInfo)) {
         const QString name = currentItem.field(Fields::name).value().toString();
         auto values = valuesForPragmas.constFind(name);
         if (values == valuesForPragmas.constEnd())
-            return {};
+            return;
 
-        QList<CompletionItem> res;
         for (const auto &value : *values) {
             CompletionItem comp;
             comp.label = value.toUtf8();
             comp.kind = static_cast<int>(CompletionItemKind::Value);
-            res.append(comp);
+            result = comp;
         }
-        return res;
+        return;
     }
 
-    QList<CompletionItem> res;
     for (const auto &pragma : valuesForPragmas.asKeyValueRange()) {
         CompletionItem comp;
         comp.label = pragma.first.toUtf8();
@@ -678,14 +651,13 @@ QQmlLSCompletion::insidePragmaCompletion(QQmlJS::Dom::DomItem currentItem,
             comp.insertText = QString(pragma.first).append(u": ").toUtf8();
         }
         comp.kind = static_cast<int>(CompletionItemKind::Value);
-        res.append(comp);
+        result = comp;
     }
-    return res;
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideQmlObjectCompletion(const DomItem &parentForContext,
-                                            const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideQmlObjectCompletion(const DomItem &parentForContext,
+                                                 const QQmlLSCompletionPosition &positionInfo,
+                                                 BackInsertIterator result) const
 {
 
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
@@ -694,12 +666,11 @@ QQmlLSCompletion::insideQmlObjectCompletion(const DomItem &parentForContext,
     const QQmlJS::SourceLocation rightBrace = regions[RightBraceRegion];
 
     if (beforeLocation(positionInfo, leftBrace)) {
-        QList<CompletionItem> res;
         LocalSymbolsTypes options;
         options.setFlag(LocalSymbolsType::ObjectType);
-        res << suggestReachableTypes(positionInfo.itemAtPosition, options,
-                              CompletionItemKind::Constructor);
-        res << suggestQuickSnippetsCompletion(positionInfo.itemAtPosition);
+        suggestReachableTypes(positionInfo.itemAtPosition, options, CompletionItemKind::Constructor,
+                              result);
+        suggestQuickSnippetsCompletion(positionInfo.itemAtPosition, result);
 
         if (QQmlLSUtils::isFieldMemberExpression(positionInfo.itemAtPosition)) {
             /*!
@@ -723,65 +694,64 @@ QQmlLSCompletion::insideQmlObjectCompletion(const DomItem &parentForContext,
                 \endcode
                 The parser will create both bindings correctly.
             */
-            res << suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+            suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
         }
-        return res;
+        return;
     }
 
     if (betweenLocations(leftBrace, positionInfo, rightBrace)) {
-        QList<CompletionItem> res;
         // default/required property completion
         for (QUtf8StringView view :
              std::array<QUtf8StringView, 6>{ "", "readonly ", "default ", "default required ",
                                              "required default ", "required " }) {
             // readonly properties require an initializer
             if (view != QUtf8StringView("readonly ")) {
-                res.append(makeSnippet(
+                result = makeSnippet(
                         QByteArray(view.data()).append("property type name;"),
-                        QByteArray(view.data()).append("property ${1:type} ${0:name};")));
+                        QByteArray(view.data()).append("property ${1:type} ${0:name};"));
             }
 
-            res.append(makeSnippet(
+            result = makeSnippet(
                     QByteArray(view.data()).append("property type name: value;"),
-                    QByteArray(view.data()).append("property ${1:type} ${2:name}: ${0:value};")));
+                    QByteArray(view.data()).append("property ${1:type} ${2:name}: ${0:value};"));
         }
 
         // signal
-        res.append(makeSnippet("signal name(arg1:type1, ...)", "signal ${1:name}($0)"));
+        result = makeSnippet("signal name(arg1:type1, ...)", "signal ${1:name}($0)");
 
         // signal without parameters
-        res.append(makeSnippet("signal name;", "signal ${0:name};"));
+        result = makeSnippet("signal name;", "signal ${0:name};");
 
         // make already existing property required
-        res.append(makeSnippet("required name;", "required ${0:name};"));
+        result = makeSnippet("required name;", "required ${0:name};");
 
         // function
-        res.append(makeSnippet("function name(args...): returnType { statements...}",
-                               "function ${1:name}($2): ${3:returnType} {\n\t$0\n}"));
+        result = makeSnippet("function name(args...): returnType { statements...}",
+                             "function ${1:name}($2): ${3:returnType} {\n\t$0\n}");
 
         // enum
-        res.append(makeSnippet("enum name { Values...}", "enum ${1:name} {\n\t${0:values}\n}"));
+        result = makeSnippet("enum name { Values...}", "enum ${1:name} {\n\t${0:values}\n}");
 
         // inline component
-        res.append(makeSnippet("component Name: BaseType { ... }",
-                               "component ${1:name}: ${2:baseType} {\n\t$0\n}"));
+        result = makeSnippet("component Name: BaseType { ... }",
+                             "component ${1:name}: ${2:baseType} {\n\t$0\n}");
 
         // add bindings
         const DomItem containingObject = parentForContext.qmlObject();
-        res += suggestBindingCompletion(containingObject);
+        suggestBindingCompletion(containingObject, result);
 
         // add Qml Types for default binding
         const DomItem containingFile = parentForContext.containingFile();
-        res += suggestReachableTypes(containingFile, LocalSymbolsType::ObjectType,
-                              CompletionItemKind::Constructor);
-        res << suggestQuickSnippetsCompletion(positionInfo.itemAtPosition);
-        return res;
+        suggestReachableTypes(containingFile, LocalSymbolsType::ObjectType,
+                              CompletionItemKind::Constructor, result);
+        suggestQuickSnippetsCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem> QQmlLSCompletion::insidePropertyDefinitionCompletion(
-        const DomItem &currentItem, const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insidePropertyDefinitionCompletion(
+        const DomItem &currentItem, const QQmlLSCompletionPosition &positionInfo,
+        BackInsertIterator result) const
 {
     auto info = FileLocations::treeOf(currentItem)->info();
     const QQmlJS::SourceLocation propertyKeyword = info.regions[PropertyKeywordRegion];
@@ -814,37 +784,36 @@ QList<CompletionItem> QQmlLSCompletion::insidePropertyDefinitionCompletion(
         if (defaultKeyword.isValid() && defaultKeyword.offset < positionInfo.offset()) {
             completeDefault = false;
         }
-        QList<CompletionItem> items;
-        auto addCompletionKeyword = [&items](QUtf8StringView view, bool complete) {
+        auto addCompletionKeyword = [&result](QUtf8StringView view, bool complete) {
             if (!complete)
                 return;
             CompletionItem item;
             item.label = view.data();
             item.kind = int(CompletionItemKind::Keyword);
-            items.append(item);
+            result = item;
         };
         addCompletionKeyword(u8"readonly", completeReadonly);
         addCompletionKeyword(u8"required", completeRequired);
         addCompletionKeyword(u8"default", completeDefault);
         addCompletionKeyword(u8"property", true);
 
-        return items;
+        return;
     }
 
     const QQmlJS::SourceLocation propertyIdentifier = info.regions[IdentifierRegion];
     if (propertyKeyword.end() <= positionInfo.offset()
         && positionInfo.offset() < propertyIdentifier.offset) {
-        return suggestReachableTypes(currentItem,
+        suggestReachableTypes(currentItem,
                               LocalSymbolsType::ObjectType | LocalSymbolsType::ValueType,
-                              CompletionItemKind::Class);
+                              CompletionItemKind::Class, result);
     }
     // do not autocomplete the rest
-    return {};
+    return;
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideBindingCompletion(const DomItem &currentItem,
-                                          const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideBindingCompletion(const DomItem &currentItem,
+                                               const QQmlLSCompletionPosition &positionInfo,
+                                               BackInsertIterator result) const
 {
     const DomItem containingBinding = currentItem.filterUp(
             [](DomType type, const QQmlJS::Dom::DomItem &) { return type == DomType::Binding; },
@@ -852,8 +821,7 @@ QQmlLSCompletion::insideBindingCompletion(const DomItem &currentItem,
 
     // do scriptidentifiercompletion after the ':' of a binding
     if (cursorAfterColon(containingBinding, positionInfo)) {
-        QList<CompletionItem> res;
-        res << suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
 
         if (auto type = QQmlLSUtils::resolveExpressionType(currentItem, ResolveOwnerType)) {
             const QStringList names = currentItem.field(Fields::name).toString().split(u'.');
@@ -862,54 +830,49 @@ QQmlLSCompletion::insideBindingCompletion(const DomItem &currentItem,
             if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
                 LocalSymbolsTypes options;
                 options.setFlag(LocalSymbolsType::ObjectType);
-                res << suggestReachableTypes(positionInfo.itemAtPosition, options,
-                                      CompletionItemKind::Constructor);
-                res << suggestQuickSnippetsCompletion(positionInfo.itemAtPosition);
+                suggestReachableTypes(positionInfo.itemAtPosition, options,
+                                      CompletionItemKind::Constructor, result);
+                suggestQuickSnippetsCompletion(positionInfo.itemAtPosition, result);
             }
         }
-        return res;
+        return;
     }
 
     // ignore the binding if asking for completion in front of the binding
     if (cursorInFrontOfItem(containingBinding, positionInfo)) {
-        return insideQmlObjectCompletion(currentItem.containingObject(), positionInfo);
+        insideQmlObjectCompletion(currentItem.containingObject(), positionInfo, result);
+        return;
     }
 
-    QList<CompletionItem> res;
     const DomItem containingObject = currentItem.qmlObject();
 
-    res << suggestBindingCompletion(positionInfo.itemAtPosition);
+    suggestBindingCompletion(positionInfo.itemAtPosition, result);
 
     // add Qml Types for default binding
-    res += suggestReachableTypes(positionInfo.itemAtPosition, LocalSymbolsType::ObjectType,
-                          CompletionItemKind::Constructor);
-    res << suggestQuickSnippetsCompletion(positionInfo.itemAtPosition);
-    return res;
+    suggestReachableTypes(positionInfo.itemAtPosition, LocalSymbolsType::ObjectType,
+                          CompletionItemKind::Constructor, result);
+    suggestQuickSnippetsCompletion(positionInfo.itemAtPosition, result);
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideImportCompletion(const DomItem &currentItem,
-                                         const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideImportCompletion(const DomItem &currentItem,
+                                              const QQmlLSCompletionPosition &positionInfo,
+                                              BackInsertIterator result) const
 {
     const DomItem containingFile = currentItem.containingFile();
-    QList<CompletionItem> res;
-    res += insideImportCompletionHelper(containingFile, positionInfo);
+    insideImportCompletionHelper(containingFile, positionInfo, result);
 
     // when in front of the import statement: propose types for root Qml Object completion
     if (cursorInFrontOfItem(currentItem, positionInfo)) {
-        res += suggestReachableTypes(containingFile, LocalSymbolsType::ObjectType,
-                              CompletionItemKind::Constructor);
+        suggestReachableTypes(containingFile, LocalSymbolsType::ObjectType,
+                              CompletionItemKind::Constructor, result);
     }
-
-    return res;
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideQmlFileCompletion(const DomItem &currentItem,
-                                          const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideQmlFileCompletion(const DomItem &currentItem,
+                                               const QQmlLSCompletionPosition &positionInfo,
+                                               BackInsertIterator result) const
 {
     const DomItem containingFile = currentItem.containingFile();
-    QList<CompletionItem> res;
     // completions for code outside the root Qml Object
     // global completions
     if (positionInfo.cursorPosition.atLineStart()) {
@@ -918,55 +881,49 @@ QQmlLSCompletion::insideQmlFileCompletion(const DomItem &currentItem,
                 CompletionItem comp;
                 comp.label = s.toUtf8();
                 comp.kind = int(CompletionItemKind::Keyword);
-                res.append(comp);
+                result = comp;
             }
         }
     }
     // Types for root Qml Object completion
-    res += suggestReachableTypes(containingFile, LocalSymbolsType::ObjectType,
-                          CompletionItemKind::Constructor);
-    return res;
+    suggestReachableTypes(containingFile, LocalSymbolsType::ObjectType,
+                          CompletionItemKind::Constructor, result);
 }
 
 /*!
 \internal
 Generate the snippets for let, var and const variable declarations.
 */
-QList<CompletionItem> QQmlLSCompletion::suggestVariableDeclarationStatementCompletion(
-        QQmlLSUtilsAppendOption option) const
+void QQmlLSCompletion::suggestVariableDeclarationStatementCompletion(
+        BackInsertIterator result, QQmlLSUtilsAppendOption option) const
 {
-    QList<CompletionItem> result;
     // let/var/const statement
     for (auto view : std::array<QUtf8StringView, 3>{ "let", "var", "const" }) {
-        result.append(makeSnippet(QByteArray(view.data()).append(" variable = value"),
-                                  QByteArray(view.data()).append(" ${1:variable} = $0")));
+        auto snippet = makeSnippet(QByteArray(view.data()).append(" variable = value"),
+                             QByteArray(view.data()).append(" ${1:variable} = $0"));
         if (option == AppendSemicolon) {
-            result.back().insertText->append(";");
-            result.back().label.append(";");
+            snippet.insertText->append(";");
+            snippet.label.append(";");
         }
+        result = snippet;
     }
-    return result;
 }
 
 /*!
 \internal
 Generate the snippets for case and default statements.
 */
-QList<CompletionItem> QQmlLSCompletion::suggestCaseAndDefaultStatementCompletion() const
+void QQmlLSCompletion::suggestCaseAndDefaultStatementCompletion(BackInsertIterator result) const
 {
-    QList<CompletionItem> result;
-
     // case snippet
-    result.append(makeSnippet("case value: statements...", "case ${1:value}:\n\t$0"));
+    result = makeSnippet("case value: statements...", "case ${1:value}:\n\t$0");
     // case + brackets snippet
-    result.append(makeSnippet("case value: { statements... }", "case ${1:value}: {\n\t$0\n}"));
+    result = makeSnippet("case value: { statements... }", "case ${1:value}: {\n\t$0\n}");
 
     // default snippet
-    result.append(makeSnippet("default: statements...", "default:\n\t$0"));
+    result = makeSnippet("default: statements...", "default:\n\t$0");
     // default + brackets snippet
-    result.append(makeSnippet("default: { statements... }", "default: {\n\t$0\n}"));
-
-    return result;
+    result = makeSnippet("default: { statements... }", "default: {\n\t$0\n}");
 }
 
 /*!
@@ -978,63 +935,64 @@ Break and continue can be inserted only in following situations:
     \li Break inside a (nested) SwitchStatement
 \endlist
 */
-QList<CompletionItem>
-QQmlLSCompletion::suggestContinueAndBreakStatementIfNeeded(const DomItem &itemAtPosition) const
+void QQmlLSCompletion::suggestContinueAndBreakStatementIfNeeded(const DomItem &itemAtPosition,
+                                                                BackInsertIterator result) const
 {
-    QList<CompletionItem> result;
-
     bool alreadyInLabel = false;
     bool alreadyInSwitch = false;
     for (DomItem current = itemAtPosition; current; current = current.directParent()) {
         switch (current.internalKind()) {
         case DomType::ScriptExpression:
             // reached end of script expression
-            return result;
+            return;
 
         case DomType::ScriptForStatement:
         case DomType::ScriptForEachStatement:
         case DomType::ScriptWhileStatement:
-        case DomType::ScriptDoWhileStatement:
-            result.emplaceBack();
-            result.back().label = "continue";
-            result.back().kind = int(CompletionItemKind::Keyword);
+        case DomType::ScriptDoWhileStatement: {
+            CompletionItem continueKeyword;
+            continueKeyword.label = "continue";
+            continueKeyword.kind = int(CompletionItemKind::Keyword);
+            result = continueKeyword;
 
             // do not add break twice
             if (!alreadyInSwitch && !alreadyInLabel) {
-                result.emplaceBack();
-                result.back().label = "break";
-                result.back().kind = int(CompletionItemKind::Keyword);
+                CompletionItem breakKeyword;
+                breakKeyword.label = "break";
+                breakKeyword.kind = int(CompletionItemKind::Keyword);
+                result = breakKeyword;
             }
             // early exit: cannot suggest more completions
-            return result;
-
-        case DomType::ScriptSwitchStatement:
+            return;
+        }
+        case DomType::ScriptSwitchStatement: {
             // check if break was already inserted
             if (alreadyInSwitch || alreadyInLabel)
                 break;
             alreadyInSwitch = true;
 
-            result.emplaceBack();
-            result.back().label = "break";
-            result.back().kind = int(CompletionItemKind::Keyword);
+            CompletionItem breakKeyword;
+            breakKeyword.label = "break";
+            breakKeyword.kind = int(CompletionItemKind::Keyword);
+            result = breakKeyword;
             break;
-
-        case DomType::ScriptLabelledStatement:
+        }
+        case DomType::ScriptLabelledStatement: {
             // check if break was already inserted because of switch or loop
             if (alreadyInSwitch || alreadyInLabel)
                 break;
             alreadyInLabel = true;
 
-            result.emplaceBack();
-            result.back().label = "break";
-            result.back().kind = int(CompletionItemKind::Keyword);
+            CompletionItem breakKeyword;
+            breakKeyword.label = "break";
+            breakKeyword.kind = int(CompletionItemKind::Keyword);
+            result = breakKeyword;
             break;
-
+        }
         default:
             break;
         }
     }
-    return result;
 }
 
 /*!
@@ -1053,57 +1011,57 @@ completion is not recommended: qmllint will warn about usage of with statements 
 LabelledStatement completion might need to propose labels (TODO?) \li DebuggerStatement completion
 does not strike as being very useful \endlist
 */
-QList<CompletionItem>
-QQmlLSCompletion::suggestJSStatementCompletion(const DomItem &itemAtPosition) const
+void QQmlLSCompletion::suggestJSStatementCompletion(const DomItem &itemAtPosition,
+                                                    BackInsertIterator result) const
 {
-    QList<CompletionItem> result = suggestJSExpressionCompletion(itemAtPosition);
+    suggestJSExpressionCompletion(itemAtPosition, result);
+    
     if (QQmlLSUtils::isFieldMemberAccess(itemAtPosition))
-        return result;
+        return;
 
     // expression statements
-    result << suggestVariableDeclarationStatementCompletion();
+    suggestVariableDeclarationStatementCompletion(result);
     // block statement
-    result.append(makeSnippet("{ statements... }", "{\n\t$0\n}"));
+    result = makeSnippet("{ statements... }", "{\n\t$0\n}");
 
     // if + brackets statement
-    result.append(makeSnippet("if (condition) { statements }", "if ($1) {\n\t$0\n}"));
+    result = makeSnippet("if (condition) { statements }", "if ($1) {\n\t$0\n}");
 
     // do statement
-    result.append(makeSnippet("do { statements } while (condition);", "do {\n\t$1\n} while ($0);"));
+    result = makeSnippet("do { statements } while (condition);", "do {\n\t$1\n} while ($0);");
 
     // while + brackets statement
-    result.append(makeSnippet("while (condition) { statements...}", "while ($1) {\n\t$0\n}"));
+    result = makeSnippet("while (condition) { statements...}", "while ($1) {\n\t$0\n}");
 
     // for + brackets loop statement
-    result.append(makeSnippet("for (initializer; condition; increment) { statements... }",
-                              "for ($1;$2;$3) {\n\t$0\n}"));
+    result = makeSnippet("for (initializer; condition; increment) { statements... }",
+                         "for ($1;$2;$3) {\n\t$0\n}");
 
     // for ... in + brackets loop statement
-    result.append(
-            makeSnippet("for (property in object) { statements... }", "for ($1 in $2) {\n\t$0\n}"));
+    result = makeSnippet("for (property in object) { statements... }", "for ($1 in $2) {\n\t$0\n}");
 
     // for ... of + brackets loop statement
-    result.append(
-            makeSnippet("for (element of array) { statements... }", "for ($1 of $2) {\n\t$0\n}"));
+    result = makeSnippet("for (element of array) { statements... }", "for ($1 of $2) {\n\t$0\n}");
 
     // try + catch statement
-    result.append(makeSnippet("try { statements... } catch(error) { statements... }",
-                              "try {\n\t$1\n} catch($2) {\n\t$0\n}"));
+    result = makeSnippet("try { statements... } catch(error) { statements... }",
+                         "try {\n\t$1\n} catch($2) {\n\t$0\n}");
 
     // try + finally statement
-    result.append(makeSnippet("try { statements... } finally { statements... }",
-                              "try {\n\t$1\n} finally {\n\t$0\n}"));
+    result = makeSnippet("try { statements... } finally { statements... }",
+                         "try {\n\t$1\n} finally {\n\t$0\n}");
 
     // try + catch + finally statement
-    result.append(makeSnippet(
+    result = makeSnippet(
             "try { statements... } catch(error) { statements... } finally { statements... }",
-            "try {\n\t$1\n} catch($2) {\n\t$3\n} finally {\n\t$0\n}"));
+            "try {\n\t$1\n} catch($2) {\n\t$3\n} finally {\n\t$0\n}");
 
     // one can always assume that JS code in QML is inside a function, so always propose `return`
     for (auto &&view : { "return"_ba, "throw"_ba }) {
-        result.emplaceBack();
-        result.back().label = std::move(view);
-        result.back().kind = int(CompletionItemKind::Keyword);
+        CompletionItem item;
+        item.label = std::move(view);
+        item.kind = int(CompletionItemKind::Keyword);
+        result = item;
     }
 
     // rules for case+default statements:
@@ -1127,17 +1085,14 @@ QQmlLSCompletion::suggestJSStatementCompletion(const DomItem &itemAtPosition) co
         || (currentKind == DomType::List
             && (parentKind == DomType::ScriptCaseClause
                 || parentKind == DomType::ScriptDefaultClause))) {
-        result << suggestCaseAndDefaultStatementCompletion();
+        suggestCaseAndDefaultStatementCompletion(result);
     }
-
-    result << suggestContinueAndBreakStatementIfNeeded(itemAtPosition);
-
-    return result;
+    suggestContinueAndBreakStatementIfNeeded(itemAtPosition, result);
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideForStatementCompletion(const DomItem &parentForContext,
-                                               const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideForStatementCompletion(const DomItem &parentForContext,
+                                                    const QQmlLSCompletionPosition &positionInfo,
+                                                    BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
@@ -1147,55 +1102,54 @@ QQmlLSCompletion::insideForStatementCompletion(const DomItem &parentForContext,
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
     if (betweenLocations(leftParenthesis, positionInfo, firstSemicolon)) {
-        QList<CompletionItem> res;
-        res << suggestJSExpressionCompletion(positionInfo.itemAtPosition)
-            << suggestVariableDeclarationStatementCompletion(
-                       QQmlLSUtilsAppendOption::AppendNothing);
-        return res;
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        suggestVariableDeclarationStatementCompletion(result,
+                                                      QQmlLSUtilsAppendOption::AppendNothing);
+        return;
     }
     if (betweenLocations(firstSemicolon, positionInfo, secondSemicolon)
         || betweenLocations(secondSemicolon, positionInfo, rightParenthesis)) {
-        QList<CompletionItem> res;
-        res << suggestJSExpressionCompletion(positionInfo.itemAtPosition);
-        return res;
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
 
     if (afterLocation(rightParenthesis, positionInfo)) {
-        return suggestJSStatementCompletion(positionInfo.itemAtPosition);
+        suggestJSStatementCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideScriptLiteralCompletion(const DomItem &currentItem,
-                                                const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideScriptLiteralCompletion(const DomItem &currentItem,
+                                                     const QQmlLSCompletionPosition &positionInfo,
+                                                     BackInsertIterator result) const
 {
     Q_UNUSED(currentItem);
-    if (positionInfo.cursorPosition.base().isEmpty())
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
-    return {};
+    if (positionInfo.cursorPosition.base().isEmpty()) {
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
+    }
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideCallExpression(const DomItem &currentItem,
-                                       const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideCallExpression(const DomItem &currentItem,
+                                            const QQmlLSCompletionPosition &positionInfo,
+                                            BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(currentItem)->info().regions;
     const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
     if (beforeLocation(positionInfo, leftParenthesis)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
     if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideIfStatement(const DomItem &currentItem,
-                                    const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideIfStatement(const DomItem &currentItem,
+                                         const QQmlLSCompletionPosition &positionInfo,
+                                         BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(currentItem)->info().regions;
     const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
@@ -1203,50 +1157,53 @@ QQmlLSCompletion::insideIfStatement(const DomItem &currentItem,
     const QQmlJS::SourceLocation elseKeyword = regions[ElseKeywordRegion];
 
     if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
     if (betweenLocations(rightParenthesis, positionInfo, elseKeyword)) {
-        return suggestJSStatementCompletion(positionInfo.itemAtPosition);
+        suggestJSStatementCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
     if (afterLocation(elseKeyword, positionInfo)) {
-        return suggestJSStatementCompletion(positionInfo.itemAtPosition);
+        suggestJSStatementCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideReturnStatement(const DomItem &currentItem,
-                                        const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideReturnStatement(const DomItem &currentItem,
+                                             const QQmlLSCompletionPosition &positionInfo,
+                                             BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(currentItem)->info().regions;
     const QQmlJS::SourceLocation returnKeyword = regions[ReturnKeywordRegion];
 
     if (afterLocation(returnKeyword, positionInfo)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideWhileStatement(const DomItem &currentItem,
-                                       const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideWhileStatement(const DomItem &currentItem,
+                                            const QQmlLSCompletionPosition &positionInfo,
+                                            BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(currentItem)->info().regions;
     const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
     if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
     if (afterLocation(rightParenthesis, positionInfo)) {
-        return suggestJSStatementCompletion(positionInfo.itemAtPosition);
+        suggestJSStatementCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideDoWhileStatement(const DomItem &parentForContext,
-                                         const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideDoWhileStatement(const DomItem &parentForContext,
+                                              const QQmlLSCompletionPosition &positionInfo,
+                                              BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
     const QQmlJS::SourceLocation doKeyword = regions[DoKeywordRegion];
@@ -1255,17 +1212,18 @@ QQmlLSCompletion::insideDoWhileStatement(const DomItem &parentForContext,
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
     if (betweenLocations(doKeyword, positionInfo, whileKeyword)) {
-        return suggestJSStatementCompletion(positionInfo.itemAtPosition);
+        suggestJSStatementCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
     if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideForEachStatement(const DomItem &parentForContext,
-                                         const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideForEachStatement(const DomItem &parentForContext,
+                                              const QQmlLSCompletionPosition &positionInfo,
+                                              BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
@@ -1274,27 +1232,24 @@ QQmlLSCompletion::insideForEachStatement(const DomItem &parentForContext,
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
     if (betweenLocations(leftParenthesis, positionInfo, inOf)) {
-        QList<CompletionItem> res;
-        res << suggestJSExpressionCompletion(positionInfo.itemAtPosition)
-            << suggestVariableDeclarationStatementCompletion();
-        return res;
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        suggestVariableDeclarationStatementCompletion(result);
+        return;
     }
     if (betweenLocations(inOf, positionInfo, rightParenthesis)) {
-        const QList<CompletionItem> res =
-                suggestJSExpressionCompletion(positionInfo.itemAtPosition);
-        return res;
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
 
     if (afterLocation(rightParenthesis, positionInfo)) {
-        return suggestJSStatementCompletion(positionInfo.itemAtPosition);
+        suggestJSStatementCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideSwitchStatement(const DomItem &parentForContext,
-                                        const QQmlLSCompletionPosition positionInfo) const
+void QQmlLSCompletion::insideSwitchStatement(const DomItem &parentForContext,
+                                             const QQmlLSCompletionPosition positionInfo,
+                                             BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
@@ -1302,17 +1257,14 @@ QQmlLSCompletion::insideSwitchStatement(const DomItem &parentForContext,
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
     if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
-        const QList<CompletionItem> res =
-                suggestJSExpressionCompletion(positionInfo.itemAtPosition);
-        return res;
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideCaseClause(const DomItem &parentForContext,
-                                   const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideCaseClause(const DomItem &parentForContext,
+                                        const QQmlLSCompletionPosition &positionInfo,
+                                        BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
@@ -1320,16 +1272,14 @@ QQmlLSCompletion::insideCaseClause(const DomItem &parentForContext,
     const QQmlJS::SourceLocation colonToken = regions[ColonTokenRegion];
 
     if (betweenLocations(caseKeyword, positionInfo, colonToken)) {
-        const QList<CompletionItem> res =
-                suggestJSExpressionCompletion(positionInfo.itemAtPosition);
-        return res;
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
     if (afterLocation(colonToken, positionInfo)) {
-        const QList<CompletionItem> res = suggestJSStatementCompletion(positionInfo.itemAtPosition);
-        return res;
+        suggestJSStatementCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
 
-    return {};
 }
 
 /*!
@@ -1388,9 +1338,9 @@ QQmlLSCompletion::previousCaseOfCaseBlock(const DomItem &parentForContext,
     return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideCaseBlock(const DomItem &parentForContext,
-                                  const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideCaseBlock(const DomItem &parentForContext,
+                                       const QQmlLSCompletionPosition &positionInfo,
+                                       BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
@@ -1398,48 +1348,49 @@ QQmlLSCompletion::insideCaseBlock(const DomItem &parentForContext,
     const QQmlJS::SourceLocation rightBrace = regions[RightBraceRegion];
 
     if (!betweenLocations(leftBrace, positionInfo, rightBrace))
-        return {};
+        return;
 
     // TODO: looks fishy
     // if there is a previous case or default clause, you can still add statements to it
-    if (const auto previousCase = previousCaseOfCaseBlock(parentForContext, positionInfo))
-        return suggestJSStatementCompletion(previousCase);
+    if (const auto previousCase = previousCaseOfCaseBlock(parentForContext, positionInfo)) {
+        suggestJSStatementCompletion(previousCase, result);
+        return;
+    }
 
     // otherwise, only complete case and default
-    return suggestCaseAndDefaultStatementCompletion();
+    suggestCaseAndDefaultStatementCompletion(result);
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideDefaultClause(const DomItem &parentForContext,
-                                      const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideDefaultClause(const DomItem &parentForContext,
+                                           const QQmlLSCompletionPosition &positionInfo,
+                                           BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation colonToken = regions[ColonTokenRegion];
 
     if (afterLocation(colonToken, positionInfo)) {
-        const QList<CompletionItem> res = suggestJSStatementCompletion(positionInfo.itemAtPosition);
-        return res;
+        suggestJSStatementCompletion(positionInfo.itemAtPosition, result);
+        return ;
     }
-
-    return {};
 }
 
-QList<CompletionItem> QQmlLSCompletion::insideBinaryExpressionCompletion(
-        const DomItem &parentForContext, const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideBinaryExpressionCompletion(
+        const DomItem &parentForContext, const QQmlLSCompletionPosition &positionInfo,
+        BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation operatorLocation = regions[OperatorTokenRegion];
 
     if (beforeLocation(positionInfo, operatorLocation)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
     if (afterLocation(operatorLocation, positionInfo)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-
-    return {};
 }
 
 /*!
@@ -1482,120 +1433,120 @@ Doing completion in variable declarations requires taking a look at all differen
 
 \endlist
 */
-QList<CompletionItem>
-QQmlLSCompletion::insideScriptPattern(const DomItem &parentForContext,
-                                      const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideScriptPattern(const DomItem &parentForContext,
+                                           const QQmlLSCompletionPosition &positionInfo,
+                                           BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation equal = regions[EqualTokenRegion];
 
     if (!afterLocation(equal, positionInfo))
-        return {};
+        return;
 
     // otherwise, only complete case and default
-    return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+    suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
 }
 
 /*!
 \internal
 See comment on insideScriptPattern().
 */
-QList<CompletionItem>
-QQmlLSCompletion::insideVariableDeclarationEntry(const DomItem &parentForContext,
-                                                 const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideVariableDeclarationEntry(const DomItem &parentForContext,
+                                                      const QQmlLSCompletionPosition &positionInfo,
+                                                      BackInsertIterator result) const
 {
-    return insideScriptPattern(parentForContext, positionInfo);
+    insideScriptPattern(parentForContext, positionInfo, result);
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideThrowStatement(const DomItem &parentForContext,
-                                       const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideThrowStatement(const DomItem &parentForContext,
+                                            const QQmlLSCompletionPosition &positionInfo,
+                                            BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation throwKeyword = regions[ThrowKeywordRegion];
 
     if (afterLocation(throwKeyword, positionInfo)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideLabelledStatement(const DomItem &parentForContext,
-                                          const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideLabelledStatement(const DomItem &parentForContext,
+                                               const QQmlLSCompletionPosition &positionInfo,
+                                               BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation colon = regions[ColonTokenRegion];
 
     if (afterLocation(colon, positionInfo)) {
-        return suggestJSStatementCompletion(positionInfo.itemAtPosition);
+        suggestJSStatementCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
     // note: the case "beforeLocation(ctx, colon)" probably never happens:
     // this is because without the colon, the parser will probably not parse this as a
     // labelledstatement but as a normal expression statement.
     // So this case only happens when the colon already exists, and the user goes back to the
     // label name and requests completion for that label.
-    return {};
 }
 
 /*!
 \internal
 Collect the current set of labels that some DomItem can jump to.
 */
-static QList<CompletionItem> collectLabels(const DomItem &context)
+static void collectLabels(const DomItem &context, QQmlLSCompletion::BackInsertIterator result)
 {
-    QList<CompletionItem> labels;
     for (DomItem current = context; current; current = current.directParent()) {
         if (current.internalKind() == DomType::ScriptLabelledStatement) {
             const QString label = current.field(Fields::label).value().toString();
             if (label.isEmpty())
                 continue;
-            labels.emplaceBack();
-            labels.back().label = label.toUtf8();
-            labels.back().kind = int(CompletionItemKind::Value); // variable?
+            CompletionItem item;
+            item.label = label.toUtf8();
+            item.kind = int(CompletionItemKind::Value); // variable?
             // TODO: more stuff here?
+            result = item;
         } else if (current.internalKind() == DomType::ScriptExpression) {
             // quick exit when leaving the JS part
-            return labels;
+            return;
         }
     }
-    return labels;
+    return;
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideContinueStatement(const DomItem &parentForContext,
-                                          const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideContinueStatement(const DomItem &parentForContext,
+                                               const QQmlLSCompletionPosition &positionInfo,
+                                               BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation continueKeyword = regions[ContinueKeywordRegion];
 
     if (afterLocation(continueKeyword, positionInfo)) {
-        return collectLabels(parentForContext);
+        collectLabels(parentForContext, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideBreakStatement(const DomItem &parentForContext,
-                                       const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideBreakStatement(const DomItem &parentForContext,
+                                            const QQmlLSCompletionPosition &positionInfo,
+                                            BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation breakKeyword = regions[BreakKeywordRegion];
 
     if (afterLocation(breakKeyword, positionInfo)) {
-        return collectLabels(parentForContext);
+        collectLabels(parentForContext, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideConditionalExpression(const DomItem &parentForContext,
-                                              const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideConditionalExpression(const DomItem &parentForContext,
+                                                   const QQmlLSCompletionPosition &positionInfo,
+                                                   BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
@@ -1603,49 +1554,50 @@ QQmlLSCompletion::insideConditionalExpression(const DomItem &parentForContext,
     const QQmlJS::SourceLocation colon = regions[ColonTokenRegion];
 
     if (beforeLocation(positionInfo, questionMark)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
     if (betweenLocations(questionMark, positionInfo, colon)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
     if (afterLocation(colon, positionInfo)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideUnaryExpression(const DomItem &parentForContext,
-                                        const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideUnaryExpression(const DomItem &parentForContext,
+                                             const QQmlLSCompletionPosition &positionInfo,
+                                             BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation operatorToken = regions[OperatorTokenRegion];
 
     if (afterLocation(operatorToken, positionInfo)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insidePostExpression(const DomItem &parentForContext,
-                                       const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insidePostExpression(const DomItem &parentForContext,
+                                            const QQmlLSCompletionPosition &positionInfo,
+                                            BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation operatorToken = regions[OperatorTokenRegion];
 
     if (beforeLocation(positionInfo, operatorToken)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::insideParenthesizedExpression(const DomItem &parentForContext,
-                                                const QQmlLSCompletionPosition &positionInfo) const
+void QQmlLSCompletion::insideParenthesizedExpression(const DomItem &parentForContext,
+                                                     const QQmlLSCompletionPosition &positionInfo,
+                                                     BackInsertIterator result) const
 {
     const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
@@ -1653,16 +1605,15 @@ QQmlLSCompletion::insideParenthesizedExpression(const DomItem &parentForContext,
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
     if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
-        return suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
     }
-    return {};
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::signalHandlerCompletion(const QQmlJSScope::ConstPtr &scope,
-                                          QDuplicateTracker<QString> *usedNames) const
+void QQmlLSCompletion::signalHandlerCompletion(const QQmlJSScope::ConstPtr &scope,
+                                               QDuplicateTracker<QString> *usedNames,
+                                               BackInsertIterator result) const
 {
-    QList<CompletionItem> res;
     const auto keyValues = scope->methods().asKeyValueRange();
     for (const auto &[name, method] : keyValues) {
         if (method.access() != QQmlJSMetaMethod::Public
@@ -1676,18 +1627,16 @@ QQmlLSCompletion::signalHandlerCompletion(const QQmlJSScope::ConstPtr &scope,
         CompletionItem completion;
         completion.label = QQmlSignalNames::signalNameToHandlerName(name).toUtf8();
         completion.kind = int(CompletionItemKind::Method);
-        res << completion;
+        result = completion;
     }
-    return res;
 }
 
-QList<CompletionItem>
-QQmlLSCompletion::suggestQuickSnippetsCompletion(const DomItem &itemAtPosition) const
+void QQmlLSCompletion::suggestQuickSnippetsCompletion(const DomItem &itemAtPosition,
+                                                      BackInsertIterator result) const
 {
-    QList<CompletionItem> res;
     auto file = itemAtPosition.containingFile().as<QmlFile>();
     if (!file)
-        return {};
+        return;
 
     // check if QtQuick has been imported
     const auto &imports = file->imports();
@@ -1695,7 +1644,7 @@ QQmlLSCompletion::suggestQuickSnippetsCompletion(const DomItem &itemAtPosition) 
         return import.uri.moduleUri() == u"QtQuick";
     });
     if (it == imports.constEnd()) {
-        return res;
+        return;
     }
 
     // check if the user already typed some qualifier, remove its dot and compare it to QtQuick's
@@ -1703,7 +1652,7 @@ QQmlLSCompletion::suggestQuickSnippetsCompletion(const DomItem &itemAtPosition) 
     const QString userTypedQualifier = QQmlLSUtils::qualifiersFrom(itemAtPosition);
     if (!userTypedQualifier.isEmpty()
         && !it->importId.startsWith(QStringView(userTypedQualifier).chopped(1))) {
-        return res;
+        return;
     }
 
     const QByteArray prefixForSnippet =
@@ -1712,114 +1661,112 @@ QQmlLSCompletion::suggestQuickSnippetsCompletion(const DomItem &itemAtPosition) 
             prefixForSnippet.isEmpty() ? QByteArray() : QByteArray(prefixForSnippet).append(u'.');
 
     // Quick completions from Qt Creator's code model
-    res << makeSnippet(prefixForSnippet, "BorderImage snippet",
-                       "BorderImage {\n"
-                       "\tid: ${1:name}\n"
-                       "\tsource: \"${2:file}\"\n"
-                       "\twidth: ${3:100}; height: ${4:100}\n"
-                       "\tborder.left: ${5: 5}; border.top: ${5}\n"
-                       "\tborder.right: ${5}; border.bottom: ${5}\n"
-                       "}");
-    res << makeSnippet(prefixForSnippet, "ColorAnimation snippet",
-                       "ColorAnimation {\n"
-                       "\tfrom: \"${1:white}\"\n"
-                       "\tto: \"${2:black}\"\n"
-                       "\tduration: ${3:200}\n"
-                       "}");
-    res << makeSnippet(prefixForSnippet, "Image snippet",
-                       "Image {\n"
-                       "\tid: ${1:name}\n"
-                       "\tsource: \"${2:file}\"\n"
-                       "}");
-    res << makeSnippet(prefixForSnippet, "Item snippet",
-                       "Item {\n"
-                       "\tid: ${1:name}\n"
-                       "}");
-    res << makeSnippet(prefixForSnippet, "NumberAnimation snippet",
-                       "NumberAnimation {\n"
-                       "\ttarget: ${1:object}\n"
-                       "\tproperty: \"${2:name}\"\n"
-                       "\tduration: ${3:200}\n"
-                       "\teasing.type: "_ba.append(prefixWithDotForSnippet)
-                               .append("Easing.${4:InOutQuad}\n"
-                                       "}"));
-    res << makeSnippet(prefixForSnippet, "NumberAnimation with targets snippet",
-                       "NumberAnimation {\n"
-                       "\ttargets: [${1:object}]\n"
-                       "\tproperties: \"${2:name}\"\n"
-                       "\tduration: ${3:200}\n"
-                       "}");
-    res << makeSnippet(prefixForSnippet, "PauseAnimation snippet",
-                       "PauseAnimation {\n"
-                       "\tduration: ${1:200}\n"
-                       "}");
-    res << makeSnippet(prefixForSnippet, "PropertyAction snippet",
-                       "PropertyAction {\n"
-                       "\ttarget: ${1:object}\n"
-                       "\tproperty: \"${2:name}\"\n"
-                       "}");
-    res << makeSnippet(prefixForSnippet, "PropertyAction with targets snippet",
-                       "PropertyAction {\n"
-                       "\ttargets: [${1:object}]\n"
-                       "\tproperties: \"${2:name}\"\n"
-                       "}");
-    res << makeSnippet(prefixForSnippet, "PropertyChanges snippet",
-                       "PropertyChanges {\n"
-                       "\ttarget: ${1:object}\n"
-                       "}");
-    res << makeSnippet(prefixForSnippet, "State snippet",
-                       "State {\n"
-                       "\tname: ${1:name}\n"
-                       "\t"_ba.append(prefixWithDotForSnippet)
-                               .append("PropertyChanges {\n"
-                                       "\t\ttarget: ${2:object}\n"
-                                       "\t}\n"
-                                       "}"));
-    res << makeSnippet(prefixForSnippet, "Text snippet",
-                       "Text {\n"
-                       "\tid: ${1:name}\n"
-                       "\ttext: qsTr(\"${2:text}\")\n"
-                       "}");
-    res << makeSnippet(prefixForSnippet, "Transition snippet",
-                       "Transition {\n"
-                       "\tfrom: \"${1:fromState}\"\n"
-                       "\tto: \"${2:toState}\"\n"
-                       "}");
+    result = makeSnippet(prefixForSnippet, "BorderImage snippet",
+                         "BorderImage {\n"
+                         "\tid: ${1:name}\n"
+                         "\tsource: \"${2:file}\"\n"
+                         "\twidth: ${3:100}; height: ${4:100}\n"
+                         "\tborder.left: ${5: 5}; border.top: ${5}\n"
+                         "\tborder.right: ${5}; border.bottom: ${5}\n"
+                         "}");
+    result = makeSnippet(prefixForSnippet, "ColorAnimation snippet",
+                         "ColorAnimation {\n"
+                         "\tfrom: \"${1:white}\"\n"
+                         "\tto: \"${2:black}\"\n"
+                         "\tduration: ${3:200}\n"
+                         "}");
+    result = makeSnippet(prefixForSnippet, "Image snippet",
+                         "Image {\n"
+                         "\tid: ${1:name}\n"
+                         "\tsource: \"${2:file}\"\n"
+                         "}");
+    result = makeSnippet(prefixForSnippet, "Item snippet",
+                         "Item {\n"
+                         "\tid: ${1:name}\n"
+                         "}");
+    result = makeSnippet(prefixForSnippet, "NumberAnimation snippet",
+                         "NumberAnimation {\n"
+                         "\ttarget: ${1:object}\n"
+                         "\tproperty: \"${2:name}\"\n"
+                         "\tduration: ${3:200}\n"
+                         "\teasing.type: "_ba.append(prefixWithDotForSnippet)
+                                 .append("Easing.${4:InOutQuad}\n"
+                                         "}"));
+    result = makeSnippet(prefixForSnippet, "NumberAnimation with targets snippet",
+                         "NumberAnimation {\n"
+                         "\ttargets: [${1:object}]\n"
+                         "\tproperties: \"${2:name}\"\n"
+                         "\tduration: ${3:200}\n"
+                         "}");
+    result = makeSnippet(prefixForSnippet, "PauseAnimation snippet",
+                         "PauseAnimation {\n"
+                         "\tduration: ${1:200}\n"
+                         "}");
+    result = makeSnippet(prefixForSnippet, "PropertyAction snippet",
+                         "PropertyAction {\n"
+                         "\ttarget: ${1:object}\n"
+                         "\tproperty: \"${2:name}\"\n"
+                         "}");
+    result = makeSnippet(prefixForSnippet, "PropertyAction with targets snippet",
+                         "PropertyAction {\n"
+                         "\ttargets: [${1:object}]\n"
+                         "\tproperties: \"${2:name}\"\n"
+                         "}");
+    result = makeSnippet(prefixForSnippet, "PropertyChanges snippet",
+                         "PropertyChanges {\n"
+                         "\ttarget: ${1:object}\n"
+                         "}");
+    result = makeSnippet(prefixForSnippet, "State snippet",
+                         "State {\n"
+                         "\tname: ${1:name}\n"
+                         "\t"_ba.append(prefixWithDotForSnippet)
+                                 .append("PropertyChanges {\n"
+                                         "\t\ttarget: ${2:object}\n"
+                                         "\t}\n"
+                                         "}"));
+    result = makeSnippet(prefixForSnippet, "Text snippet",
+                         "Text {\n"
+                         "\tid: ${1:name}\n"
+                         "\ttext: qsTr(\"${2:text}\")\n"
+                         "}");
+    result = makeSnippet(prefixForSnippet, "Transition snippet",
+                         "Transition {\n"
+                         "\tfrom: \"${1:fromState}\"\n"
+                         "\tto: \"${2:toState}\"\n"
+                         "}");
 
     if (!userTypedQualifier.isEmpty())
-        return res;
+        return;
 
     auto resolver = file->typeResolver();
     if (!resolver)
-        return res;
+        return;
     const auto qquickItemScope = resolver->typeForName(prefixWithDotForSnippet + u"Item"_s);
     const QQmlJSScope::ConstPtr ownerScope = itemAtPosition.qmlObject().semanticScope();
     if (!ownerScope || !qquickItemScope)
-        return res;
+        return;
 
     if (ownerScope->inherits(qquickItemScope)) {
-        res << makeSnippet("states binding with PropertyChanges in State",
-                           "states: [\n"
-                           "\t"_ba.append(prefixWithDotForSnippet)
-                                   .append("State {\n"
-                                           "\t\tname: \"${1:name}\"\n"
-                                           "\t\t"_ba.append(prefixWithDotForSnippet)
-                                                   .append("PropertyChanges {\n"
-                                                           "\t\t\ttarget: ${2:object}\n"
-                                                           "\t\t}\n"
-                                                           "\t}\n"
-                                                           "]")));
-        res << makeSnippet("transitions binding with Transition",
-                           "transitions: [\n"
-                           "\t"_ba.append(prefixWithDotForSnippet)
-                                   .append("Transition {\n"
-                                           "\t\tfrom: \"${1:fromState}\"\n"
-                                           "\t\tto: \"${2:fromState}\"\n"
-                                           "\t}\n"
-                                           "]"));
+        result = makeSnippet("states binding with PropertyChanges in State",
+                             "states: [\n"
+                             "\t"_ba.append(prefixWithDotForSnippet)
+                                     .append("State {\n"
+                                             "\t\tname: \"${1:name}\"\n"
+                                             "\t\t"_ba.append(prefixWithDotForSnippet)
+                                                     .append("PropertyChanges {\n"
+                                                             "\t\t\ttarget: ${2:object}\n"
+                                                             "\t\t}\n"
+                                                             "\t}\n"
+                                                             "]")));
+        result = makeSnippet("transitions binding with Transition",
+                             "transitions: [\n"
+                             "\t"_ba.append(prefixWithDotForSnippet)
+                                     .append("Transition {\n"
+                                             "\t\tfrom: \"${1:fromState}\"\n"
+                                             "\t\tto: \"${2:fromState}\"\n"
+                                             "\t}\n"
+                                             "]"));
     }
-
-    return res;
 }
 
 /*!
@@ -1829,6 +1776,15 @@ Decide which completions can be used at currentItem and compute them.
 QList<CompletionItem>
 QQmlLSCompletion::completions(const DomItem &currentItem,
                               const CompletionContextStrings &contextStrings) const
+{
+    QList<CompletionItem> result;
+    collectCompletions(currentItem, contextStrings, std::back_inserter(result));
+    return result;
+}
+
+void QQmlLSCompletion::collectCompletions(const DomItem &currentItem,
+                                          const CompletionContextStrings &contextStrings,
+                                          BackInsertIterator result) const
 {
     /*!
     Completion is not provided on a script identifier expression because script identifier
@@ -1859,57 +1815,76 @@ QQmlLSCompletion::completions(const DomItem &currentItem,
         switch (currentType) {
         case DomType::Id:
             // suppress completions for ids
-            return {};
+            return;
         case DomType::Pragma:
-            return insidePragmaCompletion(currentItem, positionInfo);
+            insidePragmaCompletion(currentItem, positionInfo, result);
+            return;
         case DomType::ScriptType: {
-            if (currentParent.directParent().internalKind() == DomType::QmlObject)
-                return insideQmlObjectCompletion(currentParent.directParent(), positionInfo);
+            if (currentParent.directParent().internalKind() == DomType::QmlObject) {
+                insideQmlObjectCompletion(currentParent.directParent(), positionInfo, result);
+                return;
+            }
 
             LocalSymbolsTypes options;
             options.setFlag(LocalSymbolsType::ObjectType);
             options.setFlag(LocalSymbolsType::ValueType);
-            return suggestReachableTypes(currentItem, options, CompletionItemKind::Class);
+            suggestReachableTypes(currentItem, options, CompletionItemKind::Class, result);
+            return;
         }
         case DomType::ScriptFormalParameter:
             // no autocompletion inside of function parameter definition
-            return {};
+            return;
         case DomType::Binding:
-            return insideBindingCompletion(currentParent, positionInfo);
+            insideBindingCompletion(currentParent, positionInfo, result);
+            return;
         case DomType::Import:
-            return insideImportCompletion(currentParent, positionInfo);
+            insideImportCompletion(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptForStatement:
-            return insideForStatementCompletion(currentParent, positionInfo);
+            insideForStatementCompletion(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptBlockStatement:
-            return suggestJSStatementCompletion(positionInfo.itemAtPosition);
+            suggestJSStatementCompletion(positionInfo.itemAtPosition, result);
+            return;
         case DomType::QmlFile:
-            return insideQmlFileCompletion(currentParent, positionInfo);
+            insideQmlFileCompletion(currentParent, positionInfo, result);
+            return;
         case DomType::QmlObject:
-            return insideQmlObjectCompletion(currentParent, positionInfo);
+            insideQmlObjectCompletion(currentParent, positionInfo, result);
+            return;
         case DomType::MethodInfo:
             // suppress completions
-            return {};
+            return;
         case DomType::PropertyDefinition:
-            return insidePropertyDefinitionCompletion(currentParent, positionInfo);
+            insidePropertyDefinitionCompletion(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptBinaryExpression:
             // ignore field member expressions: these need additional context from its parents
             if (QQmlLSUtils::isFieldMemberExpression(currentParent))
                 continue;
-            return insideBinaryExpressionCompletion(currentParent, positionInfo);
+            insideBinaryExpressionCompletion(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptLiteral:
-            return insideScriptLiteralCompletion(currentParent, positionInfo);
+            insideScriptLiteralCompletion(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptCallExpression:
-            return insideCallExpression(currentParent, positionInfo);
+            insideCallExpression(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptIfStatement:
-            return insideIfStatement(currentParent, positionInfo);
+            insideIfStatement(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptReturnStatement:
-            return insideReturnStatement(currentParent, positionInfo);
+            insideReturnStatement(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptWhileStatement:
-            return insideWhileStatement(currentParent, positionInfo);
+            insideWhileStatement(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptDoWhileStatement:
-            return insideDoWhileStatement(currentParent, positionInfo);
+            insideDoWhileStatement(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptForEachStatement:
-            return insideForEachStatement(currentParent, positionInfo);
+            insideForEachStatement(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptTryCatchStatement:
             /*!
             \internal
@@ -1929,45 +1904,59 @@ QQmlLSCompletion::completions(const DomItem &currentItem,
             Therefore, no completion is required at all when inside a try-statement but outside a
             block-statement.
             */
-            return {};
+            return;
         case DomType::ScriptSwitchStatement:
-            return insideSwitchStatement(currentParent, positionInfo);
+            insideSwitchStatement(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptCaseClause:
-            return insideCaseClause(currentParent, positionInfo);
+            insideCaseClause(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptDefaultClause:
             if (ctxBeforeStatement(positionInfo, currentParent, QQmlJS::Dom::DefaultKeywordRegion))
                 continue;
-            return insideDefaultClause(currentParent, positionInfo);
+            insideDefaultClause(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptCaseBlock:
-            return insideCaseBlock(currentParent, positionInfo);
+            insideCaseBlock(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptVariableDeclaration:
             // not needed: thats a list of ScriptVariableDeclarationEntry, and those entries cannot
             // be suggested because they all start with `{`, `[` or an identifier that should not be
             // in use yet.
-            return {};
+            return;
         case DomType::ScriptVariableDeclarationEntry:
-            return insideVariableDeclarationEntry(currentParent, positionInfo);
+            insideVariableDeclarationEntry(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptProperty:
             // fallthrough: a ScriptProperty is a ScriptPattern but inside a JS Object. It gets the
             // same completions as a ScriptPattern.
         case DomType::ScriptPattern:
-            return insideScriptPattern(currentParent, positionInfo);
+            insideScriptPattern(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptThrowStatement:
-            return insideThrowStatement(currentParent, positionInfo);
+            insideThrowStatement(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptLabelledStatement:
-            return insideLabelledStatement(currentParent, positionInfo);
+            insideLabelledStatement(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptContinueStatement:
-            return insideContinueStatement(currentParent, positionInfo);
+            insideContinueStatement(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptBreakStatement:
-            return insideBreakStatement(currentParent, positionInfo);
+            insideBreakStatement(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptConditionalExpression:
-            return insideConditionalExpression(currentParent, positionInfo);
+            insideConditionalExpression(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptUnaryExpression:
-            return insideUnaryExpression(currentParent, positionInfo);
+            insideUnaryExpression(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptPostExpression:
-            return insidePostExpression(currentParent, positionInfo);
+            insidePostExpression(currentParent, positionInfo, result);
+            return;
         case DomType::ScriptParenthesizedExpression:
-            return insideParenthesizedExpression(currentParent, positionInfo);
+            insideParenthesizedExpression(currentParent, positionInfo, result);
+            return;
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
@@ -1975,7 +1964,7 @@ QQmlLSCompletion::completions(const DomItem &currentItem,
         case DomType::ScriptObject:
         case DomType::ScriptElision:
         case DomType::ScriptArrayEntry:
-            return {};
+            return;
 
         default:
             continue;
@@ -1985,7 +1974,7 @@ QQmlLSCompletion::completions(const DomItem &currentItem,
 
     // no completion could be found
     qCDebug(QQmlLSUtilsLog) << "No completion was found for current request.";
-    return {};
+    return;
 }
 
 QT_END_NAMESPACE
