@@ -1491,6 +1491,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
             const QString &name = std::get<InlineComponentNameType>(m_currentRootName);
             m_currentScope->setIsInlineComponent(true);
             m_currentScope->setInlineComponentName(name);
+            m_currentScope->setModuleName(m_exportedRootScope->moduleName());
             m_rootScopeImports.setType(name, { m_currentScope, revision });
             m_nextIsInlineComponent = false;
         }
