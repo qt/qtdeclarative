@@ -445,6 +445,7 @@ private slots:
     void writeNumberToEnumAlias();
     void badInlineComponentAnnotation();
     void manuallyCallSignalHandler();
+    void overrideDefaultProperty();
 
 private:
     QQmlEngine engine;
@@ -8565,6 +8566,19 @@ void tst_qqmllanguage::manuallyCallSignalHandler()
         QScopedPointer<QObject> o(c.create());
         QTest::ignoreMessage(QtDebugMsg, "evil!");
     }
+}
+
+void tst_qqmllanguage::overrideDefaultProperty()
+{
+    QQmlEngine e;
+    const QUrl url = testFileUrl("overrideDefaultProperty.qml");
+
+    // Should not crash here!
+
+    QQmlComponent c(&e, url);
+    QVERIFY(c.isError());
+    QCOMPARE(c.errorString(),
+             url.toString() + QLatin1String(":5 Cannot assign object to list property \"data\"\n"));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

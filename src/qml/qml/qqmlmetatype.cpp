@@ -1463,8 +1463,15 @@ QQmlPropertyCache::ConstPtr QQmlMetaType::rawPropertyCacheForType(QMetaType meta
         return composite;
 
     const QQmlTypePrivate *type = data->idToType.value(metaType.id());
-    return (type && type->typeId == metaType)
-            ? data->propertyCache(type->baseMetaObject, QTypeRevision())
+    if (!type || type->typeId != metaType)
+        return QQmlPropertyCache::ConstPtr();
+
+    const QMetaObject *metaObject = type->isValueType()
+            ? type->metaObjectForValueType()
+            : type->baseMetaObject;
+
+    return metaObject
+            ? data->propertyCache(metaObject, QTypeRevision())
             : QQmlPropertyCache::ConstPtr();
 }
 
@@ -1863,8 +1870,12 @@ const QMetaObject *QQmlMetaType::metaObjectForValueType(QMetaType metaType)
     // call QObject pointers value types. Explicitly registered types also override
     // the implicit use of gadgets.
     if (!(metaType.flags() & QMetaType::PointerToQObject)) {
-        if (const QMetaObject *mo = metaObjectForValueType(QQmlMetaType::qmlType(metaType)))
-            return mo;
+        const QQmlMetaTypeDataPtr data;
+        const QQmlTypePrivate *type = data->idToType.value(metaType.id());
+        if (type && type->regType == QQmlType::CppType && type->typeId == metaType) {
+            if (const QMetaObject *mo = type->metaObjectForValueType())
+                return mo;
+        }
     }
 
     // If it _is_ a gadget, we can just use it.

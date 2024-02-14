@@ -445,29 +445,30 @@ bool createOrConstructValueType(
         const QQmlType &targetType, const QV4::Value &source,
         Allocate &&allocate, DefaultConstruct &&defaultConstruct)
 {
-    if (const QMetaObject *targetMetaObject = QQmlMetaType::metaObjectForValueType(targetType)) {
-        const auto warn = [&]() {
-            qWarning().noquote()
-                    << "Could not find any constructor for value type"
-                    << targetMetaObject->className() << "to call with value"
-                    << source.toQStringNoThrow();
-        };
+    const auto warn = [&](const QMetaObject *targetMetaObject) {
+        qWarning().noquote()
+                << "Could not find any constructor for value type"
+                << targetMetaObject->className() << "to call with value"
+                << source.toQStringNoThrow();
+    };
 
-        if (targetType.canPopulateValueType()) {
-            if (source.isObject() && targetMetaObject) {
+    if (targetType.canPopulateValueType()) {
+        if (const QMetaObject *targetMetaObject = targetType.metaObjectForValueType()) {
+            if (source.isObject()) {
                 doWriteProperties(targetMetaObject, defaultConstruct(), source);
                 return true;
             }
             if (targetType.canConstructValueType()) {
                 if (fromMatchingType(targetMetaObject, source, allocate))
                     return true;
-                warn();
-
+                warn(targetMetaObject);
             }
-        } else if (targetType.canConstructValueType()) {
+        }
+    } else if (targetType.canConstructValueType()) {
+        if (const QMetaObject *targetMetaObject = targetType.metaObjectForValueType()) {
             if (fromMatchingType(targetMetaObject, source, allocate))
                 return true;
-            warn();
+            warn(targetMetaObject);
         }
     }
 
@@ -489,15 +490,15 @@ bool createOrConstructValueType(
         const QQmlType &targetType, QMetaType sourceMetaType, void *source,
         Allocate &&allocate, DefaultConstruct &&defaultConstruct)
 {
-    if (const QMetaObject *targetMetaObject = QQmlMetaType::metaObjectForValueType(targetType)) {
-        const auto warn = [&]() {
-            qWarning().noquote()
-                << "Could not find any constructor for value type"
-                << targetMetaObject->className() << "to call with value" << source;
-        };
 
-        if (targetType.canPopulateValueType()) {
+    const auto warn = [&](const QMetaObject *targetMetaObject) {
+        qWarning().noquote()
+            << "Could not find any constructor for value type"
+            << targetMetaObject->className() << "to call with value" << source;
+    };
 
+    if (targetType.canPopulateValueType()) {
+        if (const QMetaObject *targetMetaObject = targetType.metaObjectForValueType()) {
             if (const QMetaObject *sourceMetaObject
                     = QQmlMetaType::metaObjectForValueType(sourceMetaType)) {
                 doWriteProperties(
@@ -529,15 +530,17 @@ bool createOrConstructValueType(
                 return true;
             }
         }
+    }
 
-        if (targetType.canConstructValueType()) {
+    if (targetType.canConstructValueType()) {
+        if (const QMetaObject *targetMetaObject = targetType.metaObjectForValueType()) {
             if (fromMatchingType(targetMetaObject, std::forward<Allocate>(allocate),
                                  [&](QMetaType, auto callback) {
                     return callback(sourceMetaType, source);
                 })) {
                 return true;
             }
-            warn();
+            warn(targetMetaObject);
         }
     }
 
@@ -656,11 +659,12 @@ QVariant QQmlValueTypeProvider::createValueType(const QString &s, QMetaType meta
     if (!isConstructibleMetaType(metaType))
         return QVariant();
     const QQmlType type = QQmlMetaType::qmlType(metaType);
-    const QMetaObject *mo = QQmlMetaType::metaObjectForValueType(type);
-    if (mo && type.canConstructValueType()) {
-        QVariant result;
-        if (fromString(mo, s, [&]() { return createVariantData(metaType, &result); }))
-            return result;
+    if (type.canConstructValueType()) {
+        if (const QMetaObject *mo = type.metaObjectForValueType()) {
+            QVariant result;
+            if (fromString(mo, s, [&]() { return createVariantData(metaType, &result); }))
+                return result;
+        }
     }
 
     return fromJSValue(type, s, metaType);
@@ -671,27 +675,29 @@ QVariant QQmlValueTypeProvider::createValueType(const QV4::Value &s, QMetaType m
     if (!isConstructibleMetaType(metaType))
         return QVariant();
     const QQmlType type = QQmlMetaType::qmlType(metaType);
-    if (const QMetaObject *mo = QQmlMetaType::metaObjectForValueType(type)) {
-        const auto warn = [&]() {
-            qWarning().noquote()
-                    << "Could not find any constructor for value type"
-                    << mo->className() << "to call with value" << s.toQStringNoThrow();
-        };
+    const auto warn = [&](const QMetaObject *mo) {
+        qWarning().noquote()
+                << "Could not find any constructor for value type"
+                << mo->className() << "to call with value" << s.toQStringNoThrow();
+    };
 
-        if (type.canPopulateValueType()) {
+    if (type.canPopulateValueType()) {
+        if (const QMetaObject *mo = type.metaObject()) {
             QVariant result = byProperties(mo, metaType, s);
             if (result.isValid())
                 return result;
             if (type.canConstructValueType()) {
                 if (fromMatchingType(mo, s, [&]() { return createVariantData(metaType, &result); }))
                     return result;
-                warn();
+                warn(mo);
             }
-        } else if (type.canConstructValueType()) {
+        }
+    } else if (type.canConstructValueType()) {
+        if (const QMetaObject *mo = type.metaObject()) {
             QVariant result;
             if (fromMatchingType(mo, s, [&]() { return createVariantData(metaType, &result); }))
                 return result;
-            warn();
+            warn(mo);
         }
     }
 
@@ -708,27 +714,29 @@ QVariant QQmlValueTypeProvider::createValueType(const QVariant &s, QMetaType met
     if (!isConstructibleMetaType(metaType))
         return QVariant();
     const QQmlType type = QQmlMetaType::qmlType(metaType);
-    if (const QMetaObject *mo = QQmlMetaType::metaObjectForValueType(type)) {
-        const auto warn = [&]() {
-            qWarning().noquote()
-                    << "Could not find any constructor for value type"
-                    << mo->className() << "to call with value" << s;
-        };
+    const auto warn = [&](const QMetaObject *mo) {
+        qWarning().noquote()
+                << "Could not find any constructor for value type"
+                << mo->className() << "to call with value" << s;
+    };
 
-        if (type.canPopulateValueType()) {
+    if (type.canPopulateValueType()) {
+        if (const QMetaObject *mo = type.metaObjectForValueType()) {
             QVariant result = byProperties(mo, metaType, s);
             if (result.isValid())
                 return result;
             if (type.canConstructValueType()) {
                 if (fromMatchingType(mo, s, [&]() { return createVariantData(metaType, &result); }))
                     return result;
-                warn();
+                warn(mo);
             }
-        } else if (type.canConstructValueType()) {
+        }
+    } else if (type.canConstructValueType()) {
+        if (const QMetaObject *mo = type.metaObjectForValueType()) {
             QVariant result;
             if (fromMatchingType(mo, s, [&]() { return createVariantData(metaType, &result); }))
                 return result;
-            warn();
+            warn(mo);
         }
     }
 

@@ -644,6 +644,11 @@ bool QQmlType::isSequentialContainer() const
     return d && d->regType == SequentialContainerType;
 }
 
+bool QQmlType::isValueType() const
+{
+    return d && d->isValueType();
+}
+
 QMetaType QQmlType::typeId() const
 {
     return d ? d->typeId : QMetaType{};
@@ -661,14 +666,13 @@ QMetaSequence QQmlType::listMetaSequence() const
 
 const QMetaObject *QQmlType::metaObject() const
 {
-    if (!d)
-        return nullptr;
-    const QQmlTypePrivate::ProxyMetaObjects *proxies = d->init();
+    return d ? d->metaObject() : nullptr;
+}
 
-    if (proxies->data.isEmpty())
-        return d->baseMetaObject;
-    else
-        return proxies->data.constFirst().metaObject;
+const QMetaObject *QQmlType::metaObjectForValueType() const
+{
+    Q_ASSERT(d);
+    return d->metaObjectForValueType();
 }
 
 const QMetaObject *QQmlType::baseMetaObject() const

@@ -86,6 +86,11 @@ public:
         return regType == QQmlType::CompositeType || regType == QQmlType::CompositeSingletonType;
     }
 
+    bool isValueType() const
+    {
+        return regType == QQmlType::CppType && !(typeId.flags() & QMetaType::PointerToQObject);
+    }
+
     QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
     QQmlPropertyCache::ConstPtr compositePropertyCache(QQmlEnginePrivate *engine) const;
 
@@ -190,6 +195,40 @@ public:
             Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
             return enums->scopedEnums.at(index)->value(name);
         }, ok);
+    }
+
+    const QMetaObject *metaObject() const
+    {
+        if (isValueType())
+            return metaObjectForValueType();
+
+        const QQmlTypePrivate::ProxyMetaObjects *proxies = init();
+        return proxies->data.isEmpty()
+                ? baseMetaObject
+                : proxies->data.constFirst().metaObject;
+    }
+
+    const QMetaObject *metaObjectForValueType() const
+    {
+        Q_ASSERT(isValueType());
+
+        // Prefer the extension meta object, if any.
+        // Extensions allow registration of non-gadget value types.
+        if (const QMetaObject *extensionMetaObject = extraData.cppTypeData->extMetaObject) {
+            // This may be a namespace even if the original metaType isn't.
+            // You can do such things with QML_FOREIGN declarations.
+            if (extensionMetaObject->metaType().flags() & QMetaType::IsGadget)
+                return extensionMetaObject;
+        }
+
+        if (baseMetaObject) {
+            // This may be a namespace even if the original metaType isn't.
+            // You can do such things with QML_FOREIGN declarations.
+            if (baseMetaObject->metaType().flags() & QMetaType::IsGadget)
+                return baseMetaObject;
+        }
+
+        return nullptr;
     }
 
 private:
