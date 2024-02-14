@@ -1662,6 +1662,10 @@ void QQuickMultiEffectPrivate::updateBlurItemsAmount(int blurLevel)
     if (!m_shaderEffect)
         return;
 
+    const auto engine = qmlEngine(q);
+    if (!engine)
+        return;
+
     // Lowest blur level uses 3 items, highest 5 items.
     int itemsAmount = blurLevel == 0 ? 0 : blurLevel + 2;
 
@@ -1669,7 +1673,6 @@ void QQuickMultiEffectPrivate::updateBlurItemsAmount(int blurLevel)
         // Add more blur items.
         // Note that by design blur items are only added and never reduced
         // during the lifetime of the effect component.
-        const auto engine = qmlEngine(q);
         QUrl blurVs = QUrl(QStringLiteral("qrc:/data/shaders/bluritems.vert.qsb"));
         QUrl blurFs = QUrl(QStringLiteral("qrc:/data/shaders/bluritems.frag.qsb"));
         QQmlComponent blurComponent(engine, QUrl(QStringLiteral("qrc:/data/BlurItem.qml")));
