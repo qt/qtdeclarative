@@ -5,7 +5,11 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtQml/qqmlapplicationengine.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickview.h>
 #include <QtTest/qsignalspy.h>
+#ifdef QT_WIDGETS_LIB
+#include <QtWidgets/qboxlayout.h>
+#endif
 #ifdef QT_QUICKWIDGETS_LIB
 #include <QtQuickWidgets/qquickwidget.h>
 #endif
@@ -34,6 +38,8 @@ private slots:
     void matcher();
     void multiple_data();
     void multiple();
+    void embedded_data();
+    void embedded();
 #ifdef QT_QUICKWIDGETS_LIB
     void quickWidgetShortcuts_data();
     void quickWidgetShortcuts();
@@ -575,6 +581,87 @@ void tst_QQuickShortcut::contextChange()
     QTest::keyPress(activeWindow, key, modifiers);
     QTest::keyRelease(activeWindow, key, modifiers);
     QCOMPARE(inactiveWindow->property("activated").toBool(), activated);
+}
+
+void tst_QQuickShortcut::embedded_data()
+{
+    QTest::addColumn<Qt::Key>("testKey");
+    QTest::addColumn<Qt::KeyboardModifiers>("testModifiers");
+    QTest::addColumn<QString>("windowShortcutSequence");
+    QTest::addColumn<bool>("windowShortcutActivated");
+
+    QTest::newRow("windowActivated") << Qt::Key_W << (Qt::ControlModifier|Qt::AltModifier)
+                                     << "Ctrl+Alt+W" << true;
+}
+
+void tst_QQuickShortcut::embedded()
+{
+#ifndef QT_WIDGETS_LIB
+    QSKIP("Skipping due to QT_WIDGETS_LIB is not defined");
+#else
+    QFETCH(Qt::Key, testKey);
+    QFETCH(Qt::KeyboardModifiers, testModifiers);
+    QFETCH(QString, windowShortcutSequence);
+    QFETCH(bool, windowShortcutActivated);
+
+    QWidget window;
+    QVBoxLayout *layout = new QVBoxLayout {&window};
+    QQuickView *quickView = new QQuickView;
+    quickView->setResizeMode(QQuickView::SizeRootObjectToView);
+    quickView->setSource(testFileUrl("embedded.qml"));
+
+    QWidget *container = QWidget::createWindowContainer(quickView);
+    container->setMinimumSize(quickView->size());
+    container->setFocusPolicy(Qt::TabFocus);
+
+    QWidget *widget = new QWidget;
+    // We will set focus to the widget and its default is NoFocus.
+    widget->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
+
+    layout->addWidget(widget);
+    layout->addWidget(container);
+
+    window.show();
+    QTRY_VERIFY(window.isVisible());
+    // The widget can get focused only when the including window has exposed.
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    widget->setFocus();
+    QTRY_VERIFY(widget->hasFocus());
+
+    // If the window-context shortcut is expected to be activated,
+    // then the QuickView window needs to be active.
+    // On Linux, the embedded QuickView window is active immediately
+    // after the containing window is active, but on Windows,
+    // the embedded QuickView window is activated after a delay
+    // once the containing window is active.
+    if (windowShortcutActivated)
+        QVERIFY(QTest::qWaitForWindowActive(quickView));
+
+    QQuickItem *item = quickView->rootObject();
+    QVERIFY(item);
+
+    QObject *windowShortcut = item->property("shortcut").value<QObject *>();
+    QVERIFY(windowShortcut);
+
+    windowShortcut->setProperty("context", Qt::WindowShortcut);
+    windowShortcut->setProperty("sequence", windowShortcutSequence);
+
+    QTest::keyPress(&window, testKey, testModifiers);
+    QTest::keyRelease(&window, testKey, testModifiers);
+    QCOMPARE(item->property("activated").toBool(), windowShortcutActivated);
+
+    quickView->requestActivate();
+    QTRY_VERIFY(quickView->isActive());
+    QVERIFY(quickView->isActive());
+
+    item->setProperty("activated", false);
+    QVERIFY(!item->property("activated").toBool());
+
+    QTest::keyPress(&window, testKey, testModifiers);
+    QTest::keyRelease(&window, testKey, testModifiers);
+    QCOMPARE(item->property("activated").toBool(), true);
+#endif
 }
 
 #ifdef QT_QUICKWIDGETS_LIB

@@ -77,7 +77,7 @@ bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
             obj = renderWindow;
         qCDebug(lcContextMatcher) << "obj" << obj << "item" << item << "focusWindow" << QGuiApplication::focusWindow()
             << "!isBlockedByPopup(item)" << !isBlockedByPopup(item);
-        return obj && obj == QGuiApplication::focusWindow() && !isBlockedByPopup(item);
+        return obj && qobject_cast<QWindow*>(obj)->isActive() && !isBlockedByPopup(item);
     default:
         return false;
     }
