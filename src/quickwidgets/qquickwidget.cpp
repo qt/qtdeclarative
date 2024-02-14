@@ -47,6 +47,10 @@
 #include <QtWidgets/qgraphicsview.h>
 #endif
 
+#if QT_CONFIG(vulkan)
+#include <QtGui/private/qvulkandefaultinstance_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 QQuickWidgetOffscreenWindow::QQuickWidgetOffscreenWindow(QQuickWindowPrivate &dd, QQuickRenderControl *control)
@@ -1084,6 +1088,8 @@ void QQuickWidgetPrivate::initializeWithRhi()
 #if QT_CONFIG(vulkan)
             if (QWindow *w = q->window()->windowHandle())
                 offscreenWindow->setVulkanInstance(w->vulkanInstance());
+            else if (rhi == offscreenRenderer.rhi())
+                offscreenWindow->setVulkanInstance(QVulkanDefaultInstance::instance());
 #endif
             renderControl->initialize();
         }
@@ -1130,7 +1136,7 @@ void QQuickWidget::createFramebufferObject()
 
     // Could be a simple hide - show, in which case the previous texture is just fine.
     if (!d->outputTexture) {
-        d->outputTexture = d->rhi->newTexture(QRhiTexture::RGBA8, fboSize, 1, QRhiTexture::RenderTarget);
+        d->outputTexture = d->rhi->newTexture(QRhiTexture::RGBA8, fboSize, 1, QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
         if (!d->outputTexture->create()) {
             qWarning("QQuickWidget: failed to create output texture of size %dx%d",
                      fboSize.width(), fboSize.height());
