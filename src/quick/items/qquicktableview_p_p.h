@@ -24,7 +24,6 @@
 #include <QtQmlModels/private/qqmlchangeset_p.h>
 #include <QtQml/qqmlinfo.h>
 
-#include <QtQuick/private/qminimalflatset_p.h>
 #include <QtQuick/private/qquickflickable_p_p.h>
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
@@ -32,6 +31,8 @@
 #include <QtQuick/private/qquicksinglepointhandler_p.h>
 #include <QtQuick/private/qquickhoverhandler_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
+
+#include <QtCore/private/qminimalflatset_p.h>
 
 QT_BEGIN_NAMESPACE
 
