@@ -259,6 +259,7 @@ protected:
     void processPropertyBindings();
     void checkRequiredProperties();
     void processPropertyTypes();
+    void processMethodTypes();
     void processPropertyBindingObjects();
     void flushPendingSignalParameters();
 
@@ -281,6 +282,13 @@ protected:
     {
         QQmlJSScope::Ptr scope;
         QString name;
+        QQmlJS::SourceLocation location;
+    };
+
+    struct PendingMethodType
+    {
+        QQmlJSScope::Ptr scope;
+        QString methodName;
         QQmlJS::SourceLocation location;
     };
 
@@ -321,6 +329,7 @@ protected:
 
     QHash<QQmlJSScope::Ptr, QVector<QQmlJSScope::Ptr>> m_pendingDefaultProperties;
     QVector<PendingPropertyType> m_pendingPropertyTypes;
+    QVector<PendingMethodType> m_pendingMethodTypes;
     QVector<PendingPropertyObjectBinding> m_pendingPropertyObjectBindings;
     QVector<RequiredProperty> m_requiredProperties;
     QVector<QQmlJSScope::Ptr> m_objectBindingScopes;

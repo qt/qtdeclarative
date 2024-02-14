@@ -286,6 +286,10 @@ public:
         UnnamedPropertyTarget // default property bindings, where property name is unspecified
     };
 
+    template <typename Key, typename Value>
+    using QMultiHashRange = QPair<typename QMultiHash<Key, Value>::iterator,
+                                  typename QMultiHash<Key, Value>::iterator>;
+
     static QQmlJSScope::Ptr create() { return QSharedPointer<QQmlJSScope>(new QQmlJSScope); }
     static QQmlJSScope::Ptr create(const QString &internalName)
     {
@@ -322,6 +326,10 @@ QT_WARNING_POP
     void setScopeType(ScopeType type) { m_scopeType = type; }
 
     void addOwnMethod(const QQmlJSMetaMethod &method) { m_methods.insert(method.methodName(), method); }
+    QMultiHashRange<QString, QQmlJSMetaMethod> mutableOwnMethodsRange(const QString &name)
+    {
+        return m_methods.equal_range(name);
+    }
     QMultiHash<QString, QQmlJSMetaMethod> ownMethods() const { return m_methods; }
     QList<QQmlJSMetaMethod> ownMethods(const QString &name) const { return m_methods.values(name); }
     bool hasOwnMethod(const QString &name) const { return m_methods.contains(name); }
