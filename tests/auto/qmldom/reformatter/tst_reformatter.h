@@ -26,6 +26,11 @@ class TestReformatter : public QObject
     Q_OBJECT
 public:
 private:
+    QString formatJSCode(const QString &jsCode)
+    {
+        return formatPlainJS(jsCode, ScriptExpression::ExpressionType::JSCode);
+    }
+
     QString formatJSModuleCode(const QString &jsCode)
     {
         return formatPlainJS(jsCode, ScriptExpression::ExpressionType::MJSCode);
@@ -408,6 +413,34 @@ private slots:
         }
     }
 
+    void hoistableDeclaration_data()
+    {
+        QTest::addColumn<QString>("declarationToBeFormatted");
+        QTest::addColumn<QString>("expectedFormattedDeclaration");
+
+        QTest::newRow("Function") << QStringLiteral(u"function a(a,b){}")
+                                  << QStringLiteral(u"function a(a, b) {}");
+        QTest::newRow("AnonymousFunction") << QStringLiteral(u"let f=function (a,b){}")
+                                           << QStringLiteral(u"let f = function (a, b) {}");
+        QTest::newRow("Generator_lhs_star")
+                << QStringLiteral(u"function* g(a,b){}") << QStringLiteral(u"function* g(a, b) {}");
+        QTest::newRow("Generator_rhs_star")
+                << QStringLiteral(u"function *g(a,b){}") << QStringLiteral(u"function* g(a, b) {}");
+        QTest::newRow("AnonymousGenerator") << QStringLiteral(u"let g=function * (a,b){}")
+                                            << QStringLiteral(u"let g = function* (a, b) {}");
+    }
+
+    // https://262.ecma-international.org/7.0/#prod-HoistableDeclaration
+    void hoistableDeclaration()
+    {
+        QFETCH(QString, declarationToBeFormatted);
+        QFETCH(QString, expectedFormattedDeclaration);
+
+        QString formattedDeclaration = formatJSCode(declarationToBeFormatted);
+
+        QCOMPARE(formattedDeclaration, expectedFormattedDeclaration);
+    }
+
     void exportDeclarations_data()
     {
         QTest::addColumn<QString>("exportToBeFormatted");
@@ -450,7 +483,7 @@ private slots:
                 << QStringLiteral(u"export "
                                   u"function * g(a,b){}")
                 << QStringLiteral(u"export "
-                                  u"function * g(a, b) {}");
+                                  u"function* g(a, b) {}");
     }
 
     // https://262.ecma-international.org/7.0/#prod-ExportDeclaration
@@ -461,8 +494,6 @@ private slots:
 
         QString formattedExport = formatJSModuleCode(exportToBeFormatted);
 
-        QEXPECT_FAIL("HoistableDeclaration_GeneratorDeclaration",
-                     "Generator functions are not yet supported", Abort);
         QCOMPARE(formattedExport, expectedFormattedExport);
     }
 

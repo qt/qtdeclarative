@@ -729,7 +729,11 @@ bool ScriptFormatter::visit(FunctionDeclaration *ast)
 bool ScriptFormatter::visit(FunctionExpression *ast)
 {
     if (!ast->isArrowFunction) {
-        out("function "); // ast->functionToken
+        if (ast->isGenerator) {
+            out("function* ");
+        } else {
+            out("function ");
+        }
         if (!ast->name.isNull())
             out(ast->identifierToken);
     }
