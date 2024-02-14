@@ -22,7 +22,7 @@ class QmltcVisitor : public QQmlJSImportVisitor
     void postVisitResolve(const QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>>
                                   &qmlIrOrderedBindings);
     void setupAliases();
-    void checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &type);
+    void checkNamesAndTypes(const QQmlJSScope::ConstPtr &type);
     void setRootFilePath();
 
     QString sourceDirectoryPath(const QString &path);
