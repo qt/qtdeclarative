@@ -26,31 +26,64 @@ class TestReformatter : public QObject
     Q_OBJECT
 public:
 private:
-    QString formatJSCode(const QString &jsCode)
+    // TODO Move to a dedicated LineWriter factory / LineWriter API ?
+    enum class LineWriterType { Default, Indenting };
+    std::unique_ptr<LineWriter> getLineWriter(const SinkF &innerSink,
+                                              const LineWriterOptions &lwOptions)
     {
-        return formatPlainJS(jsCode, ScriptExpression::ExpressionType::JSCode);
+        return lwOptions.maxLineLength > 0
+                ? getLineWriter(LineWriterType::Indenting, innerSink, lwOptions)
+                : getLineWriter(LineWriterType::Default, innerSink, lwOptions);
     }
 
-    QString formatJSModuleCode(const QString &jsCode)
+    std::unique_ptr<LineWriter> getLineWriter(LineWriterType type, const SinkF &innerSink,
+                                              const LineWriterOptions &lwOptions)
     {
-        return formatPlainJS(jsCode, ScriptExpression::ExpressionType::MJSCode);
+        switch (type) {
+        case LineWriterType::Indenting:
+            return std::make_unique<IndentingLineWriter>(innerSink, QLatin1String("*testStream*"),
+                                                         lwOptions);
+        default:
+            return std::make_unique<LineWriter>(innerSink, QLatin1String("*testStream*"),
+                                                lwOptions);
+        }
+        Q_UNREACHABLE_RETURN(nullptr);
     }
 
     // "Unix" LineWriter (with '\n' line endings) is used by default,
     // under the assumption that line endings are properly tested in lineWriter() test.
-    QString formatPlainJS(const QString &jsCode, ScriptExpression::ExpressionType exprType)
+    static LineWriterOptions defaultLineWriterOptions()
+    {
+        LineWriterOptions opts;
+        opts.lineEndings = LineWriterOptions::LineEndings::Unix;
+        return opts;
+    }
+
+    QString formatJSCode(const QString &jsCode,
+                         const LineWriterOptions &lwOptions = defaultLineWriterOptions())
+    {
+        return formatPlainJS(jsCode, ScriptExpression::ExpressionType::JSCode, lwOptions);
+    }
+
+    QString formatJSModuleCode(const QString &jsCode,
+                               const LineWriterOptions &lwOptions = defaultLineWriterOptions())
+    {
+        return formatPlainJS(jsCode, ScriptExpression::ExpressionType::MJSCode, lwOptions);
+    }
+
+    QString formatPlainJS(const QString &jsCode, ScriptExpression::ExpressionType exprType,
+                          const LineWriterOptions &lwOptions = defaultLineWriterOptions())
     {
         QString resultStr;
         QTextStream res(&resultStr);
-        LineWriterOptions opts;
-        opts.lineEndings = LineWriterOptions::LineEndings::Unix;
-        LineWriter lw([&res](QStringView s) { res << s; }, QLatin1String("*testStream*"), opts);
-        OutWriter ow(lw);
+        auto lwPtr = getLineWriter([&res](QStringView s) { res << s; }, lwOptions);
+        assert(lwPtr);
+        OutWriter ow(*lwPtr);
 
         const ScriptExpression scriptItem(jsCode, exprType);
         scriptItem.writeOut(DomItem(), ow);
 
-        lw.flush(); // flush instead of eof to protect traling spaces
+        lwPtr->flush(); // flush instead of eof to protect traling spaces
         res.flush();
         return resultStr;
     }
@@ -495,6 +528,38 @@ private slots:
         QString formattedExport = formatJSModuleCode(exportToBeFormatted);
 
         QCOMPARE(formattedExport, expectedFormattedExport);
+    }
+
+    void carryoverMJS_data()
+    {
+        QTest::addColumn<QString>("codeToBeFormatted");
+        QTest::addColumn<int>("maxLineLength");
+        QTest::addColumn<QString>("expectedFormattedCode");
+
+        QTest::newRow("LongExportList_NoMaxLineLength")
+                << QStringLiteral(u"export const n1=1,n2=2,n3=3,n4=4,n5=5") << -1
+                << QStringLiteral(u"export const n1 = 1, n2 = 2, n3 = 3, n4 = 4, n5 = 5;");
+        QTest::newRow("LongExportList_MaxLineLength20")
+                << QStringLiteral(u"export const n1=1,n2=2,n3=3,n4=4,n5=5") << 20
+                << QStringLiteral(u"export const n1 = 1,\n"
+                                  u"  n2 = 2, n3 = 3,\n"
+                                  u"  n4 = 4, n5 = 5;");
+    }
+
+    void carryoverMJS()
+    {
+        QFETCH(QString, codeToBeFormatted);
+        QFETCH(int, maxLineLength);
+        QFETCH(QString, expectedFormattedCode);
+
+        LineWriterOptions lwOptions;
+        lwOptions.maxLineLength = maxLineLength;
+        // TODO maybe fetch this
+        lwOptions.formatOptions.indentSize = 2;
+        QString formattedCode = formatJSModuleCode(codeToBeFormatted, lwOptions);
+
+        QEXPECT_FAIL("LongExportList_MaxLineLength20", "QTBUG-122260", Abort);
+        QCOMPARE(formattedCode, expectedFormattedCode);
     }
 
 private:
