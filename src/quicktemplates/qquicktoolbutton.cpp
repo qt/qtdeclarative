@@ -36,6 +36,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolPrivate : public QQuickButtonPr
 {
     Q_DECLARE_PUBLIC(QQuickToolButton)
 
+    QQuickToolPrivate() { setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Fixed); }
+
 public:
     QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ToolBar); }
 };
