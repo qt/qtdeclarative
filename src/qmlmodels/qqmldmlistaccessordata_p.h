@@ -196,7 +196,7 @@ public:
     template<typename String>
     void createPropertyIfMissing(const String &string)
     {
-        for (int i = propertyOffset, end = propertyCount(); i < end; ++i) {
+        for (int i = 0, end = propertyCount(); i < end; ++i) {
             if (QAnyStringView(property(i).name()) == QAnyStringView(string))
                 return;
         }

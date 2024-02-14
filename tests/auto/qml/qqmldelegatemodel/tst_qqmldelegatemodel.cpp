@@ -493,13 +493,14 @@ void tst_QQmlDelegateModel::overriddenModelData()
         QObject *delegate = delegateModel->object(0);
         QVERIFY(delegate);
 
-        if (i == 2) {
+        if (i == 1 || i == 2) {
+            // You can actually not override if the model is a QObject or a JavaScript array.
             // Someone is certainly relying on this.
             // We need to find a migration mechanism to fix it.
-            QEXPECT_FAIL("", "You can actually not override if the model is a QObject", Continue);
+            QCOMPARE(delegate->objectName(), QLatin1String(" 0 0  e 0"));
+        } else {
+            QCOMPARE(delegate->objectName(), QLatin1String("a b c d e f"));
         }
-
-        QCOMPARE(delegate->objectName(), QLatin1String("a b c d e f"));
     }
 }
 
