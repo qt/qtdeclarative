@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
+//    app.setAttribute(Qt::AA_DontUseNativeMenuBar, true);
     qputenv("QT_QUICK_CONTROLS_USE_NATIVE_MENUS", "1");
 
     QQmlApplicationEngine engine;

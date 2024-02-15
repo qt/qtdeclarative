@@ -60,6 +60,7 @@ public:
 
     QWindow *window() const;
     QPlatformMenuBar *nativeHandle() const;
+    bool useNativeMenuBar() const;
     void syncNativeMenuBarVisible();
     void createNativeMenuBar();
     void removeNativeMenuBar();

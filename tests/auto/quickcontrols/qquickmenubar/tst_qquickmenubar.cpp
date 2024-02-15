@@ -30,6 +30,7 @@ public:
     tst_qquickmenubar();
 
 private slots:
+    void init();
     void delegate();
     void mouse();
     void touch();
@@ -45,6 +46,7 @@ private slots:
     void hoverAfterClosingWithEscape();
     void requestNative_data();
     void requestNative();
+    void AA_DontUseNativeMenuBar();
     void containerItems_data();
     void containerItems();
     void applicationWindow_data();
@@ -72,6 +74,14 @@ tst_qquickmenubar::tst_qquickmenubar()
 bool tst_qquickmenubar::hasWindowActivation()
 {
     return (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation));
+}
+
+void tst_qquickmenubar::init()
+{
+    // Enable non-native menubars by default.
+    // Note that the AA_DontUseNativeMenuBar test will set this property to 'true', which
+    // is why we need to set it back to 'false' here.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, false);
 }
 
 void tst_qquickmenubar::delegate()
@@ -952,6 +962,30 @@ void tst_qquickmenubar::requestNative()
 
     QQuickMenuPrivate *fileMenuPriv = QQuickMenuPrivate::get(fileMenu);
     QCOMPARE(fileMenuPriv->useNativeMenu(), requestNative);
+}
+
+void tst_qquickmenubar::AA_DontUseNativeMenuBar()
+{
+    // Check that we end up with a non-native menu bar when
+    // AA_DontUseNativeMenuBar is set, even if requestNative is true.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", true }});
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+    QQuickItem *contents = window->property("contents").value<QQuickItem *>();
+    QVERIFY(contents);
+
+    QVERIFY(!menuBarPrivate->nativeHandle());
+    QVERIFY(menuBar->isVisible());
+    QVERIFY(menuBar->count() > 0);
+    QVERIFY(menuBar->height() > 0);
+    QCOMPARE(contents->height(), window->height() - menuBar->height());
 }
 
 void tst_qquickmenubar::containerItems_data()

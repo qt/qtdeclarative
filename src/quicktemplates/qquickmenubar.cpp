@@ -390,13 +390,18 @@ QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
     return menu;
 }
 
+bool QQuickMenuBarPrivate::useNativeMenuBar() const
+{
+    return requestNative && !QCoreApplication::testAttribute(Qt::AA_DontUseNativeMenuBar);
+}
+
 void QQuickMenuBarPrivate::syncNativeMenuBarVisible()
 {
     Q_Q(QQuickMenuBar);
     if (!componentComplete)
         return;
 
-    const bool shouldBeVisible = requestNative && q->isVisible();
+    const bool shouldBeVisible = q->isVisible() && useNativeMenuBar();
     if (shouldBeVisible && !handle)
         createNativeMenuBar();
     else if (!shouldBeVisible && handle)

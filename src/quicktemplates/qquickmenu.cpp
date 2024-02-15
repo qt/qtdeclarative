@@ -266,7 +266,7 @@ bool QQuickMenuPrivate::useNativeMenu() const
 
     while (p) {
         if (auto menuBar = qobject_cast<QQuickMenuBar *>(p))
-            return menuBar->requestNative();
+            return QQuickMenuBarPrivate::get(menuBar)->useNativeMenuBar();
         if (auto menu = qobject_cast<QQuickMenu *>(p))
             rootMenu = menu;
         p = p->parent();
@@ -296,9 +296,9 @@ bool QQuickMenuPrivate::createNativeMenu()
     qCDebug(lcNativeMenus) << "createNativeMenu called on" << q;
 
     if (auto menuBar = resolveMenuBar()) {
-        if (menuBar->requestNative()) {
+        auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+        if (menuBarPrivate->useNativeMenuBar()) {
             qCDebug(lcNativeMenus) << "- creating native menu from native menubar";
-            auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
             if (QPlatformMenuBar *menuBarHandle = menuBarPrivate->nativeHandle())
                 handle.reset(menuBarHandle->createMenu());
         }
