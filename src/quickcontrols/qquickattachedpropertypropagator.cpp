@@ -227,6 +227,7 @@ public:
     void setAttachedParent(QQuickAttachedPropertyPropagator *parent);
 
     void itemWindowChanged(QQuickWindow *window);
+    void transientParentWindowChanged(QWindow *newTransientParent);
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
 
     QList<QQuickAttachedPropertyPropagator *> attachedChildren;
@@ -235,20 +236,35 @@ public:
 
 void QQuickAttachedPropertyPropagatorPrivate::attachTo(QObject *object)
 {
-    QQuickItem *item = findAttachedItem(object);
-    if (item) {
+    if (QQuickItem *item = findAttachedItem(object)) {
         connect(item, &QQuickItem::windowChanged, this, &QQuickAttachedPropertyPropagatorPrivate::itemWindowChanged);
         QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Parent);
+    } else if (auto *window = qobject_cast<QQuickWindow *>(object)) {
+        QObjectPrivate::connect(window, &QWindow::transientParentChanged, this,
+            &QQuickAttachedPropertyPropagatorPrivate::transientParentWindowChanged);
     }
 }
 
 void QQuickAttachedPropertyPropagatorPrivate::detachFrom(QObject *object)
 {
-    QQuickItem *item = findAttachedItem(object);
-    if (item) {
+    if (QQuickItem *item = findAttachedItem(object)) {
         disconnect(item, &QQuickItem::windowChanged, this, &QQuickAttachedPropertyPropagatorPrivate::itemWindowChanged);
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
+    } else if (auto *window = qobject_cast<QQuickWindow *>(object)) {
+        QObjectPrivate::disconnect(window, &QWindow::transientParentChanged,
+            this, &QQuickAttachedPropertyPropagatorPrivate::transientParentWindowChanged);
     }
+}
+
+static QString debugName(QQuickAttachedPropertyPropagator *attached)
+{
+    QString string;
+    QDebug stream(&string);
+    if (!attached)
+        stream << "(null)";
+    else
+        stream.nospace().noquote() << attached << " (which is attached to " << attached->parent() << ')';
+    return string;
 }
 
 /*!
@@ -276,14 +292,14 @@ void QQuickAttachedPropertyPropagatorPrivate::setAttachedParent(QQuickAttachedPr
         return;
 
     QQuickAttachedPropertyPropagator *oldParent = attachedParent;
-    qCDebug(lcAttached) << "setAttachedParent called on" << q->parent();
+    qCDebug(lcAttached).noquote() << "setAttachedParent called on" << debugName(q) << "with parent" << debugName(parent);
     if (attachedParent) {
-        qCDebug(lcAttached) << "- removing ourselves as an attached child of" << attachedParent->parent() << attachedParent;
+        qCDebug(lcAttached).noquote() << "- removing ourselves as an attached child of" << debugName(attachedParent);
         QQuickAttachedPropertyPropagatorPrivate::get(attachedParent)->attachedChildren.removeOne(q);
     }
     attachedParent = parent;
     if (parent) {
-        qCDebug(lcAttached) << "- adding ourselves as an attached child of" << parent->parent() << parent;
+        qCDebug(lcAttached).noquote() << "- adding ourselves as an attached child of" << debugName(parent);
         QQuickAttachedPropertyPropagatorPrivate::get(parent)->attachedChildren.append(q);
     }
     q->attachedParentChange(parent, oldParent);
@@ -293,10 +309,21 @@ void QQuickAttachedPropertyPropagatorPrivate::itemWindowChanged(QQuickWindow *wi
 {
     Q_Q(QQuickAttachedPropertyPropagator);
     QQuickAttachedPropertyPropagator *attachedParent = nullptr;
-    qCDebug(lcAttached) << "window of" << q->parent() << "changed to" << window;
+    qCDebug(lcAttached).noquote() << "window of" << debugName(q) << "changed to" << window;
     attachedParent = findAttachedParent(q->metaObject(), q->parent());
     if (!attachedParent)
         attachedParent = attachedObject(q->metaObject(), window);
+    setAttachedParent(attachedParent);
+}
+
+void QQuickAttachedPropertyPropagatorPrivate::transientParentWindowChanged(QWindow *newTransientParent)
+{
+    Q_Q(QQuickAttachedPropertyPropagator);
+    QQuickAttachedPropertyPropagator *attachedParent = nullptr;
+    qCDebug(lcAttached).noquote() << "transient parent window of" << q << "changed to" << newTransientParent;
+    attachedParent = findAttachedParent(q->metaObject(), q->parent());
+    if (!attachedParent)
+        attachedParent = attachedObject(q->metaObject(), newTransientParent);
     setAttachedParent(attachedParent);
 }
 
@@ -383,14 +410,15 @@ QQuickAttachedPropertyPropagator *QQuickAttachedPropertyPropagator::attachedPare
 void QQuickAttachedPropertyPropagator::initialize()
 {
     Q_D(QQuickAttachedPropertyPropagator);
+    qCDebug(lcAttached) << "initialize called for" << parent() << "- looking for attached parent...";
     QQuickAttachedPropertyPropagator *attachedParent = findAttachedParent(metaObject(), parent());
     if (attachedParent)
         d->setAttachedParent(attachedParent);
 
     const QList<QQuickAttachedPropertyPropagator *> attachedChildren = findAttachedChildren(metaObject(), parent());
-    qCDebug(lcAttached) << "initialize called for" << parent() << "- found" << attachedChildren.size() << "attached children";
+    qCDebug(lcAttached) << "- found" << attachedChildren.size() << "attached children:";
     for (QQuickAttachedPropertyPropagator *child : attachedChildren) {
-        qCDebug(lcAttached) << "-" << child->parent();
+        qCDebug(lcAttached) << "  -" << child->parent();
         QQuickAttachedPropertyPropagatorPrivate::get(child)->setAttachedParent(this);
     }
 }
