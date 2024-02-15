@@ -3,5 +3,3 @@
 android
 [mirror_notRunning]
 android
-[currentFrame]
-macos ci # QTBUG-122111
