@@ -55,6 +55,8 @@ private slots:
     void AA_DontUseNativeMenuBar();
     void containerItems_data();
     void containerItems();
+    void mixedContainerItems_data();
+    void mixedContainerItems();
     void applicationWindow_data();
     void applicationWindow();
 
@@ -1188,6 +1190,71 @@ void tst_qquickmenubar::containerItems()
         auto menusMenu = menus.at(&menus, i);
         QVERIFY(menusMenu);
         QCOMPARE(menusMenu, menu);
+    }
+}
+
+void tst_qquickmenubar::mixedContainerItems_data()
+{
+    QTest::addColumn<bool>("requestNative");
+    QTest::newRow("not native") << false;
+    QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::mixedContainerItems()
+{
+    // The application is allowed to add items other
+    // than MenuBarItems and Menus as children. But those
+    // should just be ignored by the MenuBar (and the Container).
+    QFETCH(bool, requestNative);
+
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", requestNative }});
+    engine.load(testFileUrl("mixed.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    // The menubar has four children, but only three of them are
+    // Menus and MenuBarItems. So we should therefore only end up
+    // with three menus in the MenuBar, and three items in the Container.
+    QCOMPARE(menuBar->count(), 3);
+    for (int i = 0; i < 3; ++i) {
+        auto item = menuBar->itemAt(i);
+        QVERIFY(item);
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+        QVERIFY(menuBarItem);
+        QCOMPARE(menuBarItem->menu(), menuBar->menuAt(i));
+    }
+
+    // Try to add an unsupported item dynamically. It should
+    // have no impact on the MenuBar/Container API.
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick; Item { }", QUrl());
+    QPointer<QQuickItem> plainItem(qobject_cast<QQuickItem *>(component.create()));
+    QVERIFY(plainItem);
+
+    menuBar->addItem(plainItem);
+    QCOMPARE(menuBar->count(), 3);
+    for (int i = 0; i < 3; ++i) {
+        auto item = menuBar->itemAt(i);
+        QVERIFY(item);
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+        QVERIFY(menuBarItem);
+        QCOMPARE(menuBarItem->menu(), menuBar->menuAt(i));
+    }
+
+    // Remove it again. It should have no impact on
+    // the MenuBar/Container API.
+    menuBar->removeItem(plainItem);
+    QCOMPARE(menuBar->count(), 3);
+    for (int i = 0; i < 3; ++i) {
+        auto item = menuBar->itemAt(i);
+        QVERIFY(item);
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+        QVERIFY(menuBarItem);
+        QCOMPARE(menuBarItem->menu(), menuBar->menuAt(i));
     }
 }
 

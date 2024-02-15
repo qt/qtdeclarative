@@ -291,13 +291,9 @@ QWindow* QQuickMenuBarPrivate::window() const
 
 int QQuickMenuBarPrivate::menuIndex(QQuickMenu *menu) const
 {
-    // The Container API that MenuBar inherits allows for
-    // items other than MenuBarItems to be inserted. So when
-    // searching for a menu's index, we need to take this into account.
     Q_Q(const QQuickMenuBar);
     for (int i = 0; i < q->count(); ++i) {
-        QQuickMenuBarItem *item = qobject_cast<QQuickMenuBarItem *>(q->itemAt(i));
-        if (item && item->menu() == menu)
+        if (q->menuAt(i) == menu)
             return i;
     }
 
@@ -460,9 +456,7 @@ void QQuickMenuBarPrivate::createNativeMenuBar()
     qCDebug(lcMenuBar) << "native menubar parented to window:" << handle->parentWindow();
 
     // Add all the native menus. We need to do this right-to-left
-    // because of the QPA API (insertBefore). Note that the container
-    // might also contain other, foreign, items added using the generic
-    // container API (e.g addItem(item)), which we just ignore.
+    // because of the QPA API (insertBefore).
     for (int i = q->count() - 1; i >= 0; --i) {
         if (QQuickMenu *menu = q->menuAt(i))
             insertNativeMenu(menu);
@@ -481,9 +475,7 @@ void QQuickMenuBarPrivate::removeNativeMenuBar()
     Q_ASSERT(handle);
     qCDebug(lcMenuBar) << "removing native menubar";
 
-    // Remove all native menus. Note that the container might
-    // also contain other, foreign, items added using the generic
-    // container API (e.g addItem(item)), which we just ignore.
+    // Remove all native menus.
     for (int i = 0; i < q->count(); ++i) {
         if (QQuickMenu *menu = q->menuAt(i))
             removeNativeMenu(menu);
