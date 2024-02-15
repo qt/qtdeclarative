@@ -588,10 +588,14 @@ void tst_QQuickShortcut::embedded_data()
     QTest::addColumn<Qt::Key>("testKey");
     QTest::addColumn<Qt::KeyboardModifiers>("testModifiers");
     QTest::addColumn<QString>("windowShortcutSequence");
+    QTest::addColumn<QString>("applicationShortcutSequence");
     QTest::addColumn<bool>("windowShortcutActivated");
+    QTest::addColumn<bool>("applicationShortcutActivated");
 
-    QTest::newRow("windowActivated") << Qt::Key_W << (Qt::ControlModifier|Qt::AltModifier)
-                                     << "Ctrl+Alt+W" << true;
+    QTest::newRow("windowActivated") << Qt::Key_W << (Qt::ControlModifier | Qt::AltModifier)
+                                     << "Ctrl+Alt+W" << "Ctrl+Alt+A" << true << false;
+    QTest::newRow("applicationActivated") << Qt::Key_A << (Qt::ControlModifier | Qt::AltModifier)
+                                          << "Ctrl+Alt+W" << "Ctrl+Alt+A" << false << true;
 }
 
 void tst_QQuickShortcut::embedded()
@@ -602,7 +606,9 @@ void tst_QQuickShortcut::embedded()
     QFETCH(Qt::Key, testKey);
     QFETCH(Qt::KeyboardModifiers, testModifiers);
     QFETCH(QString, windowShortcutSequence);
+    QFETCH(QString, applicationShortcutSequence);
     QFETCH(bool, windowShortcutActivated);
+    QFETCH(bool, applicationShortcutActivated);
 
     QWidget window;
     QVBoxLayout *layout = new QVBoxLayout {&window};
@@ -625,6 +631,10 @@ void tst_QQuickShortcut::embedded()
     QTRY_VERIFY(window.isVisible());
     // The widget can get focused only when the including window has exposed.
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QWindow *windowHandle = window.windowHandle();
+    windowHandle->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(windowHandle));
 
     widget->setFocus();
     QTRY_VERIFY(widget->hasFocus());
@@ -660,7 +670,50 @@ void tst_QQuickShortcut::embedded()
 
     QTest::keyPress(&window, testKey, testModifiers);
     QTest::keyRelease(&window, testKey, testModifiers);
-    QCOMPARE(item->property("activated").toBool(), true);
+    QCOMPARE(item->property("activated").toBool(), windowShortcutActivated);
+
+    QWidget otherWindow;
+    QVBoxLayout *otherLayout = new QVBoxLayout {&otherWindow};
+    QQuickView *otherQuickView = new QQuickView;
+    otherQuickView->setResizeMode(QQuickView::SizeRootObjectToView);
+    otherQuickView->setSource(testFileUrl("embedded.qml"));
+
+    QWidget *otherContainer = QWidget::createWindowContainer(otherQuickView);
+    otherContainer->setMinimumSize(quickView->size());
+    otherContainer->setFocusPolicy(Qt::TabFocus);
+
+    QWidget *otherWidget = new QWidget;
+    otherLayout->addWidget(otherWidget);
+    otherLayout->addWidget(otherContainer);
+
+    otherWindow.show();
+    QTRY_VERIFY(otherWindow.isVisible());
+    QVERIFY(otherWindow.isVisible());
+
+    // make sure that the (first) window is active
+    quickView->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(quickView));
+
+    QQuickItem *otherItem = otherQuickView->rootObject();
+    QVERIFY(otherItem);
+
+    QObject *applicationShortcut = otherItem->property("shortcut").value<QObject *>();
+    QVERIFY(applicationShortcut);
+
+    applicationShortcut->setProperty("context", Qt::ApplicationShortcut);
+    applicationShortcut->setProperty("sequence", applicationShortcutSequence);
+
+    QTest::keyPress(&otherWindow, testKey, testModifiers);
+    QTest::keyRelease(&otherWindow, testKey, testModifiers);
+    QCOMPARE(otherItem->property("activated").toBool(), applicationShortcutActivated);
+
+    otherItem->setProperty("activated", false);
+    otherWindow.close();
+    QTRY_VERIFY(!otherWindow.isVisible());
+
+    QTest::keyPress(&otherWindow, testKey, testModifiers);
+    QTest::keyRelease(&otherWindow, testKey, testModifiers);
+    QCOMPARE(otherItem->property("activated").toBool(), false);
 #endif
 }
 

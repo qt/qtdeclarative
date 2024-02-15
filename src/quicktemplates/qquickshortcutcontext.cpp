@@ -51,44 +51,51 @@ static bool isBlockedByPopup(QQuickItem *item)
 
 bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
 {
+    if ((context != Qt::ApplicationShortcut) && (context != Qt::WindowShortcut))
+        return false;
+
     QQuickItem *item = nullptr;
-    switch (context) {
-    case Qt::ApplicationShortcut:
-        return true;
-    case Qt::WindowShortcut:
-        while (obj && !obj->isWindowType()) {
-            item = qobject_cast<QQuickItem *>(obj);
-            if (item && item->window()) {
-                obj = item->window();
-                break;
-            } else if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(obj)) {
-                obj = popup->window();
-                item = popup->popupItem();
+
+    // look for the window contains embedded shortcut
+    while (obj && !obj->isWindowType()) {
+        item = qobject_cast<QQuickItem *>(obj);
+        if (item && item->window()) {
+            obj = item->window();
+            break;
+        } else if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(obj)) {
+            obj = popup->window();
+            item = popup->popupItem();
 
 #if QT_CONFIG(qml_object_model)
-                if (!obj) {
-                    // The popup has no associated window (yet). However, sub-menus,
-                    // unlike top-level menus, will not have an associated window
-                    // until their parent menu is opened. So, check if this is a sub-menu
-                    // so that actions within it can grab shortcuts.
-                    if (auto *menu = qobject_cast<QQuickMenu *>(popup)) {
-                        auto parentMenu = QQuickMenuPrivate::get(menu)->parentMenu;
-                        while (!obj && parentMenu)
-                            obj = parentMenu->window();
-                    }
+            if (!obj) {
+                // The popup has no associated window (yet). However, sub-menus,
+                // unlike top-level menus, will not have an associated window
+                // until their parent menu is opened. So, check if this is a sub-menu
+                // so that actions within it can grab shortcuts.
+                if (auto *menu = qobject_cast<QQuickMenu *>(popup)) {
+                    auto parentMenu = QQuickMenuPrivate::get(menu)->parentMenu;
+                    while (!obj && parentMenu)
+                        obj = parentMenu->window();
                 }
-#endif
-                break;
             }
-            obj = obj->parent();
+#endif
+            break;
         }
-        if (QWindow *renderWindow = QQuickRenderControl::renderWindowFor(qobject_cast<QQuickWindow *>(obj)))
+        obj = obj->parent();
+    }
+
+    if (context == Qt::ApplicationShortcut) {
+        // the application shortcuts inside hidden/closed windows should not match
+        return obj && qobject_cast<QWindow*>(obj)->isVisible();
+    } else {
+        Q_ASSERT(context == Qt::WindowShortcut);
+        QQuickWindow *window = qobject_cast<QQuickWindow *>(obj);
+        if (QWindow *renderWindow = QQuickRenderControl::renderWindowFor(window))
             obj = renderWindow;
-        qCDebug(lcContextMatcher) << "obj" << obj << "item" << item << "focusWindow" << QGuiApplication::focusWindow()
-            << "!isBlockedByPopup(item)" << !isBlockedByPopup(item);
+        qCDebug(lcContextMatcher) << "obj" << obj << "item" << item << "focusWindow"
+                                  << QGuiApplication::focusWindow()
+                                  << "!isBlockedByPopup(item)" << !isBlockedByPopup(item);
         return obj && qobject_cast<QWindow*>(obj)->isActive() && !isBlockedByPopup(item);
-    default:
-        return false;
     }
 }
 
