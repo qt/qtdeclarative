@@ -29,6 +29,10 @@ protected:
     virtual void attachedParentChange(QQuickAttachedPropertyPropagator *newParent, QQuickAttachedPropertyPropagator *oldParent);
 
 private:
+#ifndef QT_NO_DEBUG_STREAM
+    friend Q_QUICKCONTROLS2_EXPORT QDebug operator<<(QDebug debug, const QQuickAttachedPropertyPropagator *propagator);
+#endif
+
     Q_DECLARE_PRIVATE(QQuickAttachedPropertyPropagator)
 };
 
