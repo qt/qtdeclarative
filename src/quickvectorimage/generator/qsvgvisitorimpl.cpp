@@ -28,7 +28,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorGraphics)
+Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorImage)
 
 static inline bool isPathContainer(const QSvgStructureNode *node)
 {
@@ -68,7 +68,7 @@ static inline bool isPathContainer(const QSvgStructureNode *node)
             foundPath = true;
             break;
         default:
-            qCDebug(lcQuickVectorGraphics) << "Unhandled type in switch" << child->type();
+            qCDebug(lcQuickVectorImage) << "Unhandled type in switch" << child->type();
             break;
         }
     }
@@ -150,13 +150,13 @@ QSvgVisitorImpl::QSvgVisitorImpl(const QString svgFileName, QQuickGenerator *gen
 void QSvgVisitorImpl::traverse()
 {
     if (!m_generator) {
-        qCDebug(lcQuickVectorGraphics) << "No valid QQuickGenerator is set. Genration will stop";
+        qCDebug(lcQuickVectorImage) << "No valid QQuickGenerator is set. Genration will stop";
         return;
     }
 
     auto *doc = QSvgTinyDocument::load(m_svgFileName);
     if (!doc) {
-        qCDebug(lcQuickVectorGraphics) << "Not a valid Svg File : " << m_svgFileName;
+        qCDebug(lcQuickVectorImage) << "Not a valid Svg File : " << m_svgFileName;
         return;
     }
 
@@ -278,11 +278,11 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         }
 
         if (!tspan->style().font.isDefault()) // TODO: switch to rich text when we have more complex spans with fonts?
-            qCDebug(lcQuickVectorGraphics) << "Not implemented Tspan with font:" << tspan->style().font->qfont();
+            qCDebug(lcQuickVectorImage) << "Not implemented Tspan with font:" << tspan->style().font->qfont();
         QString spanColor;
         if (!tspan->style().fill.isDefault()) {
             auto &b = tspan->style().fill->qbrush();
-            qCDebug(lcQuickVectorGraphics) << "tspan FILL:" << b;
+            qCDebug(lcQuickVectorImage) << "tspan FILL:" << b;
             if (b.style() != Qt::NoBrush)
                 spanColor = b.color().name();
         }
@@ -378,7 +378,7 @@ bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgTinyDocument *node)
 void QSvgVisitorImpl::visitDocumentNodeEnd(const QSvgTinyDocument *node)
 {
     handleBaseNodeEnd(node);
-    qCDebug(lcQuickVectorGraphics) << "REVERT" << node->nodeId() << node->type() << (styleResolver->painter().pen().style() != Qt::NoPen)
+    qCDebug(lcQuickVectorImage) << "REVERT" << node->nodeId() << node->type() << (styleResolver->painter().pen().style() != Qt::NoPen)
                                    << styleResolver->painter().pen().color().name() << (styleResolver->painter().pen().brush().style() != Qt::NoBrush)
                                    << styleResolver->painter().pen().brush().color().name();
 
@@ -401,13 +401,13 @@ void QSvgVisitorImpl::fillCommonNodeInfo(const QSvgNode *node, NodeInfo &info)
 
 void QSvgVisitorImpl::handleBaseNodeSetup(const QSvgNode *node)
 {
-    qCDebug(lcQuickVectorGraphics) << "Before SETUP" << node << "fill" << styleResolver->currentFillColor()
+    qCDebug(lcQuickVectorImage) << "Before SETUP" << node << "fill" << styleResolver->currentFillColor()
                                    << "stroke" << styleResolver->currentStrokeColor() << styleResolver->currentStrokeWidth()
                                    << node->nodeId() << " type: " << node->typeName()  << " " << node->type();
 
     node->applyStyle(&styleResolver->painter(), styleResolver->states());
 
-    qCDebug(lcQuickVectorGraphics) << "After SETUP" << node << "fill" << styleResolver->currentFillColor()
+    qCDebug(lcQuickVectorImage) << "After SETUP" << node << "fill" << styleResolver->currentFillColor()
                                    << "stroke" << styleResolver->currentStrokeColor()
                                    << styleResolver->currentStrokeWidth() << node->nodeId();
 }
@@ -424,7 +424,7 @@ void QSvgVisitorImpl::handleBaseNodeEnd(const QSvgNode *node)
 {
     node->revertStyle(&styleResolver->painter(), styleResolver->states());
 
-    qCDebug(lcQuickVectorGraphics) << "After END" << node << "fill" << styleResolver->currentFillColor()
+    qCDebug(lcQuickVectorImage) << "After END" << node << "fill" << styleResolver->currentFillColor()
                                    << "stroke" << styleResolver->currentStrokeColor() << styleResolver->currentStrokeWidth()
                                    << node->nodeId();
 

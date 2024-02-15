@@ -15,7 +15,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorGraphics)
+Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorImage)
 
 class GeneratorStream : public QTextStream
 {
@@ -64,9 +64,9 @@ QQuickQmlGenerator::~QQuickQmlGenerator()
         outFile.close();
     }
 
-    if (lcQuickVectorGraphics().isDebugEnabled()) {
+    if (lcQuickVectorImage().isDebugEnabled()) {
         result.truncate(300);
-        qCDebug(lcQuickVectorGraphics).noquote() << result;
+        qCDebug(lcQuickVectorImage).noquote() << result;
     }
 }
 
@@ -136,7 +136,7 @@ void QQuickQmlGenerator::generateImageNode(const ImageNodeInfo &info)
                                               : QStringLiteral("svg_asset_%1.jpg").arg(info.image.cacheKey());
     // For now we just create a copy of the image in the current directory
     info.image.save(fn);
-    qCDebug(lcQuickVectorGraphics) << "Saving copy of IMAGE" << fn;
+    qCDebug(lcQuickVectorImage) << "Saving copy of IMAGE" << fn;
 
     // TODO: this requires proper asset management.
     stream() << "Image {";
@@ -321,7 +321,7 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
             hAlign = QStringLiteral("right");
             break;
         default:
-            qCDebug(lcQuickVectorGraphics) << "Unexpected text alignment" << info.alignment;
+            qCDebug(lcQuickVectorImage) << "Unexpected text alignment" << info.alignment;
             Q_FALLTHROUGH();
         case Qt::AlignLeft:
             break;

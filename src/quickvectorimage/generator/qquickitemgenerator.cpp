@@ -15,7 +15,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorGraphics)
+Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorImage)
 
 QQuickItemGenerator::QQuickItemGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags, QQuickItem *parentItem)
     :QQuickGenerator(fileName, flags)
@@ -90,7 +90,7 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info)
 {
     if (m_inShapeItem) {
         if (!info.isDefaultTransform)
-            qCWarning(lcQuickVectorGraphics) << "Skipped transform for node" << info.nodeId << "type" << info.typeName << "(this is not supposed to happen)";
+            qCWarning(lcQuickVectorImage) << "Skipped transform for node" << info.nodeId << "type" << info.typeName << "(this is not supposed to happen)";
         optimizePaths(info);
     } else {
         auto *shapeItem = new QQuickShape;
@@ -215,7 +215,7 @@ void QQuickItemGenerator::generateGradient(const QGradient *grad, QQuickShapePat
 
 void QQuickItemGenerator::generateNode(const NodeInfo &info)
 {
-    qCWarning(lcQuickVectorGraphics) << "SVG NODE NOT IMPLEMENTED: "
+    qCWarning(lcQuickVectorImage) << "SVG NODE NOT IMPLEMENTED: "
                                      << info.nodeId
                                      << " type: " << info.typeName;
 }
@@ -257,7 +257,7 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
             anchors->setRight(alignPrivate->left());
             break;
         default:
-            qCDebug(lcQuickVectorGraphics) << "Unexpected text alignment" << info.alignment;
+            qCDebug(lcQuickVectorImage) << "Unexpected text alignment" << info.alignment;
             Q_FALLTHROUGH();
         case Qt::AlignLeft:
             anchors->setLeft(alignPrivate->left());
