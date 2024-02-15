@@ -130,10 +130,13 @@ public:
         Const,
     };
 
-    QQmlJSMetaParameter(const QString &name = QString(), const QString &typeName = QString(),
+    QQmlJSMetaParameter(QString name = QString(), QString typeName = QString(),
                         Constness typeQualifier = NonConst,
                         QWeakPointer<const QQmlJSScope> type = {})
-        : m_name(name), m_typeName(typeName), m_type(type), m_typeQualifier(typeQualifier)
+        : m_name(std::move(name)),
+          m_typeName(std::move(typeName)),
+          m_type(type),
+          m_typeQualifier(typeQualifier)
     {
     }
 
