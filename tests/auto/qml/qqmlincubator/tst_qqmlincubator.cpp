@@ -1168,6 +1168,12 @@ void tst_qqmlincubator::garbageCollection()
     // verify incubator is correctly collected now that incubation is complete and all references are gone
     engine.collectGarbage();
     QVERIFY(weakIncubatorRef.isNullOrUndefined());
+
+    QQmlComponent component2(&engine, testFileUrl("garbageCollection2.qml"));
+    QVERIFY2(component2.isReady(), qPrintable(component2.errorString()));
+    QScopedPointer<QObject> obj2(component2.create());
+    QVERIFY(!obj2.isNull());
+    QVERIFY(obj2->property("incubated").value<QObject *>() != nullptr);
 }
 
 void tst_qqmlincubator::requiredProperties()
