@@ -554,7 +554,7 @@ void QQuickTextPrivate::updateSize()
                 QTextLine firstLine = firstBlock.layout()->lineAt(0);
                 QTextLine lastLine = lastBlock.layout()->lineAt(lastBlock.layout()->lineCount() - 1);
                 advance = QSizeF(lastLine.horizontalAdvance(),
-                                 (lastLine.y() + lastBlock.layout()->position().y()) - (firstLine.y() + firstBlock.layout()->position().y()));
+                                 (lastLine.y() + lastBlock.layout()->position().y() + lastLine.ascent()) - (firstLine.y() + firstBlock.layout()->position().y() + firstLine.ascent()));
             } else {
                 advance = QSizeF();
             }
