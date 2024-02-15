@@ -1,9 +1,9 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-import QtQuick 2.2
-import QtTest 1.0
-import QtQuick.Layouts 1.0
+import QtQuick
+import QtTest
+import QtQuick.Layouts
 import "LayoutHelperLibrary.js" as LayoutHelpers
 
 import org.qtproject.Test
@@ -1067,6 +1067,37 @@ Item {
                 compare(actualPositions, data.expectedPositions)
             }
         }
+
+        Component {
+            id: uniformCellSizes_QML_Component
+            RowLayout {
+                spacing: 0
+                uniformCellSizes: true
+                Rectangle {
+                    implicitWidth: 1
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+                    color: "red"
+                }
+                Rectangle {
+                    implicitWidth: 2
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+                    color: "blue"
+                }
+            }
+        }
+
+        function test_uniformCellSizes_QML(data)
+        {
+            var layout = createTemporaryObject(uniformCellSizes_QML_Component, testCase)
+            layout.width  = 40
+            layout.height = 20
+            let expectedWidths = [20, 20]
+            let actualWidths = [layout.children[0].width, layout.children[1].width]
+            compare(actualWidths, expectedWidths)
+        }
+
 
         Component {
             id: layout_alignToPixelGrid_Component

@@ -185,6 +185,7 @@ class QQuickLinearLayoutPrivate;
 class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickLinearLayout : public QQuickGridLayoutBase
 {
     Q_OBJECT
+    QML_ANONYMOUS
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged FINAL)
     Q_PROPERTY(bool uniformCellSizes READ uniformCellSizes WRITE setUniformCellSizes
                NOTIFY uniformCellSizesChanged REVISION(6, 6) FINAL)
