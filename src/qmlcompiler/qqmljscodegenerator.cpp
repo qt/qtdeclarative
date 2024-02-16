@@ -2923,20 +2923,27 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
     // If the original output is a conversion, we're supposed to check for the contained
     // type and if it doesn't match, set the result to null or undefined.
     const QQmlJSRegisterContent originalContent = m_typeResolver->original(outputContent);
+    const QQmlJSScope::ConstPtr target = originalContent.storedType()->isReferenceType()
+            ? m_typeResolver->containedType(originalContent)
+            : m_typeResolver->extractNonVoidFromOptionalType(originalContent);
 
-    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(originalContent);
+    if (!target) {
+        reject(u"type assertion to unknown type"_s);
+        return;
+    }
+
     const bool isTrivial = m_typeResolver->inherits(
-            m_typeResolver->originalContainedType(inputContent), contained);
+            m_typeResolver->originalContainedType(inputContent), target);
 
     m_body += m_state.accumulatorVariableOut + u" = "_s;
 
-    if (contained->isReferenceType() && !isTrivial) {
-        const QQmlJSScope::ConstPtr genericContained = m_typeResolver->genericType(contained);
+    if (!isTrivial && target->isReferenceType()) {
+        const QQmlJSScope::ConstPtr genericContained = m_typeResolver->genericType(target);
         const QString inputConversion = inputContent.storedType()->isReferenceType()
                 ? input
                 : convertStored(inputContent.storedType(), genericContained, input);
 
-        if (contained->isComposite() && m_typeResolver->equals(
+        if (target->isComposite() && m_typeResolver->equals(
                     m_state.accumulatorIn().storedType(), m_typeResolver->metaObjectType())) {
             m_body += conversion(
                         genericContained, outputContent,
@@ -2944,19 +2951,24 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
         } else {
             m_body += conversion(
                         genericContained, outputContent,
-                        u'(' + metaObject(contained) + u")->cast("_s + inputConversion + u')');
+                        u'(' + metaObject(target) + u")->cast("_s + inputConversion + u')');
         }
         m_body += u";\n"_s;
         return;
     }
 
-    if (m_typeResolver->equals(inputContent.storedType(), m_typeResolver->varType())) {
-        if (const auto target = m_typeResolver->extractNonVoidFromOptionalType(originalContent)) {
-            m_body += m_state.accumulatorVariableOut + u" = "_s;
+    if (m_typeResolver->registerIsStoredIn(inputContent, m_typeResolver->varType())
+        || m_typeResolver->registerIsStoredIn(inputContent, m_typeResolver->jsPrimitiveType())) {
+
+        const auto source = m_typeResolver->extractNonVoidFromOptionalType(
+                m_typeResolver->original(inputContent));
+
+        if (source && m_typeResolver->equals(source, target)) {
             m_body += input + u".metaType() == "_s + metaType(target)
                     + u" ? " + conversion(inputContent, outputContent, input)
-                    + u" : " + conversion(m_typeResolver->globalType(m_typeResolver->voidType()),
-                                          outputContent, QString());
+                    + u" : " + conversion(
+                                  m_typeResolver->globalType(m_typeResolver->voidType()),
+                                  outputContent, QString());
             m_body += u";\n"_s;
             return;
         }
@@ -2968,7 +2980,7 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
         return;
     }
 
-    reject(u"unsupported type assertion"_s);
+    reject(u"non-trivial value type assertion"_s);
 }
 
 void QQmlJSCodeGenerator::generate_UNot()

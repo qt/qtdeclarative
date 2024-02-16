@@ -2123,7 +2123,6 @@ void tst_QmlCppCodegen::getOptionalLookup_data()
     // Value Types
     QTest::addRow("int on rect") << u"tv1"_s << QVariant(50);
     QTest::addRow("int on point") << u"tv2"_s << QVariant(-10);
-    QTest::addRow("int on variant as point") << u"tv3"_s << QVariant(5);
     QTest::addRow("int on undefined as point") << u"tv4"_s << QVariant(); // undefined
 
     // Enums
@@ -2135,12 +2134,8 @@ void tst_QmlCppCodegen::getOptionalLookup_data()
     // Complex chains
     QTest::addRow("mixed 1") << u"tc1"_s << QVariant(-10);
     QTest::addRow("mixed 2") << u"tc2"_s << QVariant(0);
-    QTest::addRow("mixed 3") << u"tc3"_s << QVariant(5);
     QTest::addRow("early out 1") << u"tc4"_s << QVariant(); // undefined
     QTest::addRow("early out 2") << u"tc5"_s << QVariant(); // undefined
-    QTest::addRow("early out 3") << u"tc6"_s << QVariant(); // undefined
-    QTest::addRow("complex2") << u"tc7"_s << QVariant(); // undefined
-    QTest::addRow("complex3") << u"tc8"_s << QVariant(2);
 }
 
 void tst_QmlCppCodegen::getOptionalLookup()
@@ -4778,6 +4773,16 @@ void tst_QmlCppCodegen::valueTypeBehavior()
 
         // If the binding throws an exception, the value doesn't change.
         QCOMPARE(o->property("x"), 10);
+
+        QCOMPARE(o->property("tv3"), 5);
+        QCOMPARE(o->property("tc3"), 5);
+        QCOMPARE(o->property("tc6"), QVariant());
+        QCOMPARE(o->property("tc7"), QVariant());
+        QCOMPARE(o->property("tc8"), 2);
+
+        // The default greeting is never applied because undefined can be coerced to string
+        QCOMPARE(o->property("greeting1"), QLatin1String("undefined"));
+        QCOMPARE(o->property("greeting2"), QLatin1String("Custom Greeting"));
     }
 }
 
