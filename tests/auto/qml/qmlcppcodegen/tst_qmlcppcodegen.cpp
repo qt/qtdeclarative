@@ -4260,6 +4260,12 @@ void tst_QmlCppCodegen::valueTypeBehavior()
 
                // If the binding throws an exception, the value doesn't change.
         QCOMPARE(o->property("x"), 10);
+
+        QCOMPARE(o->property("tv3"), 5);
+        QCOMPARE(o->property("tc3"), 5);
+        QCOMPARE(o->property("tc6"), QVariant());
+        QCOMPARE(o->property("tc7"), QVariant());
+        QCOMPARE(o->property("tc8"), 2);
     }
 }
 
