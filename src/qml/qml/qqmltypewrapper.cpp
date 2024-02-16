@@ -428,11 +428,11 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
     if (const QObjectWrapper *objectWrapper = var.as<QObjectWrapper>())
         return instanceOfQObject(typeWrapper, objectWrapper);
 
-    if (const QMetaObject *valueTypeMetaObject
-            = QQmlMetaType::metaObjectForValueType(typeWrapper->d()->type())) {
+    const QQmlType type = typeWrapper->d()->type();
+    if (type.isValueType()) {
         if (const QQmlValueTypeWrapper *valueWrapper = var.as<QQmlValueTypeWrapper>()) {
             return QV4::Encode(QQmlMetaObject::canConvert(valueWrapper->metaObject(),
-                                                          valueTypeMetaObject));
+                                                          type.metaObjectForValueType()));
         }
 
         // We want "foo as valuetype" to return undefined if it doesn't match.
