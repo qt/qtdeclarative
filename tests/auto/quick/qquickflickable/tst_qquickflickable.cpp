@@ -177,6 +177,7 @@ private slots:
     void returnToBounds();
     void returnToBounds_data();
     void wheel();
+    void wheelBackwards();
     void trackpad();
     void nestedTrackpad();
     void movingAndFlicking();
@@ -963,6 +964,47 @@ void tst_qquickflickable::wheel()
     QCOMPARE(fp->timeline.isActive(), false);
     QTest::qWait(50); // make sure that onContentXChanged won't sneak in again
     QCOMPARE(flick->property("movementsAfterEnd").value<int>(), 0); // QTBUG-55886
+}
+
+void tst_qquickflickable::wheelBackwards() // (QTBUG-121349)
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("wheel.qml")));
+    QQuickFlickable *flick = window.rootObject()->findChild<QQuickFlickable*>("flick");
+    QVERIFY(flick);
+    QSignalSpy moveEndSpy(flick, SIGNAL(movementEnded()));
+    quint64 timestamp = 10;
+    const QPoint pos(200, 200);
+
+    // attempting to scroll vertically "backwards" beyond extents does not initiate overshoot
+    {
+        QWheelEvent event(pos, window.mapToGlobal(pos), QPoint(), QPoint(0, 120),
+                          Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+        event.setAccepted(false);
+        event.setTimestamp(timestamp++);
+        QGuiApplication::sendEvent(&window, &event);
+    }
+    QCOMPARE(flick->contentY(), qreal(0));
+    QCOMPARE(flick->isMoving(), false);
+    QCOMPARE(moveEndSpy.size(), 0);
+
+    // get ready to test horizontal wheel
+    flick->setContentY(0); // which triggers movementEnded again
+    flick->setProperty("movementsAfterEnd", 0);
+    flick->setProperty("ended", false);
+    QCOMPARE(flick->contentY(), qreal(0));
+
+    // attempting to scroll horizontally "backwards" beyond extents does not initiate overshoot
+    {
+        QWheelEvent event(pos, window.mapToGlobal(pos), QPoint(), QPoint(120, 0),
+                          Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+        event.setAccepted(false);
+        event.setTimestamp(timestamp);
+        QGuiApplication::sendEvent(&window, &event);
+    }
+    QCOMPARE(flick->contentX(), qreal(0));
+    QCOMPARE(flick->isMoving(), false);
+    QCOMPARE(moveEndSpy.size(), 0);
 }
 
 void tst_qquickflickable::trackpad()
