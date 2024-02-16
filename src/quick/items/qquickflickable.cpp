@@ -1678,21 +1678,24 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
                 d->moveReason = QQuickFlickablePrivate::Mouse; // ItemViews will set fixupMode to Immediate in fixup() without this.
                 d->vMoved = true;
                 qreal scrollPixel = (-yDelta / 120.0 * wheelScroll);
-                if (d->boundsBehavior == QQuickFlickable::StopAtBounds) {
-                    const qreal estContentPos = scrollPixel + d->vData.move.value();
-                    if (scrollPixel > 0) { // Forward direction (away from user)
-                        if (d->vData.move.value() >= minYExtent())
-                            d->vMoved = false;
-                        else if (estContentPos > minYExtent())
-                            scrollPixel = minYExtent() - d->vData.move.value();
-                    } else { // Backward direction (towards user)
-                        if (d->vData.move.value() <= maxYExtent())
-                            d->vMoved = false;
-                        else if (estContentPos < maxYExtent())
-                            scrollPixel = maxYExtent() - d->vData.move.value();
-                    }
+                if (scrollPixel > 0) { // Forward direction (away from user)
+                    if (d->vData.move.value() >= minYExtent())
+                        d->vMoved = false;
+                } else { // Backward direction (towards user)
+                    if (d->vData.move.value() <= maxYExtent())
+                        d->vMoved = false;
                 }
                 if (d->vMoved) {
+                    if (d->boundsBehavior == QQuickFlickable::StopAtBounds) {
+                        const qreal estContentPos = scrollPixel + d->vData.move.value();
+                        if (scrollPixel > 0) { // Forward direction (away from user)
+                            if (estContentPos > minYExtent())
+                                scrollPixel = minYExtent() - d->vData.move.value();
+                        } else { // Backward direction (towards user)
+                            if (estContentPos < maxYExtent())
+                                scrollPixel = maxYExtent() - d->vData.move.value();
+                        }
+                    }
                     d->resetTimeline(d->vData);
                     movementStarting();
                     d->timeline.moveBy(d->vData.move, scrollPixel, QEasingCurve(QEasingCurve::OutExpo), 3*d->fixupDuration/4);
@@ -1705,21 +1708,24 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
                 d->moveReason = QQuickFlickablePrivate::Mouse; // ItemViews will set fixupMode to Immediate in fixup() without this.
                 d->hMoved = true;
                 qreal scrollPixel = (-xDelta / 120.0 * wheelScroll);
-                if (d->boundsBehavior == QQuickFlickable::StopAtBounds) {
-                    const qreal estContentPos = scrollPixel + d->hData.move.value();
-                    if (scrollPixel > 0) { // Forward direction (away from user)
-                        if (d->hData.move.value() >= minXExtent())
-                            d->hMoved = false;
-                        else if (estContentPos > minXExtent())
-                            scrollPixel = minXExtent() - d->hData.move.value();
-                    } else { // Backward direction (towards user)
-                        if (d->hData.move.value() <= maxXExtent())
-                            d->hMoved = false;
-                        else if (estContentPos < maxXExtent())
-                            scrollPixel = maxXExtent() - d->hData.move.value();
-                    }
+                if (scrollPixel > 0) { // Forward direction (away from user)
+                    if (d->hData.move.value() >= minXExtent())
+                        d->hMoved = false;
+                } else { // Backward direction (towards user)
+                    if (d->hData.move.value() <= maxXExtent())
+                        d->hMoved = false;
                 }
                 if (d->hMoved) {
+                    if (d->boundsBehavior == QQuickFlickable::StopAtBounds) {
+                        const qreal estContentPos = scrollPixel + d->hData.move.value();
+                        if (scrollPixel > 0) { // Forward direction (away from user)
+                            if (estContentPos > minXExtent())
+                                scrollPixel = minXExtent() - d->hData.move.value();
+                        } else { // Backward direction (towards user)
+                            if (estContentPos < maxXExtent())
+                                scrollPixel = maxXExtent() - d->hData.move.value();
+                        }
+                    }
                     d->resetTimeline(d->hData);
                     movementStarting();
                     d->timeline.moveBy(d->hData.move, scrollPixel, QEasingCurve(QEasingCurve::OutExpo), 3*d->fixupDuration/4);
