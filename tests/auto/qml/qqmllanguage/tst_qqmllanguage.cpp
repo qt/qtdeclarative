@@ -8036,6 +8036,10 @@ void tst_qqmllanguage::asValueType()
 
     const ValueTypeWithString withString = o->property("f").value<ValueTypeWithString>();
     QCOMPARE(withString.toString(), u"red");
+
+    const QVariant string = o->property("g");
+    QCOMPARE(string.metaType(), QMetaType::fromType<QString>());
+    QCOMPARE(string.toString(), u"green");
 }
 
 void tst_qqmllanguage::typedEnums_data()
