@@ -48,6 +48,7 @@ set(qml_files
     CppMethodListReturnType.qml
     Dummy.qml
     Dummy2.qml
+    EditConstraint.qml
     Enums.qml
     Foozle.qml
     GetOptionalLookupOnQJSValueNonStrict.qml
@@ -237,6 +238,7 @@ set(qml_files
     script.mjs
     sequenceToIterable.qml
     setLookupConversion.qml
+    setLookupOriginalScope.qml
     shadowedAsCasts.qml
     shadowedMethod.qml
     shadowedPrimitiveCmpEqNull.qml

@@ -203,6 +203,7 @@ private slots:
     void scopeVsObject();
     void sequenceToIterable();
     void setLookupConversion();
+    void setLookupOriginalScope();
     void shadowedAsCasts();
     void shadowedMethod();
     void shadowedPrimitiveCmpEqNull();
@@ -4104,6 +4105,24 @@ void tst_QmlCppCodegen::setLookupConversion()
     QMetaObject::invokeMethod(o.data(), "t");
     QCOMPARE(o->objectName(), u"a"_s);
     QCOMPARE(o->property("value").toInt(), 9);
+}
+
+void tst_QmlCppCodegen::setLookupOriginalScope()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/setLookupOriginalScope.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QObject *v = o->property("variable").value<QObject *>();
+    QCOMPARE(v->property("value").toInt(), 0);
+
+    QMetaObject::invokeMethod(o.data(), "trigger");
+    QObject *edit = o->property("edit").value<QObject *>();
+    QVERIFY(edit);
+    QCOMPARE(edit->property("myOutput").value<QObject *>(), v);
+    QCOMPARE(v->property("value").toInt(), 55);
 }
 
 void tst_QmlCppCodegen::shadowedAsCasts()
