@@ -231,6 +231,9 @@ void QQuickHoverHandler::setHovered(bool hovered)
     \value PointerDevice.Puck           A digitizer with crosshairs, on a graphics tablet.
     \value PointerDevice.AllDevices     Any type of pointing device.
 
+    \note Not all platforms are yet able to distinguish mouse and touchpad; and
+    on those that do, you often want to make mouse and touchpad behavior the same.
+
     \sa QInputDevice::DeviceType
 */
 
