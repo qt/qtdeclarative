@@ -145,7 +145,8 @@ bool QQuickHoverHandler::wantsPointerEvent(QPointerEvent *event)
     if (event->isSinglePointEvent() && static_cast<QSinglePointEvent *>(event)->button())
         return false;
     auto &point = event->point(0);
-    if (QQuickPointerDeviceHandler::wantsPointerEvent(event) && wantsEventPoint(event, point) && parentContains(point)) {
+    const bool inside = parentContains(point);
+    if (QQuickPointerDeviceHandler::wantsPointerEvent(event) && wantsEventPoint(event, point) && inside) {
         // assume this is a mouse or tablet event, so there's only one point
         setPointId(point.id());
         return true;
@@ -162,7 +163,7 @@ bool QQuickHoverHandler::wantsPointerEvent(QPointerEvent *event)
     // But after kCursorOverrideTimeout ms, QQuickItemPrivate::effectiveCursorHandler()
     // will ignore it, just in case there is no QQuickPointerTabletEvent to unset it.
     // For example, a tablet proximity leave event could occur, but we don't deliver it to the window.
-    if (!(m_hoveredTablet && QQuickDeliveryAgentPrivate::isMouseEvent(event)))
+    if (!inside || !(m_hoveredTablet && QQuickDeliveryAgentPrivate::isMouseEvent(event)))
         setHovered(false);
 
     return false;
