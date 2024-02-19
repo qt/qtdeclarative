@@ -837,6 +837,9 @@ QQmlJSLinter::FixResult QQmlJSLinter::applyFixes(QString *fixedCode, bool silent
                   return a.location().offset < b.location().offset;
               });
 
+    const auto dupes = std::unique(fixesToApply.begin(), fixesToApply.end());
+    fixesToApply.erase(dupes, fixesToApply.end());
+
     for (auto it = fixesToApply.begin(); it + 1 != fixesToApply.end(); it++) {
         const QQmlJS::SourceLocation srcLocA = it->location();
         const QQmlJS::SourceLocation srcLocB = (it + 1)->location();

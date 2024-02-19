@@ -797,6 +797,14 @@ singleTicks: ' \\' \\\\'
 expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                                   16, 27 } },
                         { Result::ExitsNormally, Result::AutoFixable } };
+    QTest::addRow("multifix")
+            << QStringLiteral("multifix.qml")
+            << Result { {
+                    Message { QStringLiteral("Unqualified access"), 7,  19, QtWarningMsg},
+                    Message { QStringLiteral("Unqualified access"), 11, 19, QtWarningMsg},
+                }, {}, {
+                    Message { QStringLiteral("pragma ComponentBehavior: Bound\n"), 1, 1 }
+                }, { Result::AutoFixable }};
     QTest::newRow("unresolvedType")
             << QStringLiteral("unresolvedType.qml")
             << Result { { Message { QStringLiteral(
