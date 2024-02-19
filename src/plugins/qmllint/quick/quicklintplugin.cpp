@@ -134,10 +134,15 @@ void AttachedPropertyTypeValidatorPass::onBinding(const QQmlSA::Element &element
                                                   const QQmlSA::Element &bindingScope,
                                                   const QQmlSA::Element &value)
 {
-    Q_UNUSED(element)
-    Q_UNUSED(propertyName)
-    Q_UNUSED(bindingScope)
     Q_UNUSED(value)
+
+    // We can only analyze simple attached bindings since we don't see
+    // the grouped and attached properties that lead up to this here.
+    //
+    // TODO: This is very crude.
+    //       We should add API for grouped and attached properties.
+    if (propertyName.count(QLatin1Char('.')) > 1)
+        return;
 
     checkWarnings(bindingScope.baseType(), element, binding.sourceLocation());
 }
