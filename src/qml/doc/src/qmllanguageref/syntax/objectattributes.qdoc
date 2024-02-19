@@ -498,16 +498,6 @@ the other way around.
 
 \section4 Considerations for Property Aliases
 
-Aliases are only activated once a component has been fully initialized. An
-error is generated when an uninitialized alias is referenced. Likewise,
-aliasing an aliasing property will also result in an error.
-
-\snippet qml/properties.qml alias complete
-
-When importing a \l{QML Object Types}{QML object type} with a property alias in
-the root object, however, the property appear as a regular Qt property and
-consequently can be used in alias references.
-
 It is possible for an aliasing property to have the same name as an existing
 property, effectively overwriting the existing property. For example,
 the following QML type has a \c color alias property, named the same as the
