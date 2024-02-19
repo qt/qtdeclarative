@@ -430,6 +430,9 @@ void QQuickAccessibleAttached::setIgnored(bool ignored)
 {
     if (this->ignored() != ignored && item()) {
         item()->d_func()->isAccessible = !ignored;
+        QAccessibleEvent event(item(),
+                               ignored ? QAccessible::ObjectDestroyed : QAccessible::ObjectCreated);
+        QAccessible::updateAccessibility(&event);
         emit ignoredChanged();
     }
 }
