@@ -32,7 +32,8 @@ QQuickRenderTargetPrivate::QQuickRenderTargetPrivate(const QQuickRenderTargetPri
       devicePixelRatio(other.devicePixelRatio),
       sampleCount(other.sampleCount),
       u(other.u),
-      mirrorVertically(other.mirrorVertically)
+      mirrorVertically(other.mirrorVertically),
+      multisampleResolve(other.multisampleResolve)
 {
 }
 
@@ -171,7 +172,7 @@ void QQuickRenderTarget::setMirrorVertically(bool enable)
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -220,8 +221,51 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, uint fo
 }
 
 /*!
-    \overload
+    \return a new QQuickRenderTarget referencing an OpenGL texture object
+    specified by \a textureId.
 
+    Unlike fromOpenGLTexture(), this variant assumes that \a textureId is a
+    non-multisample 2D texture, whereas \a sampleCount defines the number of
+    samples desired. The resulting QQuickRenderTarget will use an intermediate,
+    automatically created multisample texture as its color attachment, and will
+    resolve the samples into \a textureId. This is the recommended approach to
+    perform MSAA when the native OpenGL texture is not already multisample.
+
+    \a format specifies the native internal format of the texture. Only texture
+    formats that are supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specifies the number of samples used for multisample
+    antialiasing. 0 or 1 means no multisampling, in which case this function is
+    identical to fromOpenGLTexture().
+
+    A depth-stencil buffer, if applicable, is created and used automatically.
+
+    The OpenGL object name \a textureId must be a valid name in the rendering
+    context used by the Qt Quick scenegraph.
+
+    \note the resulting QQuickRenderTarget does not own any native resources, it
+    merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \note The implementation of this function is not currently compatible with
+    OpenGL ES 3.0 and requires OpenGL ES 3.1 at minimum. (or OpenGL 3.0 on desktop)
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl, fromOpenGLTexture()
+ */
+QQuickRenderTarget QQuickRenderTarget::fromOpenGLTextureWithMultiSampleResolve(uint textureId, uint format, const QSize &pixelSize, int sampleCount)
+{
+    QQuickRenderTarget rt = fromOpenGLTexture(textureId, format, pixelSize, sampleCount);
+    QQuickRenderTargetPrivate::get(&rt)->multisampleResolve = sampleCount > 1;
+    return rt;
+}
+
+/*!
     \return a new QQuickRenderTarget referencing a 2D texture array with the
     specified \a arraySize and OpenGL \a textureId.
 
@@ -236,7 +280,7 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, uint fo
 
     \a pixelSize specifies the size of the image, in pixels.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -286,6 +330,54 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTextureMultiView(uint textureId
 }
 
 /*!
+    \return a new QQuickRenderTarget referencing a 2D texture array with the
+    specified \a arraySize and OpenGL \a textureId.
+
+    \note This implies multiview rendering (GL_OVR_multiview etc.), which can be
+    relevant with VR/AR especially. \a arraySize is the number of views,
+    typically \c 2. This overload should not be used other cases.
+    See \l QSGMaterial::viewCount() for details on enabling multiview rendering
+    within the Qt Quick scenegraph.
+
+    Unlike fromOpenGLTextureMultiView(), this variant assumes that \a textureId
+    is a non-multisample 2D texture array, whereas \a sampleCount defines the
+    number of samples desired. The resulting QQuickRenderTarget will use an
+    intermediate, automatically created multisample texture array as its color
+    attachment, and will resolve the samples into \a textureId. This is the
+    recommended approach to perform MSAA when the native OpenGL texture is not
+    already multisample.
+
+    \a format specifies the native internal format of the texture. Only texture
+    formats that are supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels.
+
+    \a sampleCount specifies the number of samples used for multisample
+    antialiasing. 0 or 1 means no multisampling, in which case this function is
+    identical to fromOpenGLTextureMultiView().
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil texture array with a matching
+    number of layers, sample count, and a format of \c D24S8 is created and used
+    automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources, it
+    merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+QQuickRenderTarget QQuickRenderTarget::fromOpenGLTextureMultiViewWithMultiSampleResolve(uint textureId, uint format, const QSize &pixelSize, int sampleCount, int arraySize)
+{
+    QQuickRenderTarget rt = fromOpenGLTextureMultiView(textureId, format, pixelSize, sampleCount, arraySize);
+    QQuickRenderTargetPrivate::get(&rt)->multisampleResolve = sampleCount > 1;
+    return rt;
+}
+
+/*!
     \overload
 
     \return a new QQuickRenderTarget referencing an OpenGL texture
@@ -295,7 +387,7 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTextureMultiView(uint textureId
     \a pixelSize specifies the size of the image, in pixels. Currently
     only 2D textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native
     object is a multisample texture.
 
@@ -331,7 +423,7 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, const Q
 
     \a pixelSize specifies the size of the image, in pixels.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample renderbuffer.
 
@@ -378,7 +470,7 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLRenderBuffer(uint renderbufferI
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -424,6 +516,48 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, uint form
 }
 
 /*!
+    \return a new QQuickRenderTarget referencing a D3D11 texture object
+    specified by \a texture.
+
+    Unlike fromD3D11Texture(), this variant assumes that \a texture is a
+    non-multisample 2D texture, whereas \a sampleCount defines the number of
+    samples desired. The resulting QQuickRenderTarget will use an intermediate,
+    automatically created multisample texture as its color attachment, and will
+    resolve the samples into \a texture. This is the recommended approach to
+    perform MSAA when the native Direct 3D texture is not already multisample.
+
+    \a format specifies the DXGI_FORMAT of the texture. Only texture formats
+    that are supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specifies the number of samples used for multisample
+    antialiasing. 0 or 1 means no multisampling, in which case this function is
+    identical to fromD3D11Texture().
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources, it
+    merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl, fromD3D11Texture()
+ */
+QQuickRenderTarget QQuickRenderTarget::fromD3D11TextureWithMultiSampleResolve(void *texture, uint format,
+                                                                              const QSize &pixelSize, int sampleCount)
+{
+    QQuickRenderTarget rt = fromD3D11Texture(texture, format, pixelSize, sampleCount);
+    QQuickRenderTargetPrivate::get(&rt)->multisampleResolve = sampleCount > 1;
+    return rt;
+}
+
+/*!
     \overload
 
     \return a new QQuickRenderTarget referencing a D3D11 texture
@@ -433,7 +567,7 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, uint form
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -466,7 +600,7 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSi
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -514,8 +648,54 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D12Texture(void *texture,
 }
 
 /*!
-    \overload
+    \return a new QQuickRenderTarget referencing a D3D12 texture object
+    specified by \a texture.
 
+    Unlike fromD3D12Texture(), this variant assumes that \a texture is a
+    non-multisample 2D texture, whereas \a sampleCount defines the number of
+    samples desired. The resulting QQuickRenderTarget will use an intermediate,
+    automatically created multisample texture as its color attachment, and will
+    resolve the samples into \a texture. This is the recommended approach to
+    perform MSAA when the native Direct 3D texture is not already multisample.
+
+    \a resourceState must a valid bitmask with bits from D3D12_RESOURCE_STATES,
+    specifying the resource's current state.
+
+    \a format specifies the DXGI_FORMAT of the texture. Only texture formats
+    that are supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specifies the number of samples used for multisample
+    antialiasing. 0 or 1 means no multisampling, in which case this function is
+    identical to fromD3D12Texture().
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources, it
+    merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl, fromD3D12Texture()
+ */
+QQuickRenderTarget QQuickRenderTarget::fromD3D12TextureWithMultiSampleResolve(void *texture,
+                                                                              int resourceState,
+                                                                              uint format,
+                                                                              const QSize &pixelSize,
+                                                                              int sampleCount)
+{
+    QQuickRenderTarget rt = fromD3D12Texture(texture, resourceState, format, pixelSize, sampleCount);
+    QQuickRenderTargetPrivate::get(&rt)->multisampleResolve = sampleCount > 1;
+    return rt;
+}
+
+/*!
     \return a new QQuickRenderTarget referencing a D3D12 texture array object
     specified by \a texture. The number of array elements (layers) is given in
     \a arraySize.
@@ -535,7 +715,7 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D12Texture(void *texture,
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -588,6 +768,64 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D12TextureMultiView(void *texture,
 
     return rt;
 }
+
+/*!
+    \return a new QQuickRenderTarget referencing a D3D12 texture array object
+    specified by \a texture. The number of array elements (layers) is given in
+    \a arraySize.
+
+    \note This implies multiview rendering (GL_OVR_multiview etc.), which can be
+    relevant with VR/AR especially. \a arraySize is the number of views,
+    typically \c 2. This overload should not be used other cases.
+    See \l QSGMaterial::viewCount() for details on enabling multiview rendering
+    within the Qt Quick scenegraph.
+
+    Unlike fromD3D12TextureMultiView(), this variant assumes that \a texture is a
+    non-multisample 2D texture array, whereas \a sampleCount defines the number
+    of samples desired. The resulting QQuickRenderTarget will use an
+    intermediate, automatically created multisample texture array as its color
+    attachment, and will resolve the samples into \a texture. This is the
+    recommended approach to perform MSAA when the native Direct 3D texture is not
+    already multisample.
+
+    \a resourceState must a valid bitmask with bits from D3D12_RESOURCE_STATES,
+    specifying the resource's current state.
+
+    \a format specifies the DXGI_FORMAT of the texture. Only texture formats
+    that are supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specifies the number of samples used for multisample
+    antialiasing. 0 or 1 means no multisampling, in which case this function is
+    identical to fromD3D12TextureMultiView().
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil texture array with a matching
+    number of layers, sample count, and a format of \l{QRhiTexture::}{D24S8} is
+    created and used automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources, it
+    merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+QQuickRenderTarget QQuickRenderTarget::fromD3D12TextureMultiViewWithMultiSampleResolve(void *texture,
+                                                                                       int resourceState,
+                                                                                       uint format,
+                                                                                       const QSize &pixelSize,
+                                                                                       int sampleCount,
+                                                                                       int arraySize)
+{
+    QQuickRenderTarget rt = fromD3D12TextureMultiView(texture, resourceState, format, pixelSize, sampleCount, arraySize);
+    QQuickRenderTargetPrivate::get(&rt)->multisampleResolve = sampleCount > 1;
+    return rt;
+}
 #endif
 
 /*!
@@ -600,7 +838,7 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D12TextureMultiView(void *texture,
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -646,8 +884,52 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uin
 }
 
 /*!
-    \overload
+    \return a new QQuickRenderTarget referencing a Metal texture object
+    specified by \a texture.
 
+    Unlike fromMetalTexture(), this variant assumes that \a texture is a
+    non-multisample 2D texture, whereas \a sampleCount defines the number of
+    samples desired. The resulting QQuickRenderTarget will use an intermediate,
+    automatically created multisample texture as its color attachment, and will
+    resolve the samples into \a texture. This is the recommended approach to
+    perform MSAA when the native Metal texture is not already multisample.
+
+    \a format specifies the MTLPixelFormat of the texture. Only texture formats
+    that are supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specifies the number of samples used for multisample
+    antialiasing. 0 or 1 means no multisampling, in which case this function is
+    identical to fromMetalTexture().
+
+    \a sampleCount specifies the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample texture.
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources,
+    it merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl, fromMetalTexture()
+ */
+QQuickRenderTarget QQuickRenderTarget::fromMetalTextureWithMultiSampleResolve(MTLTexture *texture, uint format,
+                                                                              const QSize &pixelSize, int sampleCount)
+{
+    QQuickRenderTarget rt = fromMetalTexture(texture, format, pixelSize, sampleCount);
+    QQuickRenderTargetPrivate::get(&rt)->multisampleResolve = sampleCount > 1;
+    return rt;
+}
+
+/*!
     \return a new QQuickRenderTarget referencing a Metal texture array object
     with \a arraySize elements specified by \a texture.
 
@@ -663,7 +945,7 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uin
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -714,6 +996,56 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTextureMultiView(MTLTexture *tex
 }
 
 /*!
+    \return a new QQuickRenderTarget referencing a Metal texture array object
+    with \a arraySize elements specified by \a texture.
+
+    \note This implies multiview rendering (GL_OVR_multiview etc.), which can be
+    relevant with VR/AR especially. \a arraySize is the number of views,
+    typically \c 2. This overload should not be used other cases.
+    See \l QSGMaterial::viewCount() for details on enabling multiview rendering
+    within the Qt Quick scenegraph.
+
+    Unlike fromMetalTextureMultiView(), this variant assumes that \a texture is a
+    non-multisample 2D texture array, whereas \a sampleCount defines the number
+    of samples desired. The resulting QQuickRenderTarget will use an
+    intermediate, automatically created multisample texture array as its color
+    attachment, and will resolve the samples into \a texture. This is the
+    recommended approach to perform MSAA when the native Metal texture is not
+    already multisample.
+
+    \a format specifies the MTLPixelFormat of the texture. Only texture formats
+    that are supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specifies the number of samples used for multisample
+    antialiasing. 0 or 1 means no multisampling, in which case this function is
+    identical to fromMetalTextureMultiView().
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil texture array with a matching
+    number of layers, sample count, and a format of \c D24S8 is created and used
+    automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources, it
+    merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+QQuickRenderTarget QQuickRenderTarget::fromMetalTextureMultiViewWithMultiSampleResolve(MTLTexture *texture, uint format,
+                                                                                       const QSize &pixelSize, int sampleCount, int arraySize)
+{
+    QQuickRenderTarget rt = fromMetalTextureMultiView(texture, format, pixelSize, sampleCount, arraySize);
+    QQuickRenderTargetPrivate::get(&rt)->multisampleResolve = sampleCount > 1;
+    return rt;
+}
+
+/*!
     \overload
 
     \return a new QQuickRenderTarget referencing a Metal texture object
@@ -723,7 +1055,7 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTextureMultiView(MTLTexture *tex
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -755,7 +1087,7 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, con
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -801,8 +1133,49 @@ QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLay
 }
 
 /*!
-    \overload
+    \return a new QQuickRenderTarget referencing a Vulkan image object
+    specified by \a image. The current \a layout of the image must be provided
+    as well.
 
+    Unlike fromVulkanImage(), this variant assumes that \a image is a
+    non-multisample 2D texture, whereas \a sampleCount defines the number of
+    samples desired. The resulting QQuickRenderTarget will use an intermediate,
+    automatically created multisample texture as its color attachment, and will
+    resolve the samples into \a image. This is the recommended approach to
+    perform MSAA when the native Vulkan image is not already multisample.
+
+    \a format specifies the VkFormat of the image. Only image formats that are
+    supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specifies the number of samples used for multisample
+    antialiasing. 0 or 1 means no multisampling, in which case this function is
+    identical to fromVulkanImage().
+
+    The image is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources,
+    it merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl, fromVulkanImage()
+ */
+QQuickRenderTarget QQuickRenderTarget::fromVulkanImageWithMultiSampleResolve(VkImage image, VkImageLayout layout, VkFormat format,
+                                                                             const QSize &pixelSize, int sampleCount)
+{
+    QQuickRenderTarget rt = fromVulkanImage(image, layout, format, pixelSize, sampleCount);
+    QQuickRenderTargetPrivate::get(&rt)->multisampleResolve = sampleCount > 1;
+    return rt;
+}
+
+/*!
     \return a new QQuickRenderTarget referencing a Vulkan image object with
     \a arraySize layers specified by \a image. The current \a layout of the image
     must be provided as well.
@@ -819,7 +1192,7 @@ QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLay
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -870,6 +1243,57 @@ QQuickRenderTarget QQuickRenderTarget::fromVulkanImageMultiView(VkImage image, V
 }
 
 /*!
+    \return a new QQuickRenderTarget referencing a Vulkan image object with
+    \a arraySize layers specified by \a image. The current \a layout of the image
+    must be provided as well.
+
+    \note This implies multiview rendering (GL_OVR_multiview etc.), which can be
+    relevant with VR/AR especially. \a arraySize is the number of views,
+    typically \c 2. This overload should not be used other cases.
+    See \l QSGMaterial::viewCount() for details on enabling multiview rendering
+    within the Qt Quick scenegraph.
+
+    Unlike fromVulkanImageMultiView(), this variant assumes that \a image is a
+    non-multisample 2D texture array, whereas \a sampleCount defines the number
+    of samples desired. The resulting QQuickRenderTarget will use an
+    intermediate, automatically created multisample texture array as its color
+    attachment, and will resolve the samples into \a image. This is the
+    recommended approach to perform MSAA when the native Vulkan image is not
+    already multisample.
+
+    \a format specifies the VkFormat of the image. Only image formats that are
+    supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specifies the number of samples used for multisample
+    antialiasing. 0 or 1 means no multisampling, in which case this function is
+    identical to fromVulkanImageMultiView().
+
+    The image is used as the first color attachment of the render target used by
+    the Qt Quick scenegraph. A depth-stencil texture array with a matching
+    number of layers, sample count, and a format of \c D24S8 is created and used
+    automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources, it
+    merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+QQuickRenderTarget QQuickRenderTarget::fromVulkanImageMultiViewWithMultiSampleResolve(VkImage image, VkImageLayout layout, VkFormat format,
+                                                                                      const QSize &pixelSize, int sampleCount, int arraySize)
+{
+    QQuickRenderTarget rt = fromVulkanImageMultiView(image, layout, format, pixelSize, sampleCount, arraySize);
+    QQuickRenderTargetPrivate::get(&rt)->multisampleResolve = sampleCount > 1;
+    return rt;
+}
+
+/*!
     \overload
 
     \return a new QQuickRenderTarget referencing a Vulkan image object specified
@@ -879,7 +1303,7 @@ QQuickRenderTarget QQuickRenderTarget::fromVulkanImageMultiView(VkImage image, V
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
-    \a sampleCount specific the number of samples. 0 or 1 means no
+    \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
@@ -981,7 +1405,8 @@ bool QQuickRenderTarget::isEqual(const QQuickRenderTarget &other) const noexcept
             || d->pixelSize != other.d->pixelSize
             || d->devicePixelRatio != other.d->devicePixelRatio
             || d->sampleCount != other.d->sampleCount
-            || d->mirrorVertically != other.d->mirrorVertically)
+            || d->mirrorVertically != other.d->mirrorVertically
+            || d->multisampleResolve != other.d->multisampleResolve)
     {
         return false;
     }
@@ -1023,18 +1448,77 @@ bool QQuickRenderTarget::isEqual(const QQuickRenderTarget &other) const noexcept
     return true;
 }
 
-static bool createRhiRenderTarget(const QRhiColorAttachment &colorAttachment,
-                                  const QSize &pixelSize,
-                                  int sampleCount,
-                                  QRhi *rhi,
-                                  QQuickWindowRenderTarget *dst)
+static bool createRhiRenderTargetWithRenderBuffer(QRhiRenderBuffer *renderBuffer,
+                                                  const QSize &pixelSize,
+                                                  int sampleCount,
+                                                  QRhi *rhi,
+                                                  QQuickWindowRenderTarget *dst)
 {
+    sampleCount = QSGRhiSupport::chooseSampleCount(sampleCount, rhi);
+
     std::unique_ptr<QRhiRenderBuffer> depthStencil(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount));
     if (!depthStencil->create()) {
         qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
         return false;
     }
 
+    QRhiColorAttachment colorAttachment(renderBuffer);
+    QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
+    rtDesc.setDepthStencilBuffer(depthStencil.get());
+    std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    std::unique_ptr<QRhiRenderPassDescriptor> rp(rt->newCompatibleRenderPassDescriptor());
+    rt->setRenderPassDescriptor(rp.get());
+
+    if (!rt->create()) {
+        qWarning("Failed to build renderbuffer-based render target for QQuickRenderTarget");
+        return false;
+    }
+
+    dst->renderTarget = rt.release();
+    dst->rpDesc = rp.release();
+    dst->depthStencil = depthStencil.release();
+    dst->owns = true; // ownership of the native resource itself is not transferred but the QRhi objects are on us now
+
+    return true;
+}
+
+static bool createRhiRenderTarget(QRhiTexture *texture,
+                                  const QSize &pixelSize,
+                                  int sampleCount,
+                                  bool multisampleResolve,
+                                  QRhi *rhi,
+                                  QQuickWindowRenderTarget *dst)
+{
+    sampleCount = QSGRhiSupport::chooseSampleCount(sampleCount, rhi);
+    if (sampleCount <= 1)
+        multisampleResolve = false;
+
+    std::unique_ptr<QRhiRenderBuffer> depthStencil(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount));
+    if (!depthStencil->create()) {
+        qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
+        return false;
+    }
+
+    std::unique_ptr<QRhiTexture> colorBuffer;
+    if (multisampleResolve) {
+        QRhiTexture::Flags flags = QRhiTexture::RenderTarget;
+        // Pass in texture->format() as a hint, to not be tied to rgba8. Also keep the srgb flag.
+        if (texture->flags().testFlag(QRhiTexture::sRGB))
+            flags |= QRhiTexture::sRGB;
+        colorBuffer.reset(rhi->newTexture(texture->format(), pixelSize, sampleCount, flags));
+        if (!colorBuffer->create()) {
+            qWarning("Failed to build multisample color buffer for QQuickRenderTarget");
+            return false;
+        }
+    }
+
+    QRhiColorAttachment colorAttachment;
+    if (multisampleResolve) {
+        colorAttachment.setTexture(colorBuffer.get());
+        colorAttachment.setResolveTexture(texture);
+    } else {
+        colorAttachment.setTexture(texture);
+    }
     QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
     rtDesc.setDepthStencilBuffer(depthStencil.get());
     std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
@@ -1049,22 +1533,49 @@ static bool createRhiRenderTarget(const QRhiColorAttachment &colorAttachment,
     dst->renderTarget = rt.release();
     dst->rpDesc = rp.release();
     dst->depthStencil = depthStencil.release();
+    if (multisampleResolve)
+        dst->multisampleTexture = colorBuffer.release();
+
     dst->owns = true; // ownership of the native resource itself is not transferred but the QRhi objects are on us now
 
     return true;
 }
 
-static bool createRhiRenderTargetMultiView(const QRhiColorAttachment &colorAttachment,
+static bool createRhiRenderTargetMultiView(QRhiTexture *texture,
                                            const QSize &pixelSize,
                                            int arraySize,
                                            int sampleCount,
+                                           bool multisampleResolve,
                                            QRhi *rhi,
                                            QQuickWindowRenderTarget *dst)
 {
+    sampleCount = QSGRhiSupport::chooseSampleCount(sampleCount, rhi);
+    if (sampleCount <= 1)
+        multisampleResolve = false;
+
     std::unique_ptr<QRhiTexture> depthStencil(rhi->newTextureArray(QRhiTexture::D24S8, arraySize, pixelSize, sampleCount, QRhiTexture::RenderTarget));
     if (!depthStencil->create()) {
         qWarning("Failed to build depth-stencil texture array for QQuickRenderTarget");
         return false;
+    }
+
+    // With multiview this must be a multisample texture array, no legacy GLES stuff anymore.
+    std::unique_ptr<QRhiTexture> colorBuffer;
+    if (multisampleResolve) {
+        colorBuffer.reset(rhi->newTextureArray(texture->format(), arraySize, pixelSize, sampleCount, QRhiTexture::RenderTarget));
+        if (!colorBuffer->create()) {
+            qWarning("Failed to build multisample texture array for QQuickRenderTarget");
+            return false;
+        }
+    }
+
+    QRhiColorAttachment colorAttachment;
+    colorAttachment.setMultiViewCount(arraySize);
+    if (multisampleResolve) {
+        colorAttachment.setTexture(colorBuffer.get());
+        colorAttachment.setResolveTexture(texture);
+    } else {
+        colorAttachment.setTexture(texture);
     }
 
     QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
@@ -1081,6 +1592,9 @@ static bool createRhiRenderTargetMultiView(const QRhiColorAttachment &colorAttac
     dst->renderTarget = rt.release();
     dst->rpDesc = rp.release();
     dst->depthStencilTexture = depthStencil.release();
+    if (multisampleResolve)
+        dst->multisampleTexture = colorBuffer.release();
+
     dst->multiViewCount = arraySize;
     dst->owns = true; // ownership of the native resource itself is not transferred but the QRhi objects are on us now
 
@@ -1101,13 +1615,12 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
         const auto format = u.nativeTexture.rhiFormat == QRhiTexture::UnknownFormat ? QRhiTexture::RGBA8
                                                                                     : QRhiTexture::Format(u.nativeTexture.rhiFormat);
         const auto flags = QRhiTexture::RenderTarget | QRhiTexture::Flags(u.nativeTexture.rhiFlags);
-        std::unique_ptr<QRhiTexture> texture(rhi->newTexture(format, pixelSize, sampleCount, flags));
+        std::unique_ptr<QRhiTexture> texture(rhi->newTexture(format, pixelSize, multisampleResolve ? 1 : sampleCount, flags));
         if (!texture->createFrom({ u.nativeTexture.object, u.nativeTexture.layoutOrState })) {
             qWarning("Failed to build wrapper texture for QQuickRenderTarget");
             return false;
         }
-        QRhiColorAttachment att(texture.get());
-        if (!createRhiRenderTarget(att, pixelSize, sampleCount, rhi, dst))
+        if (!createRhiRenderTarget(texture.get(), pixelSize, sampleCount, multisampleResolve, rhi, dst))
             return false;
         dst->texture = texture.release();
     }
@@ -1119,14 +1632,12 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
                                                                                          : QRhiTexture::Format(u.nativeTextureArray.rhiFormat);
         const auto flags = QRhiTexture::RenderTarget | QRhiTexture::Flags(u.nativeTextureArray.rhiFlags);
         const int arraySize = u.nativeTextureArray.arraySize;
-        std::unique_ptr<QRhiTexture> texture(rhi->newTextureArray(format, arraySize, pixelSize, sampleCount, flags));
+        std::unique_ptr<QRhiTexture> texture(rhi->newTextureArray(format, arraySize, pixelSize, multisampleResolve ? 1 : sampleCount, flags));
         if (!texture->createFrom({ u.nativeTextureArray.object, u.nativeTextureArray.layoutOrState })) {
             qWarning("Failed to build wrapper texture array for QQuickRenderTarget");
             return false;
         }
-        QRhiColorAttachment att(texture.get());
-        att.setMultiViewCount(arraySize);
-        if (!createRhiRenderTargetMultiView(att, pixelSize, arraySize, sampleCount, rhi, dst))
+        if (!createRhiRenderTargetMultiView(texture.get(), pixelSize, arraySize, sampleCount, multisampleResolve, rhi, dst))
              return false;
         dst->texture = texture.release();
     }
@@ -1139,8 +1650,7 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
             qWarning("Failed to build wrapper renderbuffer for QQuickRenderTarget");
             return false;
         }
-        QRhiColorAttachment att(renderbuffer.get());
-        if (!createRhiRenderTarget(att, pixelSize, sampleCount, rhi, dst))
+        if (!createRhiRenderTargetWithRenderBuffer(renderbuffer.get(), pixelSize, sampleCount, rhi, dst))
             return false;
         dst->renderBuffer = renderbuffer.release();
     }

@@ -69,6 +69,7 @@ public:
     } u;
 
     bool mirrorVertically = false;
+    bool multisampleResolve = false;
 };
 
 QT_END_NAMESPACE

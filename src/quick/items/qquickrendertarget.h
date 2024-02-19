@@ -40,27 +40,36 @@ public:
 #if QT_CONFIG(opengl) || defined(Q_QDOC)
     static QQuickRenderTarget fromOpenGLTexture(uint textureId, uint format, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromOpenGLTexture(uint textureId, const QSize &pixelSize, int sampleCount = 1);
+    static QQuickRenderTarget fromOpenGLTextureWithMultiSampleResolve(uint textureId, uint format, const QSize &pixelSize, int sampleCount);
     static QQuickRenderTarget fromOpenGLTextureMultiView(uint textureId, uint format, const QSize &pixelSize, int sampleCount, int arraySize);
+    static QQuickRenderTarget fromOpenGLTextureMultiViewWithMultiSampleResolve(uint textureId, uint format, const QSize &pixelSize, int sampleCount, int arraySize);
     static QQuickRenderTarget fromOpenGLRenderBuffer(uint renderbufferId, const QSize &pixelSize, int sampleCount = 1);
 #endif
 
 #if defined(Q_OS_WIN) || defined(Q_QDOC)
     static QQuickRenderTarget fromD3D11Texture(void *texture, uint format, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromD3D11Texture(void *texture, const QSize &pixelSize, int sampleCount = 1);
+    static QQuickRenderTarget fromD3D11TextureWithMultiSampleResolve(void *texture, uint format, const QSize &pixelSize, int sampleCount);
     static QQuickRenderTarget fromD3D12Texture(void *texture, int resourceState, uint format, const QSize &pixelSize, int sampleCount = 1);
+    static QQuickRenderTarget fromD3D12TextureWithMultiSampleResolve(void *texture, int resourceState, uint format, const QSize &pixelSize, int sampleCount);
     static QQuickRenderTarget fromD3D12TextureMultiView(void *texture, int resourceState, uint format, const QSize &pixelSize, int sampleCount, int arraySize);
+    static QQuickRenderTarget fromD3D12TextureMultiViewWithMultiSampleResolve(void *texture, int resourceState, uint format, const QSize &pixelSize, int sampleCount, int arraySize);
 #endif
 
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_QDOC)
     static QQuickRenderTarget fromMetalTexture(MTLTexture *texture, uint format, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromMetalTexture(MTLTexture *texture, const QSize &pixelSize, int sampleCount = 1);
+    static QQuickRenderTarget fromMetalTextureWithMultiSampleResolve(MTLTexture *texture, uint format, const QSize &pixelSize, int sampleCount);
     static QQuickRenderTarget fromMetalTextureMultiView(MTLTexture *texture, uint format, const QSize &pixelSize, int sampleCount, int arraySize);
+    static QQuickRenderTarget fromMetalTextureMultiViewWithMultiSampleResolve(MTLTexture *texture, uint format, const QSize &pixelSize, int sampleCount, int arraySize);
 #endif
 
 #if QT_CONFIG(vulkan) || defined(Q_QDOC)
     static QQuickRenderTarget fromVulkanImage(VkImage image, VkImageLayout layout, VkFormat format, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromVulkanImage(VkImage image, VkImageLayout layout, const QSize &pixelSize, int sampleCount = 1);
+    static QQuickRenderTarget fromVulkanImageWithMultiSampleResolve(VkImage image, VkImageLayout layout, VkFormat format, const QSize &pixelSize, int sampleCount);
     static QQuickRenderTarget fromVulkanImageMultiView(VkImage image, VkImageLayout layout, VkFormat format, const QSize &pixelSize, int sampleCount, int arraySize);
+    static QQuickRenderTarget fromVulkanImageMultiViewWithMultiSampleResolve(VkImage image, VkImageLayout layout, VkFormat format, const QSize &pixelSize, int sampleCount, int arraySize);
 #endif
 
     static QQuickRenderTarget fromRhiRenderTarget(QRhiRenderTarget *renderTarget);

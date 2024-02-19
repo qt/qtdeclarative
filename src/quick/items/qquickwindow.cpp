@@ -485,6 +485,7 @@ void QQuickWindowRenderTarget::reset(QRhi *rhi)
             delete renderBuffer;
             delete depthStencil;
             delete depthStencilTexture;
+            delete multisampleTexture;
         }
 
         delete paintDevice;
@@ -496,6 +497,7 @@ void QQuickWindowRenderTarget::reset(QRhi *rhi)
     renderBuffer = nullptr;
     depthStencil = nullptr;
     depthStencilTexture = nullptr;
+    multisampleTexture = nullptr;
     paintDevice = nullptr;
     owns = false;
     multiViewCount = 1;
