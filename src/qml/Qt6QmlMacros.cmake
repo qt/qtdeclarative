@@ -1201,14 +1201,13 @@ function(_qt_internal_target_enable_qmlcachegen target qmlcachegen)
         ${tool_wrapper}
         ${qmlcachegen}
         --resource-name "${qmlcache_resource_name}"
-        ${qrc_resource_args}
         -o "${qmlcache_loader_cpp}"
         "@${qmlcache_loader_list}"
     )
 
     file(GENERATE
         OUTPUT ${qmlcache_loader_list}
-        CONTENT "$<JOIN:${qmlcache_resource_paths},\n>\n"
+        CONTENT "$<JOIN:${qrc_resource_args},\n>\n$<JOIN:${qmlcache_resource_paths},\n>\n"
     )
 
     add_custom_command(
