@@ -1291,6 +1291,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("AddressableValue") << QStringLiteral("addressableValue.qml");
     QTest::newRow("WriteListProperty") << QStringLiteral("writeListProperty.qml");
     QTest::newRow("dontConfuseMemberPrintWithGlobalPrint") << QStringLiteral("findMemberPrint.qml");
+    QTest::newRow("groupedAttachedLayout") << QStringLiteral("groupedAttachedLayout.qml");
 }
 
 void TestQmllint::cleanQmlCode()
