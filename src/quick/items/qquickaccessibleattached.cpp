@@ -453,6 +453,9 @@ void QQuickAccessibleAttached::setIgnored(bool ignored)
     auto item = qobject_cast<QQuickItem *>(parent());
     if (item && this->ignored() != ignored) {
         item->d_func()->isAccessible = !ignored;
+        QAccessibleEvent event(item,
+                               ignored ? QAccessible::ObjectDestroyed : QAccessible::ObjectCreated);
+        QAccessible::updateAccessibility(&event);
         emit ignoredChanged();
     }
 }
