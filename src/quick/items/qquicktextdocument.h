@@ -27,7 +27,7 @@ public:
         Loading,
         Loaded,
         Saving,
-        SaveDone,
+        Saved,
         ReadError,
         WriteError,
         NonLocalFileError,

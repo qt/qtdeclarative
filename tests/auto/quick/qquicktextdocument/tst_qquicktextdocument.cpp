@@ -241,8 +241,8 @@ void tst_qquicktextdocument::sourceAndSave()
     QCOMPARE(qqdoc->isModified(), true);
 
     qqdoc->save();
-    QCOMPARE(statusChangedSpy.size(), 4); // Saving, then SaveDone
-    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::SaveDone);
+    QCOMPARE(statusChangedSpy.size(), 4); // Saving, then Saved
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Saved);
     QFile tf(tmpPath);
     QVERIFY(tf.open(QIODeviceBase::ReadOnly));
     auto readBack = tf.readAll();

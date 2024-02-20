@@ -77,7 +77,7 @@ QQuickTextDocument::QQuickTextDocument(QQuickItem *parent)
     \value TextDocument.Loading     Reading from \l source has begun
     \value TextDocument.Loaded      Reading has successfully finished
     \value TextDocument.Saving      File writing has begun after save() or saveAs()
-    \value TextDocument.SaveDone    Writing has successfully finished
+    \value TextDocument.Saved       Writing has successfully finished
     \value TextDocument.ReadError   An error occurred while reading from \l source
     \value TextDocument.WriteError  An error occurred in save() or saveAs()
     \value TextDocument.NonLocalFileError saveAs() was called with a URL pointing
@@ -304,7 +304,7 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
 
     file.write(raw);
     file.close();
-    setStatus(QQuickTextDocument::Status::SaveDone);
+    setStatus(QQuickTextDocument::Status::Saved);
     doc->setModified(false);
 }
 
