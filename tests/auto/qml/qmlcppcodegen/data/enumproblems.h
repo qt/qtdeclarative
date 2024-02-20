@@ -82,4 +82,38 @@ public:
     Q_FLAG(Option)
 };
 
+class ScopedEnum : public QObject {
+    Q_OBJECT
+    QML_NAMED_ELEMENT(Data)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+
+public:
+    enum class DType {
+        A = 27, B
+    };
+    Q_ENUM(DType)
+
+    enum EType {
+        C = 7, D
+    };
+    Q_ENUM(EType)
+};
+
+class UnscopedEnum : public QObject {
+    Q_OBJECT
+    QML_NAMED_ELEMENT(Data2)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "true")
+
+public:
+    enum class DType {
+        A = 26, B
+    };
+    Q_ENUM(DType)
+
+    enum EType {
+        C = 6, D
+    };
+    Q_ENUM(EType)
+};
+
 #endif // ENUMPROBLEMS_H

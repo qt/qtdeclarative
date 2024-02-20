@@ -73,6 +73,7 @@ struct QmlTypesClassDescription
     bool omitFromQmlTypes = false;
     bool extensionIsJavaScript = false;
     bool extensionIsNamespace = false;
+    bool registerEnumClassesScoped = false;
     QList<QAnyStringView> implementsInterfaces;
     QList<QAnyStringView> deferredNames;
     QList<QAnyStringView> immediateNames;

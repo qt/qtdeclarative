@@ -235,6 +235,7 @@ set(qml_files
     revisions.qml
     scopeIdLookup.qml
     scopeVsObject.qml
+    scopedEnum.qml
     script.js
     script.mjs
     sequenceToIterable.qml

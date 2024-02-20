@@ -184,10 +184,13 @@ void QmlTypesClassDescription::collectLocalAnonymous(
     const auto classInfos = classDef.value(S_CLASS_INFOS).toArray();
     for (const QCborValue &classInfo : classInfos) {
         const QCborMap obj = classInfo.toMap();
-        if (obj[S_NAME] == S_DEFAULT_PROPERTY)
+        const QCborValue name = obj[S_NAME];
+        if (name == S_DEFAULT_PROPERTY)
             defaultProp = toStringView(obj, S_VALUE);
-        if (obj[S_NAME] == S_PARENT_PROPERTY)
+        else if (name == S_PARENT_PROPERTY)
             parentProp = toStringView(obj, S_VALUE);
+        else if (name == S_REGISTER_ENUM_CLASSES_UNSCOPED && toStringView(obj, S_VALUE) == S_FALSE)
+            registerEnumClassesScoped = true;
     }
 
     collectInterfaces(classDef);
@@ -222,6 +225,12 @@ void QmlTypesClassDescription::collect(
         if (name == S_PARENT_PROPERTY) {
             if (mode != RelatedType && parentProp.isEmpty())
                 parentProp = value;
+            continue;
+        }
+
+        if (name == S_REGISTER_ENUM_CLASSES_UNSCOPED) {
+            if (mode != RelatedType && value == S_FALSE)
+                registerEnumClassesScoped = true;
             continue;
         }
 
@@ -318,10 +327,12 @@ void QmlTypesClassDescription::collect(
         if (const FoundType found = findType(foreign, types, foreignTypeName, namespaces)) {
             resolved = found.select(classDef, "Foreign");
 
-            // Default properties are always local.
+            // Default properties and enum classes are always local.
             defaultProp = {};
+            registerEnumClassesScoped = false;
 
-            // Foreign type can have a default property or an attached types
+            // Foreign type can have a default property or an attached type,
+            // or RegisterEnumClassesUnscoped classinfo.
             const auto classInfos = resolved.value(S_CLASS_INFOS).toArray();
             for (const QCborValue &classInfo : classInfos) {
                 const QCborMap obj = classInfo.toMap();
@@ -331,6 +342,9 @@ void QmlTypesClassDescription::collect(
                     defaultProp = foreignValue;
                 } else if (parentProp.isEmpty() && foreignName == S_PARENT_PROPERTY) {
                     parentProp = foreignValue;
+                } else if (foreignName == S_REGISTER_ENUM_CLASSES_UNSCOPED) {
+                    if (foreignValue == S_FALSE)
+                        registerEnumClassesScoped = true;
                 } else if (foreignName == S_ATTACHED) {
                     if (const FoundType attached = collectRelated(
                                 foreignValue, types, foreign, defaultRevision, namespaces)) {
