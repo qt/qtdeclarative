@@ -54,6 +54,71 @@ struct WriteBarrier {
         if (engine->isGCOngoing)
             (std::forward<F>(markFunction))(engine->memoryManager->markStack());
     }
+
+    // HeapObjectWrapper(Base) are helper classes to ensure that
+    // we always use a WriteBarrier when setting heap-objects
+    // they are also trivial; if triviality is not required, use Pointer instead
+    struct HeapObjectWrapperBase
+    {
+        // enum class avoids accidental construction via brace-init
+        enum class PointerWrapper : quintptr {};
+        PointerWrapper wrapped;
+
+        void clear() { wrapped = PointerWrapper(quintptr(0)); }
+    };
+
+    template<typename HeapType>
+    struct HeapObjectWrapperCommon : HeapObjectWrapperBase
+    {
+        HeapType *get() const { return reinterpret_cast<HeapType *>(wrapped); }
+        operator HeapType *() const { return get(); }
+        HeapType * operator->() const { return get(); }
+
+        template <typename ConvertibleToHeapType>
+        void set(QV4::EngineBase *engine, ConvertibleToHeapType *heapObject)
+        {
+            WriteBarrier::markCustom(engine, [heapObject](QV4::MarkStack *ms){
+                if (heapObject)
+                    heapObject->mark(ms);
+            });
+            wrapped = static_cast<HeapObjectWrapperBase::PointerWrapper>(quintptr(heapObject));
+        }
+    };
+
+    // all types are trivial; we however want to block copies bypassing the write barrier
+    // therefore, all members use a PhantomTag to reduce the likelihood
+    template<typename HeapType, int PhantomTag>
+    struct HeapObjectWrapper : HeapObjectWrapperCommon<HeapType> {};
+
+    /* similar Heap::Pointer, but without the Base conversion (and its inUse assert)
+       and for storing references in engine classes stored on the native heap
+       Stores a "non-owning" reference to a heap-item (in the C++ sense), but should
+       generally mark the heap-item; therefore set goes through a write-barrier
+    */
+    template<typename T>
+    struct Pointer
+    {
+        Pointer() = default;
+        ~Pointer() = default;
+        Q_DISABLE_COPY_MOVE(Pointer)
+        T* operator->() const { return get(); }
+        operator T* () const { return get(); }
+
+        void set(EngineBase *e, T *newVal) {
+            WriteBarrier::markCustom(e, [newVal](QV4::MarkStack *ms) {
+                if (newVal)
+                    newVal->mark(ms);
+            });
+            ptr = newVal;
+        }
+
+        T* get() const { return ptr; }
+
+
+
+    private:
+        T *ptr = nullptr;
+    };
 };
 
        // ### this needs to be filled with a real memory fence once marking is concurrent
