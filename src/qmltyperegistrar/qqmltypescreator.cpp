@@ -341,7 +341,8 @@ void QmlTypesCreator::writeMethods(const QCborArray &methods, QLatin1StringView 
     }
 }
 
-void QmlTypesCreator::writeEnums(const QCborArray &enums)
+void QmlTypesCreator::writeEnums(
+        const QCborArray &enums, QmlTypesCreator::EnumClassesMode enumClassesMode)
 {
     for (const QCborValue &item : enums) {
         const QCborMap obj = item.toMap();
@@ -359,6 +360,13 @@ void QmlTypesCreator::writeEnums(const QCborArray &enums)
         auto isFlag = obj.find(MetatypesDotJson::S_IS_FLAG);
         if (isFlag != obj.end() && isFlag->toBool())
             m_qml.writeBooleanBinding(S_IS_FLAG, true);
+
+        if (enumClassesMode == EnumClassesMode::Scoped) {
+            const auto isClass = obj.find(MetatypesDotJson::S_IS_CLASS);
+            if (isClass != obj.end() && isClass->toBool())
+                m_qml.writeBooleanBinding(S_IS_SCOPED, true);
+        }
+
         writeType(obj, MetatypesDotJson::S_TYPE);
         m_qml.writeStringListBinding(S_VALUES, valueList);
         m_qml.writeEndObject();
@@ -425,7 +433,11 @@ void QmlTypesCreator::writeComponents()
         writeClassProperties(collector);
 
         if (const QCborMap &classDef = collector.resolvedClass; !classDef.isEmpty()) {
-            writeEnums(members(classDef, MetatypesDotJson::S_ENUMS, m_version));
+            writeEnums(
+                    members(classDef, MetatypesDotJson::S_ENUMS, m_version),
+                    collector.registerEnumClassesScoped
+                            ? EnumClassesMode::Scoped
+                            : EnumClassesMode::Unscoped);
 
             writeProperties(members(classDef, MetatypesDotJson::S_PROPERTIES, m_version));
 
@@ -452,7 +464,11 @@ void QmlTypesCreator::writeComponents()
             collector.collectLocalAnonymous(component, m_ownTypes, m_foreignTypes, m_version);
 
             writeClassProperties(collector);
-            writeEnums(members(component, MetatypesDotJson::S_ENUMS, m_version));
+            writeEnums(
+                    members(component, MetatypesDotJson::S_ENUMS, m_version),
+                    collector.registerEnumClassesScoped
+                            ? EnumClassesMode::Scoped
+                            : EnumClassesMode::Unscoped);
 
             writeProperties(members(component, MetatypesDotJson::S_PROPERTIES, m_version));
 
