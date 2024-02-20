@@ -19,8 +19,9 @@
 // headers here. This works because we explicitly include the QtQml include directories in the
 // manual moc call.
 #include <private/qqmlcomponentattached_p.h>
-#include <QtQml/qqmlcomponent.h>
 #include <QtQml/qjsvalue.h>
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlscriptstring.h>
 
 #include <QtQmlIntegration/qqmlintegration.h>
 
@@ -282,6 +283,13 @@ struct QQmlComponentForeign
     QML_NAMED_ELEMENT(Component)
     QML_FOREIGN(QQmlComponent)
     QML_ATTACHED(QQmlComponentAttached)
+};
+
+struct QQmlScriptStringForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QQmlScriptString)
 };
 
 QT_END_NAMESPACE
