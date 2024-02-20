@@ -128,7 +128,7 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     if (pathSelector == QQuickVectorImageGenerator::StrokePath && noPen)
         return;
 
-    const bool noFill = !info.grad && info.fillColor == u"transparent";
+    const bool noFill = info.grad.type() == QGradient::NoGradient && info.fillColor == u"transparent";
     if (pathSelector == QQuickVectorImageGenerator::FillPath && noFill)
         return;
 
@@ -153,8 +153,8 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
 
     if (!(pathSelector & QQuickVectorImageGenerator::FillPath))
         shapePath->setFillColor(Qt::transparent);
-    else if (auto *grad = info.grad)
-        generateGradient(grad, shapePath, boundingRect);
+    else if (info.grad.type() != QGradient::NoGradient)
+        generateGradient(&info.grad, shapePath, boundingRect);
     else
         shapePath->setFillColor(QColor::fromString(info.fillColor));
 

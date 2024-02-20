@@ -52,7 +52,7 @@ struct PathNodeInfo : NodeInfo
     QString strokeColor;
     qreal strokeWidth;
     QString fillColor;
-    const QGradient *grad;
+    QGradient grad;
 };
 
 struct TextNodeInfo : NodeInfo
