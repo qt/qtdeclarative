@@ -2497,7 +2497,6 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                                 }
                             }
                             qCDebug(lcVP) << "first block in viewport" << block.blockNumber() << "@" << nodeOffset.y() << coveredRegion;
-                            d->firstBlockInViewport = block.blockNumber();
                             if (block.layout())
                                 d->renderedRegion = coveredRegion;
                         } else {
@@ -2513,6 +2512,8 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                             if (inView && !block.text().isEmpty() && coveredRegion.isValid())
                                 d->renderedRegion = d->renderedRegion.united(coveredRegion);
                         }
+                        if (inView && d->firstBlockInViewport < 0)
+                            d->firstBlockInViewport = block.blockNumber();
                     }
 
                     bool createdNodeInView = false;
