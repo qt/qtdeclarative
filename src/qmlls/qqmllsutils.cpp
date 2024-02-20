@@ -2909,6 +2909,7 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &i
             result.emplaceBack();
             result.back().label = "break";
             result.back().kind = int(CompletionItemKind::Keyword);
+            break;
         case DomType::ScriptLabelledStatement:
             // check if break was already inserted because of switch or loop
             if (alreadyInSwitch || alreadyInLoop || alreadyInLabel)
