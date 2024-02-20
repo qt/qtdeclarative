@@ -4571,6 +4571,12 @@ void tst_QJSEngine::tracing()
     QTest::ignoreMessage(QtDebugMsg, "a (:1)\nb (:1)\nc (:1)\n%entry (:1)");
     engine.evaluate("function a() { console.trace(); } function b() { a(); } function c() { b(); }");
     engine.evaluate("c()");
+
+    QQmlTestMessageHandler messageHandler;
+    messageHandler.setIncludeCategoriesEnabled(true);
+    engine.evaluate("c()");
+    QCOMPARE(messageHandler.messageString(),
+             QLatin1String("js: a (:1)\nb (:1)\nc (:1)\n%entry (:1)"));
 }
 
 void tst_QJSEngine::asserts()

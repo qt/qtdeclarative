@@ -147,6 +147,15 @@ void tst_qqmlconsole::tracing()
     QQmlComponent component(&engine, testUrl);
     std::unique_ptr<QObject> object { component.create() };
     QVERIFY(object.get() != nullptr);
+
+    const QString traceText2
+            = QLatin1String("qml: tracing (%1:%2)\nexpression for onCompleted (%1:%3)")
+                                       .arg(testUrl.toString()).arg(12).arg(16);
+
+    QQmlTestMessageHandler messageHandler;
+    messageHandler.setIncludeCategoriesEnabled(true);
+    std::unique_ptr<QObject> object2 { component.create() };
+    QCOMPARE(messageHandler.messageString(), traceText2);
 }
 
 void tst_qqmlconsole::profiling()
