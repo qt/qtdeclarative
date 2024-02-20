@@ -74,7 +74,10 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
     static QString escapeString(QString s)
     {
         using namespace Qt::StringLiterals;
-        return s.replace(u'\\', u"\\\\"_s).replace(u'"', u"\\\""_s).replace(u'\n', u"\\n"_s);
+        return s.replace('\\'_L1, "\\\\"_L1)
+                .replace('"'_L1, "\\\""_L1)
+                .replace('\n'_L1, "\\n"_L1)
+                .replace('?'_L1, "\\?"_L1);
     }
 
     /*! \internal

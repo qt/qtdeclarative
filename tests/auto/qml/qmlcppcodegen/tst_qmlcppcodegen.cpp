@@ -223,6 +223,7 @@ private slots:
     void throwObjectName();
     void topLevelComponent();
     void translation();
+    void trigraphs();
     void trivialSignalHandler();
     void typePropagationLoop();
     void typePropertyClash();
@@ -4444,6 +4445,15 @@ void tst_QmlCppCodegen::translation()
     QCOMPARE(o->property("trId2"), u"s"_s);
 
     QCOMPARE(o->property("trIdNoop1"), u"s"_s);
+}
+
+void tst_QmlCppCodegen::trigraphs()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/trigraphs.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->objectName(), u"?""?= ?""?/ ?""?' ?""?( ?""?) ?""?! ?""?< ?""?> ?""?-"_s);
 }
 
 void tst_QmlCppCodegen::trivialSignalHandler()
