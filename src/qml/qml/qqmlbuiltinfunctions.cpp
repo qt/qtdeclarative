@@ -1994,7 +1994,7 @@ ReturnedValue ConsoleObject::method_trace(const FunctionObject *b, const Value *
     QV4::CppStackFrame *frame = v4->currentStackFrame;
     QMessageLogger(frame->source().toUtf8().constData(), frame->lineNumber(),
                    frame->function().toUtf8().constData())
-        .debug("%s", qPrintable(stack));
+        .debug(v4->qmlEngine() ? lcQml : lcJs, "%s", qPrintable(stack));
 
     return QV4::Encode::undefined();
 }
