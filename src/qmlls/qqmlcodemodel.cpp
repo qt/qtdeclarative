@@ -540,7 +540,11 @@ QStringList QQmlCodeModel::fileNamesToWatch(const DomItem &qmlFile)
 
     QStringList result;
     for (const auto &type : types) {
-        if (!type.scope || type.scope->isComposite())
+        if (!type.scope)
+            continue;
+        // note: the factory only loads composite types
+        const bool isComposite = type.scope.factory() || type.scope->isComposite();
+        if (isComposite)
             continue;
 
         const QString filePath = QFileInfo(type.scope->filePath()).fileName();
