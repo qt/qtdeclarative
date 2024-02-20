@@ -44,6 +44,7 @@ struct QmlTypesClassDescription
     bool hasCustomParser = false;
     bool omitFromQmlTypes = false;
     bool extensionIsNamespace = false;
+    bool registerEnumClassesScoped = false;
     QStringList implementsInterfaces;
     QStringList deferredNames;
     QStringList immediateNames;
