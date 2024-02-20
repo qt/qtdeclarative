@@ -263,6 +263,7 @@ set(qml_files
     toString.qml
     topLevelComponent.qml
     translation.qml
+    trigraphs.qml
     trivialSignalHandler.qml
     typePropagationLoop.qml
     typePropertyClash.qml
