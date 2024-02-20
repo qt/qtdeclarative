@@ -144,7 +144,7 @@ void tst_qv4mm::multiWrappedQObjects()
     {
         QObject object;
         for (int i = 0; i < 10; ++i)
-            QV4::QObjectWrapper::wrap(i % 2 ? &engine1 : &engine2, &object);
+            QV4::QObjectWrapper::ensureWrapper(i % 2 ? &engine1 : &engine2, &object);
 
         QCOMPARE(engine1.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
         QCOMPARE(engine2.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);

@@ -573,6 +573,28 @@ bool QObjectWrapper::setQmlProperty(
     return true;
 }
 
+/*!
+    \internal
+    If an QObjectWrapper is created via wrap, then it needs to be stored somewhere.
+    Otherwise, the garbage collector will immediately collect it if it is already
+    past the "mark QObjectWrapper's" phase (note that QObjectWrapper are marked
+    by iterating over a list of all QObjectWrapper, and then checking if the
+    wrapper fulfills some conditions).
+    However, sometimes we don't really want to keep a reference to the wrapper,
+    but just want to make sure that it exists (and we know that the wrapper
+    already fulfills the conditions to be kept alive). Then ensureWrapper
+    can be used, which creates the wrapper and ensures that it is also
+    marked.
+ */
+void QObjectWrapper::ensureWrapper(ExecutionEngine *engine, QObject *object)
+{
+    QV4::Scope scope(engine);
+    QV4::Scoped<QV4::QObjectWrapper> wrapper {scope, QV4::QObjectWrapper::wrap(engine, object)};
+    QV4::WriteBarrier::markCustom(engine, [&wrapper](QV4::MarkStack *ms) {
+        wrapper->mark(ms);
+    });
+}
+
 void QObjectWrapper::setProperty(
         ExecutionEngine *engine, QObject *object,
         const QQmlPropertyData *property, const Value &value)
@@ -3053,7 +3075,7 @@ void QObjectMethod::callInternalWithMetaTypes(
                 QQmlData *ddata = QQmlData::get(qobjectPtr, true);
                 if (!ddata->explicitIndestructibleSet) {
                     ddata->indestructible = false;
-                    QObjectWrapper::wrap(v4, qobjectPtr);
+                    QObjectWrapper::ensureWrapper(v4, qobjectPtr);
                 }
             }
         });

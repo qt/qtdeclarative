@@ -1394,7 +1394,7 @@ void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::Value &v)
 void QQmlVMEMetaObject::ensureQObjectWrapper()
 {
     Q_ASSERT(cache);
-    QV4::QObjectWrapper::wrap(engine, object);
+    QV4::QObjectWrapper::ensureWrapper(engine, object);
 }
 
 void QQmlVMEMetaObject::mark(QV4::MarkStack *markStack)

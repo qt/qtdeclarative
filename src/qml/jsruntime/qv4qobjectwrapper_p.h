@@ -163,8 +163,11 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
             ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
             QObject *object, String *name, Flags flags, const Value &value);
 
+    Q_NODISCARD_X("Use ensureWrapper if you don't need the return value")
     static ReturnedValue wrap(ExecutionEngine *engine, QObject *object);
+    Q_NODISCARD_X("Throwing the const wrapper away can cause it to be garbage collected")
     static ReturnedValue wrapConst(ExecutionEngine *engine, QObject *object);
+    static void ensureWrapper(ExecutionEngine *engine, QObject *object);
     static void markWrapper(QObject *object, MarkStack *markStack);
 
     using Object::get;
