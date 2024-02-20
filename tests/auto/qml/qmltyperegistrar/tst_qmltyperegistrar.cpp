@@ -711,6 +711,41 @@ void tst_qmltyperegistrar::typedEnum()
         exports: ["QmlTypeRegistrarTest/TypedEnum 1.0"]
         exportMetaObjectRevisions: [256]
         Enum {
+            name: "UChar"
+            type: "quint8"
+            values: ["V0"]
+        }
+        Enum {
+            name: "Int8_T"
+            type: "qint8"
+            values: ["V1"]
+        }
+        Enum {
+            name: "UInt8_T"
+            type: "quint8"
+            values: ["V2"]
+        }
+        Enum {
+            name: "Int16_T"
+            type: "short"
+            values: ["V3"]
+        }
+        Enum {
+            name: "UInt16_T"
+            type: "ushort"
+            values: ["V4"]
+        }
+        Enum {
+            name: "Int32_T"
+            type: "int"
+            values: ["V5"]
+        }
+        Enum {
+            name: "UInt32_T"
+            type: "uint"
+            values: ["V6"]
+        }
+        Enum {
             name: "S"
             type: "short"
             values: ["A", "B", "C"]
@@ -913,6 +948,22 @@ void tst_qmltyperegistrar::relatedAddedInVersion()
             "QmlTypeRegistrarTest/AddedIn1_0 1.5"
         ]
         exportMetaObjectRevisions: [256, 261]
+    })"));
+}
+
+void tst_qmltyperegistrar::longNumberTypes()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "LongNumberTypes"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["QmlTypeRegistrarTest/LongNumberTypes 1.0"]
+        exportMetaObjectRevisions: [256]
+        Property { name: "a"; type: "qlonglong"; index: 0 }
+        Property { name: "b"; type: "qlonglong"; index: 1 }
+        Property { name: "c"; type: "qulonglong"; index: 2 }
+        Property { name: "d"; type: "qulonglong"; index: 3 }
     })"));
 }
 
