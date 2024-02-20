@@ -268,6 +268,7 @@ protected:
     QQmlJSScope::ConstPtr m_listPropertyType;
     QQmlJSScope::ConstPtr m_qObjectType;
     QQmlJSScope::ConstPtr m_qObjectListType;
+    QQmlJSScope::ConstPtr m_qQmlScriptStringType;
     QQmlJSScope::ConstPtr m_metaObjectType;
     QQmlJSScope::ConstPtr m_functionType;
     QQmlJSScope::ConstPtr m_jsGlobalObject;
