@@ -2215,6 +2215,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
                       uied->firstSourceLocation());
     }
     QQmlJSMetaEnum qmlEnum(uied->name.toString());
+    qmlEnum.setIsQml(true);
     for (const auto *member = uied->members; member; member = member->next) {
         qmlEnum.addKey(member->member.toString());
         qmlEnum.addValue(int(member->value));

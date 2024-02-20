@@ -1036,7 +1036,7 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
 
     const auto enums = scope->ownEnumerations();
     for (const auto &enumeration : enums) {
-        if (enumeration.name() == name) {
+        if ((enumeration.isScoped() || enumeration.isQml()) && enumeration.name() == name) {
             *result = QQmlJSRegisterContent::create(
                     storedType(enumeration.type()), enumeration, QString(),
                     inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum
@@ -1045,7 +1045,7 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
             return true;
         }
 
-        if (enumeration.hasKey(name)) {
+        if (!enumeration.isScoped() && enumeration.hasKey(name)) {
             *result = QQmlJSRegisterContent::create(
                     storedType(enumeration.type()), enumeration, name,
                     inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum

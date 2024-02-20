@@ -41,7 +41,10 @@ private:
     void writeType(const QJsonObject &property, const QString &key);
     void writeProperties(const QJsonArray &properties);
     void writeMethods(const QJsonArray &methods, const QString &type);
-    void writeEnums(const QJsonArray &enums);
+
+    enum class EnumClassesMode { Scoped, Unscoped };
+    void writeEnums(const QJsonArray &enums, EnumClassesMode enumClassesMode);
+
     void writeComponents();
 
     QByteArray m_output;

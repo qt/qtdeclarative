@@ -316,7 +316,8 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
     }
 }
 
-void QmlTypesCreator::writeEnums(const QJsonArray &enums)
+void QmlTypesCreator::writeEnums(
+        const QJsonArray &enums, QmlTypesCreator::EnumClassesMode enumClassesMode)
 {
     for (const QJsonValue item : enums) {
         const QJsonObject obj = item.toObject();
@@ -336,6 +337,13 @@ void QmlTypesCreator::writeEnums(const QJsonArray &enums)
         if (isFlag != obj.end() && isFlag->toBool())
             m_qml.writeBooleanBinding(isFlag.key(), true);
         writeType(obj, QLatin1String("type"));
+
+        if (enumClassesMode == EnumClassesMode::Scoped) {
+            const auto isClass = obj.find(QLatin1String("isClass"));
+            if (isClass != obj.end() && isClass->toBool())
+                m_qml.writeBooleanBinding(QLatin1String("isScoped"), true);
+        }
+
         m_qml.writeArrayBinding(QLatin1String("values"), valueList);
         m_qml.writeEndObject();
     }
@@ -412,7 +420,11 @@ void QmlTypesCreator::writeComponents()
         writeClassProperties(collector);
 
         if (const QJsonObject *classDef = collector.resolvedClass) {
-            writeEnums(members(classDef, enumsKey, m_version));
+            writeEnums(
+                    members(classDef, enumsKey, m_version),
+                    collector.registerEnumClassesScoped
+                            ? EnumClassesMode::Scoped
+                            : EnumClassesMode::Unscoped);
 
             writeProperties(members(classDef, propertiesKey, m_version));
 
@@ -438,7 +450,11 @@ void QmlTypesCreator::writeComponents()
             collector.collectLocalAnonymous(&component, m_ownTypes, m_foreignTypes, m_version);
 
             writeClassProperties(collector);
-            writeEnums(members(&component, enumsKey, m_version));
+            writeEnums(
+                    members(&component, enumsKey, m_version),
+                    collector.registerEnumClassesScoped
+                            ? EnumClassesMode::Scoped
+                            : EnumClassesMode::Unscoped);
 
             writeProperties(members(&component, propertiesKey, m_version));
 
