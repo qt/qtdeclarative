@@ -590,6 +590,24 @@ class TypedEnum : public QObject
     Q_OBJECT
     QML_ELEMENT
 public:
+    enum UChar: uchar       { V0 = 41 };
+    Q_ENUM(UChar)
+    enum Int8_T: int8_t     { V1 = 42 };
+    Q_ENUM(Int8_T)
+    enum UInt8_T: uint8_t   { V2 = 43 };
+    Q_ENUM(UInt8_T)
+    enum Int16_T: int16_t   { V3 = 44 };
+    Q_ENUM(Int16_T)
+    enum UInt16_T: uint16_t { V4 = 45 };
+    Q_ENUM(UInt16_T)
+    enum Int32_T: int32_t   { V5 = 46 };
+    Q_ENUM(Int32_T)
+    enum UInt32_T: uint32_t { V6 = 47 };
+    Q_ENUM(UInt32_T)
+
+    // TODO: We cannot handle 64bit numbers as underlying types for enums.
+    //       Luckily, moc generates bad code for those. So we don't have to, for now.
+
     enum S: qint16 {
         A, B, C
     };
@@ -736,6 +754,21 @@ class JavaScriptExtension : public QObject
     Q_CLASSINFO("QML.ExtensionIsJavaScript", "true")
 };
 
+class LongNumberTypes : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(qint64   a MEMBER m_a)
+    Q_PROPERTY(int64_t  b MEMBER m_b)
+    Q_PROPERTY(quint64  c MEMBER m_c)
+    Q_PROPERTY(uint64_t d MEMBER m_d)
+
+    qint64   m_a = 1;
+    int64_t  m_b = 2;
+    quint64  m_c = 3;
+    uint64_t m_d = 4;
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -804,6 +837,7 @@ private slots:
 
     void consistencyWarnings();
     void relatedAddedInVersion();
+    void longNumberTypes();
 private:
     QByteArray qmltypesData;
 };

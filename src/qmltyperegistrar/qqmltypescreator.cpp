@@ -211,17 +211,22 @@ void QmlTypesCreator::writeType(const QCborMap &property, QLatin1StringView key)
 #else
         type = "double";
 #endif
-    } else if (type == "qint16") {
+    } else if (type == "int8_t") {
+        // TODO: What can we do with "char"? It's ambiguous.
+        type = "qint8";
+    } else if (type == "uchar" || type == "uint8_t") {
+        type = "quint8";
+    } else if (type == "qint16" || type == "int16_t") {
         type = "short";
-    } else if (type == "quint16") {
+    } else if (type == "quint16" || type == "uint16_t") {
         type = "ushort";
-    } else if (type == "qint32") {
+    } else if (type == "qint32" || type == "int32_t") {
         type = "int";
-    } else if (type == "quint32") {
+    } else if (type == "quint32" || type == "uint32_t") {
         type = "uint";
-    } else if (type == "qint64") {
+    } else if (type == "qint64" || type == "int64_t") {
         type = "qlonglong";
-    } else if (type == "quint64") {
+    } else if (type == "quint64" || type == "uint64_t") {
         type = "qulonglong";
     } else if (type == "QList<QObject*>") {
         type = "QObjectList";
