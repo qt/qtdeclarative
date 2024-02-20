@@ -177,7 +177,7 @@ public:
     int lastSelectionStart = 0;
     int lastSelectionEnd = 0;
     int lineCount = 0;
-    int firstBlockInViewport = -1;   // only for the autotest; can be wrong after scrolling sometimes
+    int firstBlockInViewport = -1;   // can be wrong after scrolling sometimes
     int firstBlockPastViewport = -1; // only for the autotest
     QRectF renderedRegion;
 
