@@ -1017,6 +1017,12 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (canConvertFromTo(from, m_jsPrimitiveType) && canConvertFromTo(m_jsPrimitiveType, to))
         return true;
 
+    if (from->isListProperty()
+            && to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+            && canConvertFromTo(from->valueType(), to->valueType())) {
+        return true;
+    }
+
     return false;
 }
 

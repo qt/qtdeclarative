@@ -1254,6 +1254,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("ScriptInTemplate") << QStringLiteral("scriptInTemplate.qml");
     QTest::newRow("WriteListProperty") << QStringLiteral("writeListProperty.qml");
     QTest::newRow("dontConfuseMemberPrintWithGlobalPrint") << QStringLiteral("findMemberPrint.qml");
+    QTest::newRow("listConversion") << QStringLiteral("listConversion.qml");
 }
 
 void TestQmllint::cleanQmlCode()
