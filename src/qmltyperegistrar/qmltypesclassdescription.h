@@ -55,6 +55,7 @@ struct QmlTypesClassDescription
     bool isSingleton = false;
     bool isRootClass = false;
     bool hasCustomParser = false;
+    bool registerEnumClassesScoped = false;
     QStringList implementsInterfaces;
 
     enum CollectMode {
