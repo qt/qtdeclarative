@@ -225,13 +225,18 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
     QQuickItem *alignItem = nullptr;
     QQuickText *textItem = nullptr;
 
+    QQuickItem *containerItem = new QQuickItem(currentItem());
+    addCurrentItem(containerItem, info);
+
+    generateNodeBase(info);
+
     if (!info.isTextArea) {
         alignItem = new QQuickItem(currentItem());
         alignItem->setX(info.position.x());
         alignItem->setY(info.position.y());
     }
 
-    textItem = new QQuickText;
+    textItem = new QQuickText(containerItem);
     addCurrentItem(textItem, info);
 
     if (info.isTextArea) {
@@ -274,7 +279,7 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
         textItem->setStyle(QQuickText::Outline);
     }
 
-    m_items.pop();
+    m_items.pop(); m_items.pop();
 }
 
 void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
