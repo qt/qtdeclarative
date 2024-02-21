@@ -66,14 +66,20 @@ struct TextNodeInfo : NodeInfo
     QString strokeColor;
 };
 
+enum class StructureNodeStage
+{
+    Start,
+    End
+};
+
+struct UseNodeInfo : NodeInfo
+{
+    QPointF startPos;
+    StructureNodeStage stage;
+};
+
 struct StructureNodeInfo : NodeInfo
 {
-    enum StructureNodeStage
-    {
-        Start,
-        End
-    };
-
     StructureNodeStage stage;
     bool forceSeparatePaths;
     QRectF viewBox;

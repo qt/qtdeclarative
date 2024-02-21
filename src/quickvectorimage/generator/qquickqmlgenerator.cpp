@@ -126,7 +126,8 @@ void QQuickQmlGenerator::generateNodeBase(const NodeInfo &info)
 
 bool QQuickQmlGenerator::generateDefsNode(const NodeInfo &info)
 {
-    stream() << "// skipping DEFS \"" << info.nodeId << "\"";
+    Q_UNUSED(info)
+
     return false;
 }
 
@@ -355,9 +356,23 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
     stream() << "}";
 }
 
+void QQuickQmlGenerator::generateUseNode(const UseNodeInfo &info)
+{
+    if (info.stage == StructureNodeStage::Start) {
+        stream() << "Item {";
+        generateNodeBase(info);
+        m_indentLevel++;
+        stream() << "x: " << info.startPos.x();
+        stream() << "y: " << info.startPos.y();
+    } else {
+        m_indentLevel--;
+        stream() << "}";
+    }
+}
+
 void QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
 {
-    if (info.stage == StructureNodeInfo::StructureNodeStage::Start) {
+    if (info.stage == StructureNodeStage::Start) {
         if (!info.forceSeparatePaths && info.isPathContainer) {
             stream() << shapeName() <<" {";
             m_indentLevel++;
@@ -395,7 +410,7 @@ void QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
 void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
 {
     m_indentLevel = 0;
-    if (info.stage == StructureNodeInfo::StructureNodeStage::Start) {
+    if (info.stage == StructureNodeStage::Start) {
         const QStringList comments = m_commentString.split(u'\n');
         if (comments.isEmpty())
             stream() << "// Generated from SVG";

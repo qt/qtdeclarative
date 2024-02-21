@@ -378,16 +378,33 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     handleBaseNodeEnd(node);
 }
 
-bool QSvgVisitorImpl::visitDefsNodeStart(const QSvgDefs *node)
+void QSvgVisitorImpl::visitUseNode(const QSvgUse *node)
 {
-    Q_UNUSED(node);
-    NodeInfo info;
+    QSvgNode *link = node->link();
+    if (!link)
+        return;
+
+    handleBaseNodeSetup(node);
+    UseNodeInfo info;
     fillCommonNodeInfo(node, info);
 
-    m_generator->generateDefsNode(info);
+    info.stage = StructureNodeStage::Start;
+    info.startPos = node->start();
 
-    // TODO CHECK WHAT IS THIS
-    return false;
+    m_generator->generateUseNode(info);
+
+    QSvgVisitor::traverse(link);
+
+    info.stage = StructureNodeStage::End;
+    m_generator->generateUseNode(info);
+    handleBaseNodeEnd(node);
+}
+
+bool QSvgVisitorImpl::visitDefsNodeStart(const QSvgDefs *node)
+{
+    Q_UNUSED(node)
+
+    return m_generator->generateDefsNode(NodeInfo{});
 }
 
 bool QSvgVisitorImpl::visitStructureNodeStart(const QSvgStructureNode *node)
@@ -400,7 +417,7 @@ bool QSvgVisitorImpl::visitStructureNodeStart(const QSvgStructureNode *node)
     fillCommonNodeInfo(node, info);
     info.forceSeparatePaths = forceSeparatePaths;
     info.isPathContainer = isPathContainer(node);
-    info.stage = StructureNodeInfo::StructureNodeStage::Start;
+    info.stage = StructureNodeStage::Start;
 
     m_generator->generateStructureNode(info);
 
@@ -415,7 +432,7 @@ void QSvgVisitorImpl::visitStructureNodeEnd(const QSvgStructureNode *node)
 
     StructureNodeInfo info;
     fillCommonNodeInfo(node, info);
-    info.stage = StructureNodeInfo::StructureNodeStage::End;
+    info.stage = StructureNodeStage::End;
 
     m_generator->generateStructureNode(info);
 }
@@ -431,7 +448,7 @@ bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgTinyDocument *node)
     info.size = doc->size();
     info.viewBox = doc->viewBox();
     info.isPathContainer = isPathContainer(node);
-    info.stage = StructureNodeInfo::StructureNodeStage::Start;
+    info.stage = StructureNodeStage::Start;
 
     m_generator->generateRootNode(info);
 
@@ -447,7 +464,7 @@ void QSvgVisitorImpl::visitDocumentNodeEnd(const QSvgTinyDocument *node)
 
     StructureNodeInfo info;
     fillCommonNodeInfo(node, info);
-    info.stage = StructureNodeInfo::StructureNodeStage::End;
+    info.stage = StructureNodeStage::End;
 
     m_generator->generateRootNode(info);
 }

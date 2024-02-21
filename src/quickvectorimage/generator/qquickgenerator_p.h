@@ -33,6 +33,7 @@ struct NodeInfo;
 struct ImageNodeInfo;
 struct PathNodeInfo;
 struct TextNodeInfo;
+struct UseNodeInfo;
 struct StructureNodeInfo;
 
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickGenerator
@@ -53,6 +54,7 @@ protected:
     virtual void generatePath(const PathNodeInfo &info) = 0;
     virtual void generateNode(const NodeInfo &info) = 0;
     virtual void generateTextNode(const TextNodeInfo &info) = 0;
+    virtual void generateUseNode(const UseNodeInfo &info) = 0;
     virtual void generateStructureNode(const StructureNodeInfo &info) = 0;
     virtual void generateRootNode(const StructureNodeInfo &info) = 0;
     virtual void outputShapePath(const PathNodeInfo &info, const QPainterPath *path, const QQuadPath *quadPath, QQuickVectorImageGenerator::PathSelector pathSelector, const QRectF &boundingRect) = 0;

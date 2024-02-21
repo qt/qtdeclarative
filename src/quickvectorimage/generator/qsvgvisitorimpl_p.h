@@ -41,6 +41,7 @@ protected:
     void visitPolygonNode(const QSvgPolygon *node) override;
     void visitPolylineNode(const QSvgPolyline *node) override;
     void visitTextNode(const QSvgText *node) override;
+    void visitUseNode(const QSvgUse *node) override;
     bool visitDefsNodeStart(const QSvgDefs *node) override;
     bool visitStructureNodeStart(const QSvgStructureNode *node) override;
     void visitStructureNodeEnd(const QSvgStructureNode *node) override;

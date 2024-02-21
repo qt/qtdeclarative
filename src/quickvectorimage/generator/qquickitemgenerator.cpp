@@ -275,9 +275,22 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
     m_items.pop();
 }
 
+void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
+{
+    if (info.stage == StructureNodeStage::Start) {
+        QQuickItem *item = new QQuickItem();
+        item->setPosition(info.startPos);
+        addCurrentItem(item, info);
+        generateNodeBase(info);
+    } else {
+        m_items.pop();
+    }
+
+}
+
 void QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
 {
-    if (info.stage == StructureNodeInfo::StructureNodeStage::Start) {
+    if (info.stage == StructureNodeStage::Start) {
         if (!info.forceSeparatePaths && info.isPathContainer) {
             m_inShapeItem = true;
             auto *shapeItem = new QQuickShape;
@@ -300,7 +313,7 @@ void QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
 
 void QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
 {
-    if (info.stage == StructureNodeInfo::StructureNodeStage::Start) {
+    if (info.stage == StructureNodeStage::Start) {
         QQuickItem *item = !info.viewBox.isEmpty() ? new QQuickVectorImageGenerator::Utils::ViewBoxItem(info.viewBox) : new QQuickItem;
         addCurrentItem(item, info);
         if (info.size.width() > 0)
