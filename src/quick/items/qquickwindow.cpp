@@ -1853,6 +1853,35 @@ void QQuickWindowPrivate::clearFocusObject()
         da->clearFocusObject();
 }
 
+void QQuickWindowPrivate::setFocusToTarget(FocusTarget target)
+{
+    QQuickItem *newFocusItem = nullptr;
+    if (contentItem) {
+        switch (target) {
+        case FocusTarget::First:
+            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(contentItem, true);
+            break;
+        case FocusTarget::Last:
+            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(contentItem, false);
+            break;
+        case FocusTarget::Next:
+        case FocusTarget::Prev: {
+            auto da = deliveryAgentPrivate();
+            Q_ASSERT(da);
+            QQuickItem *focusItem = da->focusTargetItem() ? da->focusTargetItem() : contentItem;
+            bool forward = (target == FocusTarget::Next);
+            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(focusItem, forward);
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    if (newFocusItem)
+        newFocusItem->setFocus(true, Qt::ActiveWindowFocusReason);
+}
+
 /*!
     \qmlproperty list<QtObject> Window::data
     \qmldefault

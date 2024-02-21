@@ -23,6 +23,11 @@
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/platforminputcontext_p.h>
 #include <QtTest/private/qpropertytesthelper_p.h>
+#ifdef QT_WIDGETS_LIB
+#include <QtWidgets/qwidget.h>
+#include <QtWidgets/qboxlayout.h>
+#include <QtWidgets/qlineedit.h>
+#endif
 
 using namespace QQuickVisualTestUtils;
 
@@ -133,6 +138,10 @@ private slots:
 
     void lastFocusChangeReason();
     void focusInScopeChanges();
+
+#ifdef QT_WIDGETS_LIB
+    void embeddedInWidgetsFocus();
+#endif
 
 private:
     QQmlEngine engine;
@@ -4430,6 +4439,70 @@ void tst_QQuickItem::focusInScopeChanges()
     QCOMPARE(textInputActiveFocusSpy.size(), 1);
     QVERIFY(textInput->hasActiveFocus());
 }
+
+#ifdef QT_WIDGETS_LIB
+void tst_QQuickItem::embeddedInWidgetsFocus()
+{
+    QWidget root;
+    QVBoxLayout *layout = new QVBoxLayout(&root);
+
+    QLineEdit *lineEdit1 = new QLineEdit(&root);
+    lineEdit1->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+
+    QQuickView *quickView = new QQuickView;
+    quickView->setSource(testFileUrl("embedded.qml"));
+    QWidget *container = QWidget::createWindowContainer(quickView, &root);
+    container->setMinimumSize(quickView->size());
+    container->setFocusPolicy(Qt::TabFocus);
+
+    QLineEdit *lineEdit2 = new QLineEdit(&root);
+    lineEdit2->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+
+    layout->addWidget(lineEdit1);
+    layout->addWidget(container);
+    layout->addWidget(lineEdit2);
+
+    QQuickItem *rect1 = findItem<QQuickItem>(quickView->rootObject(), "rect1");
+    QQuickItem *rect2 = findItem<QQuickItem>(quickView->rootObject(), "rect2");
+    QVERIFY(rect1);
+    QVERIFY(rect2);
+
+    root.show();
+    QTRY_VERIFY(root.isVisible());
+    QVERIFY(QTest::qWaitForWindowExposed(&root));
+    QVERIFY(QTest::qWaitForWindowFocused(root.windowHandle()));
+
+    lineEdit1->setFocus();
+    QTRY_VERIFY(lineEdit1->hasFocus());
+
+    // Tab forward
+    QTest::keyClick(QGuiApplication::focusWindow(), Qt::Key_Tab);
+    QTRY_VERIFY(container->hasFocus());
+    QVERIFY(QTest::qWaitForWindowFocused(quickView));
+    QVERIFY(rect1->hasActiveFocus());
+
+    QTest::keyClick(QGuiApplication::focusWindow(), Qt::Key_Tab);
+    QTRY_VERIFY(rect2->hasActiveFocus());
+
+    QTest::keyClick(QGuiApplication::focusWindow(), Qt::Key_Tab);
+    QVERIFY(QTest::qWaitForWindowFocused(root.windowHandle()));
+    QVERIFY(lineEdit2->hasFocus());
+    QVERIFY(!rect2->hasActiveFocus());
+
+    // Tab backwards
+    QTest::keyClick(QGuiApplication::focusWindow(), Qt::Key_Tab, Qt::ShiftModifier);
+    QTRY_VERIFY(container->hasFocus());
+    QVERIFY(QTest::qWaitForWindowFocused(quickView));
+    QVERIFY(rect2->hasActiveFocus());
+
+    QTest::keyClick(QGuiApplication::focusWindow(), Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(rect1->hasActiveFocus());
+
+    QTest::keyClick(QGuiApplication::focusWindow(), Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(QTest::qWaitForWindowFocused(root.windowHandle()));
+    QVERIFY(lineEdit1->hasFocus());
+}
+#endif
 
 QTEST_MAIN(tst_QQuickItem)
 

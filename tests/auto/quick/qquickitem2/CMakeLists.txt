@@ -37,6 +37,11 @@ qt_internal_add_test(tst_qquickitem2
 ## Scopes:
 #####################################################################
 
+qt_internal_extend_target(tst_qquickitem2 CONDITION TARGET Qt::Widgets
+    LIBRARIES
+        Qt::Widgets
+)
+
 qt_internal_extend_target(tst_qquickitem2 CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=":/data"

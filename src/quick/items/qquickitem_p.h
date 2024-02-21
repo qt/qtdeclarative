@@ -575,7 +575,7 @@ public:
     static bool focusNextPrev(QQuickItem *item, bool forward);
     static QQuickItem *nextTabChildItem(const QQuickItem *item, int start);
     static QQuickItem *prevTabChildItem(const QQuickItem *item, int start);
-    static QQuickItem *nextPrevItemInTabFocusChain(QQuickItem *item, bool forward);
+    static QQuickItem *nextPrevItemInTabFocusChain(QQuickItem *item, bool forward, bool wrap = true);
 
     static bool canAcceptTabFocus(QQuickItem *item);
 
