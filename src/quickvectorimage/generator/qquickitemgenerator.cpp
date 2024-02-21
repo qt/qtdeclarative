@@ -246,14 +246,11 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
         auto *alignPrivate = QQuickItemPrivate::get(alignItem);
         anchors->setBaseline(alignPrivate->top());
 
-        QString hAlign = QStringLiteral("left");
         switch (info.alignment) {
         case Qt::AlignHCenter:
-            hAlign = QStringLiteral("horizontalCenter");
             anchors->setHorizontalCenter(alignPrivate->left());
             break;
         case Qt::AlignRight:
-            hAlign = QStringLiteral("right");
             anchors->setRight(alignPrivate->left());
             break;
         default:
