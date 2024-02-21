@@ -921,8 +921,13 @@ QTypeRevision QQmlImports::importExtension(
         return QTypeRevision();
     }
 
-    if (qmldir->plugins().isEmpty())
+    if (qmldir->plugins().isEmpty()) {
+        // If the qmldir does not register a plugin, we might still have declaratively
+        // registered types (if we are dealing with an application instead of a library)
+        if (!QQmlMetaType::typeModule(uri, version))
+            QQmlMetaType::qmlRegisterModuleTypes(uri);
         return validVersion(version);
+    }
 
     QQmlPluginImporter importer(
             uri, version, typeLoader->importDatabase(), qmldir, typeLoader, errors);
