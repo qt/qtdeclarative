@@ -20,6 +20,10 @@ Pane {
             text: qsTr("Delegate controls are used as delegates in views such as ListView.")
         }
 
+        ButtonGroup {
+            id: radioButtonGroup
+        }
+
         ListView {
             id: listView
             clip: true
@@ -150,10 +154,6 @@ Pane {
                     CheckDelegate {
                         text: delegateLoader.value
                     }
-                }
-
-                ButtonGroup {
-                    id: radioButtonGroup
                 }
 
                 Component {
