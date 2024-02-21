@@ -364,8 +364,8 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
     };
 
     QQmlData *ddata = QQmlData::get(currentObject, false);
-    auto findChangeSignal = [&](QStringView changedHandlerName) {
-        if (auto propName = QQmlSignalNames::changedHandlerNameToPropertyName(changedHandlerName)) {
+    auto findChangeSignal = [&](QStringView signalName) {
+        if (auto propName = QQmlSignalNames::changedSignalNameToPropertyName(signalName)) {
             const QQmlPropertyData *d =
                     ddata->propertyCache->property(*propName, currentObject, context);
             while (d && d->isFunction())
@@ -398,7 +398,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
                 return true;
             }
 
-            return findChangeSignal(terminal);
+            return findChangeSignal(signalName);
         }
 
         return findSignalInMetaObject(signalName.toUtf8());
