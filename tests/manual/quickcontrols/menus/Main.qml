@@ -62,6 +62,9 @@ ApplicationWindow {
                 text: qsTr("Paste")
                 enabled: textArea.activeFocus
             }
+
+            MenuSeparator {}
+
             Action {
                 text: qsTr("Remove menu")
                 onTriggered: menuBar.removeMenu(editMenu)
@@ -70,6 +73,13 @@ ApplicationWindow {
                 id: editSubMenu
                 title: qsTr("Find / Replace")
                 Action { text: qsTr("&Find") }
+            }
+
+            MenuSeparator {}
+
+            ContextAction {
+                text: qsTr("Dummy Action")
+                shortcut: "Ctrl+I"
             }
         }
         MenuBarItem {
@@ -113,9 +123,10 @@ ApplicationWindow {
                + " work as expected with the TextArea?\n"
                + "  - Are they enabled/disabled as expected?\n"
                + "  - Does the TextArea keep focus after interacting with the Edit menu items?\n"
-               + "- Does adding and removing menu items work?"
-               + "- Do the menus in the MenuBar work?"
-               + "- Can you add and remove menus from the MenuBar?")
+               + "- Does adding and removing menu items work?\n"
+               + "- Do the menus in the MenuBar work?\n"
+               + "- Can you add and remove menus from the MenuBar?\n"
+               + "- Do shortcuts work?")
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.Wrap
 
@@ -262,6 +273,7 @@ ApplicationWindow {
 
         ContextAction {
             text: qsTr("Context menu item")
+            shortcut: "A"
         }
         ContextMenuItem {
             text: qsTr("Checkable context menu item")
@@ -271,16 +283,19 @@ ApplicationWindow {
             text: qsTr("Checked context menu item")
             checkable: true
             checked: true
+            shortcut: "C"
         }
         ContextAction {
             text: qsTr("Disabled context menu item")
             enabled: false
+            shortcut: "D"
         }
         ContextAction {
             text: qsTr("Checked and disabled context menu item")
             checkable: true
             checked: true
             enabled: false
+            shortcut: "E"
         }
 
         MenuSeparator {}
@@ -305,6 +320,7 @@ ApplicationWindow {
             ContextAction {
                 text: qsTr("Checkable sub-menu item")
                 checkable: true
+                shortcut: "G"
             }
             ContextAction {
                 text: qsTr("Checked sub-menu item")
@@ -317,12 +333,14 @@ ApplicationWindow {
             ContextAction {
                 text: qsTr("Disabled sub-menu item")
                 enabled: false
+                shortcut: "I"
             }
             ContextAction {
                 text: qsTr("Checked and disabled sub-menu item")
                 checkable: true
                 checked: true
                 enabled: false
+                shortcut: "J"
             }
         }
     }
