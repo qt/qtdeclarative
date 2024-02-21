@@ -474,6 +474,8 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
 {
     auto *node = new QSGCurveFillNode;
     node->setGradientType(pathData.gradientType);
+    const qsizetype approxDataCount = 20 * pathData.fillPath.elementCount();
+    node->reserve(approxDataCount);
 
     NodeList ret;
     const QColor &color = pathData.fillColor;
@@ -485,6 +487,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
     node->setDebug(dbg);
 
     QVector<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
+    wfVertices.reserve(approxDataCount);
 
     QSGCurveProcessor::processFill(pathData.fillPath,
                                    pathData.fillRule,

@@ -1591,6 +1591,18 @@ void QSGCurveProcessor::processStroke(const QQuadPath &strokePath,
     }
 }
 
+// 2x variant of qHash(float)
+inline size_t qHash(QVector2D key, size_t seed = 0) noexcept
+{
+    Q_STATIC_ASSERT(sizeof(QVector2D) == sizeof(quint64));
+    // ensure -0 gets mapped to 0
+    key[0] += 0.0f;
+    key[1] += 0.0f;
+    quint64 k;
+    memcpy(&k, &key, sizeof(QVector2D));
+    return QHashPrivate::hash(k, seed);
+}
+
 void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
                                     Qt::FillRule fillRule,
                                     addTriangleCallback addTriangle)
@@ -1598,21 +1610,10 @@ void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
     QPainterPath internalHull;
     internalHull.setFillRule(fillRule);
 
-    QMultiHash<QPair<float, float>, int> pointHash;
-    QHash<QPair<float, float>, int> linePointHash;
-    QHash<QPair<float, float>, int> concaveControlPointHash;
-    QHash<QPair<float, float>, int> convexPointHash;
-
-    auto toRoundedPair = [](const QPointF &p) -> QPair<float, float> {
-        return qMakePair(qRound(p.x() * 32.0f) / 32.0f, qRound(p.y() * 32.0f) / 32.0f);
-    };
-
-    auto toRoundedVec2D = [](const QPointF &p) -> QVector2D {
-        return { qRound(p.x() * 32.0f) / 32.0f, qRound(p.y() * 32.0f) / 32.0f };
-    };
+    QMultiHash<QVector2D, int> pointHash;
 
     auto roundVec2D = [](const QVector2D &p) -> QVector2D {
-        return { qRound(p.x() * 32.0f) / 32.0f, qRound(p.y() * 32.0f) / 32.0f };
+        return { qRound64(p.x() * 32.0f) / 32.0f, qRound64(p.y() * 32.0f) / 32.0f };
     };
 
     auto addCurveTriangle = [&](const QQuadPath::Element &element,
@@ -1693,35 +1694,33 @@ void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
 
     for (int i = 0; i < fillPath.elementCount(); ++i) {
         iteratePath(fillPath, i, [&](const QQuadPath::Element &element, int index) {
-            QPointF sp(element.startPoint().toPointF());  //### to much conversion to and from pointF
-            QPointF cp(element.controlPoint().toPointF());
-            QPointF ep(element.endPoint().toPointF());
+            QVector2D sp(element.startPoint());
+            QVector2D cp(element.controlPoint());
+            QVector2D ep(element.endPoint());
+            QVector2D rsp = roundVec2D(sp);
+
             if (element.isSubpathStart())
-                internalHull.moveTo(sp);
+                internalHull.moveTo(sp.toPointF());
             if (element.isLine()) {
-                internalHull.lineTo(ep);
-                linePointHash.insert(toRoundedPair(sp), index);
-                pointHash.insert(toRoundedPair(sp), index);
+                internalHull.lineTo(ep.toPointF());
+                pointHash.insert(rsp, index);
             } else {
+                QVector2D rep = roundVec2D(ep);
+                QVector2D rcp = roundVec2D(cp);
                 if (element.isConvex()) {
-                    internalHull.lineTo(ep);
-                    addTriangleForConvex(element, toRoundedVec2D(sp), toRoundedVec2D(ep), toRoundedVec2D(cp));
-                    convexPointHash.insert(toRoundedPair(sp), index);
-                    pointHash.insert(toRoundedPair(sp), index);
+                    internalHull.lineTo(ep.toPointF());
+                    addTriangleForConvex(element, rsp, rep, rcp);
+                    pointHash.insert(rsp, index);
                 } else {
-                    internalHull.lineTo(cp);
-                    internalHull.lineTo(ep);
-                    addTriangleForConcave(element, toRoundedVec2D(sp), toRoundedVec2D(ep), toRoundedVec2D(cp));
-                    concaveControlPointHash.insert(toRoundedPair(cp), index);
-                    pointHash.insert(toRoundedPair(cp), index);
+                    internalHull.lineTo(cp.toPointF());
+                    internalHull.lineTo(ep.toPointF());
+                    addTriangleForConcave(element, rsp, rep, rcp);
+                    pointHash.insert(rcp, index);
                 }
             }
         });
     }
 
-    auto makeHashable = [](const QVector2D &p) -> QPair<float, float> {
-        return qMakePair(qRound(p.x() * 32.0f) / 32.0f, qRound(p.y() * 32.0f) / 32.0f);
-    };
     // Points in p are already rounded do 1/32
     // Returns false if the triangle needs to be split. Adds the triangle to the graphics buffers and returns true otherwise.
     // (Does not handle ambiguous vertices that are on multiple unrelated lines/curves)
@@ -1762,7 +1761,7 @@ void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
         int ei = -1;
 
         for (int i = 0; i < 3; ++i) {
-            auto pointFoundRange = std::as_const(pointHash).equal_range(makeHashable(p[i]));
+            auto pointFoundRange = std::as_const(pointHash).equal_range(roundVec2D(p[i]));
 
             if (pointFoundRange.first == pointHash.constEnd())
                 continue;
@@ -1873,8 +1872,8 @@ void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
 
         QVector2D p[3];
         for (int i = 0; i < 3; ++i) {
-            p[i] = toRoundedVec2D(QPointF(triangles.vertices.at(idx[i] * 2),
-                                          triangles.vertices.at(idx[i] * 2 + 1)));
+            p[i] = roundVec2D(QVector2D(float(triangles.vertices.at(idx[i] * 2)),
+                                        float(triangles.vertices.at(idx[i] * 2 + 1))));
         }
         if (qFuzzyIsNull(determinant(p[0], p[1], p[2])))
             continue; // Skip degenerate triangles
