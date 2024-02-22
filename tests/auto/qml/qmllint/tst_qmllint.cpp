@@ -401,6 +401,21 @@ void TestQmllint::autoqmltypes()
     QVERIFY(process.readAllStandardError()
                 .contains("is not a qmldir file. Assuming qmltypes"));
     QVERIFY(process.readAllStandardOutput().isEmpty());
+
+    {
+        QProcess bare;
+        bare.setWorkingDirectory(testFile("autoqmltypes"));
+        bare.start(m_qmllintPath, { QStringLiteral("--bare"), QStringLiteral("test.qml") });
+        bare.waitForFinished();
+
+        const QByteArray errors = bare.readAllStandardError();
+        QVERIFY(!errors.contains("is not a qmldir file. Assuming qmltypes"));
+        QVERIFY(errors.contains("Failed to import TestTest."));
+        QVERIFY(bare.readAllStandardOutput().isEmpty());
+
+        QCOMPARE(bare.exitStatus(), QProcess::NormalExit);
+        QVERIFY(bare.exitCode() != 0);
+    }
 }
 
 void TestQmllint::resources()
