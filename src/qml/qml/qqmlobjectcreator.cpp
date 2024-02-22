@@ -70,7 +70,7 @@ QQmlObjectCreator::QQmlObjectCreator(
     sharedState->allCreatedBindings.allocate(compilationUnit->totalBindingsCount());
     sharedState->allParserStatusCallbacks.allocate(compilationUnit->totalParserStatusCount());
     sharedState->allCreatedObjects.allocate(compilationUnit->totalObjectCount());
-    sharedState->allJavaScriptObjects = nullptr;
+    sharedState->allJavaScriptObjects = ObjectInCreationGCAnchorList();
     sharedState->creationContext = creationContext;
     sharedState->rootContext.reset();
     sharedState->hadTopLevelRequiredProperties = false;
@@ -189,9 +189,9 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
 
     QV4::Scope scope(v4);
 
-    Q_ASSERT(sharedState->allJavaScriptObjects || topLevelCreator);
+    Q_ASSERT(sharedState->allJavaScriptObjects.canTrack() || topLevelCreator);
     if (topLevelCreator)
-        sharedState->allJavaScriptObjects = scope.alloc(compilationUnit->totalObjectCount());
+        sharedState->allJavaScriptObjects = ObjectInCreationGCAnchorList(scope, compilationUnit->totalObjectCount());
 
     if (!isComponentRoot && sharedState->creationContext) {
         // otherwise QQmlEnginePrivate::createInternalContext() handles it
@@ -206,7 +206,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     }
 
     if (topLevelCreator)
-        sharedState->allJavaScriptObjects = nullptr;
+        sharedState->allJavaScriptObjects = ObjectInCreationGCAnchorList();
 
     phase = CreatingObjectsPhase2;
 
@@ -235,10 +235,11 @@ void QQmlObjectCreator::beginPopulateDeferred(const QQmlRefPointer<QQmlContextDa
     sharedState->rootContext = newContext;
 
     Q_ASSERT(topLevelCreator);
-    Q_ASSERT(!sharedState->allJavaScriptObjects);
+    Q_ASSERT(!sharedState->allJavaScriptObjects.canTrack());
 
+    // FIXME (QTBUG-122956): allocating from the short lived scope does not make any sense
     QV4::Scope valueScope(v4);
-    sharedState->allJavaScriptObjects = valueScope.alloc(compilationUnit->totalObjectCount());
+    sharedState->allJavaScriptObjects = ObjectInCreationGCAnchorList(valueScope, compilationUnit->totalObjectCount());
 }
 
 void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex,
@@ -1406,9 +1407,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     QObject *scopeObject = instance;
     qSwap(_scopeObject, scopeObject);
 
-    Q_ASSERT(sharedState->allJavaScriptObjects);
-    *sharedState->allJavaScriptObjects = QV4::QObjectWrapper::wrap(v4, instance);
-    ++sharedState->allJavaScriptObjects;
+    Q_ASSERT(sharedState->allJavaScriptObjects.canTrack());
+    sharedState->allJavaScriptObjects.trackObject(v4, instance);
 
     QV4::Scope valueScope(v4);
     QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc());
@@ -1808,4 +1808,16 @@ QQmlObjectCreatorRecursionWatcher::QQmlObjectCreatorRecursionWatcher(QQmlObjectC
     : sharedState(creator->sharedState)
     , watcher(creator->sharedState.data())
 {
+}
+
+void ObjectInCreationGCAnchorList::trackObject(QV4::ExecutionEngine *engine, QObject *instance)
+{
+    *allJavaScriptObjects = QV4::QObjectWrapper::wrap(engine, instance);
+    // we have to handle the case where the gc is already running, but the scope is discarded
+    // before the collector runs again. In that case, rescanning won't help us. Thus, mark the
+    // object.
+    QV4::WriteBarrier::markCustom(engine, [this](QV4::MarkStack *ms) {
+        allJavaScriptObjects->heapObject()->mark(ms);
+    });
+    ++allJavaScriptObjects;
 }

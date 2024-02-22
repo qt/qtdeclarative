@@ -10,6 +10,8 @@
 #include <QtGui/QWindow>
 #include <QtCore/QDebug>
 #include <QtQml/qqmlengine.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4mm_p.h>
 
 #include <QtQuickTestUtils/private/geometrytestutils_p.h>
 
@@ -22,6 +24,7 @@ public:
     tst_QQuickView();
 
 private slots:
+    void gc();
     void resizemodeitem();
     void errors();
     void engine();
@@ -36,6 +39,36 @@ private slots:
 tst_QQuickView::tst_QQuickView()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
+}
+
+void tst_QQuickView::gc()
+{
+    QQuickView view;
+    QQmlEngine *engine = view.engine();
+    QV4::ExecutionEngine *v4 = engine->handle();
+
+    v4->memoryManager->gcStateMachine->deadline = QDeadlineTimer(QDeadlineTimer::Forever);
+    auto sm = v4->memoryManager->gcStateMachine.get();
+    sm->reset();
+    while (sm->state != QV4::GCState::CallDestroyObjects) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+    view.loadFromModule("test", "TestQml");
+    auto root = view.rootObject();
+    QVERIFY(root);
+    auto ddata = QQmlData::get(root, false);
+    while (sm->state != QV4::GCState::DoSweep) {
+        if (sm->state > QV4::GCState::InitCallDestroyObjects) {
+            sm->mm->collectFromJSStack(sm->mm->markStack());
+            sm->mm->m_markStack->drain();
+        }
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+    QVERIFY(ddata);
+    QVERIFY(ddata->jsWrapper.asManaged());
+    QVERIFY(ddata->jsWrapper.asManaged()->markBit());
 }
 
 void tst_QQuickView::resizemodeitem()
