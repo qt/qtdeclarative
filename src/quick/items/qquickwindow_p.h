@@ -72,21 +72,37 @@ public Q_SLOTS:
     void setHeight(int h) {QQuickItem::setHeight(qreal(h));}
 };
 
-class QQuickWindowRenderTarget
+struct QQuickWindowRenderTarget
 {
-public:
-    void reset(QRhi *rhi);
-    QRhiRenderTarget *renderTarget = nullptr;
-    QRhiRenderPassDescriptor *rpDesc = nullptr;
-    QRhiTexture *texture = nullptr;
-    QRhiRenderBuffer *renderBuffer = nullptr;
-    QRhiRenderBuffer *depthStencil = nullptr;
-    QRhiTexture *depthStencilTexture = nullptr; // for multiview
-    QRhiTexture *multisampleTexture = nullptr;
-    QPaintDevice *paintDevice = nullptr;
-    bool owns = false;
-    int multiViewCount = 1;
+    enum class ResetFlag {
+        KeepImplicitBuffers = 0x01
+    };
+    Q_DECLARE_FLAGS(ResetFlags, ResetFlag)
+    void reset(QRhi *rhi, ResetFlags flags = {});
+
+    struct {
+        QRhiRenderTarget *renderTarget = nullptr;
+        bool owns = false;
+        int multiViewCount = 1;
+    } rt;
+    struct {
+        QRhiTexture *texture = nullptr;
+        QRhiRenderBuffer *renderBuffer = nullptr;
+        QRhiRenderPassDescriptor *rpDesc = nullptr;
+    } res;
+    struct ImplicitBuffers {
+        QRhiRenderBuffer *depthStencil = nullptr;
+        QRhiTexture *depthStencilTexture = nullptr;
+        QRhiTexture *multisampleTexture = nullptr;
+        void reset(QRhi *rhi);
+    } implicitBuffers;
+    struct {
+        QPaintDevice *paintDevice = nullptr;
+        bool owns = false;
+    } sw;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickWindowRenderTarget::ResetFlags)
 
 class Q_QUICK_EXPORT QQuickWindowPrivate
     : public QWindowPrivate
@@ -189,6 +205,7 @@ public:
     void updateChildWindowStackingOrder(QQuickItem *item = nullptr);
 
     int multiViewCount();
+    QRhiRenderTarget *activeCustomRhiRenderTarget();
 
     QSGRenderContext *context;
     QSGRenderer *renderer;

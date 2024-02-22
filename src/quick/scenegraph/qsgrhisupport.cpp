@@ -819,7 +819,7 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
     case QSGRendererInterface::RhiRedirectCommandBuffer:
         return QQuickWindowPrivate::get(w)->redirect.commandBuffer;
     case QSGRendererInterface::RhiRedirectRenderTarget:
-        return QQuickWindowPrivate::get(w)->redirect.rt.renderTarget;
+        return QQuickWindowPrivate::get(w)->redirect.rt.rt.renderTarget;
     default:
         break;
     }

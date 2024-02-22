@@ -1456,16 +1456,31 @@ static bool createRhiRenderTargetWithRenderBuffer(QRhiRenderBuffer *renderBuffer
 {
     sampleCount = QSGRhiSupport::chooseSampleCount(sampleCount, rhi);
 
-    std::unique_ptr<QRhiRenderBuffer> depthStencil(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount));
-    if (!depthStencil->create()) {
-        qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
-        return false;
+    std::unique_ptr<QRhiRenderBuffer> depthStencil;
+    if (dst->implicitBuffers.depthStencil) {
+        if (dst->implicitBuffers.depthStencil->pixelSize() == pixelSize
+            && dst->implicitBuffers.depthStencil->sampleCount() == sampleCount)
+        {
+            depthStencil.reset(dst->implicitBuffers.depthStencil);
+            dst->implicitBuffers.depthStencil = nullptr;
+        }
+    }
+    dst->implicitBuffers.reset(rhi);
+
+    if (!depthStencil) {
+        depthStencil.reset(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount));
+        depthStencil->setName(QByteArrayLiteral("Depth-stencil buffer for QQuickRenderTarget"));
+        if (!depthStencil->create()) {
+            qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
+            return false;
+        }
     }
 
     QRhiColorAttachment colorAttachment(renderBuffer);
     QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
     rtDesc.setDepthStencilBuffer(depthStencil.get());
     std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    rt->setName(QByteArrayLiteral("RT for QQuickRenderTarget with renderbuffer"));
     std::unique_ptr<QRhiRenderPassDescriptor> rp(rt->newCompatibleRenderPassDescriptor());
     rt->setRenderPassDescriptor(rp.get());
 
@@ -1474,10 +1489,10 @@ static bool createRhiRenderTargetWithRenderBuffer(QRhiRenderBuffer *renderBuffer
         return false;
     }
 
-    dst->renderTarget = rt.release();
-    dst->rpDesc = rp.release();
-    dst->depthStencil = depthStencil.release();
-    dst->owns = true; // ownership of the native resource itself is not transferred but the QRhi objects are on us now
+    dst->rt.renderTarget = rt.release();
+    dst->rt.owns = true;
+    dst->res.rpDesc = rp.release();
+    dst->implicitBuffers.depthStencil = depthStencil.release();
 
     return true;
 }
@@ -1493,19 +1508,49 @@ static bool createRhiRenderTarget(QRhiTexture *texture,
     if (sampleCount <= 1)
         multisampleResolve = false;
 
-    std::unique_ptr<QRhiRenderBuffer> depthStencil(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount));
-    if (!depthStencil->create()) {
-        qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
-        return false;
+    std::unique_ptr<QRhiRenderBuffer> depthStencil;
+    if (dst->implicitBuffers.depthStencil) {
+        if (dst->implicitBuffers.depthStencil->pixelSize() == pixelSize
+            && dst->implicitBuffers.depthStencil->sampleCount() == sampleCount)
+        {
+            depthStencil.reset(dst->implicitBuffers.depthStencil);
+            dst->implicitBuffers.depthStencil = nullptr;
+        }
     }
 
     std::unique_ptr<QRhiTexture> colorBuffer;
+    QRhiTexture::Flags multisampleTextureFlags;
     if (multisampleResolve) {
-        QRhiTexture::Flags flags = QRhiTexture::RenderTarget;
+        multisampleTextureFlags = QRhiTexture::RenderTarget;
         // Pass in texture->format() as a hint, to not be tied to rgba8. Also keep the srgb flag.
         if (texture->flags().testFlag(QRhiTexture::sRGB))
-            flags |= QRhiTexture::sRGB;
-        colorBuffer.reset(rhi->newTexture(texture->format(), pixelSize, sampleCount, flags));
+            multisampleTextureFlags |= QRhiTexture::sRGB;
+
+        if (dst->implicitBuffers.multisampleTexture) {
+            if (dst->implicitBuffers.multisampleTexture->pixelSize() == pixelSize
+                && dst->implicitBuffers.multisampleTexture->sampleCount() == sampleCount
+                && dst->implicitBuffers.multisampleTexture->flags().testFlags(multisampleTextureFlags))
+            {
+                colorBuffer.reset(dst->implicitBuffers.multisampleTexture);
+                dst->implicitBuffers.multisampleTexture = nullptr;
+            }
+        }
+    }
+
+    dst->implicitBuffers.reset(rhi);
+
+    if (!depthStencil) {
+        depthStencil.reset(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount));
+        depthStencil->setName(QByteArrayLiteral("Depth-stencil buffer for QQuickRenderTarget"));
+        if (!depthStencil->create()) {
+            qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
+            return false;
+        }
+    }
+
+    if (multisampleResolve && !colorBuffer) {
+        colorBuffer.reset(rhi->newTexture(texture->format(), pixelSize, sampleCount, multisampleTextureFlags));
+        colorBuffer->setName(QByteArrayLiteral("Multisample color buffer for QQuickRenderTarget"));
         if (!colorBuffer->create()) {
             qWarning("Failed to build multisample color buffer for QQuickRenderTarget");
             return false;
@@ -1522,6 +1567,7 @@ static bool createRhiRenderTarget(QRhiTexture *texture,
     QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
     rtDesc.setDepthStencilBuffer(depthStencil.get());
     std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    rt->setName(QByteArrayLiteral("RT for QQuickRenderTarget"));
     std::unique_ptr<QRhiRenderPassDescriptor> rp(rt->newCompatibleRenderPassDescriptor());
     rt->setRenderPassDescriptor(rp.get());
 
@@ -1530,13 +1576,12 @@ static bool createRhiRenderTarget(QRhiTexture *texture,
         return false;
     }
 
-    dst->renderTarget = rt.release();
-    dst->rpDesc = rp.release();
-    dst->depthStencil = depthStencil.release();
+    dst->rt.renderTarget = rt.release();
+    dst->rt.owns = true;
+    dst->res.rpDesc = rp.release();
+    dst->implicitBuffers.depthStencil = depthStencil.release();
     if (multisampleResolve)
-        dst->multisampleTexture = colorBuffer.release();
-
-    dst->owns = true; // ownership of the native resource itself is not transferred but the QRhi objects are on us now
+        dst->implicitBuffers.multisampleTexture = colorBuffer.release();
 
     return true;
 }
@@ -1553,16 +1598,50 @@ static bool createRhiRenderTargetMultiView(QRhiTexture *texture,
     if (sampleCount <= 1)
         multisampleResolve = false;
 
-    std::unique_ptr<QRhiTexture> depthStencil(rhi->newTextureArray(QRhiTexture::D24S8, arraySize, pixelSize, sampleCount, QRhiTexture::RenderTarget));
-    if (!depthStencil->create()) {
-        qWarning("Failed to build depth-stencil texture array for QQuickRenderTarget");
-        return false;
+    std::unique_ptr<QRhiTexture> depthStencil;
+    if (dst->implicitBuffers.depthStencilTexture) {
+        if (dst->implicitBuffers.depthStencilTexture->pixelSize() == pixelSize
+            && dst->implicitBuffers.depthStencilTexture->sampleCount() == sampleCount
+            && dst->implicitBuffers.depthStencilTexture->arraySize() == arraySize)
+        {
+            depthStencil.reset(dst->implicitBuffers.depthStencilTexture);
+            dst->implicitBuffers.depthStencilTexture = nullptr;
+        }
     }
 
-    // With multiview this must be a multisample texture array, no legacy GLES stuff anymore.
     std::unique_ptr<QRhiTexture> colorBuffer;
+    QRhiTexture::Flags multisampleTextureFlags;
     if (multisampleResolve) {
-        colorBuffer.reset(rhi->newTextureArray(texture->format(), arraySize, pixelSize, sampleCount, QRhiTexture::RenderTarget));
+        multisampleTextureFlags = QRhiTexture::RenderTarget;
+        if (texture->flags().testFlag(QRhiTexture::sRGB))
+            multisampleTextureFlags |= QRhiTexture::sRGB;
+
+        if (dst->implicitBuffers.multisampleTexture) {
+            if (dst->implicitBuffers.multisampleTexture->pixelSize() == pixelSize
+                && dst->implicitBuffers.multisampleTexture->sampleCount() == sampleCount
+                && dst->implicitBuffers.multisampleTexture->arraySize() == arraySize
+                && dst->implicitBuffers.multisampleTexture->flags().testFlags(multisampleTextureFlags))
+            {
+                colorBuffer.reset(dst->implicitBuffers.multisampleTexture);
+                dst->implicitBuffers.multisampleTexture = nullptr;
+            }
+        }
+    }
+
+    dst->implicitBuffers.reset(rhi);
+
+    if (!depthStencil) {
+        depthStencil.reset(rhi->newTextureArray(QRhiTexture::D24S8, arraySize, pixelSize, sampleCount, QRhiTexture::RenderTarget));
+        depthStencil->setName(QByteArrayLiteral("Depth-stencil buffer (multiview) for QQuickRenderTarget"));
+        if (!depthStencil->create()) {
+            qWarning("Failed to build depth-stencil texture array for QQuickRenderTarget");
+            return false;
+        }
+    }
+
+    if (multisampleResolve && !colorBuffer) {
+        colorBuffer.reset(rhi->newTextureArray(texture->format(), arraySize, pixelSize, sampleCount, multisampleTextureFlags));
+        colorBuffer->setName(QByteArrayLiteral("Multisample color buffer (multiview) for QQuickRenderTarget"));
         if (!colorBuffer->create()) {
             qWarning("Failed to build multisample texture array for QQuickRenderTarget");
             return false;
@@ -1581,6 +1660,7 @@ static bool createRhiRenderTargetMultiView(QRhiTexture *texture,
     QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
     rtDesc.setDepthTexture(depthStencil.get());
     std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    rt->setName(QByteArrayLiteral("RT for multiview QQuickRenderTarget"));
     std::unique_ptr<QRhiRenderPassDescriptor> rp(rt->newCompatibleRenderPassDescriptor());
     rt->setRenderPassDescriptor(rp.get());
 
@@ -1589,25 +1669,27 @@ static bool createRhiRenderTargetMultiView(QRhiTexture *texture,
         return false;
     }
 
-    dst->renderTarget = rt.release();
-    dst->rpDesc = rp.release();
-    dst->depthStencilTexture = depthStencil.release();
+    dst->rt.renderTarget = rt.release();
+    dst->rt.owns = true;
+    dst->res.rpDesc = rp.release();
+    dst->implicitBuffers.depthStencilTexture = depthStencil.release();
     if (multisampleResolve)
-        dst->multisampleTexture = colorBuffer.release();
+        dst->implicitBuffers.multisampleTexture = colorBuffer.release();
 
-    dst->multiViewCount = arraySize;
-    dst->owns = true; // ownership of the native resource itself is not transferred but the QRhi objects are on us now
+    dst->rt.multiViewCount = arraySize;
 
     return true;
 }
 
 bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst)
 {
+    // dst->implicitBuffers may contain valid objects. If so, and their
+    // properties are suitable, they are expected to be reused. Once taken what
+    // we can reuse, it needs to be reset().
+
     switch (type) {
     case Type::Null:
-        dst->renderTarget = nullptr;
-        dst->paintDevice = nullptr;
-        dst->owns = false;
+        dst->implicitBuffers.reset(rhi);
         return true;
 
     case Type::NativeTexture:
@@ -1622,7 +1704,7 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
         }
         if (!createRhiRenderTarget(texture.get(), pixelSize, sampleCount, multisampleResolve, rhi, dst))
             return false;
-        dst->texture = texture.release();
+        dst->res.texture = texture.release();
     }
         return true;
 
@@ -1639,7 +1721,7 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
         }
         if (!createRhiRenderTargetMultiView(texture.get(), pixelSize, arraySize, sampleCount, multisampleResolve, rhi, dst))
              return false;
-        dst->texture = texture.release();
+        dst->res.texture = texture.release();
     }
         return true;
 
@@ -1652,26 +1734,26 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
         }
         if (!createRhiRenderTargetWithRenderBuffer(renderbuffer.get(), pixelSize, sampleCount, rhi, dst))
             return false;
-        dst->renderBuffer = renderbuffer.release();
+        dst->res.renderBuffer = renderbuffer.release();
     }
         return true;
 
     case Type::RhiRenderTarget:
-        dst->renderTarget = u.rhiRt;
-        dst->rpDesc = u.rhiRt->renderPassDescriptor(); // just for QQuickWindowRenderTarget::reset()
-        dst->owns = false;
-        if (dst->renderTarget->resourceType() == QRhiResource::TextureRenderTarget) {
-            auto texRt = static_cast<QRhiTextureRenderTarget *>(dst->renderTarget);
+        dst->implicitBuffers.reset(rhi);
+        dst->rt.renderTarget = u.rhiRt;
+        dst->rt.owns = false;
+        if (dst->rt.renderTarget->resourceType() == QRhiResource::TextureRenderTarget) {
+            auto texRt = static_cast<QRhiTextureRenderTarget *>(dst->rt.renderTarget);
             const QRhiTextureRenderTargetDescription desc = texRt->description();
             bool first = true;
             for (auto it = desc.cbeginColorAttachments(), end = desc.cendColorAttachments(); it != end; ++it) {
                 if (it->multiViewCount() <= 1)
                     continue;
-                if (first || dst->multiViewCount == it->multiViewCount()) {
+                if (first || dst->rt.multiViewCount == it->multiViewCount()) {
                     first = false;
                     if (it->texture() && it->texture()->flags().testFlag(QRhiTexture::TextureArray)) {
                         if (it->texture()->arraySize() >= it->layer() + it->multiViewCount()) {
-                            dst->multiViewCount = it->multiViewCount();
+                            dst->rt.multiViewCount = it->multiViewCount();
                         } else {
                             qWarning("Invalid QQuickRenderTarget; needs at least %d elements in texture array, got %d",
                                      it->layer() + it->multiViewCount(),
@@ -1684,7 +1766,7 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
                     }
                 } else {
                     qWarning("Inconsistent multiViewCount in QQuickRenderTarget (was %d, now found an attachment with %d)",
-                             dst->multiViewCount, it->multiViewCount());
+                             dst->rt.multiViewCount, it->multiViewCount());
                     return false;
                 }
             }
@@ -1692,15 +1774,13 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
         return true;
 
     case Type::PaintDevice:
-        dst->paintDevice = u.paintDevice;
-        dst->owns = false;
+        dst->implicitBuffers.reset(rhi);
+        dst->sw.paintDevice = u.paintDevice;
+        dst->sw.owns = false;
         return true;
-
-    default:
-        break;
     }
 
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 QT_END_NAMESPACE

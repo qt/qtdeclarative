@@ -475,32 +475,37 @@ void forceUpdate(QQuickItem *item)
         forceUpdate(items.at(i));
 }
 
-void QQuickWindowRenderTarget::reset(QRhi *rhi)
+void QQuickWindowRenderTarget::reset(QRhi *rhi, ResetFlags flags)
 {
-    if (owns) {
-        if (rhi) {
-            delete renderTarget;
-            delete rpDesc;
-            delete texture;
-            delete renderBuffer;
-            delete depthStencil;
-            delete depthStencilTexture;
-            delete multisampleTexture;
-        }
+    if (rhi) {
+        if (rt.owns)
+            delete rt.renderTarget;
 
-        delete paintDevice;
+        delete res.texture;
+        delete res.renderBuffer;
+        delete res.rpDesc;
     }
 
-    renderTarget = nullptr;
-    rpDesc = nullptr;
-    texture = nullptr;
-    renderBuffer = nullptr;
-    depthStencil = nullptr;
-    depthStencilTexture = nullptr;
-    multisampleTexture = nullptr;
-    paintDevice = nullptr;
-    owns = false;
-    multiViewCount = 1;
+    rt = {};
+    res = {};
+
+    if (!flags.testFlag(ResetFlag::KeepImplicitBuffers))
+        implicitBuffers.reset(rhi);
+
+    if (sw.owns)
+        delete sw.paintDevice;
+
+    sw = {};
+}
+
+void QQuickWindowRenderTarget::ImplicitBuffers::reset(QRhi *rhi)
+{
+    if (rhi) {
+        delete depthStencil;
+        delete depthStencilTexture;
+        delete multisampleTexture;
+    }
+    *this = {};
 }
 
 void QQuickWindowPrivate::invalidateFontData(QQuickItem *item)
@@ -517,19 +522,18 @@ void QQuickWindowPrivate::invalidateFontData(QQuickItem *item)
 void QQuickWindowPrivate::ensureCustomRenderTarget()
 {
     // resolve() can be expensive when importing an existing native texture, so
-    // it is important to only do it when the QQuickRenderTarget* was really changed
+    // it is important to only do it when the QQuickRenderTarget was really changed.
     if (!redirect.renderTargetDirty)
         return;
 
     redirect.renderTargetDirty = false;
 
-    redirect.rt.reset(rhi);
+    redirect.rt.reset(rhi, QQuickWindowRenderTarget::ResetFlag::KeepImplicitBuffers);
 
-    // a default constructed QQuickRenderTarget means no redirection
-    if (customRenderTarget.isNull())
-        return;
-
-    QQuickRenderTargetPrivate::get(&customRenderTarget)->resolve(rhi, &redirect.rt);
+    if (!QQuickRenderTargetPrivate::get(&customRenderTarget)->resolve(rhi, &redirect.rt)) {
+        qWarning("Failed to set up render target redirection for QQuickWindow");
+        redirect.rt.reset(rhi);
+    }
 }
 
 void QQuickWindowPrivate::setCustomCommandBuffer(QRhiCommandBuffer *cb)
@@ -608,8 +612,8 @@ int QQuickWindowPrivate::multiViewCount()
 {
     if (rhi) {
         ensureCustomRenderTarget();
-        if (redirect.rt.renderTarget)
-            return redirect.rt.multiViewCount;
+        if (redirect.rt.rt.renderTarget)
+            return redirect.rt.rt.multiViewCount;
     }
 
     // Note that on QRhi level 0 and 1 are often used interchangeably, as both mean
@@ -617,6 +621,15 @@ int QQuickWindowPrivate::multiViewCount()
     // (no-multiview), so that higher layers (effects, materials) do not need to
     // handle both 0 and 1, only 1.
     return 1;
+}
+
+QRhiRenderTarget *QQuickWindowPrivate::activeCustomRhiRenderTarget()
+{
+    if (rhi) {
+        ensureCustomRenderTarget();
+        return redirect.rt.rt.renderTarget;
+    }
+    return nullptr;
 }
 
 void QQuickWindowPrivate::renderSceneGraph()
@@ -632,8 +645,8 @@ void QQuickWindowPrivate::renderSceneGraph()
         QRhiRenderTarget *rt;
         QRhiRenderPassDescriptor *rp;
         QRhiCommandBuffer *cb;
-        if (redirect.rt.renderTarget) {
-            rt = redirect.rt.renderTarget;
+        if (redirect.rt.rt.renderTarget) {
+            rt = redirect.rt.rt.renderTarget;
             rp = rt->renderPassDescriptor();
             if (!rp) {
                 qWarning("Custom render target is set but no renderpass descriptor has been provided.");
@@ -656,7 +669,7 @@ void QQuickWindowPrivate::renderSceneGraph()
         sgRenderTarget = QSGRenderTarget(rt, rp, cb);
         sgRenderTarget.multiViewCount = multiViewCount();
     } else {
-        sgRenderTarget = QSGRenderTarget(redirect.rt.paintDevice);
+        sgRenderTarget = QSGRenderTarget(redirect.rt.sw.paintDevice);
     }
 
     context->beginNextFrame(renderer,
@@ -671,10 +684,10 @@ void QQuickWindowPrivate::renderSceneGraph()
 
     const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
     QSize pixelSize;
-    if (redirect.rt.renderTarget)
-        pixelSize = redirect.rt.renderTarget->pixelSize();
-    else if (redirect.rt.paintDevice)
-        pixelSize = QSize(redirect.rt.paintDevice->width(), redirect.rt.paintDevice->height());
+    if (redirect.rt.rt.renderTarget)
+        pixelSize = redirect.rt.rt.renderTarget->pixelSize();
+    else if (redirect.rt.sw.paintDevice)
+        pixelSize = QSize(redirect.rt.sw.paintDevice->width(), redirect.rt.sw.paintDevice->height());
     else if (rhi)
         pixelSize = swapchain->currentPixelSize();
     else // software or other backend
