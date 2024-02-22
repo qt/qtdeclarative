@@ -1308,6 +1308,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("dontConfuseMemberPrintWithGlobalPrint") << QStringLiteral("findMemberPrint.qml");
     QTest::newRow("groupedAttachedLayout") << QStringLiteral("groupedAttachedLayout.qml");
     QTest::newRow("QQmlScriptString") << QStringLiteral("scriptstring.qml");
+    QTest::newRow("QEventPoint") << QStringLiteral("qEventPoint.qml");
 }
 
 void TestQmllint::cleanQmlCode()

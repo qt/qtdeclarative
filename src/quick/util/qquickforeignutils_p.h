@@ -99,10 +99,18 @@ struct QEventPointForeign
     QML_ADDED_IN_VERSION(6, 5)
 };
 
+// Prevent the same QEventPoint type from being exported into qmltypes
+// twice, as a value type and a namespace.
+// TODO: Remove once QTBUG-115855 is fixed.
+struct QEventPointDerived : public QEventPoint
+{
+    Q_GADGET
+};
+
 namespace QEventPointForeignNamespace
 {
     Q_NAMESPACE
-    QML_FOREIGN_NAMESPACE(QEventPoint)
+    QML_FOREIGN_NAMESPACE(QEventPointDerived)
     QML_NAMED_ELEMENT(EventPoint)
     QML_ADDED_IN_VERSION(6, 6)
 };
