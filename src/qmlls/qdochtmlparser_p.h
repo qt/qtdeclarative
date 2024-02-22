@@ -23,14 +23,25 @@ class QDocHtmlExtractor
 {
 public:
     enum class ExtractionMode : char { Simplified, Extended };
-    enum class ElementType : char { QmlType, QmlProperty };
+    enum class ElementType : char {
+        QmlType,
+        QmlProperty,
+        QmlMethod,
+        QmlSignal
+    };
+
+    struct Element {
+        QString name;
+        ElementType type;
+    };
 
     QDocHtmlExtractor(const QString &code);
-    QString extract(const QString &elementName, ElementType type, ExtractionMode extractionMode);
+    QString extract(const Element &element, ExtractionMode extractionMode);
 
 private:
     QString parseForQmlType(const QString &element, ExtractionMode mode);
     QString parseForQmlProperty(const QString &element, ExtractionMode mode = ExtractionMode::Simplified);
+    QString parseForQmlMethodOrSignal(const QString &functionName, ExtractionMode mode);
 
     const QString &m_code;
 };

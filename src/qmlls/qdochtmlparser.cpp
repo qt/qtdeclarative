@@ -101,21 +101,21 @@ QDocHtmlExtractor::QDocHtmlExtractor(const QString &code) : m_code{ code }
 {
 }
 
-QString QDocHtmlExtractor::extract(const QString &elementName, ElementType type, ExtractionMode mode)
+QString QDocHtmlExtractor::extract(const QDocHtmlExtractor::Element &element, ExtractionMode mode)
 {
-    if (elementName.isEmpty())
-        return {};
-
     QString result;
-    switch (type) {
+    switch (element.type) {
     case ElementType::QmlType:
-        result = parseForQmlType(elementName, mode);
+        result = parseForQmlType(element.name, mode);
         break;
 
     case ElementType::QmlProperty:
-        result = parseForQmlProperty(elementName, mode);
+        result = parseForQmlProperty(element.name, mode);
         break;
-
+    case ElementType::QmlMethod:
+    case ElementType::QmlSignal:
+        result = parseForQmlMethodOrSignal(element.name, mode);
+        break;
     default:
         return {};
     }
@@ -174,6 +174,38 @@ QString QDocHtmlExtractor::parseForQmlProperty(const QString &element, Extractio
         return {};
 
     contents = contents.mid(startIndex);
+    if (mode == ExtractionMode::Simplified)
+        processOutput(&contents);
+    return contents;
+}
+
+QString QDocHtmlExtractor::parseForQmlMethodOrSignal(const QString &functionName, ExtractionMode mode)
+{
+    // the case with <!-- $$$childAt[overload1]$$$childAtrealreal -->
+    QString mark = QString::fromLatin1("$$$%1[overload1]$$$%1").arg(functionName);
+    qsizetype startIndex = m_code.indexOf(mark);
+    if (startIndex != -1) {
+        startIndex = m_code.indexOf("-->"_L1, startIndex + mark.length());
+        if (startIndex == -1)
+            return {};
+    } else {
+        // it could be part of the method list
+        mark = QString::fromLatin1("<span class=\"name\">%1</span>")
+                .arg(functionName);
+        startIndex = m_code.indexOf(mark);
+        if (startIndex != -1)
+            startIndex += mark.length();
+        else
+            return {};
+    }
+
+    startIndex = m_code.indexOf(QLatin1String("<div class=\"qmldoc\"><p>"), startIndex);
+    if (startIndex == -1)
+        return {};
+
+    QString endMark = QString::fromLatin1("<!-- @@@");
+    qsizetype endIndex = m_code.indexOf(endMark, startIndex);
+    QString contents = m_code.mid(startIndex, endIndex);
     if (mode == ExtractionMode::Simplified)
         processOutput(&contents);
     return contents;
