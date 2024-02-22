@@ -3,6 +3,7 @@
 
 #include <QtQuick/private/qandroidquickviewembedding_p.h>
 
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qjnienvironment.h>
 #include <QtCore/qjniobject.h>
 #include <QtCore/qjniarray.h>
@@ -392,10 +393,12 @@ namespace QtAndroidQuickViewEmbedding
                          signalMethod.methodSignature().constData(), javaArgType.constData());
             }
 
-            listenerInfo.listener
-                .callMethod<void, jstring, jobject>("onSignalEmitted",
-                                                    jSignalMethodName.object<jstring>(),
-                                                    jValue.object());
+            QNativeInterface::QAndroidApplication::runOnAndroidMainThread(
+                [listenerInfo, jSignalMethodName, jValue]() {
+                    listenerInfo.listener.callMethod<void, jstring, jobject>("onSignalEmitted",
+                                                            jSignalMethodName.object<jstring>(),
+                                                            jValue.object());
+                });
         }
     }
 
