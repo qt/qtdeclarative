@@ -1,6 +1,6 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // Copyright (C) 2016 basysKom GmbH.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QQmlEngine>

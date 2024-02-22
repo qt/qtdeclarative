@@ -1,5 +1,5 @@
 // Copyright (C) 2021 Alexander Akulich <akulichalexander@gmail.com>
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 import QtTest 1.0
 
 TestCase {
