@@ -2869,7 +2869,7 @@ void QQuickTextEditPrivate::init()
 #if QT_CONFIG(cursor)
     updateMouseCursorShape();
 #endif
-    setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
+    setSizePolicy(QLayoutPolicy::Expanding, QLayoutPolicy::Expanding);
 }
 
 void QQuickTextEditPrivate::resetInputMethod()

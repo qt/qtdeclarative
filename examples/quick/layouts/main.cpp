@@ -7,6 +7,7 @@
 int main(int argc, char* argv[])
 {
     QGuiApplication app(argc, argv);
+    QCoreApplication::setAttribute(Qt::AA_QtQuickUseDefaultSizePolicy);
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/qt/qml/layouts/layouts.qml")));

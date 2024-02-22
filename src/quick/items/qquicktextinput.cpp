@@ -2887,7 +2887,7 @@ void QQuickTextInputPrivate::init()
     }
 
     m_inputControl = new QInputControl(QInputControl::LineEdit, q);
-    setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
+    setSizePolicy(QLayoutPolicy::Expanding, QLayoutPolicy::Fixed);
 }
 
 void QQuickTextInputPrivate::cancelInput()
