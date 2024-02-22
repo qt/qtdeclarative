@@ -618,7 +618,7 @@ QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent)
     Q_D(QQuickRangeSlider);
     d->first = new QQuickRangeSliderNode(0.0, this);
     d->second = new QQuickRangeSliderNode(1.0, this);
-    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
+    d->setSizePolicy(QLayoutPolicy::Expanding, QLayoutPolicy::Fixed);
 
     setFlag(QQuickItem::ItemIsFocusScope);
 #ifdef Q_OS_MACOS
@@ -981,9 +981,9 @@ void QQuickRangeSlider::setOrientation(Qt::Orientation orientation)
         return;
 
     if (orientation == Qt::Horizontal)
-        d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
+        d->setSizePolicy(QLayoutPolicy::Expanding, QLayoutPolicy::Fixed);
     else
-        d->setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Preferred);
+        d->setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Expanding);
 
     d->orientation = orientation;
     emit orientationChanged();

@@ -29,8 +29,6 @@ ApplicationWindow {
         GroupBox {
             id: rowBox
             title: qsTr("Row layout")
-            Layout.fillWidth: true
-            Layout.fillHeight: false
             Layout.minimumWidth: rowLayout.Layout.minimumWidth + 30
 
             RowLayout {
@@ -38,11 +36,9 @@ ApplicationWindow {
                 anchors.fill: parent
                 TextField {
                     placeholderText: qsTr("This wants to grow horizontally")
-                    Layout.fillWidth: true
                 }
                 Button {
                     text: qsTr("Button")
-                    Layout.fillWidth: false
                 }
             }
         }
@@ -50,8 +46,6 @@ ApplicationWindow {
         GroupBox {
             id: gridBox
             title: qsTr("Grid layout")
-            Layout.fillWidth: true
-            Layout.fillHeight: false
             Layout.minimumWidth: gridLayout.Layout.minimumWidth + 30
 
             GridLayout {
@@ -73,8 +67,6 @@ ApplicationWindow {
                         + qsTr("All items in the GridLayout are implicitly positioned from top to bottom.")
                     wrapMode: TextArea.WordWrap
                     Layout.rowSpan: 3
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
                     Layout.minimumHeight: implicitHeight
                     Layout.minimumWidth: 100     // guesstimate, should be size of largest word
                 }
@@ -84,8 +76,6 @@ ApplicationWindow {
             id: t3
             text: qsTr("This fills the whole cell")
             Layout.minimumHeight: 30
-            Layout.fillHeight: true
-            Layout.fillWidth: true
         }
         GroupBox {
             id: stackBox
@@ -93,8 +83,6 @@ ApplicationWindow {
             implicitWidth: 200
             implicitHeight: 60
             Layout.minimumHeight: 60
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             StackLayout {
                 id: stackLayout
                 anchors.fill: parent
