@@ -2539,7 +2539,7 @@ static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &parentForC
              std::array<QUtf8StringView, 6>{ "", "readonly ", "default ", "default required ",
                                              "required default ", "required " }) {
             // readonly properties require an initializer
-            if (view != "readonly ") {
+            if (view != QUtf8StringView("readonly ")) {
                 res.append(makeSnippet(
                         QByteArray(view.data()).append("property type name;"),
                         QByteArray(view.data()).append("property ${1:type} ${0:name};")));
