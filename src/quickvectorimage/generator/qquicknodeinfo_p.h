@@ -34,6 +34,8 @@ struct NodeInfo
     qreal opacity;
     bool isDefaultTransform;
     bool isDefaultOpacity;
+    bool isVisible;
+    bool isDisplayed; // TODO: Map to display enum in QtSvg
 };
 
 struct ImageNodeInfo : NodeInfo

@@ -430,9 +430,7 @@ bool QSvgVisitorImpl::visitStructureNodeStart(const QSvgStructureNode *node)
     info.isPathContainer = isPathContainer(node);
     info.stage = StructureNodeStage::Start;
 
-    m_generator->generateStructureNode(info);
-
-    return true;
+    return m_generator->generateStructureNode(info);;
 }
 
 void QSvgVisitorImpl::visitStructureNodeEnd(const QSvgStructureNode *node)
@@ -461,9 +459,7 @@ bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgTinyDocument *node)
     info.isPathContainer = isPathContainer(node);
     info.stage = StructureNodeStage::Start;
 
-    m_generator->generateRootNode(info);
-
-    return true;
+    return m_generator->generateRootNode(info);;
 }
 
 void QSvgVisitorImpl::visitDocumentNodeEnd(const QSvgTinyDocument *node)
@@ -488,6 +484,8 @@ void QSvgVisitorImpl::fillCommonNodeInfo(const QSvgNode *node, NodeInfo &info)
     info.transform = !info.isDefaultTransform ? node->style().transform->qtransform() : QTransform();
     info.isDefaultOpacity = node->style().opacity.isDefault();
     info.opacity = !info.isDefaultOpacity ? node->style().opacity->opacity() : 1.0;
+    info.isVisible = node->isVisible();
+    info.isDisplayed = node->displayMode() != QSvgNode::DisplayMode::NoneMode;
 }
 
 void QSvgVisitorImpl::handleBaseNodeSetup(const QSvgNode *node)

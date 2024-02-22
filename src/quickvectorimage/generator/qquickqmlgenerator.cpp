@@ -133,6 +133,9 @@ bool QQuickQmlGenerator::generateDefsNode(const NodeInfo &info)
 
 void QQuickQmlGenerator::generateImageNode(const ImageNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     QString fn = info.image.hasAlphaChannel() ? QStringLiteral("svg_asset_%1.png").arg(info.image.cacheKey())
                                               : QStringLiteral("svg_asset_%1.jpg").arg(info.image.cacheKey());
     // For now we just create a copy of the image in the current directory
@@ -157,6 +160,9 @@ void QQuickQmlGenerator::generateImageNode(const ImageNodeInfo &info)
 
 void QQuickQmlGenerator::generatePath(const PathNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     if (m_inShapeItem) {
         if (!info.isDefaultTransform)
             qWarning() << "Skipped transform for node" << info.nodeId << "type" << info.typeName << "(this is not supposed to happen)";
@@ -285,6 +291,9 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
 
 void QQuickQmlGenerator::generateNode(const NodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     stream() << "// Missing Implementation for SVG Node: " << info.typeName;
     stream() << "// Adding an empty Item and skipping";
     stream() << "Item {";
@@ -294,6 +303,9 @@ void QQuickQmlGenerator::generateNode(const NodeInfo &info)
 
 void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     static int counter = 0;
     stream() << "Item {";
     generateNodeBase(info);
@@ -367,6 +379,9 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
 
 void QQuickQmlGenerator::generateUseNode(const UseNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     if (info.stage == StructureNodeStage::Start) {
         stream() << "Item {";
         generateNodeBase(info);
@@ -379,8 +394,11 @@ void QQuickQmlGenerator::generateUseNode(const UseNodeInfo &info)
     }
 }
 
-void QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
+bool QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return false;
+
     if (info.stage == StructureNodeStage::Start) {
         if (!info.forceSeparatePaths && info.isPathContainer) {
             stream() << shapeName() <<" {";
@@ -414,13 +432,16 @@ void QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
         stream() << "}";
         m_inShapeItem = false;
     }
+
+    return true;
 }
 
-void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
+bool QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
 {
     m_indentLevel = 0;
-    if (info.stage == StructureNodeStage::Start) {
-        const QStringList comments = m_commentString.split(u'\n');
+    const QStringList comments = m_commentString.split(u'\n');
+
+    if (!isNodeVisible(info)) {
         if (comments.isEmpty())
             stream() << "// Generated from SVG";
         else
@@ -429,7 +450,31 @@ void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
 
         stream() << "import QtQuick";
         stream() << "import QtQuick.Shapes" << Qt::endl;
+        stream() << "Item {";
+        m_indentLevel++;
 
+        double w = info.size.width();
+        double h = info.size.height();
+        if (w > 0)
+            stream() << "implicitWidth: " << w;
+        if (h > 0)
+            stream() << "implicitHeight: " << h;
+
+        m_indentLevel--;
+        stream() << "}";
+
+        return false;
+    }
+
+    if (info.stage == StructureNodeStage::Start) {
+        if (comments.isEmpty())
+            stream() << "// Generated from SVG";
+        else
+            for (const auto &comment : comments)
+                stream() << "// " << comment;
+
+        stream() << "import QtQuick";
+        stream() << "import QtQuick.Shapes" << Qt::endl;
         stream() << "Item {";
         m_indentLevel++;
 
@@ -456,6 +501,8 @@ void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
         stream() << "}";
         m_inShapeItem = false;
     }
+
+    return true;
 }
 
 QString QQuickQmlGenerator::indent()

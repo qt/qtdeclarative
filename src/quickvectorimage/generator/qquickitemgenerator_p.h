@@ -34,8 +34,8 @@ protected:
     void generateNode(const NodeInfo &info) override;
     void generateTextNode(const TextNodeInfo &info) override;
     void generateUseNode(const UseNodeInfo &info) override;
-    void generateStructureNode(const StructureNodeInfo &info) override;
-    void generateRootNode(const StructureNodeInfo &info) override;
+    bool generateStructureNode(const StructureNodeInfo &info) override;
+    bool generateRootNode(const StructureNodeInfo &info) override;
     void outputShapePath(const PathNodeInfo &info, const QPainterPath *path, const QQuadPath *quadPath, QQuickVectorImageGenerator::PathSelector pathSelector, const QRectF &boundingRect) override;
 
 private:

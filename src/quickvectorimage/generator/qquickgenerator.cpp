@@ -69,4 +69,12 @@ void QQuickGenerator::optimizePaths(const PathNodeInfo &info)
     }
 }
 
+bool QQuickGenerator::isNodeVisible(const NodeInfo &info)
+{
+    if (!info.isVisible || !info.isDisplayed)
+        return false;
+
+    return true;
+}
+
 QT_END_NAMESPACE
