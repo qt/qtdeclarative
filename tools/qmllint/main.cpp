@@ -296,7 +296,7 @@ All warnings can be set to three levels:
     QStringList defaultQmldirFiles;
     if (parser.isSet(qmldirFilesOption)) {
         defaultQmldirFiles = parser.values(qmldirFilesOption);
-    } else {
+    } else if (!parser.isSet(qmlImportNoDefault)){
         // If nothing given explicitly, use the qmldir file from the current directory.
         QFileInfo qmldirFile(QStringLiteral("qmldir"));
         if (qmldirFile.isFile()) {
