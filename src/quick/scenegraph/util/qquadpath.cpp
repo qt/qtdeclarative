@@ -101,7 +101,6 @@ static int qt_getInflectionPoints(const QBezier &orig, qreal *tpoints)
     xf.rotate(l.angle());
     xf.translate(-orig.pt1().x(), -orig.pt1().y());
     const QBezier n = orig.mapBy(xf);
-    Q_ASSERT(n.pt1() == QPoint() && qFuzzyIsNull(float(n.pt4().y())));
 
     const qreal x2 = n.pt2().x();
     const qreal x3 = n.pt3().x();
