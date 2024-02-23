@@ -92,6 +92,7 @@ QQuickMenuBarItem::QQuickMenuBarItem(QQuickItem *parent)
     : QQuickAbstractButton(*(new QQuickMenuBarItemPrivate), parent)
 {
     setFocusPolicy(Qt::NoFocus);
+    d_func()->setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Fixed);
 }
 
 /*!
