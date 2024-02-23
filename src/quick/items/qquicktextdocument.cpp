@@ -119,7 +119,23 @@ QQuickTextDocument::Status QQuickTextDocument::status() const
     return d->status;
 }
 
-void QQuickTextDocumentPrivate::setStatus(QQuickTextDocument::Status s)
+/*!
+    \qmlproperty string QtQuick::TextDocument::errorString
+    \readonly
+    \since 6.7
+
+    This property holds a human-readable string describing the error that
+    occurred during loading or saving, if any; otherwise, an empty string.
+
+    \sa status
+*/
+QString QQuickTextDocument::errorString() const
+{
+    Q_D(const QQuickTextDocument);
+    return d->errorString;
+}
+
+void QQuickTextDocumentPrivate::setStatus(QQuickTextDocument::Status s, const QString &err)
 {
     Q_Q(QQuickTextDocument);
     if (status == s)
@@ -127,6 +143,13 @@ void QQuickTextDocumentPrivate::setStatus(QQuickTextDocument::Status s)
 
     status = s;
     emit q->statusChanged();
+
+    if (errorString == err)
+        return;
+    errorString = err;
+    emit q->errorStringChanged();
+    if (!err.isEmpty())
+        qmlWarning(q) << err;
 }
 
 /*!
@@ -198,11 +221,10 @@ void QQuickTextDocument::setModified(bool modified)
 
 void QQuickTextDocumentPrivate::load()
 {
-    Q_Q(QQuickTextDocument);
     auto *doc = editor->document();
     if (!doc) {
-        qmlWarning(q) << QQuickTextDocument::tr("Null document object: cannot load");
-        setStatus(QQuickTextDocument::Status::ReadError);
+        setStatus(QQuickTextDocument::Status::ReadError,
+                  QQuickTextDocument::tr("Null document object: cannot load"));
         return;
     }
     const QQmlContext *context = qmlContext(editor);
@@ -227,7 +249,7 @@ void QQuickTextDocumentPrivate::load()
         else
             detectedFormat = Qt::PlainText;
         if (file.open(QFile::ReadOnly | QFile::Text)) {
-            setStatus(QQuickTextDocument::Status::Loading);
+            setStatus(QQuickTextDocument::Status::Loading, {});
             QByteArray data = file.readAll();
             doc->setBaseUrl(resolvedUrl.adjusted(QUrl::RemoveFilename));
             const bool plainText = editor->textFormat() == QQuickTextEdit::PlainText;
@@ -253,7 +275,7 @@ void QQuickTextDocumentPrivate::load()
             {
                 doc->setPlainText(QString::fromUtf8(data));
             }
-            setStatus(QQuickTextDocument::Status::Loaded);
+            setStatus(QQuickTextDocument::Status::Loaded, {});
             qCDebug(lcTextDoc) << editor << "loaded" << filePath
                                << "as" << editor->textFormat() << "detected" << detectedFormat
 #if QT_CONFIG(mimetype)
@@ -263,16 +285,16 @@ void QQuickTextDocumentPrivate::load()
             doc->setModified(false);
             return;
         }
-        qmlWarning(q) << QQuickTextDocument::tr("Failed to read: %1").arg(file.errorString());
+        setStatus(QQuickTextDocument::Status::ReadError,
+                  QQuickTextDocument::tr("Failed to read: %1").arg(file.errorString()));
     } else {
-        qmlWarning(q) << QQuickTextDocument::tr("%1 does not exist").arg(filePath);
+        setStatus(QQuickTextDocument::Status::ReadError,
+                  QQuickTextDocument::tr("%1 does not exist").arg(filePath));
     }
-    setStatus(QQuickTextDocument::Status::ReadError);
 }
 
 void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
 {
-    Q_Q(QQuickTextDocument);
     auto *doc = editor->document();
     if (!doc)
         return;
@@ -302,11 +324,11 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
     QFile file(filePath);
     if (!file.open(QFile::WriteOnly | QFile::Truncate |
                    (detectedFormat == Qt::RichText ? QFile::NotOpen : QFile::Text))) {
-        qmlWarning(q) << QQuickTextDocument::tr("Cannot save:") << file.errorString();
-        setStatus(QQuickTextDocument::Status::WriteError);
+        setStatus(QQuickTextDocument::Status::WriteError,
+                  QQuickTextDocument::tr("Cannot save: %1").arg(file.errorString()));
         return;
     }
-    setStatus(QQuickTextDocument::Status::Saving);
+    setStatus(QQuickTextDocument::Status::Saving, {});
     QByteArray raw;
 
     switch (detectedFormat) {
@@ -333,7 +355,7 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
 
     file.write(raw);
     file.close();
-    setStatus(QQuickTextDocument::Status::Saved);
+    setStatus(QQuickTextDocument::Status::Saved, {});
     doc->setModified(false);
 }
 
@@ -420,8 +442,8 @@ void QQuickTextDocument::saveAs(const QUrl &url)
 {
     Q_D(QQuickTextDocument);
     if (!url.isLocalFile()) {
-        qmlWarning(this) << QQuickTextDocument::tr("Can only save to local files");
-        d->setStatus(QQuickTextDocument::Status::NonLocalFileError);
+        d->setStatus(QQuickTextDocument::Status::NonLocalFileError,
+                     QQuickTextDocument::tr("Can only save to local files"));
         return;
     }
     d->writeTo(url);

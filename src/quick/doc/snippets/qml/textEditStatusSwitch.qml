@@ -7,6 +7,7 @@ TextEdit {
     id: edit
     width: 300
     height: 200
+    textFormat: TextEdit.MarkdownText
     textDocument.source: "example.md"
     wrapMode: TextEdit.WordWrap
 
@@ -22,12 +23,8 @@ TextEdit {
                 return qsTr("Loading ") + edit.textDocument.source
             case TextDocument.Loaded:
                 return qsTr("Loaded ") + edit.textDocument.source
-            case TextDocument.ReadError:
-                return qsTr("Failed to load ") + edit.textDocument.source
-            case TextDocument.NonLocalFileError:
-                return qsTr("Not a local file: ") + edit.textDocument.source
             default:
-                return "Unexpected status " + edit.textDocument.status + ": " + edit.textDocument.source
+                return edit.textDocument.errorString
             }
     }
 }
