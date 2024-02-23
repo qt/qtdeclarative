@@ -1900,6 +1900,14 @@ static int numDefinedArguments(CallData *callArgs)
     return numDefinedArguments;
 }
 
+static bool requiresStrictArguments(const QQmlObjectOrGadget &object)
+{
+    const QMetaObject *metaObject = object.metaObject();
+    const int indexOfClassInfo = metaObject->indexOfClassInfo("QML.StrictArguments");
+    return indexOfClassInfo != -1
+            && metaObject->classInfo(indexOfClassInfo).value() == QByteArrayView("true");
+}
+
 static ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQmlPropertyData &data,
                                       ExecutionEngine *engine, CallData *callArgs,
                                       QMetaObject::Call callType = QMetaObject::InvokeMetaMethod)
@@ -1914,11 +1922,7 @@ static ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQmlPro
     }
 
     auto handleTooManyArguments = [&](int expectedArguments) {
-        const QMetaObject *metaObject = object.metaObject();
-        const int indexOfClassInfo = metaObject->indexOfClassInfo("QML.StrictArguments");
-        if (indexOfClassInfo != -1
-                && QString::fromUtf8(metaObject->classInfo(indexOfClassInfo).value())
-                    == QStringLiteral("true")) {
+        if (requiresStrictArguments(object)) {
             engine->throwError(QStringLiteral("Too many arguments"));
             return false;
         }
