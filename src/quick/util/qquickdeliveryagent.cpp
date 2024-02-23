@@ -1017,7 +1017,8 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
     }
 
     // Prune the list for items that are no longer hovered
-    for (auto it = hoverItems.begin(); it != hoverItems.end();) {
+    auto hoverItemsCopy = hoverItems;
+    for (auto it = hoverItemsCopy.begin(); it != hoverItemsCopy.end();) {
         auto item = (*it).first.data();
         auto hoverId = (*it).second;
         if (hoverId == currentHoverId) {
@@ -1031,9 +1032,12 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
                 const bool clearHover = true;
                 deliverHoverEventToItem(item, scenePos, lastScenePos, modifiers, timestamp, clearHover);
             }
-            it = hoverItems.erase(it);
+            it = hoverItemsCopy.erase(it);
         }
     }
+    // delivery of the events might have cleared hoverItems, so don't overwrite if empty
+    if (!hoverItems.isEmpty())
+        hoverItems = hoverItemsCopy;
 
     const bool itemsAreHovered = !hoverItems.isEmpty();
     return itemsWasHovered || itemsAreHovered;
@@ -1133,7 +1137,8 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
     const QPointF localPos = item->mapFromScene(scenePos);
     const QPointF globalPos = item->mapToGlobal(localPos);
     const bool isHovering = item->contains(localPos);
-    const bool wasHovering = hoverItems.contains(item);
+    const auto hoverItemIterator = hoverItems.find(item);
+    const bool wasHovering = hoverItemIterator != hoverItems.end() && hoverItemIterator.value() != 0;
 
     qCDebug(lcHoverTrace) << "item:" << item << "scene pos:" << scenePos << "localPos:" << localPos
                           << "wasHovering:" << wasHovering << "isHovering:" << isHovering;
@@ -1149,14 +1154,18 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
         // Also set hoveredLeafItemFound, so that only propagate in a straight
         // line towards the root from now on.
         hoveredLeafItemFound = true;
-        hoverItems[item] = currentHoverId;
+        if (hoverItemIterator != hoverItems.end())
+            hoverItemIterator.value() = currentHoverId;
+        else
+            hoverItems[item] = currentHoverId;
+
         if (wasHovering)
             accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp);
         else
             accepted = sendHoverEvent(QEvent::HoverEnter, item, scenePos, lastScenePos, modifiers, timestamp);
     } else if (wasHovering) {
         // A leave should never stop propagation
-        hoverItems[item] = 0;
+        hoverItemIterator.value() = 0;
         sendHoverEvent(QEvent::HoverLeave, item, scenePos, lastScenePos, modifiers, timestamp);
     }
 
@@ -1197,7 +1206,10 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
                     // Mark the whole item as updated, even if only the handler is
                     // actually in a hovered state (because of HoverHandler.margins)
                     hoveredLeafItemFound = true;
-                    hoverItems[item] = currentHoverId;
+                    if (hoverItemIterator != hoverItems.end())
+                        hoverItemIterator.value() = currentHoverId;
+                    else
+                        hoverItems[item] = currentHoverId;
                     if (hh->isBlocking()) {
                         qCDebug(lcHoverTrace) << "skipping rest of hover delivery due to blocking" << hh;
                         accepted = true;

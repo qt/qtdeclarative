@@ -140,6 +140,7 @@ private slots:
     void hoverPropagation_siblings();
     void hoverEnterOnItemMove();
     void hoverEnterOnItemMoveAfterHide();
+    void clearItemsOnHoverLeave();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -582,6 +583,15 @@ void tst_qquickdeliveryagent::hoverEnterOnItemMoveAfterHide()
     hoverItem.setY(100);
     deliveryAgent->flushFrameSynchronousEvents(&window);
     QCOMPARE(hoverItem.hoverEnter, false);
+}
+
+void tst_qquickdeliveryagent::clearItemsOnHoverLeave()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("clearItemsOnHoverLeave.qml")));
+
+    QTest::mouseMove(&window, QPoint(10, 205)); // Move to MouseArea that triggers close
+    QTest::mouseMove(&window, QPoint(10, 405)); // Exit MouseArea that triggers close.
 }
 
 QTEST_MAIN(tst_qquickdeliveryagent)
