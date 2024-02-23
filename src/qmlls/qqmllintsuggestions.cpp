@@ -8,11 +8,12 @@
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtQmlDom/private/qqmldom_utils_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qdir.h>
+#include <QtCore/qfileinfo.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qtimer.h>
-#include <QtCore/qdebug.h>
-#include <QtCore/qfileinfo.h>
-#include <QtCore/qdir.h>
+#include <QtCore/qxpfunctional.h>
 #include <chrono>
 
 using namespace QLspSpecification;
