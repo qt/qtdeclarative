@@ -157,22 +157,26 @@ Item {
                 // picker was already visible.
                 enabled: root.interactive
 
-                NumberAnimation {
-                    target: contentContainer
-                    property: "labelOpacity"
-                    from: 1
-                    to: 0
-                }
+                SequentialAnimation {
+                    NumberAnimation {
+                        target: contentContainer
+                        property: "labelOpacity"
+                        from: 1
+                        to: 0
+                        duration: 100
+                    }
 
-                ScriptAction {
-                    script: root.__effectiveMode = root.mode
-                }
+                    ScriptAction {
+                        script: root.__effectiveMode = root.mode
+                    }
 
-                NumberAnimation {
-                    target: contentContainer
-                    property: "labelOpacity"
-                    from: 0
-                    to: 1
+                    NumberAnimation {
+                        target: contentContainer
+                        property: "labelOpacity"
+                        from: 0
+                        to: 1
+                        duration: 100
+                    }
                 }
             },
             Transition {
