@@ -461,13 +461,13 @@ public:
           m_ranges{ ranges },
           m_commentLocation { commentLocation },
           m_startElement{ m_ranges.starts.lowerBound(commentLocation.begin()) },
-          m_endElement{ m_ranges.ends.lowerBound(commentLocation.end()) }
+          m_endElement{ m_ranges.ends.lowerBound(commentLocation.end()) },
+          m_spaces{findSpacesAroundComment()}
     {
     }
 
     void linkCommentWithElement()
     {
-        m_spaces = findSpacesAroundComment();
         if (m_spaces.preNewline < 1) {
             checkElementBeforeComment();
             checkElementAfterComment();
@@ -503,7 +503,7 @@ private:
         but they are not regarded while writing since they could be a part of prenewlines
         of a following comment.
     */
-    SpaceTrace findSpacesAroundComment() const
+    [[nodiscard]] SpaceTrace findSpacesAroundComment() const
     {
         quint32 iPre = m_commentLocation.begin();
         int preNewline = 0;
