@@ -63,11 +63,12 @@ public:
     void writeTo(const QUrl &fileUrl);
     QTextDocument *document() const;
     void setDocument(QTextDocument *doc);
-    void setStatus(QQuickTextDocument::Status s);
+    void setStatus(QQuickTextDocument::Status s, const QString &err);
 
     // so far the QQuickItem given to the QQuickTextDocument ctor is always a QQuickTextEdit
     QQuickTextEdit *editor = nullptr;
     QUrl url;
+    QString errorString;
     Qt::TextFormat detectedFormat = Qt::AutoText; // url's extension, independent of TextEdit.textFormat
     std::optional<QStringConverter::Encoding> encoding; // only relevant for HTML (Qt::RichText)
     QQuickTextDocument::Status status = QQuickTextDocument::Status::Null;

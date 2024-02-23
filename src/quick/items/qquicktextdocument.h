@@ -16,6 +16,7 @@ class Q_QUICK_EXPORT QQuickTextDocument : public QObject
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged REVISION(6, 7))
     Q_PROPERTY(bool modified READ isModified WRITE setModified NOTIFY modifiedChanged REVISION(6, 7))
     Q_PROPERTY(Status status READ status NOTIFY statusChanged REVISION(6, 7))
+    Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged REVISION(6, 7))
 
     QML_NAMED_ELEMENT(TextDocument)
     QML_UNCREATABLE("TextDocument is only available as a property of TextEdit or TextArea.")
@@ -49,12 +50,14 @@ public:
     Q_REVISION(6, 7) Q_INVOKABLE void saveAs(const QUrl &url);
 
     Status status() const;
+    QString errorString() const;
 
 Q_SIGNALS:
     Q_REVISION(6,7) void textDocumentChanged();
     Q_REVISION(6, 7) void sourceChanged();
     Q_REVISION(6, 7) void modifiedChanged();
     Q_REVISION(6, 7) void statusChanged();
+    Q_REVISION(6, 7) void errorStringChanged();
 
 private:
     Q_DISABLE_COPY(QQuickTextDocument)

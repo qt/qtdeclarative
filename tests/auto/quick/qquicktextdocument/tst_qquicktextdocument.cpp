@@ -265,6 +265,7 @@ void tst_qquicktextdocument::sourceAndSave()
     QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 1);
     QCOMPARE(statusChangedSpy.size(), 2); // Loading, then Loaded
     QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Loaded);
+    QVERIFY(qqdoc->errorString().isEmpty());
     const auto *qqdp = QQuickTextDocumentPrivate::get(qqdoc);
     QCOMPARE(qqdp->detectedFormat, expectedTextFormat);
     QCOMPARE_GE(doc->characterCount(), minCharCount);
@@ -283,6 +284,7 @@ void tst_qquicktextdocument::sourceAndSave()
     qqdoc->save();
     QCOMPARE(statusChangedSpy.size(), 4); // Saving, then Saved
     QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Saved);
+    QVERIFY(qqdoc->errorString().isEmpty());
     QFile tf(tmpPath);
     QVERIFY(tf.open(QIODeviceBase::ReadOnly));
     auto readBack = tf.readAll();
@@ -312,13 +314,15 @@ void tst_qquicktextdocument::loadErrorNoSuchFile()
 
     QCOMPARE(statusChangedSpy.size(), 0);
     QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Null);
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*does not exist"));
+    const QRegularExpression err(".*does not exist");
+    QTest::ignoreMessage(QtWarningMsg, err);
     qqdoc->setProperty("source", testFileUrl("nosuchfile.md"));
     QCOMPARE(sourceChangedSpy.size(), 1);
     QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 1);
     qCDebug(lcTests) << "status history" << textEdit->property("statusHistory").toList();
     QCOMPARE(statusChangedSpy.size(), 1);
     QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::ReadError);
+    QVERIFY(qqdoc->errorString().contains(err));
 }
 
 void tst_qquicktextdocument::loadErrorPermissionDenied()
@@ -354,13 +358,15 @@ void tst_qquicktextdocument::loadErrorPermissionDenied()
 
     QCOMPARE(statusChangedSpy.size(), 0);
     QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Null);
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Failed to read: Permission denied"));
+    const QRegularExpression err(".*Failed to read: Permission denied");
+    QTest::ignoreMessage(QtWarningMsg, err);
     qqdoc->setProperty("source", QUrl::fromLocalFile(tmpPath));
     QCOMPARE(sourceChangedSpy.size(), 1);
     QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 1);
     qCDebug(lcTests) << "status history" << textEdit->property("statusHistory").toList();
     QCOMPARE(statusChangedSpy.size(), 1);
     QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::ReadError);
+    QVERIFY(qqdoc->errorString().contains(err));
 }
 
 void tst_qquicktextdocument::overrideTextFormat_data()
