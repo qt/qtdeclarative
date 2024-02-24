@@ -3792,7 +3792,10 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 continue;
             }
 
-            visibleItems.insert(index, item);
+            if (index < visibleItems.size())
+                visibleItems.insert(index, item);
+            else // special case of appending an item to the model - as above
+                visibleItems.append(item);
             if (index == 0)
                 insertResult->changedFirstItem = true;
             if (change.isMove()) {
