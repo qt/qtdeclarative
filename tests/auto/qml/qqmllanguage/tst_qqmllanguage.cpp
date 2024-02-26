@@ -446,6 +446,7 @@ private slots:
     void badInlineComponentAnnotation();
     void manuallyCallSignalHandler();
     void overrideDefaultProperty();
+    void enumScopes();
 
 private:
     QQmlEngine engine;
@@ -8579,6 +8580,20 @@ void tst_qqmllanguage::overrideDefaultProperty()
     QVERIFY(c.isError());
     QCOMPARE(c.errorString(),
              url.toString() + QLatin1String(":5 Cannot assign object to list property \"data\"\n"));
+}
+
+void tst_qqmllanguage::enumScopes()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("enumScopes.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("singletonUnscoped"), false);
+    QCOMPARE(o->property("singletonScoped"), true);
+    QCOMPARE(o->property("nonSingletonUnscoped"), false);
+    QCOMPARE(o->property("nonSingletonScoped"), true);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

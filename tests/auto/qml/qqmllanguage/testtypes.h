@@ -2770,4 +2770,42 @@ public:
     }
 };
 
+
+class Singleton: public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(EnumType enumProperty READ enumProperty CONSTANT)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+    QML_ELEMENT
+    QML_SINGLETON
+public:
+    explicit Singleton(QObject* parent = nullptr) : QObject(parent) {}
+    enum class EnumType {
+        EnumValue1,
+        EnumValue2
+    };
+    Q_ENUM(EnumType);
+    EnumType enumProperty() const {
+        return EnumType::EnumValue2;
+    }
+};
+
+class NonSingleton: public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(EnumType enumProperty READ enumProperty CONSTANT)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+    QML_ELEMENT
+public:
+    explicit NonSingleton(QObject* parent = nullptr) : QObject(parent) {}
+    enum class EnumType {
+        EnumValue1,
+        EnumValue2
+    };
+    Q_ENUM(EnumType);
+    EnumType enumProperty() const {
+        return EnumType::EnumValue2;
+    }
+};
+
 #endif // TESTTYPES_H
