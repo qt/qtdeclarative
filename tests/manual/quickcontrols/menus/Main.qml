@@ -39,6 +39,11 @@ ApplicationWindow {
             ContextAction { text: qsTr("&Open...") }
             ContextAction { text: qsTr("&Save") }
             ContextAction { text: qsTr("Save &As...") }
+            Menu {
+                title: qsTr("Sub...")
+                ContextAction { text: qsTr("Sub action 1") }
+                ContextAction { text: qsTr("Sub action 2") }
+            }
             MenuSeparator { }
             ContextAction { text: qsTr("&Quit") }
             Action {
@@ -51,6 +56,7 @@ ApplicationWindow {
             objectName: "edit"
             title: qsTr("&Edit")
             ContextAction {
+                id: cutAction
                 text: qsTr("Cut")
                 enabled: textArea.selectedText.length > 0
             }
@@ -65,6 +71,11 @@ ApplicationWindow {
 
             MenuSeparator {}
 
+            Action {
+                text: qsTr("Checkable menu")
+                checkable: true
+                checked: true
+            }
             Action {
                 text: qsTr("Remove menu")
                 onTriggered: menuBar.removeMenu(editMenu)
@@ -83,6 +94,7 @@ ApplicationWindow {
             }
         }
         MenuBarItem {
+            id: explicitMenuBarItem
             menu: Menu {
                 id: menuBarItemMenu
                 objectName: "MenuBarItem"
@@ -186,6 +198,12 @@ ApplicationWindow {
             }
         }
 
+        Component {
+            id: menuBarItemComp
+            MenuBarItem {
+            }
+        }
+
         GroupBox {
             title: qsTr("MenuBar")
 
@@ -225,6 +243,22 @@ ApplicationWindow {
                     Button {
                         text: qsTr("Add file menu")
                         onClicked: menuBar.addMenu(fileMenu)
+                    }
+                    Button {
+                        text: "Change labels"
+                        onClicked: {
+                            fileMenu.title = "File changed"
+                            cutAction.text = "Cut changed"
+                        }
+                    }
+                    Button {
+                        text: "toggle delegate"
+                        onClicked: menuBar.delegate = menuBar.delegate ? null : menuBarItemComp
+                    }
+                    Switch {
+                        text: "MenuBarItem visible"
+                        checked: true
+                        onCheckedChanged: explicitMenuBarItem.visible = checked
                     }
                 }
             }
