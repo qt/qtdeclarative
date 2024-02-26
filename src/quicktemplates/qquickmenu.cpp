@@ -258,12 +258,14 @@ QQuickMenu *QQuickMenuPrivate::rootMenu() const
 
 bool QQuickMenuPrivate::useNativeMenu() const
 {
-    // If we're inside a MenuBar, the menubar will decide if we should be
-    // native or not. Otherwise, if we're a sub-menu, the root menu will
-    // decide. Otherwise, we use requestNative.
+    // If we're inside a MenuBar that is native, we need to be
+    // native as well (but not necessarily the other way around).
+    // Otherwise, the root menu (which might be this menu) will decide.
     QQuickMenu *root = rootMenu();
-    if (auto menuBar = QQuickMenuPrivate::get(root)->menuBar.get())
-        return QQuickMenuBarPrivate::get(menuBar)->useNativeMenuBar();
+    if (auto menuBar = QQuickMenuPrivate::get(root)->menuBar.get()) {
+        if (QQuickMenuBarPrivate::get(menuBar)->useNativeMenuBar())
+            return true;
+    }
     return root->requestNative();
 }
 
