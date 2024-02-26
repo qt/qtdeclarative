@@ -3451,7 +3451,8 @@ void tst_qmlls_utils::completions_data()
                };
 
     QTest::newRow("qualifiedTypeCompletionWithoutQualifier")
-            << testFile("completions/qualifiedTypesCompletion.qml") << 9 << 5
+            << testFile("completions/quickcontrols_and_quicktemplates/qualifiedTypesCompletion.qml")
+            << 9 << 5
             << ExpectedCompletions({
                        { u"T.Button"_s, CompletionItemKind::Constructor },
                        { u"Button"_s, CompletionItemKind::Constructor },
@@ -3460,7 +3461,8 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ u"QtQuick"_s, u"vector4d"_s, u"bad"_s, u"onCompleted"_s };
 
     QTest::newRow("qualifiedTypeCompletionWithoutQualifier2")
-            << testFile("completions/qualifiedTypesCompletion.qml") << 10 << 19
+            << testFile("completions/quickcontrols_and_quicktemplates/qualifiedTypesCompletion.qml")
+            << 10 << 19
             << ExpectedCompletions({
                        { u"T.Button"_s, CompletionItemKind::Class },
                        { u"Button"_s, CompletionItemKind::Class },
@@ -3469,20 +3471,22 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ u"QtQuick"_s, u"bad"_s, u"onCompleted"_s };
 
     QTest::newRow("qualifiedTypeCompletionWithQualifier")
-            << testFile("completions/qualifiedTypesCompletion.qml") << 9 << 7
+            << testFile("completions/quickcontrols_and_quicktemplates/qualifiedTypesCompletion.qml")
+            << 9 << 7
             << ExpectedCompletions({
                        { u"Button"_s, CompletionItemKind::Constructor },
                })
-            << QStringList{ u"QtQuick"_s, u"vector4d"_s, attachedTypeName, u"Rectangle"_s,
-                            u"bad"_s, u"onCompleted"_s, u"T.Button"_s };
+            << QStringList{ u"QtQuick"_s, u"vector4d"_s,    attachedTypeName, u"Rectangle"_s,
+                            u"bad"_s,     u"onCompleted"_s, u"T.Button"_s };
 
     QTest::newRow("qualifiedTypeCompletionWithQualifier2")
-            << testFile("completions/qualifiedTypesCompletion.qml") << 10 << 21
+            << testFile("completions/quickcontrols_and_quicktemplates/qualifiedTypesCompletion.qml")
+            << 10 << 21
             << ExpectedCompletions({
                        { u"Button"_s, CompletionItemKind::Class },
                })
             << QStringList{ u"QtQuick"_s, attachedTypeName, u"Rectangle"_s,
-                            u"bad"_s, u"onCompleted"_s, u"T.Button"_s };
+                            u"bad"_s,     u"onCompleted"_s, u"T.Button"_s };
 
     QTest::newRow("parenthesizedExpression")
             << testFile("completions/parenthesizedExpression.qml") << 8 << 10
