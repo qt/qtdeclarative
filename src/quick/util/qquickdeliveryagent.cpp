@@ -2115,7 +2115,11 @@ bool QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(QPointerEvent *event
         }
     }
 
-    for (QQuickItem *item : targetItems) {
+    QVector<QPointer<QQuickItem>> safeTargetItems(targetItems.begin(), targetItems.end());
+
+    for (auto &item : safeTargetItems) {
+        if (item.isNull())
+            continue;
         // failsafe: when items get into a subscene somehow, ensure that QQuickItemPrivate::deliveryAgent() can find it
         if (isSubsceneAgent)
             QQuickItemPrivate::get(item)->maybeHasSubsceneDeliveryAgent = true;
