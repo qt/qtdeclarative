@@ -19,6 +19,7 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuick/private/qquickmousearea_p.h>
 
 #include <QtGui/private/qeventpoint_p.h>
 
@@ -143,6 +144,7 @@ private slots:
     void hoverEnterOnItemMove();
     void hoverEnterOnItemMoveAfterHide();
     void clearItemsOnHoverLeave();
+    void deleteTargetOnPress();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -594,6 +596,38 @@ void tst_qquickdeliveryagent::clearItemsOnHoverLeave()
 
     QTest::mouseMove(&window, QPoint(10, 205)); // Move to MouseArea that triggers close
     QTest::mouseMove(&window, QPoint(10, 405)); // Exit MouseArea that triggers close.
+}
+
+// QTBUG-91272
+void tst_qquickdeliveryagent::deleteTargetOnPress()
+{
+    QQuickWindow window;
+    auto deliveryAgent = QQuickWindowPrivate::get(&window)->deliveryAgentPrivate();
+    window.resize(200, 200);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QQuickMouseArea *lowerArea = new QQuickMouseArea(window.contentItem());
+    lowerArea->setWidth(200);
+    lowerArea->setHeight(200);
+
+    QQuickMouseArea *upperArea = new QQuickMouseArea(window.contentItem());
+    upperArea->setWidth(180);
+    upperArea->setHeight(180);
+    bool pressed = false;
+    connect(upperArea, &QQuickMouseArea::pressed, this, [&]() {
+        pressed = true;
+        delete lowerArea;
+        lowerArea = nullptr;
+    });
+    QTest::mouseMove(&window, QPoint(100, 100));
+    QTest::mousePress(&window, Qt::MouseButton::LeftButton, {}, {100, 100});
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QVERIFY(pressed);
+    QVERIFY(upperArea->isPressed());
+    QTest::mouseRelease(&window, Qt::MouseButton::LeftButton, {}, {100, 100});
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QVERIFY(!upperArea->isPressed());
 }
 
 QTEST_MAIN(tst_qquickdeliveryagent)
