@@ -3771,6 +3771,14 @@ void tst_QmlCppCodegen::overriddenProperty()
     QCOMPARE(child->objectName(), u"double"_s);
     QMetaObject::invokeMethod(child, "doArray");
     QCOMPARE(child->objectName(), u"javaScript"_s);
+
+    QMetaObject::invokeMethod(child, "doString2");
+    QCOMPARE(child->objectName(), u"string"_s);
+    QMetaObject::invokeMethod(child, "doNumber2");
+    QCOMPARE(child->objectName(), u"double"_s);
+    QMetaObject::invokeMethod(child, "doArray2");
+    QCOMPARE(child->objectName(), u"javaScript"_s);
+
     QMetaObject::invokeMethod(child, "doFoo");
     QCOMPARE(child->objectName(), u"ObjectWithMethod"_s);
 
