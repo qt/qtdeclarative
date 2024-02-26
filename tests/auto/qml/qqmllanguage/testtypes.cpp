@@ -165,6 +165,9 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<ByteArrayReceiver>("Test", 1);
 
     qmlRegisterTypesAndRevisions<Counter>("Test", 1);
+
+    qmlRegisterTypesAndRevisions<Singleton>("EnumScopeTest", 1);
+    qmlRegisterTypesAndRevisions<NonSingleton>("EnumScopeTest", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

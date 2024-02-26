@@ -164,25 +164,11 @@ ReturnedValue QQmlTypeWrapper::create(
     return w.asReturnedValue();
 }
 
-static int enumForSingleton(QV4::ExecutionEngine *v4, String *name, QObject *qobjectSingleton,
-                            const QQmlType &type, bool *ok)
+static int enumForSingleton(QV4::ExecutionEngine *v4, String *name, const QQmlType &type, bool *ok)
 {
     Q_ASSERT(ok != nullptr);
-    int value = type.enumValue(QQmlEnginePrivate::get(v4->qmlEngine()), name, ok);
-    if (*ok)
-        return value;
-
-    // ### Optimize
-    QByteArray enumName = name->toQString().toUtf8();
-    const QMetaObject *metaObject = qobjectSingleton->metaObject();
-    for (int ii = metaObject->enumeratorCount() - 1; ii >= 0; --ii) {
-        QMetaEnum e = metaObject->enumerator(ii);
-        value = e.keyToValue(enumName.constData(), ok);
-        if (*ok)
-            return value;
-    }
-    *ok = false;
-    return -1;
+    const int value = type.enumValue(QQmlEnginePrivate::get(v4->qmlEngine()), name, ok);
+    return *ok ? value : -1;
 }
 
 ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
@@ -220,7 +206,7 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                     const bool includeEnums = w->d()->mode == Heap::QQmlTypeWrapper::IncludeEnums;
                     if (includeEnums && name->startsWithUpper()) {
                         bool ok = false;
-                        int value = enumForSingleton(v4, name, qobjectSingleton, type, &ok);
+                        int value = enumForSingleton(v4, name, type, &ok);
                         if (ok)
                             return QV4::Value::fromInt32(value).asReturnedValue();
 
