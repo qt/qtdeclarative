@@ -6036,6 +6036,10 @@
                         "type": "number"
                     },
                     {
+                        "name": "AA_QtQuickDontUseDefaultSizePolicy",
+                        "type": "number"
+                    },
+                    {
                         "name": "AA_DontShowIconsInMenus",
                         "type": "number"
                     },
