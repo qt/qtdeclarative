@@ -384,6 +384,28 @@ void MetaTypesJsonProcessor::addRelatedTypes()
             return true;
         }
 
+        // If it's an enum, add the surrounding type.
+        const QLatin1StringView separator("::");
+        if (const qsizetype index = lastIndexOf(typeName, separator); index > 0) {
+            if (const FoundType other = QmlTypesClassDescription::findType(
+                        m_types, m_foreignTypes, typeName.left(index), namespaces)) {
+
+                const QAnyStringView enumName = typeName.mid(index + separator.length());
+
+                const QCborArray enums = other.native.value(S_ENUMS).toArray();
+                for (const QCborValue &enumerator : enums) {
+                    if (toStringView(enumerator.toMap(), S_NAME) != enumName)
+                        continue;
+
+                    addReference(other.native, &processedRelatedNativeNames, other.nativeOrigin);
+                    addReference(
+                            other.javaScript, &processedRelatedJavaScriptNames,
+                            other.javaScriptOrigin);
+                    return true;
+                }
+            }
+        }
+
         // If we've detected this type as unresolved foreign and it actually belongs to this module,
         // we'll get to it again when we process it as foreign type. In that case we'll look at the
         // special cases for sequences and extensions.

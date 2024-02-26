@@ -967,4 +967,13 @@ void tst_qmltyperegistrar::longNumberTypes()
     })"));
 }
 
+void tst_qmltyperegistrar::enumList() {
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "QList<NetworkManager::NM>"
+        accessSemantics: "sequence"
+        valueType: "NetworkManager::NM"
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

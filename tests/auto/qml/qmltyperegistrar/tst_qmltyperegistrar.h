@@ -769,6 +769,14 @@ class LongNumberTypes : public QObject
     uint64_t m_d = 4;
 };
 
+struct EnumList
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QList<NetworkManager::NM>)
+    QML_SEQUENTIAL_CONTAINER(NetworkManager::NM)
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -838,6 +846,8 @@ private slots:
     void consistencyWarnings();
     void relatedAddedInVersion();
     void longNumberTypes();
+    void enumList();
+
 private:
     QByteArray qmltypesData;
 };
