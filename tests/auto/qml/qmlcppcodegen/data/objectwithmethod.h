@@ -29,12 +29,19 @@ public:
     QProperty<int> theThing;
     QBindable<int> theThingBindable() { return QBindable<int>(&theThing); }
 
+    // The meta methods are populated back to front.
+    // The V4Function flag should not bleed into the others in either case.
+
     Q_INVOKABLE void overloaded(QQmlV4Function *) { setObjectName(QStringLiteral("javaScript")); }
     Q_INVOKABLE void overloaded(double) { setObjectName(QStringLiteral("double")); }
     Q_INVOKABLE void overloaded(const QString &) { setObjectName(QStringLiteral("string")); }
 
     Q_INVOKABLE void foo(const QString &bla) { setObjectName(bla); }
     Q_INVOKABLE void foo(ObjectWithMethod *) { setObjectName(QStringLiteral("ObjectWithMethod")); }
+
+    Q_INVOKABLE void overloaded2(double) { setObjectName(QStringLiteral("double")); }
+    Q_INVOKABLE void overloaded2(const QString &) { setObjectName(QStringLiteral("string")); }
+    Q_INVOKABLE void overloaded2(QQmlV4Function *) { setObjectName(QStringLiteral("javaScript")); }
 };
 
 class OverriddenObjectName : public ObjectWithMethod
