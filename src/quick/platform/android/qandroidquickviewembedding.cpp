@@ -56,7 +56,7 @@ namespace QtAndroidQuickViewEmbedding
                              [qtViewObject](QQuickView::Status status) {
                                  qtViewObject.callMethod<void>("handleStatusChange", status);
                              });
-
+            view->setResizeMode(QQuickView::SizeRootObjectToView);
             view->setColor(QColor(Qt::transparent));
             view->setWidth(width);
             view->setHeight(height);
