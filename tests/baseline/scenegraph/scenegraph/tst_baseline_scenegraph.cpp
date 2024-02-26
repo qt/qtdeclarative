@@ -32,6 +32,7 @@ public:
 
 private Q_SLOTS:
     void initTestCase();
+    void init();
     void cleanup();
 #ifdef TEXTLESS_TEST
     void testNoTextRendering_data();
@@ -102,6 +103,11 @@ void tst_Scenegraph::initTestCase()
         QSKIP(msg);
 }
 
+void tst_Scenegraph::init()
+{
+    // This gets called for every row. QSKIP if current item is blacklisted on the baseline server:
+    QBASELINE_SKIP_IF_BLACKLISTED;
+}
 
 void tst_Scenegraph::cleanup()
 {
