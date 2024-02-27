@@ -37,6 +37,9 @@ void QQmlAnimationTimer::unsetJobTimer(QAbstractAnimationJob *animation)
     if (animation->m_timer == this)
         animation->m_timer = nullptr;
 
+    if (animation->m_isPause)
+        runningPauseAnimations.removeOne(animation);
+
     if (animation->isGroup()) {
         QAnimationGroupJob *group = static_cast<QAnimationGroupJob *>(animation);
         if (const auto children = group->children()) {
@@ -214,10 +217,9 @@ void QQmlAnimationTimer::unregisterRunningAnimation(QAbstractAnimationJob *anima
     if (animation->m_isGroup)
         return;
 
-    if (animation->m_isPause)
-        runningPauseAnimations.removeOne(animation);
-    else
+    if (!animation->m_isPause)
         runningLeafAnimations--;
+
     Q_ASSERT(runningLeafAnimations >= 0);
 }
 
