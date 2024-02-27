@@ -249,6 +249,8 @@ private slots:
     void compositeSingletonSelectors();
     void compositeSingletonRegistered();
     void compositeSingletonCircular();
+    void compositeSingletonRequiredProperties();
+    void compositeSingletonRequiredProperties_data();
 
     void singletonsHaveContextAndEngine();
 
@@ -4907,6 +4909,36 @@ void tst_qqmllanguage::compositeSingletonCircular()
     QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 
     QCOMPARE(o->property("value").toInt(), 2);
+}
+
+void tst_qqmllanguage::compositeSingletonRequiredProperties()
+{
+    QFETCH(QString, warning);
+    QFETCH(QString, singletonName);
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+    {
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, qPrintable(warning));
+        std::unique_ptr<QObject> singleton {engine.singletonInstance<QObject *>(
+                        "SingletonWithRequiredProperties",
+                        singletonName
+        )};
+        QVERIFY(!singleton);
+    }
+}
+
+void tst_qqmllanguage::compositeSingletonRequiredProperties_data()
+{
+    QTest::addColumn<QString>("warning");
+    QTest::addColumn<QString>("singletonName");
+
+    QString warning1 = testFileUrl("SingletonWithRequiredProperties/SingletonWithRequired1.qml").toString()
+            + ":5:5: Required property i was not initialized";
+    QString warning2 = testFileUrl("SingletonWithRequiredProperties/SingletonWithRequired2.qml").toString()
+            + ":6:9: Required property i was not initialized";
+
+    QTest::addRow("toplevelRequired") << warning1 << "SingletonWithRequired1";
+    QTest::addRow("subObjectRequired") << warning2 << "SingletonWithRequired2";
 }
 
 void tst_qqmllanguage::singletonsHaveContextAndEngine()

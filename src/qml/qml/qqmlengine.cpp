@@ -21,6 +21,7 @@
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qmetaobject.h>
 #include <QDebug>
+#include <private/qqmlcomponent_p.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/qdir.h>
@@ -1867,6 +1868,24 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
             return QJSValue(QJSValue::UndefinedValue);
         }
         QObject *o = component.beginCreate(q->rootContext());
+        auto *compPriv = QQmlComponentPrivate::get(&component);
+        if (compPriv->state.hasUnsetRequiredProperties()) {
+            /* We would only get the errors from the component after (complete)Create.
+                We can't call create, as we need to convertAndInsert before completeCreate (otherwise
+                tst_qqmllanguage::compositeSingletonCircular fails).
+                On the other hand, we don't want to call cnovertAndInsert if we have an error
+                So create the unset required component errors manually.
+            */
+            delete o;
+            const auto requiredProperties = compPriv->state.requiredProperties();
+            QList<QQmlError> errors (requiredProperties->size());
+            for (const auto &reqProp: *requiredProperties)
+                errors.push_back(QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(reqProp));
+            warning(errors);
+            v4engine()->throwError(QLatin1String("Due to the preceding error(s), Singleton \"%1\" could not be loaded.").arg(QString::fromUtf8(type.typeName())));
+            return QJSValue(QJSValue::UndefinedValue);
+        }
+
         value = q->newQObject(o);
         singletonInstances.convertAndInsert(v4engine(), siinfo, &value);
         component.completeCreate();
