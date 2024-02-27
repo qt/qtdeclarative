@@ -148,8 +148,8 @@ void QSGInternalTextNode::addImage(const QRectF &rect, const QImage &image)
     node->update();
 }
 
-void QSGInternalTextNode::addTextDocument(const QPointF &position, QTextDocument *textDocument,
-                                          int selectionStart, int selectionEnd)
+void QSGInternalTextNode::doAddTextDocument(QPointF position, QTextDocument *textDocument,
+                                            int selectionStart, int selectionEnd)
 {
     QQuickTextNodeEngine engine;
     engine.setTextColor(m_color);
@@ -195,9 +195,9 @@ void QSGInternalTextNode::addTextDocument(const QPointF &position, QTextDocument
     engine.addToSceneGraph(this, QQuickText::TextStyle(m_textStyle), m_styleColor);
 }
 
-void QSGInternalTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout,
-                                        int selectionStart, int selectionEnd,
-                                        int lineStart, int lineCount)
+void QSGInternalTextNode::doAddTextLayout(QPointF position, QTextLayout *textLayout,
+                                          int selectionStart, int selectionEnd,
+                                          int lineStart, int lineCount)
 {
     QQuickTextNodeEngine engine;
     engine.setTextColor(m_color);

@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QSGTextNode::setColor(const QColor &color)
+    \fn void QSGTextNode::setColor(QColor color)
 
     Sets the main color to use when rendering the text to \a color.
 
@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QSGTextNode::setStyleColor(const QColor &styleColor)
+    \fn void QSGTextNode::setStyleColor(QColor styleColor)
 
     Sets the style color to use when rendering the text to \a styleColor.
 
@@ -110,7 +110,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QSGTextNode::setLinkColor(const QColor &linkColor)
+    \fn void QSGTextNode::setLinkColor(QColor linkColor)
 
     Sets the color of or hyperlinks to \a linkColor in the text.
 
@@ -124,7 +124,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QSGTextNode::setSelectionColor(const QColor &color)
+    \fn void QSGTextNode::setSelectionColor(QColor color)
 
     Sets the color of the selection background to \a color when any part of the text is
     marked as selected.
@@ -145,7 +145,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QSGTextNode::setSelectionTextColor(const QColor &selectionTextColor)
+    \fn void QSGTextNode::setSelectionTextColor(QColor selectionTextColor)
 
     Sets the color of the selection text to \a selectionTextColor when any part of the text is
     marked as selected.
@@ -236,7 +236,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn QSGTextNode::addTextLayout(const QPointF &position, QTextLayout *layout, int selectionStart = -1, int selectionCount = -1, int lineStart = 0, int lineCount = -1)
+    \fn QSGTextNode::addTextLayout(QPointF position, QTextLayout *layout, int selectionStart = -1, int selectionCount = -1, int lineStart = 0, int lineCount = -1)
 
     Adds the contents of \a layout to the text node at \a position. If \a selectionStart is >= 0,
     then this marks the first character in a selected area of \a selectionCount number of
@@ -248,18 +248,53 @@ QT_BEGIN_NAMESPACE
     layouts. If \a lineCount is < 0, then the the node will include the lines from \a lineStart to
     the end of the layout.
 
-    \sa clear()
+    This function forwards its arguments to the virtual function doAddTextLayout().
+
+    \sa clear(), doAddTextLayout()
 */
 
 /*!
-    \fn QSGTextNode::addTextDocument(const QPointF &position, QTextDocument *document, int selectionStart = -1, int selectionCount = -1)
+    \fn QSGTextNode::addTextDocument(QPointF position, QTextDocument *document, int selectionStart = -1, int selectionCount = -1)
 
     Adds the contents of \a document to the text node at \a position. If \a selectionStart is >= 0,
     then this marks the first character in a selected area of \a selectionCount number of
     characters. The selection is represented as a background fill with the \l selectionColor() and
     the selected text is rendered in the \l selectionTextColor().
 
-    \sa clear()
+    This function forwards its arguments to the virtual function doAddTextDocument().
+
+    \sa clear(), doAddTextDocument()
+*/
+
+/*!
+    \fn QSGTextNode::doAddTextLayout(QPointF position, QTextLayout *layout, int selectionStart, int selectionCount, int lineStart, int lineCount)
+
+    Virtual function called by addTextLayout(), which converts the contents of \a layout to scene
+    graph nodes and adds them to the current node at \a position.
+
+    If \a selectionStart is >= 0, then this marks the first character in a selected area of
+    \a selectionCount number of characters. The selection is represented as a background fill with
+    the \l selectionColor() and the selected text is rendered in the \l selectionTextColor().
+
+    For convenience, \a lineStart and \a lineCount can be used to select the range of \l QTextLine
+    objects to include from the layout. This can be useful, for instance, when creating elided
+    layouts. If \a lineCount is < 0, then the the node will include the lines from \a lineStart to
+    the end of the layout.
+
+    \sa clear(), addTextLayout()
+*/
+
+/*!
+    \fn QSGTextNode::doAddTextDocument(QPointF position, QTextDocument *document, int selectionStart, int selectionCount)
+
+    Virtual function called by addTextDocument(), which converts the contents of \a document to
+    scene graph nodes and adds them to the current node at \a position.
+
+    If \a selectionStart is >= 0, then this marks the first character in a selected area of
+    \a selectionCount number of characters. The selection is represented as a background fill with
+    the \l selectionColor() and the selected text is rendered in the \l selectionTextColor().
+
+    \sa clear(), addTextDocument()
 */
 
 /*!
