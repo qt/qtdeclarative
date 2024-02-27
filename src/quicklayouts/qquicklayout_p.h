@@ -23,6 +23,7 @@
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtGui/private/qlayoutpolicy_p.h>
+#include <QtGui/qguiapplication.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -211,11 +212,19 @@ public:
     void setMinimumImplicitSize(const QSizeF &sz);
     void setMaximumImplicitSize(const QSizeF &sz);
 
-    bool fillWidth() const { return m_fillWidth; }
+    bool fillWidth() const {
+        if (auto *itemPriv = itemForSizePolicy(m_isFillWidthSet))
+            return (itemPriv->sizePolicy().horizontalPolicy() == QLayoutPolicy::Preferred);
+        return m_fillWidth;
+    }
     void setFillWidth(bool fill);
     bool isFillWidthSet() const { return m_isFillWidthSet; }
 
-    bool fillHeight() const { return m_fillHeight; }
+    bool fillHeight() const {
+        if (auto *itemPriv = itemForSizePolicy(m_isFillHeightSet))
+            return (itemPriv->sizePolicy().verticalPolicy() == QLayoutPolicy::Preferred);
+        return m_fillHeight;
+    }
     void setFillHeight(bool fill);
     bool isFillHeightSet() const { return m_isFillHeightSet; }
 
@@ -301,6 +310,15 @@ public:
             return false;
         }
         return false;
+    }
+
+    QQuickItemPrivate *itemForSizePolicy(bool isFillSet) const
+    {
+        QQuickItemPrivate *itemPriv = nullptr;
+        if (!isFillSet && qobject_cast<QQuickItem *>(item()) &&
+            QGuiApplication::testAttribute(Qt::AA_QtQuickUseDefaultSizePolicy))
+            itemPriv = QQuickItemPrivate::get(item());
+        return itemPriv;
     }
 
 Q_SIGNALS:
