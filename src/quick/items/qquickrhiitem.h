@@ -68,7 +68,7 @@ public:
     Q_ENUM(TextureFormat)
 
     explicit QQuickRhiItem(QQuickItem *parent = nullptr);
-    ~QQuickRhiItem();
+    ~QQuickRhiItem() override;
 
     int sampleCount() const;
     void setSampleCount(int samples);
