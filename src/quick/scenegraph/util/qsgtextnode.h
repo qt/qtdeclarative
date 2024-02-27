@@ -32,22 +32,22 @@ public:
         CurveRendering
     };
 
-    virtual void setColor(const QColor &color) = 0;
+    virtual void setColor(QColor color) = 0;
     virtual QColor color() const = 0;
 
     virtual void setTextStyle(TextStyle textStyle) = 0;
     virtual TextStyle textStyle() = 0;
 
-    virtual void setStyleColor(const QColor &styleColor) = 0;
+    virtual void setStyleColor(QColor styleColor) = 0;
     virtual QColor styleColor() const = 0;
 
-    virtual void setLinkColor(const QColor &linkColor) = 0;
+    virtual void setLinkColor(QColor linkColor) = 0;
     virtual QColor linkColor() const = 0;
 
-    virtual void setSelectionColor(const QColor &selectionColor) = 0;
+    virtual void setSelectionColor(QColor selectionColor) = 0;
     virtual QColor selectionColor() const = 0;
 
-    virtual void setSelectionTextColor(const QColor &selectionTextColor) = 0;
+    virtual void setSelectionTextColor(QColor selectionTextColor) = 0;
     virtual QColor selectionTextColor() const = 0;
 
     virtual void setRenderType(RenderType renderType) = 0;
@@ -64,16 +64,35 @@ public:
     virtual void setViewport(const QRectF &viewport) = 0;
     virtual QRectF viewport() const = 0;
 
-    virtual void addTextLayout(const QPointF &position,
-                               QTextLayout *layout,
-                               int selectionStart = -1,
-                               int selectionCount = -1,
-                               int lineStart = 0,
-                               int lineCount = -1) = 0;
-    virtual void addTextDocument(const QPointF &position,
-                                 QTextDocument *document,
-                                 int selectionStart = -1,
-                                 int selectionCount = -1) = 0;
+    void addTextLayout(QPointF position,
+                       QTextLayout *layout,
+                       int selectionStart = -1,
+                       int selectionCount = -1,
+                       int lineStart = 0,
+                       int lineCount = -1)
+    {
+        doAddTextLayout(position, layout, selectionStart, selectionCount, lineStart, lineCount);
+    }
+
+    void addTextDocument(QPointF position,
+                         QTextDocument *document,
+                         int selectionStart = -1,
+                         int selectionCount = -1)
+    {
+        doAddTextDocument(position, document, selectionStart, selectionCount);
+    }
+
+private:
+    virtual void doAddTextLayout(QPointF position,
+                                 QTextLayout *layout,
+                                 int selectionStart,
+                                 int selectionCount,
+                                 int lineStart,
+                                 int lineCount) = 0;
+    virtual void doAddTextDocument(QPointF position,
+                                   QTextDocument *document,
+                                   int selectionStart,
+                                   int selectionCount) = 0;
 
 };
 
