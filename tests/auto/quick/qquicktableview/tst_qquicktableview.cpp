@@ -168,6 +168,7 @@ private slots:
     void checkSyncView_pageFlicking();
     void checkSyncView_emptyModel();
     void checkSyncView_topLeftChanged();
+    void checkSyncView_unloadHeader();
     void delegateWithRequiredProperties();
     void checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable();
     void replaceModel();
@@ -3290,6 +3291,21 @@ void tst_QQuickTableView::checkSyncView_emptyModel()
 
     QCOMPARE(tableViewVPrivate->loadedTableOuterRect.top(), tableViewPrivate->loadedTableOuterRect.top());
     QCOMPARE(tableViewVPrivate->loadedTableOuterRect.left(), 0);
+}
+
+void tst_QQuickTableView::checkSyncView_unloadHeader()
+{
+    // Check that we don't get a crash in TableView if one
+    // of the sync children is suddenly deleted (from e.g a Loader).
+    LOAD_TABLEVIEW("unloadheader.qml");
+
+    const auto loader = view->rootObject()->property("loader").value<QQuickLoader *>();
+    QVERIFY(loader);
+    QVERIFY(loader->item());
+    loader->setActive(false);
+    QVERIFY(!loader->item());
+    gc(*qmlEngine(tableView));
+    tableView->forceLayout();
 }
 
 void tst_QQuickTableView::checkSyncView_topLeftChanged()

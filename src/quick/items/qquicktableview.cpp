@@ -5365,6 +5365,14 @@ QQuickTableView::QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent)
 
 QQuickTableView::~QQuickTableView()
 {
+    Q_D(QQuickTableView);
+
+    if (d->syncView) {
+        // Remove this TableView as a sync child from the syncView
+        auto syncView_d = d->syncView->d_func();
+        syncView_d->syncChildren.removeOne(this);
+        syncView_d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly);
+    }
 }
 
 void QQuickTableView::componentFinalized()
