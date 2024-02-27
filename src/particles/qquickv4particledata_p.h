@@ -27,7 +27,7 @@ class QQuickV4ParticleData
     QML_ADDED_IN_VERSION(6, 7)
 
 #define Q_QUICK_PARTICLE_ACCESSOR(TYPE, VARIABLE, NAME) \
-    Q_PROPERTY(TYPE NAME READ NAME WRITE set_ ## NAME) \
+    Q_PROPERTY(TYPE NAME READ NAME WRITE set_ ## NAME FINAL) \
     TYPE NAME() const { return datum ? datum->VARIABLE : TYPE(); } \
     void set_ ## NAME(TYPE a) { if (datum) datum->VARIABLE = a; }
 
