@@ -29,6 +29,7 @@ struct Q_QMLNETWORK_EXPORT QQmlNetworkInformation
     Q_GADGET
     QML_FOREIGN(QNetworkInformation)
     QML_NAMED_ELEMENT(NetworkInformation)
+    QML_ADDED_IN_VERSION(6, 7)
     QML_SINGLETON
 
 public:
