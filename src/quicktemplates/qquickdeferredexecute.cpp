@@ -30,6 +30,9 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
     QQmlData *ddata = QQmlData::get(object);
     Q_ASSERT(!ddata->deferredData.isEmpty());
 
+    if (!ddata->propertyCache)
+        ddata->propertyCache = QQmlMetaType::propertyCache(object->metaObject());
+
     int propertyIndex = property.index();
     int wasInProgress = enginePriv->inProgressCreations;
 

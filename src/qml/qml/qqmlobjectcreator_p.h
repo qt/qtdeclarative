@@ -259,6 +259,10 @@ private:
     void doPopulateDeferred(QObject *instance, int deferredIndex, Functor f)
     {
         QQmlData *declarativeData = QQmlData::get(instance);
+
+        // We're in the process of creating the object. We sure hope it's still alive.
+        Q_ASSERT(declarativeData && declarativeData->propertyCache);
+
         QObject *bindingTarget = instance;
 
         QQmlPropertyCache::ConstPtr cache = declarativeData->propertyCache;

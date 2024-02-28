@@ -58,6 +58,9 @@ void qmlExecuteDeferred(QObject *object)
         return;
     }
 
+    if (!data->propertyCache)
+        data->propertyCache = QQmlMetaType::propertyCache(object->metaObject());
+
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
 
     QQmlComponentPrivate::DeferredState state;
