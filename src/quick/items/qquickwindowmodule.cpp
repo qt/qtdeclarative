@@ -210,8 +210,8 @@ void QQuickWindowQmlImpl::applyWindowVisibility()
             // Handle deferred visibility due to possible transient parent
             auto *itemParent = qmlobject_cast<QQuickItem *>(QObject::parent());
             if (!d->transientParentPropertySet && itemParent && !itemParent->window()) {
-                qCDebug(lcTransient) << "Waiting for parent Item to resolve"
-                                        "its transient parent. Deferring visibility";
+                qCDebug(lcTransient) << "Waiting for parent" << itemParent << "to resolve"
+                                     << "its window. Deferring visibility";
                 return;
             }
 
