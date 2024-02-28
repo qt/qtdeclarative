@@ -94,7 +94,11 @@ QQuickItemParticle::QQuickItemParticle(QQuickItem *parent) :
 {
     setFlag(QQuickItem::ItemHasContents);
     clock = new Clock(this);
-    clock->start();
+    connect(this, &QQuickItemParticle::systemChanged, this, &QQuickItemParticle::reconnectSystem);
+    connect(this, &QQuickItemParticle::parentChanged, this, &QQuickItemParticle::reconnectParent);
+    connect(this, &QQuickItemParticle::enabledChanged, this, &QQuickItemParticle::updateClock);
+    reconnectSystem(m_system);
+    reconnectParent(parent);
 }
 
 QQuickItemParticle::~QQuickItemParticle()
@@ -230,9 +234,10 @@ QSGNode* QQuickItemParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
     if (m_pleaseReset)
         m_pleaseReset = false;
 
-    prepareNextFrame();
-
-    update();//Get called again
+    if (clockShouldUpdate()) {
+        prepareNextFrame();
+        update(); //Get called again
+    }
     if (n)
         n->markDirty(QSGNode::DirtyMaterial);
     return QQuickItem::updatePaintNode(n,d);
@@ -283,6 +288,52 @@ void QQuickItemParticle::prepareNextFrame()
 QQuickItemParticleAttached *QQuickItemParticle::qmlAttachedProperties(QObject *object)
 {
     return new QQuickItemParticleAttached(object);
+}
+
+bool QQuickItemParticle::clockShouldUpdate() const
+{
+    QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent());
+    return (m_system && m_system->isRunning() && !m_system->isPaused() && m_system->isEnabled()
+            && ((parentItem && parentItem->isEnabled()) || !parentItem) && isEnabled());
+}
+
+void QQuickItemParticle::reconnectParent(QQuickItem *parentItem)
+{
+    updateClock();
+    disconnect(m_parentEnabledStateConnection);
+    if (parentItem) {
+        m_parentEnabledStateConnection = connect(parentItem, &QQuickParticleSystem::enabledChanged,
+                                                 this, &QQuickItemParticle::updateClock);
+    }
+}
+
+void QQuickItemParticle::reconnectSystem(QQuickParticleSystem *system)
+{
+    updateClock();
+    disconnect(m_systemRunStateConnection);
+    disconnect(m_systemPauseStateConnection);
+    disconnect(m_systemEnabledStateConnection);
+    if (system) {
+        m_systemRunStateConnection = connect(m_system, &QQuickParticleSystem::runningChanged, this, [this](){
+            QQuickItemParticle::updateClock();
+        });
+        m_systemPauseStateConnection = connect(m_system, &QQuickParticleSystem::pausedChanged, this, [this](){
+            QQuickItemParticle::updateClock();
+        });
+        m_systemEnabledStateConnection = connect(m_system, &QQuickParticleSystem::enabledChanged, this,
+                                                 &QQuickItemParticle::updateClock);
+    }
+}
+
+void QQuickItemParticle::updateClock()
+{
+    if (clockShouldUpdate()) {
+        if (!clock->isRunning())
+            clock->start();
+    } else {
+        if (clock->isRunning())
+            clock->pause();
+    }
 }
 
 QT_END_NAMESPACE
