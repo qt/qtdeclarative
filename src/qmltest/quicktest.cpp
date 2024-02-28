@@ -429,7 +429,6 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
 int quick_test_main_with_setup(int argc, char **argv, const char *name, const char *sourceDir, QObject *setup)
 {
     QScopedPointer<QCoreApplication> app;
-    app->setAttribute(Qt::AA_QtQuickDontUseDefaultSizePolicy);
     if (!QCoreApplication::instance())
         app.reset(new QGuiApplication(argc, argv));
 
