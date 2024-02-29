@@ -2123,8 +2123,23 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::executableCompilation
             return *it;
     }
 
-    return *m_compilationUnits.insert(
+    auto executableUnit =  m_compilationUnits.insert(
             url, ExecutableCompilationUnit::create(std::move(unit), this));
+    // runtime data should not be initialized yet, so we don't need to mark the CU
+    Q_ASSERT(!(*executableUnit)->runtimeStrings);
+    return *executableUnit;
+}
+
+QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::insertCompilationUnit(QQmlRefPointer<CompiledData::CompilationUnit> &&unit) {
+    QUrl url = unit->finalUrl();
+    auto executableUnit = ExecutableCompilationUnit::create(std::move(unit), this);
+    /* Compilation Units stored in the engine are part of the gc roots,
+      so we don't trigger any write-barrier when they are added. Use
+      markCustom to make sure they are still marked when we insert them */
+    QV4::WriteBarrier::markCustom(this, [&executableUnit](QV4::MarkStack *ms) {
+        executableUnit->markObjects(ms);
+    });
+    return *m_compilationUnits.insert(std::move(url), std::move(executableUnit));
 }
 
 void ExecutionEngine::trimCompilationUnits()

@@ -19,6 +19,7 @@
 #include <QModelIndex>
 #include <QtQml/qqmllist.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <private/qv4functionobject_p.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -296,6 +297,8 @@ private slots:
     void arrayBuffer();
     void staticInNestedClasses();
     void callElement();
+
+    void functionCtorGeneratedCUIsNotCollectedByGc();
 
     void tdzViolations_data();
     void tdzViolations();
@@ -5920,6 +5923,38 @@ void tst_QJSEngine::callElement()
         array[0](array.reverse()) ? "a" : "b";
     )"_s;
     QCOMPARE(engine.evaluate(program).toString(), u"a"_s);
+}
+
+void tst_QJSEngine::functionCtorGeneratedCUIsNotCollectedByGc()
+{
+    QJSEngine engine;
+    auto v4 = engine.handle();
+    QVERIFY(!v4->isGCOngoing);
+
+    // run gc until roots are collected
+    // we run the gc steps manually, so use "Forever" as the dealine to avoid interference
+    v4->memoryManager->gcStateMachine->deadline = QDeadlineTimer(QDeadlineTimer::Forever);
+    auto sm = v4->memoryManager->gcStateMachine.get();
+    sm->reset();
+    while (sm->state != QV4::GCState::InitMarkPersistentValues) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+
+    const QString program = "new Function('a', 'b', 'let x = \"Hello\"; return a + b');";
+    auto sumFunc = engine.evaluate(program);
+    QVERIFY(sumFunc.isCallable());
+    auto *function = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&sumFunc);
+    auto *cu = function->d()->function->executableCompilationUnit();
+    QVERIFY(cu->runtimeStrings); // should exist for "Hello"
+    QVERIFY(cu->runtimeStrings[0]->isMarked());
+    while (sm->state != QV4::GCState::Invalid) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+
+    auto sum = sumFunc.call({QJSValue(12), QJSValue(13)});
+    QCOMPARE(sum.toInt(), 25);
 }
 
 void tst_QJSEngine::tdzViolations_data()
