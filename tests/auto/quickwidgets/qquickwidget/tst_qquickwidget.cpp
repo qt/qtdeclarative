@@ -711,6 +711,9 @@ void tst_qquickwidget::touchMultipleWidgets()
     QWidget window;
     QQuickWidget *leftQuick = new QQuickWidget;
     leftQuick->setSource(testFileUrl("button.qml"));
+    if (!leftQuick->testAttribute(Qt::WA_AcceptTouchEvents))
+        QSKIP("irrelevant on non-touch platforms");
+
     QQuickWidget *rightQuick = new QQuickWidget;
     rightQuick->setSource(testFileUrl("button.qml"));
 
