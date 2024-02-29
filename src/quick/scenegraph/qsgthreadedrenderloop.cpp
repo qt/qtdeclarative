@@ -1714,6 +1714,7 @@ bool QSGThreadedRenderLoop::event(QEvent *e)
             emit timeToIncubate();
             return true;
         }
+        break;
     }
 
     default:

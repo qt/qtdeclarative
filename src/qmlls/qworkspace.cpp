@@ -58,6 +58,7 @@ void WorkspaceHandlers::registerHandlers(QLanguageServer *server, QLanguageServe
                                  if (file.open(QIODevice::ReadOnly))
                                      // m_modelManager->setFileContents(filename, file.readAll());
                                      break;
+                                 break;
                              }
                              case FileChangeType::Deleted:
                                  // m_modelManager->removeFile(filename);

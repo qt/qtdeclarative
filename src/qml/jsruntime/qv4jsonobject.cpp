@@ -114,6 +114,7 @@ QChar JsonParser::nextToken()
     case EndArray:
     case EndObject:
         eatSpace();
+        break;
     case Quote:
         break;
     default:

@@ -4141,6 +4141,7 @@ static int textAlignOffset(QQuickContext2D::TextAlignType value, const QFontMetr
         break;
     case QQuickContext2D::Right:
         offset = metrics.horizontalAdvance(text);
+        break;
     case QQuickContext2D::Left:
     default:
         break;

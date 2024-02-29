@@ -1272,6 +1272,7 @@ void QQmlJSImportVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr sc
                               qmlUnqualified, childScope->sourceLocation());
             }
             children.append(childScope->childScopes());
+            break;
         default:
             break;
         }
