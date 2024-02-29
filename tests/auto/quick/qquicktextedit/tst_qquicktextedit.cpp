@@ -1421,6 +1421,7 @@ void tst_qquicktextedit::selectionOnFocusOut()
 
 void tst_qquicktextedit::focusOnPress()
 {
+    const int doubleClickInterval = qApp->styleHints()->mouseDoubleClickInterval();
     QString componentStr =
             "import QtQuick 2.0\n"
             "TextEdit {\n"
@@ -1477,7 +1478,7 @@ void tst_qquicktextedit::focusOnPress()
     QCOMPARE(activeFocusSpy.size(), 2);
 
     // Wait for double click timeout to expire before clicking again.
-    QTest::qWait(400);
+    QTest::qWait(doubleClickInterval + 1);
     QTest::mousePress(&window, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
     QCOMPARE(textEditObject->hasFocus(), false);
@@ -1493,7 +1494,7 @@ void tst_qquicktextedit::focusOnPress()
     // Test a selection made in the on(Active)FocusChanged handler isn't overwritten.
     textEditObject->setProperty("selectOnFocus", true);
 
-    QTest::qWait(400);
+    QTest::qWait(doubleClickInterval + 1);
     QTest::mousePress(&window, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
     QCOMPARE(textEditObject->hasFocus(), true);
@@ -2207,7 +2208,6 @@ void tst_qquicktextedit::dragMouseSelection()
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x1,y));
     QTest::mouseMove(&window, QPoint(x2, y));
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x2,y));
-    QTest::qWait(300);
     QString str1;
     QTRY_VERIFY((str1 = textEditObject->selectedText()).size() > 3);
 
@@ -2217,7 +2217,6 @@ void tst_qquicktextedit::dragMouseSelection()
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x1,y));
     QTest::mouseMove(&window, QPoint(x2, y));
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x2,y));
-    QTest::qWait(300);
     QString str2;
     QTRY_VERIFY((str2 = textEditObject->selectedText()).size() > 3);
 
@@ -2684,6 +2683,7 @@ void tst_qquicktextedit::cursorDelegate()
 {
     QFETCH(QUrl, source);
 
+    const int doubleClickInterval = qApp->styleHints()->mouseDoubleClickInterval();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, source));
     QQuickTextEdit *textEditObject = window.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
@@ -2708,9 +2708,8 @@ void tst_qquicktextedit::cursorDelegate()
     textEditObject->setSelectByMouse(true);
     textEditObject->setCursorPosition(0);
     const QPoint point1 = textEditObject->positionToRectangle(5).center().toPoint();
-    QTest::qWait(400);  //ensure this isn't treated as a double-click
+    QTest::qWait(doubleClickInterval + 1);  // ensure this isn't treated as a double-click
     QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, point1);
-    QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);
     QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
     QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
@@ -2718,29 +2717,26 @@ void tst_qquicktextedit::cursorDelegate()
     // Test delegate gets moved on mouse drag
     textEditObject->setCursorPosition(0);
     const QPoint point2 = textEditObject->positionToRectangle(10).center().toPoint();
-    QTest::qWait(400);  //ensure this isn't treated as a double-click
+    QTest::qWait(doubleClickInterval + 1);
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, point1);
     QMouseEvent mv(QEvent::MouseMove, point2, window.mapToGlobal(point2),
                    Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
     QGuiApplication::sendEvent(&window, &mv);
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, point2);
-    QTest::qWait(50);
     QTRY_COMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
     QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
 
     textEditObject->setReadOnly(true);
     textEditObject->setCursorPosition(0);
-    QTest::qWait(400);  //ensure this isn't treated as a double-click
+    QTest::qWait(doubleClickInterval + 1);
     QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, textEditObject->positionToRectangle(5).center().toPoint());
-    QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);
     QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
     QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
 
     textEditObject->setCursorPosition(0);
-    QTest::qWait(400);  //ensure this isn't treated as a double-click
+    QTest::qWait(doubleClickInterval + 1);
     QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, textEditObject->positionToRectangle(5).center().toPoint());
-    QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);
     QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
     QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
