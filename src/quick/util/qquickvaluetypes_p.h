@@ -408,7 +408,7 @@ class Q_QUICK_EXPORT QQuickFontValueType
     Q_PROPERTY(bool kerning READ kerning WRITE setKerning FINAL)
     Q_PROPERTY(bool preferShaping READ preferShaping WRITE setPreferShaping FINAL)
     Q_PROPERTY(QVariantMap features READ features WRITE setFeatures FINAL)
-    Q_PROPERTY(QVariantMap variableAxes READ variableAxes WRITE setVariableAxes FINAL)
+    Q_PROPERTY(QVariantMap variableAxes READ variableAxes WRITE setVariableAxes FINAL REVISION(6, 7))
 
     QML_VALUE_TYPE(font)
     QML_FOREIGN(QFont)

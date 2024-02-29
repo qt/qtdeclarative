@@ -292,7 +292,7 @@ Q_SIGNALS:
     void dashOffsetChanged();
     void dashPatternChanged();
 
-    void pathHintsChanged();
+    Q_REVISION(6, 7) void pathHintsChanged();
 
 private:
     Q_DISABLE_COPY(QQuickShapePath)
