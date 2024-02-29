@@ -37,4 +37,12 @@ Item {
         }
         property string helloProperty
     }
+
+    PropertyFromAnotherFile {
+        helloProperty: 42
+        function f() {
+            return helloProperty + 53;
+        }
+        onHelloPropertyChanged: f()
+    }
 }

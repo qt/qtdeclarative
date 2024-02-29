@@ -795,6 +795,28 @@ static QQmlJSScope::ConstPtr findDefiningScopeForEnumerationKey(QQmlJSScope::Con
     });
 }
 
+/*!
+    Filter away the parts of the Dom not needed for find usages, by following the profiler's
+   information.
+    1. "propertyInfos" tries to require all inherited properties of some QmlObject. That is super
+   slow (profiler says it eats 90% of the time needed by `tst_qmlls_utils findUsages`!) and is not
+   needed for usages.
+    2. "get" tries to resolve references, like base types saved in prototypes for example, and is not
+   needed to find usages. Profiler says it eats 70% of the time needed by `tst_qmlls_utils
+   findUsages`.
+    3. "defaultPropertyName" also recurses through base types and is not needed to find usages.
+*/
+static FieldFilter filterForFindUsages()
+{
+    FieldFilter filter{ {},
+                        {
+                                { QString(), QString::fromUtf16(Fields::propertyInfos) },
+                                { QString(), QString::fromUtf16(Fields::defaultPropertyName) },
+                                { QString(), QString::fromUtf16(Fields::get) },
+                        } };
+    return filter;
+};
+
 static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &name,
                                          QList<QQmlLSUtilsLocation> &result)
 {
@@ -812,7 +834,9 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
         if (!currentType)
             return;
 
-        if (expressionType->semanticScope == currentType->semanticScope) {
+        const QQmlJSScope::ConstPtr target = expressionType->semanticScope;
+        const QQmlJSScope::ConstPtr current = currentType->semanticScope;
+        if (target == current) {
             auto tree = FileLocations::treeOf(toBeResolved);
             QQmlJS::SourceLocation sourceLocation;
 
@@ -826,8 +850,8 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
         }
     };
 
-    auto findUsages = [&addLocationIfTypeMatchesTarget, &name, &namesToCheck](Path, const DomItem &current,
-                                                                bool) -> bool {
+    auto findUsages = [&addLocationIfTypeMatchesTarget, &name,
+                       &namesToCheck](Path, const DomItem &current, bool) -> bool {
         bool continueForChildren = true;
         if (auto scope = current.semanticScope()) {
             // is the current property shadowed by some JS identifier? ignore current + its children
@@ -885,13 +909,18 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
             return continueForChildren;
         };
 
-        Q_UNREACHABLE_RETURN(continueForChildren);;
+        Q_UNREACHABLE_RETURN(continueForChildren);
     };
 
-    item.containingFile()
-            .field(Fields::components)
-            .visitTree(Path(), emptyChildrenVisitor, VisitOption::Recurse | VisitOption::VisitSelf,
-                       findUsages);
+    const DomItem qmlFiles = item.top().field(Fields::qmlFileWithPath);
+    const auto filter = filterForFindUsages();
+    for (const QString &file : qmlFiles.keys()) {
+        const DomItem currentFileComponents =
+                qmlFiles.key(file).field(Fields::currentItem).field(Fields::components);
+        currentFileComponents.visitTree(Path(), emptyChildrenVisitor,
+                                        VisitOption::Recurse | VisitOption::VisitSelf, findUsages,
+                                        emptyChildrenVisitor, filter);
+    }
 }
 
 static QQmlLSUtilsLocation locationFromJSIdentifierDefinition(const DomItem &definitionOfItem,
@@ -944,7 +973,8 @@ static void findUsagesHelper(
                     return false;
                 }
                 return true;
-            });
+            },
+            emptyChildrenVisitor, filterForFindUsages());
 
     const QQmlLSUtilsLocation definition =
             locationFromJSIdentifierDefinition(definitionOfItem, name);
@@ -1241,18 +1271,29 @@ resolveFieldMemberExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions 
     // Ignore enum usages from other files for now.
     if (owner->type == QmlComponentIdentifier) {
         // Check if name is a enum value <TypeName>.<EnumValue>
-        // Enumerations defined in the current file live under the root element scope
-        // This should be changed once we support find-usages in external files
-        const auto scope = item.rootQmlObject(GoTo::MostLikely).semanticScope();
+        // Enumerations should live under the root element scope of the file that defines the enum,
+        // therefore use the DomItem to find the root element of the qml file instead of directly
+        // using owner->semanticScope.
+        const auto scope = item.goToFile(owner->semanticScope->filePath())
+                                   .rootQmlObject(GoTo::MostLikely)
+                                   .semanticScope();
         if (scope->hasEnumerationKey(name)) {
             return QQmlLSUtilsExpressionType{name, scope, EnumeratorValueIdentifier};
         }
         // Or it is a enum name <TypeName>.<EnumName>.<EnumValue>
         else if (scope->hasEnumeration(name)) {
             return QQmlLSUtilsExpressionType{name, scope, EnumeratorIdentifier};
-        } else {
-            return owner;
         }
+
+        // check inline components <TypeName>.<InlineComponentName>
+        for (auto it = owner->semanticScope->childScopesBegin(),
+                  end = owner->semanticScope->childScopesEnd();
+             it != end; ++it) {
+            if ((*it)->inlineComponentName() == name) {
+                return QQmlLSUtilsExpressionType{ name, *it, QmlComponentIdentifier };
+            }
+        }
+        return {};
     }
 
     qCDebug(QQmlLSUtilsLog) << "Could not find identifier expression for" << item.internalKindStr();
