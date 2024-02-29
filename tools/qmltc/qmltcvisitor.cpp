@@ -687,6 +687,7 @@ void QmltcVisitor::checkNamesAndTypes(const QQmlJSScope::ConstPtr &type)
         u"const_cast"_s,
         u"consteval"_s,
         u"constexpr"_s,
+        u"constinit"_s,
         u"continue"_s,
         u"decltype"_s,
         u"default"_s,
