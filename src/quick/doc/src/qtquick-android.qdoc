@@ -1,0 +1,14 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtquick-android-classes.html
+\title Qt Quick Android Classes
+\summary The Qt Quick module provides classes for embedding Qt Quick in Android Applications.
+
+  \note Classes under this module requires \l{Qt for Android}.
+
+  \annotatedlist qt_android_classes
+
+  For more information on Qt Quick module, see the \l{Qt Quick} module documentation.
+*/
