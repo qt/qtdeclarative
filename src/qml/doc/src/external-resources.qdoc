@@ -57,3 +57,15 @@
     \externalpage https://cmake.org/cmake/help/latest/command/install.html#files
     \title install(FILES)
 */
+/*!
+    \externalpage https://developer.android.com/reference/android/view/View
+    \title Android: View
+*/
+/*!
+    \externalpage https://developer.android.com/reference/java/security/InvalidParameterException
+    \title Android: InvalidParameterException
+*/
+/*!
+    \externalpage https://developer.android.com/reference/java/lang/ClassCastException
+    \title Android: ClassCastException
+*/

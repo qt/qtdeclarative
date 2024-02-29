@@ -139,6 +139,8 @@ To find out more about using the QML language, see the \l{Qt Qml} module documen
             \li \l{Qt Quick Vector Image QML Types}{Vector Image} - provides types for displaying
             vector image files.
         \endlist
+    \li \l {Qt Quick Android Classes}
+            - provides classes for using QML with Java/Kotlin Android APIs.
 \endlist
 
 \section1 Licenses and Attributions
