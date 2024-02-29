@@ -90,7 +90,7 @@ private:
 
     using CacheKey = QString;
     // avoid loading the same file over and over when running all the tests
-    QHash<CacheKey, EnvironmentAndFile> cache;
+    QHash<CacheKey, std::shared_ptr<QQmlJS::Dom::DomEnvironment>> cache;
     QFactoryLoader m_pluginLoader;
 
 };

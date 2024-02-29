@@ -30,9 +30,11 @@ static QString printSet(const QSet<QString> &s)
 std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>
 tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
 {
-    CacheKey cacheKey = filePath;
-    if (auto entry = cache.find(cacheKey); entry != cache.end())
-        return *entry;
+    CacheKey cacheKey = QDir::cleanPath(filePath + u"/.."_s);
+    if (auto entry = cache.find(cacheKey); entry != cache.end()) {
+        DomItem env{ *entry };
+        return { env, env.field(QQmlJS::Dom::Fields::qmlFileWithPath).key(filePath) };
+    };
 
     QStringList qmltypeDirs =
             QStringList({ dataDirectory(), QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
@@ -56,7 +58,8 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
     envPtr->loadPendingDependencies();
     envPtr->loadBuiltins();
 
-    return cache[cacheKey] = std::make_tuple(env, file);
+    cache[cacheKey] = envPtr;
+    return std::make_tuple(env, file);
 }
 
 void tst_qmlls_utils::textOffsetRowColumnConversions_data()
