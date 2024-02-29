@@ -137,6 +137,8 @@ To find out more about using the QML language, see the \l{Qt Qml} module documen
             \li \l{Qt Quick Shapes QML Types}{Shapes}
                    - provides types for rendering vector shapes in a Qt Quick scene.
         \endlist
+    \li \l {Qt Quick Android Classes}
+            - provides classes for using QML with Java/Kotlin Android APIs.
 \endlist
 
 \section1 Licenses and Attributions
