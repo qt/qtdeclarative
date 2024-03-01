@@ -25,6 +25,7 @@ private slots:
     void engine();
     void findChild();
     void setInitialProperties();
+    void overlay();
 };
 
 
@@ -268,6 +269,16 @@ void tst_QQuickView::setInitialProperties()
     QVERIFY(rootObject);
     QCOMPARE(rootObject->property("z").toInt(), 4);
     QCOMPARE(rootObject->property("width").toInt(), 100);
+}
+
+void tst_QQuickView::overlay()
+{
+    QTest::ignoreMessage(QtWarningMsg,
+                         QRegularExpression(".*: Cannot set properties on overlay as it is null"));
+    QQuickView view;
+    view.setSource(testFileUrl("overlay.qml"));
+    QObject *rootObject = view.rootObject();
+    QVERIFY(!rootObject);
 }
 
 QTEST_MAIN(tst_QQuickView)
