@@ -491,7 +491,7 @@ void QQuickSelectionRectanglePrivate::updateSelectionMode()
     m_tapHandler->setEnabled(enabled);
 
     if (m_selectionMode == QQuickSelectionRectangle::Auto) {
-        if (qobject_cast<QQuickScrollView *>(m_target->parentItem())) {
+        if (m_target && qobject_cast<QQuickScrollView *>(m_target->parentItem())) {
             // ScrollView allows flicking with touch, but not with mouse. So we do
             // the same here: you can drag to select with a mouse, but not with touch.
             m_effectiveSelectionMode = QQuickSelectionRectangle::Drag;
