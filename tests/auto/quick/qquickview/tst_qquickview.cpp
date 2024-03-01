@@ -33,6 +33,7 @@ private slots:
     void fromModuleCtor();
     void loadFromModule_data();
     void loadFromModule();
+    void overlay();
 };
 
 
@@ -340,6 +341,16 @@ void tst_QQuickView::loadFromModule()
     view.loadFromModule(module, typeName);
     QTRY_COMPARE(view.status(), status);
     QCOMPARE(view.source(), url);
+}
+
+void tst_QQuickView::overlay()
+{
+    QTest::ignoreMessage(QtWarningMsg,
+                         QRegularExpression(".*: Cannot set properties on overlay as it is null"));
+    QQuickView view;
+    view.setSource(testFileUrl("overlay.qml"));
+    QObject *rootObject = view.rootObject();
+    QVERIFY(!rootObject);
 }
 
 QTEST_MAIN(tst_QQuickView)
