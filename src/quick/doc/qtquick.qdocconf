@@ -65,7 +65,8 @@ depends += \
     ../../qmllocalstorage \
     ../../quicklayouts \
     ../../labs \
-    ../../quick/jar/org/qtproject/qt/android
+    ../../quick/jar/org/qtproject/qt/android \
+    ../../../examples/platforms
 
 # both have their own documentation project
 excludedirs += \
@@ -77,7 +78,8 @@ exampledirs += \
     ../../qmlmodels/doc/snippets \
     ../../quickcontrols/doc/snippets \
     snippets \
-    ../../../tests/auto/quick/doc
+    ../../../tests/auto/quick/doc \
+    ../../../examples/platforms
 
 imagedirs += images
 
@@ -94,7 +96,8 @@ imagedirs += images
     ../../plugins
 
 excludefiles += ../util/qquickpropertychanges_p.h
-examples.fileextensions += "*.qm"
+examples.fileextensions += "*.qm" \
+                           "*.java"
 
 manifestmeta.thumbnail.names += "QtQuick/QML Dynamic View Ordering Tutorial*"
 
