@@ -1484,4 +1484,35 @@ TestCase {
         let rect = findChild(control.Overlay.overlay, "rect")
         verify(rect)
     }
+
+    Component {
+        id: popupWithOverlayInLoader
+
+        Loader {
+            id: loader
+            active: false
+            sourceComponent: Item {
+                anchors.fill: parent
+                Popup {
+                    modal: true
+                    visible: true
+                    Overlay.modal: Rectangle { color: 'grey' }
+                }
+            }
+        }
+    }
+
+    function test_popupWithOverlayInLoader() { // QTBUG-122915
+        let loader = createTemporaryObject(popupWithOverlayInLoader, testCase)
+        verify(loader)
+
+        let overlay = loader.Overlay.overlay
+        verify(overlay)
+
+        loader.active = true
+        tryCompare(overlay, "visible", true)
+
+        loader.active = false
+        tryCompare(overlay, "visible", false)
+    }
 }
