@@ -78,7 +78,7 @@ public class QtQuickView extends QtView {
         return (T)getRootObjectProperty(windowReference(), propertyName);
     }
 
-    public <T> int addSignalListener(String signalName, Class<T> argType,
+    public <T> int connectSignalListener(String signalName, Class<T> argType,
                                     SignalListener<T> listener)
     {
         int signalListenerId =
@@ -90,7 +90,7 @@ public class QtQuickView extends QtView {
         return signalListenerId;
     }
 
-    public boolean removeSignalListener(int signalListenerId)
+    public boolean disconnectSignalListener(int signalListenerId)
     {
         return removeRootObjectSignalListener(windowReference(), signalListenerId);
     }
