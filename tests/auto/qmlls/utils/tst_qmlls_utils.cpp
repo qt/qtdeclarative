@@ -682,7 +682,7 @@ void tst_qmlls_utils::findUsages_data()
 
     {
         QList<QQmlLSUtilsLocation> expectedUsages;
-        const auto testFileName = testFile("findUsages/jsIdentifier.qml");
+        const auto testFileName = testFile("findUsages/jsIdentifier/jsIdentifier.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 13, strlen("sum"));
@@ -706,7 +706,7 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
-        const auto testFileName = testFile("findUsages/property.qml");
+        const auto testFileName = testFile("findUsages/property/property.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
@@ -740,7 +740,7 @@ void tst_qmlls_utils::findUsages_data()
     }
     {
         QList<QQmlLSUtilsLocation> expectedUsages;
-        const auto testFileName = testFile("findUsages/propertyInNested.qml");
+        const auto testFileName = testFile("findUsages/propertyInNested/propertyInNested.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
@@ -790,7 +790,7 @@ void tst_qmlls_utils::findUsages_data()
     }
     {
         QList<QQmlLSUtilsLocation> expectedUsages;
-        const auto testFileName = testFile("findUsages/idUsages.qml");
+        const auto testFileName = testFile("findUsages/idUsages/idUsages.qml");
         const auto testFileContent = readFileContent(testFileName);
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 7, 9, strlen("rootId"));
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 11, 17, strlen("rootId"));
@@ -801,7 +801,7 @@ void tst_qmlls_utils::findUsages_data()
     }
     {
         QList<QQmlLSUtilsLocation> expectedUsages;
-        const auto testFileName = testFile("findUsages/recursive.qml");
+        const auto testFileName = testFile("findUsages/recursive/recursive.qml");
         const auto testFileContent = readFileContent(testFileName);
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 14, strlen("recursive"));
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 24, strlen("recursive"));
@@ -818,7 +818,7 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("findFunctionUsageFromDefinition") << 8 << 17 << recursiveUsages;
     }
     {
-        const auto testFileName = testFile("findUsages/signalsAndHandlers.qml");
+        const auto testFileName = testFile("findUsages/signalsAndHandlers/signalsAndHandlers.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
@@ -847,7 +847,7 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
-        const auto testFileName = testFile("findUsages/binding.qml");
+        const auto testFileName = testFile("findUsages/binding/binding.qml");
         const auto testFileContent = readFileContent(testFileName);
         QList<QQmlLSUtilsLocation> expectedUsages;
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 18,
@@ -859,7 +859,7 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("findBindingUsagesFromBinding") << 10 << 19 << helloPropertyBindingUsages;
     }
     {
-        const auto testFileName = testFile("findUsages/signalAndHandlers2.qml");
+        const auto testFileName = testFile("findUsages/signalsAndHandlers/signalAndHandlers2.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
@@ -926,7 +926,7 @@ void tst_qmlls_utils::findUsages_data()
     }
     {
         QList<QQmlLSUtilsLocation> expectedUsages;
-        const auto testFileName = testFile("findUsages/connections.qml");
+        const auto testFileName = testFile("findUsages/connections/connections.qml");
         const auto testFileContent = readFileContent(testFileName);
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 9, strlen("onClicked"));
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 17, 23, strlen("clicked"));
@@ -942,7 +942,8 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("findSignalsInConnectionFromFunction") << 16 << 22 << signalInConnection;
     }
     {
-        const auto testFileName = testFile("findUsages/parametersAndDeconstruction.qml");
+        const auto testFileName =
+                testFile("findUsages/parametersAndDeconstruction/parametersAndDeconstruction.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
@@ -986,7 +987,7 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
-        const auto testFileName = testFile("findUsages/groupPropertyUsage.qml");
+        const auto testFileName = testFile("findUsages/groupPropertyUsage/groupPropertyUsage.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
@@ -1010,7 +1011,8 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
-        const auto testFileName = testFile("findUsages/attachedPropertyUsage.qml");
+        const auto testFileName =
+                testFile("findUsages/attachedPropertyUsage/attachedPropertyUsage.qml");
         const auto testFileContent = readFileContent(testFileName);
         QList<QQmlLSUtilsLocation> expectedUsages;
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 5, strlen("Keys"));
@@ -1019,7 +1021,7 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("attachedPropertyUsages") << 12 << 25 << attachedPropertyUsages;
     }
     {
-        const auto testFileName = testFile("findUsages/inlineComponents.qml");
+        const auto testFileName = testFile("findUsages/inlineComponents/inlineComponents.qml");
         const auto testFileContent = readFileContent(testFileName);
         QList<QQmlLSUtilsLocation> expectedUsages;
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 22, strlen("foo"));
@@ -1032,7 +1034,7 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("inlineUsagesFromJsScope") << 20 << 20 << inlineUsages;
     }
     {
-        const auto testFileName = testFile("findUsages/propertyChanges.qml");
+        const auto testFileName = testFile("findUsages/propertyChanges/propertyChanges.qml");
         const auto testFileContent = readFileContent(testFileName);
         QList<QQmlLSUtilsLocation> expectedUsages;
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 9, strlen("onClicked"));
@@ -1043,7 +1045,7 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("propertyChanges1") << 16 << 21 << propertyChanges;
     }
     {
-        const auto testFileName = testFile("findUsages/bindings.qml");
+        const auto testFileName = testFile("findUsages/bindings/bindings.qml");
         const auto testFileContent = readFileContent(testFileName);
         QList<QQmlLSUtilsLocation> expectedUsages;
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 11, 23, strlen("patronChanged"));
@@ -1059,7 +1061,7 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("generalizedGroupPropertyBindings") << 27 << 19 << bindings;
     }
     {
-        const auto testFileName = testFile("findUsages/Enums.qml");
+        const auto testFileName = testFile("findUsages/enums/Enums.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
@@ -1080,7 +1082,7 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
-        const auto testFileName = testFile("findUsages/inlineComponents2.qml");
+        const auto testFileName = testFile("findUsages/inlineComponents/inlineComponents2.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
@@ -1098,9 +1100,10 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
-        const auto testFileName = testFile("findUsages/inlineComponents.qml");
+        const auto testFileName = testFile("findUsages/inlineComponents/inlineComponents.qml");
         const auto testFileContent = readFileContent(testFileName);
-        const auto providerFileName = testFile("findUsages/InlineComponentProvider.qml");
+        const auto providerFileName =
+                testFile("findUsages/inlineComponents/InlineComponentProvider.qml");
         const auto providerFileContent = readFileContent(providerFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsagesInProviderFile;
