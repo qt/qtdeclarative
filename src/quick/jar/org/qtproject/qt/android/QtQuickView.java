@@ -73,7 +73,7 @@ public class QtQuickView extends QtView {
     // getRootObjectProperty always returns a primitive type or an Object
     // so it is safe to suppress the unchecked warning
     @SuppressWarnings("unchecked")
-    public <T extends Object> T getProperty(String propertyName)
+    public <T> T getProperty(String propertyName)
     {
         return (T)getRootObjectProperty(windowReference(), propertyName);
     }
