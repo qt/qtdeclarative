@@ -1547,7 +1547,7 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         target->metaObject()->metacall(target, QMetaObject::BindableProperty, index, argv);
         const bool success = bindable.setBinding(qmlBinding);
 
-        const auto bindingPrivateRefCount = QPropertyBindingPrivate::get(qmlBinding)->ref;
+        const auto bindingPrivateRefCount = QPropertyBindingPrivate::get(qmlBinding)->refCount();
 
         // Only pop_front after setting the binding as the bindings are refcounted.
         sharedState->allQPropertyBindings.pop_front();

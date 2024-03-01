@@ -39,7 +39,7 @@ static int getRefCount(const QQmlAnyBinding &binding)
     } else {
         // this temporarily adds a refcount because we construc a new untypedpropertybinding
         // thus -1
-        return QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding())->ref - 1;
+        return QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding())->refCount() - 1;
     }
 }
 
