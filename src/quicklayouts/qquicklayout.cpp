@@ -303,16 +303,15 @@ void QQuickLayoutAttached::setMaximumImplicitSize(const QSizeF &sz)
     If this property is \c true, the item will be as wide as possible while respecting
     the given constraints. If the property is \c false, the item will have a fixed width
     set to the preferred width.
-    The default depends on implicit (built-in) size policy of item.
+    The default is \c false, except for layouts themselves, which default to \c true.
 
     \sa fillHeight
 */
 void QQuickLayoutAttached::setFillWidth(bool fill)
 {
-    bool oldFillWidth = fillWidth();
     m_isFillWidthSet = true;
-    m_fillWidth = fill;
-    if (oldFillWidth != fill) {
+    if (m_fillWidth != fill) {
+        m_fillWidth = fill;
         invalidateItem();
         emit fillWidthChanged();
     }
@@ -324,16 +323,15 @@ void QQuickLayoutAttached::setFillWidth(bool fill)
     If this property is \c true, the item will be as tall as possible while respecting
     the given constraints. If the property is \c false, the item will have a fixed height
     set to the preferred height.
-    The default depends on implicit (built-in) size policy of the item.
+    The default is \c false, except for layouts themselves, which default to \c true.
 
     \sa fillWidth
 */
 void QQuickLayoutAttached::setFillHeight(bool fill)
 {
-    bool oldFillHeight = fillHeight();
     m_isFillHeightSet = true;
-    m_fillHeight = fill;
-    if (oldFillHeight != fill) {
+    if (m_fillHeight != fill) {
+        m_fillHeight = fill;
         invalidateItem();
         emit fillHeightChanged();
     }
@@ -1257,15 +1255,7 @@ void QQuickLayout::effectiveSizeHints_helper(QQuickItem *item, QSizeF *cachedSiz
  */
 QLayoutPolicy::Policy QQuickLayout::effectiveSizePolicy_helper(QQuickItem *item, Qt::Orientation orientation, QQuickLayoutAttached *info)
 {
-    bool fillExtent([&]{
-        QLayoutPolicy::Policy policy{QLayoutPolicy::Fixed};
-        if (item && !QGuiApplication::testAttribute(Qt::AA_QtQuickDontUseDefaultSizePolicy)) {
-            QLayoutPolicy sizePolicy = QQuickItemPrivate::get(item)->sizePolicy();
-            policy = (orientation == Qt::Horizontal) ? sizePolicy.horizontalPolicy() : sizePolicy.verticalPolicy();
-        }
-        return (policy == QLayoutPolicy::Preferred);
-    }());
-
+    bool fillExtent = false;
     bool isSet = false;
     if (info) {
         if (orientation == Qt::Horizontal) {
@@ -1278,8 +1268,8 @@ QLayoutPolicy::Policy QQuickLayout::effectiveSizePolicy_helper(QQuickItem *item,
     }
     if (!isSet && qobject_cast<QQuickLayout*>(item))
         fillExtent = true;
-
     return fillExtent ? QLayoutPolicy::Preferred : QLayoutPolicy::Fixed;
+
 }
 
 void QQuickLayout::_q_dumpLayoutTree() const
