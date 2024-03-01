@@ -14,7 +14,7 @@
     \note The following programs must be installed if \c setHighQuality(true)
     is called:
 
-    \li \e ffmpeg (sudo apt-get install ffmpeg)
+    \li \e FFmpeg (sudo apt-get install ffmpeg)
     \li \e convert (sudo apt-get install imagemagick)
     \li \e gifsicle (sudo apt-get install gifsicle)
 
@@ -228,7 +228,7 @@ void GifRecorder::waitForFinish()
         QSignalSpy spy(mWindow, SIGNAL(frameSwapped()));
         QVERIFY(spy.wait());
 
-        // Start ffmpeg and send its output to imagemagick's convert command.
+        // Start FFmpeg and send its output to imagemagick's convert command.
         // Based on the example in the documentation for QProcess::setStandardOutputProcess().
         QProcess ffmpegProcess;
         QProcess convertProcess;
