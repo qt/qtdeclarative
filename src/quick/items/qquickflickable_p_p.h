@@ -234,7 +234,8 @@ public:
     void handleMoveEvent(QPointerEvent *);
     void handleReleaseEvent(QPointerEvent *);
 
-    void maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn);
+    void maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn,
+                        Qt::MouseButtons buttons = Qt::NoButton);
     void drag(qint64 currentTimestamp, QEvent::Type eventType, const QPointF &localPos,
               const QVector2D &deltas, bool overThreshold, bool momentum,
               bool velocitySensitiveOverBounds, const QVector2D &velocity);
