@@ -20,7 +20,7 @@ class Q_QUICK_EXPORT QQuickTextDocument : public QObject
 
     QML_NAMED_ELEMENT(TextDocument)
     QML_UNCREATABLE("TextDocument is only available as a property of TextEdit or TextArea.")
-    QML_ADDED_IN_VERSION(2, 0)
+    QML_ADDED_IN_VERSION(6, 7)
 
 public:
     enum class Status : quint8 {
