@@ -36,10 +36,10 @@ Item {
         fixedColorBufferWidth: cbSize.checked ? slSize.value.toFixed(0) : 0
         fixedColorBufferHeight: cbSize.checked ? slSize.value.toFixed(0) : 0
         alphaBlending: cbBlend.checked
-        colorBufferFormat: rdFormatRGBA8.checked ? ExampleRhiItem.RGBA8
-                                             : rdFormatFP16.checked ? ExampleRhiItem.RGBA16F
-                                                                    : rdFormatFP32.checked ? ExampleRhiItem.RGBA32F
-                                                                                           : ExampleRhiItem.RGB10A2
+        colorBufferFormat: rdFormatRGBA8.checked ? ExampleRhiItem.TextureFormat.RGBA8
+                                             : rdFormatFP16.checked ? ExampleRhiItem.TextureFormat.RGBA16F
+                                                                    : rdFormatFP32.checked ? ExampleRhiItem.TextureFormat.RGBA32F
+                                                                                           : ExampleRhiItem.TextureFormat.RGB10A2
 
         // custom properties provided by the QQuickRhiItem subclass: angle, backgroundAlpha
         NumberAnimation on angle {
