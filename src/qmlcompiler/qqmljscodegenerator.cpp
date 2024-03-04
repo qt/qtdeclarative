@@ -53,10 +53,11 @@ QString QQmlJSCodeGenerator::castTargetName(const QQmlJSScope::ConstPtr &type) c
 }
 
 QQmlJSCodeGenerator::QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
-        const QV4::Compiler::JSUnitGenerator *unitGenerator,
-        const QQmlJSTypeResolver *typeResolver,
-        QQmlJSLogger *logger)
-    : QQmlJSCompilePass(unitGenerator, typeResolver, logger)
+                                         const QV4::Compiler::JSUnitGenerator *unitGenerator,
+                                         const QQmlJSTypeResolver *typeResolver,
+                                         QQmlJSLogger *logger, BasicBlocks basicBlocks,
+                                         InstructionAnnotations annotations)
+    : QQmlJSCompilePass(unitGenerator, typeResolver, logger, basicBlocks, annotations)
     , m_context(compilerContext)
 {}
 
@@ -94,11 +95,9 @@ QString QQmlJSCodeGenerator::metaType(const QQmlJSScope::ConstPtr &type)
 }
 
 QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function,
-                                           const InstructionAnnotations *annotations,
                                            QQmlJS::DiagnosticMessage *error,
                                            bool basicBlocksValidationFailed)
 {
-    m_annotations = annotations;
     m_function = function;
     m_error = error;
 
@@ -126,7 +125,7 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function,
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_CLANG("-Wrange-loop-analysis")
-    for (const auto &annotation : *m_annotations) {
+    for (const auto &annotation : m_annotations) {
         addVariable(annotation.second.changedRegisterIndex,
                     annotation.second.changedRegister.resultLookupIndex(),
                     annotation.second.changedRegister.storedType());
@@ -1419,7 +1418,7 @@ void QQmlJSCodeGenerator::generate_GetOptionalLookup(int index, int offset)
     const QQmlJSRegisterContent accumulatorIn = m_state.accumulatorIn();
     QString accumulatorVarIn = m_state.accumulatorVariableIn;
 
-    const auto &annotation = (*m_annotations)[currentInstructionOffset()];
+    const auto &annotation = m_annotations[currentInstructionOffset()];
     if (accumulatorIn.storedType()->isReferenceType()) {
         m_body += u"if (!%1)\n"_s.arg(accumulatorVarIn);
         generateJumpCodeWithTypeConversions(offset);
@@ -3223,7 +3222,7 @@ void QQmlJSCodeGenerator::generate_GetTemplateObject(int index)
 QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
         QV4::Moth::Instr::Type type)
 {
-    m_state.State::operator=(nextStateFromAnnotations(m_state, *m_annotations));
+    m_state.State::operator=(nextStateFromAnnotations(m_state, m_annotations));
     const auto accumulatorIn = m_state.registers.find(Accumulator);
     if (accumulatorIn != m_state.registers.end()
             && isTypeStorable(m_typeResolver, accumulatorIn.value().content.storedType())) {
@@ -3647,8 +3646,8 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
 {
     QString conversionCode;
     const int absoluteOffset = nextInstructionOffset() + relativeOffset;
-    const auto annotation = m_annotations->find(absoluteOffset);
-    if (annotation != m_annotations->constEnd()) {
+    const auto annotation = m_annotations.find(absoluteOffset);
+    if (static_cast<InstructionAnnotations::const_iterator>(annotation) != m_annotations.constEnd()) {
         const auto &conversions = annotation->second.typeConversions;
 
         for (auto regIt = conversions.constBegin(), regEnd = conversions.constEnd();

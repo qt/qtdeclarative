@@ -55,6 +55,19 @@ public:
     // map from register index to expected type
     using VirtualRegisters = QFlatMap<int, VirtualRegister>;
 
+    struct BasicBlock
+    {
+        QList<int> jumpOrigins;
+        QList<int> readRegisters;
+        QList<QQmlJSScope::ConstPtr> readTypes;
+        int jumpTarget = -1;
+        bool jumpIsUnconditional = false;
+        bool isReturnBlock = false;
+        bool isThrowBlock = false;
+    };
+
+    using BasicBlocks = QFlatMap<int, BasicBlock>;
+
     struct InstructionAnnotation
     {
         // Registers explicit read as part of the instruction.
@@ -70,6 +83,11 @@ public:
     };
 
     using InstructionAnnotations = QFlatMap<int, InstructionAnnotation>;
+    struct BlocksAndAnnotations
+    {
+        BasicBlocks basicBlocks;
+        InstructionAnnotations annotations;
+    };
 
     struct Function
     {
@@ -84,6 +102,19 @@ public:
         bool isQPropertyBinding = false;
         bool isProperty = false;
         bool isFullyTyped = false;
+    };
+
+    struct ObjectOrArrayDefinition
+    {
+        enum {
+            ArrayClassId = -1,
+            ArrayConstruct1ArgId = -2,
+        };
+
+        int instructionOffset = -1;
+        int internalClassId = ArrayClassId;
+        int argc = 0;
+        int argv = -1;
     };
 
     struct State
@@ -233,10 +264,13 @@ public:
     };
 
     QQmlJSCompilePass(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
-                      const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger)
+                      const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
+                      BasicBlocks basicBlocks = {}, InstructionAnnotations annotations = {})
         : m_jsUnitGenerator(jsUnitGenerator)
         , m_typeResolver(typeResolver)
         , m_logger(logger)
+        , m_basicBlocks(basicBlocks)
+        , m_annotations(annotations)
     {}
 
 protected:
@@ -245,6 +279,8 @@ protected:
     QQmlJSLogger *m_logger = nullptr;
 
     const Function *m_function = nullptr;
+    BasicBlocks m_basicBlocks;
+    InstructionAnnotations m_annotations;
     QQmlJS::DiagnosticMessage *m_error = nullptr;
 
     int firstRegisterIndex() const

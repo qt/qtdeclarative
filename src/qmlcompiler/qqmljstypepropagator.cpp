@@ -28,13 +28,15 @@ using namespace Qt::StringLiterals;
 
 QQmlJSTypePropagator::QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                                            const QQmlJSTypeResolver *typeResolver,
-                                           QQmlJSLogger *logger,  QQmlSA::PassManager *passManager)
-    : QQmlJSCompilePass(unitGenerator, typeResolver, logger),
+                                           QQmlJSLogger *logger, BasicBlocks basicBlocks,
+                                           InstructionAnnotations annotations,
+                                           QQmlSA::PassManager *passManager)
+    : QQmlJSCompilePass(unitGenerator, typeResolver, logger, basicBlocks, annotations),
       m_passManager(passManager)
 {
 }
 
-QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
+QQmlJSCompilePass::BlocksAndAnnotations QQmlJSTypePropagator::run(
         const Function *function, QQmlJS::DiagnosticMessage *error)
 {
     m_function = function;
@@ -48,6 +50,7 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
 
         m_prevStateAnnotations = m_state.annotations;
         m_state = PassState();
+        m_state.annotations = m_annotations;
         m_state.State::operator=(initialState(m_function));
 
         reset();
@@ -58,7 +61,7 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
         // This means that we won't start over for the same reason again.
     } while (m_state.needsMorePasses);
 
-    return m_state.annotations;
+    return { std::move(m_basicBlocks), std::move(m_state.annotations) };
 }
 
 #define INSTR_PROLOGUE_NOT_IMPLEMENTED()                                              \

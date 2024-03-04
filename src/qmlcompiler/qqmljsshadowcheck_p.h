@@ -22,14 +22,14 @@ class Q_QMLCOMPILER_EXPORT QQmlJSShadowCheck : public QQmlJSCompilePass
 {
 public:
     QQmlJSShadowCheck(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
-                      const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger)
-        : QQmlJSCompilePass(jsUnitGenerator, typeResolver, logger)
+                      const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
+                      BasicBlocks basicBlocks, InstructionAnnotations annotations)
+        : QQmlJSCompilePass(jsUnitGenerator, typeResolver, logger, basicBlocks, annotations)
     {}
 
     ~QQmlJSShadowCheck() = default;
 
-    void run(InstructionAnnotations *annotations, const Function *function,
-             QQmlJS::DiagnosticMessage *error);
+    BlocksAndAnnotations run(const Function *function, QQmlJS::DiagnosticMessage *error);
 
 private:
     struct ResettableStore {
@@ -62,7 +62,6 @@ private:
     QList<QQmlJSRegisterContent> m_baseTypes;
     QSet<QQmlJSRegisterContent> m_adjustedTypes;
 
-    InstructionAnnotations *m_annotations = nullptr;
     State m_state;
 };
 
