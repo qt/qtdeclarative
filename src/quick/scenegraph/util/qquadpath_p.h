@@ -39,7 +39,7 @@ public:
     };
     Q_DECLARE_FLAGS(PathHints, PathHint)
 
-    class Element
+    class Q_QUICK_EXPORT Element
     {
     public:
         Element ()
