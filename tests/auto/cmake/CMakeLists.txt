@@ -129,6 +129,7 @@ endif()
 
 if(TARGET Qt::Quick)
     if(NOT CMAKE_CROSSCOMPILING)
+        _qt_internal_test_expect_pass(shared_qml_module)
         _qt_internal_test_expect_pass(qtquickcompiler BINARY qqc_test)
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.21")
             _qt_internal_test_expect_pass(test_common_import_path

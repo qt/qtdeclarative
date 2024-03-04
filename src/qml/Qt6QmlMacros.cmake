@@ -474,6 +474,8 @@ function(qt6_add_qml_module target)
         set(arg_TYPEINFO ${target}.qmltypes)
     endif()
 
+    set(all_qml_import_paths "${arg_IMPORT_PATH}")
+
     set(original_no_show_policy_value "${QT_NO_SHOW_OLD_POLICY_WARNINGS}")
     # silent by default, we only warn if someone uses TARGET as a URI
     set(QT_NO_SHOW_OLD_POLICY_WARNINGS TRUE)
@@ -500,8 +502,11 @@ function(qt6_add_qml_module target)
             _qt_internal_parse_qml_module_dependency(${import} ${target_keyword_was_set}
                 OUTPUT_URI import_uri
                 OUTPUT_VERSION import_version
-                OUTPUT_MODULE_LOCATION module_location # TODO: actually use it
+                OUTPUT_MODULE_LOCATION module_location
             )
+            get_filename_component(module_import_path "${module_location}" DIRECTORY)
+            list(APPEND all_qml_import_paths "${module_import_path}")
+
             if (NOT "${import_version}" STREQUAL "")
                 set_property(TARGET ${target} APPEND PROPERTY
                     QT_QML_MODULE_${import_set} "${import_uri} ${import_version}"
@@ -526,10 +531,13 @@ function(qt6_add_qml_module target)
                 set(target_keyword_was_set FALSE)
             endif()
         endif()
-        _qt_internal_parse_qml_module_dependency(${dependency} ${target_keyword_was_set}
+        _qt_internal_parse_qml_module_dependency(${dependency} "${target_keyword_was_set}"
             OUTPUT_URI dep_uri
             OUTPUT_VERSION dep_version
+            OUTPUT_MODULE_LOCATION module_location
         )
+        get_filename_component(module_import_path "${module_location}" DIRECTORY)
+        list(APPEND all_qml_import_paths "${module_import_path}")
         if (NOT "${dep_version}" STREQUAL "")
             set_property(TARGET ${target} APPEND PROPERTY
                 QT_QML_MODULE_DEPENDENCIES "${dep_uri} ${dep_version}"
@@ -586,6 +594,8 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         endif()
     endif()
 
+    list(REMOVE_DUPLICATES all_qml_import_paths)
+
     set_target_properties(${target} PROPERTIES
         QT_QML_MODULE_NO_LINT "${arg_NO_LINT}"
         QT_QML_MODULE_NO_CACHEGEN "${arg_NO_CACHEGEN}"
@@ -615,7 +625,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         QT_QML_MODULE_PAST_MAJOR_VERSIONS "${arg_PAST_MAJOR_VERSIONS}"
 
         # TODO: Check how this is used by qt6_android_generate_deployment_settings()
-        QT_QML_IMPORT_PATH "${arg_IMPORT_PATH}"
+        QT_QML_IMPORT_PATH "${all_qml_import_paths}"
     )
 
     if(arg_TYPEINFO)
