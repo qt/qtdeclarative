@@ -177,7 +177,7 @@ Item {
         }
 
         Label {
-            text: qsTr("Backing texture size: %1x%2 pixels").arg(renderer.effectiveTextureSize.width).arg(renderer.effectiveTextureSize.height)
+            text: qsTr("Backing texture size: %1x%2 pixels").arg(renderer.effectiveColorBufferSize.width).arg(renderer.effectiveColorBufferSize.height)
         }
 
         Label {
