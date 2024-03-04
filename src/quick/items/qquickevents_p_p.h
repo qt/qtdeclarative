@@ -48,7 +48,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickKeyEvent : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
     QML_NAMED_ELEMENT(KeyEvent)
     QML_UNCREATABLE("Should only be used by signal handlers in the Keys attached property")
-    QML_ADDED_IN_VERSION(2, 0)
+    QML_ADDED_IN_VERSION(6, 7)
 
 public:
     QQuickKeyEvent()
@@ -120,7 +120,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(int flags READ flags CONSTANT REVISION(2, 11) FINAL)
     QML_NAMED_ELEMENT(MouseEvent)
     QML_UNCREATABLE("Should only be used by mouse event signal handlers, for example in MouseArea")
-    QML_ADDED_IN_VERSION(2, 0)
+    QML_ADDED_IN_VERSION(6, 7)
 
 public:
     QQuickMouseEvent()
@@ -194,7 +194,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWheelEvent : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
     QML_NAMED_ELEMENT(WheelEvent)
     QML_UNCREATABLE("Should only be used by wheel event signal handlers, for example in MouseArea")
-    QML_ADDED_IN_VERSION(2, 0)
+    QML_ADDED_IN_VERSION(6, 7)
 
 public:
     QQuickWheelEvent() = default;
@@ -245,7 +245,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
     QML_NAMED_ELEMENT(CloseEvent)
     QML_UNCREATABLE("Should only be used by Window's closing signal")
-    QML_ADDED_IN_VERSION(2, 0)
+    QML_ADDED_IN_VERSION(6, 7)
 
 public:
     QQuickCloseEvent() {}
