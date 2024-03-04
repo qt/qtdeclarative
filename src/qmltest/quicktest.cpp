@@ -4,6 +4,7 @@
 #include "quicktest_p.h"
 #include "quicktestresult_p.h"
 #include <QtTest/qtestsystem.h>
+#include <QtTest/private/qtestcrashhandler_p.h>
 #include "qtestoptions_p.h"
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
@@ -566,6 +567,11 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
                  qPrintable(testPath), qPrintable(QDir::currentPath()));
         return 1;
     }
+
+    std::optional<QTest::CrashHandler::FatalSignalHandler> handler;
+    QTest::CrashHandler::prepareStackTrace();
+    if (!QTest::Internal::noCrashHandler)
+        handler.emplace();
 
     qputenv("QT_QTESTLIB_RUNNING", "1");
 
