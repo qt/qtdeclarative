@@ -62,6 +62,8 @@ private slots:
 
     void changingOrientationResetsPreviousAxisValues_data();
     void changingOrientationResetsPreviousAxisValues();
+    void bindingDirectlyOnPositionInHeaderAndFooterDelegates_data();
+    void bindingDirectlyOnPositionInHeaderAndFooterDelegates();
 
     void clearObjectListModel();
 
@@ -1153,6 +1155,38 @@ void tst_QQuickListView2::changingOrientationResetsPreviousAxisValues() // QTBUG
     // X should be 0 for all delegates, but not Y.
     QVERIFY(listView->property("isXReset").toBool());
     QVERIFY(!listView->property("isYReset").toBool());
+}
+
+void tst_QQuickListView2::bindingDirectlyOnPositionInHeaderAndFooterDelegates_data()
+{
+    QTest::addColumn<QByteArray>("sourceFile");
+    QTest::addColumn<qreal(QQuickItem::*)()const>("pos");
+    QTest::addColumn<qreal(QQuickItem::*)()const>("size");
+    QTest::newRow("XPosition") << QByteArray("bindOnHeaderAndFooterXPosition.qml") << &QQuickItem::x << &QQuickItem::width;
+    QTest::newRow("YPosition") << QByteArray("bindOnHeaderAndFooterYPosition.qml") << &QQuickItem::y << &QQuickItem::height;
+}
+void tst_QQuickListView2::bindingDirectlyOnPositionInHeaderAndFooterDelegates()
+{
+
+    typedef qreal (QQuickItem::*position_func_t)() const;
+    QFETCH(QByteArray, sourceFile);
+    QFETCH(position_func_t, pos);
+    QFETCH(position_func_t, size);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(QString::fromLatin1(sourceFile))));
+    auto *listView = qobject_cast<QQuickListView *>(window.rootObject());
+    QVERIFY(listView);
+
+    const qreal widthOrHeight = (listView->*size)();
+
+    QCOMPARE((listView->headerItem()->*pos)(), (widthOrHeight - 50) / 2);
+    QCOMPARE((listView->footerItem()->*pos)(), (widthOrHeight - 50) / 2);
+
+    // Verify that the "regular" delegate items, don't honor x and y bindings.
+    // This should only be allowed for header and footer delegates.
+    for (int i = 0; i < listView->count(); ++i)
+        QCOMPARE((listView->itemAtIndex(i)->*pos)(), 0);
 }
 
 void tst_QQuickListView2::clearObjectListModel()

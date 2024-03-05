@@ -117,6 +117,14 @@ To visualize data, bind the view's \c model property to a model and the
     \snippet qml/listview.qml delegate
     \image listview-setup.png
 
+    \section2 Positioning of View Delegates
+
+    The type of view will determine how the items are positioned. \l {ListView}
+    will position the items in a straight line, depending on the \l {ListView::}{orientation},
+    while a \l {GridView} can lay them out in a 2 dimentional grid. It's \b {not} recommended
+    to bind directly on \l {Item::x}{x} and \l {Item::y}{y}, since the view's layouting
+    behavior will always take precedence over any positional binding.
+
     \section2 Accessing Views and Models from Delegates
 
     The list view to which the delegate is bound is accessible from the delegate
