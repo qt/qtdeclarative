@@ -384,6 +384,7 @@ void tst_qquicktextdocument::overrideTextFormat_data()
     QTest::addColumn<int>("expectedItalicFragment");
     // first part of TextEdit.text after switching to replacementFormat
     QTest::addColumn<QString>("expectedReplacementPrefix");
+    QTest::addColumn<int>("expectedTextChangedSignalsAfterReplacement");
 
     QTest::addColumn<QQuickTextEdit::TextFormat>("finalFormat");
     QTest::addColumn<int>("expectedFinalFragmentCount");
@@ -394,58 +395,62 @@ void tst_qquicktextdocument::overrideTextFormat_data()
     QTest::newRow("load md, switch to plain, back to md")
             << testFileUrl("text.qml") << QQuickTextEdit::MarkdownText << testFileUrl("hello.md")
             << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
-            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s
+            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s << 2
             << QQuickTextEdit::MarkdownText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s;
     QTest::newRow("load md, switch to plain, then auto")
             << testFileUrl("text.qml") << QQuickTextEdit::MarkdownText << testFileUrl("hello.md")
             << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
-            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s
-            << QQuickTextEdit::AutoText << 3 << 1 << u"Γειά σου Κόσμε!"_s;
+            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s << 2
+            << QQuickTextEdit::AutoText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s;
     QTest::newRow("load md, switch to html, then plain")
             << testFileUrl("text.qml") << QQuickTextEdit::MarkdownText << testFileUrl("hello.md")
             << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
-            << QQuickTextEdit::RichText << 1 << -1 << u"<!DOCTYPE HTML"_s // throws away formatting, unfortunately
+            << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s << 2
             << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s;
     QTest::newRow("load md as plain text, switch to md, back to plain")
             << testFileUrl("text.qml") << QQuickTextEdit::PlainText << testFileUrl("hello.md")
             << 1 << -1 << u"Γειά σου *Κόσμε*!"_s
-            << QQuickTextEdit::MarkdownText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
+            << QQuickTextEdit::MarkdownText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s << 2
             << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s;
     QTest::newRow("load md as autotext, switch to plain, back to auto")
             << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.md")
             << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
-            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s
-            << QQuickTextEdit::AutoText << 3 << 1 << u"Γειά σου Κόσμε!"_s;
+            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s << 2
+            << QQuickTextEdit::AutoText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s;
     QTest::newRow("load md as autotext, switch to md, then plain")
             << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.md")
             << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
             << QQuickTextEdit::MarkdownText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
+            // going from AutoText to a matching explicit format does not cause extra textChanged()
+            << 1
             << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s;
     QTest::newRow("load md as autotext, switch to html, then plain")
             << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.md")
             << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
-            << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s
+            << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s << 2
             << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s;
 
     QTest::newRow("load html, switch to plain, back to rich")
             << testFileUrl("text.qml") << QQuickTextEdit::RichText << testFileUrl("hello.html")
             << 3 << 1 << u"<!DOCTYPE HTML"_s
-            << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s
+            << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s << 2
             << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s;
     QTest::newRow("load html as plain text, switch to html, back to plain")
             << testFileUrl("text.qml") << QQuickTextEdit::PlainText << testFileUrl("hello.html")
             << 1 << -1 << u"Γειά σου <i>Κόσμε</i>!"_s
-            << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s
+            << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s << 2
             << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s;
     QTest::newRow("load html as autotext, switch to html, then plain")
             << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.html")
             << 3 << 1 << u"<!DOCTYPE HTML"_s
             << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s
+            // going from AutoText to a matching explicit format does not cause extra textChanged()
+            << 1
             << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s;
     QTest::newRow("load html as autotext, switch to markdown, then plain")
             << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.html")
             << 3 << 1 << u"<!DOCTYPE HTML"_s
-            << QQuickTextEdit::MarkdownText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
+            << QQuickTextEdit::MarkdownText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s << 2
             << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s;
 }
 
@@ -465,6 +470,7 @@ void tst_qquicktextdocument::overrideTextFormat() // QTBUG-120772
     QFETCH(int, expectedFragmentCount);
     QFETCH(int, expectedItalicFragment);
     QFETCH(QString, expectedReplacementPrefix);
+    QFETCH(int, expectedTextChangedSignalsAfterReplacement);
 
     QFETCH(QQuickTextEdit::TextFormat, finalFormat);
     QFETCH(int, expectedFinalFragmentCount);
@@ -501,7 +507,7 @@ void tst_qquicktextdocument::overrideTextFormat() // QTBUG-120772
     textEdit->setTextFormat(replacementFormat);
     QCOMPARE(qqdoc->isModified(), false);
     QCOMPARE(sourceChangedSpy.size(), 1);
-    QCOMPARE_GE(textChangedSpy.size(), 2); // loading and then the format change
+    QCOMPARE_GE(textChangedSpy.size(), expectedTextChangedSignalsAfterReplacement);
     fragCountAndItalic = fragmentsAndItalics(doc);
     QCOMPARE(fragCountAndItalic.first, expectedFragmentCount);
     QCOMPARE(fragCountAndItalic.second, expectedItalicFragment);
@@ -513,7 +519,7 @@ void tst_qquicktextdocument::overrideTextFormat() // QTBUG-120772
     textEdit->setTextFormat(finalFormat);
     QCOMPARE(qqdoc->isModified(), false);
     QCOMPARE(sourceChangedSpy.size(), 1);
-    QCOMPARE_GE(textChangedSpy.size(), 3);
+    QCOMPARE_GE(textChangedSpy.size(), expectedTextChangedSignalsAfterReplacement + 1);
     fragCountAndItalic = fragmentsAndItalics(doc);
     QCOMPARE(fragCountAndItalic.first, expectedFinalFragmentCount);
     QCOMPARE(fragCountAndItalic.second, expectedFinalItalicFragment);

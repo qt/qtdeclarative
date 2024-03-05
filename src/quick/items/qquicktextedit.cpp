@@ -507,47 +507,129 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     if (format == d->format)
         return;
 
-    const bool wasRich = d->richText;
-    const bool wasMarkdown = d->markdownText;
-    const bool wasAuto = d->format == AutoText;
-    bool textCachedChanged = false;
-    d->richText = format == RichText || (format == AutoText && (wasRich || Qt::mightBeRichText(text())));
-    d->markdownText = format == MarkdownText;
+    auto mightBeRichText = [this]() {
+        return Qt::mightBeRichText(text());
+    };
 
-    qCDebug(lcTextEdit) << d->format << "->" << format
-                        << "was rich?" << wasRich << "md?" << wasMarkdown << "auto?" << wasAuto
-                        << "now: rich?" << d->richText << "md?" << d->markdownText;
+    auto findSourceFormat = [d, mightBeRichText](Qt::TextFormat detectedFormat) {
+        if (d->format == PlainText)
+            return PlainText;
+        if (d->richText) return RichText;
+        if (d->markdownText) return MarkdownText;
+        if (detectedFormat == Qt::AutoText && mightBeRichText())
+            return RichText;
+        return PlainText;
+    };
+
+    auto findDestinationFormat = [format, mightBeRichText](Qt::TextFormat detectedFormat, TextFormat sourceFormat) {
+        if (format == AutoText) {
+            if (detectedFormat == Qt::MarkdownText || (detectedFormat == Qt::AutoText && sourceFormat == MarkdownText))
+                return MarkdownText;
+            if (detectedFormat == Qt::RichText || (detectedFormat == Qt::AutoText && (sourceFormat == RichText || mightBeRichText())))
+                return RichText;
+            return PlainText; // fallback
+        }
+        return format;
+    };
+
+    bool textCachedChanged = false;
+    bool converted = false;
 
     if (isComponentComplete()) {
-        const Qt::TextFormat detectedFormat = d->quickDocument ?
-                QQuickTextDocumentPrivate::get(d->quickDocument)->detectedFormat : Qt::AutoText;
+        Qt::TextFormat detectedFormat = Qt::AutoText; // default if we don't know
+        if (d->quickDocument) {
+            // If QQuickTextDocument is in use, content can be loaded from a file,
+            // and then mime type detection overrides mightBeRichText().
+            detectedFormat = QQuickTextDocumentPrivate::get(d->quickDocument)->detectedFormat;
+        }
+
+        const TextFormat sourceFormat = findSourceFormat(detectedFormat);
+        const TextFormat destinationFormat = findDestinationFormat(detectedFormat, sourceFormat);
+
+        d->richText = destinationFormat == RichText;
+        d->markdownText = destinationFormat == MarkdownText;
+
         // If converting between markdown and HTML, avoid using cached text: have QTD re-generate it
-        if (format != PlainText && (wasRich || detectedFormat == Qt::RichText) !=
-                    (wasMarkdown || detectedFormat == Qt::MarkdownText)) {
+        if (format != PlainText && (sourceFormat != destinationFormat)) {
             d->textCached = false;
             textCachedChanged = true;
         }
+
+        switch (destinationFormat) {
+        case PlainText:
 #if QT_CONFIG(texthtmlparser)
-        if ((wasRich || wasAuto) && !d->richText && !d->markdownText) {
-            d->control->setPlainText(!d->textCached ? d->control->toHtml() : d->text);
-            updateSize();
-        } else if (!(wasRich || wasAuto) &&
-                   (d->richText || (format == AutoText && detectedFormat == Qt::RichText))) {
-            d->control->setHtml(!d->textCached ? d->control->toPlainText() : d->text);
-            updateSize();
-        }
+            if (sourceFormat == RichText) {
+                // If rich or unknown text was loaded and now the user wants plain text, get the raw HTML.
+                // But if we didn't set textCached to false above, assume d->text already contains HTML.
+                // This will allow the user to see the actual HTML they loaded (rather than Qt regenerating crufty HTML).
+                d->control->setPlainText(d->textCached ? d->text : d->control->toHtml());
+                converted = true;
+            }
 #endif
 #if QT_CONFIG(textmarkdownwriter) && QT_CONFIG(textmarkdownreader)
-        if ((wasMarkdown || wasAuto) && !d->markdownText && !d->richText) {
-            d->control->setPlainText(!d->textCached ? d->control->toMarkdown() : d->text);
-            updateSize();
-        } else if (!(wasMarkdown || wasAuto) &&
-                   (d->markdownText || (format == AutoText && detectedFormat == Qt::MarkdownText))) {
-            d->control->setMarkdownText(!d->textCached ? d->control->toPlainText() : d->text);
-            updateSize();
-        }
+            if (sourceFormat == MarkdownText) {
+                // If markdown or unknown text was loaded and now the user wants plain text, get the raw Markdown.
+                // But if we didn't set textCached to false above, assume d->text already contains markdown.
+                // This will allow the user to see the actual markdown they loaded.
+                d->control->setPlainText(d->textCached ? d->text : d->control->toMarkdown());
+                converted = true;
+            }
 #endif
+            break;
+        case RichText:
+#if QT_CONFIG(texthtmlparser)
+            switch (sourceFormat) {
+            case MarkdownText:
+                // If markdown was loaded and now the user wants HTML, convert markdown to HTML.
+                d->control->setHtml(d->control->toHtml());
+                converted = true;
+                break;
+            case PlainText:
+                // If plain text was loaded and now the user wants HTML, interpret plain text as HTML.
+                // But if we didn't set textCached to false above, assume d->text already contains HTML.
+                d->control->setHtml(d->textCached ? d->text : d->control->toPlainText());
+                converted = true;
+                break;
+            case AutoText:
+            case RichText: // nothing to do
+                break;
+            }
+#endif
+            break;
+        case MarkdownText:
+#if QT_CONFIG(textmarkdownwriter) && QT_CONFIG(textmarkdownreader)
+            switch (sourceFormat) {
+            case RichText:
+                // If HTML was loaded and now the user wants markdown, convert HTML to markdown.
+                d->control->setMarkdownText(d->control->toMarkdown());
+                converted = true;
+                break;
+            case PlainText:
+                // If plain text was loaded and now the user wants markdown, interpret plain text as markdown.
+                // But if we didn't set textCached to false above, assume d->text already contains markdown.
+                d->control->setMarkdownText(d->textCached ? d->text : d->control->toPlainText());
+                converted = true;
+                break;
+            case AutoText:
+            case MarkdownText: // nothing to do
+                break;
+            }
+#endif
+            break;
+        case AutoText: // nothing to do
+            break;
+        }
+
+        if (converted)
+            updateSize();
+    } else {
+        d->richText = format == RichText || (format == AutoText && (d->richText || mightBeRichText()));
+        d->markdownText = format == MarkdownText;
     }
+
+    qCDebug(lcTextEdit) << d->format << "->" << format
+                        << "rich?" << d->richText << "md?" << d->markdownText
+                        << "converted?" << converted << "cache invalidated?" << textCachedChanged;
 
     d->format = format;
     d->control->setAcceptRichText(d->format != PlainText);
