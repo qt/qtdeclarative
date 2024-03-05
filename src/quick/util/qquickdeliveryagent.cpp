@@ -315,6 +315,16 @@ static inline bool windowHasFocus(QQuickWindow *win)
     return win == focusWindow || QQuickRenderControlPrivate::isRenderWindowFor(win, focusWindow) || !focusWindow;
 }
 
+static QQuickItem *findFurthestFocusScopeAncestor(QQuickItem *item)
+{
+    QQuickItem *parentItem = item->parentItem();
+
+    if (parentItem && parentItem->flags() & QQuickItem::ItemIsFocusScope)
+        return findFurthestFocusScopeAncestor(parentItem);
+
+    return item;
+}
+
 #ifdef Q_OS_WEBOS
 // Temporary fix for webOS until multi-seat is implemented see QTBUG-85272
 static inline bool singleWindowOnScreen(QQuickWindow *win)
@@ -457,6 +467,16 @@ void QQuickDeliveryAgentPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *
     if (isSubsceneAgent) {
         auto da = QQuickWindowPrivate::get(rootItem->window())->deliveryAgent;
         qCDebug(lcFocus) << "    delegating setFocusInScope to" << da;
+
+        // When setting subFocusItem, hierarchy is important. Each focus ancestor's
+        // subFocusItem must be its nearest descendant with focus. Changing the rootItem's
+        // subFocusItem to 'item' here would make 'item' the subFocusItem of all ancestor
+        // focus scopes up until root item.
+        // That is why we should avoid altering subFocusItem until having traversed
+        // all the focus hierarchy.
+        QQuickItem *ancestorFS = findFurthestFocusScopeAncestor(item);
+        if (ancestorFS != item)
+            options |= QQuickDeliveryAgentPrivate::DontChangeSubFocusItem;
         QQuickWindowPrivate::get(rootItem->window())->deliveryAgentPrivate()->setFocusInScope(da->rootItem(), item, reason, options);
     }
     if (oldActiveFocusItem == activeFocusItem)
