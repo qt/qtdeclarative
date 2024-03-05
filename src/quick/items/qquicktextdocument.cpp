@@ -501,13 +501,6 @@ QSizeF QQuickTextImageHandler::intrinsicSize(
     return QSizeF();
 }
 
-/*!
-    \qmlsignal QtQuick::TextDocument::error(string message)
-
-    This signal is emitted when an error \a message (translated string) should
-    be presented to the user, for example with a MessageDialog.
-*/
-
 QT_END_NAMESPACE
 
 #include "moc_qquicktextdocument.cpp"
