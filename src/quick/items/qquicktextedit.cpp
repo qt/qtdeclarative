@@ -85,7 +85,7 @@ TextEdit {
     You can translate between cursor positions (characters from the start of the document) and pixel
     points using positionAt() and positionToRectangle().
 
-    \sa Text, TextInput
+    \sa Text, TextInput, TextArea, {Qt Quick Controls - Text Editor}
 */
 
 /*!
@@ -394,6 +394,14 @@ QString QQuickTextEdit::text() const
     The part of the text related to the predictions is underlined and stored in
     the \l preeditText property.
 
+    If you used \l TextDocument::source to load text, you can retrieve the
+    loaded text from this property. In that case, you can then change
+    \l textFormat to do format conversions that will change the value of the
+    \c text property. For example, if \c textFormat is \c RichText or
+    \c AutoText and you load an HTML file, then set \c textFormat to
+    \c MarkdownText afterwards, the \c text property will contain the
+    conversion from HTML to Markdown.
+
     \sa clear(), preeditText, textFormat
 */
 void QQuickTextEdit::setText(const QString &text)
@@ -464,6 +472,7 @@ QString QQuickTextEdit::preeditText() const
 
     \value TextEdit.PlainText       (default) all styling tags are treated as plain text
     \value TextEdit.AutoText        detected via the Qt::mightBeRichText() heuristic
+                                    or the file format of \l TextDocument::source
     \value TextEdit.RichText        \l {Supported HTML Subset} {a subset of HTML 4}
     \value TextEdit.MarkdownText    \l {https://commonmark.org/help/}{CommonMark} plus the
                                     \l {https://guides.github.com/features/mastering-markdown/}{GitHub}
@@ -471,9 +480,12 @@ QString QQuickTextEdit::preeditText() const
 
     The default is \c TextEdit.PlainText. If the text format is set to
     \c TextEdit.AutoText, the text edit will automatically determine whether
-    the text should be treated as rich text. This determination is made using
-    Qt::mightBeRichText(), which can detect the presence of an HTML tag on the
-    first line of text, but cannot distinguish Markdown from plain text.
+    the text should be treated as rich text. If the \l text property is set,
+    this determination is made using Qt::mightBeRichText(), which can detect
+    the presence of an HTML tag on the first line of text, but cannot
+    distinguish Markdown from plain text. If the \l TextDocument::source
+    property is set, this determination is made from the
+    \l {QMimeDatabase::mimeTypeForFile()}{mime type of the file}.
 
     \table
     \row
@@ -486,7 +498,17 @@ QString QQuickTextEdit::preeditText() const
     \l {https://guides.github.com/features/mastering-markdown/#GitHub-flavored-markdown}{GitHub checkbox extension}
     are interactively checkable.
 
-    \note Interactively typing markup or markdown formatting is not supported.
+    If the \l TextDocument::source property is set, changing the \c textFormat
+    property after loading has the effect of converting from the detected
+    format to the requested format. For example, you can convert between HTML
+    and Markdown. However if either of those "rich" formats is loaded and then
+    you set \c textFormat to \c PlainText, the TextEdit will show the raw
+    markup. Thus, suitable bindings (e.g. to a checkable Control) can enable
+    the user to toggle back and forth between "raw" and WYSIWYG editing.
+
+    \note Interactively typing markup or markdown formatting in WYSIWYG mode
+    is not supported; but you can switch to \c PlainText, make changes, then
+    switch back to the appropriate \c textFormat.
 
     \note With \c Text.MarkdownText, and with the supported subset of HTML,
     some decorative elements are not rendered as they would be in a web browser:
@@ -3315,8 +3337,9 @@ void QQuickTextEdit::remove(int start, int end)
     \since 5.1
 
     Returns the QQuickTextDocument of this TextEdit.
-    It can be used to implement syntax highlighting using
-    \l QSyntaxHighlighter.
+    Since Qt 6.7, it has features for loading and saving files.
+    It can also be used in C++ as a means of accessing the underlying QTextDocument
+    instance, for example to install a \l QSyntaxHighlighter.
 
     \sa QQuickTextDocument
 */

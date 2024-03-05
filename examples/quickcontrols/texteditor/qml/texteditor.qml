@@ -465,7 +465,7 @@ ApplicationWindow {
 
         TextArea.flickable: TextArea {
             id: textArea
-            textFormat: Qt.RichText
+            textFormat: Qt.AutoText
             wrapMode: TextArea.Wrap
             focus: true
             selectByMouse: true
