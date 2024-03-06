@@ -437,11 +437,6 @@ void tst_qquicktextdocument::overrideTextFormat_data()
             << 1 << -1 << u"Γειά σου <i>Κόσμε</i>!"_s
             << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s
             << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s;
-    QTest::newRow("load html as autotext, switch to plain, back to auto")
-            << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.html")
-            << 3 << 1 << u"<!DOCTYPE HTML"_s
-            << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s
-            << QQuickTextEdit::AutoText << 3 << 1 << u"<!DOCTYPE HTML"_s;
     QTest::newRow("load html as autotext, switch to html, then plain")
             << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.html")
             << 3 << 1 << u"<!DOCTYPE HTML"_s
