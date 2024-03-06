@@ -2912,6 +2912,7 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &i
             result.emplaceBack();
             result.back().label = "break";
             result.back().kind = int(CompletionItemKind::Keyword);
+            break;
 
         default:
             continue;
