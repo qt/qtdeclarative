@@ -12,11 +12,21 @@ Rectangle {
     implicitHeight: 20
     radius: width / 2
     border.width: 2
-    border.color: !control.enabled ? control.Material.hintTextColor
-        : control.checked || control.down ? control.Material.accentColor : control.Material.secondaryTextColor
+    border.color: targetColor
     color: "transparent"
 
+    // Store the target color in a separate property, because there are two animations that depend on it.
+    readonly property color targetColor: !control.enabled ? control.Material.hintTextColor
+        : control.checked || control.down ? control.Material.accentColor : control.Material.secondaryTextColor
+
     property T.AbstractButton control
+
+    Behavior on border.color {
+        ColorAnimation {
+            duration: 100
+            easing.type: Easing.OutCubic
+        }
+    }
 
     Rectangle {
         x: (parent.width - width) / 2
@@ -24,7 +34,20 @@ Rectangle {
         width: 10
         height: 10
         radius: width / 2
-        color: parent.border.color
-        visible: indicator.control.checked || indicator.control.down
+        color: indicator.targetColor
+        scale: indicator.control.checked || indicator.control.down ? 1 : 0
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 100
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: 100
+            }
+        }
     }
 }
