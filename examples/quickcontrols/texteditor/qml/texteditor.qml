@@ -450,6 +450,8 @@ ApplicationWindow {
         flickableDirection: Flickable.VerticalFlick
         anchors.fill: parent
 
+        ScrollBar.vertical: ScrollBar {}
+
         TextArea.flickable: TextArea {
             id: textArea
             textFormat: Qt.AutoText
@@ -497,8 +499,6 @@ ApplicationWindow {
                 }
             }
         }
-
-        ScrollBar.vertical: ScrollBar {}
     }
 
     Menu {
