@@ -42,7 +42,8 @@ T.TextField {
 
     FloatingPlaceholderText {
         id: placeholder
-        x: control.leftPadding
+        // Don't set this to control.leftPadding, because we don't want it to change if the user changes leftPadding.
+        x: control.Material.textFieldHorizontalPadding
         width: control.width - (control.leftPadding + control.rightPadding)
         text: control.placeholderText
         font: control.font
