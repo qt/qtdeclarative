@@ -1107,39 +1107,11 @@ function(_qt_internal_add_all_qmllint_target target_var default_target_name lint
     if("${target_name}" STREQUAL "")
         set(target_name ${default_target_name})
     endif()
-    if(CMAKE_GENERATOR MATCHES "^Visual Studio ")
-        # For the Visual Studio generators we cannot use add_dependencies, because this would enable
-        # ${lint_target} in the default build of the solution. See QTBUG-115166 and upstream CMake
-        # issue #16668 for details. Instead, we record ${lint_target} and create an all_qmllint
-        # target at the end of the top-level directory scope.
-        if(${CMAKE_VERSION} VERSION_LESS "3.19.0")
-            if(NOT QT_NO_QMLLINT_CREATION_WARNING)
-                message(WARNING "Cannot create target ${target_name} with this CMake version. "
-                    "Please upgrade to CMake 3.19.0 or newer. "
-                    "Set QT_NO_QMLLINT_CREATION_WARNING to ON to disable this warning."
-                )
-            endif()
-            return()
-        endif()
-        set(property_name _qt_target_${target_name}_dependencies)
-        get_property(recorded_targets GLOBAL PROPERTY ${property_name})
-        if("${recorded_targets}" STREQUAL "")
-            cmake_language(EVAL CODE
-                "cmake_language(DEFER DIRECTORY \"${CMAKE_SOURCE_DIR}\" CALL _qt_internal_add_all_qmllint_target_deferred \"${target_name}\")"
-            )
-        endif()
-        set_property(GLOBAL APPEND PROPERTY ${property_name} ${lint_target})
-
-        # Exclude ${lint_target} from the solution's default build to avoid it being enabled should
-        # the user add a dependency to it.
-        set_property(TARGET ${lint_target} PROPERTY EXCLUDE_FROM_DEFAULT_BUILD ON)
-    else()
-        if(NOT TARGET ${target_name})
-            add_custom_target(${target_name})
-            _qt_internal_assign_to_qmllint_targets_folder(${target_name})
-        endif()
-        add_dependencies(${target_name} ${lint_target})
-    endif()
+    _qt_internal_add_phony_target(${target_name}
+        WARNING_VARIABLE QT_NO_QMLLINT_CREATION_WARNING
+        TARGET_CREATED_HOOK _qt_internal_assign_to_qmllint_targets_folder
+    )
+    _qt_internal_add_phony_target_dependencies(${target_name} ${lint_target})
 endfunction()
 
 # Hack for the Visual Studio generator. Create the all_qmllint target named ${target} and work
