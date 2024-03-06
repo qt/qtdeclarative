@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationName("QtProject");
 
 #ifdef QT_WIDGETS_LIB
-    QApplication app(argc, argv);
+    QApplication app(argc, argv); // only for Qt.labs.platform components
 #else
     QGuiApplication app(argc, argv);
 #endif

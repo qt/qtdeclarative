@@ -6,7 +6,7 @@ import QtCore
 import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Dialogs
-import Qt.labs.platform as Platform
+import Qt.labs.platform as Platform // note: soon to be obsolete
 
 // TODO:
 // - make designer-friendly
@@ -57,18 +57,21 @@ ApplicationWindow {
     Action {
         id: copyAction
         shortcut: StandardKey.Copy
+        enabled: textArea.selectedText
         onTriggered: textArea.copy()
     }
 
     Action {
         id: cutAction
         shortcut: StandardKey.Cut
+        enabled: textArea.selectedText
         onTriggered: textArea.cut()
     }
 
     Action {
         id: pasteAction
         shortcut: StandardKey.Paste
+        enabled: textArea.canPaste
         onTriggered: textArea.paste()
     }
 
@@ -141,15 +144,19 @@ ApplicationWindow {
 
             Platform.MenuItem {
                 text: qsTr("&Open")
-                onTriggered: openDialog.open()
+                onTriggered: openAction.trigger()
             }
             Platform.MenuItem {
-                text: qsTr("&Save As...")
-                onTriggered: saveDialog.open()
+                text: qsTr("&Save…")
+                onTriggered: saveAction.trigger()
+            }
+            Platform.MenuItem {
+                text: qsTr("Save &As…")
+                onTriggered: saveAsAction.trigger()
             }
             Platform.MenuItem {
                 text: qsTr("&Quit")
-                onTriggered: close()
+                onTriggered: quitAction.trigger()
             }
         }
 
@@ -158,18 +165,18 @@ ApplicationWindow {
 
             Platform.MenuItem {
                 text: qsTr("&Copy")
-                enabled: textArea.selectedText
-                onTriggered: textArea.copy()
+                enabled: copyAction.enabled
+                onTriggered: copyAction.trigger()
             }
             Platform.MenuItem {
                 text: qsTr("Cu&t")
-                enabled: textArea.selectedText
-                onTriggered: textArea.cut()
+                enabled: cutAction.enabled
+                onTriggered: cutAction.trigger()
             }
             Platform.MenuItem {
                 text: qsTr("&Paste")
-                enabled: textArea.canPaste
-                onTriggered: textArea.paste()
+                enabled: pasteAction.enabled
+                onTriggered: pasteAction.trigger()
             }
         }
 
@@ -325,7 +332,6 @@ ApplicationWindow {
                     text: "\uF0C5" // icon-docs
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    enabled: textArea.selectedText
                     action: copyAction
                 }
                 ToolButton {
@@ -333,7 +339,6 @@ ApplicationWindow {
                     text: "\uE802" // icon-scissors
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    enabled: textArea.selectedText
                     action: cutAction
                 }
                 ToolButton {
@@ -341,7 +346,6 @@ ApplicationWindow {
                     text: "\uF0EA" // icon-paste
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    enabled: textArea.canPaste
                     action: pasteAction
                 }
                 ToolSeparator {
@@ -463,6 +467,8 @@ ApplicationWindow {
         flickableDirection: Flickable.VerticalFlick
         anchors.fill: parent
 
+        ScrollBar.vertical: ScrollBar {}
+
         TextArea.flickable: TextArea {
             id: textArea
             textFormat: Qt.RichText
@@ -479,10 +485,9 @@ ApplicationWindow {
             bottomPadding: 0
             background: null
 
-            MouseArea {
+            TapHandler {
                 acceptedButtons: Qt.RightButton
-                anchors.fill: parent
-                onClicked: contextMenu.open()
+                onTapped: contextMenu.open()
             }
 
             onLinkActivated: function (link) {
@@ -511,8 +516,6 @@ ApplicationWindow {
                 }
             }
         }
-
-        ScrollBar.vertical: ScrollBar {}
     }
 
     Platform.Menu {
@@ -520,18 +523,18 @@ ApplicationWindow {
 
         Platform.MenuItem {
             text: qsTr("Copy")
-            enabled: textArea.selectedText
-            onTriggered: textArea.copy()
+            enabled: copyAction.enabled
+            onTriggered: copyAction.trigger()
         }
         Platform.MenuItem {
             text: qsTr("Cut")
-            enabled: textArea.selectedText
-            onTriggered: textArea.cut()
+            enabled: cutAction.enabled
+            onTriggered: cutAction.trigger()
         }
         Platform.MenuItem {
             text: qsTr("Paste")
-            enabled: textArea.canPaste
-            onTriggered: textArea.paste()
+            enabled: pasteAction.enabled
+            onTriggered: pasteAction.trigger()
         }
 
         Platform.MenuSeparator {}
