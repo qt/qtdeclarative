@@ -46,7 +46,7 @@ qt_manual_moc(extra_builtins_moc_files
     qml/qqmlcomponent.h
     qml/qqmlcomponentattached_p.h
     qml/qqmlscriptstring.h
-    INCLUDE_DIRECTORY_TARGETS Qt::Qml
+    TARGETS Qt6::Qml
 )
 
 # The moc files are included directly by qqmlcomponent.cpp and qqmlscriptstring.cpp
