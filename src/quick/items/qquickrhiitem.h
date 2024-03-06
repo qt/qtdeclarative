@@ -89,6 +89,9 @@ public:
 
     QSize effectiveColorBufferSize() const;
 
+    bool isTextureProvider() const override;
+    QSGTextureProvider *textureProvider() const override;
+
 Q_SIGNALS:
     void sampleCountChanged();
     void colorBufferFormatChanged();
@@ -109,8 +112,6 @@ protected:
     bool event(QEvent *) override;
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void releaseResources() override;
-    bool isTextureProvider() const override;
-    QSGTextureProvider *textureProvider() const override;
 
 private Q_SLOTS:
     void invalidateSceneGraph();
