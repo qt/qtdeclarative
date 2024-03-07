@@ -505,7 +505,9 @@ TestCase {
             text: "SwipeDelegate"
             width: 150
             swipe.right: Button {
-                width: parent.width
+                // make the button a bit shorter than the delegate, so
+                // that we're able to release the mouse outside of it
+                width: parent.width - 4
                 height: parent.height
                 text: "Boo!"
             }
@@ -564,6 +566,22 @@ TestCase {
         verify(!button.pressed);
         mouseRelease(control, control.width / 2, control.height / 2);
         verify(!control.pressed);
+
+        // Try to press the button again, but drag and release outside of it.
+        // This should not click the button.
+        buttonClickedSpy.clear();
+        // Open the control, and press the button
+        mouseDrag(control, control.width / 2, control.height / 2, -control.width, 0);
+        mousePress(control);
+        verify(button.pressed);
+
+        // Drag the mouse outside the button, and release
+        mouseMove(control, control.width - 2, control.height / 2, -1, Qt.LeftButton);
+        mouseRelease(control);
+        verify(!button.pressed);
+        verify(!button.hovered);
+        // This should not be a click
+        compare(buttonClickedSpy.count, 0);
     }
 
     function test_mouseButtons() {
