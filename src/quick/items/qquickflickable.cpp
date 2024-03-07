@@ -1083,14 +1083,15 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     }
     q->setKeepMouseGrab(stealMouse);
 
-    maybeBeginDrag(computeCurrentTime(event), event->localPos());
+    maybeBeginDrag(computeCurrentTime(event), event->localPos(), event->buttons());
 }
 
-void QQuickFlickablePrivate::maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn)
+void QQuickFlickablePrivate::maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn, Qt::MouseButtons buttons)
 {
     Q_Q(QQuickFlickable);
     clearDelayedPress();
-    pressed = true;
+    // consider dragging only when event is left mouse button or touch event which has no button
+    pressed = (buttons == Qt::LeftButton) || (buttons == Qt::NoButton);
 
     if (hData.transitionToBounds)
         hData.transitionToBounds->stopTransition();
