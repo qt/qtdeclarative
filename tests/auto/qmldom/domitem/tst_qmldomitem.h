@@ -3073,6 +3073,37 @@ private slots:
         QCOMPARE(baseScope, derivedScope->baseType());
     }
 
+    void propertyDefinitionScopes()
+    {
+        DomItem qmlObject;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+
+        auto envPtr =
+                DomEnvironment::create(qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option{}, options);
+
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir + u"/propertyBindings.qml"_s),
+                         [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
+                             qmlObject = newIt.rootQmlObject(GoTo::MostLikely);
+                         });
+        envPtr->loadPendingDependencies();
+
+        {
+            const auto a = qmlObject.field(Fields::propertyDefs).key(u"a").index(0);
+            const auto scopeA = a.semanticScope();
+            QCOMPARE_NE(scopeA, QQmlJSScope::ConstPtr{});
+            QCOMPARE(scopeA->scopeType(), QQmlSA::ScopeType::QMLScope);
+        }
+
+        {
+            const auto b = qmlObject.field(Fields::propertyDefs).key(u"b").index(0);
+            const auto scopeB = b.semanticScope();
+            QCOMPARE_NE(scopeB, QQmlJSScope::ConstPtr{});
+            QCOMPARE(scopeB->scopeType(), QQmlSA::ScopeType::QMLScope);
+        }
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

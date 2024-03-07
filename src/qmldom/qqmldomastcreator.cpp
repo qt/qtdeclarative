@@ -2917,8 +2917,16 @@ void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomBeforeEndvisit()
                 [&scope](auto &&e) {
                     using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
                     if constexpr (std::is_same_v<U, PropertyDefinition>) {
-                        e.scope = scope;
-                        Q_ASSERT(e.scope);
+                        // Make sure to use the property definition scope instead of the binding
+                        // scope. If the current scope is a binding scope (this happens when the
+                        // property definition has a binding, like `property int i: 45` for
+                        // example), then the property definition scope is the parent of the current
+                        // scope.
+                        e.setSemanticScope(scope->scopeType() == QQmlSA::ScopeType::JSFunctionScope
+                                                   ? scope->parentScope()
+                                                   : scope);
+                        Q_ASSERT(e.semanticScope()
+                                 && e.semanticScope()->scopeType() == QQmlSA::ScopeType::QMLScope);
                     }
                 },
                 m_domCreator.currentNodeEl(1).item.value);
@@ -2928,8 +2936,8 @@ void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomBeforeEndvisit()
                 [&scope](auto &&e) {
                     using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
                     if constexpr (std::is_same_v<U, PropertyDefinition>) {
-                        e.scope = scope;
-                        Q_ASSERT(e.scope);
+                        e.setSemanticScope(scope);
+                        Q_ASSERT(e.semanticScope());
                     } else if constexpr (std::is_same_v<U, MethodInfo>) {
                         if (e.methodType == MethodInfo::Signal) {
                             e.setSemanticScope(scope);

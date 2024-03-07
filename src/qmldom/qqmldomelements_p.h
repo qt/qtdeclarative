@@ -624,6 +624,9 @@ public:
                        QmlObject **aPtr = nullptr);
     void updatePathFromOwner(const Path &newPath);
 
+    QQmlJSScope::ConstPtr semanticScope() const { return m_semanticScope; }
+    void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_semanticScope = scope; }
+
     QString name;
     Access access = Access::Public;
     QString typeName;
@@ -631,6 +634,7 @@ public:
     bool isList = false;
     QList<QmlObject> annotations;
     RegionComments comments;
+    QQmlJSScope::ConstPtr m_semanticScope;
 };
 
 struct QMLDOM_EXPORT LocallyResolvedAlias
@@ -696,7 +700,6 @@ public:
     bool isPointer = false;
     bool isDefaultMember = false;
     bool isRequired = false;
-    QQmlJSScope::ConstPtr scope;
     ScriptElementVariant m_nameIdentifiers;
 };
 
@@ -764,8 +767,6 @@ public:
                                      QLatin1String("function foo(){\n"), QLatin1String("\n}\n"));
     }
     MethodInfo() = default;
-    QQmlJSScope::ConstPtr semanticScope() const { return m_semanticScope; }
-    void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_semanticScope = scope; }
 
     // TODO: make private + add getters/setters
     QList<MethodParameter> parameters;
@@ -773,7 +774,6 @@ public:
     std::shared_ptr<ScriptExpression> body;
     std::shared_ptr<ScriptExpression> returnType;
     bool isConstructor = false;
-    QQmlJSScope::ConstPtr m_semanticScope;
 };
 
 class QMLDOM_EXPORT EnumItem

@@ -659,6 +659,9 @@ QQmlJSScope::ConstPtr DomItem::semanticScope() const
                     if (const MethodInfo *mi = e->template as<MethodInfo>()) {
                         return mi->semanticScope();
                     }
+                    if (const auto *propertyDefinition = e->template as<PropertyDefinition>()) {
+                        return propertyDefinition->semanticScope();
+                    }
                 } else if constexpr (std::is_same_v<T, ScriptElementDomWrapper>) {
                     return e.element().base()->semanticScope();
                 }

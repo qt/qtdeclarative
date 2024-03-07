@@ -1272,8 +1272,8 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
     }
     case DomType::PropertyDefinition: {
         auto propertyDefinition = item.as<PropertyDefinition>();
-        if (propertyDefinition && propertyDefinition->scope) {
-            const auto &scope = propertyDefinition->scope;
+        if (propertyDefinition && propertyDefinition->semanticScope()) {
+            const auto &scope = propertyDefinition->semanticScope();
             return QQmlLSUtilsExpressionType{ propertyDefinition->name, scope, PropertyIdentifier };
         }
         return {};
