@@ -723,19 +723,20 @@ QRect itemScreenRect(QQuickItem *item)
         return QRect();
     }
 
-    QSize itemSize((int)item->width(), (int)item->height());
+    QSizeF itemSize(item->width(), item->height());
     // ### If the bounding rect fails, we first try the implicit size, then we go for the
     // parent size. WE MIGHT HAVE TO REVISIT THESE FALLBACKS.
     if (itemSize.isEmpty()) {
-        itemSize = QSize((int)item->implicitWidth(), (int)item->implicitHeight());
+        itemSize = QSize(item->implicitWidth(), item->implicitHeight());
         if (itemSize.isEmpty() && item->parentItem())
             // ### Seems that the above fallback is not enough, fallback to use the parent size...
-            itemSize = QSize((int)item->parentItem()->width(), (int)item->parentItem()->height());
+            itemSize = QSize(item->parentItem()->width(), item->parentItem()->height());
     }
 
-    QPointF scenePoint = item->mapToScene(QPointF(0, 0));
-    QPoint screenPos = item->window()->mapToGlobal(scenePoint.toPoint());
-    return QRect(screenPos, itemSize);
+    QRectF sceneRect = item->mapRectToScene(QRectF(QPointF(0, 0), itemSize));
+    QPoint screenPos = item->window()->mapToGlobal(sceneRect.topLeft().toPoint());
+    QSize screenSize = sceneRect.size().toSize();
+    return QRect(screenPos, screenSize);
 }
 
 QTextDocument *QAccessibleQuickItem::textDocument() const
