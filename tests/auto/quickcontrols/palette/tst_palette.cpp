@@ -48,6 +48,7 @@ private slots:
     void updateBindings();
 
     void resolve();
+    void updateBindingPalette();
 };
 
 tst_palette::tst_palette()
@@ -456,6 +457,27 @@ void tst_palette::resolve()
             != control->property("palette").value<QQuickPalette*>()->window());
     QCOMPARE(window->property("palette").value<QQuickPalette*>()->windowText(),
              control->property("palette").value<QQuickPalette*>()->windowText());
+}
+
+void tst_palette::updateBindingPalette()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("palette-appwindow-bindingpalette.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow*>(component.create()));
+    QVERIFY2(!window.isNull(), qPrintable(component.errorString()));
+    auto *windowPalette = window->property("palette").value<QQuickPalette *>();
+    QVERIFY(windowPalette);
+    auto *customPalette = window->property("cstmPalette").value<QQuickPalette *>();
+    QVERIFY(customPalette);
+
+    QCOMPARE(windowPalette->buttonText(), QColor("white"));
+
+    QColor buttonTextColor("red");
+    customPalette->setButtonText(buttonTextColor);
+    QCOMPARE(customPalette->buttonText(), buttonTextColor);
+    QCOMPARE(windowPalette->buttonText(), customPalette->buttonText());
 }
 
 QTEST_MAIN(tst_palette)

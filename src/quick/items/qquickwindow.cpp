@@ -697,6 +697,24 @@ QQuickWindowPrivate::~QQuickWindowPrivate()
     deliveryAgent = nullptr;
 }
 
+void QQuickWindowPrivate::setPalette(QQuickPalette* palette)
+{
+    if (windowPaletteRef == palette)
+        return;
+
+    if (windowPaletteRef)
+        disconnect(windowPaletteRef, &QQuickPalette::changed, this, &QQuickWindowPrivate::updateWindowPalette);
+    windowPaletteRef = palette;
+    updateWindowPalette();
+    if (windowPaletteRef)
+        connect(windowPaletteRef, &QQuickPalette::changed, this, &QQuickWindowPrivate::updateWindowPalette);
+}
+
+void QQuickWindowPrivate::updateWindowPalette()
+{
+    QQuickPaletteProviderPrivateBase::setPalette(windowPaletteRef);
+}
+
 void QQuickWindowPrivate::updateChildrenPalettes(const QPalette &parentPalette)
 {
     Q_Q(QQuickWindow);
