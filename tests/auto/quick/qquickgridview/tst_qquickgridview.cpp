@@ -194,6 +194,7 @@ private slots:
 
     void keyNavigationEnabled();
     void releaseItems();
+    void removeAccessibleChildrenEvenIfReusingItems();
 
 private:
     QList<int> toIntList(const QVariantList &list);
@@ -6843,6 +6844,36 @@ void tst_QQuickGridView::releaseItems()
     // don't crash (QTBUG-61294)
     gridview->setModel(123);
 }
+
+void tst_QQuickGridView::removeAccessibleChildrenEvenIfReusingItems()
+{
+    auto window = std::make_unique<QQuickView>();
+    window->setSource(testFileUrl("removeAccessibleChildrenEvenIfReusingItems.qml"));
+    window->show();
+
+    QQuickItem *contentItem = window->contentItem();
+    QVERIFY(contentItem);
+    QQuickItem *rootItem = contentItem->childItems().first();
+    QVERIFY(rootItem);
+
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(window.get());
+    QVERIFY(iface);
+    QAccessibleInterface *gridView = iface->child(0)->child(0);
+    QCOMPARE(gridView->childCount(), 4);
+    QCOMPARE(gridView->child(0)->text(QAccessible::Text::Name), "item11");
+    QCOMPARE(gridView->child(1)->text(QAccessible::Text::Name), "item12");
+    QCOMPARE(gridView->child(2)->text(QAccessible::Text::Name), "item13");
+    QCOMPARE(gridView->child(3)->text(QAccessible::Text::Name), "item14");
+
+    QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "replaceItems"));
+
+    QCOMPARE(gridView->childCount(), 4);
+    QTRY_COMPARE(gridView->child(0)->text(QAccessible::Text::Name), "item21");
+    QTRY_COMPARE(gridView->child(1)->text(QAccessible::Text::Name), "item22");
+    QTRY_COMPARE(gridView->child(2)->text(QAccessible::Text::Name), "item23");
+    QTRY_COMPARE(gridView->child(3)->text(QAccessible::Text::Name), "item24");
+}
+
 
 QTEST_MAIN(tst_QQuickGridView)
 
