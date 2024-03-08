@@ -50,6 +50,8 @@ public:
     inline Qt::Orientation orientation() const;
     inline void setOrientation(Qt::Orientation o);
 
+    QQuickHeaderViewBase *m_headerView = nullptr;
+
 private:
     inline void connectToModel();
     inline void disconnectFromModel();
