@@ -73,6 +73,7 @@ static QQuickAttachedPropertyPropagator *attachedObject(const QMetaObject *type,
 */
 static QQuickAttachedPropertyPropagator *findAttachedParent(const QMetaObject *ourAttachedType, QObject *objectWeAreAttachedTo)
 {
+    qCDebug(lcAttached).noquote() << "findAttachedParent called with" << ourAttachedType->className() << objectWeAreAttachedTo;
     /*
         In the Material ComboBox.qml, we have code like this:
 
@@ -94,37 +95,55 @@ static QQuickAttachedPropertyPropagator *findAttachedParent(const QMetaObject *o
     */
     auto popupItem = qobject_cast<QQuickPopupItem *>(objectWeAreAttachedTo);
     if (popupItem) {
+        qCDebug(lcAttached).noquote() << "- attachee belongs to popup item" << popupItem << "- checking if it has an attached object";
         auto popupItemPrivate = QQuickPopupItemPrivate::get(popupItem);
         QQuickAttachedPropertyPropagator *popupAttached = attachedObject(ourAttachedType, popupItemPrivate->popup);
-        if (popupAttached)
+        if (popupAttached) {
+            qCDebug(lcAttached).noquote() << "- popup item has attached object" << popupAttached << "- returning";
             return popupAttached;
+        } else {
+            qCDebug(lcAttached).noquote() << "- popup item does not have attached object";
+        }
+    } else {
+        qCDebug(lcAttached).noquote() << "- attachee does not belong to a popup";
     }
 
     QQuickItem *item = qobject_cast<QQuickItem *>(objectWeAreAttachedTo);
     if (item) {
+        qCDebug(lcAttached).noquote() << "- attachee is an item; checking its parent items and popups";
         // lookup parent items and popups
         QQuickItem *parent = item->parentItem();
         while (parent) {
+            qCDebug(lcAttached).noquote() << "  - checking parent item" << parent;
             QQuickAttachedPropertyPropagator *attached = attachedObject(ourAttachedType, parent);
-            if (attached)
+            if (attached) {
+                qCDebug(lcAttached).noquote() << "  - parent item has attached object" << attached << "- returning";
                 return attached;
+            }
 
             QQuickPopup *popup = qobject_cast<QQuickPopup *>(parent->parent());
-            if (popup)
+            if (popup) {
+                qCDebug(lcAttached).noquote() << "  - parent popup has attached object" << attached << "- returning";
                 return attachedObject(ourAttachedType, popup);
+            }
 
             parent = parent->parentItem();
         }
 
         // fallback to item's window
+        qCDebug(lcAttached).noquote() << "- checking parent window" << item->window();
         QQuickAttachedPropertyPropagator *attached = attachedObject(ourAttachedType, item->window());
-        if (attached)
+        if (attached) {
+            qCDebug(lcAttached).noquote() << "- parent window has attached object" << attached << "- returning";
             return attached;
+        }
     } else {
         // lookup popup's window
         QQuickPopup *popup = qobject_cast<QQuickPopup *>(objectWeAreAttachedTo);
-        if (popup)
+        if (popup) {
+            qCDebug(lcAttached).noquote() << "- attachee is a popup; checking its window";
             return attachedObject(ourAttachedType, popup->popupItem()->window());
+        }
     }
 
     // lookup parent window
@@ -132,16 +151,20 @@ static QQuickAttachedPropertyPropagator *findAttachedParent(const QMetaObject *o
     if (window) {
         // It doesn't seem like a parent window can be anything but transient in Qt Quick.
         QQuickWindow *parentWindow = qobject_cast<QQuickWindow *>(window->transientParent());
+        qCDebug(lcAttached).noquote() << "- attachee is a window; checking its parent window" << parentWindow;
         if (parentWindow) {
             QQuickAttachedPropertyPropagator *attached = attachedObject(ourAttachedType, parentWindow);
-            if (attached)
+            if (attached) {
+                qCDebug(lcAttached).noquote() << "- parent window has attached object" << attached << "- returning";
                 return attached;
+            }
         }
     }
 
     // fallback to engine (global)
     if (objectWeAreAttachedTo) {
         QQmlEngine *engine = qmlEngine(objectWeAreAttachedTo);
+        qCDebug(lcAttached).noquote() << "- falling back to engine" << engine;
         if (engine) {
             QByteArray name = QByteArray("_q_") + ourAttachedType->className();
             QQuickAttachedPropertyPropagator *attached = engine->property(name).value<QQuickAttachedPropertyPropagator *>();
@@ -305,14 +328,30 @@ void QQuickAttachedPropertyPropagatorPrivate::setAttachedParent(QQuickAttachedPr
     q->attachedParentChange(parent, oldParent);
 }
 
+/*
+    If there's e.g. code like this:
+
+        Behavior on Material.elevation {}
+
+    The meta type will be something like QQuickMaterialStyle_QML_125,
+    whereas QQmlMetaType::attachedPropertiesFunc only has attached
+    property data for QQuickMaterialStyle (i.e. attached property types
+    created from C++). We work around this by finding the first C++
+    meta object, which works even for attached types created in QML.
+*/
+const QMetaObject *firstCppMetaObject(QQuickAttachedPropertyPropagator *propagator)
+{
+    return QQmlData::ensurePropertyCache(propagator)->firstCppMetaObject();
+}
+
 void QQuickAttachedPropertyPropagatorPrivate::itemWindowChanged(QQuickWindow *window)
 {
     Q_Q(QQuickAttachedPropertyPropagator);
     QQuickAttachedPropertyPropagator *attachedParent = nullptr;
-    qCDebug(lcAttached).noquote() << "window of" << debugName(q) << "changed to" << window;
-    attachedParent = findAttachedParent(q->metaObject(), q->parent());
+    qCDebug(lcAttached).noquote() << "window of" << q << "changed to" << window;
+    attachedParent = findAttachedParent(firstCppMetaObject(q), q->parent());
     if (!attachedParent)
-        attachedParent = attachedObject(q->metaObject(), window);
+        attachedParent = attachedObject(firstCppMetaObject(q), window);
     setAttachedParent(attachedParent);
 }
 
@@ -321,9 +360,9 @@ void QQuickAttachedPropertyPropagatorPrivate::transientParentWindowChanged(QWind
     Q_Q(QQuickAttachedPropertyPropagator);
     QQuickAttachedPropertyPropagator *attachedParent = nullptr;
     qCDebug(lcAttached).noquote() << "transient parent window of" << q << "changed to" << newTransientParent;
-    attachedParent = findAttachedParent(q->metaObject(), q->parent());
+    attachedParent = findAttachedParent(firstCppMetaObject(q), q->parent());
     if (!attachedParent)
-        attachedParent = attachedObject(q->metaObject(), newTransientParent);
+        attachedParent = attachedObject(firstCppMetaObject(q), newTransientParent);
     setAttachedParent(attachedParent);
 }
 
@@ -332,7 +371,7 @@ void QQuickAttachedPropertyPropagatorPrivate::itemParentChanged(QQuickItem *item
     Q_Q(QQuickAttachedPropertyPropagator);
     Q_UNUSED(item);
     Q_UNUSED(parent);
-    setAttachedParent(findAttachedParent(q->metaObject(), q->parent()));
+    setAttachedParent(findAttachedParent(firstCppMetaObject(q), q->parent()));
 }
 
 /*!
@@ -421,6 +460,8 @@ void QQuickAttachedPropertyPropagator::initialize()
         qCDebug(lcAttached) << "  -" << child->parent();
         QQuickAttachedPropertyPropagatorPrivate::get(child)->setAttachedParent(this);
     }
+
+    qCDebug(lcAttached) << "... finished initializing";
 }
 
 /*!
