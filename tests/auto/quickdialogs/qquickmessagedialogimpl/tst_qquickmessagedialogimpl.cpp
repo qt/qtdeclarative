@@ -39,6 +39,7 @@ private slots:
     void changeInformativeText();
     void changeStandardButtons();
     void detailedText();
+    void emitCorrectAcceptedAndRejectedSignals();
 };
 
 // We don't want to fail on warnings until QTBUG-98964 is fixed,
@@ -267,6 +268,40 @@ void tst_QQuickMessageDialogImpl::detailedText()
              "The 'show details' button should only become visible when the dialog is re-opened.");
 
     dialogHelper.dialog->close();
+}
+
+void tst_QQuickMessageDialogImpl::emitCorrectAcceptedAndRejectedSignals()
+{
+    DialogTestHelper<QQuickMessageDialog, QQuickMessageDialogImpl> dialogHelper(
+            this, "messageDialogWithYesAndNoButtons.qml");
+    QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
+    QVERIFY(dialogHelper.waitForWindowActive());
+    QVERIFY(dialogHelper.openDialog());
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
+    auto *buttonBox = dialogHelper.quickDialog->findChild<QQuickDialogButtonBox *>("buttonBox");
+    QVERIFY(buttonBox);
+
+    QSignalSpy acceptedSpy(dialogHelper.dialog, SIGNAL(accepted()));
+    QSignalSpy rejectedSpy(dialogHelper.dialog, SIGNAL(rejected()));
+
+    for (int i = 0; i < buttonBox->count(); ++i){
+        dialogHelper.dialog->open();
+        QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
+        auto *button = qobject_cast<QQuickAbstractButton *>(buttonBox->itemAt(i));
+        QVERIFY(button);
+
+        if (QQuickTest::qIsPolishScheduled(dialogHelper.window()))
+            QVERIFY(QQuickTest::qWaitForPolish(dialogHelper.window()));
+
+        QVERIFY(clickButton(button));
+        QTRY_VERIFY(!dialogHelper.isQuickDialogOpen());
+    }
+
+    // Ok and Yes should emit accepted(), Cancel and No should emit rejected()
+    QCOMPARE(acceptedSpy.count(), 2);
+    QCOMPARE(rejectedSpy.count(), 2);
 }
 
 QTEST_MAIN(tst_QQuickMessageDialogImpl)
