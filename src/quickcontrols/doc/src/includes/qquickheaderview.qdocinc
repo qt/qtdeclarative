@@ -78,5 +78,9 @@ role should be displayed.
 If model is a QAbstractItemModel then it will default to "display"; otherwise
 it is empty.
 
+A warning is given if the model's \l {QAbstractItemModel::}{roleNames()}
+doesn't provide the role specified in \l textRole.
+The warning can be silenced by setting the \l textRole.
+
 \sa QAbstractItemModel::roleNames()
 //! [textRole]

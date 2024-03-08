@@ -176,13 +176,17 @@ QAbstractItemModel *QQuickHeaderViewBasePrivate::selectionSourceModel()
 QQuickHeaderViewBase::QQuickHeaderViewBase(Qt::Orientation orient, QQuickItem *parent)
     : QQuickTableView(*(new QQuickHeaderViewBasePrivate), parent)
 {
-    d_func()->setOrientation(orient);
+    Q_D(QQuickHeaderViewBase);
+    d->m_headerDataProxyModel.m_headerView = this;
+    d->setOrientation(orient);
     setSyncDirection(orient);
 }
 
 QQuickHeaderViewBase::QQuickHeaderViewBase(QQuickHeaderViewBasePrivate &dd, QQuickItem *parent)
     : QQuickTableView(dd, parent)
 {
+    Q_D(QQuickHeaderViewBase);
+    d->m_headerDataProxyModel.m_headerView = this;
 }
 
 QQuickHeaderViewBase::~QQuickHeaderViewBase()
@@ -305,7 +309,20 @@ bool QHeaderDataProxyModel::hasChildren(const QModelIndex &parent) const
 
 QHash<int, QByteArray> QHeaderDataProxyModel::roleNames() const
 {
-    return m_model ? m_model->roleNames() : QAbstractItemModel::roleNames();
+    using namespace Qt::Literals::StringLiterals;
+
+    auto names = m_model ? m_model->roleNames() : QAbstractItemModel::roleNames();
+    if (m_headerView) {
+        QString textRole = m_headerView->textRole();
+        if (textRole.isEmpty())
+            textRole = u"display"_s;
+        if (!names.values().contains(textRole.toUtf8().constData())) {
+            qmlWarning(m_headerView).nospace() << "The 'textRole' property contains a role that doesn't exist in the model: "
+                                               << textRole << ". Check your model's roleNames() implementation";
+        }
+    }
+
+    return names;
 }
 
 QVariant QHeaderDataProxyModel::variantValue() const
