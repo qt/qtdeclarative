@@ -96,6 +96,7 @@ private slots:
     void createTextureFromImage();
     void withAdoptedRhi();
     void resizeTextureFromImage();
+    void textureNativeInterface();
 
 private:
     QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
@@ -781,6 +782,59 @@ void tst_SceneGraph::resizeTextureFromImage()
     }
 
     TestOffscreenScene::cleanup();
+}
+
+void tst_SceneGraph::textureNativeInterface()
+{
+    if (!isRunningOnRhi())
+        QSKIP("Skipping texture native interface tests due to not running with QRhi");
+
+    // test it offscreen because we want to do QSG stuff here on the main thread
+    QScopedPointer<TestOffscreenScene> scene(createOffscreenScene(testFileUrl(QLatin1String("renderControl_rect.qml"))));
+    QVERIFY(scene->renderControl && scene->window && scene->rootItem);
+
+    QImage image(512, 512, QImage::Format_RGBA8888);
+
+    QScopedPointer<QSGTexture> texture(scene->window->createTextureFromImage(image, QQuickWindow::TextureHasAlphaChannel));
+    QVERIFY(texture.data());
+
+    commitTexture(scene->window->rhi(), texture.data());
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+    if (scene->window->graphicsApi() == QSGRendererInterface::Metal) {
+        auto texNatIf = texture->nativeInterface<QNativeInterface::QSGMetalTexture>();
+        QVERIFY(texNatIf);
+        QVERIFY(texNatIf->nativeTexture());
+    }
+#endif
+
+#if defined(Q_OS_WIN)
+    if (scene->window->graphicsApi() == QSGRendererInterface::Direct3D11) {
+        auto texNatIf = texture->nativeInterface<QNativeInterface::QSGD3D11Texture>();
+        QVERIFY(texNatIf);
+        QVERIFY(texNatIf->nativeTexture());
+    } else if (scene->window->graphicsApi() == QSGRendererInterface::Direct3D12) {
+        auto texNatIf = texture->nativeInterface<QNativeInterface::QSGD3D12Texture>();
+        QVERIFY(texNatIf);
+        QVERIFY(texNatIf->nativeTexture());
+    }
+#endif
+
+#if QT_CONFIG(opengl)
+    if (scene->window->graphicsApi() == QSGRendererInterface::OpenGL) {
+        auto texNatIf = texture->nativeInterface<QNativeInterface::QSGOpenGLTexture>();
+        QVERIFY(texNatIf);
+        QVERIFY(texNatIf->nativeTexture());
+    }
+#endif
+
+#if QT_CONFIG(vulkan)
+    if (scene->window->graphicsApi() == QSGRendererInterface::Vulkan) {
+        auto texNatIf = texture->nativeInterface<QNativeInterface::QSGVulkanTexture>();
+        QVERIFY(texNatIf);
+        QVERIFY(texNatIf->nativeImage());
+    }
+#endif
 }
 
 bool tst_SceneGraph::isRunningOnRhi()
