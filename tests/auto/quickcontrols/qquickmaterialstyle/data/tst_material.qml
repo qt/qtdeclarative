@@ -1326,4 +1326,43 @@ TestCase {
         let childWindow = parentWindow.childWindow
         compare(childWindow.Material.theme, Material.Dark)
     }
+
+    Component {
+        id: themePropagationWithBehaviorComponent
+
+        ApplicationWindow {
+            width: 200
+            height: 200
+            visible: true
+
+            Material.theme: Material.Dark
+
+            property alias listView: listView
+
+            ListView {
+                id: listView
+                anchors.fill: parent
+                header: Text {
+                    text: `Material.theme for header is ${Material.theme} - should be 1`
+
+                    Rectangle {
+                        anchors.fill: parent
+                        z: -1
+                    }
+
+                    Material.elevation: 6
+                    // Having this would break the theme (QTBUG-122783)
+                    Behavior on Material.elevation {}
+                }
+            }
+        }
+    }
+
+    function test_themePropagationWithBehavior() {
+        let window = createTemporaryObject(themePropagationWithBehaviorComponent, testCase)
+        verify(window)
+
+        let headerItem = window.listView.headerItem
+        compare(headerItem.Material.theme, Material.Dark)
+    }
 }
