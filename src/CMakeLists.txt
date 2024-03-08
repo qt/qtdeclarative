@@ -115,4 +115,7 @@ if(QT_FEATURE_qml_network)
         add_subdirectory(qmldebug)
     endif()
 endif()
+
+add_subdirectory(assets)
+
 # special case end
