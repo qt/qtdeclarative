@@ -517,7 +517,7 @@ int main(int argc, char *argv[])
     parser.addOption(fixedAnimationsOption);
     QCommandLineOption rhiOption(QStringList() << QStringLiteral("r") << QStringLiteral("rhi"),
         QCoreApplication::translate("main", "Set the backend for the Qt graphics abstraction (RHI). "
-                                    "Backend is one of: default, vulkan, metal, d3d11, gl"),
+                                    "Backend is one of: default, vulkan, metal, d3d11, d3d12, opengl"),
                                  QStringLiteral("backend"));
     parser.addOption(rhiOption);
     QCommandLineOption selectorOption(QStringLiteral("S"), QCoreApplication::translate("main",
