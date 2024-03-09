@@ -42,7 +42,6 @@ QQuickTextSelection::QQuickTextSelection(QObject *parent)
 {
     // When QQuickTextEdit creates its cursorSelection, it passes itself as the parent
     if (auto *textEdit = qmlobject_cast<QQuickTextEdit *>(parent)) {
-        m_doc = textEdit->textDocument();
         m_control = QQuickTextEditPrivate::get(textEdit)->control;
         connect(m_control, &QQuickTextControl::currentCharFormatChanged,
                 this, &QQuickTextSelection::updateFromCharFormat);
