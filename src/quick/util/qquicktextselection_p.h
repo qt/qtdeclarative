@@ -70,7 +70,6 @@ private:
     QTextCursor m_cursor;
     QTextCharFormat m_charFormat;
     QTextBlockFormat m_blockFormat;
-    QQuickTextDocument *m_doc = nullptr;
     QQuickTextControl *m_control = nullptr;
 };
 
