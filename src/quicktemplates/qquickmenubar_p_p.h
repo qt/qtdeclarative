@@ -44,6 +44,7 @@ public:
 
     QQuickItem *createItem(QQuickMenu *menu);
 
+    bool isCurrentMenuOpen();
     void toggleCurrentMenu(bool visible, bool activate);
     void activateItem(QQuickMenuBarItem *item);
     void activateNextItem();
@@ -82,7 +83,6 @@ public:
 
     QPalette defaultPalette() const override;
 
-    bool popupMode = false;
     bool triggering = false;
     bool altPressed = false;
     bool requestNative = false;

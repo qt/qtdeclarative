@@ -87,15 +87,24 @@ QQuickItem *QQuickMenuBarPrivate::createItem(QQuickMenu *menu)
     return item;
 }
 
+bool QQuickMenuBarPrivate::isCurrentMenuOpen()
+{
+    if (!currentItem)
+        return false;
+    QQuickMenu *menu = currentItem->menu();
+    if (!menu)
+        return false;
+    return menu->isVisible();
+}
+
 void QQuickMenuBarPrivate::toggleCurrentMenu(bool visible, bool activate)
 {
-    if (!currentItem || visible == popupMode)
+    if (!currentItem || visible == isCurrentMenuOpen())
         return;
 
     QQuickMenu *menu = currentItem->menu();
 
     triggering = true;
-    popupMode = visible;
     if (menu)
         menu->setVisible(visible);
     if (!visible)
@@ -110,9 +119,11 @@ void QQuickMenuBarPrivate::activateItem(QQuickMenuBarItem *item)
     if (currentItem == item)
         return;
 
+    const bool stayOpen = isCurrentMenuOpen();
+
     if (currentItem) {
         currentItem->setHighlighted(false);
-        if (popupMode) {
+        if (isCurrentMenuOpen()) {
             if (QQuickMenu *menu = currentItem->menu())
                 menu->dismiss();
         }
@@ -120,7 +131,7 @@ void QQuickMenuBarPrivate::activateItem(QQuickMenuBarItem *item)
 
     if (item) {
         item->setHighlighted(true);
-        if (popupMode) {
+        if (stayOpen) {
             if (QQuickMenu *menu = item->menu())
                 menu->open();
         }
@@ -163,10 +174,10 @@ void QQuickMenuBarPrivate::onItemTriggered()
         return;
 
     if (item == currentItem) {
-        toggleCurrentMenu(!popupMode, false);
+        toggleCurrentMenu(!isCurrentMenuOpen(), false);
     } else {
-        popupMode = true;
         activateItem(item);
+        toggleCurrentMenu(true, false);
     }
 }
 
@@ -175,7 +186,6 @@ void QQuickMenuBarPrivate::onMenuAboutToHide()
     if (triggering || !currentItem || !currentItem->isHighlighted())
         return;
 
-    popupMode = false;
     activateItem(nullptr);
 }
 
@@ -796,7 +806,7 @@ void QQuickMenuBar::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QQuickMenuBar);
     QQuickContainer::hoverLeaveEvent(event);
-    if (!d->popupMode && d->currentItem)
+    if (!d->isCurrentMenuOpen() && d->currentItem)
         d->activateItem(nullptr);
 }
 
