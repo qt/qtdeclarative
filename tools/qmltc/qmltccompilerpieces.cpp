@@ -237,7 +237,8 @@ void QmltcCodeGenerator::generate_createBindingOnProperty(
         }
 
         *block += prologue;
-        *block << value + u"->" + bindable + u"().setBinding(" + createBindingForBindable + u");";
+        *block << u"if (!initializedCache.contains(\"%1\"))"_s.arg(p.propertyName());
+        *block << u"    "_s + value + u"->" + bindable + u"().setBinding(" + createBindingForBindable + u");";
         *block += epilogue;
     } else {
         QString createBindingForNonBindable =

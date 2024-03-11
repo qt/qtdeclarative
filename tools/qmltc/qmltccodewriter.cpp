@@ -118,6 +118,7 @@ void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString 
     code.rawAppendToHeader(u"#include <QtCore/qproperty.h>");
     code.rawAppendToHeader(u"#include <QtCore/qobject.h>");
     code.rawAppendToHeader(u"#include <QtCore/qcoreapplication.h>");
+    code.rawAppendToHeader(u"#include <QtCore/qxpfunctional.h>");
     code.rawAppendToHeader(u"#include <QtQml/qqmlengine.h>");
     code.rawAppendToHeader(u"#include <QtCore/qurl.h>"); // used in engine execution
     code.rawAppendToHeader(u"#include <QtQml/qqml.h>"); // used for attached properties
@@ -158,6 +159,48 @@ void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString 
         code.rawAppendToHeader(u"namespace %1 {"_s.arg(currentNamespace));
         code.rawAppendToCpp(u"namespace %1 {"_s.arg(currentNamespace));
     }
+}
+
+void QmltcCodeWriter::write(QmltcOutputWrapper &code,
+                            const QmltcPropertyInitializer &propertyInitializer,
+                            const QmltcType &wrappedType)
+{
+    code.rawAppendToHeader(u"class " + propertyInitializer.name + u" {");
+
+    {
+        {
+            [[maybe_unused]] QmltcOutputWrapper::HeaderIndentationScope headerIndent(&code);
+
+            code.rawAppendToHeader(u"friend class " + wrappedType.cppType + u";");
+        }
+
+        code.rawAppendToHeader(u"public:"_s);
+
+        [[maybe_unused]] QmltcOutputWrapper::MemberNameScope typeScope(&code, propertyInitializer.name);
+        {
+            [[maybe_unused]] QmltcOutputWrapper::HeaderIndentationScope headerIndent(&code);
+
+            write(code, propertyInitializer.constructor);
+            code.rawAppendToHeader(u""); // blank line
+
+            for (const auto &propertySetter : propertyInitializer.propertySetters) {
+                write(code, propertySetter);
+            }
+        }
+
+        code.rawAppendToHeader(u""); // blank line
+        code.rawAppendToHeader(u"private:"_s);
+
+        {
+            [[maybe_unused]] QmltcOutputWrapper::HeaderIndentationScope headerIndent(&code);
+
+            write(code, propertyInitializer.component);
+            write(code, propertyInitializer.initializedCache);
+        }
+    }
+
+    code.rawAppendToHeader(u"};"_s);
+    code.rawAppendToHeader(u""); // blank line
 }
 
 void QmltcCodeWriter::writeGlobalFooter(QmltcOutputWrapper &code, const QString &sourcePath,
@@ -290,6 +333,9 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type,
         code.rawAppendToHeader(u"/* ----------------- */");
         code.rawAppendToHeader(u"/* External C++ API */");
         code.rawAppendToHeader(u"public:", -1);
+
+        if (!type.propertyInitializer.name.isEmpty())
+            write(code, type.propertyInitializer, type);
 
         // NB: when non-document root, the externalCtor won't be public - but we
         // really don't care about the output format of such types

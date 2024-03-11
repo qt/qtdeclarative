@@ -113,9 +113,14 @@ Unlike in the case of QQmlComponent instantiation, the output of qmltc, being
 C++ code, is used directly by the application. Generally, constructing a new
 object in C++ is equivalent to creating a new object through
 QQmlComponent::create(). Once created, the object could be manipulated from C++
-or, for example, combined with QQuickWindow to be drawn on screen. Given a
-\c{myApp.qml} file, the application code (in both cases) would typically look
-like this:
+or, for example, combined with QQuickWindow to be drawn on screen.
+
+Additionally, the constructor for a qmltc object can be provided with
+with a callback to set up initial values for the component's
+properties.
+
+Given a \c{myApp.qml} file, the application code (in both cases) would
+typically look like this:
 
 \if defined(onlinedocs)
     \tab {generated-c++}{tab-qqmlcomponent}{Using QQmlComponent}{checked}

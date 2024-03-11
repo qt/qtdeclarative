@@ -22,7 +22,7 @@ class HelloWorld : public QObject
     Q_PROPERTY(QString hello WRITE setHello READ hello BINDABLE bindableHello)
 
 public:
-    HelloWorld(QQmlEngine* engine, QObject* parent = nullptr);
+    HelloWorld(QQmlEngine* engine, QObject* parent = nullptr, [[maybe_unused]] qxp::function_ref<void(PropertyInitializer&)> initializer = [](PropertyInitializer&){});
 
 Q_SIGNALS:
     void created();

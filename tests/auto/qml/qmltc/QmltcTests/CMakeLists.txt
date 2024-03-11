@@ -50,6 +50,8 @@ set(qml_sources
     qtbug103956/MainComponent.qml
     qtbug103956/qtbug103956_main.qml
 
+    qtbug120700_main.qml
+
     signalHandlers.qml
     javaScriptFunctions.qml
     changingBindings.qml
