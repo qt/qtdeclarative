@@ -189,8 +189,6 @@ protected:
     void endVisit(AST::ExportDeclaration *ast) override;
     void endVisit(AST::ExportClause *ast) override;
 
-    void endVisit(AST::FromClause *) override;
-
     void throwRecursionDepthError() override;
 
 private:

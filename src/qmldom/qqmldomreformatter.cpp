@@ -990,13 +990,20 @@ void ScriptFormatter::endVisit(ComputedPropertyName *)
 
 void ScriptFormatter::endVisit(AST::ExportDeclaration *ast)
 {
-    // handle cases with a semicolon at the end of the following expressions
+    // add a semicolon at the end of the following expressions
+    // export * FromClause ;
+    // export ExportClause FromClause ;
+    if (ast->fromClause) {
+        out(";");
+    }
+
+    // add a semicolon at the end of the following expressions
     // export ExportClause ;
     if (ast->exportClause && !ast->fromClause) {
         out(";");
     }
 
-    // handle cases with a semicolon at the end of the following expressions
+    // add a semicolon at the end of the following expressions
     // export default [lookahead ∉ { function, class }] AssignmentExpression;
     if (ast->exportDefault && ast->variableStatementOrDeclaration) {
         // lookahead ∉ { function, class }
@@ -1021,11 +1028,6 @@ void ScriptFormatter::endVisit(AST::ExportClause *ast)
         lw.space();
     }
     out(ast->rightBraceToken);
-}
-
-void ScriptFormatter::endVisit(AST::FromClause *)
-{
-    out(";");
 }
 
 void ScriptFormatter::throwRecursionDepthError()
