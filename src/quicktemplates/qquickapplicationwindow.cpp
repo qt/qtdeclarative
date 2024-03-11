@@ -145,6 +145,8 @@ public:
     QLocale locale;
     QQuickItem *activeFocusControl = nullptr;
     bool insideRelayout = false;
+    bool hasBackgroundWidth = false;
+    bool hasBackgroundHeight = false;
 };
 
 static void layoutItem(QQuickItem *item, qreal y, qreal width)
@@ -181,23 +183,25 @@ void QQuickApplicationWindowPrivate::relayout()
     layoutItem(footer, content->height(), q->width());
 
     if (background) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-        if (!p->widthValid() && qFuzzyIsNull(background->x())) {
+        if (!hasBackgroundWidth && qFuzzyIsNull(background->x()))
             background->setWidth(q->width());
-            p->widthValidFlag = false;
-        }
-        if (!p->heightValid() && qFuzzyIsNull(background->y())) {
+        if (!hasBackgroundHeight && qFuzzyIsNull(background->y()))
             background->setHeight(q->height());
-            p->heightValidFlag = false;
-        }
     }
 }
 
 void QQuickApplicationWindowPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
 {
-    Q_UNUSED(item);
-    Q_UNUSED(change);
     Q_UNUSED(diff);
+
+    if (!insideRelayout && item == background && change.sizeChange()) {
+        // Any time the background is resized (excluding our own resizing),
+        // we should respect it if it's explicit by storing the values of the flags.
+        QQuickItemPrivate *backgroundPrivate = QQuickItemPrivate::get(background);
+        hasBackgroundWidth = backgroundPrivate->widthValid();
+        hasBackgroundHeight = backgroundPrivate->heightValid();
+    }
+
     relayout();
 }
 
@@ -332,12 +336,7 @@ QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(
 
     \note If the background item has no explicit size specified, it automatically
           follows the control's size. In most cases, there is no need to specify
-          width or height for a background item. However, when using Image as
-          the background, for example, a change in \l {Image::}{source} without
-          a change in size can cause the image to be incorrectly sized (at its
-          natural size, rather than the size of the window). This is because the
-          resizing done by ApplicationWindow is not considered "explicit". This is one
-          instance where it is necessary to set the size manually.
+          width or height for a background item.
 
     \sa {Customizing ApplicationWindow}, contentItem, header, footer
 */
@@ -358,12 +357,24 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
     if (!d->background.isExecuting())
         d->cancelBackground();
 
+    if (d->background) {
+        d->hasBackgroundWidth = false;
+        d->hasBackgroundHeight = false;
+    }
     QQuickControlPrivate::hideOldItem(d->background);
+
     d->background = background;
+
     if (background) {
         background->setParentItem(QQuickWindow::contentItem());
+
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
+
+        QQuickItemPrivate *backgroundPrivate = QQuickItemPrivate::get(background);
+        d->hasBackgroundWidth = backgroundPrivate->widthValid();
+        d->hasBackgroundHeight = backgroundPrivate->heightValid();
+
         if (isComponentComplete())
             d->relayout();
     }
