@@ -45,7 +45,10 @@ public:
     QQuickItem *createItem(QQuickMenu *menu);
 
     bool isCurrentMenuOpen();
-    void toggleCurrentMenu(bool visible, bool activate);
+    void openCurrentMenu();
+    void closeCurrentMenu();
+    void activateMenuItem(int index);
+
     void activateItem(QQuickMenuBarItem *item);
     void activateNextItem();
     void activatePreviousItem();

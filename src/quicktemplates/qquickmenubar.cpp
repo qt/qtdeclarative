@@ -97,21 +97,35 @@ bool QQuickMenuBarPrivate::isCurrentMenuOpen()
     return menu->isVisible();
 }
 
-void QQuickMenuBarPrivate::toggleCurrentMenu(bool visible, bool activate)
+void QQuickMenuBarPrivate::openCurrentMenu()
 {
-    if (!currentItem || visible == isCurrentMenuOpen())
+    Q_Q(QQuickMenuBar);
+    if (!currentItem || isCurrentMenuOpen())
         return;
-
     QQuickMenu *menu = currentItem->menu();
+    if (!menu || menu->isOpened())
+        return;
+    QScopedValueRollback triggerRollback(triggering, true);
+    menu->popup({0, q->height()});
+}
 
-    triggering = true;
-    if (menu)
-        menu->setVisible(visible);
-    if (!visible)
-        currentItem->forceActiveFocus();
-    else if (menu && activate)
-        menu->setCurrentIndex(0);
-    triggering = false;
+void QQuickMenuBarPrivate::closeCurrentMenu()
+{
+    if (!currentItem || !isCurrentMenuOpen())
+        return;
+    QQuickMenu *menu = currentItem->menu();
+    QScopedValueRollback triggerRollback(triggering, true);
+    menu->dismiss();
+}
+
+void QQuickMenuBarPrivate::activateMenuItem(int index)
+{
+    if (!currentItem)
+        return;
+    QQuickMenu *menu = currentItem->menu();
+    if (!menu)
+        return;
+    menu->setCurrentIndex(index);
 }
 
 void QQuickMenuBarPrivate::activateItem(QQuickMenuBarItem *item)
@@ -123,21 +137,16 @@ void QQuickMenuBarPrivate::activateItem(QQuickMenuBarItem *item)
 
     if (currentItem) {
         currentItem->setHighlighted(false);
-        if (isCurrentMenuOpen()) {
-            if (QQuickMenu *menu = currentItem->menu())
-                menu->dismiss();
-        }
-    }
-
-    if (item) {
-        item->setHighlighted(true);
-        if (stayOpen) {
-            if (QQuickMenu *menu = item->menu())
-                menu->open();
-        }
+        closeCurrentMenu();
     }
 
     currentItem = item;
+
+    if (currentItem) {
+        currentItem->setHighlighted(true);
+        if (stayOpen)
+            openCurrentMenu();
+    }
 }
 
 void QQuickMenuBarPrivate::activateNextItem()
@@ -174,10 +183,15 @@ void QQuickMenuBarPrivate::onItemTriggered()
         return;
 
     if (item == currentItem) {
-        toggleCurrentMenu(!isCurrentMenuOpen(), false);
+        if (isCurrentMenuOpen()) {
+            closeCurrentMenu();
+            currentItem->forceActiveFocus();
+        } else {
+            openCurrentMenu();
+        }
     } else {
         activateItem(item);
-        toggleCurrentMenu(true, false);
+        openCurrentMenu();
     }
 }
 
@@ -744,11 +758,12 @@ void QQuickMenuBar::keyPressEvent(QKeyEvent *event)
 
     switch (event->key()) {
     case Qt::Key_Up:
-        d->toggleCurrentMenu(false, false);
+        d->closeCurrentMenu();
         break;
 
     case Qt::Key_Down:
-        d->toggleCurrentMenu(true, true);
+        d->openCurrentMenu();
+        d->activateMenuItem(0);
         break;
 
     case Qt::Key_Left:
@@ -773,7 +788,8 @@ void QQuickMenuBar::keyPressEvent(QKeyEvent *event)
                 if (auto *item = qobject_cast<QQuickMenuBarItem *>(d->itemAt(i))) {
                     if (item->shortcut() == mnemonic) {
                         d->activateItem(item);
-                        d->toggleCurrentMenu(true, true);
+                        d->openCurrentMenu();
+                        d->activateMenuItem(0);
                     }
                 }
             }
