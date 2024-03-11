@@ -45,7 +45,6 @@ void CubeRenderer::init(QWindow *w, QOpenGLContext *share)
         return;
 
     QOpenGLFunctions *f = m_context->functions();
-    f->glClearColor(0.0f, 0.1f, 0.25f, 1.0f);
     f->glViewport(0, 0, w->width() * w->devicePixelRatio(), w->height() * w->devicePixelRatio());
 
     static const char *vertexShaderSource =
@@ -148,6 +147,7 @@ void CubeRenderer::render(QWindow *w, QOpenGLContext *share, uint texture)
         return;
 
     QOpenGLFunctions *f = m_context->functions();
+    f->glClearColor(0.0f, 0.1f, 0.25f, 1.0f);
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (texture) {
