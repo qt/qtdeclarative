@@ -240,7 +240,8 @@ void QQuickSpinBoxPrivate::contentItemTextChanged()
         return;
     QString text = inputTextItem->text();
 #if QT_CONFIG(validator)
-    validator->fixup(text);
+    if (validator)
+        validator->fixup(text);
 #endif
 
     if (live) {

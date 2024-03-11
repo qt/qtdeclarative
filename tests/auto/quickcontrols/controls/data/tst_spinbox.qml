@@ -1119,4 +1119,9 @@ TestCase {
         mouseClick(control.up.indicator) // +1
         compare(control.value, 0)
     }
+
+    function test_nullValidator() {
+        var control = createTemporaryObject(spinBox, testCase, { validator: null })
+        verify(control)
+    }
 }
