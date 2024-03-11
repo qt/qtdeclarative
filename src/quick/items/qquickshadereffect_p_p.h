@@ -92,6 +92,7 @@ private:
     void disconnectSignals(Shader shaderType);
     void clearMappers(Shader shaderType);
     std::optional<int> findMappedShaderVariableId(const QByteArray &name) const;
+    std::optional<int> findMappedShaderVariableId(const QByteArray &name, Shader shaderType) const;
     bool sourceIsUnique(QQuickItem *source, Shader typeToSkip, int indexToSkip) const;
 
     bool inDestructor = false;
