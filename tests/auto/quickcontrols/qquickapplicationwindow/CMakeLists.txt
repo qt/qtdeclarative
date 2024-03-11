@@ -40,11 +40,11 @@ qt_internal_add_test(tst_qquickapplicationwindow
     TESTDATA ${test_data}
 )
 
-#### Keys ignored in scope 1:.:.:qquickapplicationwindow.pro:<TRUE>:
-# OTHER_FILES = "data/*.qml"
-
-## Scopes:
-#####################################################################
+# Make the QML files available to Creator's locator.
+target_sources(tst_qquickapplicationwindow
+    PRIVATE
+        ${test_data}
+)
 
 qt_internal_extend_target(tst_qquickapplicationwindow CONDITION ANDROID OR IOS
     DEFINES
