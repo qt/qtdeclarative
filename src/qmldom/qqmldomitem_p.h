@@ -25,6 +25,7 @@
 #include "qqmldomfunctionref_p.h"
 #include "qqmldomfilewriter_p.h"
 #include "qqmldomlinewriter_p.h"
+#include "qqmldomfieldfilter_p.h"
 
 #include <QtCore/QMap>
 #include <QtCore/QMultiMap>
@@ -1024,7 +1025,8 @@ public:
     bool visitTree(const Path &basePath, ChildrenVisitor visitor,
                    VisitOptions options = VisitOption::Default,
                    ChildrenVisitor openingVisitor = emptyChildrenVisitor,
-                   ChildrenVisitor closingVisitor = emptyChildrenVisitor) const;
+                   ChildrenVisitor closingVisitor = emptyChildrenVisitor,
+                   const FieldFilter &filter = FieldFilter::noFilter()) const;
     bool visitPrototypeChain(function_ref<bool(const DomItem &)> visitor,
                              VisitPrototypesOptions options = VisitPrototypesOption::Normal,
                              const ErrorHandler &h = nullptr, QSet<quintptr> *visited = nullptr,

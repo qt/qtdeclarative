@@ -3104,6 +3104,53 @@ private slots:
         }
     }
 
+    void visitTreeFilter()
+    {
+        DomItem qmlObject;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+
+        auto envPtr =
+                DomEnvironment::create(qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option{}, options);
+
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir + u"/visitTreeFilter.qml"_s),
+                         [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
+                             qmlObject = newIt.rootQmlObject(GoTo::MostLikely);
+                         });
+        envPtr->loadPendingDependencies();
+
+        FieldFilter filter({}, { { QString(), QString::fromUtf16(Fields::propertyDefs) } });
+
+        // check if propertyDefs is visited without the filter
+        bool success = false;
+        qmlObject.visitTree(
+                Path(), emptyChildrenVisitor, VisitOption::Recurse | VisitOption::VisitSelf,
+                [&success](const Path &p, const DomItem &, bool) {
+                    const QString pathString = p.toString();
+                    if (p && p.checkHeadName(Fields::propertyDefs)) {
+                        success = true;
+                    }
+                    return true;
+                },
+                emptyChildrenVisitor);
+        QVERIFY(success);
+
+        // check that propertyDefs is not visited with the filter
+        success = true;
+        qmlObject.visitTree(
+                Path(), emptyChildrenVisitor, VisitOption::Recurse | VisitOption::VisitSelf,
+                [&success](const Path &p, const DomItem &, bool) {
+                    if (p && p.checkHeadName(Fields::propertyDefs)) {
+                        qWarning() << "Filter did not filter propertyDefs at path" << p;
+                        success = false;
+                    }
+                    return true;
+                },
+                emptyChildrenVisitor, filter);
+        QVERIFY(success);
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;
