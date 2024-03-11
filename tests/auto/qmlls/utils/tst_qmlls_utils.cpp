@@ -223,7 +223,6 @@ void tst_qmlls_utils::findItemFromLocation_data()
     QTest::addRow("onWhitespaceBetweenCAndD2") << file1Qml << 17 << 24 << firstResult << outOfOne
                                                << QQmlJS::Dom::DomType::Map << 16 << 8;
 
-    // check workaround for inline components
     QTest::addRow("ic") << file1Qml << 15 << 5 << firstResult << outOfOne
                         << QQmlJS::Dom::DomType::QmlComponent << -1 << 5;
     QTest::addRow("ic2") << file1Qml << 15 << 20 << firstResult << outOfOne
