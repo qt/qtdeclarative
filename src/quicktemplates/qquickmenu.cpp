@@ -473,18 +473,15 @@ void QQuickMenuPrivate::setNativeMenuVisible(bool visible)
     QPoint offset;
     QWindow *window = effectiveWindow(qGuiApp->topLevelWindows().first(), &offset);
 
-    QRect targetRect;
-#if QT_CONFIG(cursor)
-    QPoint pos = QCursor::pos();
-    if (window)
-        pos = window->mapFromGlobal(pos);
-    targetRect.moveTo(pos);
-#endif
-    if (visible)
+    if (visible) {
+        const QPointF globalPos = parentItem->mapToGlobal(x, y);
+        const QPoint windowPos = window->mapFromGlobal(globalPos.toPoint());
+        QRect targetRect(windowPos, QSize(0, 0));
         handle->showPopup(window, QHighDpi::toNativePixels(targetRect, window),
             /*menuItem ? menuItem->handle() : */nullptr);
-    else
+    } else {
         handle->dismiss();
+    }
 }
 
 QQuickItem *QQuickMenuPrivate::itemAt(int index) const
