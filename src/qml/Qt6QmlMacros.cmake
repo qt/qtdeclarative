@@ -3707,7 +3707,16 @@ function(qt6_generate_deploy_qml_app_script)
         endif()
     endforeach()
 
-    if(APPLE AND NOT IOS AND QT6_IS_SHARED_LIBS_BUILD AND is_bundle)
+    _qt_internal_should_skip_deployment_api(skip_deployment skip_reason)
+    if(skip_deployment)
+        _qt_internal_generate_no_op_deploy_script(
+            FUNCTION_NAME "qt6_generate_deploy_qml_app_script"
+            SKIP_REASON "${skip_reason}"
+            TARGET ${arg_TARGET}
+            NAME ${deploy_script_name}
+            OUTPUT_SCRIPT deploy_script
+        )
+    elseif(APPLE AND NOT IOS AND QT6_IS_SHARED_LIBS_BUILD AND is_bundle)
         # TODO: Consider handling non-bundle applications in the future using the generic cmake
         # runtime dependency feature.
 
