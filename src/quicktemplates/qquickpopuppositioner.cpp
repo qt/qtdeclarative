@@ -127,8 +127,6 @@ void QQuickPopupPositioner::reposition()
                           qMax<qreal>(0.0, margins.top()),
                           p->window->width() - qMax<qreal>(0.0, margins.left()) - qMax<qreal>(0.0, margins.right()),
                           p->window->height() - qMax<qreal>(0.0, margins.top()) - qMax<qreal>(0.0, margins.bottom()));
-            if (p->window->contentOrientation() == Qt::LandscapeOrientation || p->window->contentOrientation() == Qt::InvertedLandscapeOrientation)
-                bounds = bounds.transposed();
 
             // if the popup doesn't fit horizontally inside the window, try flipping it around (left <-> right)
             if (p->allowHorizontalFlip && (rect.left() < bounds.left() || rect.right() > bounds.right())) {
