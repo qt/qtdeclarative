@@ -18,6 +18,12 @@ language/statements/labeled/let-identifier-with-newline.js sloppyFails
 language/statements/while/let-identifier-with-newline.js sloppyFails
 language/statements/with/let-identifier-with-newline.js sloppyFails
 
+# These failures are a defect in the Yarr regexp engine we are using.
+# They all amount to some variation of: /\udf06/u.exec('\ud834\udf06')
+built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js
+built-ins/RegExp/prototype/Symbol.search/u-lastindex-advance.js
+built-ins/RegExp/prototype/exec/u-lastindex-adv.js
+
 # The ES6/7 spec says that [[DefineOwnProperty]] on the module namespace exotic object
 # always returns false. This was changed in https://github.com/tc39/ecma262/pull/858
 # but it's not in the published spec yet.
@@ -211,7 +217,6 @@ built-ins/Promise/prototype/then/ctor-throws.js fails
 built-ins/Promise/race/ctx-ctor.js fails
 built-ins/Proxy/ownKeys/return-duplicate-entries-throws.js fails
 built-ins/Proxy/ownKeys/return-duplicate-symbol-entries-throws.js fails
-built-ins/RegExp/prototype/Symbol.match/builtin-success-u-return-val-groups.js fails
 built-ins/RegExp/prototype/Symbol.split/species-ctor.js fails
 built-ins/RegExp/prototype/exec/S15.10.6.2_A5_T3.js fails
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js fails

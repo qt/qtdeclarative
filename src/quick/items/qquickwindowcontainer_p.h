@@ -31,6 +31,9 @@ class Q_QUICK_EXPORT QQuickWindowContainer : public QQuickImplicitSizeItem
     QML_NAMED_ELEMENT(WindowContainer)
     Q_PROPERTY(QWindow *window READ containedWindow WRITE setContainedWindow
                NOTIFY containedWindowChanged DESIGNABLE false FINAL)
+
+    QML_ADDED_IN_VERSION(6, 7)
+
 public:
     enum ContainerMode {
         WindowControlsItem,

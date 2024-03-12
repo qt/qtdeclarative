@@ -865,7 +865,7 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
             ow.ensureNewline();
         }
         ow.decreaseIndent(1, baseIndent);
-        ow.write(u"}");
+        ow.writeRegion(RightBraceRegion);
 
         return;
     }
@@ -1032,7 +1032,7 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
         ow.removeTextAddCallback(spacerId);
     }
     ow.decreaseIndent(1, baseIndent);
-    ow.ensureNewline().write(u"}");
+    ow.ensureNewline().writeRegion(RightBraceRegion);
 }
 
 Binding::Binding(const QString &name, std::unique_ptr<BindingValue> value, BindingType bindingType)
@@ -1715,7 +1715,9 @@ void ScriptExpression::setCode(const QString &code, const QString &preCode, cons
         if (m_expressionType == ExpressionType::BindingExpression)
             if (AST::ExpressionStatement *exp = AST::cast<AST::ExpressionStatement *>(m_ast))
                 m_ast = exp->expression;
-        AstComments::collectComments(m_engine, m_ast, m_astComments, MutableDomItem(), nullptr);
+
+        CommentCollector collector;
+        collector.collectComments(m_engine, parser.rootNode(), m_astComments);
     }
 }
 

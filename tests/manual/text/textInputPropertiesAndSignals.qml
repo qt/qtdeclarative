@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -17,6 +17,7 @@ Item {
             id: enabledCB
             text: "enabled"
             checked: true
+            Layout.fillWidth: false
         }
 
         // ====================================================
@@ -31,6 +32,7 @@ Item {
             id: textInputMouseSelCB
             text: "mouse select"
             onCheckedChanged: textInput.selectByMouse = checked
+            Layout.fillWidth: false
         }
 
         Rectangle {
@@ -110,6 +112,7 @@ Item {
             id: textFieldMouseSelCB
             text: "mouse select"
             onCheckedChanged: textField.selectByMouse = checked
+            Layout.fillWidth: false
         }
 
         TextField {
@@ -190,6 +193,7 @@ Item {
             text: "setText"
             Layout.column: 2
             Layout.row: 14
+            Layout.fillWidth: false
             onClicked: {
                 Qt.inputMethod.reset()
                 textInput.text = copyFrom.text
@@ -211,14 +215,17 @@ Item {
             CheckBox {
                 id: textEditReadOnly
                 text: "read-only"
+                Layout.fillWidth: false
             }
             CheckBox {
                 id: textEditMouseSelCB
                 text: "mouse select"
+                Layout.fillWidth: false
                 onCheckedChanged: textEdit.selectByMouse = checked
             }
             CheckBox {
                 id: textEditPressDelayCB
+                Layout.fillWidth: false
                 text: "press delay: " + flick.pressDelay
             }
         }
@@ -350,10 +357,12 @@ Item {
             CheckBox {
                 id: textAreaReadOnly
                 text: "read-only"
+                Layout.fillWidth: false
             }
             CheckBox {
                 id: textAreaMouseSelCB
                 text: "mouse select"
+                Layout.fillWidth: false
                 onCheckedChanged: textArea.selectByMouse = checked
             }
         }

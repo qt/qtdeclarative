@@ -1,5 +1,5 @@
 // Copyright (C) 2018 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 
@@ -571,6 +571,17 @@ void tst_HoverHandler::deviceCursor()
     QCOMPARE(eraserHandler->isHovered(), false);
     QCOMPARE(aibrushHandler->isHovered(), false);
     QCOMPARE(airbrushEraserHandler->isHovered(), true); // there was no fresh QTabletEvent to tell it not to be hovered
+
+    // hover with the stylus again, then move the mouse outside the handlers' parent item
+    testStylusDevice(QInputDevice::DeviceType::Stylus, QPointingDevice::PointerType::Pen,
+                     Qt::CrossCursor, stylusHandler);
+    QTest::mouseMove(&window, QPoint(180, 180));
+    // the mouse has left the item: all its HoverHandlers should be unhovered (QTBUG-116505)
+    QCOMPARE(stylusHandler->isHovered(), false);
+    QCOMPARE(eraserHandler->isHovered(), false);
+    QCOMPARE(aibrushHandler->isHovered(), false);
+    QCOMPARE(airbrushEraserHandler->isHovered(), false);
+    QCOMPARE(mouseHandler->isHovered(), false);
 }
 
 void tst_HoverHandler::addHandlerFromCpp()

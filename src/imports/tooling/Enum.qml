@@ -7,5 +7,6 @@ Member {
     property string alias
     property string type
     property bool isFlag: false
+    property bool isScoped: false
     property var values: []
 }

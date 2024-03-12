@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "tst_qmlls_utils.h"
 #include <algorithm>
@@ -1664,47 +1664,264 @@ void tst_qmlls_utils::completions_data()
 
     const QString propertyCompletion = u"property type name: value;"_s;
     const QString functionCompletion = u"function name(args...): returnType { statements...}"_s;
+
+    const ExpectedCompletions quickSnippetsWithQualifier{
+        { u"QQ.BorderImage snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.BorderImage {\n"
+          u"\tid: ${1:name}\n"
+          u"\tsource: \"${2:file}\"\n"
+          u"\twidth: ${3:100}; height: ${4:100}\n"
+          u"\tborder.left: ${5: 5}; border.top: ${5}\n"
+          u"\tborder.right: ${5}; border.bottom: ${5}\n"
+          u"}"_s },
+        { u"QQ.ColorAnimation snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.ColorAnimation {\n"
+          u"\tfrom: \"${1:white}\"\n"
+          u"\tto: \"${2:black}\"\n"
+          u"\tduration: ${3:200}\n"
+          u"}"_s },
+        { u"QQ.Image snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.Image {\n"
+          u"\tid: ${1:name}\n"
+          u"\tsource: \"${2:file}\"\n"
+          u"}"_s },
+        { u"QQ.Item snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.Item {\n"
+          u"\tid: ${1:name}\n"
+          u"}"_s },
+        { u"QQ.NumberAnimation snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.NumberAnimation {\n"
+          u"\ttarget: ${1:object}\n"
+          u"\tproperty: \"${2:name}\"\n"
+          u"\tduration: ${3:200}\n"
+          u"\teasing.type: QQ.Easing.${4:InOutQuad}\n"
+          u"}"_s },
+        { u"QQ.NumberAnimation with targets snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.NumberAnimation {\n"
+          u"\ttargets: [${1:object}]\n"
+          u"\tproperties: \"${2:name}\"\n"
+          u"\tduration: ${3:200}\n"
+          u"}"_s },
+        { u"QQ.PauseAnimation snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.PauseAnimation {\n"
+          u"\tduration: ${1:200}\n"
+          u"}"_s },
+        { u"QQ.PropertyAction snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.PropertyAction {\n"
+          u"\ttarget: ${1:object}\n"
+          u"\tproperty: \"${2:name}\"\n"
+          "}"_s },
+        { u"QQ.PropertyAction with targets snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.PropertyAction {\n"
+          u"\ttargets: [${1:object}]\n"
+          u"\tproperties: \"${2:name}\"\n"
+          u"}"_s },
+        { u"QQ.PropertyChanges snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.PropertyChanges {\n"
+          u"\ttarget: ${1:object}\n"
+          u"}"_s },
+        { u"QQ.State snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.State {\n"
+          u"\tname: ${1:name}\n"
+          u"\tQQ.PropertyChanges {\n"
+          u"\t\ttarget: ${2:object}\n"
+          u"\t}\n"
+          u"}"_s },
+        { u"QQ.Text snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.Text {\n"
+          u"\tid: ${1:name}\n"
+          u"\ttext: qsTr(\"${2:text}\")\n"
+          u"}"_s },
+        { u"QQ.Transition snippet"_s, CompletionItemKind::Snippet,
+          u"QQ.Transition {\n"
+          u"\tfrom: \"${1:fromState}\"\n"
+          u"\tto: \"${2:toState}\"\n"
+          u"}"_s },
+        { u"states binding with PropertyChanges in State"_s, CompletionItemKind::Snippet,
+          u"states: [\n"
+          u"\tQQ.State {\n"
+          u"\t\tname: \"${1:name}\"\n"
+          u"\t\tQQ.PropertyChanges {\n"
+          u"\t\t\ttarget: ${2:object}\n"
+          u"\t\t}\n"
+          u"\t}\n"
+          u"]"_s },
+        { u"transitions binding with Transition"_s, CompletionItemKind::Snippet,
+          u"transitions: [\n"
+          u"\tQQ.Transition {\n"
+          u"\t\tfrom: \"${1:fromState}\"\n"
+          u"\t\tto: \"${2:fromState}\"\n"
+          u"\t}\n"
+          u"]"_s }
+    };
+    const ExpectedCompletions quickSnippetsWithoutQualifier{
+        { { u"BorderImage snippet"_s, CompletionItemKind::Snippet,
+            u"BorderImage {\n"
+            u"\tid: ${1:name}\n"
+            u"\tsource: \"${2:file}\"\n"
+            u"\twidth: ${3:100}; height: ${4:100}\n"
+            u"\tborder.left: ${5: 5}; border.top: ${5}\n"
+            u"\tborder.right: ${5}; border.bottom: ${5}\n"
+            u"}"_s },
+          { u"ColorAnimation snippet"_s, CompletionItemKind::Snippet,
+            u"ColorAnimation {\n"
+            u"\tfrom: \"${1:white}\"\n"
+            u"\tto: \"${2:black}\"\n"
+            u"\tduration: ${3:200}\n"
+            u"}"_s },
+          { u"Image snippet"_s, CompletionItemKind::Snippet,
+            u"Image {\n"
+            u"\tid: ${1:name}\n"
+            u"\tsource: \"${2:file}\"\n"
+            u"}"_s },
+          { u"Item snippet"_s, CompletionItemKind::Snippet,
+            u"Item {\n"
+            u"\tid: ${1:name}\n"
+            u"}"_s },
+          { u"NumberAnimation snippet"_s, CompletionItemKind::Snippet,
+            u"NumberAnimation {\n"
+            u"\ttarget: ${1:object}\n"
+            u"\tproperty: \"${2:name}\"\n"
+            u"\tduration: ${3:200}\n"
+            u"\teasing.type: Easing.${4:InOutQuad}\n"
+            u"}"_s },
+          { u"NumberAnimation with targets snippet"_s, CompletionItemKind::Snippet,
+            u"NumberAnimation {\n"
+            u"\ttargets: [${1:object}]\n"
+            u"\tproperties: \"${2:name}\"\n"
+            u"\tduration: ${3:200}\n"
+            u"}"_s },
+          { u"PauseAnimation snippet"_s, CompletionItemKind::Snippet,
+            u"PauseAnimation {\n"
+            u"\tduration: ${1:200}\n"
+            u"}"_s },
+          { u"PropertyAction snippet"_s, CompletionItemKind::Snippet,
+            u"PropertyAction {\n"
+            u"\ttarget: ${1:object}\n"
+            u"\tproperty: \"${2:name}\"\n"
+            "}"_s },
+          { u"PropertyAction with targets snippet"_s, CompletionItemKind::Snippet,
+            u"PropertyAction {\n"
+            u"\ttargets: [${1:object}]\n"
+            u"\tproperties: \"${2:name}\"\n"
+            u"}"_s },
+          { u"PropertyChanges snippet"_s, CompletionItemKind::Snippet,
+            u"PropertyChanges {\n"
+            u"\ttarget: ${1:object}\n"
+            u"}"_s },
+          { u"State snippet"_s, CompletionItemKind::Snippet,
+            u"State {\n"
+            u"\tname: ${1:name}\n"
+            u"\tPropertyChanges {\n"
+            u"\t\ttarget: ${2:object}\n"
+            u"\t}\n"
+            u"}"_s },
+          { u"Text snippet"_s, CompletionItemKind::Snippet,
+            u"Text {\n"
+            u"\tid: ${1:name}\n"
+            u"\ttext: qsTr(\"${2:text}\")\n"
+            u"}"_s },
+          { u"Transition snippet"_s, CompletionItemKind::Snippet,
+            u"Transition {\n"
+            u"\tfrom: \"${1:fromState}\"\n"
+            u"\tto: \"${2:toState}\"\n"
+            u"}"_s } }
+    };
+    const ExpectedCompletions quickSnippetsWithoutQualifierWithBindings = ExpectedCompletions{
+        { { u"states binding with PropertyChanges in State"_s, CompletionItemKind::Snippet,
+            u"states: [\n"
+            u"\tState {\n"
+            u"\t\tname: \"${1:name}\"\n"
+            u"\t\tPropertyChanges {\n"
+            u"\t\t\ttarget: ${2:object}\n"
+            u"\t\t}\n"
+            u"\t}\n"
+            u"]"_s },
+          { u"transitions binding with Transition"_s, CompletionItemKind::Snippet,
+            u"transitions: [\n"
+            u"\tTransition {\n"
+            u"\t\tfrom: \"${1:fromState}\"\n"
+            u"\t\tto: \"${2:fromState}\"\n"
+            u"\t}\n"
+            u"]"_s } }
+    } += quickSnippetsWithoutQualifier;
     QTest::newRow("objEmptyLineSnippets")
             << file << 9 << 1
-            << ExpectedCompletions({
-                       { propertyCompletion, CompletionItemKind::Snippet,
-                         u"property ${1:type} ${2:name}: ${0:value};"_s },
-                       { u"readonly property type name: value;"_s, CompletionItemKind::Snippet,
-                         u"readonly property ${1:type} ${2:name}: ${0:value};"_s },
-                       { u"default property type name: value;"_s, CompletionItemKind::Snippet,
-                         u"default property ${1:type} ${2:name}: ${0:value};"_s },
-                       { u"default required property type name: value;"_s,
-                         CompletionItemKind::Snippet,
-                         u"default required property ${1:type} ${2:name}: ${0:value};"_s },
-                       { u"required default property type name: value;"_s,
-                         CompletionItemKind::Snippet,
-                         u"required default property ${1:type} ${2:name}: ${0:value};"_s },
-                       { u"required property type name: value;"_s, CompletionItemKind::Snippet,
-                         u"required property ${1:type} ${2:name}: ${0:value};"_s },
-                       { u"property type name;"_s, CompletionItemKind::Snippet,
-                         u"property ${1:type} ${0:name};"_s },
-                       { u"required property type name;"_s, CompletionItemKind::Snippet,
-                         u"required property ${1:type} ${0:name};"_s },
-                       { u"default property type name;"_s, CompletionItemKind::Snippet,
-                         u"default property ${1:type} ${0:name};"_s },
-                       { u"default required property type name;"_s, CompletionItemKind::Snippet,
-                         u"default required property ${1:type} ${0:name};"_s },
-                       { u"required default property type name;"_s, CompletionItemKind::Snippet,
-                         u"required default property ${1:type} ${0:name};"_s },
-                       { u"signal name(arg1:type1, ...)"_s, CompletionItemKind::Snippet,
-                         u"signal ${1:name}($0)"_s },
-                       { u"signal name;"_s, CompletionItemKind::Snippet, u"signal ${0:name};"_s },
-                       { u"required name;"_s, CompletionItemKind::Snippet,
-                         u"required ${0:name};"_s },
-                       { functionCompletion, CompletionItemKind::Snippet,
-                         u"function ${1:name}($2): ${3:returnType} {\n\t$0\n}"_s },
-                       { u"enum name { Values...}"_s, CompletionItemKind::Snippet,
-                         u"enum ${1:name} {\n\t${0:values}\n}"_s },
-                       { u"component Name: BaseType { ... }"_s, CompletionItemKind::Snippet,
-                         u"component ${1:name}: ${2:baseType} {\n\t$0\n}"_s },
-               })
+            << (ExpectedCompletions({
+                        { propertyCompletion, CompletionItemKind::Snippet,
+                          u"property ${1:type} ${2:name}: ${0:value};"_s },
+                        { u"readonly property type name: value;"_s, CompletionItemKind::Snippet,
+                          u"readonly property ${1:type} ${2:name}: ${0:value};"_s },
+                        { u"default property type name: value;"_s, CompletionItemKind::Snippet,
+                          u"default property ${1:type} ${2:name}: ${0:value};"_s },
+                        { u"default required property type name: value;"_s,
+                          CompletionItemKind::Snippet,
+                          u"default required property ${1:type} ${2:name}: ${0:value};"_s },
+                        { u"required default property type name: value;"_s,
+                          CompletionItemKind::Snippet,
+                          u"required default property ${1:type} ${2:name}: ${0:value};"_s },
+                        { u"required property type name: value;"_s, CompletionItemKind::Snippet,
+                          u"required property ${1:type} ${2:name}: ${0:value};"_s },
+                        { u"property type name;"_s, CompletionItemKind::Snippet,
+                          u"property ${1:type} ${0:name};"_s },
+                        { u"required property type name;"_s, CompletionItemKind::Snippet,
+                          u"required property ${1:type} ${0:name};"_s },
+                        { u"default property type name;"_s, CompletionItemKind::Snippet,
+                          u"default property ${1:type} ${0:name};"_s },
+                        { u"default required property type name;"_s, CompletionItemKind::Snippet,
+                          u"default required property ${1:type} ${0:name};"_s },
+                        { u"required default property type name;"_s, CompletionItemKind::Snippet,
+                          u"required default property ${1:type} ${0:name};"_s },
+                        { u"signal name(arg1:type1, ...)"_s, CompletionItemKind::Snippet,
+                          u"signal ${1:name}($0)"_s },
+                        { u"signal name;"_s, CompletionItemKind::Snippet, u"signal ${0:name};"_s },
+                        { u"required name;"_s, CompletionItemKind::Snippet,
+                          u"required ${0:name};"_s },
+                        { functionCompletion, CompletionItemKind::Snippet,
+                          u"function ${1:name}($2): ${3:returnType} {\n\t$0\n}"_s },
+                        { u"enum name { Values...}"_s, CompletionItemKind::Snippet,
+                          u"enum ${1:name} {\n\t${0:values}\n}"_s },
+                        { u"component Name: BaseType { ... }"_s, CompletionItemKind::Snippet,
+                          u"component ${1:name}: ${2:baseType} {\n\t$0\n}"_s },
+                }) += quickSnippetsWithoutQualifierWithBindings)
             // not allowed because required properties need an initializer
             << QStringList({ u"readonly property type name;"_s });
+
+    QTest::newRow("quickSnippetsForQualifiedQuickImport")
+            << testFile("qualifiedModule.qml") << 5 << 1
+            << quickSnippetsWithQualifier
+            // not allowed because required properties need an initializer
+            << QStringList({ u"readonly property type name;"_s });
+
+    QTest::newRow("quickSnippetsForQualifiedQuickImportBeforeDot")
+            << testFile("qualifiedModule.qml") << 5 << 7
+            << quickSnippetsWithQualifier
+            // not allowed because required properties need an initializer
+            << QStringList({ u"readonly property type name;"_s });
+
+    QTest::newRow("quickSnippetsForQualifiedQuickImportAfterDot")
+            << testFile("qualifiedModule.qml") << 5 << 8
+            << quickSnippetsWithoutQualifier
+            // not allowed because required properties need an initializer
+            << QStringList({ u"readonly property type name;"_s,
+                             u"states binding with PropertyChanges in State"_s,
+                             u"transitions binding with Transition"_s });
+
+    QTest::newRow("quickSnippetsForQualifiedQuickImportBeforeDotInBinding")
+            << testFile("qualifiedModule.qml") << 4 << 33 << quickSnippetsWithQualifier
+            << QStringList();
+
+    QTest::newRow("quickSnippetsForQualifiedQuickImportAfterDotInBinding")
+            << testFile("qualifiedModule.qml") << 4 << 34 << quickSnippetsWithoutQualifier
+            << QStringList({ u"states binding with PropertyChanges in State"_s,
+                             u"transitions binding with Transition"_s });
+
+    // forbid transitions and states because QtObject does not inherit from Item
+    QTest::newRow("qtObjectEmptyLineSnippets")
+            << file << 141 << 8
+            << ExpectedCompletions{ { u"Item"_s, CompletionItemKind::Constructor } }
+            << QStringList({ u"transitions binding with Transition"_s,
+                             u"states binding with PropertyChanges in State"_s });
 
     QTest::newRow("handlers") << file << 5 << 1
                               << ExpectedCompletions{ {
@@ -1844,8 +2061,29 @@ void tst_qmlls_utils::completions_data()
                                     })
                                  << QStringList({ u"foo"_s, u"import"_s, u"Rectangle"_s });
 
-    QTest::newRow("asCompletions")
-            << file << 26 << 9
+    QTest::newRow("qualifiedTypeCompletionBeforeDot")
+            << testFile(u"qualifiedModule.qml"_s) << 4 << 31
+            << ExpectedCompletions({
+                       { u"QQ.Rectangle"_s, CompletionItemKind::Constructor },
+               })
+            << QStringList({ u"foo"_s, u"import"_s, u"lala"_s, });
+
+    QTest::newRow("qualifiedTypeCompletionAfterDot")
+            << testFile(u"qualifiedModule.qml"_s) << 4 << 35
+            << ExpectedCompletions({
+                       { u"Rectangle"_s, CompletionItemKind::Constructor },
+               })
+            << QStringList({ u"foo"_s, u"import"_s, u"lala"_s, u"width"_s });
+
+    QTest::newRow("qualifiedTypeCompletionBeforeDotInDefaultBinding")
+            << testFile(u"qualifiedModule.qml"_s) << 5 << 5
+            << ExpectedCompletions({
+                       { u"QQ.Rectangle"_s, CompletionItemKind::Constructor },
+               })
+            << QStringList({ u"foo"_s, u"import"_s, u"lala"_s });
+
+    QTest::newRow("qualifiedTypeCompletionAfterDotInDefaultBinding")
+            << testFile(u"qualifiedModule.qml"_s) << 5 << 8
             << ExpectedCompletions({
                        { u"Rectangle"_s, CompletionItemKind::Constructor },
                })
@@ -3246,14 +3484,14 @@ void tst_qmlls_utils::completions_data()
                             u"bad"_s, u"onCompleted"_s, u"T.Button"_s };
 
     QTest::newRow("parenthesizedExpression")
-            << testFile("completions/parenthesizedExpression.qml") << 10 << 10
+            << testFile("completions/parenthesizedExpression.qml") << 8 << 10
             << ExpectedCompletions({
                        { u"x"_s, CompletionItemKind::Variable },
                })
             << QStringList{ u"QtQuick"_s, u"Rectangle"_s, forStatementCompletion };
 
     QTest::newRow("behindParenthesizedExpression")
-            << testFile("completions/parenthesizedExpression.qml") << 10 << 16
+            << testFile("completions/parenthesizedExpression.qml") << 8 << 16
             << ExpectedCompletions({})
             << QStringList{ u"QtQuick"_s, attachedTypeName, u"Rectangle"_s, forStatementCompletion,
                             u"x"_s };
@@ -3287,8 +3525,9 @@ void tst_qmlls_utils::completions()
 
     qsizetype pos = QQmlLSUtils::textOffsetFrom(code, line - 1, character - 1);
     CompletionContextStrings ctxt{ code, pos };
+    QQmlLSCompletion completionEngine(m_pluginLoader);
     QList<CompletionItem> completions =
-            QQmlLSUtils::completions(locations.front().domItem, ctxt);
+            completionEngine.completions(locations.front().domItem, ctxt);
 
     if (expected.isEmpty()) {
         if constexpr (enable_debug_output) {

@@ -47,13 +47,7 @@ public:
 
     static bool isComplexRichText(QTextDocument *);
 
-    void addTextLayout(const QPointF &position, QTextLayout *textLayout,
-                       int selectionStart = -1, int selectionEnd = -1,
-                       int lineStart = 0, int lineCount = -1) override;
-    void addTextDocument(const QPointF &position, QTextDocument *textDocument,
-                         int selectionStart = -1, int selectionEnd = -1) override;
-
-    void setColor(const QColor &color) override
+    void setColor(QColor color) override
     {
         m_color = color;
     }
@@ -73,7 +67,7 @@ public:
         return m_textStyle;
     }
 
-    void setStyleColor(const QColor &styleColor) override
+    void setStyleColor(QColor styleColor) override
     {
         m_styleColor = styleColor;
     }
@@ -83,7 +77,7 @@ public:
         return m_styleColor;
     }
 
-    void setLinkColor(const QColor &linkColor) override
+    void setLinkColor(QColor linkColor) override
     {
         m_linkColor = linkColor;
     }
@@ -93,7 +87,7 @@ public:
         return m_linkColor;
     }
 
-    void setSelectionColor(const QColor &selectionColor) override
+    void setSelectionColor(QColor selectionColor) override
     {
         m_selectionColor = selectionColor;
     }
@@ -103,7 +97,7 @@ public:
         return m_selectionColor;
     }
 
-    void setSelectionTextColor(const QColor &selectionTextColor) override
+    void setSelectionTextColor(QColor selectionTextColor) override
     {
         m_selectionTextColor = selectionTextColor;
     }
@@ -132,14 +126,14 @@ public:
         return m_renderType;
     }
 
-    void setSmooth(bool smooth) override
+    void setFiltering(QSGTexture::Filtering filtering) override
     {
-        m_smooth = smooth;
+        m_filtering = filtering;
     }
 
-    bool smooth() const override
+    QSGTexture::Filtering filtering() const override
     {
-        return m_smooth;
+        return m_filtering;
     }
 
     void setViewport(const QRectF &viewport) override
@@ -166,6 +160,19 @@ public:
     QSGInternalRectangleNode *cursorNode() const { return m_cursorNode; }
     QPair<int, int> renderedLineRange() const { return { m_firstLineInViewport, m_firstLinePastViewport }; }
 
+protected:
+    void doAddTextLayout(QPointF position,
+                         QTextLayout *textLayout,
+                         int selectionStart,
+                         int selectionEnd,
+                         int lineStart,
+                         int lineCount) override;
+
+    void doAddTextDocument(QPointF position,
+                           QTextDocument *textDocument,
+                           int selectionStart,
+                           int selectionEnd) override;
+
 private:
     QSGInternalRectangleNode *m_cursorNode = nullptr;
     QList<QSGTexture *> m_textures;
@@ -178,7 +185,7 @@ private:
     QColor m_linkColor = QColor(0, 0, 255);
     QColor m_selectionColor = QColor(0, 0, 128);
     QColor m_selectionTextColor = QColor(255, 255, 255);
-    bool m_smooth = false;
+    QSGTexture::Filtering m_filtering = QSGTexture::Nearest;
     int m_renderTypeQuality = -1;
     int m_firstLineInViewport = -1;
     int m_firstLinePastViewport = -1;

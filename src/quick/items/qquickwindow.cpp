@@ -475,30 +475,37 @@ void forceUpdate(QQuickItem *item)
         forceUpdate(items.at(i));
 }
 
-void QQuickWindowRenderTarget::reset(QRhi *rhi)
+void QQuickWindowRenderTarget::reset(QRhi *rhi, ResetFlags flags)
 {
-    if (owns) {
-        if (rhi) {
-            delete renderTarget;
-            delete rpDesc;
-            delete texture;
-            delete renderBuffer;
-            delete depthStencil;
-            delete depthStencilTexture;
-        }
+    if (rhi) {
+        if (rt.owns)
+            delete rt.renderTarget;
 
-        delete paintDevice;
+        delete res.texture;
+        delete res.renderBuffer;
+        delete res.rpDesc;
     }
 
-    renderTarget = nullptr;
-    rpDesc = nullptr;
-    texture = nullptr;
-    renderBuffer = nullptr;
-    depthStencil = nullptr;
-    depthStencilTexture = nullptr;
-    paintDevice = nullptr;
-    owns = false;
-    multiViewCount = 1;
+    rt = {};
+    res = {};
+
+    if (!flags.testFlag(ResetFlag::KeepImplicitBuffers))
+        implicitBuffers.reset(rhi);
+
+    if (sw.owns)
+        delete sw.paintDevice;
+
+    sw = {};
+}
+
+void QQuickWindowRenderTarget::ImplicitBuffers::reset(QRhi *rhi)
+{
+    if (rhi) {
+        delete depthStencil;
+        delete depthStencilTexture;
+        delete multisampleTexture;
+    }
+    *this = {};
 }
 
 void QQuickWindowPrivate::invalidateFontData(QQuickItem *item)
@@ -515,19 +522,18 @@ void QQuickWindowPrivate::invalidateFontData(QQuickItem *item)
 void QQuickWindowPrivate::ensureCustomRenderTarget()
 {
     // resolve() can be expensive when importing an existing native texture, so
-    // it is important to only do it when the QQuickRenderTarget* was really changed
+    // it is important to only do it when the QQuickRenderTarget was really changed.
     if (!redirect.renderTargetDirty)
         return;
 
     redirect.renderTargetDirty = false;
 
-    redirect.rt.reset(rhi);
+    redirect.rt.reset(rhi, QQuickWindowRenderTarget::ResetFlag::KeepImplicitBuffers);
 
-    // a default constructed QQuickRenderTarget means no redirection
-    if (customRenderTarget.isNull())
-        return;
-
-    QQuickRenderTargetPrivate::get(&customRenderTarget)->resolve(rhi, &redirect.rt);
+    if (!QQuickRenderTargetPrivate::get(&customRenderTarget)->resolve(rhi, &redirect.rt)) {
+        qWarning("Failed to set up render target redirection for QQuickWindow");
+        redirect.rt.reset(rhi);
+    }
 }
 
 void QQuickWindowPrivate::setCustomCommandBuffer(QRhiCommandBuffer *cb)
@@ -606,8 +612,8 @@ int QQuickWindowPrivate::multiViewCount()
 {
     if (rhi) {
         ensureCustomRenderTarget();
-        if (redirect.rt.renderTarget)
-            return redirect.rt.multiViewCount;
+        if (redirect.rt.rt.renderTarget)
+            return redirect.rt.rt.multiViewCount;
     }
 
     // Note that on QRhi level 0 and 1 are often used interchangeably, as both mean
@@ -615,6 +621,15 @@ int QQuickWindowPrivate::multiViewCount()
     // (no-multiview), so that higher layers (effects, materials) do not need to
     // handle both 0 and 1, only 1.
     return 1;
+}
+
+QRhiRenderTarget *QQuickWindowPrivate::activeCustomRhiRenderTarget()
+{
+    if (rhi) {
+        ensureCustomRenderTarget();
+        return redirect.rt.rt.renderTarget;
+    }
+    return nullptr;
 }
 
 void QQuickWindowPrivate::renderSceneGraph()
@@ -630,8 +645,8 @@ void QQuickWindowPrivate::renderSceneGraph()
         QRhiRenderTarget *rt;
         QRhiRenderPassDescriptor *rp;
         QRhiCommandBuffer *cb;
-        if (redirect.rt.renderTarget) {
-            rt = redirect.rt.renderTarget;
+        if (redirect.rt.rt.renderTarget) {
+            rt = redirect.rt.rt.renderTarget;
             rp = rt->renderPassDescriptor();
             if (!rp) {
                 qWarning("Custom render target is set but no renderpass descriptor has been provided.");
@@ -654,7 +669,7 @@ void QQuickWindowPrivate::renderSceneGraph()
         sgRenderTarget = QSGRenderTarget(rt, rp, cb);
         sgRenderTarget.multiViewCount = multiViewCount();
     } else {
-        sgRenderTarget = QSGRenderTarget(redirect.rt.paintDevice);
+        sgRenderTarget = QSGRenderTarget(redirect.rt.sw.paintDevice);
     }
 
     context->beginNextFrame(renderer,
@@ -669,10 +684,10 @@ void QQuickWindowPrivate::renderSceneGraph()
 
     const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
     QSize pixelSize;
-    if (redirect.rt.renderTarget)
-        pixelSize = redirect.rt.renderTarget->pixelSize();
-    else if (redirect.rt.paintDevice)
-        pixelSize = QSize(redirect.rt.paintDevice->width(), redirect.rt.paintDevice->height());
+    if (redirect.rt.rt.renderTarget)
+        pixelSize = redirect.rt.rt.renderTarget->pixelSize();
+    else if (redirect.rt.sw.paintDevice)
+        pixelSize = QSize(redirect.rt.sw.paintDevice->width(), redirect.rt.sw.paintDevice->height());
     else if (rhi)
         pixelSize = swapchain->currentPixelSize();
     else // software or other backend
@@ -734,6 +749,24 @@ QQuickWindowPrivate::~QQuickWindowPrivate()
     if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
         service->removeWindow(q_func());
     deliveryAgent = nullptr;
+}
+
+void QQuickWindowPrivate::setPalette(QQuickPalette* palette)
+{
+    if (windowPaletteRef == palette)
+        return;
+
+    if (windowPaletteRef)
+        disconnect(windowPaletteRef, &QQuickPalette::changed, this, &QQuickWindowPrivate::updateWindowPalette);
+    windowPaletteRef = palette;
+    updateWindowPalette();
+    if (windowPaletteRef)
+        connect(windowPaletteRef, &QQuickPalette::changed, this, &QQuickWindowPrivate::updateWindowPalette);
+}
+
+void QQuickWindowPrivate::updateWindowPalette()
+{
+    QQuickPaletteProviderPrivateBase::setPalette(windowPaletteRef);
 }
 
 void QQuickWindowPrivate::updateChildrenPalettes(const QPalette &parentPalette)
@@ -3655,17 +3688,21 @@ void QQuickWindow::endExternalCommands()
     shown, that minimizing the parent window will also minimize the transient
     window, and so on; however results vary somewhat from platform to platform.
 
-    Declaring a Window inside an Item or inside another Window, either via the
+    Declaring a Window inside an Item or another Window, either via the
     \l{Window::data}{default property} or a dedicated property, will automatically
-    set up a transient parent relationship to the containing Item or Window,
+    set up a transient parent relationship to the containing window,
     unless the \l transientParent property is explicitly set. This applies
     when creating Window items via \l [QML] {QtQml::Qt::createComponent()}
     {Qt.createComponent} or \l [QML] {QtQml::Qt::createQmlObject()}
-    {Qt.createQmlObject} as well, if an Item or Window is passed as the
-    \c parent argument.
+    {Qt.createQmlObject} as well, as long as an Item or Window is passed
+    as the \c parent argument.
 
     A Window with a transient parent will not be shown until its transient
-    parent is shown, even if the \l visible property is \c true. Setting
+    parent is shown, even if the \l visible property is \c true. This also
+    applies for the automatic transient parent relationship described above.
+    In particular, if the Window's containing element is an Item, the window
+    will not be shown until the containing item is added to a scene, via its
+    \l{Concepts - Visual Parent in Qt Quick}{visual parent hierarchy}. Setting
     the \l transientParent to \c null will override this behavior:
 
     \snippet qml/nestedWindowTransientParent.qml 0

@@ -759,11 +759,7 @@ public:
             QQmlRefPointer<QV4::CompiledData::CompilationUnit> &&unit);
 
     QQmlRefPointer<ExecutableCompilationUnit> insertCompilationUnit(
-            QQmlRefPointer<QV4::CompiledData::CompilationUnit> &&unit) {
-        QUrl url = unit->finalUrl();
-        return *m_compilationUnits.insert(
-                std::move(url), ExecutableCompilationUnit::create(std::move(unit), this));
-    }
+            QQmlRefPointer<QV4::CompiledData::CompilationUnit> &&unit);
 
     QMultiHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> compilationUnits() const
     {

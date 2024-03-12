@@ -21,9 +21,6 @@
     allows declaration of multiple layouts with the same content items. The
     layouts can be shown and hidden to switch between them.
 
-    \note This API is considered tech preview and may change or be removed in
-    future versions of Qt.
-
     The LayoutItemProxy will try to take control of the \l{target} item if it
     is \l [QML] {Item::}{visible}. Taking control will position and resize the
     \l{target} item to match the position and size of the LayoutItemProxy.

@@ -46,7 +46,7 @@ arbitrary QML program (see \l{Known Limitations} for more details). When qmltc
 fails, nothing is generated as your application cannot sensibly use the qmltc
 output. If your program contains errors (or unsolvable warnings), they should be
 fixed to enable the compilation. The general rule is to adhere to the best
-practices and follow \l{qmllint} advice.
+practices and follow \l{qmllint Reference}{qmllint} advice.
 
 \note \c qmltc does not guarantee that the generated C++ stays API-, source- or
 binary-compatible between past or future versions, even patch versions.

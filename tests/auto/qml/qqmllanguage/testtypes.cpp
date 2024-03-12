@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "testtypes.h"
 
@@ -165,6 +165,9 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<ByteArrayReceiver>("Test", 1);
 
     qmlRegisterTypesAndRevisions<Counter>("Test", 1);
+
+    qmlRegisterTypesAndRevisions<Singleton>("EnumScopeTest", 1);
+    qmlRegisterTypesAndRevisions<NonSingleton>("EnumScopeTest", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

@@ -163,8 +163,11 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
             ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
             QObject *object, String *name, Flags flags, const Value &value);
 
+    Q_NODISCARD_X("Use ensureWrapper if you don't need the return value")
     static ReturnedValue wrap(ExecutionEngine *engine, QObject *object);
+    Q_NODISCARD_X("Throwing the const wrapper away can cause it to be garbage collected")
     static ReturnedValue wrapConst(ExecutionEngine *engine, QObject *object);
+    static void ensureWrapper(ExecutionEngine *engine, QObject *object);
     static void markWrapper(QObject *object, MarkStack *markStack);
 
     using Object::get;
@@ -341,7 +344,7 @@ inline ReturnedValue QObjectWrapper::lookupMethodGetterImpl(
     if (!v->as<QObjectMethod>())
         return revertLookup();
 
-    lookup->qobjectMethodLookup.method = static_cast<Heap::QObjectMethod *>(v->heapObject());
+    lookup->qobjectMethodLookup.method.set(engine, static_cast<Heap::QObjectMethod *>(v->heapObject()));
     return v->asReturnedValue();
 }
 
@@ -410,6 +413,8 @@ struct Q_QML_EXPORT QmlSignalHandler : public QV4::Object
 
     int signalIndex() const { return d()->signalIndex; }
     QObject *object() const { return d()->object(); }
+
+    ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const;
 
     static void initProto(ExecutionEngine *v4);
 };

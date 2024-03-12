@@ -22,7 +22,7 @@
 QT_BEGIN_NAMESPACE
 
 class QRhi;
-class QQuickWindowRenderTarget;
+struct QQuickWindowRenderTarget;
 
 class Q_QUICK_EXPORT QQuickRenderTargetPrivate
 {
@@ -69,6 +69,7 @@ public:
     } u;
 
     bool mirrorVertically = false;
+    bool multisampleResolve = false;
 };
 
 QT_END_NAMESPACE

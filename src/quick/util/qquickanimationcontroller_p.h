@@ -33,8 +33,8 @@ class Q_QUICK_EXPORT QQuickAnimationController : public QObject, public QQmlFina
     QML_NAMED_ELEMENT(AnimationController)
     QML_ADDED_IN_VERSION(2, 0)
 
-    Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged FINAL)
-    Q_PROPERTY(QQuickAbstractAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
+    Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged)
+    Q_PROPERTY(QQuickAbstractAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged)
 
 public:
     QQuickAnimationController(QObject *parent=nullptr);

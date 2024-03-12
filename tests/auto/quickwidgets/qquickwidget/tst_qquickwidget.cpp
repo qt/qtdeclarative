@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <qtesttouch.h>
@@ -703,7 +703,9 @@ void tst_qquickwidget::touchTapHandler()
 
     QCoreApplication::setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, guiSynthMouse);
     QQuickWidget quick;
-    QVERIFY(quick.testAttribute(Qt::WA_AcceptTouchEvents));
+    if (!quick.testAttribute(Qt::WA_AcceptTouchEvents))
+        QSKIP("irrelevant on non-touch platforms");
+
     quick.setSource(testFileUrl("tapHandler.qml"));
     quick.show();
     QVERIFY(QTest::qWaitForWindowExposed(&quick));
@@ -728,6 +730,9 @@ void tst_qquickwidget::touchMultipleWidgets()
     QWidget window;
     QQuickWidget *leftQuick = new QQuickWidget;
     leftQuick->setSource(testFileUrl("button.qml"));
+    if (!leftQuick->testAttribute(Qt::WA_AcceptTouchEvents))
+        QSKIP("irrelevant on non-touch platforms");
+
     QQuickWidget *rightQuick = new QQuickWidget;
     rightQuick->setSource(testFileUrl("button.qml"));
 

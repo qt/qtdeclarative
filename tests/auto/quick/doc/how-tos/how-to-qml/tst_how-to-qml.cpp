@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtCore/qregularexpression.h>
 #include <QtTest/QtTest>
@@ -144,6 +144,7 @@ void tst_HowToQml::timePicker()
     auto verifyLabels = [&](Mode expectedMode, bool is24Hour, int callerLineNumber) {
         // When not in 24 hour mode, there are always 12 labels, regardless of whether it's showing hours or minutes.
         const int expectedLabelCount = expectedMode == Hours && is24Hour ? 24 : 12;
+        QCOMPARE(labelRepeater->count(), expectedLabelCount);
         for (int i = 0; i < expectedLabelCount; ++i) {
             auto *labelDelegate = labelRepeater->itemAt(i);
             QVERIFY2(labelDelegate, qPrintable(QString::fromLatin1("Expected valid label delegate item at index %1 (caller line %2)")
@@ -151,8 +152,8 @@ void tst_HowToQml::timePicker()
             // Use the waiting variant of the macro because there are opacity animations.
             // TODO: is this causing the failure on line 224?
             QTRY_VERIFY2(qFuzzyCompare(labelDelegate->opacity(), 1.0), qPrintable(QString::fromLatin1(
-                "Expected label opacity at index %1 to be 1 but it's %2 (caller line %3)").arg(i)
-                .arg(labelDelegate->opacity()).arg(callerLineNumber)));
+                "Expected opacity of label delegate %1 at index %2 to be 1 but it's %3 (caller line %4) - QTBUG-118056: actual label delegate at this index is now %5")
+                    .arg(QDebug::toString(labelDelegate)).arg(i).arg(labelDelegate->opacity()).arg(callerLineNumber).arg(QDebug::toString(labelRepeater->itemAt(i)))));
 
             const int expectedValue = (i * valuesPerLabelStep) % 60;
             const int actualValue = labelDelegate->property("value").toInt();
@@ -303,11 +304,18 @@ void tst_HowToQml::timePicker()
     QCOMPARE(dialog->property("minutes").toInt(), 8);
 
     // Test that the 24 hour mode works.
+    const bool isCi = qgetenv("QTEST_ENVIRONMENT") == "ci"; // QTBUG-122679
+    if (isCi)
+        qDebug() << "about to set is24hour to true";
     QVERIFY(dialog->setProperty("is24Hour", QVariant::fromValue(true)));
+    if (isCi)
+        qDebug() << "about to open picker";
     QTest::touchEvent(window, touchScreen.data()).press(0, mapCenterToWindow(openDialogLabel));
     QTest::touchEvent(window, touchScreen.data()).release(0, mapCenterToWindow(openDialogLabel));
     QTRY_COMPARE(dialog->property("opened").toBool(), true);
     QCOMPARE(timePicker->property("mode").toInt(), Hours);
+    if (isCi)
+        qDebug() << "about to verify labels after switching to 24hr";
     RETURN_IF_FAILED(verifyLabels(Hours, TwentyFourHour, __LINE__));
     // TwelveHour because the selected value (7) is on the 12 hour "ring".
     RETURN_IF_FAILED(verifySelectionIndicator(valueForHour(7), TwelveHour, __LINE__));

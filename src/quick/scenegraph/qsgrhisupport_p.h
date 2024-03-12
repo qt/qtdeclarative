@@ -77,7 +77,7 @@ public:
         QRhi *rhi;
         bool own;
     };
-    RhiCreateResult createRhi(QQuickWindow *window, QSurface *offscreenSurface);
+    RhiCreateResult createRhi(QQuickWindow *window, QSurface *offscreenSurface, bool forcePreferSwRenderer = false);
     void destroyRhi(QRhi *rhi, const QQuickGraphicsConfiguration &config);
     void prepareWindowForRhi(QQuickWindow *window);
 
@@ -89,6 +89,8 @@ public:
     void applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickWindow *window);
 
     QRhiTexture::Format toRhiTextureFormat(uint nativeFormat, QRhiTexture::Flags *flags) const;
+
+    bool attemptReinitWithSwRastUponFail() const;
 
 private:
     QSGRhiSupport();

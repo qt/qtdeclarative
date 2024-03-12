@@ -3,7 +3,7 @@
 
 /*!
 \page qtqml-tooling-qmlls.html
-\title QML Language Server
+\title \QMLLS Reference
 \brief Overview of the QML Language Server (qmlls).
 \ingroup qtqml-tooling
 
@@ -18,6 +18,7 @@ Currently, it enables your editor to:
     \li Display qmllint warnings
     \li Navigate to definitions in QML files
     \li Find usages of JavaScript variables and QML objects
+    \li Rename JavaScript variables and QML objects
     \li Format QML files
 \endlist
 
@@ -30,7 +31,7 @@ more details.
 
 QML Language Server can automatically lint opened QML files
 and display warnings or errors straight in the editor. See
-\l{qmllint} for more information about the linting process.
+\l{qmllint Reference}{qmllint} for more information about the linting process.
 
 \section2 Formatting
 
@@ -54,13 +55,37 @@ QML Language Server can find usages of JavaScript variables,
 QML object properties, JavaScript functions, QML object methods,
 and QML object id's.
 
+\section2 Renaming
+
+QML Language Server can rename JavaScript variables and functions,
+as well as QML object properties, methods, and id's, as long as
+they are defined in a QML file.
+
+\section2 Suggesting Autocompletion Items
+
+QML Language Server provides autocompletion suggestions for
+JavaScript variables, expressions, and statements, as well as
+QML object properties, methods, and id's.
+
+\section2 Tracking Changes in C++ Files
+
+QML Language Server can track changes in C++ files defining QML
+types. It automatically rebuilds CMake QML modules to provide
+accurate and up-to-date warnings and completion items for C++
+defined QML types.
+
+You can
+\l{Disabling automatic CMake builds}{disable this feature}.
+
 \section1 Setting up the QML Language Server in Your Editor
 
 \note You can find the QML Language Server binary under
 \c{<Qt installation folder>/bin/qmlls} in installations of Qt
-made with the official Maintenance Tool.
+made with \QOI.
 
-QML Language Server also needs to know the location of your build
+\section2 Setting up the Build Directory
+
+QML Language Server needs to know the location of your build
 folder. You can pass it the following ways:
 \list
     \li The \c{--build-dir} command line option. In this case
@@ -76,6 +101,22 @@ your editor should invoke \c{qmlls} as following:
 command line option takes preference over the environment variable
 that takes precedence over the setting file.
 
+\section2 Disabling Automatic CMake Builds
+
+\c{qmlls} will try to trigger a CMake rebuild when it detects that the
+source code of a C++ defined QML type has been modified.
+
+To disable this feature, use the following ways:
+\list
+    \li The \c{--no-cmake-calls} command line option. In this case
+your editor should invoke \c{qmlls} as follows:
+\badcode
+<path/to/qmlls> --build-dir <path/to/build-directory> --no-cmake-calls
+\endcode
+    \li The \c{QMLLS_NO_CMAKE_CALLS} environment variable.
+    \li The \c{.qmlls.ini} settings file, see \l {Configuration File}.
+\endlist
+
 \section1 Configuration File
 
 QML Language Server can be configured via a configuration file \c{.qmlls.ini}.
@@ -90,10 +131,12 @@ The configuration file should look like this:
 // .qmlls.ini
 [General]
 buildDir=<path/to/build-directory>
+no-cmake-calls=<true-or-false>
 \endcode
 
-Currently, the configuration file can only be used to set the build
-directory of the current project.
+Currently, the configuration file can be used to set the build
+directory of the current project and optionally disable the automatic
+CMake rebuild functionality for C++ defined QML types.
 
 \note QML Language Server can create default configuration files
 using the \c{--write-defaults} option. This will overwrite an
@@ -110,11 +153,10 @@ the QML Language Server is still in development with some features
 yet to be supported:
 
 \list
-    \li Renaming symbols (JavaScript variables, QML object id's, QML
-object properties, and so on).
-    \li Formatting only parts of a document.
-    \li Formatting using a configurable set of rules.
+    \li Renaming QML types.
+    \li Suggesting autocompletions on invalid QML files.
     \li Navigating to definitions of objects defined in C++.
+    \li Supporting all QML and JavaScript language constructs for all features.
 \endlist
 
 The QML code model in the QML Language Server does not yet

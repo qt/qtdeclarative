@@ -27,6 +27,7 @@ Page {
 
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: 10
+            Layout.fillWidth: false
 
             onClicked: AppSettings.showDoneTasks = checked
         }

@@ -27,6 +27,170 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
+class ScriptFormatter final : protected AST::JSVisitor
+{
+public:
+    // TODO QTBUG-121988
+    ScriptFormatter(OutWriter &lw, const std::shared_ptr<AstComments> &comments,
+                    const std::function<QStringView(SourceLocation)> &loc2Str, AST::Node *node)
+        : lw(lw), comments(comments), loc2Str(loc2Str)
+    {
+        accept(node);
+    }
+
+protected:
+    inline void out(const char *str) { lw.write(QString::fromLatin1(str)); }
+    inline void out(QStringView str) { lw.write(str); }
+    inline void out(const SourceLocation &loc)
+    {
+        if (loc.length != 0)
+            out(loc2Str(loc));
+    }
+    inline void newLine() { lw.ensureNewline(); }
+
+    inline void accept(AST::Node *node) { AST::Node::accept(node, this); }
+    void lnAcceptIndented(AST::Node *node);
+    bool acceptBlockOrIndented(AST::Node *ast, bool finishWithSpaceOrNewline = false);
+
+    void outputScope(AST::VariableScope scope);
+
+    bool preVisit(AST::Node *n) override;
+    void postVisit(AST::Node *n) override;
+
+    bool visit(AST::ThisExpression *ast) override;
+    bool visit(AST::NullExpression *ast) override;
+    bool visit(AST::TrueLiteral *ast) override;
+    bool visit(AST::FalseLiteral *ast) override;
+    bool visit(AST::IdentifierExpression *ast) override;
+    bool visit(AST::StringLiteral *ast) override;
+    bool visit(AST::NumericLiteral *ast) override;
+    bool visit(AST::RegExpLiteral *ast) override;
+
+    bool visit(AST::ArrayPattern *ast) override;
+
+    bool visit(AST::ObjectPattern *ast) override;
+
+    bool visit(AST::PatternElementList *ast) override;
+
+    bool visit(AST::PatternPropertyList *ast) override;
+
+    bool visit(AST::NestedExpression *ast) override;
+    bool visit(AST::IdentifierPropertyName *ast) override;
+    bool visit(AST::StringLiteralPropertyName *ast) override;
+    bool visit(AST::NumericLiteralPropertyName *ast) override;
+
+    bool visit(AST::TemplateLiteral *ast) override;
+    bool visit(AST::ArrayMemberExpression *ast) override;
+
+    bool visit(AST::FieldMemberExpression *ast) override;
+
+    bool visit(AST::NewMemberExpression *ast) override;
+
+    bool visit(AST::NewExpression *ast) override;
+
+    bool visit(AST::CallExpression *ast) override;
+
+    bool visit(AST::PostIncrementExpression *ast) override;
+
+    bool visit(AST::PostDecrementExpression *ast) override;
+    bool visit(AST::PreIncrementExpression *ast) override;
+
+    bool visit(AST::PreDecrementExpression *ast) override;
+
+    bool visit(AST::DeleteExpression *ast) override;
+
+    bool visit(AST::VoidExpression *ast) override;
+    bool visit(AST::TypeOfExpression *ast) override;
+
+    bool visit(AST::UnaryPlusExpression *ast) override;
+
+    bool visit(AST::UnaryMinusExpression *ast) override;
+
+    bool visit(AST::TildeExpression *ast) override;
+
+    bool visit(AST::NotExpression *ast) override;
+
+    bool visit(AST::BinaryExpression *ast) override;
+
+    bool visit(AST::ConditionalExpression *ast) override;
+
+    bool visit(AST::Block *ast) override;
+
+    bool visit(AST::VariableStatement *ast) override;
+
+    bool visit(AST::PatternElement *ast) override;
+
+    bool visit(AST::EmptyStatement *ast) override;
+
+    bool visit(AST::IfStatement *ast) override;
+    bool visit(AST::DoWhileStatement *ast) override;
+
+    bool visit(AST::WhileStatement *ast) override;
+
+    bool visit(AST::ForStatement *ast) override;
+
+    bool visit(AST::ForEachStatement *ast) override;
+
+    bool visit(AST::ContinueStatement *ast) override;
+    bool visit(AST::BreakStatement *ast) override;
+
+    bool visit(AST::ReturnStatement *ast) override;
+    bool visit(AST::ThrowStatement *ast) override;
+    bool visit(AST::WithStatement *ast) override;
+
+    bool visit(AST::SwitchStatement *ast) override;
+
+    bool visit(AST::CaseBlock *ast) override;
+
+    bool visit(AST::CaseClause *ast) override;
+
+    bool visit(AST::DefaultClause *ast) override;
+
+    bool visit(AST::LabelledStatement *ast) override;
+
+    bool visit(AST::TryStatement *ast) override;
+
+    bool visit(AST::Catch *ast) override;
+
+    bool visit(AST::Finally *ast) override;
+
+    bool visit(AST::FunctionDeclaration *ast) override;
+
+    bool visit(AST::FunctionExpression *ast) override;
+
+    bool visit(AST::Elision *ast) override;
+
+    bool visit(AST::ArgumentList *ast) override;
+
+    bool visit(AST::StatementList *ast) override;
+
+    bool visit(AST::VariableDeclarationList *ast) override;
+
+    bool visit(AST::CaseClauses *ast) override;
+
+    bool visit(AST::FormalParameterList *ast) override;
+
+    bool visit(AST::SuperLiteral *) override;
+    bool visit(AST::ComputedPropertyName *) override;
+    bool visit(AST::Expression *el) override;
+    bool visit(AST::ExpressionStatement *el) override;
+
+    bool visit(AST::ClassDeclaration *ast) override;
+
+    void endVisit(AST::ComputedPropertyName *) override;
+
+    void throwRecursionDepthError() override;
+
+private:
+    bool addSemicolons() const { return expressionDepth > 0; }
+
+    OutWriter &lw;
+    std::shared_ptr<AstComments> comments;
+    std::function<QStringView(SourceLocation)> loc2Str;
+    QHash<AST::Node *, QList<std::function<void()>>> postOps;
+    int expressionDepth = 0;
+};
+
 QMLDOM_EXPORT void reformatAst(
         OutWriter &lw, const std::shared_ptr<AstComments> &comments,
         const std::function<QStringView(SourceLocation)> &loc2Str, AST::Node *n);

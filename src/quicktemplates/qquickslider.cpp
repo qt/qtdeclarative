@@ -250,6 +250,8 @@ void QQuickSliderPrivate::itemDestroyed(QQuickItem *item)
 QQuickSlider::QQuickSlider(QQuickItem *parent)
     : QQuickControl(*(new QQuickSliderPrivate), parent)
 {
+    Q_D(QQuickSlider);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
     setActiveFocusOnTab(true);
 #ifdef Q_OS_MACOS
     setFocusPolicy(Qt::TabFocus);
@@ -532,6 +534,11 @@ void QQuickSlider::setOrientation(Qt::Orientation orientation)
     Q_D(QQuickSlider);
     if (d->orientation == orientation)
         return;
+
+    if (orientation == Qt::Horizontal)
+        d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
+    else
+        d->setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Preferred);
 
     d->orientation = orientation;
     emit orientationChanged();

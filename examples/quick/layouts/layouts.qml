@@ -30,6 +30,7 @@ ApplicationWindow {
             id: rowBox
             title: qsTr("Row layout")
             Layout.fillWidth: true
+            Layout.fillHeight: false
             Layout.minimumWidth: rowLayout.Layout.minimumWidth + 30
 
             RowLayout {
@@ -41,6 +42,7 @@ ApplicationWindow {
                 }
                 Button {
                     text: qsTr("Button")
+                    Layout.fillWidth: false
                 }
             }
         }
@@ -49,6 +51,7 @@ ApplicationWindow {
             id: gridBox
             title: qsTr("Grid layout")
             Layout.fillWidth: true
+            Layout.fillHeight: false
             Layout.minimumWidth: gridLayout.Layout.minimumWidth + 30
 
             GridLayout {

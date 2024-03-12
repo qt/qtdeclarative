@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Layouts
@@ -29,30 +29,14 @@ ApplicationWindow {
             anchors.fill: parent
             spacing: 0
 
-            ToolButton {
-                icon.name: "grid"
-            }
-            ToolButton {
-                icon.name: "settings"
-            }
-            ToolButton {
-                icon.name: "filter"
-            }
-            ToolButton {
-                icon.name: "message"
-            }
-            ToolButton {
-                icon.name: "music"
-            }
-            ToolButton {
-                icon.name: "cloud"
-            }
-            ToolButton {
-                icon.name: "bluetooth"
-            }
-            ToolButton {
-                icon.name: "cart"
-            }
+            ToolButton { icon.name: "grid" }
+            ToolButton { icon.name: "settings" }
+            ToolButton { icon.name: "filter" }
+            ToolButton { icon.name: "message" }
+            ToolButton { icon.name: "music" }
+            ToolButton { icon.name: "cloud" }
+            ToolButton { icon.name: "bluetooth" }
+            ToolButton { icon.name: "cart" }
 
             Item {
                 Layout.fillWidth: true
@@ -132,11 +116,13 @@ ApplicationWindow {
 
                 Button {
                     icon.name: "folder"
+                    Layout.fillWidth: false
                 }
 
                 Button {
                     icon.name: "save"
                     enabled: false
+                    Layout.fillWidth: false
                 }
             }
 
@@ -283,36 +269,43 @@ ApplicationWindow {
                     icon.name: "favorite"
                     icon.width: 32
                     icon.height: 32
+                    Layout.fillWidth: false
                 }
                 RoundButton {
                     icon.name: "stop"
                     icon.width: 32
                     icon.height: 32
+                    Layout.fillWidth: false
                 }
                 RoundButton {
                     icon.name: "previous"
                     icon.width: 32
                     icon.height: 32
+                    Layout.fillWidth: false
                 }
                 RoundButton {
                     icon.name: "pause"
                     icon.width: 32
                     icon.height: 32
+                    Layout.fillWidth: false
                 }
                 RoundButton {
                     icon.name: "next"
                     icon.width: 32
                     icon.height: 32
+                    Layout.fillWidth: false
                 }
                 RoundButton {
                     icon.name: "repeat"
                     icon.width: 32
                     icon.height: 32
+                    Layout.fillWidth: false
                 }
                 RoundButton {
                     icon.name: "shuffle"
                     icon.width: 32
                     icon.height: 32
+                    Layout.fillWidth: false
                 }
             }
 
@@ -355,14 +348,17 @@ ApplicationWindow {
                 Button {
                     text: "Files"
                     checked: true
+                    Layout.fillWidth: false
                 }
                 Button {
                     text: "Playlists"
                     checkable: true
+                    Layout.fillWidth: false
                 }
                 Button {
                     text: "Favourites"
                     checkable: true
+                    Layout.fillWidth: false
                 }
             }
 
@@ -372,6 +368,7 @@ ApplicationWindow {
                 }
                 Button {
                     icon.name: "folder"
+                    Layout.fillWidth: false
                 }
             }
 

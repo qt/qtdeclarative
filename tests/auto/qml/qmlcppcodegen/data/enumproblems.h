@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef ENUMPROBLEMS_H
 #define ENUMPROBLEMS_H
@@ -80,6 +80,40 @@ public:
 
     Q_DECLARE_FLAGS(Options, Option)
     Q_FLAG(Option)
+};
+
+class ScopedEnum : public QObject {
+    Q_OBJECT
+    QML_NAMED_ELEMENT(Data)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+
+public:
+    enum class DType {
+        A = 27, B
+    };
+    Q_ENUM(DType)
+
+    enum EType {
+        C = 7, D
+    };
+    Q_ENUM(EType)
+};
+
+class UnscopedEnum : public QObject {
+    Q_OBJECT
+    QML_NAMED_ELEMENT(Data2)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "true")
+
+public:
+    enum class DType {
+        A = 26, B
+    };
+    Q_ENUM(DType)
+
+    enum EType {
+        C = 6, D
+    };
+    Q_ENUM(EType)
 };
 
 #endif // ENUMPROBLEMS_H

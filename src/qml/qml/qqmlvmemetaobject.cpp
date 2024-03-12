@@ -430,6 +430,12 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QV4::ExecutionEngine *engine,
             uint size = compiledObject->nProperties + compiledObject->nFunctions;
             if (size) {
                 QV4::Heap::MemberData *data = QV4::MemberData::allocate(engine, size);
+                // we only have a weak reference below; if the VMEMetaObject is already marked
+                // (triggered by the allocate call above)
+                // we therefore might never mark the member data; consequently, mark it now
+                QV4::WriteBarrier::markCustom(engine, [data](QV4::MarkStack *ms) {
+                    data->mark(ms);
+                });
                 propertyAndMethodStorage.set(engine, data);
                 std::fill(data->values.values, data->values.values + data->values.size, QV4::Encode::undefined());
             }
@@ -1388,7 +1394,7 @@ void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::Value &v)
 void QQmlVMEMetaObject::ensureQObjectWrapper()
 {
     Q_ASSERT(cache);
-    QV4::QObjectWrapper::wrap(engine, object);
+    QV4::QObjectWrapper::ensureWrapper(engine, object);
 }
 
 void QQmlVMEMetaObject::mark(QV4::MarkStack *markStack)

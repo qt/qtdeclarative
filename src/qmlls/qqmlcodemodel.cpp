@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmlcodemodel_p.h"
+#include "qqmllsplugin_p.h"
 #include "qtextdocument_p.h"
 #include "qqmllsutils_p.h"
 
@@ -88,7 +89,8 @@ QQmlCodeModel::QQmlCodeModel(QObject *parent, QQmlToolingSettings *settings)
       m_validEnv(std::make_shared<DomEnvironment>(
                      QStringList(QLibraryInfo::path(QLibraryInfo::QmlImportsPath)),
                      DomEnvironment::Option::SingleThreaded)),
-      m_settings(settings)
+      m_settings(settings),
+      m_pluginLoader(QmlLSPluginInterface_iid, u"/qmlls"_s)
 {
 }
 
@@ -538,7 +540,11 @@ QStringList QQmlCodeModel::fileNamesToWatch(const DomItem &qmlFile)
 
     QStringList result;
     for (const auto &type : types) {
-        if (!type.scope || type.scope->isComposite())
+        if (!type.scope)
+            continue;
+        // note: the factory only loads composite types
+        const bool isComposite = type.scope.factory() || type.scope->isComposite();
+        if (isComposite)
             continue;
 
         const QString filePath = QFileInfo(type.scope->filePath()).fileName();

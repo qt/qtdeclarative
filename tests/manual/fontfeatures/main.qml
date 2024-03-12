@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtCore
 import QtQuick
@@ -43,6 +43,7 @@ ApplicationWindow {
             }
             ToolButton {
                 text: "..."
+                Layout.fillWidth: false
                 onClicked: fontDialog.visible = true
             }
         }
@@ -51,6 +52,7 @@ ApplicationWindow {
             text: "This text is fine"
             font.family: "Calibri"
             font.pixelSize: 20
+            Layout.fillWidth: false
         }
         TextField {
             id: smcpText
@@ -60,6 +62,7 @@ ApplicationWindow {
                 "pixelSize": sampleText.font.pixelSize,
                 "features": { "smcp": 1 }
             }
+            Layout.fillWidth: false
         }
         TextField {
             id: noLigaturesOrKerning
@@ -67,12 +70,15 @@ ApplicationWindow {
             font.family: sampleText.font.family
             font.pixelSize: sampleText.font.pixelSize
             font.features: { "liga": 0, "dlig": 0, "clig": 0, "hlig": 0, "kern": 0 }
+            Layout.fillWidth: false
         }
 
         ListView {
             id: listView
             height: window.height / 2
             width: window.width
+            Layout.fillWidth: false
+            Layout.fillHeight: false
             model: [ "aalt",
                 "abvf",
                 "abvm",

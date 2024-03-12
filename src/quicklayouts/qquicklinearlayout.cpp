@@ -635,9 +635,6 @@ void QQuickGridLayout::setFlow(QQuickGridLayout::Flow flow)
 
     Default value is \c false.
 
-    \note This API is considered tech preview and may change or be removed in future versions of
-    Qt.
-
     \sa GridLayout::uniformCellHeights, RowLayout::uniformCellSizes, ColumnLayout::uniformCellSizes
 */
 bool QQuickGridLayout::uniformCellWidths() const
@@ -668,9 +665,6 @@ void QQuickGridLayout::setUniformCellWidths(bool uniformCellWidths)
     compromisses to fullfill the requirements of all items.
 
     Default value is \c false.
-
-    \note This API is considered tech preview and may change or be removed in future versions of
-    Qt.
 
     \sa GridLayout::uniformCellWidths, RowLayout::uniformCellSizes, ColumnLayout::uniformCellSizes
 */
@@ -872,9 +866,6 @@ QQuickLinearLayout::QQuickLinearLayout(Qt::Orientation orientation,
     If this property is set to \c true, the layout will force all cells to have
     a uniform size.
 
-    \note This API is considered tech preview and may change or be removed in future versions of
-    Qt.
-
     \sa GridLayout::uniformCellWidths, GridLayout::uniformCellHeights, ColumnLayout::uniformCellSizes
 */
 /*!
@@ -883,9 +874,6 @@ QQuickLinearLayout::QQuickLinearLayout(Qt::Orientation orientation,
 
     If this property is set to \c true, the layout will force all cells to have
     a uniform size.
-
-    \note This API is considered tech preview and may change or be removed in future versions of
-    Qt.
 
     \sa GridLayout::uniformCellWidths, GridLayout::uniformCellHeights, RowLayout::uniformCellSizes
 */

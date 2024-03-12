@@ -163,7 +163,7 @@ void CustomRenderNode::prepare()
 }
 
 //![node-render]
-void CustomRenderNode::render(const RenderState *state)
+void CustomRenderNode::render(const RenderState *)
 {
     QRhiCommandBuffer *cb = commandBuffer();
     cb->setGraphicsPipeline(m_pipeline.get());

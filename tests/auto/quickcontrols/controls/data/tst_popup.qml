@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -1524,5 +1524,36 @@ TestCase {
         compare(control.x, 0)
         compare(control.y, control.parent.height / 2 - control.height / 2)
         control.close()
+    }
+
+    Component {
+        id: popupWithOverlayInLoader
+
+        Loader {
+            id: loader
+            active: false
+            sourceComponent: Item {
+                anchors.fill: parent
+                Popup {
+                    modal: true
+                    visible: true
+                    Overlay.modal: Rectangle { color: 'grey' }
+                }
+            }
+        }
+    }
+
+    function test_popupWithOverlayInLoader() { // QTBUG-122915
+        let loader = createTemporaryObject(popupWithOverlayInLoader, testCase)
+        verify(loader)
+
+        let overlay = loader.Overlay.overlay
+        verify(overlay)
+
+        loader.active = true
+        tryCompare(overlay, "visible", true)
+
+        loader.active = false
+        tryCompare(overlay, "visible", false)
     }
 }

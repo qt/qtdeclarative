@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -22,6 +22,7 @@ ColumnLayout {
             title: qsTr("Dialog properties")
 
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             GridLayout {
                 columns: 2
@@ -43,17 +44,20 @@ ColumnLayout {
 
                     RadioButton {
                         text: qsTr("Qt.NonModal")
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.NonModal
                     }
                     RadioButton {
                         text: qsTr("Qt.WindowModal")
                         checked: true
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.WindowModal
                     }
                     RadioButton {
                         text: qsTr("Qt.ApplicationModal")
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.ApplicationModal
                     }
@@ -67,6 +71,7 @@ ColumnLayout {
                     text: folderDialog.result === 1 ? qsTr("Accepted") : qsTr("Rejected")
                     readOnly: true
                     enabled: false
+                    Layout.fillWidth: false
                 }
 
                 Label {
@@ -75,6 +80,7 @@ ColumnLayout {
                 TextField {
                     id: titleTextField
                     text: qsTr("Choose a folder")
+                    Layout.fillWidth: false
                 }
             }
         }
@@ -83,6 +89,7 @@ ColumnLayout {
             title: qsTr("FolderDialog properties")
 
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             GridLayout {
                 columns: 2
@@ -97,6 +104,7 @@ ColumnLayout {
                 TextField {
                     id: acceptLabelTextField
                     text: qsTr("OK")
+                    Layout.fillWidth: false
                 }
 
                 Label {
@@ -105,6 +113,7 @@ ColumnLayout {
                 TextField {
                     id: rejectLabelTextField
                     text: qsTr("Cancel")
+                    Layout.fillWidth: false
                 }
 
                 Label {
@@ -130,12 +139,14 @@ ColumnLayout {
                     CheckBox {
                         id: dontResolveSymlinksCheckBox
                         text: qsTr("DontResolveSymlinks")
+                        Layout.fillWidth: false
 
                         readonly property int folderOption: checked ? FolderDialog.DontResolveSymlinks : 0
                     }
                     CheckBox {
                         id: readOnlyCheckBox
                         text: qsTr("ReadOnly")
+                        Layout.fillWidth: false
 
                         readonly property int folderOption: checked ? FolderDialog.ReadOnly : 0
                     }

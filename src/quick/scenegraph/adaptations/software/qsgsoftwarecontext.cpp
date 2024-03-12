@@ -201,7 +201,7 @@ void *QSGSoftwareContext::getResource(QQuickWindow *window, Resource resource) c
     if (resource == PainterResource)
         return window->isSceneGraphInitialized() ? static_cast<QSGSoftwareRenderContext *>(cd->context)->m_activePainter : nullptr;
     else if (resource == RedirectPaintDevice)
-        return cd->redirect.rt.paintDevice;
+        return cd->redirect.rt.sw.paintDevice;
 
     return nullptr;
 }

@@ -229,20 +229,9 @@ Button {
 //! [image alias]
 
 Item {
-id: widget
+    id: widget
 
-//! [alias complete]
-property alias widgetLabel: label
-
-//will generate an error
-//widgetLabel.text: "Initial text"
-
-//will generate an error
-//property alias widgetLabelText: widgetLabel.text
-
-Component.onCompleted: widgetLabel.text = "Alias completed Initialization"
-//! [alias complete]
-
+    property alias widgetLabel: label
     Text {id: label}
 }
 

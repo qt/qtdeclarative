@@ -370,6 +370,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     const size_t guardPages = 2 * WTF::pageSize();
 
     memoryManager = new QV4::MemoryManager(this);
+    // we don't want to run the gc while the initial setup is not done; not even in aggressive mode
+    GCCriticalSection gcCriticalSection(this);
     // reserve space for the JS stack
     // we allow it to grow to a bit more than m_maxJSStackSize, as we can overshoot due to ScopedValues
     // allocated outside of JIT'ed methods.
@@ -1631,10 +1633,6 @@ static QVariant toVariant(const QV4::Value &value, QMetaType metaType, JSToQVari
             return str.at(0);
         return str;
     }
-#if QT_CONFIG(qml_locale)
-    if (const QV4::QQmlLocaleData *ld = value.as<QV4::QQmlLocaleData>())
-        return *ld->d()->locale;
-#endif
     if (const QV4::DateObject *d = value.as<DateObject>()) {
         // NOTE: since we convert QTime to JS Date,
         //       round trip will change the variant type (to QDateTime)!
@@ -1864,10 +1862,6 @@ QV4::ReturnedValue ExecutionEngine::fromData(
                 return QV4::JsonObject::fromJsonObject(this, *reinterpret_cast<const QJsonObject *>(ptr));
             case QMetaType::QJsonArray:
                 return QV4::JsonObject::fromJsonArray(this, *reinterpret_cast<const QJsonArray *>(ptr));
-#if QT_CONFIG(qml_locale)
-            case QMetaType::QLocale:
-                return QQmlLocale::wrap(this, *reinterpret_cast<const QLocale*>(ptr));
-#endif
             case QMetaType::QPixmap:
             case QMetaType::QImage:
                 // Scarce value types
@@ -2131,8 +2125,23 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::executableCompilation
             return *it;
     }
 
-    return *m_compilationUnits.insert(
+    auto executableUnit =  m_compilationUnits.insert(
             url, ExecutableCompilationUnit::create(std::move(unit), this));
+    // runtime data should not be initialized yet, so we don't need to mark the CU
+    Q_ASSERT(!(*executableUnit)->runtimeStrings);
+    return *executableUnit;
+}
+
+QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::insertCompilationUnit(QQmlRefPointer<CompiledData::CompilationUnit> &&unit) {
+    QUrl url = unit->finalUrl();
+    auto executableUnit = ExecutableCompilationUnit::create(std::move(unit), this);
+    /* Compilation Units stored in the engine are part of the gc roots,
+      so we don't trigger any write-barrier when they are added. Use
+      markCustom to make sure they are still marked when we insert them */
+    QV4::WriteBarrier::markCustom(this, [&executableUnit](QV4::MarkStack *ms) {
+        executableUnit->markObjects(ms);
+    });
+    return *m_compilationUnits.insert(std::move(url), std::move(executableUnit));
 }
 
 void ExecutionEngine::trimCompilationUnits()
@@ -2668,15 +2677,6 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         }
         break;
     }
-#if QT_CONFIG(qml_locale)
-    case QMetaType::QLocale: {
-        if (const QV4::QQmlLocaleData *l = value.as<QQmlLocaleData>()) {
-            *reinterpret_cast<QLocale *>(data) = *l->d()->locale;
-            return true;
-        }
-        break;
-    }
-#endif
     default:
         break;
     }

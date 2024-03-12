@@ -21,6 +21,7 @@
 #include <QObject>
 #include <QHash>
 #include <QtCore/qfilesystemwatcher.h>
+#include <QtCore/private/qfactoryloader_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
@@ -105,6 +106,7 @@ public:
     QStringList findFilePathsFromFileNames(const QStringList &fileNames) const;
     static QStringList fileNamesToWatch(const QQmlJS::Dom::DomItem &qmlFile);
     void disableCMakeCalls();
+    const QFactoryLoader &pluginLoader() const { return m_pluginLoader; }
 Q_SIGNALS:
     void updatedSnapshot(const QByteArray &url);
 private:
@@ -145,6 +147,7 @@ private:
     QHash<QByteArray, OpenDocument> m_openDocuments;
     QQmlToolingSettings *m_settings;
     QFileSystemWatcher m_cppFileWatcher;
+    QFactoryLoader m_pluginLoader;
     bool m_rebuildRequired = true; // always trigger a rebuild on start
     CMakeStatus m_cmakeStatus = RequiresInitialization;
 private slots:

@@ -87,6 +87,7 @@ public:
     bool overrideActions : 1;
     QPointF hotSpot;
     QUrl imageSource;
+    QSize imageSourceSize;
     QQuickPixmap pixmapLoader;
     QStringList keys;
     QVariantMap externalMimeData;

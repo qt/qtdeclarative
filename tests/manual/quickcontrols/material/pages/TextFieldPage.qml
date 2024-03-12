@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
@@ -56,6 +56,38 @@ Page {
             text: "text"
             placeholderText: "placeholderText"
             enabled: false
+
+            Material.containerStyle: layout.containerStyle
+        }
+
+        TextField {
+            text: "0 leftPadding"
+            placeholderText: "placeholderText"
+            leftPadding: 0
+
+            Material.containerStyle: layout.containerStyle
+        }
+
+        TextField {
+            text: "0 rightPadding"
+            placeholderText: "placeholderText"
+            rightPadding: 0
+
+            Material.containerStyle: layout.containerStyle
+        }
+
+        TextField {
+            text: "0 topPadding"
+            placeholderText: "placeholderText"
+            topPadding: 0
+
+            Material.containerStyle: layout.containerStyle
+        }
+
+        TextField {
+            text: "0 bottomPadding"
+            placeholderText: "placeholderText"
+            bottomPadding: 0
 
             Material.containerStyle: layout.containerStyle
         }

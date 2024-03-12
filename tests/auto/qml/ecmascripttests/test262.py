@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Copyright (C) 2017 The Qt Company Ltd.
-# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 # Copyright 2009 the Sputnik authors.  All rights reserved.
 # This code is governed by the BSD license found in the LICENSE file.

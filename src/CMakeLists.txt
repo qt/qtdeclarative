@@ -57,7 +57,7 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     endif()
 
     if(TARGET Qt::Svg)
-        add_subdirectory(quickvectorgraphics)
+        add_subdirectory(quickvectorimage)
     endif()
 
     if(TARGET Qt::Widgets)
@@ -72,7 +72,7 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     endif()
     add_subdirectory(quicknativestyle)
 
-    if(QT_FEATURE_testlib AND QT_FEATURE_network AND QT_FEATURE_quick_itemview AND TARGET Qt::Test AND TARGET Qt::QuickControls2)
+    if(QT_FEATURE_testlib AND QT_FEATURE_network AND QT_FEATURE_quick_itemview AND TARGET Qt::Test AND TARGET Qt::QuickControls2 AND NOT (WASM AND BUILD_SHARED_LIBS))
         add_subdirectory(quickcontrolstestutils)
     endif()
 else()
@@ -98,8 +98,11 @@ if(QT_FEATURE_xmlstreamwriter)
     add_subdirectory(../tools/qmlcachegen qmlcachegen)
 endif()
 
-if(QT_FEATURE_thread AND TARGET Qt::LanguageServerPrivate AND NOT WASM AND NOT IOS AND NOT ANDROID AND NOT QNX AND NOT INTEGRITY AND NOT WEBOS AND NOT VXWORKS)
-    add_subdirectory(qmlls)
+if(QT_FEATURE_thread AND QT_FEATURE_filesystemwatcher AND QT_FEATURE_processenvironment
+        AND TARGET Qt::LanguageServerPrivate)
+    if (NOT CMAKE_CROSSCOMPILING OR QT_FORCE_BUILD_TOOLS)
+        add_subdirectory(qmlls)
+    endif()
 endif()
 
 add_subdirectory(plugins)

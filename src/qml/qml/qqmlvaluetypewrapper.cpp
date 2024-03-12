@@ -339,12 +339,6 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
                     time, valueTypeWrapper, index, referenceFlags(metaObject, index));
     };
 
-#if QT_CONFIG(qml_locale)
-    const auto wrapLocale = [engine](const QLocale &locale) {
-        return QQmlLocale::wrap(engine, locale);
-    };
-#endif
-
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
     case metatype: { \
         cpptype v; \
@@ -397,9 +391,6 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     VALUE_TYPE_LOAD(QMetaType::QJsonValue, QJsonValue, wrapJsonValue);
     VALUE_TYPE_LOAD(QMetaType::QJsonObject, QJsonObject, wrapJsonObject);
     VALUE_TYPE_LOAD(QMetaType::QJsonArray, QJsonArray, wrapJsonArray);
-#if QT_CONFIG(qml_locale)
-    VALUE_TYPE_LOAD(QMetaType::QLocale, QLocale, wrapLocale);
-#endif
     case QMetaType::QPixmap:
     case QMetaType::QImage: {
         QVariant v(metaType);
@@ -653,7 +644,7 @@ ReturnedValue QQmlValueTypeWrapper::virtualResolveLookupGetter(const Object *obj
     if (!result.isValid())
         return QV4::Object::virtualResolveLookupGetter(object, engine, lookup);
 
-    lookup->qgadgetLookup.ic = r->internalClass();
+    lookup->qgadgetLookup.ic.set(engine, r->internalClass());
     // & 1 to tell the gc that this is not heap allocated; see markObjects in qv4lookup_p.h
     lookup->qgadgetLookup.metaObject = quintptr(r->d()->metaObject()) + 1;
     lookup->qgadgetLookup.metaType = result.propType().iface();

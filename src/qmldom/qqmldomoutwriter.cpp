@@ -346,11 +346,11 @@ void OutWriter::logScriptExprUpdateSkipped(
     qCWarning(writeOutLog).noquote() << "Skipped update of reformatted ScriptExpression with "
                                         "code:\n---------------\n"
                                      << formattedExpr->code() << "\n---------------\n preCode:" <<
-            [formattedExpr](Sink s) { sinkEscaped(s, formattedExpr->preCode()); }
+            [&formattedExpr](Sink s) { sinkEscaped(s, formattedExpr->preCode()); }
                                      << "\n postCode: " <<
-            [formattedExpr](Sink s) { sinkEscaped(s, formattedExpr->postCode()); }
+            [&formattedExpr](Sink s) { sinkEscaped(s, formattedExpr->postCode()); }
                                      << "\n as it failed standalone reparse with errors:" <<
-            [exprItem, exprPath, formattedExpr](Sink s) {
+            [&exprItem, &exprPath, &formattedExpr](Sink s) {
                 exprItem.copy(formattedExpr, exprPath)
                         .iterateErrors(
                                 [s](const DomItem &, const ErrorMessage &msg) {

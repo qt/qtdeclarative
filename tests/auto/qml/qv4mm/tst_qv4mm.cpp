@@ -1,5 +1,5 @@
 // Copyright (C) 2016 basysKom GmbH.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QQmlEngine>
@@ -11,6 +11,7 @@
 #include <private/qjsvalue_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4identifiertable_p.h>
+#include <private/qv4arraydata_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -25,6 +26,7 @@ public:
 
 private slots:
     void gcStats();
+    void arrayDataWriteBarrierInteraction();
     void persistentValueMarking_data();
     void persistentValueMarking();
     void multiWrappedQObjects();
@@ -47,6 +49,38 @@ void tst_qv4mm::gcStats()
     QQmlEngine engine;
     gc(engine);
     QLoggingCategory::setFilterRules("qt.qml.gc.*=false");
+}
+
+void tst_qv4mm::arrayDataWriteBarrierInteraction()
+{
+    QV4::ExecutionEngine engine;
+    QCOMPARE(engine.memoryManager->gcBlocked, QV4::MemoryManager::Unblocked);
+    engine.memoryManager->gcBlocked = QV4::MemoryManager::InCriticalSection;
+    QV4::Heap::Object *unprotectedObject = engine.newObject();
+    QV4::Scope scope(&engine);
+    QV4::ScopedArrayObject array(scope, engine.newArrayObject());
+    constexpr int initialCapacity = 8; // compare qv4arraydata.cpp
+    for (int i = 0; i < initialCapacity; ++i) {
+        array->push_back(unprotectedObject->asReturnedValue());
+    }
+    QVERIFY(!unprotectedObject->isMarked());
+    engine.memoryManager->gcBlocked = QV4::MemoryManager::Unblocked;
+
+    // initialize gc
+    auto sm = engine.memoryManager->gcStateMachine.get();
+    sm->reset();
+    while (sm->state != QV4::GCState::MarkGlobalObject) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+
+    array->push_back(QV4::Value::fromUInt32(42));
+    QVERIFY(!unprotectedObject->isMarked());
+    // we should have pushed the new arraydata on the mark stack
+    // so if we call drain...
+    engine.memoryManager->markStack()->drain();
+    // the unprotectedObject should have been marked
+    QVERIFY(unprotectedObject->isMarked());
 }
 
 enum PVSetOption {
@@ -144,7 +178,7 @@ void tst_qv4mm::multiWrappedQObjects()
     {
         QObject object;
         for (int i = 0; i < 10; ++i)
-            QV4::QObjectWrapper::wrap(i % 2 ? &engine1 : &engine2, &object);
+            QV4::QObjectWrapper::ensureWrapper(i % 2 ? &engine1 : &engine2, &object);
 
         QCOMPARE(engine1.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
         QCOMPARE(engine2.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
@@ -317,10 +351,10 @@ void tst_qv4mm::sharedInternalClassDataMarking()
     QVERIFY(!engine.memoryManager->gcBlocked);
     // no scoped classes, as that would defeat the point of the test
     // we block the gc instead so that the allocation can't trigger the gc
-    engine.memoryManager->gcBlocked = true;
+    engine.memoryManager->gcBlocked = QV4::MemoryManager::InCriticalSection;
     QV4::Heap::String *s = engine.newString(QString::fromLatin1("test"));
     QV4::PropertyKey id = engine.identifierTable->asPropertyKeyImpl(s);
-    engine.memoryManager->gcBlocked = false;
+    engine.memoryManager->gcBlocked = QV4::MemoryManager::Unblocked;
     QVERIFY(!id.asStringOrSymbol()->isMarked());
 
     auto sm = engine.memoryManager->gcStateMachine.get();

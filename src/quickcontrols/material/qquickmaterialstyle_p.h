@@ -18,10 +18,11 @@
 #include <QtGui/qcolor.h>
 #include <QtQml/qqml.h>
 #include <QtQuickControls2/qquickattachedpropertypropagator.h>
+#include <QtQuickControls2Material/qtquickcontrols2materialexports.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
+class Q_QUICKCONTROLS2MATERIAL_EXPORT QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)

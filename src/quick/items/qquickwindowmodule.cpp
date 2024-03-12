@@ -72,7 +72,7 @@ void QQuickWindowQmlImpl::classBegin()
         // The content item has CppOwnership policy (set in QQuickWindow). Ensure the presence of a JS
         // wrapper so that the garbage collector can see the policy.
         QV4::ExecutionEngine *v4 = e->handle();
-        QV4::QObjectWrapper::wrap(v4, d->contentItem);
+        QV4::QObjectWrapper::ensureWrapper(v4, d->contentItem);
     }
 }
 
@@ -210,8 +210,8 @@ void QQuickWindowQmlImpl::applyWindowVisibility()
             // Handle deferred visibility due to possible transient parent
             auto *itemParent = qmlobject_cast<QQuickItem *>(QObject::parent());
             if (!d->transientParentPropertySet && itemParent && !itemParent->window()) {
-                qCDebug(lcTransient) << "Waiting for parent Item to resolve"
-                                        "its transient parent. Deferring visibility";
+                qCDebug(lcTransient) << "Waiting for parent" << itemParent << "to resolve"
+                                     << "its window. Deferring visibility";
                 return;
             }
 

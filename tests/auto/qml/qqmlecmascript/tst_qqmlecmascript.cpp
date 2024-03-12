@@ -1,6 +1,6 @@
 // Copyright (C) 2017 Crimson AS <info@crimson.no>
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QtQml/qqmlcomponent.h>
@@ -8122,12 +8122,9 @@ void tst_qqmlecmascript::onDestructionViaGC()
         v4->memoryManager->allocate<QV4::WeakReferenceSentinel>(weakRef.data(), &sentinelResult);
     }
     gc(engine);
-
+    QVERIFY2(weakRef->isNullOrUndefined(), "The weak value was not cleared");
     QVERIFY2(mutatorResult, "We failed to re-assign the weak reference a new value during GC");
-    QVERIFY2(!sentinelResult, "The weak value was cleared on first GC run");
-    QVERIFY2(!weakRef->isNullOrUndefined(), "The weak value was cleared on first GC run");
-    gc(engine);
-    QVERIFY2(weakRef->isNullOrUndefined(), "The weak value was not cleared on second gc run");
+    QVERIFY2(sentinelResult, "The weak reference was not cleared properly");
 }
 
 struct EventProcessor : public QObject

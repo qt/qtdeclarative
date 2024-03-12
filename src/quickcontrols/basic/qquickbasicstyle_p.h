@@ -18,11 +18,11 @@
 #include <QtCore/qobject.h>
 #include <QtGui/qcolor.h>
 #include <QtQml/qqml.h>
-#include <QtCore/private/qglobal_p.h>
+#include <QtQuickControls2Basic/qtquickcontrols2basicexports.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickBasicStyle : public QObject
+class Q_QUICKCONTROLS2BASIC_EXPORT QQuickBasicStyle : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QColor backgroundColor READ backgroundColor CONSTANT FINAL)

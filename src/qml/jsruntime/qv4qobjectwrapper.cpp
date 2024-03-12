@@ -37,6 +37,7 @@
 #include <private/qv4compileddata_p.h>
 #include <private/qqmlpropertybinding_p.h>
 #include <private/qqmlpropertycachemethodarguments_p.h>
+#include <private/qqmlsignalnames_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -60,6 +61,7 @@ Q_LOGGING_CATEGORY(lcBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcObjectConnect, "qt.qml.object.connect", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcOverloadResolution, "qt.qml.overloadresolution", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcMethodBehavior, "qt.qml.method.behavior")
+Q_LOGGING_CATEGORY(lcSignalHandler, "qt.qml.signalhandler")
 
 // The code in this file does not violate strict aliasing, but GCC thinks it does
 // so turn off the warnings for us to have a clean build
@@ -249,13 +251,6 @@ static ReturnedValue loadProperty(
         property.readProperty(object, &v);
         return QV4::JsonObject::fromJsonArray(v4, v);
     }
-#if QT_CONFIG(qml_locale)
-    case QMetaType::QLocale: {
-        QLocale v;
-        property.readProperty(object, &v);
-        return QQmlLocale::wrap(v4, v);
-    }
-#endif
     case QMetaType::QStringList:
         return encodeSequence(QMetaSequence::fromContainer<QStringList>());
     case QMetaType::QVariantList:
@@ -576,6 +571,28 @@ bool QObjectWrapper::setQmlProperty(
 
     setProperty(engine, object, result, value);
     return true;
+}
+
+/*!
+    \internal
+    If an QObjectWrapper is created via wrap, then it needs to be stored somewhere.
+    Otherwise, the garbage collector will immediately collect it if it is already
+    past the "mark QObjectWrapper's" phase (note that QObjectWrapper are marked
+    by iterating over a list of all QObjectWrapper, and then checking if the
+    wrapper fulfills some conditions).
+    However, sometimes we don't really want to keep a reference to the wrapper,
+    but just want to make sure that it exists (and we know that the wrapper
+    already fulfills the conditions to be kept alive). Then ensureWrapper
+    can be used, which creates the wrapper and ensures that it is also
+    marked.
+ */
+void QObjectWrapper::ensureWrapper(ExecutionEngine *engine, QObject *object)
+{
+    QV4::Scope scope(engine);
+    QV4::Scoped<QV4::QObjectWrapper> wrapper {scope, QV4::QObjectWrapper::wrap(engine, object)};
+    QV4::WriteBarrier::markCustom(engine, [&wrapper](QV4::MarkStack *ms) {
+        wrapper->mark(ms);
+    });
 }
 
 void QObjectWrapper::setProperty(
@@ -1120,7 +1137,8 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
             && !property->isVarProperty()
             && !property->isVMEFunction() // Handled by QObjectLookup
             && !property->isSignalHandler()) { // TODO: Optimize SignalHandler, too
-        setupQObjectMethodLookup(lookup, ddata, property, This, nullptr);
+        QV4::Heap::QObjectMethod *method = nullptr;
+        setupQObjectMethodLookup(lookup, ddata, property, This, method);
         lookup->getter = Lookup::getterQObjectMethod;
         return lookup->getter(lookup, engine, *object);
     }
@@ -1898,6 +1916,14 @@ static int numDefinedArguments(CallData *callArgs)
     return numDefinedArguments;
 }
 
+static bool requiresStrictArguments(const QQmlObjectOrGadget &object)
+{
+    const QMetaObject *metaObject = object.metaObject();
+    const int indexOfClassInfo = metaObject->indexOfClassInfo("QML.StrictArguments");
+    return indexOfClassInfo != -1
+            && metaObject->classInfo(indexOfClassInfo).value() == QByteArrayView("true");
+}
+
 static ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQmlPropertyData &data,
                                       ExecutionEngine *engine, CallData *callArgs,
                                       QMetaObject::Call callType = QMetaObject::InvokeMetaMethod)
@@ -1912,11 +1938,7 @@ static ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQmlPro
     }
 
     auto handleTooManyArguments = [&](int expectedArguments) {
-        const QMetaObject *metaObject = object.metaObject();
-        const int indexOfClassInfo = metaObject->indexOfClassInfo("QML.StrictArguments");
-        if (indexOfClassInfo != -1
-                && QString::fromUtf8(metaObject->classInfo(indexOfClassInfo).value())
-                    == QStringLiteral("true")) {
+        if (requiresStrictArguments(object)) {
             engine->throwError(QStringLiteral("Too many arguments"));
             return false;
         }
@@ -3053,7 +3075,7 @@ void QObjectMethod::callInternalWithMetaTypes(
                 QQmlData *ddata = QQmlData::get(qobjectPtr, true);
                 if (!ddata->explicitIndestructibleSet) {
                     ddata->indestructible = false;
-                    QObjectWrapper::wrap(v4, qobjectPtr);
+                    QObjectWrapper::ensureWrapper(v4, qobjectPtr);
                 }
             }
         });
@@ -3178,6 +3200,26 @@ void Heap::QmlSignalHandler::init(QObject *object, int signalIndex)
 }
 
 DEFINE_OBJECT_VTABLE(QmlSignalHandler);
+
+ReturnedValue QmlSignalHandler::call(const Value *thisObject, const Value *argv, int argc) const
+{
+    const QString handlerName = QQmlSignalNames::signalNameToHandlerName(
+            object()->metaObject()->method(signalIndex()).name());
+    qCWarning(lcSignalHandler).noquote()
+            << QStringLiteral("Property '%1' of object %2 is a signal handler. You should "
+                              "not call it directly. Make it a proper function and call "
+                              "that or emit the signal.")
+                       .arg(handlerName, thisObject->toQStringNoThrow());
+
+    Scope scope(engine());
+    Scoped<QObjectMethod> method(
+            scope, QObjectMethod::create(
+                           scope.engine->rootContext(),
+                           static_cast<Heap::QObjectWrapper *>(nullptr),
+                           signalIndex()));
+
+    return method->call(thisObject, argv, argc);
+}
 
 void QmlSignalHandler::initProto(ExecutionEngine *engine)
 {

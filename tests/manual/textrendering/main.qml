@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Window
@@ -59,6 +59,7 @@ Window {
         TextField {
             id: dummyText
             text: "Foobar"
+            Layout.fillWidth: false
         }
 
         Label {
@@ -70,6 +71,7 @@ Window {
             from: 0.5
             to: 10
             value: 1
+            Layout.fillWidth: false
         }
 
         Label {
@@ -86,16 +88,19 @@ Window {
 
         ComboBox {
             id: styleCombo
+            Layout.fillWidth: false
             model: [ "Normal", "Outline", "Raised", "Sunken" ]
         }
 
         ComboBox {
             id: renderTypeCombo
+            Layout.fillWidth: false
             model: [ "QtRendering", "NativeRendering", "CurveRendering", "Qt Quick Shapes" ]
         }
 
         ComboBox {
             id: shapesRendererCombo
+            Layout.fillWidth: false
             model: [ "GeometryRenderer", "CurveRenderer" ]
             visible: renderTypeCombo.currentIndex > 2
         }

@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
@@ -444,6 +444,9 @@ private slots:
 
     void writeNumberToEnumAlias();
     void badInlineComponentAnnotation();
+    void manuallyCallSignalHandler();
+    void overrideDefaultProperty();
+    void enumScopes();
 
 private:
     QQmlEngine engine;
@@ -8034,6 +8037,10 @@ void tst_qqmllanguage::asValueType()
 
     const ValueTypeWithString withString = o->property("f").value<ValueTypeWithString>();
     QCOMPARE(withString.toString(), u"red");
+
+    const QVariant string = o->property("g");
+    QCOMPARE(string.metaType(), QMetaType::fromType<QString>());
+    QCOMPARE(string.toString(), u"green");
 }
 
 void tst_qqmllanguage::typedEnums_data()
@@ -8544,6 +8551,53 @@ void tst_qqmllanguage::badInlineComponentAnnotation()
     QCOMPARE(o->property("b").value<QObject *>(), ic);
     QCOMPARE(o->property("c").value<QObject *>(), ic);
     QCOMPARE(o->property("d").value<QObject *>(), nullptr);
+}
+
+void tst_qqmllanguage::manuallyCallSignalHandler()
+{
+    // TODO: This test verifies the absence of regression legacy behavior. See QTBUG-120573
+    //       Once we can get rid of the legacy behavior, delete this test!
+
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("manuallyCallSignalHandler.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    for (int i = 0; i < 10; ++i) {
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+            "Property 'onDestruction' of object QQmlComponentAttached\\(0x[0-9a-f]+\\) is a signal "
+            "handler\\. You should not call it directly\\. Make it a proper function and call that "
+            "or emit the signal\\."));
+        QTest::ignoreMessage(QtDebugMsg, "evil!");
+        QScopedPointer<QObject> o(c.create());
+        QTest::ignoreMessage(QtDebugMsg, "evil!");
+    }
+}
+
+void tst_qqmllanguage::overrideDefaultProperty()
+{
+    QQmlEngine e;
+    const QUrl url = testFileUrl("overrideDefaultProperty.qml");
+
+    // Should not crash here!
+
+    QQmlComponent c(&e, url);
+    QVERIFY(c.isError());
+    QCOMPARE(c.errorString(),
+             url.toString() + QLatin1String(":5 Cannot assign object to list property \"data\"\n"));
+}
+
+void tst_qqmllanguage::enumScopes()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("enumScopes.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("singletonUnscoped"), false);
+    QCOMPARE(o->property("singletonScoped"), true);
+    QCOMPARE(o->property("nonSingletonUnscoped"), false);
+    QCOMPARE(o->property("nonSingletonScoped"), true);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

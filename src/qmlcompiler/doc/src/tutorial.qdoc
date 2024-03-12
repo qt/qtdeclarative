@@ -106,7 +106,7 @@ Running the command should print \c{Hello World Plugin is enabled}.
 \previouspage QML Static Analysis 1 - Basic Setup
 \nextpage QML Static Analysis 3 - Fixit Hints
 
-This chapter shows how custom analysis passes can be added to \l{qmllint},
+This chapter shows how custom analysis passes can be added to \l{qmllint Reference}{qmllint},
 by extending the plugin we've created in the last chapter.
 For demonstration purposes, we will create a plugin which checks whether
 \l{Text} elements have "Hello world!" assigned to their text property.
@@ -167,7 +167,7 @@ adding
 \printline manager->registerElementPass
 to the \c{registerPasses} functions of our plugin.
 
-We can test our plugin by invoking \l{qmllint} on an example
+We can test our plugin by invoking \l{qmllint Reference}{qmllint} on an example
 file via
 \badcode
 qmllint -P /path/to/the/directory/containing/the/plugin --Plugin.HelloWorld.hello-world info test.qml

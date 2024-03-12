@@ -338,7 +338,7 @@ void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
 
     for (const QList<QQmlJSScope::ConstPtr> &qmlTypes : m_pureQmlTypes)
         for (const QQmlJSScope::ConstPtr &type : qmlTypes)
-            checkForNamingCollisionsWithCpp(type);
+            checkNamesAndTypes(type);
 }
 
 QQmlJSScope::ConstPtr fetchType(const QQmlJSMetaPropertyBinding &binding)
@@ -655,7 +655,7 @@ void QmltcVisitor::setupAliases()
     }
 }
 
-void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &type)
+void QmltcVisitor::checkNamesAndTypes(const QQmlJSScope::ConstPtr &type)
 {
     static const QString cppKeywords[] = {
         u"alignas"_s,
@@ -772,6 +772,23 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
                       qmlCompiler, type->sourceLocation());
     };
 
+    const auto validateType = [&type, this](const QQmlJSScope::ConstPtr &typeToCheck,
+                                            QStringView name, QStringView errorPrefix) {
+        if (type->moduleName().isEmpty() || typeToCheck.isNull())
+            return;
+
+        if (typeToCheck->isComposite() && typeToCheck->moduleName() != type->moduleName()) {
+            m_logger->log(
+                    QStringLiteral(
+                            "Can't compile the %1 type \"%2\" to C++ because it "
+                            "lives in \"%3\" instead of the current file's \"%4\" QML module.")
+                            .arg(errorPrefix, name, typeToCheck->moduleName(), type->moduleName()),
+                    qmlCompiler, type->sourceLocation());
+        }
+    };
+
+    validateType(type->baseType(), type->baseTypeName(), u"QML base");
+
     const auto enums = type->ownEnumerations();
     for (auto it = enums.cbegin(); it != enums.cend(); ++it) {
         const QQmlJSMetaEnum e = it.value();
@@ -786,16 +803,23 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
     for (auto it = properties.cbegin(); it != properties.cend(); ++it) {
         const QQmlJSMetaProperty &p = it.value();
         validate(p.propertyName(), u"Property");
+
+        if (!p.isAlias() && !p.typeName().isEmpty())
+            validateType(p.type(), p.typeName(), u"QML property");
     }
 
     const auto methods = type->ownMethods();
     for (auto it = methods.cbegin(); it != methods.cend(); ++it) {
         const QQmlJSMetaMethod &m = it.value();
         validate(m.methodName(), u"Method");
+        if (!m.returnTypeName().isEmpty())
+            validateType(m.returnType(), m.returnTypeName(), u"QML method return");
 
-        const auto parameterNames = m.parameterNames();
-        for (const auto &name : parameterNames)
-            validate(name, u"Method '%1' parameter"_s.arg(m.methodName()));
+        for (const auto &parameter : m.parameters()) {
+            validate(parameter.name(), u"Method '%1' parameter"_s.arg(m.methodName()));
+            if (!parameter.typeName().isEmpty())
+                validateType(parameter.type(), parameter.typeName(), u"QML parameter");
+        }
     }
 
     // TODO: one could also test signal handlers' parameters but we do not store

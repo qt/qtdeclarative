@@ -3412,7 +3412,7 @@ bool QQuickJSContext2DPixelData::virtualPut(QV4::Managed *m, QV4::PropertyKey id
 /*!
     \qmlmethod CanvasImageData QtQuick::Context2D::createImageData(CanvasImageData imageData)
 
-    Creates a CanvasImageData object with the same dimensions as the argument.
+    Creates a CanvasImageData object with the same dimensions as the \a imageData argument.
 */
 /*!
     \qmlmethod CanvasImageData QtQuick::Context2D::createImageData(Url imageUrl)
@@ -4141,6 +4141,7 @@ static int textAlignOffset(QQuickContext2D::TextAlignType value, const QFontMetr
         break;
     case QQuickContext2D::Right:
         offset = metrics.horizontalAdvance(text);
+        break;
     case QQuickContext2D::Left:
     default:
         break;

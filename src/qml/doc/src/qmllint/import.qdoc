@@ -51,14 +51,15 @@ Item {
 
 \section3 User-Defined Module That Was Not Built
 
-Some tooling like \l{QML Language Server} or \l{qmllint} can't find user-defined modules when they
+Some tooling like \l{\QMLLS Reference}{\QMLLS} or \l{qmllint Reference}{qmllint}
+can't find user-defined modules when they
 are not built. If your project defines the QML Module you are trying to import, then
 the QML tooling will not find it until you build it.
 
-\note If building the module does not help when using \l{QML Language Server}, follow the
+\note If building the module does not help when using \l{\QMLLS Reference}{\QMLLS}, follow the
 instructions in
-\l{QML Language Server#setting-up-the-qml-language-server-in-your-editor}{QML Language Server setup instructions}
-and make sure that you communicate the correct build folder to \l{QML Language Server}.
+\l{Setting up the QML Language Server in Your Editor}{\QMLLS setup instructions}
+and make sure that you communicate the correct build folder to \QMLLS.
 
 \section3 Wrong Import Path
 

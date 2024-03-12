@@ -455,6 +455,7 @@ QQuickDialogButtonBox::QQuickDialogButtonBox(QQuickItem *parent)
     Q_D(QQuickDialogButtonBox);
     d->changeTypes |= QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
     d->buttonLayout = platformButtonLayout();
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
 }
 
 QQuickDialogButtonBox::~QQuickDialogButtonBox()

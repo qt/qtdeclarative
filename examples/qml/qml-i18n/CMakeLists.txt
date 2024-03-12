@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/qmli18n")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Qml LinguistTools)
 
-qt_standard_project_setup(REQUIRES 6.5 I18N_LANGUAGES en en_AU fr)
+qt_standard_project_setup(REQUIRES 6.5 I18N_TRANSLATED_LANGUAGES en en_AU fr)
 
 qt_add_executable(qmli18n WIN32 MACOSX_BUNDLE main.cpp)
 

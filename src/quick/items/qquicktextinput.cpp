@@ -1994,7 +1994,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         node->setColor(d->color);
         node->setSelectionTextColor(d->selectedTextColor);
         node->setSelectionColor(d->selectionColor);
-        node->setSmooth(smooth());
+        node->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
 
         if (flags().testFlag(ItemObservesViewport))
             node->setViewport(clipRect());
@@ -2587,7 +2587,7 @@ bool QQuickTextInput::canPaste() const
     Q_D(const QQuickTextInput);
     if (!d->canPasteValid) {
         if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
-            const_cast<QQuickTextInputPrivate *>(d)->canPaste = !d->m_readOnly && mimeData->hasText();
+            const_cast<QQuickTextInputPrivate *>(d)->canPaste = !d->m_readOnly && mimeData->hasText() && !mimeData->text().isEmpty();
         const_cast<QQuickTextInputPrivate *>(d)->canPasteValid = true;
     }
     return d->canPaste;
@@ -2867,6 +2867,7 @@ void QQuickTextInputPrivate::init()
     }
 
     m_inputControl = new QInputControl(QInputControl::LineEdit, q);
+    setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
 }
 
 void QQuickTextInputPrivate::cancelInput()

@@ -145,12 +145,17 @@ void QQuickShapeCurveRenderer::beginSync(int totalCount, bool *countChanged)
 
 void QQuickShapeCurveRenderer::setPath(int index, const QQuickPath *path)
 {
-    auto &pathData = m_paths[index];
-    pathData.originalPath = path->path();
-    pathData.m_dirty |= PathDirty;
+    constexpr QQuickShapePath::PathHints noHints;
     const auto *shapePath = qobject_cast<const QQuickShapePath *>(path);
-    if (shapePath)
-        pathData.pathHints = shapePath->pathHints();
+    setPath(index, path->path(), shapePath ? shapePath->pathHints() : noHints);
+}
+
+void QQuickShapeCurveRenderer::setPath(int index, const QPainterPath &path, QQuickShapePath::PathHints pathHints)
+{
+    auto &pathData = m_paths[index];
+    pathData.originalPath = path;
+    pathData.pathHints = pathHints;
+    pathData.m_dirty |= PathDirty;
 }
 
 void QQuickShapeCurveRenderer::setStrokeColor(int index, const QColor &color)
@@ -334,7 +339,8 @@ void QQuickShapeCurveRenderer::maybeUpdateAsyncItem()
         if (pd.currentRunner && !pd.currentRunner->isDone)
             return;
     }
-    m_item->update();
+    if (m_item)
+        m_item->update();
     if (m_asyncCallback)
         m_asyncCallback(m_asyncCallbackData);
 }
@@ -470,6 +476,8 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
 {
     auto *node = new QSGCurveFillNode;
     node->setGradientType(pathData.gradientType);
+    const qsizetype approxDataCount = 20 * pathData.fillPath.elementCount();
+    node->reserve(approxDataCount);
 
     NodeList ret;
     const QColor &color = pathData.fillColor;
@@ -481,6 +489,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
     node->setDebug(dbg);
 
     QVector<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
+    wfVertices.reserve(approxDataCount);
 
     QSGCurveProcessor::processFill(pathData.fillPath,
                                    pathData.fillRule,

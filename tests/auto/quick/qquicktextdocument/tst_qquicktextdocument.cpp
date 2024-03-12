@@ -1,10 +1,11 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QtTest/QtTest>
-#include <QtQuick/QQuickTextDocument>
 #include <QtQuick/QQuickItem>
+#include <QtQuick/QQuickTextDocument>
+#include <QtQuick/QQuickView>
 #include <QtQuick/private/qquicktextdocument_p.h>
 #include <QtQuick/private/qquicktextedit_p.h>
 #include <QtQuick/private/qquicktextedit_p_p.h>
@@ -16,6 +17,10 @@
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlFile>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#ifdef Q_OS_UNIX
+#include <unistd.h>
+#endif
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
@@ -27,11 +32,21 @@ class tst_qquicktextdocument : public QQmlDataTest
 public:
     tst_qquicktextdocument();
 
+private:
+    QPair<int, int> fragmentsAndItalics(const QTextDocument *doc);
+    bool isMainFontFixed();
+
 private slots:
     void textDocumentWriter();
     void customDocument();
     void sourceAndSave_data();
     void sourceAndSave();
+    void loadErrorNoSuchFile();
+    void loadErrorPermissionDenied();
+    void overrideTextFormat_data();
+    void overrideTextFormat();
+    void independentDocumentsSameSource_data();
+    void independentDocumentsSameSource();
 };
 
 QString text = QStringLiteral("foo bar");
@@ -72,6 +87,34 @@ QVariant FakeImageDocument::loadResource(int type, const QUrl &name)
 tst_qquicktextdocument::tst_qquicktextdocument()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
+}
+
+/*! \internal
+    Returns {fragmentCount, italicFragmentIndex}. If no italic fragment is found,
+    italicFragmentIndex is -1.
+*/
+QPair<int, int> tst_qquicktextdocument::fragmentsAndItalics(const QTextDocument *doc)
+{
+    int fragmentCount = 0;
+    int italicFragment = -1;
+    for (QTextBlock::iterator it = doc->firstBlock().begin(); !(it.atEnd()); ++it) {
+        QTextFragment currentFragment = it.fragment();
+        if (currentFragment.charFormat().fontItalic())
+            italicFragment = fragmentCount;
+        ++fragmentCount;
+        qCDebug(lcTests) << (currentFragment.charFormat().fontItalic() ? "italic" : "roman") << currentFragment.text();
+    }
+    return {fragmentCount, italicFragment};
+}
+
+bool tst_qquicktextdocument::isMainFontFixed()
+{
+    bool ret = QFontInfo(QGuiApplication::font()).fixedPitch();
+    if (ret) {
+        qCWarning(lcTests) << "QFontDatabase::GeneralFont is monospaced: markdown writing is likely to use too many backticks"
+                           << QFontDatabase::systemFont(QFontDatabase::GeneralFont);
+    }
+    return ret;
 }
 
 void tst_qquicktextdocument::textDocumentWriter()
@@ -156,31 +199,33 @@ void tst_qquicktextdocument::customDocument()
 
 void tst_qquicktextdocument::sourceAndSave_data()
 {
+    QTest::addColumn<QQuickTextEdit::TextFormat>("textFormat");
     QTest::addColumn<QString>("source");
     QTest::addColumn<std::optional<QStringConverter::Encoding>>("expectedEncoding");
-    QTest::addColumn<QString>("expectedMimeType");
+    QTest::addColumn<QQuickTextEdit::TextFormat>("expectedTextFormat");
     QTest::addColumn<int>("minCharCount");
     QTest::addColumn<QString>("expectedPlainText");
 
     const std::optional<QStringConverter::Encoding> nullEnc;
 
-    QTest::newRow("plain") << "hello.txt"
-        << nullEnc << "text/plain" << 15 << u"Γειά σου Κόσμε!"_s;
-    QTest::newRow("markdown") << "hello.md"
-        << nullEnc << "text/markdown" << 15 << u"Γειά σου Κόσμε!"_s;
-    QTest::newRow("html") << "hello.html"
+    QTest::newRow("plain") << QQuickTextEdit::PlainText << "hello.txt"
+        << nullEnc << QQuickTextEdit::PlainText << 15 << u"Γειά σου Κόσμε!"_s;
+    QTest::newRow("markdown") << QQuickTextEdit::MarkdownText << "hello.md"
+        << nullEnc << QQuickTextEdit::MarkdownText << 15 << u"Γειά σου Κόσμε!"_s;
+    QTest::newRow("html") << QQuickTextEdit::RichText << "hello.html"
         << std::optional<QStringConverter::Encoding>(QStringConverter::Utf8)
-        << "text/html" << 15 << u"Γειά σου Κόσμε!"_s;
-    QTest::newRow("html-utf16be") << "hello-utf16be.html"
+        << QQuickTextEdit::RichText << 15 << u"Γειά σου Κόσμε!"_s;
+    QTest::newRow("html-utf16be") << QQuickTextEdit::AutoText << "hello-utf16be.html"
         << std::optional<QStringConverter::Encoding>(QStringConverter::Utf16BE)
-        << "text/html" << 15 << u"Γειά σου Κόσμε!"_s;
+        << QQuickTextEdit::RichText << 15 << u"Γειά σου Κόσμε!"_s;
 }
 
 void tst_qquicktextdocument::sourceAndSave()
 {
+    QFETCH(QQuickTextEdit::TextFormat, textFormat);
     QFETCH(QString, source);
     QFETCH(std::optional<QStringConverter::Encoding>, expectedEncoding);
-    QFETCH(QString, expectedMimeType);
+    QFETCH(QQuickTextEdit::TextFormat, expectedTextFormat);
     QFETCH(int, minCharCount);
     QFETCH(QString, expectedPlainText);
 
@@ -214,14 +259,15 @@ void tst_qquicktextdocument::sourceAndSave()
 
     QCOMPARE(statusChangedSpy.size(), 0);
     QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Null);
+    textEdit->setTextFormat(textFormat);
     qqdoc->setProperty("source", QUrl::fromLocalFile(tmpPath));
     QCOMPARE(sourceChangedSpy.size(), 1);
     QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 1);
     QCOMPARE(statusChangedSpy.size(), 2); // Loading, then Loaded
     QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Loaded);
+    QVERIFY(qqdoc->errorString().isEmpty());
     const auto *qqdp = QQuickTextDocumentPrivate::get(qqdoc);
-    QVERIFY(qqdp->mimeType.inherits(expectedMimeType));
-    const bool expectHtml = (expectedMimeType == "text/html");
+    QCOMPARE(qqdp->detectedFormat, expectedTextFormat);
     QCOMPARE_GE(doc->characterCount(), minCharCount);
     QCOMPARE(doc->toPlainText().trimmed(), expectedPlainText);
     QCOMPARE(qqdp->encoding, expectedEncoding);
@@ -236,12 +282,13 @@ void tst_qquicktextdocument::sourceAndSave()
     QCOMPARE(qqdoc->isModified(), true);
 
     qqdoc->save();
-    QCOMPARE(statusChangedSpy.size(), 4); // Saving, then SaveDone
-    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::SaveDone);
+    QCOMPARE(statusChangedSpy.size(), 4); // Saving, then Saved
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Saved);
+    QVERIFY(qqdoc->errorString().isEmpty());
     QFile tf(tmpPath);
     QVERIFY(tf.open(QIODeviceBase::ReadOnly));
     auto readBack = tf.readAll();
-    if (expectHtml) {
+    if (expectedTextFormat == Qt::RichText) {
         QStringDecoder dec(*expectedEncoding);
         const QString decStr = dec(readBack);
         QVERIFY(decStr.contains("hello!</p>"));
@@ -249,6 +296,271 @@ void tst_qquicktextdocument::sourceAndSave()
         QVERIFY(readBack.contains("hello!"));
     }
     QCOMPARE(textEdit->property("sourceChangeCount").toInt(), sourceChangedSpy.size());
+}
+
+void tst_qquicktextdocument::loadErrorNoSuchFile()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("text.qml"));
+    QScopedPointer<QQuickTextEdit> textEdit(qobject_cast<QQuickTextEdit*>(c.create()));
+    QCOMPARE(textEdit.isNull(), false);
+    QQuickTextDocument *qqdoc = textEdit->property("textDocument").value<QQuickTextDocument*>();
+    QVERIFY(qqdoc);
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 0);
+    QTextDocument *doc = qqdoc->textDocument();
+    QVERIFY(doc);
+    QSignalSpy sourceChangedSpy(qqdoc, &QQuickTextDocument::sourceChanged);
+    QSignalSpy statusChangedSpy(qqdoc, &QQuickTextDocument::statusChanged);
+
+    QCOMPARE(statusChangedSpy.size(), 0);
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Null);
+    const QRegularExpression err(".*does not exist");
+    QTest::ignoreMessage(QtWarningMsg, err);
+    qqdoc->setProperty("source", testFileUrl("nosuchfile.md"));
+    QCOMPARE(sourceChangedSpy.size(), 1);
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 1);
+    qCDebug(lcTests) << "status history" << textEdit->property("statusHistory").toList();
+    QCOMPARE(statusChangedSpy.size(), 1);
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::ReadError);
+    QVERIFY(qqdoc->errorString().contains(err));
+}
+
+void tst_qquicktextdocument::loadErrorPermissionDenied()
+{
+#ifdef Q_OS_UNIX
+    if (geteuid() == 0)
+        QSKIP("Permission will not be denied with root privileges.");
+#endif
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("text.qml"));
+    QScopedPointer<QQuickTextEdit> textEdit(qobject_cast<QQuickTextEdit*>(c.create()));
+    QCOMPARE(textEdit.isNull(), false);
+    QQuickTextDocument *qqdoc = textEdit->property("textDocument").value<QQuickTextDocument*>();
+    QVERIFY(qqdoc);
+    const QQmlContext *ctxt = e.rootContext();
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 0);
+    QTextDocument *doc = qqdoc->textDocument();
+    QVERIFY(doc);
+    QSignalSpy sourceChangedSpy(qqdoc, &QQuickTextDocument::sourceChanged);
+    QSignalSpy statusChangedSpy(qqdoc, &QQuickTextDocument::statusChanged);
+
+    QTemporaryDir tmpDir;
+    QVERIFY(tmpDir.isValid());
+    const QString source("hello.md");
+    QFile sf(QQmlFile::urlToLocalFileOrQrc(ctxt->resolvedUrl(testFileUrl(source))));
+    qCDebug(lcTests) << source << "orig ->" << sf.fileName();
+    QVERIFY(sf.exists());
+    QString tmpPath = tmpDir.filePath(source);
+    QVERIFY(sf.copy(tmpPath));
+    qCDebug(lcTests) << source << "copy ->" << tmpDir.path() << ":" << tmpPath;
+    if (!QFile::setPermissions(tmpPath, QFileDevice::Permissions{})) // no permissions at all
+        QSKIP("Failed to change permissions of temporary file: cannot continue.");
+
+    QCOMPARE(statusChangedSpy.size(), 0);
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::Null);
+    const QRegularExpression err(".*Failed to read: Permission denied");
+    QTest::ignoreMessage(QtWarningMsg, err);
+    qqdoc->setProperty("source", QUrl::fromLocalFile(tmpPath));
+    QCOMPARE(sourceChangedSpy.size(), 1);
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 1);
+    qCDebug(lcTests) << "status history" << textEdit->property("statusHistory").toList();
+    QCOMPARE(statusChangedSpy.size(), 1);
+    QCOMPARE(qqdoc->status(), QQuickTextDocument::Status::ReadError);
+    QVERIFY(qqdoc->errorString().contains(err));
+}
+
+void tst_qquicktextdocument::overrideTextFormat_data()
+{
+    QTest::addColumn<QUrl>("qmlfile");
+    QTest::addColumn<QQuickTextEdit::TextFormat>("initialFormat");
+    QTest::addColumn<QUrl>("source");
+    QTest::addColumn<int>("expectedInitialFragmentCount");
+    QTest::addColumn<int>("expectedInitialItalicFragment");
+    // first part of TextEdit.text after loading
+    QTest::addColumn<QString>("expectedTextPrefix");
+
+    QTest::addColumn<QQuickTextEdit::TextFormat>("replacementFormat");
+    QTest::addColumn<int>("expectedFragmentCount");
+    QTest::addColumn<int>("expectedItalicFragment");
+    // first part of TextEdit.text after switching to replacementFormat
+    QTest::addColumn<QString>("expectedReplacementPrefix");
+    QTest::addColumn<int>("expectedTextChangedSignalsAfterReplacement");
+
+    QTest::addColumn<QQuickTextEdit::TextFormat>("finalFormat");
+    QTest::addColumn<int>("expectedFinalFragmentCount");
+    QTest::addColumn<int>("expectedFinalItalicFragment");
+    // first part of TextEdit.text after switching to finalFormat
+    QTest::addColumn<QString>("expectedFinalPrefix");
+
+    QTest::newRow("load md, switch to plain, back to md")
+            << testFileUrl("text.qml") << QQuickTextEdit::MarkdownText << testFileUrl("hello.md")
+            << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
+            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s << 2
+            << QQuickTextEdit::MarkdownText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s;
+    QTest::newRow("load md, switch to plain, then auto")
+            << testFileUrl("text.qml") << QQuickTextEdit::MarkdownText << testFileUrl("hello.md")
+            << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
+            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s << 2
+            << QQuickTextEdit::AutoText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s;
+    QTest::newRow("load md, switch to html, then plain")
+            << testFileUrl("text.qml") << QQuickTextEdit::MarkdownText << testFileUrl("hello.md")
+            << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
+            << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s << 2
+            << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s;
+    QTest::newRow("load md as plain text, switch to md, back to plain")
+            << testFileUrl("text.qml") << QQuickTextEdit::PlainText << testFileUrl("hello.md")
+            << 1 << -1 << u"Γειά σου *Κόσμε*!"_s
+            << QQuickTextEdit::MarkdownText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s << 2
+            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s;
+    QTest::newRow("load md as autotext, switch to plain, back to auto")
+            << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.md")
+            << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
+            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s << 2
+            << QQuickTextEdit::AutoText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s;
+    QTest::newRow("load md as autotext, switch to md, then plain")
+            << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.md")
+            << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
+            << QQuickTextEdit::MarkdownText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
+            // going from AutoText to a matching explicit format does not cause extra textChanged()
+            << 1
+            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s;
+    QTest::newRow("load md as autotext, switch to html, then plain")
+            << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.md")
+            << 3 << 1 << u"Γειά σου *Κόσμε*!"_s
+            << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s << 2
+            << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s;
+
+    QTest::newRow("load html, switch to plain, back to rich")
+            << testFileUrl("text.qml") << QQuickTextEdit::RichText << testFileUrl("hello.html")
+            << 3 << 1 << u"<!DOCTYPE HTML"_s
+            << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s << 2
+            << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s;
+    QTest::newRow("load html as plain text, switch to html, back to plain")
+            << testFileUrl("text.qml") << QQuickTextEdit::PlainText << testFileUrl("hello.html")
+            << 1 << -1 << u"Γειά σου <i>Κόσμε</i>!"_s
+            << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s << 2
+            << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s;
+    QTest::newRow("load html as autotext, switch to plain, back to auto")
+            << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.html")
+            << 3 << 1 << u"<!DOCTYPE HTML"_s
+            << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s << 2
+            << QQuickTextEdit::AutoText << 3 << 1 << u"<!DOCTYPE HTML"_s;
+    QTest::newRow("load html as autotext, switch to html, then plain")
+            << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.html")
+            << 3 << 1 << u"<!DOCTYPE HTML"_s
+            << QQuickTextEdit::RichText << 3 << 1 << u"<!DOCTYPE HTML"_s
+            // going from AutoText to a matching explicit format does not cause extra textChanged()
+            << 1
+            << QQuickTextEdit::PlainText << 1 << -1 << u"<!DOCTYPE HTML"_s;
+    QTest::newRow("load html as autotext, switch to markdown, then plain")
+            << testFileUrl("text.qml") << QQuickTextEdit::AutoText << testFileUrl("hello.html")
+            << 3 << 1 << u"<!DOCTYPE HTML"_s
+            << QQuickTextEdit::MarkdownText << 3 << 1 << u"Γειά σου *Κόσμε*!"_s << 2
+            << QQuickTextEdit::PlainText << 1 << -1 << u"Γειά σου *Κόσμε*!"_s;
+}
+
+void tst_qquicktextdocument::overrideTextFormat() // QTBUG-120772
+{
+    if (isMainFontFixed())
+        QSKIP("fixed-pitch main font (QTBUG-103484)");
+
+    QFETCH(QUrl, qmlfile);
+    QFETCH(QQuickTextEdit::TextFormat, initialFormat);
+    QFETCH(QUrl, source);
+    QFETCH(int, expectedInitialFragmentCount);
+    QFETCH(int, expectedInitialItalicFragment);
+    QFETCH(QString, expectedTextPrefix);
+
+    QFETCH(QQuickTextEdit::TextFormat, replacementFormat);
+    QFETCH(int, expectedFragmentCount);
+    QFETCH(int, expectedItalicFragment);
+    QFETCH(QString, expectedReplacementPrefix);
+    QFETCH(int, expectedTextChangedSignalsAfterReplacement);
+
+    QFETCH(QQuickTextEdit::TextFormat, finalFormat);
+    QFETCH(int, expectedFinalFragmentCount);
+    QFETCH(int, expectedFinalItalicFragment);
+    QFETCH(QString, expectedFinalPrefix);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, qmlfile));
+    QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit *>(window.rootObject());
+    QVERIFY(textEdit);
+    QQuickTextDocument *qqdoc = textEdit->property("textDocument").value<QQuickTextDocument*>();
+    QVERIFY(qqdoc);
+    QTextDocument *doc = qqdoc->textDocument();
+    QVERIFY(doc);
+
+    textEdit->setTextFormat(initialFormat);
+    QCOMPARE(qqdoc->isModified(), false);
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 0);
+    QSignalSpy sourceChangedSpy(qqdoc, &QQuickTextDocument::sourceChanged);
+    QSignalSpy textChangedSpy(textEdit, &QQuickTextEdit::textChanged);
+
+    qqdoc->setProperty("source", source);
+    QCOMPARE(sourceChangedSpy.size(), 1);
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 1);
+    QCOMPARE_GE(textChangedSpy.size(), 1);
+    auto fragCountAndItalic = fragmentsAndItalics(doc);
+    QCOMPARE(fragCountAndItalic.first, expectedInitialFragmentCount);
+    QCOMPARE(fragCountAndItalic.second, expectedInitialItalicFragment);
+    QString textPropValue = textEdit->text();
+    qCDebug(lcTests) << "expect text()" << textPropValue.first(qMin(20, textPropValue.size() - 1))
+                     << "to start with" << expectedTextPrefix;
+    QVERIFY(textPropValue.startsWith(expectedTextPrefix));
+
+    textEdit->setTextFormat(replacementFormat);
+    QCOMPARE(qqdoc->isModified(), false);
+    QCOMPARE(sourceChangedSpy.size(), 1);
+    QCOMPARE_GE(textChangedSpy.size(), expectedTextChangedSignalsAfterReplacement);
+    fragCountAndItalic = fragmentsAndItalics(doc);
+    QCOMPARE(fragCountAndItalic.first, expectedFragmentCount);
+    QCOMPARE(fragCountAndItalic.second, expectedItalicFragment);
+    textPropValue = textEdit->text();
+    qCDebug(lcTests) << "expect text()" << textPropValue.first(qMin(20, textPropValue.size() - 1))
+                     << "to start with" << expectedReplacementPrefix;
+    QVERIFY(textPropValue.startsWith(expectedReplacementPrefix));
+
+    textEdit->setTextFormat(finalFormat);
+    QCOMPARE(qqdoc->isModified(), false);
+    QCOMPARE(sourceChangedSpy.size(), 1);
+    QCOMPARE_GE(textChangedSpy.size(), expectedTextChangedSignalsAfterReplacement + 1);
+    fragCountAndItalic = fragmentsAndItalics(doc);
+    QCOMPARE(fragCountAndItalic.first, expectedFinalFragmentCount);
+    QCOMPARE(fragCountAndItalic.second, expectedFinalItalicFragment);
+    textPropValue = textEdit->text();
+    qCDebug(lcTests) << "expect text()" << textPropValue.first(qMin(20, textPropValue.size() - 1))
+                     << "to start with" << expectedFinalPrefix;
+    QVERIFY(textPropValue.startsWith(expectedFinalPrefix));
+}
+
+void tst_qquicktextdocument::independentDocumentsSameSource_data()
+{
+    QTest::addColumn<QUrl>("qmlfile");
+
+    QTest::newRow("textFormat above source") << testFileUrl("sideBySideIndependent.qml");
+    QTest::newRow("source above textFormat") << testFileUrl("sideBySideIndependentReverse.qml");
+}
+
+// ensure that two TextEdits' textFormat properties take effect, regardless of qml init order
+void tst_qquicktextdocument::independentDocumentsSameSource() // QTBUG-120772
+{
+    QFETCH(QUrl, qmlfile);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, qmlfile));
+    QQuickTextEdit *textEditPlain = window.rootObject()->findChild<QQuickTextEdit *>("plain");
+    QVERIFY(textEditPlain);
+    QQuickTextEdit *textEditMarkdown = window.rootObject()->findChild<QQuickTextEdit *>("markdown");
+    QVERIFY(textEditMarkdown);
+
+    auto fragCountAndItalic = fragmentsAndItalics(textEditPlain->textDocument()->textDocument());
+    QCOMPARE(fragCountAndItalic.first, 1);
+    QCOMPARE(fragCountAndItalic.second, -1);
+
+    fragCountAndItalic = fragmentsAndItalics(textEditMarkdown->textDocument()->textDocument());
+    QCOMPARE(fragCountAndItalic.first, 3);
+    QCOMPARE(fragCountAndItalic.second, 1);
 }
 
 QTEST_MAIN(tst_qquicktextdocument)

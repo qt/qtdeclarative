@@ -14,6 +14,7 @@ set(cpp_sources
     getOptionalLookup.h
     gadgetwithenum.h
     invisible.h
+    listprovider.h
     multiforeign.h
     objectwithmethod.h
     person.cpp person.h
@@ -44,8 +45,10 @@ set(qml_files
     Cycle1.qml
     Cycle2.qml
     Cycle3.qml
+    CppMethodListReturnType.qml
     Dummy.qml
     Dummy2.qml
+    EditConstraint.qml
     Enums.qml
     Foozle.qml
     GetOptionalLookupOnQJSValueNonStrict.qml
@@ -208,6 +211,7 @@ set(qml_files
     nullAccess.qml
     nullAccessInsideSignalHandler.qml
     nullComparison.qml
+    nullishCoalescing.qml
     numbersInJsPrimitive.qml
     objectInVar.qml
     objectLookupOnListElement.qml
@@ -231,10 +235,12 @@ set(qml_files
     revisions.qml
     scopeIdLookup.qml
     scopeVsObject.qml
+    scopedEnum.qml
     script.js
     script.mjs
     sequenceToIterable.qml
     setLookupConversion.qml
+    setLookupOriginalScope.qml
     shadowedAsCasts.qml
     shadowedMethod.qml
     shadowedPrimitiveCmpEqNull.qml
@@ -260,6 +266,7 @@ set(qml_files
     toString.qml
     topLevelComponent.qml
     translation.qml
+    trigraphs.qml
     trivialSignalHandler.qml
     typePropagationLoop.qml
     typePropertyClash.qml

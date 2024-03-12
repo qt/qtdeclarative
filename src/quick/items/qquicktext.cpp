@@ -554,7 +554,7 @@ void QQuickTextPrivate::updateSize()
                 QTextLine firstLine = firstBlock.layout()->lineAt(0);
                 QTextLine lastLine = lastBlock.layout()->lineAt(lastBlock.layout()->lineCount() - 1);
                 advance = QSizeF(lastLine.horizontalAdvance(),
-                                 (lastLine.y() + lastBlock.layout()->position().y()) - (firstLine.y() + firstBlock.layout()->position().y()));
+                                 (lastLine.y() + lastBlock.layout()->position().y() + lastLine.ascent()) - (firstLine.y() + firstBlock.layout()->position().y() + firstLine.ascent()));
             } else {
                 advance = QSizeF();
             }
@@ -2414,7 +2414,6 @@ void QQuickText::resetMaximumLineCount()
     \list
     \li code blocks use the \l {QFontDatabase::FixedFont}{default monospace font} but without a surrounding highlight box
     \li block quotes are indented, but there is no vertical line alongside the quote
-    \li horizontal rules are not rendered
     \endlist
 */
 QQuickText::TextFormat QQuickText::textFormat() const
@@ -2720,7 +2719,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     else
         node = static_cast<QSGInternalTextNode *>(oldNode);
 
-    node->setSmooth(smooth());
+    node->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
 
     node->setTextStyle(QSGTextNode::TextStyle(d->style));
     node->setRenderType(QSGTextNode::RenderType(d->renderType));

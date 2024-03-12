@@ -35,7 +35,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickShapeCurveRunnable;
 
-class QQuickShapeCurveRenderer : public QQuickAbstractPathRenderer
+class Q_QUICKSHAPES_EXPORT QQuickShapeCurveRenderer : public QQuickAbstractPathRenderer
 {
 public:
     QQuickShapeCurveRenderer(QQuickItem *item)
@@ -45,6 +45,7 @@ public:
 
     void beginSync(int totalCount, bool *countChanged) override;
     void setPath(int index, const QQuickPath *path) override;
+    void setPath(int index, const QPainterPath &path, QQuickShapePath::PathHints pathHints = {});
     void setStrokeColor(int index, const QColor &color) override;
     void setStrokeWidth(int index, qreal w) override;
     void setFillColor(int index, const QColor &color) override;
@@ -78,8 +79,8 @@ public:
         DebugWireframe = 0x02
     };
 
-    Q_QUICKSHAPES_EXPORT static int debugVisualization();
-    Q_QUICKSHAPES_EXPORT static void setDebugVisualization(int options);
+    static int debugVisualization();
+    static void setDebugVisualization(int options);
 
 private:
     struct PathData {

@@ -316,8 +316,9 @@ JsFile::JsFile(
     }
 
     auto astComments = std::make_shared<AstComments>(m_engine);
-    AstComments::collectComments(m_engine, parser.rootNode(), astComments, MutableDomItem(),
-                                 nullptr);
+
+    CommentCollector collector;
+    collector.collectComments(m_engine, parser.rootNode(), astComments);
     m_script = std::make_shared<ScriptExpression>(code, m_engine, parser.rootNode(), astComments,
                                                   ScriptExpression::ExpressionType::Code);
 }

@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qbaselinetest.h>
 
@@ -32,6 +32,7 @@ public:
 
 private Q_SLOTS:
     void initTestCase();
+    void init();
     void cleanup();
 #ifdef TEXTLESS_TEST
     void testNoTextRendering_data();
@@ -102,6 +103,11 @@ void tst_Scenegraph::initTestCase()
         QSKIP(msg);
 }
 
+void tst_Scenegraph::init()
+{
+    // This gets called for every row. QSKIP if current item is blacklisted on the baseline server:
+    QBASELINE_SKIP_IF_BLACKLISTED;
+}
 
 void tst_Scenegraph::cleanup()
 {

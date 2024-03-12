@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -40,6 +40,7 @@ private slots:
     void localSignalHandler();
     void whenEvaluatedEarlyEnough();
     void propertiesAttachedToBindingItself();
+    void toggleEnableProperlyRemembersValues();
 
 private:
     QQmlEngine engine;
@@ -623,6 +624,30 @@ void tst_qqmlbinding::propertiesAttachedToBindingItself()
     // 0 => everything broken; 1 => normal attached properties broken;
     // 2 => Component.onCompleted broken, 3 => everything works
     QTRY_COMPARE(root->property("check").toInt(), 3);
+}
+
+void tst_qqmlbinding::toggleEnableProperlyRemembersValues()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("toggleEnableProperlyRemembersValues.qml"));
+    std::unique_ptr<QObject> root { c.create() };
+    QVERIFY2(root, qPrintable(c.errorString()));
+    for (int i = 0; i < 3; ++i) {
+        {
+            QJSManagedValue arr(root->property("arr"), &e);
+            QJSManagedValue func(root->property("func"), &e);
+            QCOMPARE(arr.property("length").toInt(), 2);
+            QCOMPARE(func.call().toInt(), 1);
+        }
+        root->setProperty("enabled", true);
+        {
+            QJSManagedValue arr(root->property("arr"), &e);
+            QJSManagedValue func(root->property("func"), &e);
+            QCOMPARE(arr.property("length").toInt(), 3);
+            QCOMPARE(func.call().toInt(), 2);
+        }
+        root->setProperty("enabled", false);
+    }
 }
 
 QTEST_MAIN(tst_qqmlbinding)

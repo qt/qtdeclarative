@@ -954,6 +954,7 @@ QQuickComboBox::QQuickComboBox(QQuickItem *parent)
 #endif
     Q_D(QQuickComboBox);
     d->setInputMethodHints(Qt::ImhNoPredictiveText, true);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
 }
 
 QQuickComboBox::~QQuickComboBox()

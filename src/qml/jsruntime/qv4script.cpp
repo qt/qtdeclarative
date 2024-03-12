@@ -26,14 +26,15 @@ using namespace QQmlJS;
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, const QQmlRefPointer<ExecutableCompilationUnit> &compilationUnit)
     : line(1), column(0), context(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
-    , compilationUnit(compilationUnit), vmFunction(nullptr), parseAsBinding(true)
+    , compilationUnit(compilationUnit), parseAsBinding(true)
 {
     if (qml)
         qmlContext.set(v4, *qml);
 
     parsed = true;
 
-    vmFunction = compilationUnit ? compilationUnit->rootFunction() : nullptr;
+    vmFunction.set(v4,
+                   compilationUnit ? compilationUnit->rootFunction() : nullptr);
 }
 
 Script::~Script()
@@ -95,7 +96,7 @@ void Script::parse()
             return;
 
         compilationUnit = v4->insertCompilationUnit(cg.generateCompilationUnit());
-        vmFunction = compilationUnit->rootFunction();
+        vmFunction.set(v4, compilationUnit->rootFunction());
     }
 
     if (!vmFunction) {

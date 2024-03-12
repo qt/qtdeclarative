@@ -1,23 +1,49 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include <QtCore/qscopeguard.h>
-#include <QtTest/QtTest>
-#include <QQmlApplicationEngine>
-#include <QQmlAbstractUrlInterceptor>
+#include <private/qmlutils_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlimport_p.h>
+
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
-#include <private/qqmlimport_p.h>
-#include <private/qqmlengine_p.h>
-#include <QtQuickTestUtils/private/qmlutils_p.h>
-#include <QQmlComponent>
+
+#include <QtTest/qsignalspy.h>
+
+#include <QtQml/qqmlabstracturlinterceptor.h>
+#include <QtQml/qqmlapplicationengine.h>
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlmoduleregistration.h>
+
+#include <QtCore/qscopeguard.h>
+#include <QtCore/qlibraryinfo.h>
+
+class TheThing : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int width MEMBER m_width FINAL)
+
+public:
+    int m_width = 12;
+};
+
+void qml_register_types_noimport()
+{
+    qmlRegisterTypesAndRevisions<TheThing>("noimport", 1);
+    qmlRegisterModule("noimport", 1, 0);
+}
 
 class tst_QQmlImport : public QQmlDataTest
 {
     Q_OBJECT
 
 public:
-    tst_QQmlImport();
+    tst_QQmlImport()
+        : QQmlDataTest(QT_QMLTEST_DATADIR)
+        , noimportRegistration("noimport", qml_register_types_noimport)
+    {
+    }
 
 private slots:
     void importPathOrder();
@@ -40,6 +66,10 @@ private slots:
     void implicitWithDependencies();
     void qualifiedScriptImport();
     void invalidImportUrl();
+    void registerTypesFromImplicitImport();
+
+private:
+    QQmlModuleRegistration noimportRegistration;
 };
 
 void tst_QQmlImport::cleanup()
@@ -150,6 +180,18 @@ void tst_QQmlImport::invalidImportUrl()
                     ":2 Cannot resolve URL for import \"file://./MyModuleName\"\n"));
 }
 
+void tst_QQmlImport::registerTypesFromImplicitImport()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("noimport/Main.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    TheThing *t = qobject_cast<TheThing *>(o.data());
+    QVERIFY(t);
+    QCOMPARE(t->m_width, 640);
+}
+
 void tst_QQmlImport::testDesignerSupported()
 {
     std::unique_ptr<QQuickView> window = std::make_unique<QQuickView>();
@@ -217,11 +259,6 @@ void tst_QQmlImport::uiFormatLoading()
     QCOMPARE(test->rootObjects().size(), ++size);
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
-}
-
-tst_QQmlImport::tst_QQmlImport()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
-{
 }
 
 void tst_QQmlImport::importPathOrder()

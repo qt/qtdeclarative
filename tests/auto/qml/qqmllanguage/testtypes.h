@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #ifndef TESTTYPES_H
 #define TESTTYPES_H
 
@@ -2767,6 +2767,44 @@ public:
     static CounterAttachedBaseType *qmlAttachedProperties(QObject *o)
     {
         return new CounterAttachedType(o);
+    }
+};
+
+
+class Singleton: public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(EnumType enumProperty READ enumProperty CONSTANT)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+    QML_ELEMENT
+    QML_SINGLETON
+public:
+    explicit Singleton(QObject* parent = nullptr) : QObject(parent) {}
+    enum class EnumType {
+        EnumValue1,
+        EnumValue2
+    };
+    Q_ENUM(EnumType);
+    EnumType enumProperty() const {
+        return EnumType::EnumValue2;
+    }
+};
+
+class NonSingleton: public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(EnumType enumProperty READ enumProperty CONSTANT)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+    QML_ELEMENT
+public:
+    explicit NonSingleton(QObject* parent = nullptr) : QObject(parent) {}
+    enum class EnumType {
+        EnumValue1,
+        EnumValue2
+    };
+    Q_ENUM(EnumType);
+    EnumType enumProperty() const {
+        return EnumType::EnumValue2;
     }
 };
 

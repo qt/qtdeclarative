@@ -141,6 +141,7 @@ Page {
                 enabled: newProjectTextField.length > 0
 
                 Layout.alignment: Qt.AlignHCenter
+                Layout.fillWidth: false
 
                 onClicked: {
                     let results = Database.newProject(newProjectTextField.text)

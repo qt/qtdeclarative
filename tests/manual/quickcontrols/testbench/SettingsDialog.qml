@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -120,6 +120,7 @@ Ui.Dialog {
             GroupBox {
                 title: qsTr("General")
                 Layout.fillWidth: true
+                Layout.fillHeight: false
 
                 GridLayout {
                     columns: 2
@@ -161,6 +162,7 @@ Ui.Dialog {
                 title: qsTr("Imagine Style")
                 visible: usingImagineStyle
                 Layout.fillWidth: true
+                Layout.fillHeight: false
                 Layout.columnSpan: 2
 
                 GridLayout {
@@ -173,6 +175,7 @@ Ui.Dialog {
                         enabled: usingImagineStyle
 
                         Layout.columnSpan: 2
+                        Layout.fillWidth: false
                     }
 
                     Label {
@@ -217,6 +220,7 @@ Ui.Dialog {
                         enabled: usingImagineStyle && customImagineStyleCheckBox.checked
 
                         Layout.columnSpan: 2
+                        Layout.fillWidth: false
 
                         ToolTip {
                             text: "If set, custom Imagine style assets will be modified to be compliant whenever they have changed on disk"
@@ -231,6 +235,7 @@ Ui.Dialog {
             GroupBox {
                 title: qsTr("Palette")
                 Layout.fillWidth: true
+                Layout.fillHeight: false
 
                 GridLayout {
                     columns: 2
@@ -239,6 +244,7 @@ Ui.Dialog {
                     CheckBox {
                         id: useCustomPaletteCheckBox
                         text: qsTr("Use Custom Palette")
+                        Layout.fillWidth: false
                     }
 
                     ColorEditor {
@@ -376,6 +382,7 @@ Ui.Dialog {
 
                         Layout.columnSpan: 2
                         Layout.alignment: Qt.AlignRight
+                        Layout.fillWidth: false
                     }
                 }
             }

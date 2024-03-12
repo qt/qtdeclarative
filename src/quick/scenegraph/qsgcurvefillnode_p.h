@@ -197,6 +197,12 @@ public:
 
     void cookGeometry() override;
 
+    void reserve(qsizetype size)
+    {
+        m_uncookedIndexes.reserve(size);
+        m_uncookedVertexes.reserve(size);
+    }
+
 private:
     struct CurveNodeVertex
     {

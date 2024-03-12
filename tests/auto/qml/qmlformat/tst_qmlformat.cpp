@@ -1,5 +1,5 @@
 // Copyright (C) 2019 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QDir>
@@ -144,6 +144,7 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qmlls/utils/data/completions/afterDots.qml";
     m_invalidFiles << "tests/auto/qmlls/modules/data/completions/bindingAfterDot.qml";
     m_invalidFiles << "tests/auto/qmlls/modules/data/completions/defaultBindingAfterDot.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/qualifiedModule.qml";
 
     // Files that get changed:
     // rewrite of import "bla/bla/.." to import "bla"

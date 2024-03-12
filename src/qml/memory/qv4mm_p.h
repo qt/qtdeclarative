@@ -38,7 +38,12 @@ enum GCState {
     MarkWeakValues,
     MarkDrain,
     MarkReady,
-    Sweep,
+    InitCallDestroyObjects,
+    CallDestroyObjects,
+    FreeWeakMaps,
+    FreeWeakSets,
+    HandleQObjectWrappers,
+    DoSweep,
     Invalid,
     Count,
 };
@@ -174,6 +179,9 @@ public:
     MemoryManager(ExecutionEngine *engine);
     ~MemoryManager();
 
+    template <typename ToBeMarked>
+    friend struct  GCCriticalSection;
+
     // TODO: this is only for 64bit (and x86 with SSE/AVX), so exend it for other architectures to be slightly more efficient (meaning, align on 8-byte boundaries).
     // Note: all occurrences of "16" in alloc/dealloc are also due to the alignment.
     constexpr static inline std::size_t align(std::size_t size)
@@ -305,6 +313,7 @@ public:
     }
 
     void runGC();
+    bool tryForceGCCompletion();
 
     void dumpStats() const;
 
@@ -316,16 +325,13 @@ public:
     // and InternalClassDataPrivate<PropertyAttributes>.
     void changeUnmanagedHeapSizeUsage(qptrdiff delta) { unmanagedHeapSize += delta; }
 
+    // called at the end of a gc cycle
+    void updateUnmanagedHeapSizeGCLimit();
+
     template<typename ManagedType>
     typename ManagedType::Data *allocIC()
     {
         Heap::Base *b = *allocate(&icAllocator, align(sizeof(typename ManagedType::Data)));
-        if (m_markStack) {
-            // If the gc is running right now, it will not have a chance to mark the newly created item
-            // and may therefore sweep it right away.
-            // Protect the new object from the current GC run to avoid this.
-            b->setMarkBit();
-        }
         return static_cast<typename ManagedType::Data *>(b);
     }
 
@@ -352,14 +358,21 @@ private:
 public:
     void collectFromJSStack(MarkStack *markStack) const;
     void sweep(bool lastSweep = false, ClassDestroyStatsCallback classCountPtr = nullptr);
+    void cleanupDeletedQObjectWrappersInSweep();
+    bool isAboveUnmanagedHeapLimit()
+    {
+        const bool incrementalGCIsAlreadyRunning = m_markStack != nullptr;
+        const bool aboveUnmanagedHeapLimit = incrementalGCIsAlreadyRunning
+                ? unmanagedHeapSize > 3 * unmanagedHeapSizeGCLimit / 2
+                : unmanagedHeapSize > unmanagedHeapSizeGCLimit;
+        return aboveUnmanagedHeapLimit;
+    }
 private:
     bool shouldRunGC() const;
 
     HeapItem *allocate(BlockAllocator *allocator, std::size_t size)
     {
-        // We must not call runGC if incremental gc is running
-        // so temporarily set gcBlocked in that case, too
-        QBoolBlocker block(gcBlocked, m_markStack != nullptr || gcBlocked);
+        const bool incrementalGCIsAlreadyRunning = m_markStack != nullptr;
 
         bool didGCRun = false;
         if (aggressiveGC) {
@@ -367,19 +380,9 @@ private:
             didGCRun = true;
         }
 
-        if (unmanagedHeapSize > unmanagedHeapSizeGCLimit) {
+        if (isAboveUnmanagedHeapLimit()) {
             if (!didGCRun)
-                runGC();
-
-            if (3*unmanagedHeapSizeGCLimit <= 4 * unmanagedHeapSize) {
-                // more than 75% full, raise limit
-                unmanagedHeapSizeGCLimit = std::max(unmanagedHeapSizeGCLimit,
-                                                    unmanagedHeapSize) * 2;
-            } else if (unmanagedHeapSize * 4 <= unmanagedHeapSizeGCLimit) {
-                // less than 25% full, lower limit
-                unmanagedHeapSizeGCLimit = qMax(std::size_t(MinUnmanagedHeapSizeGCLimit),
-                                                unmanagedHeapSizeGCLimit/2);
-            }
+                incrementalGCIsAlreadyRunning ? (void) tryForceGCCompletion() : runGC();
             didGCRun = true;
         }
 
@@ -414,7 +417,8 @@ public:
     std::size_t unmanagedHeapSizeGCLimit;
     std::size_t usedSlotsAfterLastFullSweep = 0;
 
-    bool gcBlocked = false;
+    enum Blockness : quint8 {Unblocked, NormalBlocked, InCriticalSection };
+    Blockness gcBlocked = Unblocked;
     bool aggressiveGC = false;
     bool gcStats = false;
     bool gcCollectorStats = false;
@@ -428,6 +432,51 @@ public:
         size_t maxUsedMem = 0;
         uint allocations[BlockAllocator::NumBins];
     } statistics;
+};
+
+/*!
+    \internal
+    GCCriticalSection prevets the gc from running, until it is destructed.
+    In its dtor, it runs a check whether we've reached the unmanaegd heap limit,
+    and triggers a gc run if necessary.
+    Lastly, it can optionally mark an object passed to it before runnig the gc.
+ */
+template <typename ToBeMarked = void>
+struct GCCriticalSection {
+    Q_DISABLE_COPY_MOVE(GCCriticalSection)
+
+    Q_NODISCARD_CTOR GCCriticalSection(QV4::ExecutionEngine *engine, ToBeMarked *toBeMarked = nullptr)
+        : m_engine(engine)
+          , m_oldState(std::exchange(engine->memoryManager->gcBlocked, MemoryManager::InCriticalSection))
+          , m_toBeMarked(toBeMarked)
+    {
+        // disallow nested critical sections
+        Q_ASSERT(m_oldState != MemoryManager::InCriticalSection);
+    }
+    ~GCCriticalSection()
+    {
+        m_engine->memoryManager->gcBlocked = m_oldState;
+        if (m_oldState != MemoryManager::Unblocked)
+            if constexpr (!std::is_same_v<ToBeMarked, void>)
+                if (m_toBeMarked)
+                    m_toBeMarked->markObjects(m_engine->memoryManager->markStack());
+        /* because we blocked the gc, we might be using too much memoryon the unmanaged heap
+           and did not run the normal fixup logic. So recheck again, and trigger a gc run
+           if necessary*/
+        if (!m_engine->memoryManager->isAboveUnmanagedHeapLimit())
+            return;
+        if (!m_engine->isGCOngoing) {
+            m_engine->memoryManager->runGC();
+        } else {
+            [[maybe_unused]] bool gcFinished = m_engine->memoryManager->tryForceGCCompletion();
+            Q_ASSERT(gcFinished);
+        }
+    }
+
+private:
+    QV4::ExecutionEngine *m_engine;
+    MemoryManager::Blockness m_oldState;
+    ToBeMarked *m_toBeMarked;
 };
 
 }

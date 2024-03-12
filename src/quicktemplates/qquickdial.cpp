@@ -372,6 +372,8 @@ QQuickDial::QQuickDial(QQuickItem *parent)
 #if QT_CONFIG(cursor)
     setCursor(Qt::ArrowCursor);
 #endif
+    Q_D(QQuickDial);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
 }
 
 /*!

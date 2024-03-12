@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -22,6 +22,7 @@ ColumnLayout {
             title: qsTr("Dialog properties")
 
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             GridLayout {
                 columns: 2
@@ -43,17 +44,20 @@ ColumnLayout {
 
                     RadioButton {
                         text: qsTr("Qt.NonModal")
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.NonModal
                     }
                     RadioButton {
                         text: qsTr("Qt.WindowModal")
                         checked: true
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.WindowModal
                     }
                     RadioButton {
                         text: qsTr("Qt.ApplicationModal")
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.ApplicationModal
                     }
@@ -67,6 +71,7 @@ ColumnLayout {
                     text: fileDialog.result === 1 ? qsTr("Accepted") : qsTr("Rejected")
                     readOnly: true
                     enabled: false
+                    Layout.fillWidth: false
                 }
 
                 Label {
@@ -75,6 +80,7 @@ ColumnLayout {
                 TextField {
                     id: titleTextField
                     text: qsTr("Choose a file")
+                    Layout.fillWidth: false
                 }
             }
         }
@@ -83,6 +89,7 @@ ColumnLayout {
             title: qsTr("FileDialog properties")
 
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             GridLayout {
                 columns: 2
@@ -97,6 +104,7 @@ ColumnLayout {
                 TextField {
                     id: acceptLabelTextField
                     text: qsTr("OK")
+                    Layout.fillWidth: false
                 }
 
                 Label {
@@ -145,24 +153,28 @@ ColumnLayout {
                     CheckBox {
                         id: dontResolveSymlinksCheckBox
                         text: qsTr("DontResolveSymlinks")
+                        Layout.fillWidth: false
 
                         readonly property int fileOption: checked ? FileDialog.DontResolveSymlinks : 0
                     }
                     CheckBox {
                         id: dontConfirmOverwriteCheckBox
                         text: qsTr("DontConfirmOverwrite")
+                        Layout.fillWidth: false
 
                         readonly property int fileOption: checked ? FileDialog.DontConfirmOverwrite : 0
                     }
                     CheckBox {
                         id: readOnlyCheckBox
                         text: qsTr("ReadOnly")
+                        Layout.fillWidth: false
 
                         readonly property int fileOption: checked ? FileDialog.ReadOnly : 0
                     }
                     CheckBox {
                         id: hideNameFilterDetailsCheckBox
                         text: qsTr("HideNameFilterDetails")
+                        Layout.fillWidth: false
 
                         readonly property int fileOption: checked ? FileDialog.HideNameFilterDetails : 0
                     }
@@ -182,17 +194,20 @@ ColumnLayout {
 
                     RadioButton {
                         text: qsTr("OpenFile")
+                        Layout.fillWidth: false
 
                         readonly property int fileMode: FileDialog.OpenFile
                     }
                     RadioButton {
                         text: qsTr("OpenFiles")
                         checked: true
+                        Layout.fillWidth: false
 
                         readonly property int fileMode: FileDialog.OpenFiles
                     }
                     RadioButton {
                         text: qsTr("SaveFile")
+                        Layout.fillWidth: false
 
                         readonly property int fileMode: FileDialog.SaveFile
                     }
@@ -218,6 +233,7 @@ ColumnLayout {
                 TextField {
                     id: rejectLabelTextField
                     text: qsTr("Cancel")
+                    Layout.fillWidth: false
                 }
 
                 Label {

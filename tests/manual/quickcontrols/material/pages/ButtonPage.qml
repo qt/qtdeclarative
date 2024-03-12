@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
@@ -16,16 +16,19 @@ Page {
             id: textCheckBox
             text: "Text"
             checked: true
+            Layout.fillWidth: false
         }
 
         CheckBox {
             id: iconCheckBox
             text: "Icon"
+            Layout.fillWidth: false
         }
 
         CheckBox {
             id: disabledCheckBox
             text: "Disabled"
+            Layout.fillWidth: false
         }
 
         Item {

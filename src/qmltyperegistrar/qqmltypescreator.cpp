@@ -211,17 +211,22 @@ void QmlTypesCreator::writeType(const QCborMap &property, QLatin1StringView key)
 #else
         type = "double";
 #endif
-    } else if (type == "qint16") {
+    } else if (type == "int8_t") {
+        // TODO: What can we do with "char"? It's ambiguous.
+        type = "qint8";
+    } else if (type == "uchar" || type == "uint8_t") {
+        type = "quint8";
+    } else if (type == "qint16" || type == "int16_t") {
         type = "short";
-    } else if (type == "quint16") {
+    } else if (type == "quint16" || type == "uint16_t") {
         type = "ushort";
-    } else if (type == "qint32") {
+    } else if (type == "qint32" || type == "int32_t") {
         type = "int";
-    } else if (type == "quint32") {
+    } else if (type == "quint32" || type == "uint32_t") {
         type = "uint";
-    } else if (type == "qint64") {
+    } else if (type == "qint64" || type == "int64_t") {
         type = "qlonglong";
-    } else if (type == "quint64") {
+    } else if (type == "quint64" || type == "uint64_t") {
         type = "qulonglong";
     } else if (type == "QList<QObject*>") {
         type = "QObjectList";
@@ -336,7 +341,8 @@ void QmlTypesCreator::writeMethods(const QCborArray &methods, QLatin1StringView 
     }
 }
 
-void QmlTypesCreator::writeEnums(const QCborArray &enums)
+void QmlTypesCreator::writeEnums(
+        const QCborArray &enums, QmlTypesCreator::EnumClassesMode enumClassesMode)
 {
     for (const QCborValue &item : enums) {
         const QCborMap obj = item.toMap();
@@ -354,6 +360,13 @@ void QmlTypesCreator::writeEnums(const QCborArray &enums)
         auto isFlag = obj.find(MetatypesDotJson::S_IS_FLAG);
         if (isFlag != obj.end() && isFlag->toBool())
             m_qml.writeBooleanBinding(S_IS_FLAG, true);
+
+        if (enumClassesMode == EnumClassesMode::Scoped) {
+            const auto isClass = obj.find(MetatypesDotJson::S_IS_CLASS);
+            if (isClass != obj.end() && isClass->toBool())
+                m_qml.writeBooleanBinding(S_IS_SCOPED, true);
+        }
+
         writeType(obj, MetatypesDotJson::S_TYPE);
         m_qml.writeStringListBinding(S_VALUES, valueList);
         m_qml.writeEndObject();
@@ -420,7 +433,11 @@ void QmlTypesCreator::writeComponents()
         writeClassProperties(collector);
 
         if (const QCborMap &classDef = collector.resolvedClass; !classDef.isEmpty()) {
-            writeEnums(members(classDef, MetatypesDotJson::S_ENUMS, m_version));
+            writeEnums(
+                    members(classDef, MetatypesDotJson::S_ENUMS, m_version),
+                    collector.registerEnumClassesScoped
+                            ? EnumClassesMode::Scoped
+                            : EnumClassesMode::Unscoped);
 
             writeProperties(members(classDef, MetatypesDotJson::S_PROPERTIES, m_version));
 
@@ -447,7 +464,11 @@ void QmlTypesCreator::writeComponents()
             collector.collectLocalAnonymous(component, m_ownTypes, m_foreignTypes, m_version);
 
             writeClassProperties(collector);
-            writeEnums(members(component, MetatypesDotJson::S_ENUMS, m_version));
+            writeEnums(
+                    members(component, MetatypesDotJson::S_ENUMS, m_version),
+                    collector.registerEnumClassesScoped
+                            ? EnumClassesMode::Scoped
+                            : EnumClassesMode::Unscoped);
 
             writeProperties(members(component, MetatypesDotJson::S_PROPERTIES, m_version));
 

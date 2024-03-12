@@ -91,6 +91,12 @@ void Function::destroy()
     delete this;
 }
 
+void Function::mark(MarkStack *ms)
+{
+    if (internalClass)
+        internalClass->mark(ms);
+}
+
 static bool isSpecificType(const CompiledData::ParameterType &type)
 {
     return type.typeNameIndexOrCommonType()
@@ -100,7 +106,7 @@ static bool isSpecificType(const CompiledData::ParameterType &type)
 Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                    const CompiledData::Function *function,
                    const QQmlPrivate::AOTCompiledFunction *aotFunction)
-    : FunctionData(unit)
+    : FunctionData(engine, unit)
     , compiledFunction(function)
     , codeData(function->code())
     , jittedCode(nullptr)
@@ -124,7 +130,7 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         if (enforceJsTypes && !isSpecificType(formalsIndices[i].type))
             enforceJsTypes = false;
     }
-    internalClass = ic->d();
+    internalClass.set(engine, ic->d());
 
     nFormals = compiledFunction->nFormals;
 
@@ -216,22 +222,23 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
 
     }
 
-    internalClass = engine->internalClasses(EngineBase::Class_CallContext);
+    Scope scope(engine);
+    Scoped<InternalClass> ic(scope, engine->internalClasses(EngineBase::Class_CallContext));
 
     // first locals
     const quint32_le *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i) {
-        internalClass = internalClass->addMember(
+        ic = ic->addMember(
                 engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[localsIndices[i]]),
                 Attr_NotConfigurable);
     }
 
-    Scope scope(engine);
     ScopedString arg(scope);
     for (const QString &parameterName : parameterNames) {
         arg = engine->newIdentifier(parameterName);
-        internalClass = internalClass->addMember(arg->propertyKey(), Attr_NotConfigurable);
+        ic = ic->addMember(arg->propertyKey(), Attr_NotConfigurable);
     }
+    internalClass.set(engine, ic->d());
     nFormals = parameters.size();
 }
 
@@ -250,6 +257,11 @@ QQmlSourceLocation Function::sourceLocation() const
 {
     return QQmlSourceLocation(
             sourceFile(), compiledFunction->location.line(), compiledFunction->location.column());
+}
+
+FunctionData::FunctionData(EngineBase *engine, ExecutableCompilationUnit *compilationUnit_)
+{
+    compilationUnit.set(engine, compilationUnit_);
 }
 
 } // namespace QV4

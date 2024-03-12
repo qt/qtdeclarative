@@ -177,7 +177,7 @@ private:
 
 template<>
 struct SharedInternalClassDataPrivate<PropertyKey> {
-    SharedInternalClassDataPrivate(ExecutionEngine *e) : refcount(1), engine(e), data(nullptr) {}
+    SharedInternalClassDataPrivate(ExecutionEngine *e) : refcount(1), engine(e) {}
     SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other);
     SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other, uint pos, PropertyKey value);
     ~SharedInternalClassDataPrivate() {}
@@ -198,7 +198,7 @@ struct SharedInternalClassDataPrivate<PropertyKey> {
     int refcount = 1;
 private:
     ExecutionEngine *engine;
-    Heap::MemberData *data;
+    WriteBarrier::Pointer<Heap::MemberData> data;
 };
 
 template<typename StringOrSymbol>

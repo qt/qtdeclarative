@@ -312,7 +312,9 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(
             } else if (name == QLatin1String("isJavaScriptFunction")) {
                 metaMethod.setIsJavaScriptFunction(true);
             } else if (name == QLatin1String("isList")) {
-                // TODO: Theoretically this can happen. QQmlJSMetaMethod should store it.
+                auto metaReturnType = metaMethod.returnValue();
+                metaReturnType.setIsList(true);
+                metaMethod.setReturnValue(metaReturnType);
             } else if (name == QLatin1String("isPointer")) {
                 // TODO: We don't need this information. We can probably drop all isPointer members
                 //       once we make sure that the type information is always complete. The
@@ -425,13 +427,13 @@ void QQmlJSTypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJS
             metaEnum.setIsFlag(readBoolBinding(script));
         } else if (name == QLatin1String("values")) {
             readEnumValues(script, &metaEnum);
-        } else if (name == QLatin1String("scoped")) {
-            metaEnum.setScoped(readBoolBinding(script));
+        } else if (name == QLatin1String("isScoped")) {
+            metaEnum.setIsScoped(readBoolBinding(script));
         } else if (name == QLatin1String("type")) {
             metaEnum.setTypeName(readStringBinding(script));
         } else {
             addWarning(script->firstSourceLocation(),
-                       tr("Expected only name, alias, isFlag, values, scoped, or type."));
+                       tr("Expected only name, alias, isFlag, values, isScoped, or type."));
         }
     }
 

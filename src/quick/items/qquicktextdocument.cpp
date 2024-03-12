@@ -16,6 +16,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcTextDoc, "qt.quick.textdocument")
+
 using namespace Qt::StringLiterals;
 
 /*!
@@ -77,7 +79,7 @@ QQuickTextDocument::QQuickTextDocument(QQuickItem *parent)
     \value TextDocument.Loading     Reading from \l source has begun
     \value TextDocument.Loaded      Reading has successfully finished
     \value TextDocument.Saving      File writing has begun after save() or saveAs()
-    \value TextDocument.SaveDone    Writing has successfully finished
+    \value TextDocument.Saved       Writing has successfully finished
     \value TextDocument.ReadError   An error occurred while reading from \l source
     \value TextDocument.WriteError  An error occurred in save() or saveAs()
     \value TextDocument.NonLocalFileError saveAs() was called with a URL pointing
@@ -117,7 +119,23 @@ QQuickTextDocument::Status QQuickTextDocument::status() const
     return d->status;
 }
 
-void QQuickTextDocumentPrivate::setStatus(QQuickTextDocument::Status s)
+/*!
+    \qmlproperty string QtQuick::TextDocument::errorString
+    \readonly
+    \since 6.7
+
+    This property holds a human-readable string describing the error that
+    occurred during loading or saving, if any; otherwise, an empty string.
+
+    \sa status
+*/
+QString QQuickTextDocument::errorString() const
+{
+    Q_D(const QQuickTextDocument);
+    return d->errorString;
+}
+
+void QQuickTextDocumentPrivate::setStatus(QQuickTextDocument::Status s, const QString &err)
 {
     Q_Q(QQuickTextDocument);
     if (status == s)
@@ -125,6 +143,13 @@ void QQuickTextDocumentPrivate::setStatus(QQuickTextDocument::Status s)
 
     status = s;
     emit q->statusChanged();
+
+    if (errorString == err)
+        return;
+    errorString = err;
+    emit q->errorStringChanged();
+    if (!err.isEmpty())
+        qmlWarning(q) << err;
 }
 
 /*!
@@ -196,13 +221,19 @@ void QQuickTextDocument::setModified(bool modified)
 
 void QQuickTextDocumentPrivate::load()
 {
-    Q_Q(QQuickTextDocument);
+    auto *doc = editor->document();
+    if (!doc) {
+        setStatus(QQuickTextDocument::Status::ReadError,
+                  QQuickTextDocument::tr("Null document object: cannot load"));
+        return;
+    }
     const QQmlContext *context = qmlContext(editor);
     const QUrl &resolvedUrl = context ? context->resolvedUrl(url) : url;
     const QString filePath = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
-    if (QFile::exists(filePath)) {
+    QFile file(filePath);
+    if (file.exists()) {
 #if QT_CONFIG(mimetype)
-        mimeType = QMimeDatabase().mimeTypeForFile(filePath);
+        QMimeType mimeType = QMimeDatabase().mimeTypeForFile(filePath);
         const bool isHtml = mimeType.inherits("text/html"_L1);
         const bool isMarkdown = mimeType.inherits("text/markdown"_L1);
 #else
@@ -211,78 +242,103 @@ void QQuickTextDocumentPrivate::load()
         const bool isMarkdown = filePath.endsWith(".md"_L1, Qt::CaseInsensitive) ||
                 filePath.endsWith(".markdown"_L1, Qt::CaseInsensitive);
 #endif
-        QFile file(filePath);
+        if (isHtml)
+            detectedFormat = Qt::RichText;
+        else if (isMarkdown)
+            detectedFormat = Qt::MarkdownText;
+        else
+            detectedFormat = Qt::PlainText;
         if (file.open(QFile::ReadOnly | QFile::Text)) {
-            setStatus(QQuickTextDocument::Status::Loading);
+            setStatus(QQuickTextDocument::Status::Loading, {});
             QByteArray data = file.readAll();
-            if (auto *doc = editor->document()) {
-                doc->setBaseUrl(resolvedUrl.adjusted(QUrl::RemoveFilename));
+            doc->setBaseUrl(resolvedUrl.adjusted(QUrl::RemoveFilename));
+            const bool plainText = editor->textFormat() == QQuickTextEdit::PlainText;
 #if QT_CONFIG(textmarkdownreader)
-                if (isMarkdown) {
-                    doc->setMarkdown(QString::fromUtf8(data));
-                } else
+            if (!plainText && isMarkdown) {
+                doc->setMarkdown(QString::fromUtf8(data));
+            } else
 #endif
 #ifndef QT_NO_TEXTHTMLPARSER
-                if (isHtml) {
-                    // If a user loads an HTML file, remember the encoding.
-                    // If the user then calls save() later, the same encoding will be used.
-                    encoding = QStringConverter::encodingForHtml(data);
-                    if (encoding) {
-                        QStringDecoder decoder(*encoding);
-                        doc->setHtml(decoder(data));
-                    } else {
-                        // fall back to utf8
-                        doc->setHtml(QString::fromUtf8(data));
-                    }
-                } else
-#endif
-                {
-                    doc->setPlainText(QString::fromUtf8(data));
+            if (!plainText && isHtml) {
+                // If a user loads an HTML file, remember the encoding.
+                // If the user then calls save() later, the same encoding will be used.
+                encoding = QStringConverter::encodingForHtml(data);
+                if (encoding) {
+                    QStringDecoder decoder(*encoding);
+                    doc->setHtml(decoder(data));
+                } else {
+                    // fall back to utf8
+                    doc->setHtml(QString::fromUtf8(data));
                 }
-                setStatus(QQuickTextDocument::Status::Loaded);
-                doc->setModified(false);
+            } else
+#endif
+            {
+                doc->setPlainText(QString::fromUtf8(data));
             }
-        } else {
-            qmlWarning(q) << QQuickTextDocument::tr("Cannot load:") << file.errorString();
-            setStatus(QQuickTextDocument::Status::ReadError);
+            setStatus(QQuickTextDocument::Status::Loaded, {});
+            qCDebug(lcTextDoc) << editor << "loaded" << filePath
+                               << "as" << editor->textFormat() << "detected" << detectedFormat
+#if QT_CONFIG(mimetype)
+                               << "(file type" << mimeType << ')'
+#endif
+                    ;
+            doc->setModified(false);
+            return;
         }
+        setStatus(QQuickTextDocument::Status::ReadError,
+                  QQuickTextDocument::tr("Failed to read: %1").arg(file.errorString()));
+    } else {
+        setStatus(QQuickTextDocument::Status::ReadError,
+                  QQuickTextDocument::tr("%1 does not exist").arg(filePath));
     }
 }
 
 void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
 {
-    Q_Q(QQuickTextDocument);
     auto *doc = editor->document();
     if (!doc)
         return;
 
     const QString filePath = fileUrl.toLocalFile();
     const bool sameUrl = fileUrl == url;
+    if (!sameUrl) {
 #if QT_CONFIG(mimetype)
-    const auto type = (sameUrl ? mimeType : QMimeDatabase().mimeTypeForUrl(fileUrl));
-    const bool isHtml = type.inherits("text/html"_L1);
-    const bool isMarkdown = type.inherits("text/markdown"_L1);
+        const auto type = QMimeDatabase().mimeTypeForUrl(fileUrl);
+        if (type.inherits("text/html"_L1))
+            detectedFormat = Qt::RichText;
+        else if (type.inherits("text/markdown"_L1))
+            detectedFormat = Qt::MarkdownText;
+        else
+            detectedFormat = Qt::PlainText;
 #else
-    const bool isHtml = filePath.endsWith(".html"_L1, Qt::CaseInsensitive) ||
-            filePath.endsWith(".htm"_L1, Qt::CaseInsensitive);
-    const bool isMarkdown = filePath.endsWith(".md"_L1, Qt::CaseInsensitive) ||
-            filePath.endsWith(".markdown"_L1, Qt::CaseInsensitive);
+        if (filePath.endsWith(".html"_L1, Qt::CaseInsensitive) ||
+            filePath.endsWith(".htm"_L1, Qt::CaseInsensitive))
+            detectedFormat = Qt::RichText;
+        else if (filePath.endsWith(".md"_L1, Qt::CaseInsensitive) ||
+                 filePath.endsWith(".markdown"_L1, Qt::CaseInsensitive))
+            detectedFormat = Qt::MarkdownText;
+        else
+            detectedFormat = Qt::PlainText;
 #endif
+    }
     QFile file(filePath);
-    if (!file.open(QFile::WriteOnly | QFile::Truncate | (isHtml ? QFile::NotOpen : QFile::Text))) {
-        qmlWarning(q) << QQuickTextDocument::tr("Cannot save:") << file.errorString();
-        setStatus(QQuickTextDocument::Status::WriteError);
+    if (!file.open(QFile::WriteOnly | QFile::Truncate |
+                   (detectedFormat == Qt::RichText ? QFile::NotOpen : QFile::Text))) {
+        setStatus(QQuickTextDocument::Status::WriteError,
+                  QQuickTextDocument::tr("Cannot save: %1").arg(file.errorString()));
         return;
     }
-    setStatus(QQuickTextDocument::Status::Saving);
+    setStatus(QQuickTextDocument::Status::Saving, {});
     QByteArray raw;
+
+    switch (detectedFormat) {
 #if QT_CONFIG(textmarkdownwriter)
-    if (isMarkdown) {
+    case Qt::MarkdownText:
         raw = doc->toMarkdown().toUtf8();
-    } else
+        break;
 #endif
 #ifndef QT_NO_TEXTHTMLPARSER
-    if (isHtml) {
+    case Qt::RichText:
         if (sameUrl && encoding) {
             QStringEncoder enc(*encoding);
             raw = enc.encode(doc->toHtml());
@@ -290,15 +346,16 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
             // default to UTF-8 unless the user is saving the same file as previously loaded
             raw = doc->toHtml().toUtf8();
         }
-    } else
+        break;
 #endif
-    {
+    default:
         raw = doc->toPlainText().toUtf8();
+        break;
     }
 
     file.write(raw);
     file.close();
-    setStatus(QQuickTextDocument::Status::SaveDone);
+    setStatus(QQuickTextDocument::Status::Saved, {});
     doc->setModified(false);
 }
 
@@ -385,8 +442,8 @@ void QQuickTextDocument::saveAs(const QUrl &url)
 {
     Q_D(QQuickTextDocument);
     if (!url.isLocalFile()) {
-        qmlWarning(this) << QQuickTextDocument::tr("Can only save to local files");
-        d->setStatus(QQuickTextDocument::Status::NonLocalFileError);
+        d->setStatus(QQuickTextDocument::Status::NonLocalFileError,
+                     QQuickTextDocument::tr("Can only save to local files"));
         return;
     }
     d->writeTo(url);
@@ -443,13 +500,6 @@ QSizeF QQuickTextImageHandler::intrinsicSize(
     }
     return QSizeF();
 }
-
-/*!
-    \qmlsignal QtQuick::TextDocument::error(string message)
-
-    This signal is emitted when an error \a message (translated string) should
-    be presented to the user, for example with a MessageDialog.
-*/
 
 QT_END_NAMESPACE
 

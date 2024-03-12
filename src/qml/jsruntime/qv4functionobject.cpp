@@ -428,8 +428,8 @@ ReturnedValue FunctionPrototype::method_bind(const FunctionObject *b, const Valu
     }
 
     ScopedContext ctx(scope, target->scope());
-    Heap::BoundFunction *bound = BoundFunction::create(ctx, target, boundThis, boundArgs);
-    bound->setFunction(target->function());
+    Scoped<BoundFunction> bound(scope, BoundFunction::create(ctx, target, boundThis, boundArgs));
+    bound->d()->setFunction(target->function());
     return bound->asReturnedValue();
 }
 

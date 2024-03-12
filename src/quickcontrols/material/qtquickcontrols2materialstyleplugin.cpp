@@ -5,8 +5,6 @@
 #include "qquickmaterialtheme_p.h"
 
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
-#include <QtQuickControls2Impl/private/qquickpaddedrectangle_p.h>
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 

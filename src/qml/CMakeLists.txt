@@ -34,21 +34,23 @@ endif()
 set_source_files_properties(
         qml/qqmlcomponent.h qml/qqmlcomponent.cpp qml/qqmlcomponent_p.h
         qml/qqmlcomponentattached_p.h
+        qml/qqmlscriptstring.h qml/qqmlscriptstring_p.h qml/qqmlscriptstring.cpp
     PROPERTIES
         SKIP_AUTOMOC TRUE
 )
 
-# We want QQmlComponent and QQmlComponentAttached to be available as metatypes in the builtins,
-# but without depending on QtQml and without duplicating the metaobjects.
-qt_manual_moc(qqmlcomponent_moc_files
-    OUTPUT_MOC_JSON_FILES qqmlcomponent_json_list
+# We want QQmlComponent, QQmlComponentAttached, and QQmlScriptString to be available as metatypes in
+# the builtins, but without depending on QtQml and without duplicating the metaobjects.
+qt_manual_moc(extra_builtins_moc_files
+    OUTPUT_MOC_JSON_FILES extra_builtins_json_list
     qml/qqmlcomponent.h
     qml/qqmlcomponentattached_p.h
-    INCLUDE_DIRECTORY_TARGETS Qt::Qml
+    qml/qqmlscriptstring.h
+    TARGETS Qt6::Qml
 )
 
-# The moc files are included directly by qqmlcomponent.cpp
-set_source_files_properties(${qqmlcomponent_moc_files} PROPERTIES HEADER_FILE_ONLY ON)
+# The moc files are included directly by qqmlcomponent.cpp and qqmlscriptstring.cpp
+set_source_files_properties(${extra_builtins_moc_files} PROPERTIES HEADER_FILE_ONLY ON)
 
 qt_internal_add_module(QmlBuiltins
     STATIC
@@ -57,8 +59,8 @@ qt_internal_add_module(QmlBuiltins
         qqmlbuiltins_p.h
 )
 
-add_custom_target(QQmlComponentJson DEPENDS ${qqmlcomponent_json_list})
-add_custom_target(QQmlComponentMocs DEPENDS ${qqmlcomponent_moc_files})
+add_custom_target(ExtraBuiltinsJson DEPENDS ${extra_builtins_json_list})
+add_custom_target(ExtraBuiltinsMocs DEPENDS ${extra_builtins_moc_files})
 
 target_link_libraries(QmlBuiltins PRIVATE Qt::Core Qt::QmlIntegration)
 
@@ -504,7 +506,7 @@ target_include_directories(QmlBuiltins PRIVATE
 )
 
 set(builtins_typeregistration_args
-    MANUAL_MOC_JSON_FILES ${qqmlcomponent_json_list}
+    MANUAL_MOC_JSON_FILES ${extra_builtins_json_list}
     REGISTRATIONS_TARGET Qml
 )
 
@@ -514,7 +516,7 @@ if(qt_namespace)
 endif()
 
 _qt_internal_qml_type_registration(QmlBuiltins ${builtins_typeregistration_args})
-add_dependencies(QmlBuiltins QQmlComponentJson)
+add_dependencies(QmlBuiltins ExtraBuiltinsJson)
 
 _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
 add_custom_command(
@@ -559,7 +561,7 @@ qt_install(
     DESTINATION "${INSTALL_QMLDIR}"
 )
 
-add_dependencies(Qml QQmlComponentMocs)
+add_dependencies(Qml ExtraBuiltinsMocs)
 add_dependencies(Qml BuiltinsOutput)
 
 qt_update_ignore_pch_source(Qml "compat/removed_api.cpp")

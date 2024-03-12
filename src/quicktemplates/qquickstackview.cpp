@@ -384,6 +384,9 @@ QQuickStackView::QQuickStackView(QQuickItem *parent)
     : QQuickControl(*(new QQuickStackViewPrivate), parent)
 {
     setFlag(ItemIsFocusScope);
+
+    Q_D(QQuickStackView);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
 }
 
 QQuickStackView::~QQuickStackView()
@@ -931,8 +934,10 @@ void QQuickStackView::replace(QQmlV4Function *args)
     \since 6.7
 
     Pushes \a items onto the stack using an optional \a operation, and
-    optionally applies a set of properties on each element. Each element can be
-    an \l Item, \l Component, or \l [QML] url. Returns the item that became
+    optionally applies a set of properties on each element. \a items is an array
+    of elements. Each element can be
+    an \l Item, \l Component, or \l [QML] url and can be followed by an optional
+    properties argument (see below). Returns the item that became
     current (the last item).
 
     StackView creates an instance automatically if the pushed element is a
@@ -945,14 +950,14 @@ void QQuickStackView::replace(QQmlV4Function *args)
     stackView.push([item, rectComponent, Qt.resolvedUrl("MyItem.qml")])
 
     // With properties:
-    stackView.push([
+    stackView.pushItems([
         item, { "color": "red" },
         rectComponent, { "color": "green" },
         Qt.resolvedUrl("MyItem.qml"), { "color": "blue" }
     ])
 
     // With properties for only some items:
-    stackView.push([
+    stackView.pushItems([
         item, { "color": "yellow" },
         rectComponent
     ])

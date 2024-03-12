@@ -1,5 +1,5 @@
 // Copyright (C) 2019 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/qtest.h>
 #include <QtCore/qjsonobject.h>
@@ -35,6 +35,7 @@ private slots:
     void universalModelData();
     void typedModelData();
     void requiredModelData();
+    void overriddenModelData();
     void deleteRace();
     void persistedItemsStayInCache();
     void unknownContainersAsModel();
@@ -471,6 +472,35 @@ void tst_QQmlDelegateModel::requiredModelData()
         const QVariant a = delegate->property("a");
         QCOMPARE(a.metaType(), QMetaType::fromType<QString>());
         QCOMPARE(a.toString(), QLatin1String("a"));
+    }
+}
+
+void tst_QQmlDelegateModel::overriddenModelData()
+{
+    QTest::failOnWarning(QRegularExpression(
+            "Final member [^ ]+ is overridden in class [^\\.]+. The override won't be used."));
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("overriddenModelData.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel *>(o.data());
+    QVERIFY(delegateModel);
+
+    for (int i = 0; i < 3; ++i) {
+        delegateModel->setProperty("n", i);
+        QObject *delegate = delegateModel->object(0);
+        QVERIFY(delegate);
+
+        if (i == 1 || i == 2) {
+            // You can actually not override if the model is a QObject or a JavaScript array.
+            // Someone is certainly relying on this.
+            // We need to find a migration mechanism to fix it.
+            QCOMPARE(delegate->objectName(), QLatin1String(" 0 0  e 0"));
+        } else {
+            QCOMPARE(delegate->objectName(), QLatin1String("a b c d e f"));
+        }
     }
 }
 

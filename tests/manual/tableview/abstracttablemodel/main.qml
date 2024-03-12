@@ -1,5 +1,5 @@
 // Copyright (C) 2018 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Window
@@ -33,11 +33,14 @@ ApplicationWindow {
                 Layout.rightMargin: menu.menuMargin
                 Layout.leftMargin: menu.menuMargin
                 Layout.topMargin: menu.menuMargin
+                Layout.fillWidth: false
+                Layout.fillHeight: false
                 ColumnLayout {
                     CheckBox {
                         text: "Use Syncview"
                         checkable: true
                         checked: true
+                        Layout.fillWidth: false
                         onCheckedChanged: {
                             if (checked) {
                                 leftHeader.syncView = tableView
@@ -53,6 +56,7 @@ ApplicationWindow {
                         id: flickingMode
                         checkable: true
                         checked: false
+                        Layout.fillWidth: false
                         text: "Interactive"
                     }
 
@@ -60,6 +64,7 @@ ApplicationWindow {
                         id: indexNavigation
                         checkable: true
                         checked: true
+                        Layout.fillWidth: false
                         text: "Enable navigation"
                     }
 
@@ -67,6 +72,7 @@ ApplicationWindow {
                         id: resizableRowsEnabled
                         checkable: true
                         checked: false
+                        Layout.fillWidth: false
                         text: "Resizable rows"
                     }
 
@@ -74,6 +80,7 @@ ApplicationWindow {
                         id: resizableColumnsEnabled
                         checkable: true
                         checked: false
+                        Layout.fillWidth: false
                         text: "Resizable columns"
                     }
 
@@ -81,6 +88,7 @@ ApplicationWindow {
                         id: enableAnimation
                         checkable: true
                         checked: true
+                        Layout.fillWidth: false
                         text: "Enable animation"
                     }
 
@@ -88,6 +96,7 @@ ApplicationWindow {
                         id: drawText
                         checkable: true
                         checked: true
+                        Layout.fillWidth: false
                         text: "Draw text"
                     }
 
@@ -95,6 +104,7 @@ ApplicationWindow {
                         id: useRandomColor
                         checkable: true
                         checked: false
+                        Layout.fillWidth: false
                         text: "Use colors"
                     }
 
@@ -103,6 +113,7 @@ ApplicationWindow {
                         checkable: true
                         checked: false
                         text: "Use large cells"
+                        Layout.fillWidth: false
                         onCheckedChanged: Qt.callLater(tableView.forceLayout)
                     }
 
@@ -110,6 +121,7 @@ ApplicationWindow {
                         id: useSubRect
                         checkable: true
                         checked: false
+                        Layout.fillWidth: false
                         text: "Use subRect"
                     }
 
@@ -117,6 +129,7 @@ ApplicationWindow {
                         id: useOffset
                         checkable: true
                         checked: false
+                        Layout.fillWidth: false
                         text: "Use offset"
                     }
 
@@ -124,6 +137,7 @@ ApplicationWindow {
                         id: highlightCurrentRow
                         checkable: true
                         checked: false
+                        Layout.fillWidth: false
                         text: "Highlight row/col"
                     }
 
@@ -132,6 +146,7 @@ ApplicationWindow {
                         checkable: true
                         checked: tableView.interactive
                         text: "Show selection handles"
+                        Layout.fillWidth: false
                     }
 
                     ComboBox {
@@ -143,6 +158,7 @@ ApplicationWindow {
                             "SelectRows",
                             "SelectColumns",
                         ]
+                        Layout.fillWidth: false
                     }
 
                     ComboBox {
@@ -156,6 +172,7 @@ ApplicationWindow {
                             { text: "ContiguousSelection", value: TableView.ContiguousSelection },
                             { text: "ExtendedSelection", value: TableView.ExtendedSelection }
                         ]
+                        Layout.fillWidth: false
                     }
 
                     ComboBox {
@@ -166,6 +183,7 @@ ApplicationWindow {
                             "Drag",
                             "PressAndHold",
                         ]
+                        Layout.fillWidth: false
                     }
                     ComboBox {
                         id: editCombo
@@ -178,6 +196,7 @@ ApplicationWindow {
                             "EditKeyPressed",
                             "AnyKeyPressed",
                         ]
+                        Layout.fillWidth: false
                     }
                 }
             }
@@ -186,6 +205,8 @@ ApplicationWindow {
                 Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
                 Layout.rightMargin: menu.menuMargin
                 Layout.leftMargin: menu.menuMargin
+                Layout.fillWidth: false
+                Layout.fillHeight: false
                 GridLayout {
                     columns: 2
                     Label { text: "Model size:" }
@@ -195,6 +216,7 @@ ApplicationWindow {
                         to: 1000
                         value: 200
                         editable: true
+                        Layout.fillWidth: false
                     }
                     Label { text: "Spacing:" }
                     SpinBox {
@@ -203,6 +225,7 @@ ApplicationWindow {
                         to: 100
                         value: 1
                         editable: true
+                        Layout.fillWidth: false
                     }
                     Label { text: "Margins:" }
                     SpinBox {
@@ -211,6 +234,7 @@ ApplicationWindow {
                         to: 100
                         value: 0
                         editable: true
+                        Layout.fillWidth: false
                     }
                 }
             }
@@ -219,10 +243,13 @@ ApplicationWindow {
                 Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
                 Layout.rightMargin: menu.menuMargin
                 Layout.leftMargin: menu.menuMargin
+                Layout.fillWidth: false
+                Layout.fillHeight: false
                 RowLayout {
                     id: positionRow
                     Button {
                         text: "<<"
+                        Layout.fillWidth: false
                         onClicked: {
                             tableView.positionViewAtRow(0, Qt.AlignTop, -tableView.topMargin)
                             tableView.positionViewAtColumn(0, Qt.AlignLeft, -tableView.leftMargin)
@@ -231,6 +258,7 @@ ApplicationWindow {
 
                     Button {
                         text: ">>"
+                        Layout.fillWidth: false
                         onClicked: {
                             tableView.positionViewAtRow(tableView.rows - 1, Qt.AlignBottom, tableView.bottomMargin)
                             tableView.positionViewAtColumn(tableView.columns - 1, Qt.AlignRight, tableView.rightMargin)
@@ -243,34 +271,41 @@ ApplicationWindow {
                 Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
                 Layout.rightMargin: menu.menuMargin
                 Layout.leftMargin: menu.menuMargin
+                Layout.fillWidth: false
+                Layout.fillHeight: false
                 ColumnLayout {
                     Button {
                         text: "Add row"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: tableView.model.insertRows(currentIndex.row, 1)
                     }
 
                     Button {
                         text: "Remove row"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: tableView.model.removeRows(currentIndex.row, 1)
                     }
 
                     Button {
                         text: "Add column"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: tableView.model.insertColumns(currentIndex.column, 1)
                     }
 
                     Button {
                         text: "Remove column"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: tableView.model.removeColumns(currentIndex.column, 1)
                     }
 
                     Button {
                         text: "Hide column"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: {
                             hiddenColumn = currentIndex.column
                             tableView.forceLayout()
@@ -283,10 +318,13 @@ ApplicationWindow {
                 Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
                 Layout.rightMargin: menu.menuMargin
                 Layout.leftMargin: menu.menuMargin
+                Layout.fillWidth: false
+                Layout.fillHeight: false
                 ColumnLayout {
                     Button {
                         text: "Current to top-left"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: {
                             let cell = Qt.point(currentIndex.column, currentIndex.row)
                             tableView.positionViewAtCell(cell, Qt.AlignTop | Qt.AlignLeft, positionOffset, positionSubRect)
@@ -296,6 +334,7 @@ ApplicationWindow {
                     Button {
                         text: "Current to center"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: {
                             let cell = Qt.point(currentIndex.column, currentIndex.row)
                             tableView.positionViewAtCell(cell, Qt.AlignCenter, positionOffset, positionSubRect)
@@ -305,6 +344,7 @@ ApplicationWindow {
                     Button {
                         text: "Current to bottom-right"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: {
                             let cell = Qt.point(currentIndex.column, currentIndex.row)
                             tableView.positionViewAtCell(cell, Qt.AlignBottom | Qt.AlignRight, positionOffset, positionSubRect)
@@ -314,6 +354,7 @@ ApplicationWindow {
                     Button {
                         text: "Current to Visible"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: {
                             let cell = Qt.point(currentIndex.column, currentIndex.row)
                             tableView.positionViewAtCell(cell, TableView.Visible, positionOffset, positionSubRect)
@@ -323,6 +364,7 @@ ApplicationWindow {
                     Button {
                         text: "Current to Contain"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: {
                             let cell = Qt.point(currentIndex.column, currentIndex.row)
                             tableView.positionViewAtCell(cell, TableView.Contain, positionOffset, positionSubRect)
@@ -335,10 +377,13 @@ ApplicationWindow {
                 Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
                 Layout.rightMargin: menu.menuMargin
                 Layout.leftMargin: menu.menuMargin
+                Layout.fillWidth: false
+                Layout.fillHeight: false
                 ColumnLayout {
                     Button {
                         text: "Open editor"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: {
                             tableView.edit(currentIndex, true)
                         }
@@ -346,12 +391,14 @@ ApplicationWindow {
                     Button {
                         text: "Close editor"
                         enabled: currentIndex.valid
+                        Layout.fillWidth: false
                         onClicked: {
                             tableView.closeEditor()
                         }
                     }
                     Button {
                         text: "Set current index"
+                        Layout.fillWidth: false
                         onClicked: {
                             let index = tableView.modelIndex(1, 1);
                             tableView.selectionModel.setCurrentIndex(index, ItemSelectionModel.NoUpdate)
@@ -365,9 +412,12 @@ ApplicationWindow {
                 Layout.rightMargin: menu.menuMargin
                 Layout.leftMargin: menu.menuMargin
                 Layout.bottomMargin: menu.menuMargin
+                Layout.fillWidth: false
+                Layout.fillHeight: false
                 ColumnLayout {
                     Button {
                         text: "Fast-flick table"
+                        Layout.fillWidth: false
                         onClicked: {
                             tableView.contentX += tableView.width * 1.2
                         }
@@ -375,6 +425,7 @@ ApplicationWindow {
 
                     Button {
                         text: "Fast-flick headers"
+                        Layout.fillWidth: false
                         onClicked: {
                             topHeader.contentX += tableView.width * 1.2
                             leftHeader.contentY += tableView.height * 1.2
@@ -383,6 +434,7 @@ ApplicationWindow {
 
                     Button {
                         text: "ForceLayout()"
+                        Layout.fillWidth: false
                         onClicked: tableView.forceLayout()
                     }
                 }

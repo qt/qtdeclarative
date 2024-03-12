@@ -108,6 +108,9 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_qObjectListType = builtinTypes.type(u"QObjectList"_s).scope;
     assertExtension(m_qObjectListType, "Array"_L1);
 
+    m_qQmlScriptStringType = builtinTypes.type(u"QQmlScriptString"_s).scope;
+    Q_ASSERT(m_qQmlScriptStringType);
+
     m_functionType = builtinTypes.type(u"function"_s).scope;
     Q_ASSERT(m_functionType);
 
@@ -1098,7 +1101,7 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
 
     const auto enums = scope->ownEnumerations();
     for (const auto &enumeration : enums) {
-        if (enumeration.name() == name) {
+        if ((enumeration.isScoped() || enumeration.isQml()) && enumeration.name() == name) {
             *result = QQmlJSRegisterContent::create(
                     storedType(enumeration.type()), enumeration, QString(),
                     inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum
@@ -1107,7 +1110,7 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
             return true;
         }
 
-        if (enumeration.hasKey(name)) {
+        if (!enumeration.isScoped() && enumeration.hasKey(name)) {
             *result = QQmlJSRegisterContent::create(
                     storedType(enumeration.type()), enumeration, name,
                     inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum
@@ -1265,6 +1268,8 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (equals(from, m_varType) || equals(to, m_varType))
         return true;
     if (equals(from, m_jsValueType) || equals(to, m_jsValueType))
+        return true;
+    if (equals(to, m_qQmlScriptStringType))
         return true;
     if (isNumeric(from) && isNumeric(to))
         return true;

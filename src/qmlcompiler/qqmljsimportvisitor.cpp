@@ -465,6 +465,7 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     setAllBindings();
     processDefaultProperties();
     processPropertyTypes();
+    processMethodTypes();
     processPropertyBindings();
     processPropertyBindingObjects();
     checkRequiredProperties();
@@ -662,6 +663,39 @@ void QQmlJSImportVisitor::processPropertyTypes()
             m_logger->log(property.typeName()
                                   + QStringLiteral(" was not found. Did you add all import paths?"),
                           qmlImport, type.location);
+        }
+    }
+}
+
+void QQmlJSImportVisitor::processMethodTypes()
+{
+    for (const auto &type : m_pendingMethodTypes) {
+
+        for (auto [it, end] = type.scope->mutableOwnMethodsRange(type.methodName); it != end;
+             ++it) {
+            if (const auto returnType =
+                        QQmlJSScope::findType(it->returnTypeName(), m_rootScopeImports).scope) {
+                it->setReturnType({ returnType });
+            } else {
+                m_logger->log(u"\"%1\" was not found for the return type of method \"%2\"."_s.arg(
+                                      it->returnTypeName(), it->methodName()),
+                              qmlUnresolvedType, type.location);
+            }
+
+            for (auto [parameter, parameterEnd] = it->mutableParametersRange();
+                 parameter != parameterEnd; ++parameter) {
+                if (const auto parameterType =
+                            QQmlJSScope::findType(parameter->typeName(), m_rootScopeImports)
+                                    .scope) {
+                    parameter->setType({ parameterType });
+                } else {
+                    m_logger->log(
+                            u"\"%1\" was not found for the type of parameter \"%2\" in method \"%3\"."_s
+                                    .arg(parameter->typeName(), parameter->name(),
+                                         it->methodName()),
+                            qmlUnresolvedType, type.location);
+                }
+            }
         }
     }
 }
@@ -1238,6 +1272,7 @@ void QQmlJSImportVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr sc
                               qmlUnqualified, childScope->sourceLocation());
             }
             children.append(childScope->childScopes());
+            break;
         default:
             break;
         }
@@ -1491,6 +1526,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
             const QString &name = std::get<InlineComponentNameType>(m_currentRootName);
             m_currentScope->setIsInlineComponent(true);
             m_currentScope->setInlineComponentName(name);
+            m_currentScope->setModuleName(m_exportedRootScope->moduleName());
             m_rootScopeImports.setType(name, { m_currentScope, revision });
             m_nextIsInlineComponent = false;
         }
@@ -1686,6 +1722,7 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
 {
     using namespace QQmlJS::AST;
     auto name = fexpr->name.toString();
+    bool pending = false;
     if (!name.isEmpty()) {
         QQmlJSMetaMethod method(name);
         method.setMethodType(QQmlJSMetaMethodType::Method);
@@ -1712,6 +1749,15 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
                 }  else {
                     anyFormalTyped = true;
                     method.addParameter(QQmlJSMetaParameter(parameter.id, type));
+                    if (!pending) {
+                        m_pendingMethodTypes << PendingMethodType{
+                            m_currentScope,
+                            name,
+                            combine(parameter.typeAnnotation->firstSourceLocation(),
+                                    parameter.typeAnnotation->lastSourceLocation())
+                        };
+                        pending = true;
+                    }
                 }
             }
         }
@@ -1723,9 +1769,17 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
         // Methods with only untyped arguments return an untyped value.
         // Methods with at least one typed argument but no explicit return type return void.
         // In order to make a function without arguments return void, you have to specify that.
-        if (parseTypes && fexpr->typeAnnotation)
+        if (parseTypes && fexpr->typeAnnotation) {
             method.setReturnTypeName(fexpr->typeAnnotation->type->toString());
-        else if (anyFormalTyped)
+            if (!pending) {
+                m_pendingMethodTypes << PendingMethodType{
+                    m_currentScope, name,
+                    combine(fexpr->typeAnnotation->firstSourceLocation(),
+                            fexpr->typeAnnotation->lastSourceLocation())
+                };
+                pending = true;
+            }
+        } else if (anyFormalTyped)
             method.setReturnTypeName(QStringLiteral("void"));
         else
             method.setReturnTypeName(QStringLiteral("var"));
@@ -2203,6 +2257,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
                       uied->firstSourceLocation());
     }
     QQmlJSMetaEnum qmlEnum(uied->name.toString());
+    qmlEnum.setIsQml(true);
     for (const auto *member = uied->members; member; member = member->next) {
         qmlEnum.addKey(member->member.toString());
         qmlEnum.addValue(int(member->value));

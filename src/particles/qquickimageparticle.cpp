@@ -1856,6 +1856,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                 else
                     getShadowDatum(datum)->color = color;
             }
+            break;
         default:
             break;
     }

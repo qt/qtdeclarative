@@ -27,12 +27,12 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_EXPORT QQuickTapHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
-    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
-    Q_PROPERTY(int tapCount READ tapCount NOTIFY tapCountChanged FINAL)
-    Q_PROPERTY(qreal timeHeld READ timeHeld NOTIFY timeHeldChanged FINAL)
-    Q_PROPERTY(qreal longPressThreshold READ longPressThreshold WRITE setLongPressThreshold NOTIFY longPressThresholdChanged RESET resetLongPressThreshold FINAL)
-    Q_PROPERTY(GesturePolicy gesturePolicy READ gesturePolicy WRITE setGesturePolicy NOTIFY gesturePolicyChanged FINAL)
-    Q_PROPERTY(QQuickTapHandler::ExclusiveSignals exclusiveSignals READ exclusiveSignals WRITE setExclusiveSignals NOTIFY exclusiveSignalsChanged REVISION(6, 5) FINAL)
+    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged)
+    Q_PROPERTY(int tapCount READ tapCount NOTIFY tapCountChanged)
+    Q_PROPERTY(qreal timeHeld READ timeHeld NOTIFY timeHeldChanged)
+    Q_PROPERTY(qreal longPressThreshold READ longPressThreshold WRITE setLongPressThreshold NOTIFY longPressThresholdChanged RESET resetLongPressThreshold)
+    Q_PROPERTY(GesturePolicy gesturePolicy READ gesturePolicy WRITE setGesturePolicy NOTIFY gesturePolicyChanged)
+    Q_PROPERTY(QQuickTapHandler::ExclusiveSignals exclusiveSignals READ exclusiveSignals WRITE setExclusiveSignals NOTIFY exclusiveSignalsChanged REVISION(6, 5))
 
     QML_NAMED_ELEMENT(TapHandler)
     QML_ADDED_IN_VERSION(2, 12)

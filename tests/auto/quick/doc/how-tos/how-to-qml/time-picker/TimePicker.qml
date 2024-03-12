@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 //! [file]
 import QtQuick
@@ -157,22 +157,26 @@ Item {
                 // picker was already visible.
                 enabled: root.interactive
 
-                NumberAnimation {
-                    target: contentContainer
-                    property: "labelOpacity"
-                    from: 1
-                    to: 0
-                }
+                SequentialAnimation {
+                    NumberAnimation {
+                        target: contentContainer
+                        property: "labelOpacity"
+                        from: 1
+                        to: 0
+                        duration: 100
+                    }
 
-                ScriptAction {
-                    script: root.__effectiveMode = root.mode
-                }
+                    ScriptAction {
+                        script: root.__effectiveMode = root.mode
+                    }
 
-                NumberAnimation {
-                    target: contentContainer
-                    property: "labelOpacity"
-                    from: 0
-                    to: 1
+                    NumberAnimation {
+                        target: contentContainer
+                        property: "labelOpacity"
+                        from: 0
+                        to: 1
+                        duration: 100
+                    }
                 }
             },
             Transition {
@@ -273,6 +277,10 @@ Item {
                 rotation: -rotationTransform.angle
                 opacity: contentContainer.labelOpacity
                 anchors.centerIn: parent
+
+                // TODO: remove me - QTBUG-122679
+                Component.onCompleted: print("created", labelDelegate, "at index", index)
+                Component.onDestruction: print("destroyed", labelDelegate, "at index", index)
 
                 required property int index
                 // From 0 to 60.

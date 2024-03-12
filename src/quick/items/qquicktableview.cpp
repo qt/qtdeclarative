@@ -1236,7 +1236,7 @@
     modelIndex(cell.y, cell.x)
     \endcode
 
-    A cell is simply a \l point that combines row and column into
+    A \a cell is simply a \l point that combines row and column into
     a single type.
 
     \note \c {point.x} will map to the column, and \c {point.y} will map to the row.
@@ -5365,6 +5365,14 @@ QQuickTableView::QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent)
 
 QQuickTableView::~QQuickTableView()
 {
+    Q_D(QQuickTableView);
+
+    if (d->syncView) {
+        // Remove this TableView as a sync child from the syncView
+        auto syncView_d = d->syncView->d_func();
+        syncView_d->syncChildren.removeOne(this);
+        syncView_d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly);
+    }
 }
 
 void QQuickTableView::componentFinalized()

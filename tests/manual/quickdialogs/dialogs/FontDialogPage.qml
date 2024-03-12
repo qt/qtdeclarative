@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -22,6 +22,7 @@ ColumnLayout {
             title: qsTr("Dialog properties")
 
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             GridLayout {
                 columns: 2
@@ -43,17 +44,20 @@ ColumnLayout {
 
                     RadioButton {
                         text: qsTr("Qt.NonModal")
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.NonModal
                     }
                     RadioButton {
                         text: qsTr("Qt.WindowModal")
                         checked: true
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.WindowModal
                     }
                     RadioButton {
                         text: qsTr("Qt.ApplicationModal")
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.ApplicationModal
                     }
@@ -67,6 +71,7 @@ ColumnLayout {
                     text: fontDialog.result === 1 ? qsTr("Accepted") : qsTr("Rejected")
                     readOnly: true
                     enabled: false
+                    Layout.fillWidth: false
                 }
 
                 Label {
@@ -75,6 +80,7 @@ ColumnLayout {
                 TextField {
                     id: titleTextField
                     text: qsTr("Pick a font")
+                    Layout.fillWidth: false
                 }
             }
         }
@@ -83,6 +89,7 @@ ColumnLayout {
             title: qsTr("FontDialog properties")
 
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             GridLayout {
                 columns: 2
@@ -127,30 +134,35 @@ ColumnLayout {
                     CheckBox {
                         id: noButtons
                         text: qsTr("NoButtons")
+                        Layout.fillWidth: false
 
                         readonly property int fontOption: checked ? FontDialog.NoButtons : 0
                     }
                     CheckBox {
                         id: scalableFonts
                         text: qsTr("ScalableFonts")
+                        Layout.fillWidth: false
 
                         readonly property int fontOption: checked ? FontDialog.ScalableFonts : 0
                     }
                     CheckBox {
                         id: nonScalableFonts
                         text: qsTr("NonScalableFonts")
+                        Layout.fillWidth: false
 
                         readonly property int fontOption: checked ? FontDialog.NonScalableFonts : 0
                     }
                     CheckBox {
                         id: monospacedFonts
                         text: qsTr("MonospacedFonts")
+                        Layout.fillWidth: false
 
                         readonly property int fontOption: checked ? FontDialog.MonospacedFonts : 0
                     }
                     CheckBox {
                         id: proportionalFonts
                         text: qsTr("ProportionalFonts")
+                        Layout.fillWidth: false
 
                         readonly property int fontOption: checked ? FontDialog.ProportionalFonts : 0
                     }

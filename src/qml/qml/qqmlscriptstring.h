@@ -23,7 +23,6 @@ namespace QV4 {
 class Q_QML_EXPORT QQmlScriptString
 {
     Q_GADGET
-    QML_ANONYMOUS
 public:
     QQmlScriptString();
     QQmlScriptString(const QQmlScriptString &);

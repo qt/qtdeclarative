@@ -122,6 +122,9 @@ void FileLocations::updateFullLocation(const FileLocations::Tree &fLoc, SourceLo
     }
 }
 
+// Adding a new region to file location regions might break down qmlformat because
+// comments might be linked to new region undesirably. We might need to add an
+// exception to AstRangesVisitor::shouldSkipRegion when confronted those cases.
 void FileLocations::addRegion(const FileLocations::Tree &fLoc, FileLocationRegion region,
                               SourceLocation loc)
 {

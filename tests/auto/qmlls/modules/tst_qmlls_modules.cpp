@@ -1,5 +1,5 @@
 // Copyright (C) 2018 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "tst_qmlls_modules.h"
 #include "QtQmlLS/private/qqmllsutils_p.h"
@@ -418,6 +418,22 @@ void tst_qmlls_modules::automaticSemicolonInsertionForCompletions()
                     { u"good"_s, CompletionItemKind::Property },
             }),
             QStringList({ u"bad"_s, u"BuildDirType"_s, u"QtQuick"_s, u"width"_s, u"vector4d"_s })));
+}
+
+void tst_qmlls_modules::checkQuickSnippets()
+{
+    ignoreDiagnostics();
+    const auto uri = openFile(u"completions/Yyy.qml"_s);
+    QVERIFY(uri);
+
+    // if at least one snippet is there, then the pluginloading works. To test the plugin itself,
+    // add tests in tst_qmlls_utils instead.
+    QTEST_CHECKED(checkCompletions(
+            *uri, 4, 3,
+            ExpectedCompletions({
+                    { u"BorderImage snippet"_s, CompletionItemKind::Snippet },
+            }),
+            QStringList({})));
 }
 
 void tst_qmlls_modules::goToTypeDefinition_data()

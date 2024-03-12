@@ -72,6 +72,24 @@ inline bool contains(QAnyStringView whole, QLatin1Char part)
     return whole.visit([&](auto view) { return doesContain(view, part); });
 }
 
+inline qsizetype getLastIndexOf(QStringView whole, QLatin1StringView part)
+{
+    return whole.lastIndexOf(part);
+}
+inline qsizetype getLastIndexOf(QLatin1StringView whole, QLatin1StringView part)
+{
+    return whole.lastIndexOf(part);
+}
+inline qsizetype getLastIndexOf(QUtf8StringView whole, QLatin1StringView part)
+{
+    return QByteArrayView(whole.data(), whole.size()).lastIndexOf(part);
+}
+inline qsizetype lastIndexOf(QAnyStringView whole, QLatin1StringView part)
+{
+    Q_ASSERT(QtPrivate::isAscii(part));
+    return whole.visit([&](auto view) { return getLastIndexOf(view, part); });
+}
+
 inline int toInt(QUtf8StringView view)
 {
     return QByteArrayView(view.data(), view.length()).toInt();

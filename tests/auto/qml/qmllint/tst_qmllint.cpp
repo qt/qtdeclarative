@@ -1,6 +1,6 @@
 // Copyright (C) 2016 Klaralvdalens Datakonsult AB, a KDAB Group company, info@kdab.com, author Sergio Martins <sergio.martins@kdab.com>
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QProcess>
@@ -404,6 +404,21 @@ void TestQmllint::autoqmltypes()
     QVERIFY(process.readAllStandardError()
                 .contains("is not a qmldir file. Assuming qmltypes"));
     QVERIFY(process.readAllStandardOutput().isEmpty());
+
+    {
+        QProcess bare;
+        bare.setWorkingDirectory(testFile("autoqmltypes"));
+        bare.start(m_qmllintPath, { QStringLiteral("--bare"), QStringLiteral("test.qml") });
+        bare.waitForFinished();
+
+        const QByteArray errors = bare.readAllStandardError();
+        QVERIFY(!errors.contains("is not a qmldir file. Assuming qmltypes"));
+        QVERIFY(errors.contains("Failed to import TestTest."));
+        QVERIFY(bare.readAllStandardOutput().isEmpty());
+
+        QCOMPARE(bare.exitStatus(), QProcess::NormalExit);
+        QVERIFY(bare.exitCode() != 0);
+    }
 }
 
 void TestQmllint::resources()
@@ -797,6 +812,14 @@ singleTicks: ' \\' \\\\'
 expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                                   16, 27 } },
                         { Result::ExitsNormally, Result::AutoFixable } };
+    QTest::addRow("multifix")
+            << QStringLiteral("multifix.qml")
+            << Result { {
+                    Message { QStringLiteral("Unqualified access"), 7,  19, QtWarningMsg},
+                    Message { QStringLiteral("Unqualified access"), 11, 19, QtWarningMsg},
+                }, {}, {
+                    Message { QStringLiteral("pragma ComponentBehavior: Bound\n"), 1, 1 }
+                }, { Result::AutoFixable }};
     QTest::newRow("unresolvedType")
             << QStringLiteral("unresolvedType.qml")
             << Result { { Message { QStringLiteral(
@@ -1037,8 +1060,8 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("NotScopedEnumCpp")
             << QStringLiteral("NotScopedEnumCpp.qml")
             << Result{ { Message{
-                       QStringLiteral("You cannot access unscoped enum \"V1\" from here."), 5,
-                       57 } } };
+                       QStringLiteral("You cannot access unscoped enum \"TheEnum\" from here."), 5,
+                       49 } } };
 
     QTest::newRow("unresolvedArrayBinding")
             << QStringLiteral("unresolvedArrayBinding.qml")
@@ -1283,6 +1306,10 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("AddressableValue") << QStringLiteral("addressableValue.qml");
     QTest::newRow("WriteListProperty") << QStringLiteral("writeListProperty.qml");
     QTest::newRow("dontConfuseMemberPrintWithGlobalPrint") << QStringLiteral("findMemberPrint.qml");
+    QTest::newRow("groupedAttachedLayout") << QStringLiteral("groupedAttachedLayout.qml");
+    QTest::newRow("QQmlScriptString") << QStringLiteral("scriptstring.qml");
+    QTest::newRow("QEventPoint") << QStringLiteral("qEventPoint.qml");
+    QTest::newRow("locale") << QStringLiteral("locale.qml");
 }
 
 void TestQmllint::cleanQmlCode()

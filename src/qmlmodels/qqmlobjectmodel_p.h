@@ -32,7 +32,7 @@ class Q_QMLMODELS_EXPORT QQmlInstanceModel : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 

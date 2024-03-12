@@ -384,7 +384,7 @@ inline ReturnedValue coerce(
 
     if (void *target = QQmlValueTypeProvider::heapCreateValueType(qmlType, value)) {
         Heap::QQmlValueTypeWrapper *wrapper = engine->memoryManager->allocate<QQmlValueTypeWrapper>(
-                nullptr, metaType, QQmlMetaType::metaObjectForValueType(qmlType),
+                nullptr, metaType, qmlType.metaObjectForValueType(),
                 nullptr, -1, Heap::ReferenceObject::NoFlag);
         Q_ASSERT(!wrapper->gadgetPtr());
         wrapper->setGadgetPtr(target);

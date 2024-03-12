@@ -166,6 +166,7 @@ public:
     void evaluate();
     void evaluateModuleRequests();
 
+    void mark(MarkStack *markStack) const { markObjects(markStack); }
     void markObjects(MarkStack *markStack) const;
 
     QString bindingValueAsString(const CompiledData::Binding *binding) const;

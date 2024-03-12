@@ -53,6 +53,7 @@ static constexpr QLatin1StringView S_IS_LIST                      { "isList" };
 static constexpr QLatin1StringView S_IS_POINTER                   { "isPointer" };
 static constexpr QLatin1StringView S_IS_READONLY                  { "isReadonly" };
 static constexpr QLatin1StringView S_IS_REQUIRED                  { "isRequired" };
+static constexpr QLatin1StringView S_IS_SCOPED                    { "isScoped" };
 static constexpr QLatin1StringView S_IS_SINGLETON                 { "isSingleton" };
 static constexpr QLatin1StringView S_METHOD                       { "Method" };
 static constexpr QLatin1StringView S_MODULE                       { "Module" };
@@ -101,6 +102,7 @@ static constexpr QLatin1StringView S_IMMEDIATE_PROPERTY_NAMES     { "ImmediatePr
 static constexpr QLatin1StringView S_INDEX                        { "index" };
 static constexpr QLatin1StringView S_INPUT_FILE                   { "inputFile" };
 static constexpr QLatin1StringView S_INTERFACES                   { "interfaces" };
+static constexpr QLatin1StringView S_IS_CLASS                     { "isClass" };
 static constexpr QLatin1StringView S_IS_CLONED                    { "isCloned" };
 static constexpr QLatin1StringView S_IS_CONSTRUCTOR               { "isConstructor" };
 static constexpr QLatin1StringView S_IS_FLAG                      { "isFlag" };
@@ -119,6 +121,11 @@ static constexpr QLatin1StringView S_PROPERTY                     { "property" }
 static constexpr QLatin1StringView S_PUBLIC                       { "public" };
 static constexpr QLatin1StringView S_QUALIFIED_CLASS_NAME         { "qualifiedClassName" };
 static constexpr QLatin1StringView S_READ                         { "read" };
+
+static constexpr QLatin1StringView S_REGISTER_ENUM_CLASSES_UNSCOPED {
+    "RegisterEnumClassesUnscoped"
+};
+
 static constexpr QLatin1StringView S_REQUIRED                     { "required" };
 static constexpr QLatin1StringView S_RESET                        { "reset" };
 static constexpr QLatin1StringView S_RETURN_TYPE                  { "returnType" };

@@ -368,6 +368,7 @@ QQuickScrollBar::QQuickScrollBar(QQuickItem *parent)
     Q_D(QQuickScrollBar);
     d->decreaseVisual = new QQuickIndicatorButton(this);
     d->increaseVisual = new QQuickIndicatorButton(this);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
     setKeepMouseGrab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
 #if QT_CONFIG(quicktemplates2_multitouch)
@@ -571,6 +572,11 @@ void QQuickScrollBar::setOrientation(Qt::Orientation orientation)
     Q_D(QQuickScrollBar);
     if (d->orientation == orientation)
         return;
+
+    if (orientation == Qt::Horizontal)
+        d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
+    else
+        d->setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Preferred);
 
     d->orientation = orientation;
     if (isComponentComplete())

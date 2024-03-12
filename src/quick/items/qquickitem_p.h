@@ -44,6 +44,8 @@
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qpointer.h>
 
+#include <QtGui/private/qlayoutpolicy_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QNetworkReply;
@@ -708,6 +710,10 @@ public:
 
     virtual void updatePolish() { }
     virtual void dumpItemTree(int indent) const;
+
+    QLayoutPolicy sizePolicy() const;
+    void setSizePolicy(const QLayoutPolicy::Policy &horizontalPolicy, const QLayoutPolicy::Policy &verticalPolicy);
+    QLayoutPolicy szPolicy;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItemPrivate::ExtraDataTags)

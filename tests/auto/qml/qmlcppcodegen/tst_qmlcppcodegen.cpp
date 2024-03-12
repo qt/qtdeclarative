@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
@@ -76,6 +76,7 @@ private slots:
     void convertPrimitiveToVar();
     void convertQJSPrimitiveValueToIntegral();
     void convertToOriginalReadAcumulatorForUnaryOperators();
+    void cppMethodListReturnType();
     void cppValueTypeList();
     void dateConstruction();
     void dateConversions();
@@ -172,6 +173,8 @@ private slots:
     void nullAccess();
     void nullAccessInsideSignalHandler();
     void nullComparison();
+    void nullishCoalescing();
+    void nullishCoalescing_data();
     void numbersInJsPrimitive();
     void objectInVar();
     void objectLookupOnListElement();
@@ -200,8 +203,10 @@ private slots:
     void scopeIdLookup();
     void scopeObjectDestruction();
     void scopeVsObject();
+    void scopedEnum();
     void sequenceToIterable();
     void setLookupConversion();
+    void setLookupOriginalScope();
     void shadowedAsCasts();
     void shadowedMethod();
     void shadowedPrimitiveCmpEqNull();
@@ -222,6 +227,7 @@ private slots:
     void throwObjectName();
     void topLevelComponent();
     void translation();
+    void trigraphs();
     void trivialSignalHandler();
     void typePropagationLoop();
     void typePropertyClash();
@@ -1375,6 +1381,17 @@ void tst_QmlCppCodegen::convertToOriginalReadAcumulatorForUnaryOperators()
     QVERIFY(!o.isNull());
 }
 
+void tst_QmlCppCodegen::cppMethodListReturnType()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/CppMethodListReturnType.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("list").toList()[2].toInt(), 2);
+}
+
 void tst_QmlCppCodegen::cppValueTypeList()
 {
     QQmlEngine engine;
@@ -2107,7 +2124,6 @@ void tst_QmlCppCodegen::getOptionalLookup_data()
     // Value Types
     QTest::addRow("int on rect") << u"tv1"_s << QVariant(50);
     QTest::addRow("int on point") << u"tv2"_s << QVariant(-10);
-    QTest::addRow("int on variant as point") << u"tv3"_s << QVariant(5);
     QTest::addRow("int on undefined as point") << u"tv4"_s << QVariant(); // undefined
 
     // Enums
@@ -2119,12 +2135,8 @@ void tst_QmlCppCodegen::getOptionalLookup_data()
     // Complex chains
     QTest::addRow("mixed 1") << u"tc1"_s << QVariant(-10);
     QTest::addRow("mixed 2") << u"tc2"_s << QVariant(0);
-    QTest::addRow("mixed 3") << u"tc3"_s << QVariant(5);
     QTest::addRow("early out 1") << u"tc4"_s << QVariant(); // undefined
     QTest::addRow("early out 2") << u"tc5"_s << QVariant(); // undefined
-    QTest::addRow("early out 3") << u"tc6"_s << QVariant(); // undefined
-    QTest::addRow("complex2") << u"tc7"_s << QVariant(); // undefined
-    QTest::addRow("complex3") << u"tc8"_s << QVariant(2);
 }
 
 void tst_QmlCppCodegen::getOptionalLookup()
@@ -3456,6 +3468,54 @@ void tst_QmlCppCodegen::nullComparison()
     QCOMPARE(o->property("z").toInt(), 18);
 }
 
+void tst_QmlCppCodegen::nullishCoalescing_data()
+{
+    QTest::addColumn<QString>("propertyName");
+    QTest::addColumn<QVariant>("expected");
+
+    const auto undefinedValue = QVariant();
+    const auto nullValue = QVariant::fromMetaType(QMetaType::fromType<std::nullptr_t>(), nullptr);
+
+    QTest::addRow("trivial-good-int") << "p1" << QVariant(5);
+    QTest::addRow("trivial-good-string") << "p2" << QVariant("6");
+
+    QTest::addRow("trivial-bad-undefined-undefined") << "p3" << undefinedValue;
+    QTest::addRow("trivial-bad-undefined-null") << "p4" << nullValue;
+    QTest::addRow("trivial-bad-undefined-int") << "p5" << QVariant(-1);
+    QTest::addRow("trivial-bad-undefined-string") << "p6" << QVariant("-1");
+
+    QTest::addRow("trivial-bad-null-undefined") << "p7" << undefinedValue;
+    QTest::addRow("trivial-bad-null-null") << "p8" << nullValue;
+    QTest::addRow("trivial-bad-null-int") << "p9" << QVariant(-1);
+    QTest::addRow("trivial-bad-null-string") << "p10" << QVariant("-1");
+
+    QTest::addRow("enum1") << "p11" << QVariant(1);
+
+    QTest::addRow("multiple ?? int") << "p12" << QVariant(1);
+    QTest::addRow("multiple ?? string") << "p13" << QVariant("1");
+    QTest::addRow("multiple ?? mixed2") << "p14" << QVariant("2");
+    QTest::addRow("multiple ?? mixed3") << "p15" << QVariant(1);
+
+    QTest::addRow("optional + nullish bad") << "p16" << QVariant(-1);
+    QTest::addRow("optional + nullish good") << "p17" << QVariant(5);
+}
+
+void tst_QmlCppCodegen::nullishCoalescing()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/qt/qml/TestTypes/nullishCoalescing.qml"_s);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QFETCH(QString, propertyName);
+    QFETCH(QVariant, expected);
+
+    QVariant actual = o->property(propertyName.toLocal8Bit());
+    QCOMPARE(actual, expected);
+}
+
 void tst_QmlCppCodegen::numbersInJsPrimitive()
 {
     QQmlEngine engine;
@@ -3711,6 +3771,14 @@ void tst_QmlCppCodegen::overriddenProperty()
     QCOMPARE(child->objectName(), u"double"_s);
     QMetaObject::invokeMethod(child, "doArray");
     QCOMPARE(child->objectName(), u"javaScript"_s);
+
+    QMetaObject::invokeMethod(child, "doString2");
+    QCOMPARE(child->objectName(), u"string"_s);
+    QMetaObject::invokeMethod(child, "doNumber2");
+    QCOMPARE(child->objectName(), u"double"_s);
+    QMetaObject::invokeMethod(child, "doArray2");
+    QCOMPARE(child->objectName(), u"javaScript"_s);
+
     QMetaObject::invokeMethod(child, "doFoo");
     QCOMPARE(child->objectName(), u"ObjectWithMethod"_s);
 
@@ -4066,6 +4134,39 @@ void tst_QmlCppCodegen::scopeVsObject()
     QCOMPARE(object->property("objectName").toString(), u"foobar"_s);
 }
 
+void tst_QmlCppCodegen::scopedEnum()
+{
+    QQmlEngine engine;
+    const QString url = u"qrc:/qt/qml/TestTypes/scopedEnum.qml"_s;
+    QQmlComponent component(&engine, QUrl(url));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url + u":6:5: Unable to assign [undefined] to int"_s));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url + u":8: TypeError: Cannot read property 'C' of undefined"_s));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url + u":14: TypeError: Cannot read property 'C' of undefined"_s));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("good").toInt(), 27);
+    QCOMPARE(object->property("bad").toInt(), 0);
+    QCOMPARE(object->property("wrong").toInt(), 0);
+    QCOMPARE(object->property("right").toInt(), 7);
+
+    QCOMPARE(object->property("notgood").toInt(), 26);
+    QCOMPARE(object->property("notbad").toInt(), 26);
+    QCOMPARE(object->property("notwrong").toInt(), 0);
+    QCOMPARE(object->property("notright").toInt(), 6);
+
+    QCOMPARE(object->property("passable").toInt(), 2);
+    QCOMPARE(object->property("wild").toInt(), 1);
+}
+
 void tst_QmlCppCodegen::sequenceToIterable()
 {
     QQmlEngine engine;
@@ -4096,6 +4197,24 @@ void tst_QmlCppCodegen::setLookupConversion()
     QMetaObject::invokeMethod(o.data(), "t");
     QCOMPARE(o->objectName(), u"a"_s);
     QCOMPARE(o->property("value").toInt(), 9);
+}
+
+void tst_QmlCppCodegen::setLookupOriginalScope()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/setLookupOriginalScope.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QObject *v = o->property("variable").value<QObject *>();
+    QCOMPARE(v->property("value").toInt(), 0);
+
+    QMetaObject::invokeMethod(o.data(), "trigger");
+    QObject *edit = o->property("edit").value<QObject *>();
+    QVERIFY(edit);
+    QCOMPARE(edit->property("myOutput").value<QObject *>(), v);
+    QCOMPARE(v->property("value").toInt(), 55);
 }
 
 void tst_QmlCppCodegen::shadowedAsCasts()
@@ -4434,6 +4553,15 @@ void tst_QmlCppCodegen::translation()
     QCOMPARE(o->property("trIdNoop1"), u"s"_s);
 }
 
+void tst_QmlCppCodegen::trigraphs()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/trigraphs.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->objectName(), u"?""?= ?""?/ ?""?' ?""?( ?""?) ?""?! ?""?< ?""?> ?""?-"_s);
+}
+
 void tst_QmlCppCodegen::trivialSignalHandler()
 {
     QQmlEngine engine;
@@ -4687,6 +4815,16 @@ void tst_QmlCppCodegen::valueTypeBehavior()
 
         // If the binding throws an exception, the value doesn't change.
         QCOMPARE(o->property("x"), 10);
+
+        QCOMPARE(o->property("tv3"), 5);
+        QCOMPARE(o->property("tc3"), 5);
+        QCOMPARE(o->property("tc6"), QVariant());
+        QCOMPARE(o->property("tc7"), QVariant());
+        QCOMPARE(o->property("tc8"), 2);
+
+        // The default greeting is never applied because undefined can be coerced to string
+        QCOMPARE(o->property("greeting1"), QLatin1String("undefined"));
+        QCOMPARE(o->property("greeting2"), QLatin1String("Custom Greeting"));
     }
 }
 

@@ -223,10 +223,10 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                         QQmlEnginePrivate *e = QQmlEnginePrivate::get(v4->qmlEngine());
                         if (r.type.isQObjectSingleton() || r.type.isCompositeSingleton()) {
                             e->singletonInstance<QObject*>(r.type);
-                            lookup->qmlContextSingletonLookup.singletonObject =
+                            lookup->qmlContextSingletonLookup.singletonObject.set(v4,
                                         Value::fromReturnedValue(
                                             QQmlTypeWrapper::create(v4, nullptr, r.type)
-                                        ).heapObject();
+                                        ).heapObject());
                         } else {
                             QJSValue singleton = e->singletonInstance<QJSValue>(r.type);
 
@@ -235,7 +235,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                             Q_ASSERT(!QJSValuePrivate::asQString(&singleton));
 
                             if (QV4::Value *val = QJSValuePrivate::takeManagedValue(&singleton)) {
-                                lookup->qmlContextSingletonLookup.singletonObject = val->heapObject();
+                                lookup->qmlContextSingletonLookup.singletonObject.set(v4, val->heapObject());
                             } else {
                                 lookup->qmlContextSingletonLookup.singletonValue = QJSValuePrivate::asReturnedValue(&singleton);
                                 isValueSingleton = true;
@@ -251,7 +251,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                 result = QQmlTypeWrapper::create(v4, scopeObject, context->imports(), r.importNamespace);
             }
             if (lookup) {
-                lookup->qmlTypeLookup.qmlTypeWrapper = result->heapObject();
+                lookup->qmlTypeLookup.qmlTypeWrapper.set(v4, result->heapObject());
                 lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupType;
             }
             return result->asReturnedValue();
@@ -815,7 +815,7 @@ ReturnedValue QQmlContextWrapper::lookupType(Lookup *l, ExecutionEngine *engine,
 
     Heap::Base *heapObject = l->qmlTypeLookup.qmlTypeWrapper;
     if (static_cast<Heap::QQmlTypeWrapper *>(heapObject)->object != scopeObject) {
-        l->qmlTypeLookup.qmlTypeWrapper = nullptr;
+        l->qmlTypeLookup.qmlTypeWrapper.clear();
         l->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;
         return QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(l, engine, base);
     }

@@ -614,6 +614,7 @@ void QQmlJSImporter::importQmldirs(const QStringList &qmldirFiles)
         QString qmldirName;
         if (file.endsWith(SlashQmldir)) {
             result = readQmldir(file.chopped(SlashQmldir.size()));
+            setQualifiedNamesOn(result);
             qmldirName = file;
         } else {
             m_warnings.append({

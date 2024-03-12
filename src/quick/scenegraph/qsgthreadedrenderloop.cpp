@@ -280,6 +280,7 @@ public:
     };
 
     void ensureRhi();
+    void teardownGraphics();
     void handleDeviceLoss();
 
     QSGThreadedRenderLoop *wm;
@@ -309,6 +310,7 @@ public:
     bool rhiDeviceLost = false;
     bool rhiDoomed = false;
     bool guiNotifiedAboutRhiFailure = false;
+    bool swRastFallbackDueToSwapchainFailure = false;
 
     // Local event queue stuff...
     bool stopEventProcessing;
@@ -575,20 +577,25 @@ void QSGRenderThread::sync(bool inExpose)
     }
 }
 
+void QSGRenderThread::teardownGraphics()
+{
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+    wd->cleanupNodesOnShutdown();
+    sgrc->invalidate();
+    wm->releaseSwapchain(window);
+    if (ownRhi)
+        QSGRhiSupport::instance()->destroyRhi(rhi, {});
+    rhi = nullptr;
+}
+
 void QSGRenderThread::handleDeviceLoss()
 {
     if (!rhi || !rhi->isDeviceLost())
         return;
 
     qWarning("Graphics device lost, cleaning up scenegraph and releasing RHI");
-    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-    wd->cleanupNodesOnShutdown();
-    sgrc->invalidate();
-    wm->releaseSwapchain(window);
+    teardownGraphics();
     rhiDeviceLost = true;
-    if (ownRhi)
-        QSGRhiSupport::instance()->destroyRhi(rhi, {});
-    rhi = nullptr;
 }
 
 void QSGRenderThread::syncAndRender()
@@ -620,6 +627,7 @@ void QSGRenderThread::syncAndRender()
     pendingUpdate = 0;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
     // Begin the frame before syncing -> sync is where we may invoke
     // updatePaintNode() on the items and they may want to do resource updates.
     // Also relevant for applications that connect to the before/afterSynchronizing
@@ -641,10 +649,29 @@ void QSGRenderThread::syncAndRender()
                 qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "just became exposed");
 
             cd->hasActiveSwapchain = cd->swapchain->createOrResize();
-            if (!cd->hasActiveSwapchain && rhi->isDeviceLost()) {
-                handleDeviceLoss();
-                QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
-                return;
+            if (!cd->hasActiveSwapchain) {
+                bool bailOut = false;
+                if (rhi->isDeviceLost()) {
+                    handleDeviceLoss();
+                    bailOut = true;
+                } else if (previousOutputSize.isEmpty() && !swRastFallbackDueToSwapchainFailure && rhiSupport->attemptReinitWithSwRastUponFail()) {
+                    qWarning("Failed to create swapchain."
+                             " Retrying by requesting a software rasterizer, if applicable for the 3D API implementation.");
+                    swRastFallbackDueToSwapchainFailure = true;
+                    teardownGraphics();
+                    bailOut = true;
+                }
+                if (bailOut) {
+                    QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
+                    if (syncRequested) {
+                        // Lock like sync() would do. Note that exposeRequested always includes syncRequested.
+                        qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- bailing out due to failed swapchain init, wake Gui");
+                        mutex.lock();
+                        waitCondition.wakeOne();
+                        mutex.unlock();
+                    }
+                    return;
+                }
             }
 
             cd->swapchainJustBecameRenderable = false;
@@ -851,7 +878,8 @@ void QSGRenderThread::ensureRhi()
         if (rhiDoomed) // no repeated attempts if the initial attempt failed
             return;
         QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
-        QSGRhiSupport::RhiCreateResult rhiResult = rhiSupport->createRhi(window, offscreenSurface);
+        const bool forcePreferSwRenderer = swRastFallbackDueToSwapchainFailure;
+        QSGRhiSupport::RhiCreateResult rhiResult = rhiSupport->createRhi(window, offscreenSurface, forcePreferSwRenderer);
         rhi = rhiResult.rhi;
         ownRhi = rhiResult.own;
         if (rhi) {
@@ -1686,6 +1714,7 @@ bool QSGThreadedRenderLoop::event(QEvent *e)
             emit timeToIncubate();
             return true;
         }
+        break;
     }
 
     default:

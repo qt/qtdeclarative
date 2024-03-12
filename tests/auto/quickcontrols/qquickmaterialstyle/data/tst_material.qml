@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Window
@@ -24,6 +24,11 @@ TestCase {
     }
 
     Component {
+        id: signalSpyComponent
+        SignalSpy {}
+    }
+
+    Component {
         id: buttonComponent
         Button { }
     }
@@ -43,17 +48,6 @@ TestCase {
     Component {
         id: windowComponent
         Window { }
-    }
-
-    Component {
-        id: styledWindowComponent
-        Window {
-            Material.theme: Material.Dark
-            Material.primary: Material.Brown
-            Material.accent: Material.Green
-            Material.background: Material.Yellow
-            Material.foreground: Material.Grey
-        }
     }
 
     Component {
@@ -1046,6 +1040,38 @@ TestCase {
         }
     }
 
+    function test_outlinedPlaceholderTextPosWithPadding_data() {
+        return [
+            { tag: "TextField, leftPadding=0", component: textFieldComponent, leftPadding: 0 },
+            { tag: "TextField, rightPadding=0", component: textFieldComponent, rightPadding: 0 },
+            { tag: "TextField, leftPadding=20", component: textFieldComponent, leftPadding: 20 },
+            { tag: "TextField, rightPadding=20", component: textFieldComponent, rightPadding: 20 },
+            { tag: "TextArea, leftPadding=0", component: textAreaComponent, leftPadding: 0 },
+            { tag: "TextArea, rightPadding=0", component: textAreaComponent, rightPadding: 0 },
+            { tag: "TextArea, leftPadding=20", component: textAreaComponent, leftPadding: 20 },
+            { tag: "TextArea, rightPadding=20", component: textAreaComponent, rightPadding: 20 },
+        ]
+    }
+
+    function test_outlinedPlaceholderTextPosWithPadding(data) {
+        let control = createTemporaryObject(data.component, testCase, {
+            text: "Text",
+            placeholderText: "Enter text..."
+        })
+        verify(control)
+
+        // Work around QTBUG-99231.
+        if (data.leftPadding !== undefined)
+            control.leftPadding = data.leftPadding
+        if (data.rightPadding !== undefined)
+            control.rightPadding = data.rightPadding
+
+        let placeholderTextItem = control.children[0]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+        // This is the default value returned by textFieldHorizontalPadding when using a non-dense variant.
+        compare(placeholderTextItem.x, 16)
+    }
+
     Component {
         id: flickableTextAreaComponent
 
@@ -1214,5 +1240,90 @@ TestCase {
         // Note that we can't use the properties argument of createTemporaryObject due to QTBUG-117201.
         textArea.background = null
         verify(!placeholderTextItem.visible)
+    }
+
+    Component {
+        id: textFieldAndButtonComponent
+
+        FocusScope {
+            focus: true
+            anchors.fill: parent
+
+            property alias textField: textField
+            property alias button: button
+
+            Keys.onEscapePressed: function (event) {
+                event.accepted = true
+                button.forceActiveFocus()
+                textField.forceActiveFocus()
+            }
+
+            TextField {
+                id: textField
+                focus: true
+                placeholderText: "placeholderText"
+                anchors.fill: parent
+            }
+
+            Button {
+                id: button
+                anchors.right: parent.right
+                text: focus ? "focus" : "no focus"
+            }
+        }
+    }
+
+    // QTBUG-118889
+    function test_focusChanges() {
+        let focusScope = createTemporaryObject(textFieldAndButtonComponent, testCase)
+        verify(focusScope)
+        testCase.Window.window.requestActivate()
+        tryCompare(testCase.Window.window, "active", true)
+
+        let textField = focusScope.textField
+        verify(textField.activeFocus)
+        let textFieldActiveFocusSpy = signalSpyComponent.createObject(textField,
+            { target: textField, signalName: "activeFocusChanged" })
+        verify(textFieldActiveFocusSpy.valid)
+
+        let button = focusScope.button
+        let buttonActiveFocusSpy = signalSpyComponent.createObject(button,
+            { target: button, signalName: "activeFocusChanged" })
+        verify(buttonActiveFocusSpy.valid)
+
+        // Shouldn't assert after quickly switching focus.
+        keyClick(Qt.Key_Escape)
+        // true => false => true.
+        compare(textFieldActiveFocusSpy.count, 2)
+        // false => true => false.
+        compare(buttonActiveFocusSpy.count, 2)
+    }
+
+    Component {
+        id: childWindowComponent
+
+        ApplicationWindow {
+            objectName: "parentWindow"
+            property alias childWindow: childWindow
+
+            Material.theme: Material.Dark
+            Material.primary: Material.Brown
+            Material.accent: Material.Green
+            Material.background: Material.Yellow
+            Material.foreground: Material.Grey
+
+            ApplicationWindow {
+                id: childWindow
+                objectName: "childWindow"
+            }
+        }
+    }
+
+    function test_windowBackgroundColorPropagation() {
+        let parentWindow = createTemporaryObject(childWindowComponent, testCase)
+        verify(parentWindow)
+
+        let childWindow = parentWindow.childWindow
+        compare(childWindow.Material.theme, Material.Dark)
     }
 }

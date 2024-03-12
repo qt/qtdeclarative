@@ -9,4 +9,5 @@ QtObject {
     property bool d: ({x: 10, y: 20}) instanceof point
     property var e: ({x: 10, y: 20}) as point
     property var f: "red" as withString
+    property var g: "green" as string
 }

@@ -18,7 +18,7 @@ add_subdirectory(UnregisteredTypes)
 add_subdirectory(foreign)
 
 qt_manual_moc(moc_files OUTPUT_MOC_JSON_FILES json_list noextheader
-              INCLUDE_DIRECTORY_TARGETS Qt::Qml)
+              TARGETS Qt6::Qml)
 
 # Dummy target to pass --private-includes to qmltyperegistrar for tst_qmltyperegistrar.
 # We want to test that it expects files named foo_p.h appearing in foreign metatypes

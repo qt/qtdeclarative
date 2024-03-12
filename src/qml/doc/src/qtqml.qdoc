@@ -69,6 +69,24 @@ lists the environment variables you may use to this effect. The description of t
 \l{The QML Disk Cache}{QML Disk Cache} describes the options related to how your QML
 components are compiled and loaded.
 
+\section1 Articles and Guides
+
+These articles contain information about Qt Qml.
+
+\list
+    \li \l{The QML Reference}
+    \li \l{Qt Qml Tooling}
+    \li \l{Writing QML Modules}
+    \li \l{Singletons in QML}
+\endlist
+
+\section1 Reference
+
+\list
+    \li \l {Qt QML C++ Classes} {C++ Classes}
+    \li \l {Qt QML QML Types} {QML Types}
+\endlist
+
 \section1 Licenses and Attributions
 
 Qt QML is available under commercial licenses from \l{The Qt Company}.
@@ -82,12 +100,5 @@ Furthermore Qt QML in Qt \QtVersion may contain third party
 modules under following permissive licenses:
 
 \generatelist{groupsbymodule attributions-qtqml}
-
-\section1 Reference
-
-\list
-    \li \l {Qt QML C++ Classes} {C++ Classes}
-    \li \l {Qt QML QML Types} {QML Types}
-\endlist
 
 */

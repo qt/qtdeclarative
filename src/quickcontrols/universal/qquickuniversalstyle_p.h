@@ -18,12 +18,13 @@
 #include <QtGui/qcolor.h>
 #include <QtQml/qqml.h>
 #include <QtQuickControls2/qquickattachedpropertypropagator.h>
+#include <QtQuickControls2Universal/qtquickcontrols2universalexports.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickUniversalStylePrivate;
 
-class QQuickUniversalStyle : public QQuickAttachedPropertyPropagator
+class Q_QUICKCONTROLS2UNIVERSAL_EXPORT QQuickUniversalStyle : public QQuickAttachedPropertyPropagator
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)

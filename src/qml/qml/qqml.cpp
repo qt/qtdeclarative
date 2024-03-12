@@ -2009,9 +2009,9 @@ static void initTypeWrapperLookup(
             wrapper = l->qmlContextPropertyGetter(l, context->engine->handle(), wrapper);
             l->qmlContextPropertyGetter = qmlContextPropertyGetter;
             if (qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton)
-                l->qmlContextSingletonLookup.singletonObject = wrapper->heapObject();
+                l->qmlContextSingletonLookup.singletonObject.set(scope.engine, wrapper->heapObject());
             else if (qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupType)
-                l->qmlTypeLookup.qmlTypeWrapper = wrapper->heapObject();
+                l->qmlTypeLookup.qmlTypeWrapper.set(scope.engine, wrapper->heapObject());
             return;
         }
         scope.engine->throwTypeError();
@@ -2082,7 +2082,7 @@ void AOTCompiledContext::initLoadAttachedLookup(
                 scope, QV4::QQmlTypeWrapper::create(scope.engine, object, type,
                                                     QV4::Heap::QQmlTypeWrapper::ExcludeEnums));
 
-    l->qmlTypeLookup.qmlTypeWrapper = wrapper->d();
+    l->qmlTypeLookup.qmlTypeWrapper.set(scope.engine, wrapper->d());
     l->getter = QV4::QObjectWrapper::lookupAttached;
 }
 
@@ -2093,7 +2093,7 @@ bool AOTCompiledContext::loadTypeLookup(uint index, void *target) const
         return false;
 
     const QV4::Heap::QQmlTypeWrapper *typeWrapper = static_cast<const QV4::Heap::QQmlTypeWrapper *>(
-                l->qmlTypeLookup.qmlTypeWrapper);
+                l->qmlTypeLookup.qmlTypeWrapper.get());
 
     QMetaType metaType = typeWrapper->type().typeId();
     *static_cast<const QMetaObject **>(target)

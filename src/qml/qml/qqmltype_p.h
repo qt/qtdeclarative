@@ -96,12 +96,17 @@ public:
     bool isQObjectSingleton() const;
     bool isQJSValueSingleton() const;
     bool isSequentialContainer() const;
+    bool isValueType() const;
 
     QMetaType typeId() const;
     QMetaType qListTypeId() const;
     QMetaSequence listMetaSequence() const;
 
     const QMetaObject *metaObject() const;
+
+    // Precondition: The type is actually a value type!
+    const QMetaObject *metaObjectForValueType() const;
+
     const QMetaObject *baseMetaObject() const;
     QTypeRevision metaObjectRevision() const;
     bool containsRevisionedAttributes() const;

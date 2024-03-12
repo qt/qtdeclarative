@@ -2912,7 +2912,8 @@ void createDom(MutableDomItem &&qmlFile, DomCreationOptions options)
             v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
 
             AST::Node::accept(qmlFilePtr->ast(), v.get());
-            AstComments::collectComments(qmlFile);
+            CommentCollector collector(qmlFile);
+            collector.collectComments();
 
             auto typeResolver = std::make_shared<QQmlJSTypeResolver>(importer.get());
             typeResolver->init(&v->scopeCreator(), nullptr);
@@ -2922,7 +2923,8 @@ void createDom(MutableDomItem &&qmlFile, DomCreationOptions options)
             v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
 
             AST::Node::accept(qmlFilePtr->ast(), v.get());
-            AstComments::collectComments(qmlFile);
+            CommentCollector collector(qmlFile);
+            collector.collectComments();
         }
     } else {
         qCWarning(creatorLog) << "createDom called on non qmlFile";

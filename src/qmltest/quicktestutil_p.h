@@ -52,7 +52,7 @@ public Q_SLOTS:
     QJSValue callerFile(int frameIndex = 0) const;
     int callerLine(int frameIndex = 0) const;
 
-    QString signalHandlerName(const QString &signalName)
+    Q_REVISION(6, 7) QString signalHandlerName(const QString &signalName)
     {
         if (QQmlSignalNames::isHandlerName(signalName))
             return signalName;

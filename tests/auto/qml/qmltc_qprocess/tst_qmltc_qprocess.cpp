@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/qtest.h>
 
@@ -52,6 +52,8 @@ private slots:
     void dashesInFilename();
     void invalidSignalHandlers();
     void exports();
+    void qmlBaseFromAnotherModule();
+    void invalidTypeAnnotation();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -93,6 +95,7 @@ QString tst_qmltc_qprocess::runQmltc(const QString &inputFile,
         args << u"--resource"_s << resource;
     args << u"--header"_s << (m_tmpPath + u"/"_s + QFileInfo(inputFile).baseName() + u".h"_s);
     args << u"--impl"_s << (m_tmpPath + u"/"_s + QFileInfo(inputFile).baseName() + u".cpp"_s);
+    args << u"--module"_s << u"QmltcQProcessTestModule"_s;
 
     args << extraArgs;
     QString errors;
@@ -259,6 +262,35 @@ void tst_qmltc_qprocess::invalidSignalHandlers()
                 u"invalidSignalHandlers.qml:9:5: Type int of parameter in signal called signalWithPrimitivePointer should be passed by value or const reference to be able to compile onSignalWithPrimitivePointer.  [signal-handler-parameters]"_s));
         QVERIFY(errors.contains(
                 u"invalidSignalHandlers.qml:10:5: Type int of parameter in signal called signalWithConstPrimitivePointer should be passed by value or const reference to be able to compile onSignalWithConstPrimitivePointer.  [signal-handler-parameters]"_s));
+    }
+}
+
+void tst_qmltc_qprocess::qmlBaseFromAnotherModule()
+{
+    {
+        const auto errors = runQmltc(u"QmlBaseFromAnotherModule.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"QmlBaseFromAnotherModule.qml:6:1: Can't compile the QML property type \"ScrollBar\" to C++ because it lives in \"QtQuick.Controls.Basic\" instead of the current file's \"QmltcQProcessTestModule\" QML module."_s));
+        QVERIFY(errors.contains(
+                u"QmlBaseFromAnotherModule.qml:6:1: Can't compile the QML method return type \"ScrollBar\" to C++ because it lives in \"QtQuick.Controls.Basic\" instead of the current file's \"QmltcQProcessTestModule\" QML module."_s));
+        QVERIFY(errors.contains(
+                u"QmlBaseFromAnotherModule.qml:6:1: Can't compile the QML parameter type \"ScrollBar\" to C++ because it lives in \"QtQuick.Controls.Basic\" instead of the current file's \"QmltcQProcessTestModule\" QML module."_s));
+        // it should not complain about the usages of Item, a C++ defined QML element from another
+        // module
+        QVERIFY(!errors.contains(u"\"Item\""_s));
+    }
+}
+
+void tst_qmltc_qprocess::invalidTypeAnnotation()
+{
+    {
+        const auto errors = runQmltc(u"invalidTypeAnnotation.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"invalidTypeAnnotation.qml:5:17: \"Qt.point\" was not found for the return type of method \"f\"."_s));
+        QVERIFY(errors.contains(
+                u"invalidTypeAnnotation.qml:19:21: \"Qt.point\" was not found for the type of parameter \"a\" in method \"gamma\"."_s));
+        QVERIFY(!errors.contains(u"\"var\""_s));
+        QVERIFY(!errors.contains(u"\"void\""_s));
     }
 }
 

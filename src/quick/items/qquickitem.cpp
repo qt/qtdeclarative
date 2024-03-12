@@ -3277,6 +3277,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , baselineOffset(0)
     , itemNodeInstance(nullptr)
     , paintNode(nullptr)
+    , szPolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Fixed)
 {
 }
 
@@ -3299,6 +3300,17 @@ void QQuickItemPrivate::init(QQuickItem *parent)
         QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(parent);
         setImplicitLayoutMirror(parentPrivate->inheritedLayoutMirror, parentPrivate->inheritMirrorFromParent);
     }
+}
+
+QLayoutPolicy QQuickItemPrivate::sizePolicy() const
+{
+    return szPolicy;
+}
+
+void QQuickItemPrivate::setSizePolicy(const QLayoutPolicy::Policy& horizontalPolicy, const QLayoutPolicy::Policy& verticalPolicy)
+{
+    szPolicy.setHorizontalPolicy(horizontalPolicy);
+    szPolicy.setVerticalPolicy(verticalPolicy);
 }
 
 void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
@@ -7951,7 +7963,7 @@ QQuickItem *QQuickItem::scopedFocusItem() const
     \value Qt.WheelFocus  The item accepts focus by tabbing, clicking, and using the mouse wheel.
     \value Qt.NoFocus     The item does not accept focus.
 
-    \note This property was a member of \l {QQuickControl} {Control} until Qt 6.7.
+    \note This property was a member of the \l[QML]{Control} QML type in Qt 6.6 and earlier.
 */
 /*!
     \property QQuickItem::focusPolicy
@@ -7959,7 +7971,6 @@ QQuickItem *QQuickItem::scopedFocusItem() const
 
     This property determines the way the item accepts focus.
 
-    \note This property was a member of \l {QQuickControl} {Control} until Qt 6.7.
 */
 Qt::FocusPolicy QQuickItem::focusPolicy() const
 {

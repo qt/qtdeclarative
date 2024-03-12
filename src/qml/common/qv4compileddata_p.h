@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 // Also change the comment behind the number to describe the latest change. This has the added
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
-#define QV4_DATA_STRUCTURE_VERSION 0x3F // Refactor compilation units
+#define QV4_DATA_STRUCTURE_VERSION 0x40 // Switch the "sticky" and "unicode" regexp flags
 
 class QIODevice;
 class QQmlTypeNameCache;
@@ -161,8 +161,8 @@ struct RegExp
         RegExp_Global     = 0x01,
         RegExp_IgnoreCase = 0x02,
         RegExp_Multiline  = 0x04,
-        RegExp_Unicode    = 0x08,
-        RegExp_Sticky     = 0x10
+        RegExp_Sticky     = 0x08,
+        RegExp_Unicode    = 0x10,
     };
 
     RegExp() : m_data(QSpecialIntegerBitfieldZero) {}

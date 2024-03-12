@@ -68,7 +68,7 @@ public:
     Q_ENUM(TextureFormat)
 
     explicit QQuickRhiItem(QQuickItem *parent = nullptr);
-    ~QQuickRhiItem();
+    ~QQuickRhiItem() override;
 
     int sampleCount() const;
     void setSampleCount(int samples);
@@ -88,6 +88,9 @@ public:
     void setFixedColorBufferHeight(int height);
 
     QSize effectiveColorBufferSize() const;
+
+    bool isTextureProvider() const override;
+    QSGTextureProvider *textureProvider() const override;
 
 Q_SIGNALS:
     void sampleCountChanged();
@@ -109,8 +112,6 @@ protected:
     bool event(QEvent *) override;
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void releaseResources() override;
-    bool isTextureProvider() const override;
-    QSGTextureProvider *textureProvider() const override;
 
 private Q_SLOTS:
     void invalidateSceneGraph();

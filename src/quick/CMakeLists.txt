@@ -559,6 +559,17 @@ qt_internal_extend_target(Quick CONDITION IOS OR MACOS
         scenegraph/qsgrhisupport_mac.mm
 )
 
+qt_internal_extend_target(Quick CONDITION ANDROID
+    SOURCES
+        platform/android/qandroidquickviewembedding.cpp platform/android/qandroidquickviewembedding_p.h
+)
+if (ANDROID)
+    add_subdirectory(jar)
+    set_property(TARGET Quick PROPERTY QT_ANDROID_BUNDLED_JAR_DEPENDENCIES
+        jar/Qt${QtDeclarative_VERSION_MAJOR}AndroidQuick.jar
+    )
+endif()
+
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_thread
     SOURCES
         scenegraph/adaptations/software/qsgsoftwarethreadedrenderloop.cpp scenegraph/adaptations/software/qsgsoftwarethreadedrenderloop_p.h
@@ -635,8 +646,6 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_quick_positioners
     SOURCES
         items/qquickpositioners.cpp items/qquickpositioners_p.h
         items/qquickpositioners_p_p.h
-    NO_UNITY_BUILD_SOURCES
-        items/qquickpositioners.cpp # redefinition of 'watchedChanges' (from qquickloader.cpp)
 )
 
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_quick_flipable
