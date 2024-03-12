@@ -56,6 +56,7 @@ private slots:
     void dragMargin();
 
     void reposition();
+    void rotate();
     void header();
 
     void dragHandlerInteraction();
@@ -486,6 +487,53 @@ void tst_QQuickDrawer::reposition()
     QVERIFY(popupItem2->isVisible());
     QCOMPARE(popupItem2->x(), -drawer2->width());
     QTRY_COMPARE(popupItem2->x(), 0.0);
+}
+
+void tst_QQuickDrawer::rotate()
+{
+    QQuickControlsApplicationHelper helper(this, u"rotate.qml"_s);
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickDrawer *drawer_LR = window->property("drawer_LR").value<QQuickDrawer*>();
+    QVERIFY(drawer_LR);
+    QQuickItem *popupItem_LR = drawer_LR->popupItem();
+    QVERIFY(popupItem_LR);
+
+    QQuickDrawer *drawer_TB = window->property("drawer_TB").value<QQuickDrawer*>();
+    QVERIFY(drawer_TB);
+    QQuickItem *popupItem_TB = drawer_TB->popupItem();
+    QVERIFY(popupItem_TB);
+
+    drawer_LR->open();
+    drawer_TB->open();
+
+    const int drawerSize = window->property("drawerSize").toInt();
+    int virtualWidth = window->width();
+    int virtualHeight = window->height();
+
+    // First iteration tests an unrotated window; 2nd iteration repeats the test with a rotated window
+    for (int i = 0; i < 2; ++i) {
+        drawer_LR->setEdge(Qt::LeftEdge);
+        QTRY_COMPARE(geometry(popupItem_LR), QRectF(0, 0, drawerSize, virtualHeight));
+
+        drawer_TB->setEdge(Qt::TopEdge);
+        QTRY_COMPARE(geometry(popupItem_TB), QRectF(0, 0, virtualWidth, drawerSize));
+
+        drawer_LR->setEdge(Qt::RightEdge);
+        QTRY_COMPARE(geometry(popupItem_LR), QRectF(virtualWidth - drawerSize, 0, drawerSize, virtualHeight));
+
+        drawer_TB->setEdge(Qt::BottomEdge);
+        QTRY_COMPARE(geometry(popupItem_TB), QRectF(0, virtualHeight - drawerSize, virtualWidth, drawerSize));
+
+        if (i == 0) {
+            window->setProperty("rotated", true);
+            std::swap(virtualWidth, virtualHeight);
+        }
+    }
 }
 
 void tst_QQuickDrawer::header()

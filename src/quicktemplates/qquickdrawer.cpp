@@ -203,8 +203,11 @@ void QQuickDrawerPositioner::reposition()
         return;
 
     QQuickDrawer *drawer = static_cast<QQuickDrawer*>(popup());
-    QQuickWindow *window = drawer->window();
-    if (!window)
+
+    // The overlay is assumed to fully cover the window's contents, although the overlay's geometry
+    // might not always equal the window's geometry (for example, if the window's contents are rotated).
+    QQuickOverlay *overlay = QQuickOverlay::overlay(drawer->window());
+    if (!overlay)
         return;
 
     const qreal position = drawer->position();
@@ -214,13 +217,13 @@ void QQuickDrawerPositioner::reposition()
         popupItem->setX((position - 1.0) * popupItem->width());
         break;
     case Qt::RightEdge:
-        popupItem->setX(window->width() - position * popupItem->width());
+        popupItem->setX(overlay->width() - position * popupItem->width());
         break;
     case Qt::TopEdge:
         popupItem->setY((position - 1.0) * popupItem->height());
         break;
     case Qt::BottomEdge:
-        popupItem->setY(window->height() - position * popupItem->height());
+        popupItem->setY(overlay->height() - position * popupItem->height());
         break;
     }
 

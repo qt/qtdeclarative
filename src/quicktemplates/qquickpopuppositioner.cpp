@@ -121,12 +121,25 @@ void QQuickPopupPositioner::reposition()
             rect.moveTopLeft(m_parentItem->mapToItem(popupItem->parentItem(), rect.topLeft()));
         }
 
-        if (p->window) {
+        // The overlay is assumed to fully cover the window's contents, although the overlay's geometry
+        // might not always equal the window's geometry (for example, if the window's contents are rotated).
+        QQuickOverlay *overlay = QQuickOverlay::overlay(p->window);
+        if (overlay) {
+            qreal boundsWidth = overlay->width();
+            qreal boundsHeight = overlay->height();
+
+            // QTBUG-126843: On some platforms, the overlay's geometry is not yet available at the instant
+            // when Component.completed() is emitted. Fall back to the window's geometry for this edge case.
+            if (Q_UNLIKELY(boundsWidth <= 0)) {
+                boundsWidth = p->window->width();
+                boundsHeight = p->window->height();
+            }
+
             const QMarginsF margins = p->getMargins();
             QRectF bounds(qMax<qreal>(0.0, margins.left()),
                           qMax<qreal>(0.0, margins.top()),
-                          p->window->width() - qMax<qreal>(0.0, margins.left()) - qMax<qreal>(0.0, margins.right()),
-                          p->window->height() - qMax<qreal>(0.0, margins.top()) - qMax<qreal>(0.0, margins.bottom()));
+                          boundsWidth - qMax<qreal>(0.0, margins.left()) - qMax<qreal>(0.0, margins.right()),
+                          boundsHeight - qMax<qreal>(0.0, margins.top()) - qMax<qreal>(0.0, margins.bottom()));
 
             // if the popup doesn't fit horizontally inside the window, try flipping it around (left <-> right)
             if (p->allowHorizontalFlip && (rect.left() < bounds.left() || rect.right() > bounds.right())) {
