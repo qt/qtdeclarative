@@ -1385,7 +1385,8 @@ static bool createRhiRenderTargetMultiView(QRhiTexture *texture,
 
     QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
     rtDesc.setDepthTexture(depthStencil.get());
-    std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc,
+                                                                            QRhiTextureRenderTarget::DoNotStoreDepthStencilContents));
     rt->setName(QByteArrayLiteral("RT for multiview QQuickRenderTarget"));
     std::unique_ptr<QRhiRenderPassDescriptor> rp(rt->newCompatibleRenderPassDescriptor());
     rt->setRenderPassDescriptor(rp.get());
