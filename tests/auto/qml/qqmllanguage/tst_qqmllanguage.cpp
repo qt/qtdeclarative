@@ -8598,6 +8598,9 @@ void tst_qqmllanguage::enumScopes()
     QCOMPARE(o->property("singletonScoped"), true);
     QCOMPARE(o->property("nonSingletonUnscoped"), false);
     QCOMPARE(o->property("nonSingletonScoped"), true);
+
+    QCOMPARE(o->property("singletonScopedValue").toInt(), int(EnumProviderSingleton::Expected::Value));
+    QCOMPARE(o->property("singletonUnscopedValue").toInt(), int(EnumProviderSingleton::Expected::Value));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

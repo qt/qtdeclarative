@@ -302,6 +302,19 @@ void QQmlTypePrivate::insertEnums(Enums *enums, const QMetaObject *metaObject) c
     QSet<QString> localEnums;
     const QMetaObject *localMetaObject = nullptr;
 
+    // ### TODO (QTBUG-123294): track this at instance creation time
+    auto shouldSingletonAlsoRegisterUnscoped = [&](){
+        Q_ASSERT(regType == QQmlType::SingletonType);
+        if (!baseMetaObject)
+            return true;
+        int idx = baseMetaObject->indexOfClassInfo("RegisterEnumClassesUnscoped");
+        if (idx == -1)
+            return true;
+        if (qstrcmp(baseMetaObject->classInfo(idx).value(), "false") == 0)
+            return false;
+        return true;
+    };
+
     // Add any enum values defined by this class, overwriting any inherited values
     for (int ii = 0; ii < metaObject->enumeratorCount(); ++ii) {
         QMetaEnum e = metaObject->enumerator(ii);
@@ -318,12 +331,15 @@ void QQmlTypePrivate::insertEnums(Enums *enums, const QMetaObject *metaObject) c
             localEnums.clear();
             localMetaObject = e.enclosingMetaObject();
         }
+        const bool shouldRegisterUnscoped = !isScoped
+                || (regType == QQmlType::CppType && extraData.cppTypeData->registerEnumClassesUnscoped)
+                || (regType == QQmlType::SingletonType && shouldSingletonAlsoRegisterUnscoped())
+        ;
 
         for (int jj = 0; jj < e.keyCount(); ++jj) {
             const QString key = QString::fromUtf8(e.key(jj));
             const int value = e.value(jj);
-            if (!isScoped || (regType == QQmlType::CppType
-                              && extraData.cppTypeData->registerEnumClassesUnscoped)) {
+            if (shouldRegisterUnscoped) {
                 if (localEnums.contains(key)) {
                     auto existingEntry = enums->enums.find(key);
                     if (existingEntry != enums->enums.end() && existingEntry.value() != value) {
