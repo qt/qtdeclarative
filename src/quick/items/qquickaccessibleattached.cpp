@@ -120,6 +120,15 @@ QT_BEGIN_NAMESPACE
     \endtable
 */
 
+/*!
+    \qmlproperty string QtQuick::Accessible::id
+
+    This property sets an identifier for the object.
+    It can be used to provide stable identifiers to UI tests.
+    By default, the identifier is set to the ID of the QML object.
+    If the ID is not set the default of \l QAccessible::Identifier is used.
+*/
+
 /*! \qmlproperty bool QtQuick::Accessible::focusable
     \brief This property holds whether this item is focusable.
 
