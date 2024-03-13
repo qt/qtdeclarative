@@ -10,4 +10,7 @@ QtObject {
     property bool singletonScoped: Singleton.enumProperty === Singleton.EnumType.EnumValue2
     property bool nonSingletonUnscoped: nonSingleton.enumProperty === NonSingleton.EnumValue2
     property bool nonSingletonScoped: nonSingleton.enumProperty === NonSingleton.EnumType.EnumValue2
+
+    property int singletonScopedValue: EnumProviderSingleton.Expected.Value
+    property int singletonUnscopedValue: EnumProviderSingleton.Value
 }

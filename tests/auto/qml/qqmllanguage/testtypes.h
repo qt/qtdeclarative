@@ -2464,6 +2464,35 @@ public:
     Q_INVOKABLE quint64 getQTrue() const { return 1; }
 };
 
+class EnumProviderSingleton : public QObject {
+    Q_OBJECT
+
+public:
+    enum class Expected {
+        Value = 42
+    };
+    Q_ENUM(Expected)
+
+    EnumProviderSingleton(QObject* parent = nullptr) : QObject(parent) {}
+};
+
+class EnumProviderSingletonQml {
+    Q_GADGET
+    QML_FOREIGN(EnumProviderSingleton)
+    QML_NAMED_ELEMENT(EnumProviderSingleton)
+    QML_SINGLETON
+
+public:
+    static EnumProviderSingleton* create(QQmlEngine*, QJSEngine*) {
+        return new EnumProviderSingleton();
+    }
+
+private:
+    EnumProviderSingletonQml() = default;
+};
+
+
+
 namespace TypedEnums {
 Q_NAMESPACE
 QML_ELEMENT
