@@ -348,6 +348,8 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
         stream() << "font.underline: true";
     if (info.font.weight() != QFont::Normal)
         stream() << "font.weight: " << int(info.font.weight());
+    if (info.font.italic())
+        stream() << "font.italic: true";
 
     if (!info.strokeColor.isEmpty()) {
         stream() << "styleColor: \"" << info.strokeColor << "\"";
