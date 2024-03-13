@@ -177,10 +177,33 @@ function(_qt_internal_deploy_qml_imports_for_target)
                 # supports symlinks (which all do in some form now, even
                 # Windows if the right permissions are set), but we only really
                 # expect to need this for macOS app bundles.
-                set(final_destination "${dest_qmldir}/lib${entry_PLUGIN}.dylib")
+                if(DEFINED __QT_DEPLOY_TARGET_${entry_LINKTARGET}_FILE)
+                    set(source_file "${__QT_DEPLOY_TARGET_${entry_LINKTARGET}_FILE}")
+                    get_filename_component(source_file_name "${source_file}" NAME)
+                    set(final_destination "${dest_qmldir}/${source_file_name}")
+                else()
+                    # TODO: This is inconsistent with what we do further down below for the
+                    # installation case. There we file(GLOB) any files we find, whereas here we
+                    # build the path manually, because the file might not exist yet.
+                    # Ideally both cases should use neither file(GLOB) nor manual path building,
+                    # and instead rely on available target information or qmldir information.
+                    # Currently that is not possible because we don't have all targets exposed
+                    # via the __QT_DEPLOY_TARGET_{target} mechanism, only those that are built as
+                    # part of the current project, and the qmldir -> qmlimportscanner does print
+                    # the full file path, because there is one qmldir, but possibly 2+ plugins
+                    # (debug and release).
+                    set(plugin_suffix "")
+                    if(__QT_DEPLOY_ACTIVE_CONFIG STREQUAL "Debug")
+                        string(APPEND plugin_suffix "${__QT_DEPLOY_QT_DEBUG_POSTFIX}")
+                    endif()
+
+                    set(source_file "${entry_PATH}/lib${entry_PLUGIN}${plugin_suffix}.dylib")
+                    set(final_destination "${dest_qmldir}/lib${entry_PLUGIN}${plugin_suffix}.dylib")
+                endif()
+
                 message(STATUS "Symlinking: ${final_destination}")
                 file(CREATE_LINK
-                    "${entry_PATH}/lib${entry_PLUGIN}.dylib"
+                    "${source_file}"
                     "${final_destination}"
                     SYMBOLIC
                 )
