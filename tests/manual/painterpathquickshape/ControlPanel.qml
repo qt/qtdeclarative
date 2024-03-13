@@ -86,7 +86,7 @@ Item {
             }
             CheckBox {
                 id: enableDebug
-                fillWidth: false
+                Layout.fillWidth: false
             }
             Label {
                 text: "Debug"
