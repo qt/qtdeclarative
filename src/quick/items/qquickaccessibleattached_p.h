@@ -53,6 +53,7 @@ class Q_QUICK_EXPORT QQuickAccessibleAttached : public QObject
     Q_PROPERTY(QAccessible::Role role READ role WRITE setRole NOTIFY roleChanged FINAL)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
     Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged FINAL)
+    Q_PROPERTY(QString id READ id WRITE setId NOTIFY idChanged REVISION(6, 8) FINAL)
     Q_PROPERTY(bool ignored READ ignored WRITE setIgnored NOTIFY ignoredChanged FINAL)
 
     QML_NAMED_ELEMENT(Accessible)
@@ -116,6 +117,17 @@ public:
             m_description = description;
             Q_EMIT descriptionChanged();
             QAccessibleEvent ev(parent(), QAccessible::DescriptionChanged);
+            QAccessible::updateAccessibility(&ev);
+        }
+    }
+
+    QString id() const { return m_id; }
+    void setId(const QString &id)
+    {
+        if (m_id != id) {
+            m_id = id;
+            Q_EMIT idChanged();
+            QAccessibleEvent ev(parent(), QAccessible::IdentifierChanged);
             QAccessible::updateAccessibility(&ev);
         }
     }
@@ -191,6 +203,7 @@ Q_SIGNALS:
     void roleChanged();
     void nameChanged();
     void descriptionChanged();
+    void idChanged();
     void ignoredChanged();
     void pressAction();
     void toggleAction();
@@ -212,6 +225,7 @@ private:
     QString m_description;
     bool m_descriptionExplicitlySet = false;
     QQuickAccessibleAttached* m_proxying = nullptr;
+    QString m_id;
 
     static QMetaMethod sigPress;
     static QMetaMethod sigToggle;

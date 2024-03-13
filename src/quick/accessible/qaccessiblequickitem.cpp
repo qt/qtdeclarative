@@ -604,6 +604,20 @@ QString QAccessibleQuickItem::text(QAccessible::Text textType) const
         if (!accessibleDecription.isNull())
             return accessibleDecription.toString();
         break;}
+    case QAccessible::Identifier: {
+        QVariant accessibleIdentifier = QQuickAccessibleAttached::property(object(), "id");
+        if (!accessibleIdentifier.isNull())
+            return accessibleIdentifier.toString();
+        auto quickItem = item();
+        if (quickItem->isComponentComplete()) {
+            QQmlContext *context = qmlContext(quickItem);
+            if (context) {
+                const auto objectId = context->nameForObject(quickItem);
+                if (!objectId.isEmpty())
+                    return objectId;
+            }
+        }
+        break;}
 #ifdef Q_ACCESSIBLE_QUICK_ITEM_ENABLE_DEBUG_DESCRIPTION
     case QAccessible::DebugDescription: {
         QString debugString;
