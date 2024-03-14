@@ -262,6 +262,9 @@ The \c status property will be updated as the operation progresses.
 
 If provided, \a callback is invoked when the operation completes.  The callback is passed
 the same object as is returned from the Qt.include() call.
+
+\warning Using this function is strict mode does not actually put identifier into the
+current context.
 */
 // Qt.include() is implemented in qv4include.cpp
 
