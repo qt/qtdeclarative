@@ -56,10 +56,10 @@
 
     Each Action to change text formatting (such as bold, italic and alignment)
     is \l {Action::}{checkable}, and its boolean \c checked state
-    is in sync with the relevant font property in the
+    is in sync with the relevant property in the
     \l {TextEdit::selectedText}{selected text}.
     Since declarative bidirectional synchronization is difficult, we use
-    an \c onTriggered script to change the font property when the Action is
+    an \c onTriggered script to change the property when the Action is
     activated. The \l {TextEdit::}{cursorSelection} property
     is new in Qt 6.7 and makes this much easier than it was.
 

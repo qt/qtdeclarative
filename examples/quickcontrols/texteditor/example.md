@@ -1,10 +1,10 @@
 # Markdown in Qt Quick
 
 The Text, TextEdit and TextArea items support rich text formatted in HTML.
-Since Qt 5.14, they now support two dialects of Markdown as well:
-[The CommonMark Specification](https://spec.commonmark.org/0.29/) is the
+Since Qt 5.14, they support two dialects of Markdown as well:
+[The CommonMark Specification](https://spec.commonmark.org/0.31.2/) is the
 conservative formal specification, while
-[GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/#GitHub-flavored-markdown)
+[GitHub Flavored Markdown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
 adds extra features such as task lists and tables.
 
 If you are viewing this document in the Qt Quick Controls Text Editor example,
@@ -36,7 +36,7 @@ Block {
 
 Block quotes can be nested, and block quotes can include indented code blocks.
 
-In [The CommonMark Specification](https://spec.commonmark.org/0.29/)
+In [The CommonMark Specification](https://spec.commonmark.org/0.31.2/)
 John MacFarlane writes:
 
 > What distinguishes Markdown from many other lightweight markup syntaxes,
@@ -158,7 +158,7 @@ Some Qt Widgets also support Markdown.
 [QTextEdit](https://doc.qt.io/qt-6/qtextedit.html) has similar WYSIWYG
 editing features as TextEdit and TextArea: you can edit the rendered text
 directly. You can use
-[QTextDocument::toMarkdown](https://doc-snapshots.qt.io/qt5-dev/qtextdocument.html#toMarkdown)
+[QTextDocument::toMarkdown](https://doc.qt.io/qt-6/qtextdocument.html#toMarkdown)
 to rewrite the Markdown format, and save it back to a file.
 
 If you have the [KDE Kate Editor](https://kate-editor.org/) installed on your

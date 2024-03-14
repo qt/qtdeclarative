@@ -312,7 +312,6 @@ ApplicationWindow {
                     text: "\uF0C5" // icon-docs
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    enabled: textArea.selectedText
                     action: copyAction
                 }
                 ToolButton {
@@ -320,7 +319,6 @@ ApplicationWindow {
                     text: "\uE802" // icon-scissors
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    enabled: textArea.selectedText
                     action: cutAction
                 }
                 ToolButton {
@@ -328,7 +326,6 @@ ApplicationWindow {
                     text: "\uF0EA" // icon-paste
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    enabled: textArea.canPaste
                     action: pasteAction
                 }
                 ToolSeparator {
