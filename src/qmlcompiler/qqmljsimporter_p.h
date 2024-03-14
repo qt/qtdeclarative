@@ -134,6 +134,14 @@ public:
     };
     void runImportVisitor(QQmlJS::AST::Node *rootNode,
                           const ImportVisitorPrerequisites &prerequisites);
+
+    /*!
+    \internal
+     When a qml file gets lazily loaded, it will be lexed and parsed and finally be constructed
+    via an ImportVisitor. By default, this is done via the QQmlJSImportVisitor, but can also be done
+    via other import visitors like QmltcVisitor, which is used by qmltc to compile a QML file, or
+    QQmlDomAstCreatorWithQQmlJSScope, which is used to construct the Dom of lazily loaded QML files.
+    */
     using ImportVisitor = std::function<void(QQmlJS::AST::Node *rootNode, QQmlJSImporter *self,
                                              const ImportVisitorPrerequisites &prerequisites)>;
 
