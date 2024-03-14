@@ -3179,6 +3179,61 @@ function(_qt_internal_collect_qml_import_paths out_var target)
     set(${out_var} "${qml_import_paths}" PARENT_SCOPE)
 endfunction()
 
+# This function returns the path to the qmlimportscanner executable.
+# The are a few cases to handle:
+# When used in a user project, the tool should already be built and we can find the path
+# via the imported target.
+# When used in an example that is built as part of the qtdeclarative build (or top-level build),
+# there is no imported target yet. Here we have to differentiate whether the tool will be run at
+# build time or configure time.
+# If at configure time, we show an error, there is nothing to run yet. Such a setup is currently not
+# supported.
+# If at build time, we return the path where the built tool will be located after it is built.
+function(_qt_internal_find_qmlimportscanner_path out_path scan_at_configure_time)
+    # Find location of qmlimportscanner via the imported target.
+    set(tool_path "")
+    set(tool_name "qmlimportscanner")
+    set(import_scanner_target "${QT_CMAKE_EXPORT_NAMESPACE}::${tool_name}")
+    if(TARGET "${import_scanner_target}")
+        get_target_property(tool_path "${import_scanner_target}" IMPORTED_LOCATION)
+        if(NOT tool_path)
+            set(configs "RELWITHDEBINFO;RELEASE;MINSIZEREL;DEBUG")
+            foreach(config ${configs})
+                get_target_property(tool_path
+                    "${import_scanner_target}" IMPORTED_LOCATION_${config})
+                if(tool_path)
+                    break()
+                endif()
+            endforeach()
+        endif()
+    endif()
+
+    if(NOT QT_BUILDING_QT)
+        set(building_user_project TRUE)
+    else()
+        set(building_user_project FALSE)
+    endif()
+
+    if(NOT EXISTS "${tool_path}"
+            AND (building_user_project OR scan_at_configure_time))
+        message(FATAL_ERROR "The qmlimportscanner tool could not be found.
+Possible reasons include:
+* The file was deleted, renamed, or moved to another location.
+* An install or uninstall procedure did not complete successfully.
+* The installation was faulty.
+")
+    endif()
+
+    # We are building Qt, the tool is not built yet and we need to run it at build time.
+    if(NOT tool_path)
+        qt_path_join(tool_path
+            "${QT_BUILD_DIR}/${INSTALL_LIBEXECDIR}"
+            "${tool_name}${CMAKE_EXECUTABLE_SUFFIX}")
+    endif()
+
+    set(${out_path} "${tool_path}" PARENT_SCOPE)
+endfunction()
+
 function(_qt_internal_scan_qml_imports target imports_file_var when_to_scan)
     if(NOT "${ARGN}" STREQUAL "")
         message(FATAL_ERROR "Unknown/unexpected arguments: ${ARGN}")
@@ -3186,34 +3241,15 @@ function(_qt_internal_scan_qml_imports target imports_file_var when_to_scan)
 
     if(when_to_scan STREQUAL "BUILD_PHASE")
         set(scan_at_build_time TRUE)
+        set(scan_at_configure_time FALSE)
     elseif(when_to_scan STREQUAL "IMMEDIATELY")
         set(scan_at_build_time FALSE)
+        set(scan_at_configure_time TRUE)
     else()
         message(FATAL_ERROR "Unexpected value for when_to_scan: ${when_to_scan}")
     endif()
 
-    # Find location of qmlimportscanner.
-    get_target_property(tool_path ${QT_CMAKE_EXPORT_NAMESPACE}::qmlimportscanner IMPORTED_LOCATION)
-    if(NOT tool_path)
-        set(configs "RELWITHDEBINFO;RELEASE;MINSIZEREL;DEBUG")
-        foreach(config ${configs})
-            get_target_property(tool_path
-                ${QT_CMAKE_EXPORT_NAMESPACE}::qmlimportscanner IMPORTED_LOCATION_${config})
-            if(tool_path)
-                break()
-            endif()
-        endforeach()
-    endif()
-
-    if(NOT EXISTS "${tool_path}")
-        message(FATAL_ERROR "The package \"QmlImportScanner\" references the file
-   \"${tool_path}\"
-but this file does not exist.  Possible reasons include:
-* The file was deleted, renamed, or moved to another location.
-* An install or uninstall procedure did not complete successfully.
-* The installation package was faulty.
-")
-    endif()
+    _qt_internal_find_qmlimportscanner_path(tool_path "${scan_at_configure_time}")
 
     get_target_property(target_source_dir ${target} SOURCE_DIR)
     get_target_property(target_binary_dir ${target} BINARY_DIR)
