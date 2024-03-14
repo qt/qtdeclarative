@@ -3477,6 +3477,17 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     endfunction()
 endif()
 
+function(_qt_internal_add_qml_deploy_info_finalizer target)
+    get_property(finalizer_added TARGET ${target} PROPERTY _qt_qml_deploy_finalizer_added)
+    if(NOT finalizer_added)
+        set_property(TARGET ${target} APPEND PROPERTY
+            INTERFACE_QT_EXECUTABLE_FINALIZERS
+            _qt_internal_generate_deploy_qml_imports_script
+        )
+        set_property(TARGET ${target} PROPERTY _qt_qml_deploy_finalizer_added TRUE)
+    endif()
+endfunction()
+
 # This function may be called as a finalizer in qt6_finalize_executable() for any
 # target that links against the Qml library for a shared Qt.
 function(_qt_internal_generate_deploy_qml_imports_script target)
@@ -3682,23 +3693,28 @@ function(qt6_generate_deploy_qml_app_script)
     endforeach()
 
     _qt_internal_should_skip_deployment_api(skip_deployment skip_reason)
-    if(skip_deployment)
-        _qt_internal_generate_no_op_deploy_script(
-            FUNCTION_NAME "qt6_generate_deploy_qml_app_script"
-            SKIP_REASON "${skip_reason}"
-            TARGET ${arg_TARGET}
-            NAME ${deploy_script_name}
-            OUTPUT_SCRIPT deploy_script
-        )
-    elseif(APPLE AND NOT IOS AND QT6_IS_SHARED_LIBS_BUILD AND is_bundle)
+    _qt_internal_should_skip_post_build_deployment_api(skip_post_build_deployment
+        post_build_skip_reason)
+
+    if(APPLE AND NOT IOS AND QT6_IS_SHARED_LIBS_BUILD AND is_bundle)
         # TODO: Consider handling non-bundle applications in the future using the generic cmake
         # runtime dependency feature.
 
-        qt6_generate_deploy_script(
-            TARGET ${arg_TARGET}
-            NAME ${deploy_script_name}
-            OUTPUT_SCRIPT deploy_script
-            CONTENT "
+        set(should_post_build FALSE)
+        if(arg_MACOS_BUNDLE_POST_BUILD AND NOT skip_post_build_deployment)
+            set(should_post_build TRUE)
+        endif()
+
+        # Generate the real deployment script when both post build step either deployment are
+        # enabled.
+        # If we skip deployment, but not the POST_BUILD step, we still need to generate the
+        # regular deploy script to run it during POST_BUILD time.
+        if(NOT skip_deployment OR should_post_build)
+            qt6_generate_deploy_script(
+                TARGET ${arg_TARGET}
+                NAME ${deploy_script_name}
+                OUTPUT_SCRIPT real_deploy_script
+                CONTENT "
 qt6_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 if(NOT DEFINED __QT_DEPLOY_POST_BUILD)
     qt6_deploy_runtime_dependencies(
@@ -3706,7 +3722,45 @@ if(NOT DEFINED __QT_DEPLOY_POST_BUILD)
         ADDITIONAL_MODULES \${plugins_found}
     ${common_deploy_args})
 endif()")
-        if(arg_MACOS_BUNDLE_POST_BUILD)
+        endif()
+
+        # Generate a no-op script either if we skip deployment or the post build step.
+        if(skip_deployment)
+            _qt_internal_generate_no_op_deploy_script(
+                FUNCTION_NAME "qt6_generate_deploy_qml_app_script"
+                SKIP_REASON "${skip_reason}"
+                TARGET ${arg_TARGET}
+                NAME ${deploy_script_name}
+                OUTPUT_SCRIPT no_op_deploy_script
+            )
+        endif()
+
+        if(skip_post_build_deployment)
+            _qt_internal_generate_no_op_deploy_script(
+                FUNCTION_NAME "qt6_generate_deploy_qml_app_script"
+                SKIP_REASON "${post_build_skip_reason}"
+                TARGET ${arg_TARGET}
+                NAME ${deploy_script_name}
+                OUTPUT_SCRIPT no_op_post_build_script
+            )
+        endif()
+
+        # Choose which deployment script to use during installation.
+        if(skip_deployment)
+            set(deploy_script "${no_op_deploy_script}")
+        else()
+            set(deploy_script "${real_deploy_script}")
+        endif()
+
+        # Choose which deployment script to use during the post build step.
+        if(should_post_build)
+            set(post_build_deploy_script "${real_deploy_script}")
+        elseif(skip_post_build_deployment)
+            # Explicitly asked to skip post build, show a no-op message.
+            set(post_build_deploy_script "${no_op_post_build_script}")
+        endif()
+
+        if(should_post_build OR skip_post_build_deployment)
             # We must not deploy the runtime dependencies, otherwise we interfere
             # with CMake's RPATH rewriting at install time. We only need the QML
             # imports deployed to the bundle anyway, the build RPATHs will allow
@@ -3717,11 +3771,18 @@ endif()")
                 -D "QT_DEPLOY_PREFIX=$<TARGET_PROPERTY:${arg_TARGET},BINARY_DIR>"
                 -D "__QT_DEPLOY_IMPL_DIR=${deploy_impl_dir}"
                 -D "__QT_DEPLOY_POST_BUILD=TRUE"
-                -P "${deploy_script}"
+                -P "${post_build_deploy_script}"
                 VERBATIM
             )
         endif()
-
+    elseif(skip_deployment)
+            _qt_internal_generate_no_op_deploy_script(
+                FUNCTION_NAME "qt6_generate_deploy_qml_app_script"
+                SKIP_REASON "${skip_reason}"
+                TARGET ${arg_TARGET}
+                NAME ${deploy_script_name}
+                OUTPUT_SCRIPT deploy_script
+            )
     elseif(WIN32 AND QT6_IS_SHARED_LIBS_BUILD)
         qt6_generate_deploy_script(
             TARGET ${arg_TARGET}
