@@ -61,6 +61,7 @@ private slots:
 #if QT_CONFIG(cursor)
     void popup();
 #endif
+    void openParentlessMenu();
     void actions();
 #if QT_CONFIG(shortcut)
     void actionShortcuts();
@@ -989,6 +990,29 @@ void tst_QQuickMenu::popup()
     QTRY_COMPARE(QCursor::pos(), oldCursorPos);
 }
 #endif // QT_CONFIG(cursor)
+
+void tst_QQuickMenu::openParentlessMenu()
+{
+    // Check that we don't get a crash if the application sets a menu's parentItem
+    // to null. This will also result in the menu not showing at all, since it's
+    // no longer a part of the scene. Even if this limitiation is technically only
+    // relevant for non-native menus, we enforce it also for native menus to ensure
+    // that an application works the same on all platforms.
+    QQuickControlsApplicationHelper helper(this, QLatin1String("popup.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    centerOnScreen(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot show menu: parent is null"));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->setParentItem(nullptr);
+    menu->popup();
+    QVERIFY(!menu->isVisible());
+}
 
 void tst_QQuickMenu::actions()
 {

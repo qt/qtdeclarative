@@ -1466,6 +1466,10 @@ void QQuickMenu::setVisible(bool visible)
     Q_D(QQuickMenu);
     if (visible == d->visible)
         return;
+    if (visible && !parentItem()) {
+        qmlWarning(this) << "cannot show menu: parent is null";
+        return;
+    }
 
     if (visible && ((d->useNativeMenu() && !d->maybeNativeHandle())
             || (!d->useNativeMenu() && d->maybeNativeHandle()))) {
