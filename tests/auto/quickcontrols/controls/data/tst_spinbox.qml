@@ -443,6 +443,7 @@ TestCase {
         id: doubleBox
         SpinBox {
             id: doubleSpinBox
+            locale: Qt.locale("en_EN")
 
             property int decimals: 2
             property double realValue: value / 10**decimals
@@ -451,6 +452,7 @@ TestCase {
                 top:  Math.max(doubleSpinBox.from, doubleSpinBox.to)
                 decimals: doubleSpinBox.decimals
                 notation: DoubleValidator.StandardNotation
+                locale: doubleSpinBox.locale.name
             }
 
             textFromValue: function(value, locale) {
@@ -462,6 +464,13 @@ TestCase {
                 let res = Math.round(Number.fromLocaleString(locale, text) * 10**doubleSpinBox.decimals)
                 return res
             }
+
+            onDisplayTextChanged: {
+                console.log(doubleSpinBox.displayText)
+                displayTextChangedWithArg(doubleSpinBox.displayText);
+            }
+
+            signal displayTextChangedWithArg(text: string)
         }
     }
 
@@ -469,16 +478,6 @@ TestCase {
         var control = createTemporaryObject(doubleBox, testCase)
         verify(control)
 
-        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
-        verify(valueModifiedSpy.valid)
-
-        var valueChangedSpy = signalSpy.createObject(control, {target: control, signalName: "valueChanged"})
-        verify(valueChangedSpy.valid)
-
-        var displayTextChangedSpy = signalSpy.createObject(control, {target: control, signalName: "displayTextChanged"})
-        verify(displayTextChangedSpy.valid)
-
-        control.locale = Qt.locale("en_EN")
         control.editable = true
         control.from = 0
         control.to = 1000000
@@ -492,73 +491,94 @@ TestCase {
         compare(control.realValue, 5.00)
         compare(control.displayText, "5.00")
 
+        var valueModifiedSpy = signalSpy.createObject(
+                    control, {target: control, signalName: "valueModified"})
+        verify(valueModifiedSpy.valid)
+
+        var valueChangedSpy = signalSpy.createObject(
+                    control, {target: control, signalName: "valueChanged"})
+        verify(valueChangedSpy.valid)
+
+        var displayTextChangedSpy = signalSpy.createObject(
+                    control, {target: control, signalName: "displayTextChangedWithArg"})
+        verify(displayTextChangedSpy.valid)
+
         control.contentItem.forceActiveFocus()
         compare(control.contentItem.activeFocus, true)
 
         control.contentItem.selectAll()
+        compare(displayTextChangedSpy.count, 0)
         keyClick(Qt.Key_4)
         compare(control.value, 500)
         compare(control.realValue, 5.00)
         compare(control.displayText, "4")
         compare(valueModifiedSpy.count, 0)
-        compare(valueChangedSpy.count, 1)
-        compare(displayTextChangedSpy.count, 2)
+        compare(valueChangedSpy.count, 0)
+        compare(displayTextChangedSpy.signalArguments[0][0], "4")
+        compare(displayTextChangedSpy.count, 1)
 
         keyClick(Qt.Key_Enter)
         compare(control.value, 400)
         compare(control.realValue, 4.00)
         compare(control.displayText, "4.00")
         compare(valueModifiedSpy.count, 1)
-        compare(valueChangedSpy.count, 2)
-        compare(displayTextChangedSpy.count, 3)
+        compare(valueChangedSpy.count, 1)
+        compare(displayTextChangedSpy.signalArguments[1][0], "4.00")
+        compare(displayTextChangedSpy.count, 2)
 
         keyClick(Qt.Key_Backspace)
         compare(control.value, 400)
         compare(control.realValue, 4.00)
         compare(control.displayText, "4.0")
         compare(valueModifiedSpy.count, 1)
-        compare(valueChangedSpy.count, 2)
-        compare(displayTextChangedSpy.count, 4)
+        compare(valueChangedSpy.count, 1)
+        compare(displayTextChangedSpy.signalArguments[2][0], "4.0")
+        compare(displayTextChangedSpy.count, 3)
 
         keyClick(Qt.Key_Backspace)
         compare(control.value, 400)
         compare(control.realValue, 4.00)
         compare(control.displayText, "4") //The fixup removes the trailing "."
         compare(valueModifiedSpy.count, 1)
-        compare(valueChangedSpy.count, 2)
-        compare(displayTextChangedSpy.count, 5)
+        compare(valueChangedSpy.count, 1)
+        compare(displayTextChangedSpy.signalArguments[3][0], "4")
+        compare(displayTextChangedSpy.count, 4)
 
         keyClick(Qt.Key_0)
         compare(control.value, 400)
         compare(control.realValue, 4.00)
         compare(control.displayText, "40")
         compare(valueModifiedSpy.count, 1)
-        compare(valueChangedSpy.count, 2)
-        compare(displayTextChangedSpy.count, 6)
+        compare(valueChangedSpy.count, 1)
+        compare(displayTextChangedSpy.signalArguments[4][0], "40")
+        compare(displayTextChangedSpy.count, 5)
 
         keyClick(Qt.Key_0)
         compare(control.value, 400)
         compare(control.realValue, 4.00)
         compare(control.displayText, "400")
         compare(valueModifiedSpy.count, 1)
-        compare(valueChangedSpy.count, 2)
-        compare(displayTextChangedSpy.count, 7)
+        compare(valueChangedSpy.count, 1)
+        compare(displayTextChangedSpy.signalArguments[5][0], "400")
+        compare(displayTextChangedSpy.count, 6)
 
         keyClick(Qt.Key_0)
         compare(control.value, 400)
         compare(control.realValue, 4.00)
         compare(control.displayText, "4,000")
         compare(valueModifiedSpy.count, 1)
-        compare(valueChangedSpy.count, 2)
-        compare(displayTextChangedSpy.count, 8)
+        compare(valueChangedSpy.count, 1)
+        compare(displayTextChangedSpy.signalArguments[6][0], "4,000")
+        compare(displayTextChangedSpy.count, 7)
 
         keyClick(Qt.Key_Enter)
         compare(control.value, 400000)
         compare(control.realValue, 4000.00)
         compare(control.displayText, "4,000.00")
         compare(valueModifiedSpy.count, 2)
-        compare(valueChangedSpy.count, 3)
-        compare(displayTextChangedSpy.count, 9)
+        compare(valueChangedSpy.count, 2)
+        compare(displayTextChangedSpy.signalArguments[7][0], "4,000.00")
+        compare(displayTextChangedSpy.count, 8)
 
         // Changing to and testing live mode
         control.live = true
@@ -569,24 +589,27 @@ TestCase {
         compare(control.realValue, 4000.00)
         compare(control.displayText, "4,000.0")
         compare(valueModifiedSpy.count, 2)
-        compare(valueChangedSpy.count, 3)
-        compare(displayTextChangedSpy.count, 10)
+        compare(valueChangedSpy.count, 2)
+        compare(displayTextChangedSpy.signalArguments[8][0], "4,000.0")
+        compare(displayTextChangedSpy.count, 9)
 
         keyClick(Qt.Key_Backspace)
         compare(control.value, 400000)
         compare(control.realValue, 4000.00)
         compare(control.displayText, "4,000") //The fixup removes the trailing "."
         compare(valueModifiedSpy.count, 2)
-        compare(valueChangedSpy.count, 3)
-        compare(displayTextChangedSpy.count, 11)
+        compare(valueChangedSpy.count, 2)
+        compare(displayTextChangedSpy.signalArguments[9][0], "4,000")
+        compare(displayTextChangedSpy.count, 10)
 
         keyClick(Qt.Key_Backspace)
         compare(control.displayText, "400.00")
         compare(control.value, 40000)
         compare(control.realValue, 400.00)
         compare(valueModifiedSpy.count, 2)
-        compare(valueChangedSpy.count, 4)
-        compare(displayTextChangedSpy.count, 12)
+        compare(valueChangedSpy.count, 3)
+        compare(displayTextChangedSpy.signalArguments[10][0], "400.00")
+        compare(displayTextChangedSpy.count, 11)
 
         // It is a bit unfortunate that we need 3 Backspace to go from
         // 400 to 4000 on live editing mode. Maybe think about a fix in
@@ -598,8 +621,11 @@ TestCase {
         compare(control.value, 4000)
         compare(control.realValue, 40.00)
         compare(valueModifiedSpy.count, 2)
-        compare(valueChangedSpy.count, 5)
-        compare(displayTextChangedSpy.count, 15)
+        compare(valueChangedSpy.count, 4)
+        compare(displayTextChangedSpy.signalArguments[11][0], "400.0")
+        compare(displayTextChangedSpy.signalArguments[12][0], "400")
+        compare(displayTextChangedSpy.signalArguments[13][0], "40.00")
+        compare(displayTextChangedSpy.count, 14)
 
         keyClick(Qt.Key_Backspace)
         keyClick(Qt.Key_Backspace)
@@ -608,8 +634,11 @@ TestCase {
         compare(control.value, 400)
         compare(control.realValue, 4.00)
         compare(valueModifiedSpy.count, 2)
-        compare(valueChangedSpy.count, 6)
-        compare(displayTextChangedSpy.count, 18)
+        compare(valueChangedSpy.count, 5)
+        compare(displayTextChangedSpy.signalArguments[14][0], "40.0")
+        compare(displayTextChangedSpy.signalArguments[15][0], "40")
+        compare(displayTextChangedSpy.signalArguments[16][0], "4.00")
+        compare(displayTextChangedSpy.count, 17)
 
         keyClick(Qt.Key_Backspace)
         keyClick(Qt.Key_Backspace)
@@ -618,8 +647,11 @@ TestCase {
         compare(control.value, 4100)
         compare(control.realValue, 41.00)
         compare(valueModifiedSpy.count, 2)
-        compare(valueChangedSpy.count, 7)
-        compare(displayTextChangedSpy.count, 21)
+        compare(valueChangedSpy.count, 6)
+        compare(displayTextChangedSpy.signalArguments[17][0], "4.0")
+        compare(displayTextChangedSpy.signalArguments[18][0], "4")
+        compare(displayTextChangedSpy.signalArguments[19][0], "41.00")
+        compare(displayTextChangedSpy.count, 20)
     }
 
     function test_groupSeparatorHandling_data() {
