@@ -52,7 +52,7 @@ public:
     bool useNativeMenu() const;
     bool createNativeMenu();
     void syncWithNativeMenu();
-    void syncWithRequestNative();
+    void syncWithUseNativeMenu();
     static void recursivelyDestroyNativeSubMenus(QQuickMenu *menu);
     void setNativeMenuVisible(bool visible);
 
@@ -120,7 +120,6 @@ public:
     QPalette defaultPalette() const override;
 
     bool cascade = false;
-    bool requestNative = false;
     bool triedToCreateNativeMenu = false;
     int hoverTimer = 0;
     int currentIndex = -1;

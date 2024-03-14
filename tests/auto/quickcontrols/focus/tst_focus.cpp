@@ -52,6 +52,7 @@ tst_focus::tst_focus()
 
 void tst_focus::initTestCase()
 {
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     QQuickStyle::setStyle("Basic");
     QQmlDataTest::initTestCase();
 }

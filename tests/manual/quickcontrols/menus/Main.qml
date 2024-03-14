@@ -1,4 +1,4 @@
-// Copyright (C) 2023 The Qt Company Ltd.
+// Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtCore
@@ -28,13 +28,11 @@ ApplicationWindow {
     }
 
     menuBar: MenuBar {
-        requestNative: requestNativeMenuBarSwitch.checked
         visible: menuBarVisibleSwitch.checked
 
         Menu {
             id: fileMenu
             objectName: "file"
-            requestNative: true
             title: qsTr("&File")
             ContextAction { text: qsTr("&New...") }
             ContextMenuItem { text: "menuItem" }
@@ -135,9 +133,10 @@ ApplicationWindow {
                 anchors.fill: parent
 
                 Switch {
-                    id: requestNativeAction
-                    text: qsTr("Request native")
-                    checked: true
+                    text: qsTr("Don't use native menu windows")
+                    checked: CppSettings.dontUseNativeMenuWindows
+
+                    onClicked: CppSettings.dontUseNativeMenuWindows = checked
                 }
 
                 Row {
@@ -186,9 +185,10 @@ ApplicationWindow {
 
                 Row {
                     Switch {
-                        id: requestNativeMenuBarSwitch
-                        text: qsTr("Request native")
-                        checked: true
+                        text: qsTr("Don't use native menu bar")
+                        checked: CppSettings.dontUseNativeMenuBar
+
+                        onClicked: CppSettings.dontUseNativeMenuBar = checked
                     }
                     Switch {
                         id: menuBarVisibleSwitch
@@ -245,7 +245,6 @@ ApplicationWindow {
     Menu {
         id: backgroundContextMenu
         objectName: "backgroundContextMenu"
-        requestNative: requestNativeAction.checked
 
         function appendAction() {
             let action = actionComponent.createObject(null, { text: qsTr("Extra context menu item") })
@@ -331,7 +330,6 @@ ApplicationWindow {
     Menu {
         id: editContextMenu
         objectName: "editContextMenu"
-        requestNative: requestNativeAction.checked
 
         ContextAction {
             text: qsTr("Cut")

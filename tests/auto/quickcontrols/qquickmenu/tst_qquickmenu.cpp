@@ -46,6 +46,8 @@ public:
     tst_QQuickMenu();
 
 private slots:
+    void init();
+
     void defaults();
     void count();
     void mouse();
@@ -98,7 +100,7 @@ private slots:
     void nativeDynamicActions();
     void nativeDynamicSubmenus();
     void nativeMenuSeparator();
-    void requestNativeChanges();
+    void dontUseNativeMenuWindowsChanges();
     void nativeMixedItems();
 
 private:
@@ -121,6 +123,16 @@ tst_QQuickMenu::tst_QQuickMenu()
 {
     std::unique_ptr<QPlatformMenu> platformMenu(QGuiApplicationPrivate::platformTheme()->createPlatformMenu());
     nativeMenuSupported = platformMenu != nullptr;
+}
+
+void tst_QQuickMenu::init()
+{
+    QQmlDataTest::init();
+
+    // By default we don't want to use native menus, as the majority of the tests
+    // were written before they were a thing. We instead explicitly set it where necessary.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
 }
 
 bool tst_QQuickMenu::hasWindowActivation()
@@ -2189,6 +2201,7 @@ void tst_QQuickMenu::invalidUrlInImgTag()
 
 void tst_QQuickMenu::nativeStatic()
 {
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeStatic.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2197,8 +2210,8 @@ void tst_QQuickMenu::nativeStatic()
 
     QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
     QVERIFY(contextMenu);
-    QVERIFY(contextMenu->requestNative());
     auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
+    QVERIFY(contextMenuPrivate->useNativeMenu());
 
     // Check that the actions of the parent menu can be accessed
     // and are in the appropriate places in contentModel and contentData.
@@ -2232,6 +2245,7 @@ void tst_QQuickMenu::nativeStatic()
 
 void tst_QQuickMenu::nativeDynamicActions()
 {
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeEmptyMenu.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2291,6 +2305,7 @@ void tst_QQuickMenu::nativeDynamicActions()
 
 void tst_QQuickMenu::nativeDynamicSubmenus()
 {
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeDynamicSubmenus.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2398,6 +2413,7 @@ void tst_QQuickMenu::nativeDynamicSubmenus()
 
 void tst_QQuickMenu::nativeMenuSeparator()
 {
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeMenuSeparator.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2435,8 +2451,12 @@ void tst_QQuickMenu::nativeMenuSeparator()
     }
 }
 
-void tst_QQuickMenu::requestNativeChanges()
+void tst_QQuickMenu::dontUseNativeMenuWindowsChanges()
 {
+    if (QSysInfo::productType() == QLatin1String("b2qt"))
+        QSKIP("b2qt doesn't support native menus");
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeStatic.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2445,9 +2465,8 @@ void tst_QQuickMenu::requestNativeChanges()
 
     QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
     QVERIFY(contextMenu);
-    QVERIFY(contextMenu->requestNative());
     QCOMPARE(contextMenu->count(), 3);
-    // Sub-menus should respect the value of requestNative of their parents.
+    // Sub-menus should respect the native-ness of their parents.
     auto *subMenu = contextMenu->menuAt(2);
     auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
     QVERIFY(subMenuPrivate->useNativeMenu());
@@ -2472,12 +2491,12 @@ void tst_QQuickMenu::requestNativeChanges()
         QVERIFY(contextMenuPrivate->handle);
     else
         QVERIFY(!contextMenuPrivate->handle);
-    contextMenu->setRequestNative(false);
-    QVERIFY(!contextMenu->requestNative());
+
+    // We need to wait until the menu is opened before it picks up the changes,
+    // which is why we don't check the native handle here yet.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     QVERIFY(!contextMenuPrivate->useNativeMenu());
-    QVERIFY(!contextMenuPrivate->handle);
     QVERIFY(!subMenuPrivate->useNativeMenu());
-    QVERIFY(!subMenuPrivate->handle);
 
     // Check that we can open the menu by right-clicking (or just open it manually
     // if the platform doesn't support (moving) QCursor).
@@ -2505,6 +2524,9 @@ void tst_QQuickMenu::requestNativeChanges()
     QVERIFY(contextMenu->isVisible());
     QTRY_VERIFY(contextMenu->isOpened());
     QCOMPARE(aboutToShowSpy.size(), 1);
+    // Now that it's open and has picked up the changes to Qt::AA_DontUseNativeMenuWindows, we can check it.
+    QVERIFY(!contextMenuPrivate->handle);
+    QVERIFY(!subMenuPrivate->handle);
     // Check that it opened at the mouse cursor and actually has menu items.
     QCOMPARE(contextMenu->x(), cursorPos.x());
     QCOMPARE(contextMenu->y(), cursorPos.y());
@@ -2512,10 +2534,10 @@ void tst_QQuickMenu::requestNativeChanges()
     QVERIFY(action1MenuItem);
     QCOMPARE(action1MenuItem->text(), "action1");
 
-    // Test setting requestNative while visible has no effect (until it's re-opened, which we can't
-    // test because we can't test opening native menus).
-    contextMenu->setRequestNative(true);
-    QVERIFY(contextMenu->requestNative());
+    // Test setting Qt::AA_DontUseNativeMenuWindows while visible has no effect
+    // (until it's re-opened, which we can't test because we can't test opening native menus).
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
+    QVERIFY(contextMenuPrivate->useNativeMenu());
     QVERIFY(!contextMenuPrivate->handle);
     QVERIFY(!subMenuPrivate->handle);
 
@@ -2535,23 +2557,16 @@ void tst_QQuickMenu::requestNativeChanges()
     // Although we can't open the native menu, we can at least check that
     // attempting (the changes won't come into effect until it's re-opened)
     // to make the menu native again doesn't e.g. crash.
-    contextMenu->setRequestNative(true);
     QVERIFY(contextMenuPrivate->useNativeMenu());
     QVERIFY(subMenuPrivate->useNativeMenu());
     QVERIFY(!contextMenuPrivate->handle);
-    QVERIFY(!subMenuPrivate->handle);
-
-    // Check that setting requestNative has no (immediate) effect on a sub-menu.
-    subMenu->setRequestNative(false);
-    // Its parent still is still requesting to be native, otherwise this would be false.
-    QVERIFY(subMenuPrivate->useNativeMenu());
-    QVERIFY(!subMenuPrivate->requestNative);
     QVERIFY(!subMenuPrivate->handle);
 }
 
 // Check that non-menu items (e.g. Rectangles) can be inserted between menu items without issues.
 void tst_QQuickMenu::nativeMixedItems()
 {
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeMixedItems.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2560,7 +2575,6 @@ void tst_QQuickMenu::nativeMixedItems()
 
     QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
     QVERIFY(contextMenu);
-    QVERIFY(contextMenu->requestNative());
 
     // Insert a Rectangle between the Action and MenuItem in the top-level menu.
     QVERIFY(QMetaObject::invokeMethod(window, "insertRectangle",

@@ -448,7 +448,7 @@ QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
 
 bool QQuickMenuBarPrivate::useNativeMenuBar() const
 {
-    return requestNative && !QCoreApplication::testAttribute(Qt::AA_DontUseNativeMenuBar);
+    return !QCoreApplication::testAttribute(Qt::AA_DontUseNativeMenuBar);
 }
 
 void QQuickMenuBarPrivate::syncNativeMenuBarVisible()
@@ -458,6 +458,8 @@ void QQuickMenuBarPrivate::syncNativeMenuBarVisible()
         return;
 
     const bool shouldBeVisible = q->isVisible() && useNativeMenuBar();
+    qCDebug(lcMenuBar) << "syncNativeMenuBarVisible called - q->isVisible()" << q->isVisible()
+        << "useNativeMenuBar()" << useNativeMenuBar() << "handle" << handle.get();
     if (shouldBeVisible && !handle)
         createNativeMenuBar();
     else if (!shouldBeVisible && handle)
@@ -846,6 +848,7 @@ void QQuickMenuBar::itemChange(QQuickItem::ItemChange change, const QQuickItem::
         }
         break;
     case ItemVisibleHasChanged:
+        qCDebug(lcMenuBar) << "visibility of" << this << "changed to" << isVisible();
         d->syncNativeMenuBarVisible();
         break;
     default:
@@ -907,28 +910,6 @@ QAccessible::Role QQuickMenuBar::accessibleRole() const
     return QAccessible::MenuBar;
 }
 #endif
-
-bool QQuickMenuBar::requestNative() const
-{
-    return d_func()->requestNative;
-}
-
-void QQuickMenuBar::setRequestNative(bool requestNative)
-{
-    Q_D(QQuickMenuBar);
-    if (d->requestNative == requestNative)
-        return;
-
-    d->requestNative = requestNative;
-    d->syncNativeMenuBarVisible();
-
-    emit requestNativeChanged();
-}
-
-void QQuickMenuBar::resetRequestNative()
-{
-    setRequestNative(false);
-}
 
 QT_END_NAMESPACE
 

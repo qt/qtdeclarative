@@ -7,17 +7,20 @@
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication::setApplicationName("menus");
     QGuiApplication::setOrganizationName("QtProject");
+    QGuiApplication::setApplicationName("menus");
 
     QGuiApplication app(argc, argv);
 
-//    app.setAttribute(Qt::AA_DontUseNativeMenuBar, true);
-    qputenv("QT_QUICK_CONTROLS_USE_NATIVE_MENUS", "1");
-
     QQmlApplicationEngine engine;
     engine.setInitialProperties({{ "currentStyle", QQuickStyle::name() }});
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    QObject::connect(
+        &engine,
+        &QQmlApplicationEngine::objectCreationFailed,
+        &app,
+        []() { QCoreApplication::exit(-1); },
+        Qt::QueuedConnection);
+    engine.loadFromModule("Menus", "Main");
 
     return app.exec();
 }

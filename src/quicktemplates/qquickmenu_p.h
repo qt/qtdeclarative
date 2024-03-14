@@ -45,9 +45,6 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickMenu : public QQuickPopup
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL REVISION(2, 3))
     // 6.5 (Qt 6.5)
     Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(6, 5))
-    // 6.8
-    Q_PROPERTY(bool requestNative READ requestNative WRITE setRequestNative RESET resetRequestNative
-        NOTIFY requestNativeChanged REVISION(6, 8))
     Q_CLASSINFO("DefaultProperty", "contentData")
     QML_NAMED_ELEMENT(Menu)
     QML_ADDED_IN_VERSION(2, 0)
@@ -74,10 +71,6 @@ public:
     bool cascade() const;
     void setCascade(bool cascade);
     void resetCascade();
-
-    bool requestNative() const;
-    void setRequestNative(bool native);
-    void resetRequestNative();
 
     qreal overlap() const;
     void setOverlap(qreal overlap);
@@ -129,8 +122,6 @@ Q_SIGNALS:
     Q_REVISION(2, 3) void currentIndexChanged();
     // 6.5 (Qt 6.5)
     Q_REVISION(6, 5) void iconChanged(const QQuickIcon &icon);
-    // 6.7
-    Q_REVISION(6, 7) void requestNativeChanged();
 
 protected:
     void timerEvent(QTimerEvent *event) override;

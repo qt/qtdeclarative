@@ -121,6 +121,7 @@ tst_QQuickPopup::tst_QQuickPopup()
 void tst_QQuickPopup::initTestCase()
 {
     QQmlDataTest::initTestCase();
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
 }
 

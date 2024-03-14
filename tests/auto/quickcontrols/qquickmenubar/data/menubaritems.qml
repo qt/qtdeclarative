@@ -7,7 +7,6 @@ import QtQuick.Controls
 ApplicationWindow {
     id: root
     readonly property Button oopsButton: oopsButton
-    property bool requestNative: false
     property alias fileMenu: fileMenu
 
     width: 400
@@ -15,7 +14,6 @@ ApplicationWindow {
     visible: true
 
     menuBar: MenuBar {
-        requestNative: root.requestNative
         MenuBarItem {
             menu: Menu {
                 id: fileMenu

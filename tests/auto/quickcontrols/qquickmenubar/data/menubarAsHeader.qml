@@ -6,7 +6,6 @@ import QtQuick.Controls
 
 ApplicationWindow {
     id: root
-    property bool requestNative: false
     property bool menuBarVisible: true
     property alias fileMenu: fileMenu
     property alias contents: contents
@@ -16,7 +15,6 @@ ApplicationWindow {
     visible: true
 
     header: MenuBar {
-        requestNative: root.requestNative
         visible: root.menuBarVisible
         Menu {
             id: fileMenu

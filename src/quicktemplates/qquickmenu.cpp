@@ -284,9 +284,6 @@ void QQuickMenuPrivate::init()
 {
     Q_Q(QQuickMenu);
     contentModel = new QQmlObjectModel(q);
-
-    // TODO: use an env var until we get Qt::AA_DontUseNativeMenu
-    requestNative = qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_USE_NATIVE_MENUS");
 }
 
 QQuickMenu *QQuickMenuPrivate::rootMenu() const
@@ -313,7 +310,7 @@ bool QQuickMenuPrivate::useNativeMenu() const
         if (QQuickMenuBarPrivate::get(menuBar)->useNativeMenuBar())
             return true;
     }
-    return root->requestNative();
+    return !QCoreApplication::testAttribute(Qt::AA_DontUseNativeMenuWindows);
 }
 
 QPlatformMenu *QQuickMenuPrivate::nativeHandle()
@@ -440,10 +437,10 @@ void QQuickMenuPrivate::syncWithNativeMenu()
     qCDebug(lcNativeMenus) << "... finished syncing" << q;
 }
 
-void QQuickMenuPrivate::syncWithRequestNative()
+void QQuickMenuPrivate::syncWithUseNativeMenu()
 {
     Q_Q(QQuickMenu);
-    // Users can change requestNative on sub-menus and menus that are visible,
+    // Users can change AA_DontUseNativeMenuWindows while a menu is visible,
     // but the changes won't take affect until the menu is re-opened.
     if (q->isVisible() || parentMenu)
         return;
@@ -1531,11 +1528,11 @@ void QQuickMenu::setVisible(bool visible)
     if (visible && ((d->useNativeMenu() && !d->maybeNativeHandle())
             || (!d->useNativeMenu() && d->maybeNativeHandle()))) {
         // We've been made visible, and our actual native state doesn't match our requested state,
-        // which means requestNative was set while we were visible or had a parent. Try to sync our
-        // state again now that we're about to be re-opened.
+        // which means AA_DontUseNativeMenuWindows was set while we were visible or had a parent.
+        // Try to sync our state again now that we're about to be re-opened.
         qCDebug(lcNativeMenus) << "setVisible called - useNativeMenu:" << d->useNativeMenu()
             << "maybeNativeHandle:" << d->maybeNativeHandle();
-        d->syncWithRequestNative();
+        d->syncWithUseNativeMenu();
     }
     if (d->maybeNativeHandle()) {
         d->setNativeMenuVisible(visible);
@@ -1700,29 +1697,6 @@ void QQuickMenu::resetCascade()
         setCascade(d->parentMenu->cascade());
     else
         setCascade(shouldCascade());
-}
-
-bool QQuickMenu::requestNative() const
-{
-    Q_D(const QQuickMenu);
-    return d->requestNative;
-}
-
-void QQuickMenu::setRequestNative(bool native)
-{
-    Q_D(QQuickMenu);
-    if (d->requestNative == native)
-        return;
-
-    d->requestNative = native;
-    if (d->complete)
-        d->syncWithRequestNative();
-    emit requestNativeChanged();
-}
-
-void QQuickMenu::resetRequestNative()
-{
-    setRequestNative(true);
 }
 
 /*!
@@ -1991,7 +1965,7 @@ void QQuickMenu::componentComplete()
     Q_D(QQuickMenu);
     QQuickPopup::componentComplete();
     d->resizeItems();
-    d->syncWithRequestNative();
+    d->syncWithUseNativeMenu();
 }
 
 void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)

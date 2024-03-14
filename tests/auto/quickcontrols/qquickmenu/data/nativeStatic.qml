@@ -14,7 +14,6 @@ ApplicationWindow {
     Menu {
         id: contextMenu
         objectName: "menu"
-        requestNative: true
 
         Action {
             objectName: text
@@ -36,7 +35,6 @@ ApplicationWindow {
             title: "subMenu"
             objectName: title
             // TODO: remove me when the defaults are true
-            requestNative: true
 
             Action {
                 objectName: text
