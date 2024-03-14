@@ -302,7 +302,10 @@ protected:
 
 /*!
 \internal
-Keep this struct around to be able to populate deferred scopes obtained from a QQmlJSTypeResolver.
+
+QQmlJSTypeResolver expects to be outlived by its importer and mapper. It crashes when its importer
+or mapper gets destructed. Therefore, you can use this struct to extend the lifetime of its
+dependencies in case you need to store the resolver as a class member.
 */
 struct QQmlJSTypeResolverDependencies
 {
