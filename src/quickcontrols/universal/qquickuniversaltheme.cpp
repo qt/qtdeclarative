@@ -3,7 +3,7 @@
 
 #include "qquickuniversaltheme_p.h"
 
-#include <QtGui/qfontinfo.h>
+#include <QtGui/qfontdatabase.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -14,8 +14,9 @@ void QQuickUniversalTheme::initialize(QQuickTheme *theme)
     QFont groupBoxTitleFont;
     QFont tabButtonFont;
 
-    const QFont font(QLatin1String("Segoe UI"));
-    if (QFontInfo(font).family() == QLatin1String("Segoe UI")) {
+    const QLatin1String segoeUiFamilyName("Segoe UI");
+    if (QFontDatabase::families().contains(segoeUiFamilyName)) {
+        const QFont font(segoeUiFamilyName);
         const QStringList families{font.family()};
         systemFont.setFamilies(families);
         groupBoxTitleFont.setFamilies(families);
