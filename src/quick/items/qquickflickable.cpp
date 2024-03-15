@@ -22,7 +22,7 @@
 #include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/qstylehints.h>
 #include <QtCore/qmath.h>
-#include <qpa/qplatformintegration.h>
+#include <qpa/qplatformtheme.h>
 
 #include <math.h>
 #include <cmath>
@@ -249,9 +249,9 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , syncDrag(false)
     , lastPosTime(-1)
     , lastPressTime(0)
-    , deceleration(QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FlickDeceleration).toReal())
+    , deceleration(QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::FlickDeceleration).toReal())
     , wheelDeceleration(15000)
-    , maxVelocity(QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FlickMaximumVelocity).toReal())
+    , maxVelocity(QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::FlickMaximumVelocity).toReal())
     , delayedPressEvent(nullptr), pressDelay(0), fixupDuration(400)
     , flickBoost(1.0), initialWheelFlickDistance(qApp->styleHints()->wheelScrollLines() * 24)
     , fixupMode(Normal), vTime(0), visibleArea(nullptr)
@@ -1455,7 +1455,7 @@ void QQuickFlickablePrivate::handleReleaseEvent(QPointerEvent *event)
     }
 
     flickBoost = canBoost ? qBound(1.0, flickBoost+0.25, QML_FLICK_MULTIFLICK_MAXBOOST) : 1.0;
-    const int flickThreshold = QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FlickStartDistance).toInt();
+    const int flickThreshold = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::FlickStartDistance).toInt();
 
     bool flickedVertically = false;
     vVelocity *= flickBoost;

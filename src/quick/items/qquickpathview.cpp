@@ -10,7 +10,7 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlopenmetaobject_p.h>
 #include <private/qqmlchangeset_p.h>
-#include <qpa/qplatformintegration.h>
+#include <qpa/qplatformtheme.h>
 
 #include <QtQml/qqmlinfo.h>
 
@@ -65,7 +65,7 @@ QQuickPathViewPrivate::QQuickPathViewPrivate()
     , moving(false), flicking(false), dragging(false), inRequest(false), delegateValidated(false)
     , inRefill(false)
     , dragMargin(0), deceleration(100)
-    , maximumFlickVelocity(QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FlickMaximumVelocity).toReal())
+    , maximumFlickVelocity(QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::FlickMaximumVelocity).toReal())
     , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
     , pathItems(-1), requestedIndex(-1), cacheSize(0), requestedZ(0)
     , moveReason(Other), movementDirection(QQuickPathView::Shortest), moveDirection(QQuickPathView::Shortest)
