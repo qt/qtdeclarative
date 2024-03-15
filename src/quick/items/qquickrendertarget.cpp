@@ -799,11 +799,11 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, con
     \a sampleCount specifies the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture, except when \a flags contains \l MultisampleResolve. In
-    that case, \a image is assumed to be a non-multisample 2D texture or 2D
+    that case, \a texture is assumed to be a non-multisample 2D texture or 2D
     texture array, and \a sampleCount defines the number of samples desired. The
     resulting QQuickRenderTarget will use an intermediate, automatically created
     multisample texture (or texture array) as its color attachment, and will
-    resolve the samples into \a image. This is the recommended approach to
+    resolve the samples into \a texture. This is the recommended approach to
     perform MSAA when the native Metal texture is not already multisample.
 
     The number of array elements (layers) is given in \a arraySize. When greater
@@ -851,7 +851,7 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uin
 
     d->pixelSize = pixelSize;
     d->sampleCount = qMax(1, sampleCount);
-    d->multisampleResolve = flags.testFlag(MultisampleResolve);
+    d->multisampleResolve = flags.testFlag(Flag::MultisampleResolve);
 
     if (arraySize <= 1) {
         d->type = QQuickRenderTargetPrivate::Type::NativeTexture;
