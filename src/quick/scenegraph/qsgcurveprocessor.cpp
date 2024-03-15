@@ -224,8 +224,8 @@ static bool isIntersecting(const TrianglePoints &t1, const TrianglePoints &t2, Q
     constexpr int maxIterations = 7; // Maximum iterations allowed for Newton
 
     // Convert to double to get better accuracy.
-    QPointF td1[3] = {QPointF(t1[0].x(), t1[0].y()), QPointF(t1[1].x(), t1[1].y()), QPointF(t1[2].x(), t1[2].y())};
-    QPointF td2[3] = {QPointF(t2[0].x(), t2[0].y()), QPointF(t2[1].x(), t2[1].y()), QPointF(t2[2].x(), t2[2].y())};
+    QPointF td1[3] = { t1[0].toPointF(), t1[1].toPointF(), t1[2].toPointF() };
+    QPointF td2[3] = { t2[0].toPointF(), t2[1].toPointF(), t2[2].toPointF() };
 
     // F = P1(t1) - P2(t2) where P1 and P2 are bezier curve functions.
     // F = (0, 0) at the intersection.
@@ -259,10 +259,11 @@ static bool isIntersecting(const TrianglePoints &t1, const TrianglePoints &t2, Q
 
     // TODO: Try to figure out reasonable starting points to reach all 4 possible intersections.
     // This works but is kinda brute forcing it.
-    const QList<QPointF> tref {{0., 0.}, {0.5, 0.}, {1., 0.}, {0., 0.5}, {0.5, 0.5}, {1., 0.5}, {0., 1.}, {0.5, 1.}, {1., 1.}};
+    constexpr std::array tref = { QPointF{0.0, 0.0}, QPointF{0.5, 0.0}, QPointF{1.0, 0.0},
+                                  QPointF{0.0, 0.5}, QPointF{0.5, 0.5}, QPointF{1.0, 0.5},
+                                  QPointF{0.0, 1.0}, QPointF{0.5, 1.0}, QPointF{1.0, 1.0} };
 
-    for (auto t0 : tref) {
-        QPointF t = t0;
+    for (auto t : tref) {
         double err = 1;
         QPointF fval = F(t);
         int i = 0;
@@ -285,8 +286,10 @@ static bool isIntersecting(const TrianglePoints &t1, const TrianglePoints &t2, Q
             if (solutions) {
                 bool append = true;
                 for (auto solution : *solutions) {
-                    if (qAbs(solution.first - t.x()) < 10 * eps2 && qAbs(solution.second - t.y()) < 10 * eps2)
+                    if (qAbs(solution.first - t.x()) < 10 * eps2 && qAbs(solution.second - t.y()) < 10 * eps2) {
                         append = false;
+                        break;
+                    }
                 }
                 if (append)
                     solutions->append({t.x(), t.y()});
@@ -325,8 +328,8 @@ struct TriangleData
     TrianglePoints normals;
 };
 
-// Returns a vector that is normal to baseLine, pointing to the right
-QVector2D normalVector(QVector2D baseLine)
+// Returns a normalized vector that is perpendicular to baseLine, pointing to the right
+inline QVector2D normalVector(QVector2D baseLine)
 {
     QVector2D normal = QVector2D(-baseLine.y(), baseLine.x()).normalized();
     return normal;
@@ -483,12 +486,12 @@ static QList<TriangleData> customTriangulator2(const QQuadPath &path, float penW
         giveUp = false;
         if (!element1) {
             Q_ASSERT(element2);
-            QVector2D n = normalVector(*element2).normalized();
+            QVector2D n = normalVector(*element2);
             return {n, n, -n, -n, -n};
         }
         if (!element2) {
             Q_ASSERT(element1);
-            QVector2D n = normalVector(*element1, true).normalized();
+            QVector2D n = normalVector(*element1, true);
             return {n, n, -n, -n, -n};
         }
 
@@ -551,8 +554,8 @@ static QList<TriangleData> customTriangulator2(const QQuadPath &path, float penW
 
         if (simpleJoin)
             return {bn, bn, -bn, -bn, -bn}; // We only have one inner and one outer point TODO: change inner point when conflict/curve
-        const QVector2D n1 = normalVector(*element1, true).normalized();
-        const QVector2D n2 = normalVector(*element2).normalized();
+        const QVector2D n1 = normalVector(*element1, true);
+        const QVector2D n2 = normalVector(*element2);
         if (giveUp) {
             if (innerIsRight)
                 return {n1, n2, -n1, -n2, -bn};
@@ -858,16 +861,17 @@ bool QSGCurveProcessor::solveOverlaps(QQuadPath &path)
 // reduce the complexity to O(n log n), where n is the number of elements in the path.
 QList<QPair<int, int>> QSGCurveProcessor::findOverlappingCandidates(const QQuadPath &path)
 {
-    struct bRect { float xmin; float xmax; float ymin; float ymax; };
+    struct BRect { float xmin; float xmax; float ymin; float ymax; };
 
-    // Calculate all bounding rectanlges
-    QList<int> elementStarts;
-    QVarLengthArray<bRect, 32> boundingRects;
+    // Calculate all bounding rectangles
+    QVarLengthArray<int, 64> elementStarts, elementEnds;
+    QVarLengthArray<BRect, 64> boundingRects;
+    elementStarts.reserve(path.elementCount());
     boundingRects.reserve(path.elementCount());
     for (int i = 0; i < path.elementCount(); i++) {
         QQuadPath::Element e = path.elementAt(i);
 
-        bRect bR{qMin(qMin(e.startPoint().x(), e.controlPoint().x()), e.endPoint().x()),
+        BRect bR{qMin(qMin(e.startPoint().x(), e.controlPoint().x()), e.endPoint().x()),
                  qMax(qMax(e.startPoint().x(), e.controlPoint().x()), e.endPoint().x()),
                  qMin(qMin(e.startPoint().y(), e.controlPoint().y()), e.endPoint().y()),
                  qMax(qMax(e.startPoint().y(), e.controlPoint().y()), e.endPoint().y())};
@@ -879,7 +883,7 @@ QList<QPair<int, int>> QSGCurveProcessor::findOverlappingCandidates(const QQuadP
     auto compareXmin = [&](int i, int j){return boundingRects.at(i).xmin < boundingRects.at(j).xmin;};
     auto compareXmax = [&](int i, int j){return boundingRects.at(i).xmax < boundingRects.at(j).xmax;};
     std::sort(elementStarts.begin(), elementStarts.end(), compareXmin);
-    QList<int> elementEnds = elementStarts;
+    elementEnds = elementStarts;
     std::sort(elementEnds.begin(), elementEnds.end(), compareXmax);
 
     QList<int> bRpool;
@@ -888,20 +892,25 @@ QList<QPair<int, int>> QSGCurveProcessor::findOverlappingCandidates(const QQuadP
     // Start from x = xmin and move towards xmax. Add a rectangle to the pool and check for
     // intersections with all other rectangles in the pool. If a rectangles xmax is smaller
     // than the new xmin, it can be removed from the pool.
-    while (!elementStarts.isEmpty()) {
-        int addIndex = elementStarts.takeFirst();
-        const bRect &newR = boundingRects.at(addIndex);
+    int firstElementEnd = 0;
+    for (const int addIndex : std::as_const(elementStarts)) {
+        const BRect &newR = boundingRects.at(addIndex);
         // First remove elements from the pool that cannot touch the new one
         // because xmax is too small
-        while (bRpool.size() && elementEnds.size() && bRpool.contains(elementEnds.first()) && newR.xmin > boundingRects.at(elementEnds.first()).xmax) {
-            int removeIndex = elementEnds.takeFirst();
-            bRpool.removeOne(removeIndex);
+        while (bRpool.size() && firstElementEnd < elementEnds.size()) {
+            int removeIndex = elementEnds.at(firstElementEnd);
+            if (bRpool.contains(removeIndex) && newR.xmin > boundingRects.at(removeIndex).xmax) {
+                bRpool.removeOne(removeIndex);
+                firstElementEnd++;
+            } else {
+                break;
+            }
         }
 
         // Now compare the new element with all elements in the pool.
         for (int j = 0; j < bRpool.size(); j++) {
             int i = bRpool.at(j);
-            const bRect &r1 = boundingRects.at(i);
+            const BRect &r1 = boundingRects.at(i);
             // We don't have to check for x because the pooling takes care of it.
             //if (r1.xmax <= newR.xmin || newR.xmax <= r1.xmin)
             //    continue;
@@ -1102,10 +1111,12 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool removeNestedPat
 
     qCDebug(lcSGCurveIntersectionSolver) << "----- Checking for Intersections -----";
     qCDebug(lcSGCurveIntersectionSolver) << "Found" << intersections.length() << "intersections";
-    for (const auto &i : intersections) {
-        auto p1 = path.elementAt(i.e1).pointAtFraction(i.t1);
-        auto p2 = path.elementAt(i.e2).pointAtFraction(i.t2);
-        qCDebug(lcSGCurveIntersectionSolver) << "    between" << i.e1 << "and" << i.e2 << "at" << i.t1 << "/" << i.t2 << "->" << p1 << "/" << p2;
+    if (lcSGCurveIntersectionSolver().isDebugEnabled()) {
+        for (const auto &i : intersections) {
+            auto p1 = path.elementAt(i.e1).pointAtFraction(i.t1);
+            auto p2 = path.elementAt(i.e2).pointAtFraction(i.t2);
+            qCDebug(lcSGCurveIntersectionSolver) << "    between" << i.e1 << "and" << i.e2 << "at" << i.t1 << "/" << i.t2 << "->" << p1 << "/" << p2;
+        }
     }
 
     if (intersections.isEmpty()) {
@@ -1213,7 +1224,7 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool removeNestedPat
     float startedAtT = -1;
 
     if (!findStart(path, 0, path.elementCount(), &i1, &forward)) {
-        qWarning() << "No suitable start found. This should not happen. Returning the path unchanged.";
+        qCDebug(lcSGCurveIntersectionSolver) << "No suitable start found. This should not happen. Returning the path unchanged.";
         return false;
     }
 
@@ -1248,7 +1259,7 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool removeNestedPat
                 nextIndex = nextIndex + 1;
             }
             if (handledElements[nextIndex]) {
-                qWarning() << "Revisiting an element when trying to solve intersections. This should not happen. Returning the path unchanged.";
+                qCDebug(lcSGCurveIntersectionSolver) << "Revisiting an element when trying to solve intersections. This should not happen. Returning the path unchanged.";
                 return false;
             }
             handledElements[nextIndex] = true;
@@ -1517,7 +1528,7 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool removeNestedPat
     } while (totalIterations < path.elementCount() * 50);
     // Check the totalIterations as a sanity check. Should never be triggered.
 
-    qWarning() << "Could not solve intersections of path. This should not happen. Returning the path unchanged.";
+    qCDebug(lcSGCurveIntersectionSolver) << "Could not solve intersections of path. This should not happen. Returning the path unchanged.";
 
     return false;
 }
@@ -1622,7 +1633,7 @@ void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
 
         QVector2D baseLine = endPoint - startPoint;
         QVector2D insideVector = insidePoint - startPoint;
-        QVector2D normal = QVector2D(-baseLine.y(), baseLine.x()).normalized();
+        QVector2D normal = normalVector(baseLine);
 
         bool swap = QVector2D::dotProduct(insideVector, normal) < 0;
 
