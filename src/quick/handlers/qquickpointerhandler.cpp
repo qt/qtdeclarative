@@ -558,10 +558,10 @@ bool QQuickPointerHandler::parentContains(const QPointF &scenePosition) const
 {
     if (QQuickItem *par = parentItem()) {
         if (par->window()) {
-            QRect windowGeometry = par->window()->geometry();
+            QRectF windowGeometry = par->window()->geometry();
             if (!par->window()->isTopLevel())
-                windowGeometry = QRect(QWindowPrivate::get(par->window())->globalPosition(), par->window()->size());
-            QPoint screenPosition = par->window()->mapToGlobal(scenePosition.toPoint());
+                windowGeometry = QRectF(QWindowPrivate::get(par->window())->globalPosition(), par->window()->size());
+            QPointF screenPosition = par->window()->mapToGlobal(scenePosition);
             if (!windowGeometry.contains(screenPosition))
                 return false;
         }
