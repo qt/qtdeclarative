@@ -6036,7 +6036,7 @@
                         "type": "number"
                     },
                     {
-                        "name": "AA_QtQuickDontUseDefaultSizePolicy",
+                        "name": "AA_QtQuickUseDefaultSizePolicy",
                         "type": "number"
                     },
                     {
