@@ -56,7 +56,13 @@ static const int SUBMENU_DELAY = 225;
     \ingroup qtquickcontrols-popups
     \brief Menu popup that can be used as a context menu or popup menu.
 
-    \image qtquickcontrols-menu.png
+    \table
+        \row
+          \li \image qtquickcontrols-menu-native.png
+             \caption Native macOS menu.
+          \li \image qtquickcontrols-menu.png
+             \caption Non-native \l {Material Style}{Material style} menu.
+   \endtable
 
     Menu has two main use cases:
     \list
@@ -193,6 +199,45 @@ static const int SUBMENU_DELAY = 225;
 
     \sa {Customizing Menu}, MenuItem, {Menu Controls}, {Popup Controls},
         {Dynamic QML Object Creation from JavaScript}
+
+    \section1 Native Menus
+
+    Since Qt 6.8, Menu is backed by a native menu by default, on platforms
+    where it is supported:
+    \list
+    \li Android
+    \li iOS
+    \li Linux (only available as a stand-alone context menu when running with the GTK+ platform theme)
+    \li macOS
+    \li Windows
+    \endlist
+
+    To use non-native menus by default, set \l {Qt::ApplicationAttribute}
+    {Qt::AA_DontUseNativeMenuWindows} to \c true.
+
+    As not all platforms support the full set of Menu's API, only a common
+    subset of it is supported when using a native menu:
+    \list
+    \li \l {Popup::}{x}
+    \li \l {Popup::}{y}
+    \li \l {Popup::}{visible}
+    \li \l {Popup::}{opened}
+    \li \l title
+    \li \l count
+    \li \l {Popup::}{contentData}
+    \li \l {Popup::}{contentChildren} (visual children will not be visible)
+    \li \l contentModel
+    \li \l {Popup::}{open()}
+    \li \l {Popup::}{close()}
+    \li \l {Popup::}{opened()}
+    \li \l {Popup::}{closed()}
+    \li \l {Popup::}{aboutToShow()}
+    \li \l {Popup::}{aboutToHide()}
+    \endlist
+
+    Items like \l MenuItem will still react to clicks in the corresponding
+    native menu item by emitting signals, for example, but will be replaced by
+    their native counterpart.
 */
 
 /*!
@@ -205,6 +250,8 @@ static const int SUBMENU_DELAY = 225;
     \l {Keyboard Focus in Qt Quick}.
 
     The default value is \c true.
+
+    \include qquickmenu.qdocinc non-native-only-property
 
     \sa {Popup::}{activeFocus}
 */
@@ -1592,6 +1639,8 @@ void QQuickMenu::setTitle(const QString &title)
 
     \include qquickicon.qdocinc grouped-properties
 
+    \include qquickmenu.qdocinc non-native-only-property
+
     \sa AbstractButton::text, AbstractButton::display, {Icons in Qt Quick Controls}
 */
 
@@ -1622,6 +1671,8 @@ void QQuickMenu::setIcon(const QQuickIcon &icon)
     are shown one menu at a time, and centered over the parent menu.
 
     \note Changing the value of the property has no effect while the menu is open.
+
+    \include qquickmenu.qdocinc non-native-only-property
 
     \sa overlap
 */
@@ -1686,6 +1737,8 @@ void QQuickMenu::resetRequestNative()
 
     \note Changing the value of the property has no effect while the menu is open.
 
+    \include qquickmenu.qdocinc non-native-only-property
+
     \sa cascade
 */
 qreal QQuickMenu::overlap() const
@@ -1718,6 +1771,9 @@ void QQuickMenu::setOverlap(qreal overlap)
     }
     \endcode
 
+    \note delegates will only be visible when using a \l {Native Menus}
+    {non-native Menu}.
+
     \sa Action
 */
 QQmlComponent *QQuickMenu::delegate() const
@@ -1743,6 +1799,8 @@ void QQuickMenu::setDelegate(QQmlComponent *delegate)
     This property holds the index of the currently highlighted item.
 
     Menu items can be highlighted by mouse hover or keyboard navigation.
+
+    \include qquickmenu.qdocinc non-native-only-property
 
     \sa MenuItem::highlighted
 */
@@ -1910,9 +1968,10 @@ void QQuickMenu::popup(QQmlV4Function *args)
 
     Closes all menus in the hierarchy that this menu belongs to.
 
-    \note Unlike \l {Popup::}{close()} that only closes a menu and its sub-menus,
-    \c dismiss() closes the whole hierarchy of menus, including the parent menus.
-    In practice, \c close() is suitable e.g. for implementing navigation in a
+    \note Unlike \l {Popup::}{close()} that only closes a menu and its
+    sub-menus (when using \l {Native Menus}{non-native menus}), \c dismiss()
+    closes the whole hierarchy of menus, including the parent menus. In
+    practice, \c close() is suitable e.g. for implementing navigation in a
     hierarchy of menus, and \c dismiss() is the appropriate method for closing
     the whole hierarchy of menus.
 
