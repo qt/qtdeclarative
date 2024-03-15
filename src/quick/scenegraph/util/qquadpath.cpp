@@ -378,8 +378,9 @@ QQuadPath::Element::FillSide QQuadPath::fillSideOf(int elementIdx, float element
 {
     constexpr float toleranceT = 1e-3f;
     const QVector2D point = m_elements.at(elementIdx).pointAtFraction(elementT);
+    const QVector2D tangent = m_elements.at(elementIdx).tangentAtFraction(elementT);
 
-    const bool swapXY = qAbs(m_elements.at(elementIdx).tangentAtFraction(elementT).x()) > qAbs(m_elements.at(elementIdx).tangentAtFraction(elementT).y());
+    const bool swapXY = qAbs(tangent.x()) > qAbs(tangent.y());
     auto getX = [=](QVector2D p) -> float { return swapXY ? p.y() : p.x(); };
     auto getY = [=](QVector2D p) -> float { return swapXY ? -p.x() : p.y(); };
 
@@ -398,10 +399,8 @@ QQuadPath::Element::FillSide QQuadPath::fillSideOf(int elementIdx, float element
                 continue;
             const float t = (getY(point) - getY(e.startPoint())) / (getY(e.endPoint()) - getY(e.startPoint()));
             const float x = getX(e.startPoint()) + t * (getX(e.endPoint()) - getX(e.startPoint()));
-            if ((elementIdx != i && x <= getX(point)) ||
-                (elementIdx == i && x <= getX(point) && qAbs(t - elementT) > toleranceT)) {
+            if (x <= getX(point) && (i != elementIdx || qAbs(t - elementT) > toleranceT))
                 winding_number += dir;
-            }
         } else {
             y1 = qMin(y1, getY(e.controlPoint()));
             y2 = qMax(y2, getY(e.controlPoint()));
@@ -414,8 +413,7 @@ QQuadPath::Element::FillSide QQuadPath::fillSideOf(int elementIdx, float element
             float tForHit = -1;
             for (int j = 0; j < numRoots; j++) {
                 const float x = getX(e.pointAtFraction(ts[j]));
-                if ((elementIdx != i && x <= getX(point)) ||
-                    (elementIdx == i && x <= getX(point) && qAbs(ts[j] - elementT) > toleranceT)) {
+                if (x <= getX(point) && (i != elementIdx || qAbs(ts[j] - elementT) > toleranceT)) {
                     oneHit = !oneHit;
                     tForHit = ts[j];
                 }
@@ -430,13 +428,12 @@ QQuadPath::Element::FillSide QQuadPath::fillSideOf(int elementIdx, float element
     int left_winding_number = winding_number;
     int right_winding_number = winding_number;
 
-    int dir = getY(m_elements.at(elementIdx).tangentAtFraction(elementT)) < 0 ? -1 : 1;
+    int dir = getY(tangent) < 0 ? -1 : 1;
 
-    if (dir > 0) {
+    if (dir > 0)
         left_winding_number += dir;
-    } else {
+    else
         right_winding_number += dir;
-    }
 
     bool leftInside = (fillRule() == Qt::WindingFill ? (left_winding_number != 0) : ((left_winding_number % 2) != 0));
     bool rightInside = (fillRule() == Qt::WindingFill ? (right_winding_number != 0) : ((right_winding_number % 2) != 0));
