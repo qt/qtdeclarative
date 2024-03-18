@@ -782,4 +782,17 @@ void tst_qmltyperegistrar::foreignNamespaceFromGadget()
     }
 }
 
+void tst_qmltyperegistrar::constReturnType()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "ConstInvokable"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["QmlTypeRegistrarTest/ConstInvokable 1.0"]
+        exportMetaObjectRevisions: [256]
+        Method { name: "getObject"; type: "QObject"; isPointer: true; isConstant: true }
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

@@ -1299,6 +1299,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("dontConfuseMemberPrintWithGlobalPrint") << QStringLiteral("findMemberPrint.qml");
     QTest::newRow("groupedAttachedLayout") << QStringLiteral("groupedAttachedLayout.qml");
     QTest::newRow("QEventPoint") << QStringLiteral("qEventPoint.qml");
+    QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
 }
 
 void TestQmllint::cleanQmlCode()
