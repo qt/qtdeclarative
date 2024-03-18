@@ -41,7 +41,7 @@ static const char *globalProgramName = nullptr;
 static bool loggingStarted = false;
 static QBenchmarkGlobalData globalBenchmarkData;
 
-class Q_QUICK_TEST_EXPORT QuickTestImageObject : public QObject
+class Q_QMLTEST_EXPORT QuickTestImageObject : public QObject
 {
     Q_OBJECT
 

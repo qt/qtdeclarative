@@ -12,8 +12,8 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickWindow;
 
-Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir);
-Q_QUICK_TEST_EXPORT int quick_test_main_with_setup(int argc, char **argv, const char *name, const char *sourceDir, QObject *setup);
+Q_QMLTEST_EXPORT int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir);
+Q_QMLTEST_EXPORT int quick_test_main_with_setup(int argc, char **argv, const char *name, const char *sourceDir, QObject *setup);
 
 #ifdef QUICK_TEST_SOURCE_DIR
 
@@ -68,17 +68,17 @@ Q_QUICK_TEST_EXPORT int quick_test_main_with_setup(int argc, char **argv, const 
 namespace QQuickTest {
 static const int defaultTimeout = 5000;
 
-Q_QUICK_TEST_EXPORT bool qIsPolishScheduled(const QQuickItem *item);
-Q_QUICK_TEST_EXPORT bool qIsPolishScheduled(const QQuickWindow *window);
+Q_QMLTEST_EXPORT bool qIsPolishScheduled(const QQuickItem *item);
+Q_QMLTEST_EXPORT bool qIsPolishScheduled(const QQuickWindow *window);
 
 #if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
 #if QT_DEPRECATED_SINCE(6, 4)
     QT_DEPRECATED_X("Use qWaitForPolish(QQuickItem *) instead")
-    Q_QUICK_TEST_EXPORT bool qWaitForItemPolished(const QQuickItem *item, int timeout = defaultTimeout);
+    Q_QMLTEST_EXPORT bool qWaitForItemPolished(const QQuickItem *item, int timeout = defaultTimeout);
 #endif
 #endif
-Q_QUICK_TEST_EXPORT bool qWaitForPolish(const QQuickItem *item, int timeout = defaultTimeout);
-Q_QUICK_TEST_EXPORT bool qWaitForPolish(const QQuickWindow *window, int timeout = defaultTimeout);
+Q_QMLTEST_EXPORT bool qWaitForPolish(const QQuickItem *item, int timeout = defaultTimeout);
+Q_QMLTEST_EXPORT bool qWaitForPolish(const QQuickWindow *window, int timeout = defaultTimeout);
 }
 
 QT_END_NAMESPACE
