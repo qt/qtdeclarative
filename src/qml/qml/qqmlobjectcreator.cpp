@@ -442,6 +442,49 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         break;
     }
     break;
+    case QMetaType::SChar: {
+        assertType(QV4::CompiledData::Binding::Type_Number);
+        double d = compilationUnit->bindingValueAsNumber(binding);
+        qint8 value = qint8(d);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
+        break;
+    }
+    case QMetaType::UChar: {
+        assertType(QV4::CompiledData::Binding::Type_Number);
+        double d = compilationUnit->bindingValueAsNumber(binding);
+        quint8 value = quint8(d);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
+        break;
+    }
+    case QMetaType::Short: {
+        assertType(QV4::CompiledData::Binding::Type_Number);
+        double d = compilationUnit->bindingValueAsNumber(binding);
+        qint16 value = qint16(d);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
+        break;
+    }
+    case QMetaType::UShort: {
+        assertType(QV4::CompiledData::Binding::Type_Number);
+        double d = compilationUnit->bindingValueAsNumber(binding);
+        quint16 value = quint16(d);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
+        break;
+    }
+    case QMetaType::LongLong: {
+        assertType(QV4::CompiledData::Binding::Type_Number);
+        double d = compilationUnit->bindingValueAsNumber(binding);
+        qint64 value = qint64(d);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
+        break;
+    }
+    case QMetaType::ULongLong: {
+        assertType(QV4::CompiledData::Binding::Type_Number);
+        double d = compilationUnit->bindingValueAsNumber(binding);
+        quint64 value = quint64(d);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
+        break;
+    }
+    break;
     case QMetaType::Float: {
         assertType(QV4::CompiledData::Binding::Type_Number);
         float value = float(compilationUnit->bindingValueAsNumber(binding));

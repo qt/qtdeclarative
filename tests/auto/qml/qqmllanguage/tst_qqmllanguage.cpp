@@ -412,6 +412,8 @@ private slots:
 
     void longConversion();
 
+    void enumPropsManyUnderylingTypes();
+
     void typedEnums_data();
     void typedEnums();
 
@@ -8007,6 +8009,22 @@ void tst_qqmllanguage::longConversion()
         QCOMPARE(val.metaType(), QMetaType::fromType<bool>());
         QVERIFY(!val.toBool());
     }
+}
+
+void tst_qqmllanguage::enumPropsManyUnderylingTypes()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("enumPropsManyUnderlyingTypes.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    auto *enumObject = qobject_cast<EnumPropsManyUnderlyingTypes *>(o.get());
+    QCOMPARE(enumObject->si8prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
+    QCOMPARE(enumObject->ui8prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
+    QCOMPARE(enumObject->si16prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
+    QCOMPARE(enumObject->ui16prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
+    QCOMPARE(enumObject->si64prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
+    QCOMPARE(enumObject->ui64prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
 }
 
 void tst_qqmllanguage::asValueType()
