@@ -6,12 +6,6 @@ project(wearableexample VERSION 1 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-if(NOT DEFINED INSTALL_EXAMPLESDIR)
-    set(INSTALL_EXAMPLESDIR "examples")
-endif()
-
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/wearable")
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2 OPTIONAL_COMPONENTS Positioning Location)
 
 qt_standard_project_setup()
@@ -58,14 +52,17 @@ set_target_properties(wearableexample PROPERTIES
 )
 
 install(TARGETS wearableexample
-    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
-    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
-    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-include(../../quick/shared/QtBundleQmlModuleForMacOS.cmake)
+qt_generate_deploy_qml_app_script(
+    TARGET wearableexample
+    OUTPUT_SCRIPT deploy_script
+    MACOS_BUNDLE_POST_BUILD
+    NO_UNSUPPORTED_PLATFORM_ERROR
+    DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
+)
+install(SCRIPT ${deploy_script})
 
-set(app_target "wearableexample")
-add_qml_module_to_macos_app_bundle("${app_target}" "wearable")
-add_qml_module_to_macos_app_bundle("${app_target}" "wearablesettings")
-add_qml_module_to_macos_app_bundle("${app_target}" "wearablestyle")
