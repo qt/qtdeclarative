@@ -1,16 +1,16 @@
 dependencies:
   ../tqtc-qtbase:
-    ref: e09cc1bb9b396241a5e5439f107b449f28c4ffb9
+    ref: f552c4cd3fce3866776cc3db6904f2cefb70958c
     required: true
   ../tqtc-qtimageformats:
-    ref: 33514dcbc1de26cb25aa12484f0098d85495b826
+    ref: 990cabd5c5fcf11cd674687b5a2bd982205a1587
     required: false
   ../tqtc-qtlanguageserver:
-    ref: d7ef6c45fe7ed71ac22b4238914be4893f0c4bd7
+    ref: ca57443113d2c6fc9c884420b9566d58c734ed44
     required: false
   ../tqtc-qtshadertools:
-    ref: 7e562b0251dad19120c1aaf82599b18588d04a91
+    ref: 6c725a84b82ce0cf26e23e0a13bb0a7df460c09c
     required: false
   ../tqtc-qtsvg:
-    ref: 997ca3d9f66f476dd895a228ada58b9f0afb0a44
+    ref: bcc73befe056b794d90c1e49499a98a68f6aa258
     required: false
