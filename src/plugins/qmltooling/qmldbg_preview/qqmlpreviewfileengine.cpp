@@ -380,7 +380,7 @@ void QQmlPreviewFileEngine::load() const
         m_entries = m_loader->entries();
         break;
     case QQmlPreviewFileLoader::Fallback:
-        m_fallback.reset(QAbstractFileEngine::create(m_name));
+        m_fallback = QAbstractFileEngine::create(m_name);
         break;
     case QQmlPreviewFileLoader::Unknown:
         Q_UNREACHABLE();
@@ -393,7 +393,8 @@ QQmlPreviewFileEngineHandler::QQmlPreviewFileEngineHandler(QQmlPreviewFileLoader
 {
 }
 
-QAbstractFileEngine *QQmlPreviewFileEngineHandler::create(const QString &fileName) const
+std::unique_ptr<QAbstractFileEngine> QQmlPreviewFileEngineHandler::create(
+        const QString &fileName) const
 {
     // Don't load compiled QML/JS over the network
     if (fileName.endsWith(".qmlc") || fileName.endsWith(".jsc") || isRootPath(fileName)) {
@@ -409,8 +410,10 @@ QAbstractFileEngine *QQmlPreviewFileEngineHandler::create(const QString &fileNam
 
     const QString absolute = relative.startsWith(':') ? relative : absolutePath(relative);
 
-    return m_loader->isBlacklisted(absolute)
-            ? nullptr : new QQmlPreviewFileEngine(relative, absolute, m_loader.data());
+    if (m_loader->isBlacklisted(absolute))
+        return {};
+
+    return std::make_unique<QQmlPreviewFileEngine>(relative, absolute, m_loader.data());
 }
 
 QT_END_NAMESPACE

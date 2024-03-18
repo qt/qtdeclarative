@@ -92,7 +92,7 @@ class QQmlPreviewFileEngineHandler : public QAbstractFileEngineHandler
 {
 public:
     QQmlPreviewFileEngineHandler(QQmlPreviewFileLoader *loader);
-    QAbstractFileEngine *create(const QString &fileName) const override;
+    std::unique_ptr<QAbstractFileEngine> create(const QString &fileName) const override;
 
 private:
     QPointer<QQmlPreviewFileLoader> m_loader;
