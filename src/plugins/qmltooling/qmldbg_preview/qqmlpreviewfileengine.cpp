@@ -327,7 +327,7 @@ QString QQmlPreviewFileEngine::owner(FileOwner owner) const
     return m_fallback ? m_fallback->owner(owner) : QString();
 }
 
-QDateTime QQmlPreviewFileEngine::fileTime(FileTime time) const
+QDateTime QQmlPreviewFileEngine::fileTime(QFile::FileTime time) const
 {
     // Files we replace are always newer than the ones we had before. This makes the QML engine
     // actually recompile them, rather than pick them from the cache.
