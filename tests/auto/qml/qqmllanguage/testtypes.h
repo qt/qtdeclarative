@@ -1294,6 +1294,40 @@ public:
     }
 };
 
+class EnumPropsManyUnderlyingTypes : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    enum  si8 : qint8 { ResolvedValue = 1};
+    enum  ui8 : quint8 {};
+    enum si16 : qint16 {};
+    enum ui16 : quint16 {};
+    enum ui64 : qint64 {};
+    enum si64 : quint64 {};
+    Q_ENUM(si8)
+    Q_ENUM(ui8)
+    Q_ENUM(si16)
+    Q_ENUM(ui16)
+    Q_ENUM(si64)
+    Q_ENUM(ui64)
+
+
+    Q_PROPERTY(si8  si8prop MEMBER si8prop)
+    Q_PROPERTY(ui8  ui8prop MEMBER ui8prop)
+    Q_PROPERTY(si16 si16prop MEMBER si16prop)
+    Q_PROPERTY(ui16 ui16prop MEMBER ui16prop)
+    Q_PROPERTY(si64 si64prop MEMBER si64prop)
+    Q_PROPERTY(ui64 ui64prop MEMBER ui64prop)
+
+    si8 si8prop = si8(0);
+    ui8 ui8prop = ui8(0);
+    si16 si16prop = si16(0);
+    ui16 ui16prop = ui16(0);
+    si64 si64prop = si64(0);
+    ui64 ui64prop = ui64(0);
+};
+
 Q_DECLARE_METATYPE(MyEnum2Class::EnumB)
 Q_DECLARE_METATYPE(MyEnum1Class::EnumA)
 Q_DECLARE_METATYPE(Qt::TextFormat)
