@@ -93,6 +93,8 @@ void registerTypes()
 
     qmlRegisterType<MyArrayBufferTestClass>("Test", 1, 0, "MyArrayBufferTestClass");
 
+    qmlRegisterTypesAndRevisions<EnumPropsManyUnderlyingTypes>("Test", 1);
+
     qmlRegisterType<LazyDeferredSubObject>("Test", 1, 0, "LazyDeferredSubObject");
     qmlRegisterType<DeferredProperties>("Test", 1, 0, "DeferredProperties");
     qmlRegisterType<ImmediateProperties>("Test", 1, 0, "ImmediateProperties");
