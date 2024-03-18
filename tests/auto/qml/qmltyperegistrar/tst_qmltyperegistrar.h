@@ -777,6 +777,14 @@ struct EnumList
     QML_SEQUENTIAL_CONTAINER(NetworkManager::NM)
 };
 
+class ConstInvokable : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    Q_INVOKABLE const QObject *getObject() { return nullptr; }
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -847,6 +855,7 @@ private slots:
     void relatedAddedInVersion();
     void longNumberTypes();
     void enumList();
+    void constReturnType();
 
 private:
     QByteArray qmltypesData;
