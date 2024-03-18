@@ -365,6 +365,13 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
             needsPathNode = true;
         }
 
+        QString strokeColor = styleResolver->currentStrokeColor();
+        if (!strokeColor.isEmpty()) {
+            styleTagContent += QStringLiteral("-qt-stroke-color:%1;").arg(strokeColor);
+            styleTagContent += QStringLiteral("-qt-stroke-width:%1;").arg(styleResolver->currentStrokeWidth());
+            needsPathNode = true;
+        }
+
         if (tspan->whitespaceMode() == QSvgText::Preserve && !preserveWhiteSpace)
             styleTagContent += QStringLiteral("white-space: pre-wrap;");
 
@@ -466,8 +473,13 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                     }
 
                     info.painterPath = p;
-                    info.strokeColor = styleResolver->currentStrokeColor();
-                    info.strokeWidth = styleResolver->currentStrokeWidth();
+                    if (fmt.hasProperty(QTextCharFormat::TextOutline)) {
+                        info.strokeWidth = fmt.textOutline().widthF();
+                        info.strokeColor = fmt.textOutline().color().name();
+                    } else {
+                        info.strokeColor = styleResolver->currentStrokeColor();
+                        info.strokeWidth = styleResolver->currentStrokeWidth();
+                    }
                     if (info.grad.type() == QGradient::NoGradient && styleResolver->currentFillGradient() != nullptr)
                         info.grad = *styleResolver->currentFillGradient();
 
