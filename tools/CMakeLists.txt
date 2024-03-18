@@ -25,7 +25,7 @@ if(QT_FEATURE_xmlstreamwriter)
     # special case end
 endif()
 
-if(NOT (ANDROID OR WASM OR IOS OR rtems))
+if(NOT (ANDROID OR WASM OR IOS OR VISIONOS OR rtems))
     if(QT_FEATURE_thread)
         add_subdirectory(qml)
         if(QT_FEATURE_qml_profiler)
