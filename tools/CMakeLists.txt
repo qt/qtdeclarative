@@ -24,63 +24,49 @@ if(QT_FEATURE_xmlstreamwriter)
     # add_subdirectory(qmlcachegen)
     # special case end
 endif()
-if(QT_FEATURE_thread AND NOT ANDROID AND NOT WASM AND NOT IOS AND NOT rtems)
-    add_subdirectory(qml)
-endif()
-if(QT_FEATURE_qml_profiler
-        AND QT_FEATURE_thread
-        AND NOT ANDROID
-        AND NOT IOS
-        AND NOT WASM
-        AND NOT rtems)
-    add_subdirectory(qmlprofiler)
-endif()
-if(QT_FEATURE_qml_preview AND QT_FEATURE_thread AND NOT ANDROID AND NOT WASM AND NOT IOS AND NOT rtems)
-    add_subdirectory(qmlpreview)
-endif()
-if(QT_BUILD_SHARED_LIBS AND QT_FEATURE_thread AND TARGET Qt::Quick AND NOT ANDROID AND NOT WASM AND NOT IOS AND NOT rtems)
-    add_subdirectory(qmlscene)
-    add_subdirectory(qmltime)
-endif()
-if(QT_BUILD_SHARED_LIBS
-        AND QT_FEATURE_process
-        AND QT_FEATURE_regularexpression
-        AND QT_FEATURE_thread
-        AND TARGET Qt::Quick
-        AND NOT ANDROID
-        AND NOT IOS
-        AND NOT WASM
-        AND NOT rtems)
-    add_subdirectory(qmlplugindump)
-endif()
-if(TARGET Qt::Quick
-        AND TARGET Qt::Widgets
-        AND QT_FEATURE_checkbox
-        AND QT_FEATURE_combobox
-        AND QT_FEATURE_dialogbuttonbox
-        AND QT_FEATURE_formlayout
-        AND QT_FEATURE_groupbox
-        AND QT_FEATURE_lineedit
-        AND QT_FEATURE_mainwindow
-        AND QT_FEATURE_spinbox
-        AND QT_FEATURE_textedit
-        AND NOT ANDROID
-        AND NOT IOS
-        AND NOT WASM
-        AND NOT rtems)
-    add_subdirectory(qmleasing)
-endif()
-if(TARGET Qt::Quick
-        AND TARGET Qt::Svg
-        AND NOT ANDROID
-        AND NOT IOS
-        AND NOT WASM
-        AND NOT rtems)
-    add_subdirectory(svgtoqml)
-endif()
-if(QT_FEATURE_thread AND TARGET Qt::QuickTest AND NOT ANDROID AND NOT WASM AND NOT rtems)
-    add_subdirectory(qmltestrunner)
-endif()
-if(QT_FEATURE_private_tests AND QT_FEATURE_thread AND NOT ANDROID AND NOT WASM AND NOT IOS AND NOT rtems)
-    add_subdirectory(qmljs)
-endif()
+
+if(NOT (ANDROID OR WASM OR IOS OR rtems))
+    if(QT_FEATURE_thread)
+        add_subdirectory(qml)
+        if(QT_FEATURE_qml_profiler)
+            add_subdirectory(qmlprofiler)
+        endif()
+        if(QT_FEATURE_qml_preview)
+            add_subdirectory(qmlpreview)
+        endif()
+        if(QT_BUILD_SHARED_LIBS AND TARGET Qt::Quick)
+            add_subdirectory(qmlscene)
+            add_subdirectory(qmltime)
+        endif()
+        if(QT_BUILD_SHARED_LIBS
+            AND QT_FEATURE_process
+            AND QT_FEATURE_regularexpression
+            AND TARGET Qt::Quick)
+            add_subdirectory(qmlplugindump)
+        endif()
+        if(TARGET Qt::QuickTest)
+            add_subdirectory(qmltestrunner)
+        endif()
+        if(QT_FEATURE_private_tests)
+            add_subdirectory(qmljs)
+        endif()
+    endif() # QT_FEATURE_thread
+
+    if(TARGET Qt::Quick
+            AND TARGET Qt::Widgets
+            AND QT_FEATURE_checkbox
+            AND QT_FEATURE_combobox
+            AND QT_FEATURE_dialogbuttonbox
+            AND QT_FEATURE_formlayout
+            AND QT_FEATURE_groupbox
+            AND QT_FEATURE_lineedit
+            AND QT_FEATURE_mainwindow
+            AND QT_FEATURE_spinbox
+            AND QT_FEATURE_textedit)
+        add_subdirectory(qmleasing)
+    endif()
+
+    if(TARGET Qt::Quick AND TARGET Qt::Svg)
+        add_subdirectory(svgtoqml)
+    endif()
+endif() # NOT (ANDROID OR WASM OR IOS OR rtems)
