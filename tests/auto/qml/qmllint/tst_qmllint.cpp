@@ -1310,6 +1310,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QQmlScriptString") << QStringLiteral("scriptstring.qml");
     QTest::newRow("QEventPoint") << QStringLiteral("qEventPoint.qml");
     QTest::newRow("locale") << QStringLiteral("locale.qml");
+    QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
 }
 
 void TestQmllint::cleanQmlCode()
