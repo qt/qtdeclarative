@@ -68,7 +68,7 @@ public:
     bool setPermissions(uint perms) override;
     QByteArray id() const override;
     QString owner(FileOwner) const override;
-    QDateTime fileTime(FileTime time) const override;
+    QDateTime fileTime(QFile::FileTime time) const override;
     int handle() const override;
     qint64 readLine(char *data, qint64 maxlen) override;
     qint64 write(const char *data, qint64 len) override;
