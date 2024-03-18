@@ -44,8 +44,7 @@ public:
                                   const QStringList &filterNames, const QStringList &m_entries);
     ~QQmlPreviewFileEngineIterator();
 
-    QString next() override;
-    bool hasNext() const override;
+    bool advance() override;
     QString currentFileName() const override;
 
 private:
@@ -65,17 +64,13 @@ QQmlPreviewFileEngineIterator::~QQmlPreviewFileEngineIterator()
 {
 }
 
-QString QQmlPreviewFileEngineIterator::next()
+bool QQmlPreviewFileEngineIterator::advance()
 {
-    if (!hasNext())
-        return QString();
-    ++m_index;
-    return currentFilePath();
-}
+    if (m_index >= m_entries.size())
+        return false;
 
-bool QQmlPreviewFileEngineIterator::hasNext() const
-{
-    return m_index < m_entries.size();
+    ++m_index;
+    return true;
 }
 
 QString QQmlPreviewFileEngineIterator::currentFileName() const
