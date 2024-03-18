@@ -1241,6 +1241,14 @@ bool MemoryManager::tryForceGCCompletion()
     return true;
 }
 
+void MemoryManager::runFullGC()
+{
+    runGC();
+    const bool incrementalGCStillRunning = m_markStack != nullptr;
+    if (incrementalGCStillRunning)
+        tryForceGCCompletion();
+}
+
 void MemoryManager::runGC()
 {
     if (gcBlocked != Unblocked) {
