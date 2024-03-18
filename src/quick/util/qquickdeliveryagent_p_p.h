@@ -164,9 +164,14 @@ public:
     QVector<QQuickItem *> mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const;
 
     // hover delivery
+    enum class HoverChange : uint8_t {
+        Clear,
+        Set,
+    };
     bool deliverHoverEvent(const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp);
     bool deliverHoverEventRecursive(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp);
-    bool deliverHoverEventToItem(QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp, bool clearHover);
+    bool deliverHoverEventToItem(QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp,
+                                 HoverChange hoverChange);
     bool sendHoverEvent(QEvent::Type, QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos,
                         Qt::KeyboardModifiers modifiers, ulong timestamp);
     bool clearHover(ulong timestamp = 0);

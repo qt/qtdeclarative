@@ -128,16 +128,12 @@ DomItem CompletionRequest::patchInvalidFileForParser(const DomItem &file, qsizet
         DomItem newCurrent = file.environment().makeCopy(DomItem::CopyOption::EnvConnected).item();
 
         DomItem result;
-        DomCreationOptions options;
-        options.setFlag(DomCreationOption::WithScriptExpressions);
-        options.setFlag(DomCreationOption::WithSemanticAnalysis);
-        options.setFlag(DomCreationOption::WithRecovery);
         auto newCurrentPtr = newCurrent.ownerAs<DomEnvironment>();
-        newCurrentPtr->loadFile(FileToLoad::fromMemory(newCurrentPtr, file.canonicalFilePath(),
-                                                       patchedCode, options),
-                                [&result](Path, const DomItem &, const DomItem &newValue) {
-                                    result = newValue.fileObject();
-                                });
+        newCurrentPtr->loadFile(
+                FileToLoad::fromMemory(newCurrentPtr, file.canonicalFilePath(), patchedCode),
+                [&result](Path, const DomItem &, const DomItem &newValue) {
+                    result = newValue.fileObject();
+                });
         newCurrentPtr->loadPendingDependencies();
         return result;
     }

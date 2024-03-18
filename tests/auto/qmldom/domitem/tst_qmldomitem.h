@@ -56,8 +56,9 @@ private slots:
         qmltypeDirs = QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::QmlImportsPath) });
         universePtr =
                 std::shared_ptr<DomUniverse>(new DomUniverse(QStringLiteral(u"dummyUniverse")));
-        envPtr = std::shared_ptr<DomEnvironment>(new DomEnvironment(
-                QStringList(), DomEnvironment::Option::SingleThreaded, universePtr));
+        envPtr = std::shared_ptr<DomEnvironment>(
+                new DomEnvironment(QStringList(), DomEnvironment::Option::SingleThreaded,
+                                   DomCreationOption::None, universePtr));
         env = DomItem(envPtr);
         testOwnerPtr = std::shared_ptr<MockOwner>(new MockOwner(
                 Path::Root(u"env").field(u"testOwner"), 0,
@@ -408,7 +409,7 @@ private slots:
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies,
-                univPtr));
+                DomCreationOption::None, univPtr));
         QQmlJS::Dom::DomItem env(envPtr);
         QVERIFY(env);
         QString testFile1 = baseDir + QLatin1String("/test1.qml");
@@ -491,7 +492,7 @@ private slots:
         auto univPtr = std::shared_ptr<QQmlJS::Dom::DomUniverse>(
                 new QQmlJS::Dom::DomUniverse(QLatin1String("univ1")));
         auto envPtr = std::shared_ptr<QQmlJS::Dom::DomEnvironment>(new QQmlJS::Dom::DomEnvironment(
-                qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, univPtr));
+                qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, {}, univPtr));
         QQmlJS::Dom::DomItem env(envPtr);
         QVERIFY(env);
         QString testFile1 = baseDir + QLatin1String("/test1.qml");
@@ -854,9 +855,10 @@ private slots:
         auto envPtr = DomEnvironment::create(
                 importPaths,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies,
+                WithSemanticAnalysis);
 
-        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, fileName, WithSemanticAnalysis),
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, fileName),
                          [&tFile](Path, const DomItem &, const DomItem &newIt) {
                              tFile = newIt.fileObject();
                          });
@@ -2609,23 +2611,24 @@ private slots:
         const QString canonicalFilePathB = QFileInfo(filePathB).canonicalFilePath();
         QVERIFY(!canonicalFilePathB.isEmpty());
 
-        auto envPtr = DomEnvironment::create(
-                qmltypeDirs,
-                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
-
-        DomItem fileA;
-        DomItem fileB;
         DomCreationOptions options;
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
+        auto envPtr = DomEnvironment::create(
+                qmltypeDirs,
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies,
+                options);
 
-        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, filePathA, options),
+        DomItem fileA;
+        DomItem fileB;
+
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, filePathA),
                          [&fileA](Path, const DomItem &, const DomItem &newIt) {
                              fileA = newIt.fileObject();
                          });
 
-        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, filePathB, options),
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, filePathB),
                          [&fileB](Path, const DomItem &, const DomItem &newIt) {
                              fileB = newIt.fileObject();
                          });
@@ -2641,18 +2644,19 @@ private slots:
         const QString canonicalFilePathB = QFileInfo(filePath).canonicalFilePath();
         QVERIFY(!canonicalFilePathB.isEmpty());
 
-        auto envPtr = DomEnvironment::create(
-                qmltypeDirs,
-                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
-
-        DomItem fileA;
-        DomItem fileB;
         DomCreationOptions options;
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
+        auto envPtr = DomEnvironment::create(
+                qmltypeDirs,
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies,
+                options);
 
-        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, filePath, options),
+        DomItem fileA;
+        DomItem fileB;
+
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, filePath),
                          [&fileA](Path, const DomItem &, const DomItem &newIt) {
                              fileA = newIt.fileObject();
                          });
@@ -2687,17 +2691,19 @@ private slots:
 private:
     static DomItem parse(const QString &path, const QStringList &qmltypeDirs)
     {
-        auto envPtr = DomEnvironment::create(
-                qmltypeDirs,
-                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
-
-        DomItem fileItem;
         DomCreationOptions options;
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
 
-        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, path, options),
+        auto envPtr = DomEnvironment::create(
+                qmltypeDirs,
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies,
+                options);
+
+        DomItem fileItem;
+
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, path),
                          [&fileItem](Path, const DomItem &, const DomItem &newIt) {
                              fileItem = newIt.fileObject();
                          });
@@ -3010,6 +3016,13 @@ private slots:
                          .value()
                          .toString(),
                  u"QQ");
+    }
+
+    void mjsExpression()
+    {
+        const ScriptExpression mjsExpr("export function a(){}",
+                                       ScriptExpression::ExpressionType::MJSCode);
+        QVERIFY(mjsExpr.localErrors().empty());
     }
 
 private:

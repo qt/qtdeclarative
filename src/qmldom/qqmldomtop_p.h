@@ -207,7 +207,8 @@ public:
         DomItem currentItem;
     };
 
-    LoadResult loadFile(const FileToLoad &file, DomType fileType);
+    LoadResult loadFile(const FileToLoad &file, DomType fileType,
+                        DomCreationOptions creationOptions = {});
 
     void removePath(const QString &dir);
 
@@ -330,14 +331,16 @@ private:
     using ReadResult = std::variant<ContentWithDate, ErrorMessage>;
     ReadResult readFileContent(const QString &canonicalPath) const;
 
-    LoadResult load(const ContentWithDate &codeWithDate, const FileToLoad &file, DomType fType);
+    LoadResult load(const ContentWithDate &codeWithDate, const FileToLoad &file, DomType fType,
+                    DomCreationOptions creationOptions = {});
 
     // contains either Content to be parsed or LoadResult if loading / parsing is not needed
     using PreloadResult = std::variant<ContentWithDate, LoadResult>;
     PreloadResult preload(const DomItem &univ, const FileToLoad &file, DomType fType) const;
 
     std::shared_ptr<QmlFile> parseQmlFile(const QString &code, const FileToLoad &file,
-                                          const QDateTime &contentDate);
+                                          const QDateTime &contentDate,
+                                          DomCreationOptions creationOptions);
     std::shared_ptr<JsFile> parseJsFile(const QString &code, const FileToLoad &file,
                                         const QDateTime &contentDate);
     std::shared_ptr<ExternalItemPairBase> getPathValueOrNull(DomType fType,
@@ -786,13 +789,16 @@ public:
     QSet<QString> globalScopeNames(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
 
     explicit DomEnvironment(const QStringList &loadPaths, Options options = Option::SingleThreaded,
+                            DomCreationOptions domCreationOptions = None,
                             const std::shared_ptr<DomUniverse> &universe = nullptr);
     explicit DomEnvironment(const std::shared_ptr<DomEnvironment> &parent,
-                            const QStringList &loadPaths, Options options = Option::SingleThreaded);
+                            const QStringList &loadPaths, Options options = Option::SingleThreaded,
+                            DomCreationOptions domCreationOptions = None);
     DomEnvironment(const DomEnvironment &o) = delete;
-    static std::shared_ptr<DomEnvironment> create(const QStringList &loadPaths,
-                                                  Options options = Option::SingleThreaded,
-                                                  const DomItem &universe = DomItem::empty);
+    static std::shared_ptr<DomEnvironment>
+    create(const QStringList &loadPaths, Options options = Option::SingleThreaded,
+           DomCreationOptions creationOptions = DomCreationOption::None,
+           const DomItem &universe = DomItem::empty);
 
     // TODO AddOption can easily be removed later. KeepExisting option only used in one
     // place which will be removed in https://codereview.qt-project.org/c/qt/qtdeclarative/+/523217
@@ -923,6 +929,8 @@ public:
             }
         }
     }
+    void populateFromQmlFile(MutableDomItem &&qmlFile);
+    DomCreationOptions domCreationOptions() const { return m_domCreationOptions; }
 
 private:
     friend class RefCacheEntry;
@@ -1093,6 +1101,18 @@ private:
     QList<Import> m_implicitImports;
     QList<Callback> m_allLoadedCallback;
     QHash<Path, RefCacheEntry> m_referenceCache;
+    DomCreationOptions m_domCreationOptions;
+
+    struct SemanticAnalysis
+    {
+        SemanticAnalysis(const QStringList &loadPaths);
+        void setLoadPaths(const QStringList &loadPaths);
+
+        std::shared_ptr<QQmlJSResourceFileMapper> m_mapper;
+        std::shared_ptr<QQmlJSImporter> m_importer;
+    };
+    std::optional<SemanticAnalysis> m_semanticAnalysis;
+    SemanticAnalysis &semanticAnalysis();
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(DomEnvironment::Options)
 

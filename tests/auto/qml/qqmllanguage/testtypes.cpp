@@ -168,6 +168,8 @@ void registerTypes()
 
     qmlRegisterTypesAndRevisions<Singleton>("EnumScopeTest", 1);
     qmlRegisterTypesAndRevisions<NonSingleton>("EnumScopeTest", 1);
+    qmlRegisterTypesAndRevisions<EnumProviderSingletonQml>("EnumScopeTest", 1);
+
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

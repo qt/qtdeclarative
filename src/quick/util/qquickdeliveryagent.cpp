@@ -315,6 +315,16 @@ static inline bool windowHasFocus(QQuickWindow *win)
     return win == focusWindow || QQuickRenderControlPrivate::isRenderWindowFor(win, focusWindow) || !focusWindow;
 }
 
+static QQuickItem *findFurthestFocusScopeAncestor(QQuickItem *item)
+{
+    QQuickItem *parentItem = item->parentItem();
+
+    if (parentItem && parentItem->flags() & QQuickItem::ItemIsFocusScope)
+        return findFurthestFocusScopeAncestor(parentItem);
+
+    return item;
+}
+
 #ifdef Q_OS_WEBOS
 // Temporary fix for webOS until multi-seat is implemented see QTBUG-85272
 static inline bool singleWindowOnScreen(QQuickWindow *win)
@@ -457,6 +467,16 @@ void QQuickDeliveryAgentPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *
     if (isSubsceneAgent) {
         auto da = QQuickWindowPrivate::get(rootItem->window())->deliveryAgent;
         qCDebug(lcFocus) << "    delegating setFocusInScope to" << da;
+
+        // When setting subFocusItem, hierarchy is important. Each focus ancestor's
+        // subFocusItem must be its nearest descendant with focus. Changing the rootItem's
+        // subFocusItem to 'item' here would make 'item' the subFocusItem of all ancestor
+        // focus scopes up until root item.
+        // That is why we should avoid altering subFocusItem until having traversed
+        // all the focus hierarchy.
+        QQuickItem *ancestorFS = findFurthestFocusScopeAncestor(item);
+        if (ancestorFS != item)
+            options |= QQuickDeliveryAgentPrivate::DontChangeSubFocusItem;
         QQuickWindowPrivate::get(rootItem->window())->deliveryAgentPrivate()->setFocusInScope(da->rootItem(), item, reason, options);
     }
     if (oldActiveFocusItem == activeFocusItem)
@@ -609,15 +629,13 @@ bool QQuickDeliveryAgentPrivate::clearHover(ulong timestamp)
 
     const QPointF lastPos = window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition);
     const auto modifiers = QGuiApplication::keyboardModifiers();
-    const bool clearHover = true;
 
-    for (auto hoverItem : hoverItems) {
-        auto item = hoverItem.first;
-        if (item)
-            deliverHoverEventToItem(item, lastPos, lastPos, modifiers, timestamp, clearHover);
+    for (const auto &[item, id] : hoverItems) {
+        if (item) {
+            deliverHoverEventToItem(item, lastPos, lastPos, modifiers, timestamp, HoverChange::Clear);
+            Q_ASSERT(id == 0);
+        }
     }
-
-    hoverItems.clear();
 
     return true;
 }
@@ -1038,10 +1056,8 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
     }
 
     // Prune the list for items that are no longer hovered
-    auto hoverItemsCopy = hoverItems;
-    for (auto it = hoverItemsCopy.begin(); it != hoverItemsCopy.end();) {
-        auto item = (*it).first.data();
-        auto hoverId = (*it).second;
+    for (auto it = hoverItems.begin(); it != hoverItems.end();) {
+        const auto &[item, hoverId] = *it;
         if (hoverId == currentHoverId) {
             // Still being hovered
             it++;
@@ -1049,16 +1065,11 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
             // No longer hovered. If hoverId is 0, it means that we have sent a HoverLeave
             // event to the item already, and it can just be removed from the list. Note that
             // the item can have been deleted as well.
-            if (item && hoverId != 0) {
-                const bool clearHover = true;
-                deliverHoverEventToItem(item, scenePos, lastScenePos, modifiers, timestamp, clearHover);
-            }
-            it = hoverItemsCopy.erase(it);
+            if (item && hoverId != 0)
+                deliverHoverEventToItem(item, scenePos, lastScenePos, modifiers, timestamp, HoverChange::Clear);
+            it = hoverItems.erase(it);
         }
     }
-    // delivery of the events might have cleared hoverItems, so don't overwrite if empty
-    if (!hoverItems.isEmpty())
-        hoverItems = hoverItemsCopy;
 
     const bool itemsAreHovered = !hoverItems.isEmpty();
     return itemsWasHovered || itemsAreHovered;
@@ -1136,7 +1147,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
 
     // All decendants have been visited.
     // Now deliver the event to the item
-    return deliverHoverEventToItem(item, scenePos, lastScenePos, modifiers, timestamp, false);
+    return deliverHoverEventToItem(item, scenePos, lastScenePos, modifiers, timestamp, HoverChange::Set);
 }
 
 /*! \internal
@@ -1149,7 +1160,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
 */
 bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
         QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos,
-        Qt::KeyboardModifiers modifiers, ulong timestamp, bool clearHover)
+        Qt::KeyboardModifiers modifiers, ulong timestamp, HoverChange hoverChange)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     const QPointF localPos = item->mapFromScene(scenePos);
@@ -1166,7 +1177,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
     // Start by sending out enter/move/leave events to the item.
     // Note that hoverEnabled only controls if we should send out hover events to the
     // item itself. HoverHandlers are not included, and are dealt with separately below.
-    if (itemPrivate->hoverEnabled && isHovering && !clearHover) {
+    if (itemPrivate->hoverEnabled && isHovering && hoverChange == HoverChange::Set) {
         // Add the item to the list of hovered items (if it doesn't exist there
         // from before), and update hoverId to mark that it's (still) hovered.
         // Also set hoveredLeafItemFound, so that only propagate in a straight
@@ -1197,7 +1208,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
     // Note that since a HoverHandler can have a margin, a HoverHandler
     // can be hovered even if the item itself is not.
 
-    if (clearHover) {
+    if (hoverChange == HoverChange::Clear) {
         // Note: a leave should never stop propagation
         QHoverEvent hoverEvent(QEvent::HoverLeave, scenePos, globalPos, lastScenePos, modifiers);
         hoverEvent.setTimestamp(timestamp);
@@ -2104,10 +2115,12 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
 
         // Ensure that HoverHandlers are updated, in case no items got dirty so far and there's no update request
         if (event->type() == QEvent::TouchUpdate) {
-            for (auto hoverItem : hoverItems) {
-                if (auto item = hoverItem.first) {
-                    deliverHoverEventToItem(item, point.scenePosition(), point.sceneLastPosition(),
-                                            event->modifiers(), event->timestamp(), false);
+            for (const auto &[item, id] : hoverItems) {
+                if (item) {
+                    bool res = deliverHoverEventToItem(item, point.scenePosition(), point.sceneLastPosition(),
+                                                       event->modifiers(), event->timestamp(), HoverChange::Set);
+                    // if the event was accepted, then the item's ID must be valid
+                    Q_ASSERT(!res || hoverItems.value(item));
                 }
             }
         }

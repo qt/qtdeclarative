@@ -84,11 +84,17 @@ worker thread (or more) that work on it exist.
 QQmlCodeModel::QQmlCodeModel(QObject *parent, QQmlToolingSettings *settings)
     : QObject { parent },
       m_currentEnv(std::make_shared<DomEnvironment>(
-                       QStringList(QLibraryInfo::path(QLibraryInfo::QmlImportsPath)),
-                       DomEnvironment::Option::SingleThreaded)),
+              QStringList(QLibraryInfo::path(QLibraryInfo::QmlImportsPath)),
+              DomEnvironment::Option::SingleThreaded,
+              DomCreationOptions{} | DomCreationOption::WithRecovery
+                      | DomCreationOption::WithScriptExpressions
+                      | DomCreationOption::WithSemanticAnalysis)),
       m_validEnv(std::make_shared<DomEnvironment>(
-                     QStringList(QLibraryInfo::path(QLibraryInfo::QmlImportsPath)),
-                     DomEnvironment::Option::SingleThreaded)),
+              QStringList(QLibraryInfo::path(QLibraryInfo::QmlImportsPath)),
+              DomEnvironment::Option::SingleThreaded,
+              DomCreationOptions{} | DomCreationOption::WithRecovery
+                      | DomCreationOption::WithScriptExpressions
+                      | DomCreationOption::WithSemanticAnalysis)),
       m_settings(settings),
       m_pluginLoader(QmlLSPluginInterface_iid, u"/qmlls"_s)
 {
@@ -198,12 +204,8 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
         if (indexCancelled())
             return;
         QString fPath = dir.filePath(file);
-        DomCreationOptions options;
-        options.setFlag(DomCreationOption::WithScriptExpressions);
-        options.setFlag(DomCreationOption::WithSemanticAnalysis);
-        options.setFlag(DomCreationOption::WithRecovery);
         auto newCurrentPtr = newCurrent.ownerAs<DomEnvironment>();
-        FileToLoad fileToLoad = FileToLoad::fromFileSystem(newCurrentPtr, fPath, options);
+        FileToLoad fileToLoad = FileToLoad::fromFileSystem(newCurrentPtr, fPath);
         if (!fileToLoad.canonicalPath().isEmpty()) {
             newCurrentPtr->loadBuiltins();
             newCurrentPtr->loadFile(fileToLoad, [](Path, const DomItem &, const DomItem &) {});
@@ -597,11 +599,8 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
         newCurrentPtr->setLoadPaths(loadPaths);
     }
     Path p;
-    const DomCreationOptions options = DomCreationOptions{}
-            | DomCreationOption::WithScriptExpressions | DomCreationOption::WithSemanticAnalysis
-            | DomCreationOption::WithRecovery;
     auto newCurrentPtr = newCurrent.ownerAs<DomEnvironment>();
-    newCurrentPtr->loadFile(FileToLoad::fromMemory(newCurrentPtr, fPath, docText, options),
+    newCurrentPtr->loadFile(FileToLoad::fromMemory(newCurrentPtr, fPath, docText),
                             [&p, this](Path, const DomItem &, const DomItem &newValue) {
                                 const DomItem file = newValue.fileObject();
                                 p = file.canonicalPath();

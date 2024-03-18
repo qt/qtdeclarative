@@ -157,14 +157,13 @@ qt_internal_add_qml_module(QuickControls2Basic
     CLASS_NAME QtQuickControls2BasicStylePlugin
     DEPENDENCIES
         QtQuick/auto
-    IMPORTS
-        QtQuick.Controls.impl/auto
     PLUGIN_TARGET qtquickcontrols2basicstyleplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
     SOURCES
         qquickbasicstyle.cpp qquickbasicstyle_p.h
         qquickbasictheme.cpp qquickbasictheme_p.h
+        qtquickcontrols2basicforeign.cpp qtquickcontrols2basicforeign_p.h
     QML_FILES
         ${qml_files}
     DEFINES

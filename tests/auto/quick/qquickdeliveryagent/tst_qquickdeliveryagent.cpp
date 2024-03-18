@@ -145,6 +145,7 @@ private slots:
     void hoverEnterOnItemMoveAfterHide();
     void clearItemsOnHoverLeave();
     void deleteTargetOnPress();
+    void compoundControlsFocusInSubscene();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -399,7 +400,7 @@ void tst_qquickdeliveryagent::undoDelegationWhenSubsceneFocusCleared() // QTBUG-
     SubsceneRootItem subscene(listView, listView->boundingRect(), window.rootObject());
 
     window.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowFocused(&window));
 
     // populate a delegate in ListView
     listView->setModel(1);
@@ -628,6 +629,51 @@ void tst_qquickdeliveryagent::deleteTargetOnPress()
     QTest::mouseRelease(&window, Qt::MouseButton::LeftButton, {}, {100, 100});
     deliveryAgent->flushFrameSynchronousEvents(&window);
     QVERIFY(!upperArea->isPressed());
+}
+
+void tst_qquickdeliveryagent::compoundControlsFocusInSubscene()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::initView(window, testFileUrl("compoundControl.qml")));
+    QQuickItem *spinboxFocusScope = window.rootObject()->findChild<QQuickItem *>("spinboxFocusScope");
+    QVERIFY(spinboxFocusScope);
+    QQuickItem *spinbox = window.rootObject()->findChild<QQuickItem *>("spinbox");
+    QVERIFY(spinbox);
+    QQuickItem *textField = window.rootObject()->findChild<QQuickItem *>("spinboxContentItem");
+    QVERIFY(textField);
+
+    // put the items into a SubsceneRootItem
+    SubsceneRootItem subscene(spinboxFocusScope, spinboxFocusScope->boundingRect().translated(0, spinboxFocusScope->height() + 20), window.rootObject());
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowFocused(&window));
+
+    QVERIFY(!textField->hasActiveFocus());
+    QVERIFY(!textField->hasFocus());
+    QVERIFY(!spinbox->hasActiveFocus());
+    QVERIFY(!spinbox->hasFocus());
+    QVERIFY(!spinbox->scopedFocusItem());
+    QVERIFY(!spinboxFocusScope->hasActiveFocus());
+    QVERIFY(!spinboxFocusScope->hasFocus());
+    QVERIFY(!spinbox->scopedFocusItem());
+
+    auto clickPos = spinboxFocusScope->boundingRect().translated(0, spinboxFocusScope->height() + 20).center().toPoint();
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, clickPos);
+
+    QVERIFY(textField->hasActiveFocus());
+    QVERIFY(textField->hasFocus());
+    QTRY_VERIFY(spinbox->hasActiveFocus());
+    QVERIFY(spinbox->hasFocus());
+    QCOMPARE(spinbox->scopedFocusItem(), textField);
+    QVERIFY(spinboxFocusScope->hasActiveFocus());
+    QVERIFY(spinboxFocusScope->hasFocus());
+    QCOMPARE(spinboxFocusScope->scopedFocusItem(), spinbox);
+
+    QQuickDeliveryAgentPrivate *daPriv = static_cast<QQuickDeliveryAgentPrivate *>(QQuickDeliveryAgentPrivate::get(subscene.deliveryAgent));
+    QVERIFY(daPriv->rootItem->hasActiveFocus());
+    QCOMPARE(daPriv->activeFocusItem, textField);
+    QCOMPARE(QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->activeFocusItem, textField);
+    QCOMPARE(QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->rootItem->scopedFocusItem(), spinboxFocusScope);
 }
 
 QTEST_MAIN(tst_qquickdeliveryagent)

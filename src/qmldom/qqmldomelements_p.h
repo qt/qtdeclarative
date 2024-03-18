@@ -384,6 +384,7 @@ public:
 };
 
 // TODO: rename? it may contain statements and stuff, not only expressions
+// TODO QTBUG-121933
 class QMLDOM_EXPORT ScriptExpression final : public OwningItem
 {
     Q_GADGET
@@ -395,7 +396,8 @@ public:
         ArgInitializer,
         ArgumentStructure,
         ReturnType,
-        Code, // Used for storing the content of the whole file as "one" Expression
+        JSCode, // Used for storing the content of the whole .js file as "one" Expression
+        MJSCode, // Used for storing the content of the whole .mjs file as "one" Expression
     };
     Q_ENUM(ExpressionType);
     constexpr static DomType kindValue = DomType::ScriptExpression;
@@ -506,7 +508,28 @@ protected:
     }
 
 private:
+    enum class ParseMode {
+        QML,
+        JS,
+        MJS, // module js
+    };
+
+    inline ParseMode resolveParseMode()
+    {
+        switch (m_expressionType) {
+        case ExpressionType::BindingExpression:
+            // unfortunately there are no documentation explaining this resolution
+            // this was just moved from the original implementation
+            return ParseMode::QML;
+        case ExpressionType::MJSCode:
+            return ParseMode::MJS;
+        default:
+            return ParseMode::JS;
+        }
+    }
     void setCode(const QString &code, const QString &preCode, const QString &postCode);
+    [[nodiscard]] AST::Node *parse(ParseMode mode);
+
     ExpressionType m_expressionType;
     QString m_codeStr;
     QStringView m_code;

@@ -295,10 +295,12 @@ void QQuickQmlGenerator::generateNode(const NodeInfo &info)
 void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
 {
     static int counter = 0;
+    stream() << "Item {";
+    generateNodeBase(info);
+    m_indentLevel++;
 
-    if (!info.isTextArea) {
+    if (!info.isTextArea)
         stream() << "Item { id: textAlignItem_" << counter << "; x: " << info.position.x() << "; y: " << info.position.y() << "}";
-    }
 
     stream() << "Text {";
 
@@ -348,11 +350,16 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
         stream() << "font.underline: true";
     if (info.font.weight() != QFont::Normal)
         stream() << "font.weight: " << int(info.font.weight());
+    if (info.font.italic())
+        stream() << "font.italic: true";
 
     if (!info.strokeColor.isEmpty()) {
         stream() << "styleColor: \"" << info.strokeColor << "\"";
         stream() << "style: Text.Outline";
     }
+
+    m_indentLevel--;
+    stream() << "}";
 
     m_indentLevel--;
     stream() << "}";

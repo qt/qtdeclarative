@@ -64,7 +64,8 @@ depends += \
     ../../quickwidgets \
     ../../qmllocalstorage \
     ../../quicklayouts \
-    ../../labs
+    ../../labs \
+    ../../quick/jar/org/qtproject/qt/android
 
 # both have their own documentation project
 excludedirs += \

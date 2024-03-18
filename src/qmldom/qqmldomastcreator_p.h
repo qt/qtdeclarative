@@ -520,8 +520,8 @@ public:
 class QQmlDomAstCreatorWithQQmlJSScope : public AST::Visitor
 {
 public:
-    QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile, QQmlJSLogger *logger,
-                                     QQmlJSImporter *importer);
+    QQmlDomAstCreatorWithQQmlJSScope(const QQmlJSScope::Ptr &current, MutableDomItem &qmlFile,
+                                     QQmlJSLogger *logger, QQmlJSImporter *importer);
 
 #define X(name)                       \
     bool visit(AST::name *) override; \

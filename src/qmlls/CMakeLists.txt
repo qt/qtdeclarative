@@ -30,6 +30,7 @@ qt_internal_add_module(QmlLSPrivate
         qqmllsplugin_p.h
         qqmllscompletion.cpp qqmllscompletion_p.h
         qqmllscompletionplugin.cpp qqmllscompletionplugin_p.h
+        qdochtmlparser_p.h qdochtmlparser.cpp
 
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate

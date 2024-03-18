@@ -990,9 +990,11 @@ void QQuickShaderEffectPrivate::handleEvent(QEvent *event)
 {
     if (event->type() == QEvent::DynamicPropertyChange) {
         const auto propertyName = static_cast<QDynamicPropertyChangeEvent *>(event)->propertyName();
-        const auto mappedId = findMappedShaderVariableId(propertyName);
-        if (mappedId)
-            propertyChanged(*mappedId);
+        for (int i = 0; i < NShader; ++i) {
+            const auto mappedId = findMappedShaderVariableId(propertyName, Shader(i));
+            if (mappedId)
+                propertyChanged(*mappedId);
+        }
     }
 }
 
@@ -1444,6 +1446,17 @@ std::optional<int> QQuickShaderEffectPrivate::findMappedShaderVariableId(const Q
             if (vars[idx].name == name)
                 return indexToMappedId(shaderType, idx);
         }
+    }
+
+    return {};
+}
+
+std::optional<int> QQuickShaderEffectPrivate::findMappedShaderVariableId(const QByteArray &name, Shader shaderType) const
+{
+    const auto &vars = m_shaders[shaderType].shaderInfo.variables;
+    for (int idx = 0; idx < vars.size(); ++idx) {
+        if (vars[idx].name == name)
+            return indexToMappedId(shaderType, idx);
     }
 
     return {};

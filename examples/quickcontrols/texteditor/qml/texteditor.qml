@@ -25,6 +25,7 @@ ApplicationWindow {
 
     Action {
         id: openAction
+        text: qsTr("&Open")
         shortcut: StandardKey.Open
         onTriggered: {
             if (textArea.textDocument.modified)
@@ -36,6 +37,7 @@ ApplicationWindow {
 
     Action {
         id: saveAction
+        text: qsTr("&Save…")
         shortcut: StandardKey.Save
         enabled: textArea.textDocument.modified
         onTriggered: textArea.textDocument.save()
@@ -43,36 +45,45 @@ ApplicationWindow {
 
     Action {
         id: saveAsAction
+        text: qsTr("Save &As…")
         shortcut: StandardKey.SaveAs
         onTriggered: saveDialog.open()
     }
 
     Action {
         id: quitAction
+        text: qsTr("&Quit")
         shortcut: StandardKey.Quit
         onTriggered: close()
     }
 
     Action {
         id: copyAction
+        text: qsTr("&Copy")
         shortcut: StandardKey.Copy
+        enabled: textArea.selectedText
         onTriggered: textArea.copy()
     }
 
     Action {
         id: cutAction
+        text: qsTr("Cu&t")
         shortcut: StandardKey.Cut
+        enabled: textArea.selectedText
         onTriggered: textArea.cut()
     }
 
     Action {
         id: pasteAction
+        text: qsTr("&Paste")
         shortcut: StandardKey.Paste
+        enabled: textArea.canPaste
         onTriggered: textArea.paste()
     }
 
     Action {
         id: boldAction
+        text: qsTr("&Bold")
         shortcut: StandardKey.Bold
         checkable: true
         checked: textArea.cursorSelection.font.bold
@@ -81,6 +92,7 @@ ApplicationWindow {
 
     Action {
         id: italicAction
+        text: qsTr("&Italic")
         shortcut: StandardKey.Italic
         checkable: true
         checked: textArea.cursorSelection.font.italic
@@ -89,6 +101,7 @@ ApplicationWindow {
 
     Action {
         id: underlineAction
+        text: qsTr("&Underline")
         shortcut: StandardKey.Underline
         checkable: true
         checked: textArea.cursorSelection.font.underline
@@ -97,6 +110,7 @@ ApplicationWindow {
 
     Action {
         id: strikeoutAction
+        text: qsTr("&Strikeout")
         checkable: true
         checked: textArea.cursorSelection.font.strikeout
         onTriggered: textArea.cursorSelection.font = Qt.font({ strikeout: checked })
@@ -104,6 +118,7 @@ ApplicationWindow {
 
     Action {
         id: alignLeftAction
+        text: qsTr("Align &Left")
         shortcut: "Ctrl+{"
         checkable: true
         checked: textArea.cursorSelection.alignment === Qt.AlignLeft
@@ -112,6 +127,7 @@ ApplicationWindow {
 
     Action {
         id: alignCenterAction
+        text: qsTr("&Center")
         shortcut: "Ctrl+|"
         checkable: true
         checked: textArea.cursorSelection.alignment === Qt.AlignCenter
@@ -120,6 +136,7 @@ ApplicationWindow {
 
     Action {
         id: alignRightAction
+        text: qsTr("Align &Right")
         shortcut: "Ctrl+}"
         checkable: true
         checked: textArea.cursorSelection.alignment === Qt.AlignRight
@@ -128,6 +145,7 @@ ApplicationWindow {
 
     Action {
         id: alignJustifyAction
+        text: qsTr("&Justify")
         shortcut: "Ctrl+Alt+}"
         checkable: true
         checked: textArea.cursorSelection.alignment === Qt.AlignJustify
@@ -139,16 +157,16 @@ ApplicationWindow {
             title: qsTr("&File")
 
             MenuItem {
-                text: qsTr("&Open")
-                onTriggered: openDialog.open()
+                action: openAction
             }
             MenuItem {
-                text: qsTr("&Save As...")
-                onTriggered: saveDialog.open()
+                action: saveAction
             }
             MenuItem {
-                text: qsTr("&Quit")
-                onTriggered: close()
+                action: saveAsAction
+            }
+            MenuItem {
+                action: quitAction
             }
         }
 
@@ -156,19 +174,13 @@ ApplicationWindow {
             title: qsTr("&Edit")
 
             MenuItem {
-                text: qsTr("&Copy")
-                enabled: textArea.selectedText
-                onTriggered: textArea.copy()
+                action: copyAction
             }
             MenuItem {
-                text: qsTr("Cu&t")
-                enabled: textArea.selectedText
-                onTriggered: textArea.cut()
+                action: cutAction
             }
             MenuItem {
-                text: qsTr("&Paste")
-                enabled: textArea.canPaste
-                onTriggered: textArea.paste()
+                action: pasteAction
             }
         }
 
@@ -176,55 +188,31 @@ ApplicationWindow {
             title: qsTr("F&ormat")
 
             MenuItem {
-                text: qsTr("&Bold")
-                checkable: true
-                checked: boldAction.checked
-                onTriggered: boldAction.trigger()
+                action: boldAction
             }
             MenuItem {
-                text: qsTr("&Italic")
-                checkable: true
-                checked: italicAction.checked
-                onTriggered: italicAction.trigger()
+                action: italicAction
             }
             MenuItem {
-                text: qsTr("&Underline")
-                checkable: true
-                checked: underlineAction.checked
-                onTriggered: underlineAction.trigger()
+                action: underlineAction
             }
             MenuItem {
-                text: qsTr("&Strikeout")
-                checkable: true
-                checked: strikeoutAction.checked
-                onTriggered: strikeoutAction.trigger()
+                action: strikeoutAction
             }
 
             MenuSeparator {}
 
             MenuItem {
-                text: qsTr("Align &Left")
-                checkable: true
-                checked: alignLeftAction.checked
-                onTriggered: alignLeftAction.trigger()
+                action: alignLeftAction
             }
             MenuItem {
-                text: qsTr("&Center")
-                checkable: true
-                checked: alignCenterAction.checked
-                onTriggered: alignCenterAction.trigger()
+                action: alignCenterAction
             }
             MenuItem {
-                text: qsTr("&Justify")
-                checkable: true
-                checked: alignJustifyAction.checked
-                onTriggered: alignJustifyAction.trigger()
+                action: alignJustifyAction
             }
             MenuItem {
-                text: qsTr("Align &Right")
-                checkable: true
-                checked: alignRightAction.checked
-                onTriggered: alignRightAction.trigger()
+                action: alignRightAction
             }
         }
     }
@@ -462,6 +450,8 @@ ApplicationWindow {
         flickableDirection: Flickable.VerticalFlick
         anchors.fill: parent
 
+        ScrollBar.vertical: ScrollBar {}
+
         TextArea.flickable: TextArea {
             id: textArea
             textFormat: Qt.AutoText
@@ -478,10 +468,9 @@ ApplicationWindow {
             bottomPadding: 0
             background: null
 
-            MouseArea {
+            TapHandler {
                 acceptedButtons: Qt.RightButton
-                anchors.fill: parent
-                onClicked: contextMenu.popup()
+                onTapped: contextMenu.popup()
             }
 
             onLinkActivated: function (link) {
@@ -510,8 +499,6 @@ ApplicationWindow {
                 }
             }
         }
-
-        ScrollBar.vertical: ScrollBar {}
     }
 
     Menu {
@@ -519,18 +506,15 @@ ApplicationWindow {
 
         MenuItem {
             text: qsTr("Copy")
-            enabled: textArea.selectedText
-            onTriggered: textArea.copy()
+            action: copyAction
         }
         MenuItem {
             text: qsTr("Cut")
-            enabled: textArea.selectedText
-            onTriggered: textArea.cut()
+            action: cutAction
         }
         MenuItem {
             text: qsTr("Paste")
-            enabled: textArea.canPaste
-            onTriggered: textArea.paste()
+            action: pasteAction
         }
 
         MenuSeparator {}

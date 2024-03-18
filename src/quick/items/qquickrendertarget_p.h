@@ -51,14 +51,18 @@ public:
         quint64 object;
         int layoutOrState;
         uint rhiFormat;
-        uint rhiFlags;
+        uint rhiFormatFlags;
+        uint rhiViewFormat;
+        uint rhiViewFormatFlags;
     };
     struct NativeTextureArray {
         quint64 object;
         int layoutOrState;
         int arraySize;
         uint rhiFormat;
-        uint rhiFlags;
+        uint rhiFormatFlags;
+        uint rhiViewFormat;
+        uint rhiViewFormatFlags;
     };
     union {
         NativeTexture nativeTexture;

@@ -8,6 +8,7 @@
 #include <QtCore/qjniobject.h>
 #include <QtCore/qjniarray.h>
 #include <QtCore/qjnitypes.h>
+#include <QtQml/qqmlengine.h>
 #include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE

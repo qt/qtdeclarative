@@ -271,6 +271,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 
     QString text;
     bool needsRichText = false;
+    bool preserveWhiteSpace = node->whitespaceMode() == QSvgText::Preserve;
     for (const auto *tspan : node->tspans()) {
         if (!tspan) {
             text += QStringLiteral("<br>");
@@ -303,6 +304,9 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
             styleTagContent += QStringLiteral("font-variant: small-caps;");
         }
 
+        if (tspan->whitespaceMode() == QSvgText::Preserve && !preserveWhiteSpace)
+            styleTagContent += QStringLiteral("white-space: pre-wrap;");
+
         needsRichText = needsRichText || !styleTagContent.isEmpty();
         if (!styleTagContent.isEmpty())
             text += QStringLiteral("<span style=\"%1\">").arg(styleTagContent);
@@ -325,6 +329,9 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
             text += QStringLiteral("<font color=\"%1\">").arg(spanColor);
 
         QString content = tspan->text().toHtmlEscaped();
+        content.replace(QLatin1Char('\t'), QLatin1Char(' '));
+        content.replace(QLatin1Char('\n'), QLatin1Char(' '));
+
         if (font.resolveMask() & QFont::CapitalizationResolved) {
             switch (font.capitalization()) {
             case QFont::AllLowercase:
@@ -355,6 +362,10 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         if (needsRichText)
             text += QStringLiteral("</span>");
     }
+
+
+    if (preserveWhiteSpace && (needsRichText || styleResolver->currentFillGradient() != nullptr))
+        text = QStringLiteral("<span style=\"white-space: pre-wrap\">") + text + QStringLiteral("</span>");
 
     QFont font = styleResolver->painter().font();
     if (font.pixelSize() <= 0 && font.pointSize() > 0)

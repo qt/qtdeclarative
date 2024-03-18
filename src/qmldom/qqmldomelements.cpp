@@ -1654,11 +1654,10 @@ AST::Node *firstNodeInRange(AST::Node *n, quint32 minStart = 0, quint32 maxEnd =
 
 void ScriptExpression::setCode(const QString &code, const QString &preCode, const QString &postCode)
 {
-    //TODO refactor and move parsing outside?
+    // TODO QTBUG-121933
     m_codeStr = code;
-    const bool qmlMode = (m_expressionType == ExpressionType::BindingExpression);
     QString resolvedPreCode, resolvedPostCode;
-    if (qmlMode && preCode.isEmpty()) {
+    if (m_expressionType == ExpressionType::BindingExpression && preCode.isEmpty()) {
         resolvedPreCode = Binding::preCodeForName(u"binding");
         resolvedPostCode = Binding::postCodeForName(u"binding");
     } else {
@@ -1682,21 +1681,8 @@ void ScriptExpression::setCode(const QString &code, const QString &preCode, cons
         m_localOffset.startLine = preChange.nNewlines;
         m_engine = std::make_shared<QQmlJS::Engine>();
         m_astComments = std::make_shared<AstComments>(m_engine);
-        QQmlJS::Lexer lexer(m_engine.get());
-        lexer.setCode(m_codeStr, /*lineno = */ 1, /*qmlMode=*/true);
-        QQmlJS::Parser parser(m_engine.get());
-        if ((qmlMode && !parser.parse()) || (!qmlMode && !parser.parseScript()))
-            addErrorLocal(domParsingErrors().error(tr("Parsing of code failed")));
-        const auto messages = parser.diagnosticMessages();
-        for (const DiagnosticMessage &msg : messages) {
-            ErrorMessage err = domParsingErrors().errorMessage(msg);
-            err.location.offset -= m_localOffset.offset;
-            err.location.startLine -= m_localOffset.startLine;
-            if (err.location.startLine == 1)
-                err.location.startColumn -= m_localOffset.startColumn;
-            addErrorLocal(std::move(err));
-        }
-        m_ast = parser.rootNode();
+        m_ast = parse(resolveParseMode());
+
         if (AST::Program *programPtr = AST::cast<AST::Program *>(m_ast)) {
             m_ast = programPtr->statements;
         }
@@ -1717,8 +1703,40 @@ void ScriptExpression::setCode(const QString &code, const QString &preCode, cons
                 m_ast = exp->expression;
 
         CommentCollector collector;
-        collector.collectComments(m_engine, parser.rootNode(), m_astComments);
+        collector.collectComments(m_engine, m_ast, m_astComments);
     }
+}
+
+AST::Node *ScriptExpression::parse(const ParseMode mode)
+{
+    QQmlJS::Lexer lexer(m_engine.get());
+    lexer.setCode(m_codeStr, /*lineno = */ 1, /*qmlMode=*/mode == ParseMode::QML);
+    QQmlJS::Parser parser(m_engine.get());
+    const bool parserSucceeded = [mode, &parser]() {
+        switch (mode) {
+        case ParseMode::QML:
+            return parser.parse();
+        case ParseMode::JS:
+            return parser.parseScript();
+        case ParseMode::MJS:
+            return parser.parseModule();
+        default:
+            Q_UNREACHABLE_RETURN(false);
+        }
+    }();
+    if (!parserSucceeded) {
+        addErrorLocal(domParsingErrors().error(tr("Parsing of code failed")));
+    }
+    const auto messages = parser.diagnosticMessages();
+    for (const DiagnosticMessage &msg : messages) {
+        ErrorMessage err = domParsingErrors().errorMessage(msg);
+        err.location.offset -= m_localOffset.offset;
+        err.location.startLine -= m_localOffset.startLine;
+        if (err.location.startLine == 1)
+            err.location.startColumn -= m_localOffset.startColumn;
+        addErrorLocal(std::move(err));
+    }
+    return parser.rootNode();
 }
 
 void ScriptExpression::astDumper(const Sink &s, AstDumperOptions options) const

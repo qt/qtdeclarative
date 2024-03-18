@@ -729,7 +729,11 @@ bool ScriptFormatter::visit(FunctionDeclaration *ast)
 bool ScriptFormatter::visit(FunctionExpression *ast)
 {
     if (!ast->isArrowFunction) {
-        out("function "); // ast->functionToken
+        if (ast->isGenerator) {
+            out("function* ");
+        } else {
+            out("function ");
+        }
         if (!ast->name.isNull())
             out(ast->identifierToken);
     }
@@ -923,9 +927,184 @@ bool ScriptFormatter::visit(ClassDeclaration *ast)
     return false;
 }
 
+bool ScriptFormatter::visit(AST::ImportDeclaration *ast)
+{
+    out(ast->importToken);
+    lw.space();
+    if (!ast->moduleSpecifier.isNull()) {
+        out(ast->moduleSpecifierToken);
+    }
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::ImportSpecifier *ast)
+{
+    if (!ast->identifier.isNull()) {
+        out(ast->identifierToken);
+        lw.space();
+        out("as");
+        lw.space();
+    }
+    out(ast->importedBindingToken);
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::NameSpaceImport *ast)
+{
+    out(ast->starToken);
+    lw.space();
+    out("as");
+    lw.space();
+    out(ast->importedBindingToken);
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::ImportsList *ast)
+{
+    for (ImportsList *it = ast; it; it = it->next) {
+        accept(it->importSpecifier);
+        if (it->next) {
+            out(",");
+            lw.space();
+        }
+    }
+    return false;
+}
+bool ScriptFormatter::visit(AST::NamedImports *ast)
+{
+    out(ast->leftBraceToken);
+    if (ast->importsList) {
+        lw.space();
+    }
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::ImportClause *ast)
+{
+    if (!ast->importedDefaultBinding.isNull()) {
+        out(ast->importedDefaultBindingToken);
+        if (ast->nameSpaceImport || ast->namedImports) {
+            out(",");
+            lw.space();
+        }
+    }
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::ExportDeclaration *ast)
+{
+    out(ast->exportToken);
+    lw.space();
+    if (ast->exportDefault) {
+        out("default");
+        lw.space();
+    }
+    if (ast->exportsAll()) {
+        out("*");
+    }
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::ExportClause *ast)
+{
+    out(ast->leftBraceToken);
+    if (ast->exportsList) {
+        lw.space();
+    }
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::ExportSpecifier *ast)
+{
+    out(ast->identifier);
+    if (ast->exportedIdentifierToken.isValid()) {
+        lw.space();
+        out("as");
+        lw.space();
+        out(ast->exportedIdentifier);
+    }
+    return true;
+}
+
+bool ScriptFormatter::visit(AST::ExportsList *ast)
+{
+    for (ExportsList *it = ast; it; it = it->next) {
+        accept(it->exportSpecifier);
+        if (it->next) {
+            out(",");
+            lw.space();
+        }
+    }
+    return false;
+}
+
+bool ScriptFormatter::visit(AST::FromClause *ast)
+{
+    lw.space();
+    out(ast->fromToken);
+    lw.space();
+    out(ast->moduleSpecifierToken);
+    return true;
+}
+
 void ScriptFormatter::endVisit(ComputedPropertyName *)
 {
     out("]");
+}
+
+void ScriptFormatter::endVisit(AST::ExportDeclaration *ast)
+{
+    // add a semicolon at the end of the following expressions
+    // export * FromClause ;
+    // export ExportClause FromClause ;
+    if (ast->fromClause) {
+        out(";");
+    }
+
+    // add a semicolon at the end of the following expressions
+    // export ExportClause ;
+    if (ast->exportClause && !ast->fromClause) {
+        out(";");
+    }
+
+    // add a semicolon at the end of the following expressions
+    // export default [lookahead ∉ { function, class }] AssignmentExpression;
+    if (ast->exportDefault && ast->variableStatementOrDeclaration) {
+        // lookahead ∉ { function, class }
+        if (!(ast->variableStatementOrDeclaration->kind == Node::Kind_FunctionDeclaration
+              || ast->variableStatementOrDeclaration->kind == Node::Kind_ClassDeclaration)) {
+            out(";");
+        }
+        // ArrowFunction in QQmlJS::AST is handled with the help of FunctionDeclaration
+        // and not as part of AssignmentExpression (as per ECMA
+        // https://262.ecma-international.org/7.0/#prod-AssignmentExpression)
+        if (ast->variableStatementOrDeclaration->kind == Node::Kind_FunctionDeclaration
+            && static_cast<AST::FunctionDeclaration *>(ast->variableStatementOrDeclaration)
+                       ->isArrowFunction) {
+            out(";");
+        }
+    }
+}
+
+void ScriptFormatter::endVisit(AST::ExportClause *ast)
+{
+    if (ast->exportsList) {
+        lw.space();
+    }
+    out(ast->rightBraceToken);
+}
+
+void ScriptFormatter::endVisit(AST::NamedImports *ast)
+{
+    if (ast->importsList) {
+        lw.space();
+    }
+    out(ast->rightBraceToken);
+}
+
+void ScriptFormatter::endVisit(AST::ImportDeclaration *)
+{
+    out(";");
 }
 
 void ScriptFormatter::throwRecursionDepthError()

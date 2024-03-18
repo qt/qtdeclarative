@@ -39,6 +39,10 @@ set_source_files_properties(
         SKIP_AUTOMOC TRUE
 )
 
+set(extra_manual_moc_deps "")
+if(QT_FEATURE_qml_network)
+    list(APPEND extra_manual_moc_deps Qt6::Network)
+endif()
 # We want QQmlComponent, QQmlComponentAttached, and QQmlScriptString to be available as metatypes in
 # the builtins, but without depending on QtQml and without duplicating the metaobjects.
 qt_manual_moc(extra_builtins_moc_files
@@ -46,7 +50,7 @@ qt_manual_moc(extra_builtins_moc_files
     qml/qqmlcomponent.h
     qml/qqmlcomponentattached_p.h
     qml/qqmlscriptstring.h
-    TARGETS Qt6::Qml
+    TARGETS Qt6::Qml Qt6::Core ${extra_manual_moc_deps}
 )
 
 # The moc files are included directly by qqmlcomponent.cpp and qqmlscriptstring.cpp
