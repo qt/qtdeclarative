@@ -553,7 +553,7 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengl
         util/qquickopenglutils.cpp util/qquickopenglutils.h
 )
 
-qt_internal_extend_target(Quick CONDITION IOS OR MACOS
+qt_internal_extend_target(Quick CONDITION QT_FEATURE_metal
     SOURCES
         scenegraph/coreapi/qsgtexture_mac.mm
         scenegraph/qsgrhisupport_mac.mm

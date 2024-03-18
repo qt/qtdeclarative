@@ -15,7 +15,7 @@
 #include <QtGui/qvulkaninstance.h>
 #endif
 
-#if defined(Q_OS_APPLE) || defined(Q_QDOC)
+#if QT_CONFIG(metal) || defined(Q_QDOC)
 #  if defined(__OBJC__) || defined(Q_QDOC)
      @protocol MTLTexture;
 #    define QT_OBJC_PROTOCOL(protocol) id<protocol>
@@ -68,7 +68,7 @@ struct Q_QUICK_EXPORT QSGD3D12Texture
 };
 #endif
 
-#if defined(Q_OS_APPLE) || defined(Q_QDOC)
+#if QT_CONFIG(metal) || defined(Q_QDOC)
 struct Q_QUICK_EXPORT QSGMetalTexture
 {
     QT_DECLARE_NATIVE_INTERFACE(QSGMetalTexture, 1, QSGTexture)

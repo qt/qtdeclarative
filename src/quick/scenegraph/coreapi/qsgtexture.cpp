@@ -87,7 +87,7 @@ QSGTexturePrivate::QSGTexturePrivate(QSGTexture *t)
     , m_d3d11TextureAccessor(t)
     , m_d3d12TextureAccessor(t)
 #endif
-#if defined(Q_OS_APPLE)
+#if QT_CONFIG(metal)
     , m_metalTextureAccessor(t)
 #endif
 #if QT_CONFIG(vulkan)
@@ -1047,7 +1047,7 @@ void *QSGTexture::resolveInterface(const char *name, int revision) const
 #if QT_CONFIG(vulkan)
     QT_NATIVE_INTERFACE_RETURN_IF(QSGVulkanTexture, &dd->m_vulkanTextureAccessor);
 #endif
-#if defined(Q_OS_APPLE)
+#if QT_CONFIG(metal)
     QT_NATIVE_INTERFACE_RETURN_IF(QSGMetalTexture, &dd->m_metalTextureAccessor);
 #endif
 #if defined(Q_OS_WIN)

@@ -11,7 +11,7 @@
 #include <QtGui/qvulkaninstance.h>
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_QDOC)
+#if QT_CONFIG(metal) || defined(Q_QDOC)
 Q_FORWARD_DECLARE_OBJC_CLASS(MTLTexture);
 #endif
 
@@ -59,7 +59,7 @@ public:
     static QQuickRenderTarget fromD3D12Texture(void *texture, int resourceState, uint format, uint viewFormat, const QSize &pixelSize, int sampleCount, int arraySize, Flags flags);
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_QDOC)
+#if QT_CONFIG(metal) || defined(Q_QDOC)
     static QQuickRenderTarget fromMetalTexture(MTLTexture *texture, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromMetalTexture(MTLTexture *texture, uint format, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromMetalTexture(MTLTexture *texture, uint format, uint viewFormat, const QSize &pixelSize, int sampleCount, int arraySize, Flags flags);

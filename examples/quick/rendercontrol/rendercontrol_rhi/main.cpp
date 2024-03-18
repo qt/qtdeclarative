@@ -576,7 +576,7 @@ int main(int argc, char **argv)
     apiList->addItem("Direct3D 12");
     apiValues.append(QSGRendererInterface::Direct3D12);
 #endif
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     apiList->addItem("Metal");
     apiValues.append(QSGRendererInterface::Metal);
 #endif

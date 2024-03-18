@@ -800,7 +800,7 @@ void tst_SceneGraph::textureNativeInterface()
 
     commitTexture(scene->window->rhi(), texture.data());
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     if (scene->window->graphicsApi() == QSGRendererInterface::Metal) {
         auto texNatIf = texture->nativeInterface<QNativeInterface::QSGMetalTexture>();
         QVERIFY(texNatIf);

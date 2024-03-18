@@ -719,7 +719,7 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D12Texture(void *texture,
 
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_QDOC)
+#if QT_CONFIG(metal) || defined(Q_QDOC)
 QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uint format,
                                                         const QSize &pixelSize, int sampleCount)
 {
