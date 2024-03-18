@@ -1499,6 +1499,7 @@
       Q_GADGET
       QML_VALUE_TYPE(myValueType)
       QML_CONSTRUCTIBLE_VALUE
+  public:
       Q_INVOKABLE MyValueType(double d);
 
       // ...
