@@ -2,8 +2,6 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     message(FATAL_ERROR "MyStyle should be built as part of the 'attachedstyleproperties' project, and not in isolation.")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/attachedstyleproperties")
-
 qt_policy(SET QTP0001 NEW)
 qt_add_qml_module(MyStyle
     URI MyStyle
@@ -35,14 +33,15 @@ target_link_libraries(MyStyle PRIVATE
 )
 
 install(TARGETS MyStyle
-    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
-    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
-    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}/MyStyle"
+    BUNDLE DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 install(TARGETS MyStyleplugin
-    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}/MyStyle"
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}/MyStyle"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_BINDIR}/MyStyle"
 )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qmldir
-    DESTINATION "${INSTALL_EXAMPLEDIR}/MyStyle"
+    DESTINATION "${CMAKE_INSTALL_BINDIR}/MyStyle"
 )
