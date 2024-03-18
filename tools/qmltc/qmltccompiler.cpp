@@ -218,8 +218,11 @@ void QmltcCompiler::compileType(
                 return scope->parentScope();
             return scope;
         };
-        current.otherCode << u"friend class %1;"_s.arg(
-                realQmlScope(type->parentScope())->internalName());
+
+        const auto& realScope = realQmlScope(type->parentScope());
+        if (realScope != rootType) {
+            current.otherCode << u"friend class %1;"_s.arg(realScope->internalName());
+        }
     }
 
     // make QQmltcObjectCreationHelper a friend of every type since it provides
