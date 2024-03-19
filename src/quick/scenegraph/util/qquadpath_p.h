@@ -187,8 +187,8 @@ public:
 
     void moveTo(const QVector2D &to)
     {
-        subPathToStart = true;
-        currentPoint = to;
+        m_subPathToStart = true;
+        m_currentPoint = to;
     }
 
     void lineTo(const QVector2D &to)
@@ -218,8 +218,8 @@ public:
 
     QRectF controlPointRect() const;
 
-    Qt::FillRule fillRule() const { return m_fillRule; }
-    void setFillRule(Qt::FillRule rule) { m_fillRule = rule; }
+    Qt::FillRule fillRule() const { return m_windingFill ? Qt::WindingFill : Qt::OddEvenFill; }
+    void setFillRule(Qt::FillRule rule) { m_windingFill = (rule == Qt::WindingFill); }
 
     void reserve(int size) { m_elements.reserve(size); }
     int elementCount() const { return m_elements.size(); }
@@ -319,12 +319,12 @@ private:
 
     friend Q_QUICK_EXPORT QDebug operator<<(QDebug, const QQuadPath &);
 
-    PathHints m_hints;
-    bool subPathToStart = true;
-    Qt::FillRule m_fillRule = Qt::OddEvenFill;
-    QVector2D currentPoint;
     QList<Element> m_elements;
     QList<Element> m_childElements;
+    QVector2D m_currentPoint;
+    bool m_subPathToStart = true;
+    bool m_windingFill = false;
+    PathHints m_hints;
 
     friend class QSGCurveProcessor;
 };
