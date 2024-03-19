@@ -417,6 +417,56 @@ static QCborArray constructors(
     });
 }
 
+void QmlTypesCreator::writeRootMethods(const QCborMap &classDef)
+{
+    // Hide destroyed() signals
+    QCborArray componentSignals = members(classDef, MetatypesDotJson::S_SIGNALS, m_version);
+    for (auto it = componentSignals.begin(); it != componentSignals.end();) {
+        if (toStringView(it->toMap(), MetatypesDotJson::S_NAME) == "destroyed"_L1)
+            it = componentSignals.erase(it);
+        else
+            ++it;
+    }
+    writeMethods(componentSignals, S_SIGNAL);
+
+    // Hide deleteLater() methods
+    QCborArray componentMethods = members(classDef, MetatypesDotJson::S_METHODS, m_version)
+            + members(classDef, MetatypesDotJson::S_SLOTS, m_version);
+    for (auto it = componentMethods.begin(); it != componentMethods.end();) {
+        if (toStringView(it->toMap(), MetatypesDotJson::S_NAME) == "deleteLater"_L1)
+            it = componentMethods.erase(it);
+        else
+            ++it;
+    }
+
+    // Add toString()
+    QCborMap toStringMethod;
+    toStringMethod.insert(MetatypesDotJson::S_NAME, "toString"_L1);
+    toStringMethod.insert(MetatypesDotJson::S_ACCESS, MetatypesDotJson::S_PUBLIC);
+    toStringMethod.insert(MetatypesDotJson::S_RETURN_TYPE, "QString"_L1);
+    componentMethods.append(toStringMethod);
+
+    // Add destroy(int)
+    QCborMap destroyMethodWithArgument;
+    destroyMethodWithArgument.insert(MetatypesDotJson::S_NAME, "destroy"_L1);
+    destroyMethodWithArgument.insert(MetatypesDotJson::S_ACCESS, MetatypesDotJson::S_PUBLIC);
+    QCborMap delayArgument;
+    delayArgument.insert(MetatypesDotJson::S_NAME, "delay"_L1);
+    delayArgument.insert(MetatypesDotJson::S_TYPE, "int"_L1);
+    QCborArray destroyArguments;
+    destroyArguments.append(delayArgument);
+    destroyMethodWithArgument.insert(MetatypesDotJson::S_ARGUMENTS, destroyArguments);
+    componentMethods.append(destroyMethodWithArgument);
+
+    // Add destroy()
+    QCborMap destroyMethod;
+    destroyMethod.insert(MetatypesDotJson::S_NAME, "destroy"_L1);
+    destroyMethod.insert(MetatypesDotJson::S_ACCESS, MetatypesDotJson::S_PUBLIC);
+    destroyMethod.insert(MetatypesDotJson::S_IS_CLONED, true);
+    componentMethods.append(destroyMethod);
+
+    writeMethods(componentMethods, S_METHOD);
+};
 
 void QmlTypesCreator::writeComponents()
 {
@@ -424,9 +474,6 @@ void QmlTypesCreator::writeComponents()
         QmlTypesClassDescription collector;
         collector.collect(component, m_ownTypes, m_foreignTypes,
                           QmlTypesClassDescription::TopLevel, m_version);
-
-        if (collector.omitFromQmlTypes)
-            continue;
 
         m_qml.writeStartObject(S_COMPONENT);
 
@@ -441,9 +488,14 @@ void QmlTypesCreator::writeComponents()
 
             writeProperties(members(classDef, MetatypesDotJson::S_PROPERTIES, m_version));
 
-            writeMethods(members(classDef, MetatypesDotJson::S_SIGNALS, m_version), S_SIGNAL);
-            writeMethods(members(classDef, MetatypesDotJson::S_SLOTS, m_version), S_METHOD);
-            writeMethods(members(classDef, MetatypesDotJson::S_METHODS, m_version), S_METHOD);
+            if (collector.isRootClass) {
+                writeRootMethods(classDef);
+            } else {
+                writeMethods(members(classDef, MetatypesDotJson::S_SIGNALS, m_version), S_SIGNAL);
+                writeMethods(members(classDef, MetatypesDotJson::S_SLOTS, m_version), S_METHOD);
+                writeMethods(members(classDef, MetatypesDotJson::S_METHODS, m_version), S_METHOD);
+            }
+
             writeMethods(constructors(classDef, MetatypesDotJson::S_CONSTRUCTORS, m_version),
                          S_METHOD);
         }

@@ -1127,6 +1127,12 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                        Message{
                                u"Namespace 'test' of 'test.Grid' must start with an upper case letter."_s },
                } };
+    QTest::newRow("notQmlRootMethods")
+            << QStringLiteral("notQmlRootMethods.qml")
+            << Result{ {
+                       Message{ u"Member \"deleteLater\" not found on type \"QtObject\""_s },
+                       Message{ u"Member \"destroyed\" not found on type \"QtObject\""_s },
+               } };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1250,6 +1256,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QVariant") << QStringLiteral("qvariant.qml");
     QTest::newRow("Accessible") << QStringLiteral("accessible.qml");
     QTest::newRow("qjsroot") << QStringLiteral("qjsroot.qml");
+    QTest::newRow("qmlRootMethods") << QStringLiteral("qmlRootMethods.qml");
     QTest::newRow("InlineComponent") << QStringLiteral("inlineComponent.qml");
     QTest::newRow("InlineComponentWithComponents") << QStringLiteral("inlineComponentWithComponents.qml");
     QTest::newRow("InlineComponentsChained") << QStringLiteral("inlineComponentsChained.qml");

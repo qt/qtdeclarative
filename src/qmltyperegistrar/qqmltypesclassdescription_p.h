@@ -70,7 +70,7 @@ struct QmlTypesClassDescription
     bool isStructured = false;
     bool isSingleton = false;
     bool hasCustomParser = false;
-    bool omitFromQmlTypes = false;
+    bool isRootClass = false;
     bool extensionIsJavaScript = false;
     bool extensionIsNamespace = false;
     bool registerEnumClassesScoped = false;

@@ -153,8 +153,8 @@ static constexpr QLatin1StringView S_EXTENSION_IS_NAMESPACE       { "QML.Extensi
 static constexpr QLatin1StringView S_FOREIGN                      { "QML.Foreign" };
 static constexpr QLatin1StringView S_FOREIGN_IS_NAMESPACE         { "QML.ForeignIsNamespace" };
 static constexpr QLatin1StringView S_HAS_CUSTOM_PARSER            { "QML.HasCustomParser" };
-static constexpr QLatin1StringView S_OMIT_FROM_QML_TYPES          { "QML.OmitFromQmlTypes" };
 static constexpr QLatin1StringView S_REMOVED_IN_VERSION           { "QML.RemovedInVersion" };
+static constexpr QLatin1StringView S_ROOT                         { "QML.Root" };
 static constexpr QLatin1StringView S_SEQUENCE                     { "QML.Sequence" };
 static constexpr QLatin1StringView S_SINGLETON                    { "QML.Singleton" };
 static constexpr QLatin1StringView S_UNCREATABLE_REASON           { "QML.UncreatableReason" };

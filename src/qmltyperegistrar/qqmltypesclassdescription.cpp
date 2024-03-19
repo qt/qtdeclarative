@@ -301,9 +301,8 @@ void QmlTypesClassDescription::collect(
             foreignTypeName = value;
         } else if (name == S_FOREIGN_IS_NAMESPACE) {
             foreignIsNamespace = (value == S_TRUE);
-        } else if (name == S_OMIT_FROM_QML_TYPES) {
-            if (value == S_TRUE)
-                omitFromQmlTypes = true;
+        } else if (name == S_ROOT) {
+            isRootClass = (value == S_TRUE);
         } else if (name == S_HAS_CUSTOM_PARSER) {
             if (value == S_TRUE)
                 hasCustomParser = true;

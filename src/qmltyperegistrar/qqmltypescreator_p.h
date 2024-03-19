@@ -46,6 +46,7 @@ private:
     void writeEnums(const QCborArray &enums, EnumClassesMode enumClassesMode);
 
     void writeComponents();
+    void writeRootMethods(const QCborMap &classDef);
 
     QByteArray m_output;
     QQmlJSStreamWriter m_qml;
