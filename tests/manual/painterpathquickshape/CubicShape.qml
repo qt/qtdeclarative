@@ -5,7 +5,6 @@ import QtQuick
 import QtQuick.Shapes
 
 ControlledShape {
-    fillRule: ShapePath.OddEvenFill
     delegate: [
         PathMove { x: start.cx; y: start.cy},
         PathCubic { x: end.cx; y: end.cy;
