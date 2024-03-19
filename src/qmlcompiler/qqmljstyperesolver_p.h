@@ -54,6 +54,7 @@ public:
     QQmlJSScope::ConstPtr uint32Type() const { return m_uint32Type; }
     QQmlJSScope::ConstPtr int64Type() const { return m_int64Type; }
     QQmlJSScope::ConstPtr uint64Type() const { return m_uint64Type; }
+    QQmlJSScope::ConstPtr sizeType() const { return m_sizeType; }
     QQmlJSScope::ConstPtr boolType() const { return m_boolType; }
     QQmlJSScope::ConstPtr stringType() const { return m_stringType; }
     QQmlJSScope::ConstPtr stringListType() const { return m_stringListType; }
@@ -255,6 +256,7 @@ protected:
     QQmlJSScope::ConstPtr m_uint32Type;
     QQmlJSScope::ConstPtr m_int64Type;
     QQmlJSScope::ConstPtr m_uint64Type;
+    QQmlJSScope::ConstPtr m_sizeType;
     QQmlJSScope::ConstPtr m_boolType;
     QQmlJSScope::ConstPtr m_stringType;
     QQmlJSScope::ConstPtr m_stringListType;

@@ -3972,6 +3972,10 @@ QString QQmlJSCodeGenerator::convertStored(
             return variable + u".toDouble()"_s;
         if (m_typeResolver->equals(to, boolType))
             return variable + u".toBoolean()"_s;
+        if (m_typeResolver->equals(to, m_typeResolver->int64Type())
+            || m_typeResolver->equals(to, m_typeResolver->uint64Type())) {
+            return u"%1(%2.toDouble())"_s.arg(to->internalName(), variable);
+        }
         if (m_typeResolver->isIntegral(to))
             return u"%1(%2.toInteger())"_s.arg(to->internalName(), variable);
         if (m_typeResolver->equals(to, m_typeResolver->stringType()))
@@ -4002,7 +4006,8 @@ QString QQmlJSCodeGenerator::convertStored(
                 || m_typeResolver->equals(from, m_typeResolver->realType())
                 || m_typeResolver->equals(from, m_typeResolver->stringType())) {
             return u"QJSPrimitiveValue("_s + variable + u')';
-        } else if (m_typeResolver->isSignedInteger(from)
+        } else if (m_typeResolver->equals(from, m_typeResolver->int16Type())
+                   || m_typeResolver->equals(from, m_typeResolver->int8Type())
                    || m_typeResolver->equals(from, m_typeResolver->uint16Type())
                    || m_typeResolver->equals(from, m_typeResolver->uint8Type())) {
             return u"QJSPrimitiveValue(int("_s + variable + u"))"_s;

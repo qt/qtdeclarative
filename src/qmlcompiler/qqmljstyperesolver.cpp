@@ -68,6 +68,12 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_uint64Type = builtinTypes.type(u"qulonglong"_s).scope;
     Q_ASSERT(m_uint64Type);
 
+    m_sizeType = builtinTypes.type(u"qsizetype"_s).scope;
+    assertExtension(m_sizeType, "Number"_L1);
+
+    // qsizetype is either a 32bit or a 64bit signed integer. We don't want to special-case it.
+    Q_ASSERT(m_sizeType == m_int32Type || m_sizeType == m_int64Type);
+
     m_boolType = builtinTypes.type(u"bool"_s).scope;
     assertExtension(m_boolType, "Boolean"_L1);
 
@@ -356,18 +362,18 @@ bool QQmlJSTypeResolver::isNumeric(const QQmlJSScope::ConstPtr &type) const
 
 bool QQmlJSTypeResolver::isSignedInteger(const QQmlJSScope::ConstPtr &type) const
 {
-    // Only types of length <= 32bit count as integral
     return equals(type, m_int8Type)
             || equals(type, m_int16Type)
-            || equals(type, m_int32Type);
+            || equals(type, m_int32Type)
+            || equals(type, m_int64Type);
 }
 
 bool QQmlJSTypeResolver::isUnsignedInteger(const QQmlJSScope::ConstPtr &type) const
 {
-    // Only types of length <= 32bit count as integral
     return equals(type, m_uint8Type)
             || equals(type, m_uint16Type)
-            || equals(type, m_uint32Type);
+            || equals(type, m_uint32Type)
+            || equals(type, m_uint64Type);
 }
 
 QQmlJSScope::ConstPtr
