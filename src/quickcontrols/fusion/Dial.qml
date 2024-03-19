@@ -28,7 +28,7 @@ T.Dial {
         height: control.height / 7
         transform: [
             Translate {
-                y: -Math.min(control.background.width, control.background.height) * 0.42
+                y: -Math.min(control.background.width, control.background.height) * 0.35
                    + (control.handle ? control.handle.height / 2 : 0)
             },
             Rotation {
