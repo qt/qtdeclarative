@@ -813,7 +813,13 @@ QObject *AOTCompiledContext::thisObject() const
 
 QQmlEngine *AOTCompiledContext::qmlEngine() const
 {
-    return qmlContext ? qmlContext->engine() : nullptr;
+    return engine->handle()->qmlEngine();
+}
+
+static QQmlPropertyCapture *propertyCapture(const AOTCompiledContext *aotContext)
+{
+    QQmlEngine *engine = aotContext->qmlEngine();
+    return engine ? QQmlEnginePrivate::get(aotContext->qmlEngine())->propertyCapture : nullptr;
 }
 
 QJSValue AOTCompiledContext::jsMetaType(int index) const
@@ -836,37 +842,25 @@ void AOTCompiledContext::setReturnValueUndefined() const
     }
 }
 
-static QQmlPropertyCapture *propertyCapture(const QQmlContextData *qmlContext)
-{
-    if (!qmlContext)
-        return nullptr;
-
-    QQmlEngine *engine = qmlContext->engine();
-    Q_ASSERT(engine);
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-    Q_ASSERT(ep);
-    return ep->propertyCapture;
-}
-
 static void captureFallbackProperty(
         QObject *object, int coreIndex, int notifyIndex, bool isConstant,
-        const QQmlContextData *qmlContext)
+        const AOTCompiledContext *aotContext)
 {
     if (isConstant)
         return;
 
-    if (QQmlPropertyCapture *capture = propertyCapture(qmlContext))
+    if (QQmlPropertyCapture *capture = propertyCapture(aotContext))
         capture->captureProperty(object, coreIndex, notifyIndex);
 }
 
 static void captureObjectProperty(
         QObject *object, const QQmlPropertyCache *propertyCache,
-        const QQmlPropertyData *property, QQmlContextData *qmlContext)
+        const QQmlPropertyData *property, const AOTCompiledContext *aotContext)
 {
     if (property->isConstant())
         return;
 
-    if (QQmlPropertyCapture *capture = propertyCapture(qmlContext))
+    if (QQmlPropertyCapture *capture = propertyCapture(aotContext))
         capture->captureProperty(object, propertyCache, property);
 }
 
@@ -883,7 +877,7 @@ enum class ObjectPropertyResult { OK, NeedsInit, Deleted };
 
 template<bool StrictType = false>
 ObjectPropertyResult loadObjectProperty(
-        QV4::Lookup *l, QObject *object, void *target, QQmlContextData *qmlContext)
+        QV4::Lookup *l, QObject *object, void *target, const AOTCompiledContext *aotContext)
 {
     QQmlData *qmlData = QQmlData::get(object);
     if (!qmlData)
@@ -904,13 +898,13 @@ ObjectPropertyResult loadObjectProperty(
     if (qmlData->hasPendingBindingBit(coreIndex))
         qmlData->flushPendingBinding(coreIndex);
 
-    captureObjectProperty(object, propertyCache, property, qmlContext);
+    captureObjectProperty(object, propertyCache, property, aotContext);
     property->readProperty(object, target);
     return ObjectPropertyResult::OK;
 }
 
 static ObjectPropertyResult loadFallbackProperty(
-        QV4::Lookup *l, QObject *object, void *target, QQmlContextData *qmlContext)
+        QV4::Lookup *l, QObject *object, void *target, const AOTCompiledContext *aotContext)
 {
     QQmlData *qmlData = QQmlData::get(object);
     if (qmlData && qmlData->isQueuedForDeletion)
@@ -928,7 +922,7 @@ static ObjectPropertyResult loadFallbackProperty(
         qmlData->flushPendingBinding(coreIndex);
 
     captureFallbackProperty(object, coreIndex, l->qobjectFallbackLookup.notifyIndex,
-                            l->qobjectFallbackLookup.isConstant, qmlContext);
+                            l->qobjectFallbackLookup.isConstant, aotContext);
 
     void *a[] = { target, nullptr };
     metaObject->metacall(object, QMetaObject::ReadProperty, coreIndex, a);
@@ -937,19 +931,19 @@ static ObjectPropertyResult loadFallbackProperty(
 }
 
 ObjectPropertyResult loadObjectAsVariant(
-        QV4::Lookup *l, QObject *object, void *target, QQmlContextData *qmlContext)
+        QV4::Lookup *l, QObject *object, void *target, const AOTCompiledContext *aotContext)
 {
     QVariant *variant = static_cast<QVariant *>(target);
     const QMetaType propType = l->qobjectLookup.propertyData->propType();
     if (propType == QMetaType::fromType<QVariant>())
-        return loadObjectProperty<true>(l, object, variant, qmlContext);
+        return loadObjectProperty<true>(l, object, variant, aotContext);
 
     *variant = QVariant(propType);
-    return loadObjectProperty<true>(l, object, variant->data(), qmlContext);
+    return loadObjectProperty<true>(l, object, variant->data(), aotContext);
 }
 
 ObjectPropertyResult loadFallbackAsVariant(
-        QV4::Lookup *l, QObject *object, void *target, QQmlContextData *qmlContext)
+        QV4::Lookup *l, QObject *object, void *target, const AOTCompiledContext *aotContext)
 {
     const QMetaObject *metaObject
             = reinterpret_cast<const QMetaObject *>(l->qobjectFallbackLookup.metaObject - 1);
@@ -958,10 +952,10 @@ ObjectPropertyResult loadFallbackAsVariant(
     QVariant *variant = static_cast<QVariant *>(target);
     const QMetaType propType = metaObject->property(l->qobjectFallbackLookup.coreIndex).metaType();
     if (propType == QMetaType::fromType<QVariant>())
-        return loadFallbackProperty(l, object, variant, qmlContext);
+        return loadFallbackProperty(l, object, variant, aotContext);
 
     *variant = QVariant(propType);
-    return loadFallbackProperty(l, object, variant->data(), qmlContext);
+    return loadFallbackProperty(l, object, variant->data(), aotContext);
 }
 
 template<bool StrictType, typename Op>
@@ -1283,7 +1277,7 @@ bool AOTCompiledContext::captureLookup(uint index, QObject *object) const
             || l->getter == QV4::Lookup::getterQObjectAsVariant) {
         const QQmlPropertyData *property = l->qobjectLookup.propertyData;
         QQmlData::flushPendingBinding(object, property->coreIndex());
-        captureObjectProperty(object, l->qobjectLookup.propertyCache, property, qmlContext);
+        captureObjectProperty(object, l->qobjectLookup.propertyCache, property, this);
         return true;
     }
 
@@ -1293,7 +1287,7 @@ bool AOTCompiledContext::captureLookup(uint index, QObject *object) const
         QQmlData::flushPendingBinding(object, coreIndex);
         captureFallbackProperty(
                     object, coreIndex, l->qobjectFallbackLookup.notifyIndex,
-                    l->qobjectFallbackLookup.isConstant, qmlContext);
+                    l->qobjectFallbackLookup.isConstant, this);
         return true;
     }
 
@@ -1307,7 +1301,7 @@ bool AOTCompiledContext::captureQmlContextPropertyLookup(uint index) const
             && l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupContextObjectProperty) {
         const QQmlPropertyData *property = l->qobjectLookup.propertyData;
         QQmlData::flushPendingBinding(qmlScopeObject, property->coreIndex());
-        captureObjectProperty(qmlScopeObject, l->qobjectLookup.propertyCache, property, qmlContext);
+        captureObjectProperty(qmlScopeObject, l->qobjectLookup.propertyCache, property, this);
         return true;
     }
 
@@ -1315,7 +1309,7 @@ bool AOTCompiledContext::captureQmlContextPropertyLookup(uint index) const
         const int coreIndex = l->qobjectFallbackLookup.coreIndex;
         QQmlData::flushPendingBinding(qmlScopeObject, coreIndex);
         captureFallbackProperty(qmlScopeObject, coreIndex, l->qobjectFallbackLookup.notifyIndex,
-                                l->qobjectFallbackLookup.isConstant, qmlContext);
+                                l->qobjectFallbackLookup.isConstant, this);
         return true;
     }
 
@@ -1324,7 +1318,7 @@ bool AOTCompiledContext::captureQmlContextPropertyLookup(uint index) const
 
 void AOTCompiledContext::captureTranslation() const
 {
-    if (QQmlPropertyCapture *capture = propertyCapture(qmlContext))
+    if (QQmlPropertyCapture *capture = propertyCapture(this))
         capture->captureTranslation();
 }
 
@@ -1672,9 +1666,9 @@ bool AOTCompiledContext::loadScopeObjectPropertyLookup(uint index, void *target)
 
     ObjectPropertyResult result = ObjectPropertyResult::NeedsInit;
     if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectProperty)
-        result = loadObjectProperty(l, qmlScopeObject, target, qmlContext);
+        result = loadObjectProperty(l, qmlScopeObject, target, this);
     else if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeFallbackProperty)
-        result = loadFallbackProperty(l, qmlScopeObject, target, qmlContext);
+        result = loadFallbackProperty(l, qmlScopeObject, target, this);
     else
         return false;
 
@@ -1871,13 +1865,13 @@ bool AOTCompiledContext::getObjectLookup(uint index, QObject *object, void *targ
 
     ObjectPropertyResult result = ObjectPropertyResult::NeedsInit;
     if (l->getter == QV4::Lookup::getterQObject)
-        result = loadObjectProperty(l, object, target, qmlContext);
+        result = loadObjectProperty(l, object, target, this);
     else if (l->getter == QV4::Lookup::getterFallback)
-        result = loadFallbackProperty(l, object, target, qmlContext);
+        result = loadFallbackProperty(l, object, target, this);
     else if (l->getter == QV4::Lookup::getterQObjectAsVariant)
-        result = loadObjectAsVariant(l, object, target, qmlContext);
+        result = loadObjectAsVariant(l, object, target, this);
     else if (l->getter == QV4::Lookup::getterFallbackAsVariant)
-        result = loadFallbackAsVariant(l, object, target, qmlContext);
+        result = loadFallbackAsVariant(l, object, target, this);
     else
         return false;
 
