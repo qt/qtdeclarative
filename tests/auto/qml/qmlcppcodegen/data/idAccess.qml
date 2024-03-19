@@ -1,3 +1,4 @@
+pragma Strict
 import QtQuick
 
 Item {
@@ -11,5 +12,9 @@ Item {
 
     Text {
         id: ttt
+        onTextChanged: {
+            root.objectName = "dead"
+            ttt.objectName = "context"
+        }
     }
 }
