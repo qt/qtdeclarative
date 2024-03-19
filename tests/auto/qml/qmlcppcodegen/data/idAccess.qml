@@ -11,5 +11,9 @@ Item {
 
     Text {
         id: ttt
+        onTextChanged: {
+            root.objectName = "dead"
+            ttt.objectName = "context"
+        }
     }
 }
