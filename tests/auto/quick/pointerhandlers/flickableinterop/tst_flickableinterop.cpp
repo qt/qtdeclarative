@@ -628,7 +628,10 @@ void tst_FlickableInterop::touchDragSliderAndFlickable()
         QQuickTouchUtils::flush(window);
         qCDebug(lcPointerTests) << "step" << i << ": fingers @" << p1 << p2 << "is Flickable moving yet?" << flickable->isMoving();
     }
-    QVERIFY(flickable->isMoving());
+    // In Qt 6, Flickable doesn't see the second touchpoint, so it doesn't move.
+    // One way to see this is that Flickable is more immune to stray touches than it otherwise would be.
+    // But time will tell if we are missing out on something useful, which was possible in Qt 5 (QTBUG-123490).
+    QCOMPARE(flickable->isMoving(), false);
     qreal knobSliderXOffset = qAbs(knob->mapToScene(knob->clipRect().center()).toPoint().x() -
         slider->mapToScene(slider->clipRect().center()).toPoint().x()) - initialXOffset;
     if (knobSliderXOffset > 1)
