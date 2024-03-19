@@ -72,6 +72,7 @@ struct QQmlQtObjectForeign
     QML_NAMED_ELEMENT(QtObject)
     QML_EXTENDED_JAVASCRIPT(Object)
     QML_FOREIGN(QObject)
+    Q_CLASSINFO("QML.Root", "true")
 };
 
 struct QQmlIntForeign
