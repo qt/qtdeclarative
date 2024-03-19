@@ -141,12 +141,10 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         exportStrings.append(QUtf8StringView(entry));
 
     m_qml.writeStringListBinding(S_EXPORTS, exportStrings);
-
-    if (!collector.isCreatable || collector.isSingleton)
-        m_qml.writeBooleanBinding(S_IS_CREATABLE, false);
+    m_qml.writeBooleanBinding(S_IS_CREATABLE, collector.isCreatable && !collector.isSingleton);
 
     if (collector.isStructured)
-        m_qml.writeScriptBinding(QLatin1String("isStructured"), QLatin1String("true"));
+        m_qml.writeBooleanBinding(S_IS_STRUCTURED, true);
 
     if (collector.isSingleton)
         m_qml.writeBooleanBinding(S_IS_SINGLETON, true);

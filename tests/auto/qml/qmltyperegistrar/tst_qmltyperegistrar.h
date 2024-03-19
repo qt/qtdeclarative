@@ -544,6 +544,13 @@ signals:
     void clonedSignal(int i = 7);
 };
 
+class Unconstructible
+{
+    Q_GADGET
+    QML_VALUE_TYPE(unconstructible)
+    int m_i = 11;
+};
+
 class Constructible
 {
     Q_GADGET
@@ -835,6 +842,7 @@ private slots:
     void duplicateExportWarnings();
     void clonedSignal();
     void baseVersionInQmltypes();
+    void unconstructibleValueType();
     void constructibleValueType();
     void structuredValueType();
     void anonymousAndUncreatable();
