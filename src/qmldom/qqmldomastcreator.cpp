@@ -530,6 +530,8 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
                                  el->propertyToken());
         FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion,
                                  el->identifierToken);
+        FileLocations::addRegion(nodeStack.last().fileLocations, TypeIdentifierRegion,
+                                 el->typeToken);
         FileLocations::addRegion(nodeStack.last().fileLocations, ColonTokenRegion, el->colonToken);
         if (p.name == u"id")
             qmlFile.addError(std::move(astParseErrors()
