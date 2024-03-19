@@ -93,13 +93,13 @@ void tst_qquickapplication::active()
             window.show();
             window.requestActivate();
             QVERIFY(QTest::qWaitForWindowActive(&window));
-            QCOMPARE(QGuiApplication::focusWindow(), &window);
+            QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
             QVERIFY(item->property("active").toBool());
             QVERIFY(item->property("active2").toBool());
 
             // not active again
             QWindowSystemInterface::handleFocusWindowChanged(nullptr);
-            QTRY_VERIFY_WITH_TIMEOUT(QGuiApplication::focusWindow() != &window, 15000);
+            QTRY_COMPARE_NE(QGuiApplication::focusWindow(), &window);
             QVERIFY(!item->property("active").toBool());
             QVERIFY(!item->property("active2").toBool());
         }
@@ -166,13 +166,13 @@ void tst_qquickapplication::state()
             window.show();
             window.requestActivate();
             QVERIFY(QTest::qWaitForWindowActive(&window));
-            QCOMPARE(QGuiApplication::focusWindow(), &window);
+            QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
             QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationActive);
             QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationActive);
 
             // not active again
             QWindowSystemInterface::handleFocusWindowChanged(nullptr);
-            QTRY_VERIFY_WITH_TIMEOUT(QGuiApplication::focusWindow() != &window, 15000);
+            QTRY_COMPARE_NE(QGuiApplication::focusWindow(), &window);
             QCOMPARE(Qt::ApplicationState(item->property("state").toInt()),
                      Qt::ApplicationInactive);
             QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()),
