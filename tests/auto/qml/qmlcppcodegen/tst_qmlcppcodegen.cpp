@@ -2235,6 +2235,18 @@ void tst_QmlCppCodegen::idAccess()
     QObject *ttt = qmlContext(object.data())->objectForName(u"ttt"_s);
     QFont f = qvariant_cast<QFont>(ttt->property("font"));
     QCOMPARE(f.pointSize(), 22);
+
+    QObject::connect(object.data(), &QObject::objectNameChanged, ttt, [&](){
+        ttt->setParent(nullptr);
+        QJSEngine::setObjectOwnership(ttt, QJSEngine::CppOwnership);
+        object.reset(ttt);
+    });
+
+    QVERIFY(object->objectName().isEmpty());
+    QVERIFY(ttt->objectName().isEmpty());
+    ttt->setProperty("text", u"kill"_s);
+    QCOMPARE(object.data(), ttt);
+    QCOMPARE(ttt->objectName(), u"context"_s);
 }
 
 void tst_QmlCppCodegen::ignoredFunctionReturn()
