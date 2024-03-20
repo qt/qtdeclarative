@@ -485,6 +485,9 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
                                                  Path::Field(Fields::parameters).index(idx),
                                                  AttachedInfo::PathType::Relative);
             FileLocations::addRegion(argLocs, MainRegion, combineLocations(args));
+            FileLocations::addRegion(argLocs, IdentifierRegion, args->identifierToken);
+            if (args->type)
+                FileLocations::addRegion(argLocs, TypeIdentifierRegion, args->propertyTypeToken);
             args = args->next;
         }
         break;
@@ -669,6 +672,8 @@ bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
     auto bodyTree = FileLocations::ensure(fLoc, Path::Field(Fields::body),
                                           AttachedInfo::PathType::Relative);
     FileLocations::addRegion(bodyTree, MainRegion, bodyLoc);
+    if (fDef->functionToken.isValid())
+        FileLocations::addRegion(fLoc, FunctionKeywordRegion, fDef->functionToken);
     if (fDef->lparenToken.length != 0)
         FileLocations::addRegion(fLoc, LeftParenthesisRegion, fDef->lparenToken);
     if (fDef->rparenToken.length != 0)
@@ -677,6 +682,8 @@ bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
         FileLocations::addRegion(fLoc, LeftBraceRegion, fDef->lbraceToken);
     if (fDef->rbraceToken.length != 0)
         FileLocations::addRegion(fLoc, RightBraceRegion, fDef->rbraceToken);
+    if (fDef->typeAnnotation)
+        FileLocations::addRegion(fLoc, TypeIdentifierRegion, combineLocations(fDef->typeAnnotation->type));
     MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
     AST::FormalParameterList *args = fDef->formals;
     while (args) {
@@ -708,6 +715,10 @@ bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
                                              Path::Field(Fields::parameters).index(idx),
                                              AttachedInfo::PathType::Relative);
         FileLocations::addRegion(argLocs, MainRegion, combineLocations(args));
+        if (args->element->identifierToken.isValid())
+            FileLocations::addRegion(argLocs, IdentifierRegion, args->element->identifierToken);
+        if (args->element->typeAnnotation)
+            FileLocations::addRegion(argLocs, TypeIdentifierRegion, combineLocations(args->element->typeAnnotation->type));
         args = args->next;
     }
     return true;

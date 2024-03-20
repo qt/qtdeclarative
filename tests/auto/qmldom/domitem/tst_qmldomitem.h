@@ -3258,6 +3258,31 @@ private slots:
         QSet {
             QQmlJS::SourceLocation{172, 6, 6, 28}
         };
+
+        QTest::newRow("function") << baseDir + u"/fileLocationRegions/functions.qml"_s
+                                  << FunctionKeywordRegion
+                                  << QSet{ QQmlJS::SourceLocation{ 139, 9, 7, 5 },
+                                           QQmlJS::SourceLocation{ 195, 9, 10, 9 } };
+
+        QTest::newRow("signal") << baseDir + u"/fileLocationRegions/functions.qml"_s
+                                << SignalKeywordRegion
+                                << QSet{ QQmlJS::SourceLocation{ 234, 6, 13, 5 },
+                                         QQmlJS::SourceLocation{ 254, 6, 14, 5 } };
+        QTest::newRow("return-type-identifier")
+                << baseDir + u"/fileLocationRegions/functions.qml"_s << TypeIdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 154, 3, 7, 20 },
+                         QQmlJS::SourceLocation{ 216, 3, 10, 30 } };
+        QTest::newRow("function-parameter-type-identifier")
+                << baseDir + u"/fileLocationRegions/functions.qml"_s << TypeIdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 209, 3, 10, 23 } };
+        QTest::newRow("signal-parameter-type-identifier")
+                << baseDir + u"/fileLocationRegions/functions.qml"_s << TypeIdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 243, 3, 13, 14 },
+                         QQmlJS::SourceLocation{ 267, 3, 14, 18 } };
+        QTest::newRow("signal-parameter-identifier")
+                << baseDir + u"/fileLocationRegions/functions.qml"_s << IdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 247, 1, 13, 18 },
+                         QQmlJS::SourceLocation{ 264, 1, 14, 15 } };
     }
 
     void fileLocationRegions()
