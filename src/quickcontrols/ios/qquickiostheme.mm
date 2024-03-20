@@ -3,7 +3,7 @@
 
 #include "qquickiostheme_p.h"
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if defined(Q_OS_APPLE)
 #include <QtGui/private/qcoregraphics_p.h>
 #endif
 
