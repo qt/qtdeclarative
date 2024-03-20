@@ -56,6 +56,8 @@ void registerTypes()
 
     qmlRegisterTypeNotAvailable("Test",1,0,"UnavailableType", "UnavailableType is unavailable for testing");
 
+    qmlRegisterTypesAndRevisions<DerivedFromUnexposedBase>("Test", 1);
+
     qmlRegisterType<MyQmlObject>("Test.Version",1,0,"MyQmlObject");
     qmlRegisterType<MyTypeObject>("Test.Version",1,0,"MyTypeObject");
     qmlRegisterType<MyTypeObject>("Test.Version",2,0,"MyTypeObject");
@@ -272,3 +274,19 @@ UncreatableSingleton *UncreatableSingleton::instance()
     static UncreatableSingleton instance;
     return &instance;
 }
+
+QT_BEGIN_NAMESPACE
+const QMetaObject *QtPrivate::MetaObjectForType<FakeDynamicObject *, void>::metaObjectFunction(const QMetaTypeInterface *)
+{
+    static auto ptr = []{
+        QMetaObjectBuilder builder(&FakeDynamicObject::staticMetaObject);
+        builder.setFlags(DynamicMetaObject);
+        auto mo = builder.toMetaObject();
+        QObject::connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, [mo]() {
+            delete mo;
+        });
+        return mo;
+    }();
+    return ptr;
+}
+QT_END_NAMESPACE
