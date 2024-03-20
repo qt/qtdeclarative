@@ -4,7 +4,7 @@
 import QtQuick
 import QmltcTests 1.0
 
-TypeWithSpecialProperties {
+TypeForCustomInitialization {
     id: myWindow
     required property int someValue
 
@@ -17,6 +17,7 @@ TypeWithSpecialProperties {
     property int someComplexValueThatWillNotBeSet: { return 5 }
 
     property list<int> valueTypeList : []
+    property list<Item> objectTypeList : []
 
     //QTBUG-114403: onValueChanged should not trigger when setting
     //the initial values.

@@ -22,6 +22,7 @@ set(cpp_sources
     cpptypes/singletontype.h cpptypes/singletontype.cpp
     cpptypes/typewithnamespace.h cpptypes/typewithnamespace.cpp
     cpptypes/typewithsignal.h
+    cpptypes/custominitialization.h
 )
 
 set(qml_sources

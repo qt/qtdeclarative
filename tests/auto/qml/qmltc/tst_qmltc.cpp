@@ -840,13 +840,20 @@ void tst_qmltc::customInitialization()
 {
     int valueToTest = 10;
 
+    QQuickItem firstItem;
+    QQuickItem secondItem;
+
     QQmlEngine e;
     PREPEND_NAMESPACE(qtbug120700_main)
-    created(&e, nullptr, [valueToTest](auto& component) {
+    created(&e, nullptr, [valueToTest, &firstItem, &secondItem](auto& component) {
         component.setSomeValue(valueToTest);
         component.setSomeComplexValueThatWillBeSet(valueToTest);
-        component.setZ(static_cast<double>(valueToTest));
+        component.setPropertyFromExtension(static_cast<double>(valueToTest));
+        component.setDefaultedBindable(static_cast<double>(valueToTest));
         component.setValueTypeList({1, 2, 3, 4});
+        component.setObjectTypeList({&firstItem, &secondItem});
+        component.setExtensionObjectList({&firstItem, &secondItem});
+        component.setCppObjectList({&firstItem, &secondItem});
     });
 
     // QTBUG-114403: onValueChanged should have not been triggered
@@ -868,8 +875,15 @@ void tst_qmltc::customInitialization()
     QCOMPARE(created.someValue(), valueToTest);
     QCOMPARE(created.someValueAlias(), valueToTest);
     QCOMPARE(created.someValueBinding(), valueToTest + 1);
-    QCOMPARE(created.bindableZ().value(), static_cast<double>(valueToTest));
+    QCOMPARE(created.property("propertyFromExtension").toDouble(), static_cast<double>(valueToTest));
+    QCOMPARE(created.bindableDefaultedBindable().value(), static_cast<double>(valueToTest));
     QCOMPARE(created.valueTypeList(), QList({1, 2, 3, 4}));
+    QCOMPARE(created.objectTypeList().toList<QList<QQuickItem*>>(), QList({&firstItem, &secondItem}));
+    QCOMPARE(
+        created.property("extensionObjectList").value<QQmlListProperty<QQuickItem>>().toList<QList<QQuickItem*>>(),
+        QList({&firstItem, &secondItem})
+    );
+    QCOMPARE(created.getCppObjectList().toList<QList<QQuickItem*>>(), QList({&firstItem, &secondItem}));
 }
 
 // QTBUG-104094

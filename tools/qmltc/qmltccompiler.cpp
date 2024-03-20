@@ -416,7 +416,7 @@ static void compilePropertyInitializer(QmltcType &current, const QQmlJSScope::Co
     for (auto& property: properties) {
         if (property.index() == -1) continue;
         if (property.isPrivate()) continue;
-        if (!property.isWritable() || qIsReferenceTypeList(property)) continue;
+        if (!property.isWritable() && !qIsReferenceTypeList(property)) continue;
 
         const QString name = property.propertyName();
 
@@ -426,11 +426,28 @@ static void compilePropertyInitializer(QmltcType &current, const QQmlJSScope::Co
         compiledSetter.userVisible = true;
         compiledSetter.returnType = u"void"_s;
         compiledSetter.name = QmltcPropertyData(property).write;
-        compiledSetter.parameterList.emplaceBack(
-            QQmlJSUtils::constRefify(getUnderlyingType(property)), name + u"_", QString()
-        );
 
-        if (QQmlJSUtils::bindablePropertyHasDefaultAccessor(property, QQmlJSUtils::PropertyAccessor_Write)) {
+        if (qIsReferenceTypeList(property)) {
+            compiledSetter.parameterList.emplaceBack(
+                QQmlJSUtils::constRefify(u"QList<%1*>"_s.arg(property.type()->valueType()->internalName())),
+                name + u"_", QString()
+            );
+        } else {
+            compiledSetter.parameterList.emplaceBack(
+                QQmlJSUtils::constRefify(getUnderlyingType(property)), name + u"_", QString()
+            );
+        }
+
+        if (qIsReferenceTypeList(property)) {
+            compiledSetter.body << u"QQmlListReference list_ref_(&%1, \"%2\");"_s.arg(
+               current.propertyInitializer.component.name, name
+            );
+            compiledSetter.body << u"list_ref_.clear();"_s;
+            compiledSetter.body << u"for (const auto& list_item_ : %1_)"_s.arg(name);
+            compiledSetter.body << u"    list_ref_.append(list_item_);"_s;
+        } else if (
+            QQmlJSUtils::bindablePropertyHasDefaultAccessor(property, QQmlJSUtils::PropertyAccessor_Write)
+        ) {
             compiledSetter.body  << u"%1.%2().setValue(%3_);"_s.arg(
                 current.propertyInitializer.component.name, property.bindable(), name);
         } else if (property.write().isEmpty() || isFromExtension(property, type)) {
