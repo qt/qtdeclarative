@@ -42,8 +42,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public Q
                        visibilityChanged)
     Q_PROPERTY(QObject *screen READ screen WRITE setScreen NOTIFY screenChanged REVISION(2, 3))
     Q_PROPERTY(QObject *parent READ visualParent WRITE setVisualParent NOTIFY visualParentChanged DESIGNABLE false FINAL REVISION(6, 7))
-    Q_PROPERTY(int x READ x WRITE setX NOTIFY xChanged REVISION(6, 7))
-    Q_PROPERTY(int y READ y WRITE setY NOTIFY yChanged REVISION(6, 7))
+    Q_PROPERTY(int x READ x WRITE setX NOTIFY xChanged)
+    Q_PROPERTY(int y READ y WRITE setY NOTIFY yChanged)
     Q_PROPERTY(qreal z READ z WRITE setZ NOTIFY zChanged FINAL REVISION(6, 7))
     QML_ATTACHED(QQuickWindowAttached)
     QML_NAMED_ELEMENT(Window)
@@ -77,8 +77,8 @@ Q_SIGNALS:
     Q_REVISION(6, 7) void visualParentChanged(QObject *);
     Q_REVISION(2, 3) void screenChanged();
 
-    Q_REVISION(6, 7) void xChanged(int arg);
-    Q_REVISION(6, 7) void yChanged(int arg);
+    void xChanged(int arg);
+    void yChanged(int arg);
     Q_REVISION(6, 7) void zChanged();
 
 protected:
