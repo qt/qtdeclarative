@@ -252,7 +252,7 @@ void tst_MptaInterop::touchesThenPinch()
     }
     qCDebug(lcPointerTests) << "drag started after" << dragTookGrab
                             << "moves; ended with translation" << drag->activeTranslation();
-    QCOMPARE(devPriv->pointById(1)->exclusiveGrabber, drag);
+    QCOMPARE(devPriv->pointById(2)->exclusiveGrabber, drag);
     QTRY_VERIFY(drag->activeTranslation().x() > 0);
 
     touch.release(2, p2).commit();
