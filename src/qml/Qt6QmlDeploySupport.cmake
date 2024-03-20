@@ -9,7 +9,7 @@
 
 cmake_minimum_required(VERSION 3.16...3.21)
 
-function(qt_deploy_qml_imports)
+function(qt6_deploy_qml_imports)
     set(no_value_options
         NO_QT_IMPORTS
     )
@@ -59,6 +59,21 @@ function(qt_deploy_qml_imports)
     include(${filename})
 
 endfunction()
+
+if(NOT __QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
+    function(qt_deploy_qml_imports)
+        if(__QT_DEFAULT_MAJOR_VERSION EQUAL 6)
+            qt6_deploy_qml_imports(${ARGV})
+
+            cmake_parse_arguments(PARSE_ARGV 0 arg "" "PLUGINS_FOUND" "")
+            if(arg_PLUGINS_FOUND)
+                set(${arg_PLUGINS_FOUND} ${${arg_PLUGINS_FOUND}} PARENT_SCOPE)
+            endif()
+        else()
+            message(FATAL_ERROR "qt_deploy_qml_imports() is only available in Qt 6.")
+        endif()
+    endfunction()
+endif()
 
 function(_qt_internal_deploy_qml_imports_for_target)
     set(no_value_options
