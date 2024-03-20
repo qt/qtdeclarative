@@ -846,6 +846,7 @@ void tst_qmltc::customInitialization()
         component.setSomeValue(valueToTest);
         component.setSomeComplexValueThatWillBeSet(valueToTest);
         component.setZ(static_cast<double>(valueToTest));
+        component.setValueTypeList({1, 2, 3, 4});
     });
 
     // QTBUG-114403: onValueChanged should have not been triggered
@@ -868,6 +869,7 @@ void tst_qmltc::customInitialization()
     QCOMPARE(created.someValueAlias(), valueToTest);
     QCOMPARE(created.someValueBinding(), valueToTest + 1);
     QCOMPARE(created.bindableZ().value(), static_cast<double>(valueToTest));
+    QCOMPARE(created.valueTypeList(), QList({1, 2, 3, 4}));
 }
 
 // QTBUG-104094

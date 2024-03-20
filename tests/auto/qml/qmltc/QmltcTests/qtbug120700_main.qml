@@ -16,6 +16,8 @@ TypeWithSpecialProperties {
     property int someComplexValueThatWillBeSet: { return 5 }
     property int someComplexValueThatWillNotBeSet: { return 5 }
 
+    property list<int> valueTypeList : []
+
     //QTBUG-114403: onValueChanged should not trigger when setting
     //the initial values.
     onSomeValueChanged: { wasSomeValueChanged = true; }

@@ -242,11 +242,13 @@ void QmltcCodeGenerator::generate_createBindingOnProperty(
         *block += epilogue;
     } else {
         QString createBindingForNonBindable =
-                u"QT_PREPEND_NAMESPACE(QQmlCppBinding)::createBindingForNonBindable(" + unitVarName
+                u"    "_s
+                + u"QT_PREPEND_NAMESPACE(QQmlCppBinding)::createBindingForNonBindable(" + unitVarName
                 + u", " + scope + u", " + QString::number(functionIndex) + u", " + target + u", "
                 + QString::number(propertyIndex) + u", " + QString::number(valueTypeIndex) + u", "
                 + propName + u")";
         // Note: in this version, the binding is set implicitly
+        *block << u"if (!initializedCache.contains(\"%1\"))"_s.arg(p.propertyName());
         *block << createBindingForNonBindable + u";";
     }
 }
