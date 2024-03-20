@@ -392,9 +392,18 @@ bool QQmlDomAstCreator::visit(UiPragma *el)
 
     auto fileLocation = createMap(
             DomType::Pragma, qmlFilePtr->addPragma(Pragma(el->name.toString(), valueList)), el);
+    FileLocations::addRegion(fileLocation, PragmaKeywordRegion, el->pragmaToken);
+    FileLocations::addRegion(fileLocation, IdentifierRegion, el->pragmaIdToken);
     if (el->colonToken.isValid()) {
         FileLocations::addRegion(fileLocation, ColonTokenRegion, el->colonToken);
     }
+    int i = 0;
+    for (auto t = el->values; t; t = t->next) {
+        auto subMap = createMap(fileLocation, Path().field(Fields::values).index(i), t);
+        FileLocations::addRegion(subMap, PragmaValuesRegion, t->location);
+        ++i;
+    }
+
     return true;
 }
 

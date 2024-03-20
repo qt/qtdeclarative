@@ -1679,7 +1679,7 @@ void QQmlLSCompletion::collectCompletions(const DomItem &currentItem,
             // suppress completions for ids
             return;
         case DomType::Pragma:
-            insidePragmaCompletion(currentItem, positionInfo, result);
+            insidePragmaCompletion(currentParent, positionInfo, result);
             return;
         case DomType::ScriptType: {
             if (currentParent.directParent().internalKind() == DomType::QmlObject) {

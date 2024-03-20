@@ -778,6 +778,7 @@ UiPragma: T_PRAGMA PragmaId Semicolon;
     case $rule_number: {
         AST::UiPragma *pragma = new (pool) AST::UiPragma(stringRef(2));
         pragma->pragmaToken = loc(1);
+        pragma->pragmaIdToken = loc(2);
         pragma->semicolonToken = loc(3);
         sym(1).Node = pragma;
     } break;
@@ -789,6 +790,7 @@ UiPragma: T_PRAGMA PragmaId T_COLON UiPragmaValueList Semicolon;
         AST::UiPragma *pragma = new (pool) AST::UiPragma(
                 stringRef(2), sym(4).UiPragmaValueList->finish());
         pragma->pragmaToken = loc(1);
+        pragma->pragmaIdToken = loc(2);
         pragma->colonToken = loc(3);
         pragma->semicolonToken = loc(5);
         sym(1).Node = pragma;

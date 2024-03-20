@@ -3283,6 +3283,25 @@ private slots:
                 << baseDir + u"/fileLocationRegions/functions.qml"_s << IdentifierRegion
                 << QSet{ QQmlJS::SourceLocation{ 247, 1, 13, 18 },
                          QQmlJS::SourceLocation{ 264, 1, 14, 15 } };
+
+        QTest::newRow("pragma-keyword")
+                << baseDir + u"/fileLocationRegions/pragmas.qml"_s << PragmaKeywordRegion
+                << QSet{ QQmlJS::SourceLocation{ 112, 6, 4, 1 },
+                         QQmlJS::SourceLocation{ 129, 6, 5, 1 },
+                         QQmlJS::SourceLocation{ 161, 6, 6, 1 },
+                         QQmlJS::SourceLocation{ 204, 6, 7, 1 }};
+        QTest::newRow("pragmaId")
+                << baseDir + u"/fileLocationRegions/pragmas.qml"_s << IdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 119, 9, 4, 8 },
+                         QQmlJS::SourceLocation{ 136, 17, 5, 8 },
+                         QQmlJS::SourceLocation{ 168, 25, 6, 8 },
+                         QQmlJS::SourceLocation{ 211, 17, 7, 8 }};
+        QTest::newRow("pragmaValues")
+                << baseDir + u"/fileLocationRegions/pragmas.qml"_s << PragmaValuesRegion
+                << QSet{ QQmlJS::SourceLocation{ 155, 5, 5, 27 },
+                         QQmlJS::SourceLocation{ 195, 8, 6, 35 },
+                         QQmlJS::SourceLocation{ 230, 4, 7, 27 },
+                         QQmlJS::SourceLocation{ 235, 11, 7, 32 }};
     }
 
     void fileLocationRegions()
@@ -3317,7 +3336,6 @@ private slots:
             return true;
         };
         AttachedInfo::visitTree(tree, visitor, Path());
-
         [&] {
             QVERIFY(locs.contains(expectedLocs));
         }();
