@@ -3523,7 +3523,7 @@ function(_qt_internal_generate_deploy_qml_imports_script target)
     file(GENERATE OUTPUT "${filename}" CONTENT
 "# Auto-generated deploy QML imports script for target \"${target}\".
 # Do not edit, all changes will be lost.
-# This file should only be included by qt_deploy_qml_imports().
+# This file should only be included by qt6_deploy_qml_imports().
 
 set(__qt_opts $<${is_bundle}:BUNDLE>)
 if(arg_NO_QT_IMPORTS)
@@ -3666,9 +3666,9 @@ function(qt6_generate_deploy_qml_app_script)
             NAME ${deploy_script_name}
             OUTPUT_SCRIPT deploy_script
             CONTENT "
-qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
+qt6_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 if(NOT DEFINED __QT_DEPLOY_POST_BUILD)
-    qt_deploy_runtime_dependencies(
+    qt6_deploy_runtime_dependencies(
         EXECUTABLE $<TARGET_FILE_NAME:${arg_TARGET}>.app
         ADDITIONAL_MODULES \${plugins_found}
     ${common_deploy_args})
@@ -3695,8 +3695,8 @@ endif()")
             NAME ${deploy_script_name}
             OUTPUT_SCRIPT deploy_script
             CONTENT "
-qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
-qt_deploy_runtime_dependencies(
+qt6_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
+qt6_deploy_runtime_dependencies(
     EXECUTABLE $<TARGET_FILE:${arg_TARGET}>
     ADDITIONAL_MODULES \${plugins_found}
     GENERATE_QT_CONF
@@ -3708,8 +3708,8 @@ ${common_deploy_args})")
             NAME ${deploy_script_name}
             OUTPUT_SCRIPT deploy_script
             CONTENT "
-qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
-qt_deploy_runtime_dependencies(
+qt6_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
+qt6_deploy_runtime_dependencies(
     EXECUTABLE $<TARGET_FILE:${arg_TARGET}>
     ADDITIONAL_MODULES \${plugins_found}
     GENERATE_QT_CONF
@@ -3733,7 +3733,7 @@ ${common_deploy_args})")
             OUTPUT_SCRIPT deploy_script
             CONTENT "
 _qt_internal_show_skip_runtime_deploy_message(\"${qt_build_type_string}\")
-qt_deploy_qml_imports(TARGET ${arg_TARGET} NO_QT_IMPORTS)
+qt6_deploy_qml_imports(TARGET ${arg_TARGET} NO_QT_IMPORTS)
 ")
     elseif(NOT arg_NO_UNSUPPORTED_PLATFORM_ERROR AND NOT QT_INTERNAL_NO_UNSUPPORTED_PLATFORM_ERROR)
         # Currently we don't deploy runtime dependencies if cross-compiling or using a static Qt.
