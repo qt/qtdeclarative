@@ -450,6 +450,9 @@ static void compilePropertyInitializer(QmltcType &current, const QQmlJSScope::Co
         ) {
             compiledSetter.body  << u"%1.%2().setValue(%3_);"_s.arg(
                 current.propertyInitializer.component.name, property.bindable(), name);
+        } else if (type->hasOwnProperty(name)) {
+            compiledSetter.body << u"%1.%2(%3_);"_s.arg(
+                current.propertyInitializer.component.name, QmltcPropertyData(property).write, name);
         } else if (property.write().isEmpty() || isFromExtension(property, type)) {
             // We can end here if a WRITE method is not available or
             // if the method is available but not in this scope, so
