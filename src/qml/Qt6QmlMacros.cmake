@@ -3665,11 +3665,32 @@ function(qt6_generate_deploy_qml_app_script)
     string(MAKE_C_IDENTIFIER "${arg_TARGET}" target_id)
     set(deploy_script_name "qml_app_${target_id}")
 
+    get_target_property(is_bundle ${arg_TARGET} MACOSX_BUNDLE)
+
+    set(unsupported_platform_extra_message "")
     if(QT6_IS_SHARED_LIBS_BUILD)
         set(qt_build_type_string "shared Qt libs")
     else()
         set(qt_build_type_string "static Qt libs")
     endif()
+
+    if(CMAKE_CROSSCOMPILING)
+        string(APPEND qt_build_type_string ", cross-compiled")
+    endif()
+
+    if(NOT is_bundle)
+        string(APPEND qt_build_type_string ", non-bundle app")
+        set(unsupported_platform_extra_message
+            "Executable targets have to be app bundles to use this command on Apple platforms.")
+    endif()
+
+    set(skip_message
+        "_qt_internal_show_skip_runtime_deploy_message(\"${qt_build_type_string}\"")
+    if(unsupported_platform_extra_message)
+        string(APPEND skip_message
+            "\n    EXTRA_MESSAGE \"${unsupported_platform_extra_message}\"")
+    endif()
+    string(APPEND skip_message "\n)")
 
     set(common_deploy_args "")
     if(arg_NO_TRANSLATIONS)
@@ -3686,15 +3707,9 @@ function(qt6_generate_deploy_qml_app_script)
         endif()
     endforeach()
 
-    if(APPLE AND NOT IOS AND QT6_IS_SHARED_LIBS_BUILD)
-        # TODO: Handle non-bundle applications if possible.
-        get_target_property(is_bundle ${arg_TARGET} MACOSX_BUNDLE)
-        if(NOT is_bundle)
-            message(FATAL_ERROR
-                "Executable targets have to be app bundles to use this command "
-                "on Apple platforms."
-            )
-        endif()
+    if(APPLE AND NOT IOS AND QT6_IS_SHARED_LIBS_BUILD AND is_bundle)
+        # TODO: Consider handling non-bundle applications in the future using the generic cmake
+        # runtime dependency feature.
 
         qt6_generate_deploy_script(
             TARGET ${arg_TARGET}
@@ -3767,18 +3782,17 @@ ${common_deploy_args})")
             NAME ${deploy_script_name}
             OUTPUT_SCRIPT deploy_script
             CONTENT "
-_qt_internal_show_skip_runtime_deploy_message(\"${qt_build_type_string}\")
+${skip_message}
 qt6_deploy_qml_imports(TARGET ${arg_TARGET} NO_QT_IMPORTS)
 ")
     elseif(NOT arg_NO_UNSUPPORTED_PLATFORM_ERROR AND NOT QT_INTERNAL_NO_UNSUPPORTED_PLATFORM_ERROR)
         # Currently we don't deploy runtime dependencies if cross-compiling or using a static Qt.
-        # We also don't do it if targeting Linux, but we could provide an option to do
-        # so if we had a deploy tool or purely CMake-based deploy implementation.
         # Error out by default unless the project opted out of the error.
         # This provides us a migration path in the future without breaking compatibility promises.
         message(FATAL_ERROR
             "Support for installing runtime dependencies is not implemented for "
-            "this target platform (${CMAKE_SYSTEM_NAME}, ${qt_build_type_string})."
+            "this target platform (${CMAKE_SYSTEM_NAME}, ${qt_build_type_string}). "
+            ${unsupported_platform_extra_message}
         )
     else()
         qt6_generate_deploy_script(
@@ -3786,7 +3800,7 @@ qt6_deploy_qml_imports(TARGET ${arg_TARGET} NO_QT_IMPORTS)
             NAME ${deploy_script_name}
             OUTPUT_SCRIPT deploy_script
             CONTENT "
-_qt_internal_show_skip_runtime_deploy_message(\"${qt_build_type_string}\")
+${skip_message}
 _qt_internal_show_skip_qml_runtime_deploy_message()
 ")
     endif()
