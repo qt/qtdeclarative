@@ -198,6 +198,7 @@ void tst_QQuickMenu::mouse()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -695,6 +696,7 @@ void tst_QQuickMenu::menuSeparator()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -1105,6 +1107,7 @@ void tst_QQuickMenu::actionShortcuts()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     // Try the menu's shortcut.
@@ -1405,6 +1408,7 @@ void tst_QQuickMenu::subMenuKeyboard()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     if (mirrored) {
@@ -1534,6 +1538,7 @@ void tst_QQuickMenu::subMenuDisabledKeyboard()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     if (mirrored) {
@@ -2118,6 +2123,7 @@ void tst_QQuickMenu::giveMenuItemFocusOnButtonPress()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     // Press enter on the button to open the menu.
