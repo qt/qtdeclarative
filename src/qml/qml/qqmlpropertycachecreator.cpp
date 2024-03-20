@@ -154,8 +154,19 @@ QQmlPropertyCache::ConstPtr QQmlBindingInstantiationContext::instantiatingProper
         if (instantiatingProperty->isQObject()) {
             // rawPropertyCacheForType assumes a given unspecified version means "any version".
             // There is another overload that takes no version, which we shall not use here.
-            return QQmlMetaType::rawPropertyCacheForType(instantiatingProperty->propType(),
+            auto result = QQmlMetaType::rawPropertyCacheForType(instantiatingProperty->propType(),
                                                          instantiatingProperty->typeVersion());
+            if (result)
+                return result;
+            /* We might end up here if there's a grouped property, and the type hasn't been registered.
+               Still try to get a property cache, as long as the type of the property is well-behaved
+               (i.e., not dynamic)*/
+            if (auto metaObject = instantiatingProperty->propType().metaObject(); metaObject) {
+                // we'll warn about dynamic meta-object later in the property validator
+                if (!(QMetaObjectPrivate::get(metaObject)->flags & DynamicMetaObject))
+                    return QQmlMetaType::propertyCache(metaObject);
+            }
+            // fall through intentional
         } else if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForValueType(instantiatingProperty->propType())) {
             return QQmlMetaType::propertyCache(vtmo, instantiatingProperty->typeVersion());
         }

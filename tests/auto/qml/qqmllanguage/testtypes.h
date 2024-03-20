@@ -44,6 +44,77 @@ struct MyCustomVariantType
 };
 Q_DECLARE_METATYPE(MyCustomVariantType);
 
+
+class Group : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(int value MEMBER value)
+
+public:
+    Group(QObject *parent = nullptr) : QObject(parent) {}
+    int value = 0;
+};
+
+
+struct GroupGadget
+{
+    Q_GADGET
+
+    Q_PROPERTY(int value MEMBER value)
+
+public:
+    friend bool operator==(GroupGadget g1, GroupGadget g2) { return g1.value == g2.value; }
+    friend bool operator!=(GroupGadget g1, GroupGadget g2) { return !(g1 == g2); }
+    int value = 0;
+};
+
+struct FakeDynamicObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString value MEMBER value)
+
+public:
+    FakeDynamicObject() {}
+    QString value;
+};
+
+QT_BEGIN_NAMESPACE
+namespace QtPrivate {
+// don't do this at home – we override the meta-object which QMetaType collects for
+// FakeDynamicObject* properties
+template<>
+struct MetaObjectForType<FakeDynamicObject *, void>
+{
+    static const QMetaObject *metaObjectFunction(const QMetaTypeInterface *);
+};
+}
+QT_END_NAMESPACE
+
+class UnexposedBase : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(Group *group MEMBER group)
+    Q_PROPERTY(GroupGadget groupGadget MEMBER groupGadget)
+    Q_PROPERTY(FakeDynamicObject *dynamic MEMBER dynamic)
+public:
+    UnexposedBase(QObject *parent = nullptr) : QObject(parent)
+    {
+        group = new Group(this);
+    }
+    Group *group;
+    GroupGadget groupGadget;
+    FakeDynamicObject *dynamic = nullptr;
+};
+
+class DerivedFromUnexposedBase : public UnexposedBase
+{
+    Q_OBJECT
+    QML_ELEMENT
+};
+
+
 class MyAttachedObject : public QObject
 {
     Q_OBJECT

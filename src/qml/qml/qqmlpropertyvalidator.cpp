@@ -302,17 +302,25 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                         return recordError(
                                     binding->location,
                                     tr("Invalid grouped property access: Property \"%1\" with primitive type \"%2\".")
-                                        .arg(name)
-                                        .arg(QString::fromUtf8(type.name()))
+                                        .arg(name, QString::fromUtf8(type.name()))
                                     );
                     }
 
                     if (!QQmlMetaType::propertyCacheForType(type)) {
-                        return recordError(binding->location,
-                                           tr("Invalid grouped property access: Property \"%1\" with type \"%2\", which is not a value type")
-                                           .arg(name)
-                                           .arg(QString::fromUtf8(type.name()))
-                                          );
+                        auto mo = type.metaObject();
+                        if (!mo) {
+                            return recordError(binding->location,
+                                               tr("Invalid grouped property access: Property \"%1\" with type \"%2\", which is neither a value nor an object type")
+                                               .arg(name, QString::fromUtf8(type.name()))
+                                              );
+                        }
+                        if (QMetaObjectPrivate::get(mo)->flags & DynamicMetaObject) {
+                            return recordError(binding->location,
+                                               QString::fromLatin1("Unsupported grouped property access: Property \"%1\" with type \"%2\" has a dynamic meta-object.")
+                                               .arg(name, QString::fromUtf8(type.name()))
+                                               );
+                        }
+                        // fall through, this is okay
                     }
                 }
             }

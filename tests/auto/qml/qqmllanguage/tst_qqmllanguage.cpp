@@ -360,6 +360,8 @@ private slots:
 
     void hangOnWarning();
 
+    void groupPropertyFromNonExposedBaseClass();
+
     void listEnumConversion();
     void deepInlineComponentScriptBinding();
 
@@ -6862,6 +6864,25 @@ void tst_qqmllanguage::hangOnWarning()
     QQmlComponent component(&engine, testFileUrl("hangOnWarning.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
+}
+
+void tst_qqmllanguage::groupPropertyFromNonExposedBaseClass()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("derivedFromUnexposedBase.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    auto root = qobject_cast<DerivedFromUnexposedBase *>(o.get());
+    QVERIFY(root);
+    QVERIFY(root->group);
+    QCOMPARE(root->group->value, 42);
+    QCOMPARE(root->groupGadget.value, 42);
+
+    c.loadUrl(testFileUrl("dynamicGroupPropertyRejected.qml"));
+    QVERIFY(c.isError());
+    QVERIFY2(c.errorString().contains("Unsupported grouped property access"), qPrintable(c.errorString()));
 }
 
 void tst_qqmllanguage::listEnumConversion()
