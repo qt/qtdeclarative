@@ -52,6 +52,8 @@ set(qml_sources
 
     qtbug120700_main.qml
 
+    qtbug123476.qml
+
     signalHandlers.qml
     javaScriptFunctions.qml
     changingBindings.qml
