@@ -2901,7 +2901,7 @@ function(_qt_internal_qml_type_registration target)
 
     set(cmd_args)
     set(plugin_types_file "${output_dir}/${qmltypes_output_name}")
-    set(generated_marker_file "${target_binary_dir}/.generated/${qmltypes_output_name}")
+    set(generated_marker_file "${target_binary_dir}/.qt/qmltypes/${qmltypes_output_name}")
     get_filename_component(generated_marker_dir "${generated_marker_file}" DIRECTORY)
     set_target_properties(${target} PROPERTIES
         QT_QML_MODULE_PLUGIN_TYPES_FILE ${plugin_types_file}
