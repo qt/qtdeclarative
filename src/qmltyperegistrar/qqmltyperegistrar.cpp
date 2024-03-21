@@ -106,7 +106,7 @@ int QmlTypeRegistrar::runExtract(const QString &baseName, const MetaTypesJsonPro
     const QList<QString> includes = processor.includes();
     for (const QString &include: includes)
         prefix += u"\n#include <%1>"_s.arg(include);
-    headerFile.write((prefix + processor.extractRegisteredTypes()).toUtf8() + "\n#endif");
+    headerFile.write((prefix + processor.extractRegisteredTypes()).toUtf8() + "\n#endif\n");
 
     QFile sourceFile(baseName + u".cpp");
     ok = sourceFile.open(QFile::WriteOnly);
@@ -118,6 +118,7 @@ int QmlTypeRegistrar::runExtract(const QString &baseName, const MetaTypesJsonPro
     QString code = u"#include \"%1.h\"\n#include "_s.arg(baseName);
     code += uR"("moc_%1.cpp")"_s.arg(baseName);
     sourceFile.write(code.toUtf8());
+    sourceFile.write("\n");
     return EXIT_SUCCESS;
 }
 
