@@ -822,12 +822,15 @@ endmacro()
 
 # Creates a genex that will call a c++ macro on each of the list values.
 # Handles empty lists.
-macro(_qt_internal_genex_get_list_joined_with_macro var input_list macro_name)
+macro(_qt_internal_genex_get_list_joined_with_macro var input_list macro_name with_ending_semicolon)
     set(${var} "${input_list}")
     set(have_${var} "$<BOOL:${${var}}>")
 
     set(_macro_begin "${macro_name}(")
-    set(_macro_end ");")
+    set(_macro_end ")")
+    if(with_ending_semicolon)
+        string(APPEND _macro_end ";")
+    endif()
     set(_macro_glue "${_macro_end}\n${_macro_begin}")
 
     string(JOIN "" ${var}
@@ -845,9 +848,11 @@ endmacro()
 # Reads a target property that contains a list of values and creates a genex that will
 # call a c++ macro on each of the values.
 # Handles empty properties.
-macro(_qt_internal_genex_get_property_joined_with_macro var target property macro_name)
+macro(_qt_internal_genex_get_property_joined_with_macro var target property macro_name
+        with_ending_semicolon)
     _qt_internal_genex_getproperty(${var} ${target} ${property})
-    _qt_internal_genex_get_list_joined_with_macro("${var}" "${${var}}" "${macro_name}")
+    _qt_internal_genex_get_list_joined_with_macro("${var}" "${${var}}" "${macro_name}"
+        "${with_ending_semicolon}")
 endmacro()
 
 macro(_qt_internal_genex_getoption var target property)
@@ -1680,10 +1685,12 @@ endif()
 
 # Get extern declaration for types registration function.
 function(_qt_internal_qml_get_types_extern_declaration register_types_function_name out_var)
+    set(with_ending_semicolon FALSE)
     _qt_internal_genex_get_list_joined_with_macro(
         content
         "${register_types_function_name}"
         "QT_DECLARE_EXTERN_SYMBOL_VOID"
+        ${with_ending_semicolon}
     )
 
     string(PREPEND content "\n")
@@ -1693,10 +1700,12 @@ endfunction()
 # Get code block that should reference the types registration function in the plugin constructor.
 # Ensures the symbol is not discarded when linking.
 function(_qt_internal_qml_get_types_keep_reference register_types_function_name out_var)
+    set(with_ending_semicolon FALSE)
     _qt_internal_genex_get_list_joined_with_macro(
         content
         "${register_types_function_name}"
         "QT_KEEP_SYMBOL"
+        ${with_ending_semicolon}
     )
 
     string(PREPEND content "\n")
@@ -1705,11 +1714,13 @@ endfunction()
 
 # Get extern declaration for cachegen resource.
 function(_qt_internal_qml_get_cachegen_extern_resource_declaration target out_var)
+    set(with_ending_semicolon FALSE)
     _qt_internal_genex_get_property_joined_with_macro(
         content
         "${target}"
         "_qt_cachegen_sanitized_resource_name"
         "QT_DECLARE_EXTERN_RESOURCE"
+        ${with_ending_semicolon}
     )
 
     string(PREPEND content "\n")
@@ -1719,11 +1730,13 @@ endfunction()
 # Get code block that should reference the cachegen resource in the plugin constructor.
 # Ensures the resource is not discarded when linking.
 function(_qt_internal_qml_get_cachegen_resource_keep_reference target out_var)
+    set(with_ending_semicolon FALSE)
     _qt_internal_genex_get_property_joined_with_macro(
         content
         "${target}"
         "_qt_cachegen_sanitized_resource_name"
         "QT_KEEP_RESOURCE"
+        ${with_ending_semicolon}
     )
 
     string(PREPEND content "\n")
@@ -1732,11 +1745,13 @@ endfunction()
 
 # Get extern declaration for a regular resource.
 function(_qt_internal_qml_get_resource_extern_declarations target out_var)
+    set(with_ending_semicolon FALSE)
     _qt_internal_genex_get_property_joined_with_macro(
         content
         "${target}"
         "_qt_qml_module_sanitized_resource_names"
         "QT_DECLARE_EXTERN_RESOURCE"
+        ${with_ending_semicolon}
     )
 
     string(PREPEND content "\n")
@@ -1746,11 +1761,13 @@ endfunction()
 # Get code block that should reference regular resources in the plugin constructor.
 # Ensures the resources are not discarded when linking.
 function(_qt_internal_qml_get_resource_keep_references target out_var)
+    set(with_ending_semicolon FALSE)
     _qt_internal_genex_get_property_joined_with_macro(
         content
         "${target}"
         "_qt_qml_module_sanitized_resource_names"
         "QT_KEEP_RESOURCE"
+        ${with_ending_semicolon}
     )
 
     string(PREPEND content "\n")
