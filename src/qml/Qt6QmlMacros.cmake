@@ -3259,9 +3259,11 @@ function(_qt_internal_scan_qml_imports target imports_file_var when_to_scan)
     if(when_to_scan STREQUAL "BUILD_PHASE")
         set(scan_at_build_time TRUE)
         set(scan_at_configure_time FALSE)
+        set(imports_file_infix "build")
     elseif(when_to_scan STREQUAL "IMMEDIATELY")
         set(scan_at_build_time FALSE)
         set(scan_at_configure_time TRUE)
+        set(imports_file_infix "conf")
     else()
         message(FATAL_ERROR "Unexpected value for when_to_scan: ${when_to_scan}")
     endif()
@@ -3270,8 +3272,15 @@ function(_qt_internal_scan_qml_imports target imports_file_var when_to_scan)
 
     get_target_property(target_source_dir ${target} SOURCE_DIR)
     get_target_property(target_binary_dir ${target} BINARY_DIR)
-    set(out_dir "${target_binary_dir}/.qt_plugins")
-    set(imports_file "${out_dir}/Qt6_QmlPlugins_Imports_${target}.cmake")
+    set(out_dir "${target_binary_dir}/.qt/qml_imports")
+
+    # Create separate files for scanning at build time vs configure time. Otherwise calling
+    # ninja clean will re-run qmlimportscanner directly after the clean, which is
+    # both weird and sometimes prints warnings due to the tool not finding qml files that were
+    # cleaned from the build dir.
+    set(file_base_name "${target}_${imports_file_infix}")
+
+    set(imports_file "${out_dir}/${file_base_name}.cmake")
     set(${imports_file_var} "${imports_file}" PARENT_SCOPE)
     file(MAKE_DIRECTORY ${out_dir})
 
@@ -3310,7 +3319,7 @@ function(_qt_internal_scan_qml_imports target imports_file_var when_to_scan)
     # of arguments on the command line
     string(LENGTH "${cmd_args}" length)
     if(length GREATER 240)
-        set(rsp_file "${out_dir}/Qt6_QmlPlugins_Imports_${target}.rsp")
+        set(rsp_file "${out_dir}/${file_base_name}.rsp")
         list(JOIN cmd_args "\n" rsp_file_content)
         file(WRITE ${rsp_file} "${rsp_file_content}")
         set(cmd_args "@${rsp_file}")
