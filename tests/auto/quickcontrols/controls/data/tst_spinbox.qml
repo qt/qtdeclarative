@@ -443,7 +443,7 @@ TestCase {
         id: doubleBox
         SpinBox {
             id: doubleSpinBox
-            locale: Qt.locale("en_EN")
+            locale: Qt.locale("en_US")
 
             property int decimals: 2
             property double realValue: value / 10**decimals
@@ -466,7 +466,6 @@ TestCase {
             }
 
             onDisplayTextChanged: {
-                console.log(doubleSpinBox.displayText)
                 displayTextChangedWithArg(doubleSpinBox.displayText);
             }
 
@@ -491,16 +490,13 @@ TestCase {
         compare(control.realValue, 5.00)
         compare(control.displayText, "5.00")
 
-        var valueModifiedSpy = signalSpy.createObject(
-                    control, {target: control, signalName: "valueModified"})
+        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
         verify(valueModifiedSpy.valid)
 
-        var valueChangedSpy = signalSpy.createObject(
-                    control, {target: control, signalName: "valueChanged"})
+        var valueChangedSpy = signalSpy.createObject(control, {target: control, signalName: "valueChanged"})
         verify(valueChangedSpy.valid)
 
-        var displayTextChangedSpy = signalSpy.createObject(
-                    control, {target: control, signalName: "displayTextChangedWithArg"})
+        var displayTextChangedSpy = signalSpy.createObject(control, {target: control, signalName: "displayTextChangedWithArg"})
         verify(displayTextChangedSpy.valid)
 
         control.contentItem.forceActiveFocus()
