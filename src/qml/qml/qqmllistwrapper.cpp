@@ -198,8 +198,9 @@ ReturnedValue QmlListWrapper::virtualGet(const Managed *m, PropertyKey id, const
 qint64 QmlListWrapper::virtualGetLength(const Managed *m)
 {
     Q_ASSERT(m->as<QmlListWrapper>());
-    const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
-    return w->toListReference().size();
+    QQmlListProperty<QObject> *property = static_cast<const QmlListWrapper *>(m)->d()->property();
+    Q_ASSERT(property);
+    return property->count ? property->count(property) : 0;
 }
 
 bool QmlListWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
