@@ -2861,6 +2861,12 @@ private slots:
 
         QTest::addRow("inactiveVisitorMarkerCrash")
                 << baseDir + u"/inactiveVisitorMarkerCrash.qml"_s;
+
+        QTest::addRow("templateStrings")
+                << baseDir + u"/crashes/templateStrings.qml"_s;
+
+        QTest::addRow("lambda")
+                << baseDir + u"/crashes/lambda.qml"_s;
     }
     void crashes()
     {
