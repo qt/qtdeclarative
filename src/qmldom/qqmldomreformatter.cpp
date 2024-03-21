@@ -188,59 +188,48 @@ bool ScriptFormatter::visit(PatternElementList *ast)
 bool ScriptFormatter::visit(PatternPropertyList *ast)
 {
     for (PatternPropertyList *it = ast; it; it = it->next) {
-        PatternProperty *assignment = AST::cast<PatternProperty *>(it->property);
-        if (assignment) {
-            preVisit(assignment);
-            accept(assignment->name);
-            bool useInitializer = false;
-            const bool bindingIdentifierExist = !assignment->bindingIdentifier.isEmpty();
-            if (assignment->colonToken.length > 0) {
-                out(": ");
-                useInitializer = true;
-                if (bindingIdentifierExist)
-                    out(assignment->bindingIdentifier);
-                if (assignment->bindingTarget)
-                    accept(assignment->bindingTarget);
-            }
-
-            if (assignment->initializer) {
-                if (bindingIdentifierExist) {
-                    out(" = ");
-                    useInitializer = true;
-                }
-                if (useInitializer)
-                    accept(assignment->initializer);
-            }
-
-            if (it->next) {
-                out(",");
-                newLine();
-            }
-            postVisit(assignment);
-            continue;
+        accept(it->property);
+        if (it->next) {
+            out(",");
+            newLine();
         }
+    }
+    return false;
+}
 
-        PatternPropertyList *getterSetter = AST::cast<PatternPropertyList *>(it->next);
-        if (getterSetter && getterSetter->property) {
-            switch (getterSetter->property->type) {
-            case PatternElement::Getter:
-                out("get");
-                break;
-            case PatternElement::Setter:
-                out("set");
-                break;
-            default:
-                break;
-            }
+// TODO cover/verify PatternProperty properly
+// https://262.ecma-international.org/7.0/#prod-PropertyDefinition
+// for example, complete MethodDefinition
+bool ScriptFormatter::visit(AST::PatternProperty *property)
+{
+    if (property->type == PatternElement::Getter || property->type == PatternElement::Setter) {
+        // TODO cover/verify MethodDefinition properly
+        // https://262.ecma-international.org/7.0/#prod-MethodDefinition
+        return false;
+    }
 
-            accept(getterSetter->property->name);
-            out("(");
-            // accept(getterSetter->formals);  // TODO
-            out(")");
-            out(" {");
-            // accept(getterSetter->functionBody);  // TODO
-            out(" }");
+    // IdentifierReference[?Yield]
+    accept(property->name);
+    bool useInitializer = false;
+    const bool bindingIdentifierExist = !property->bindingIdentifier.isEmpty();
+    if (property->colonToken.isValid()) {
+        // PropertyName[?Yield] : AssignmentExpression[In, ?Yield]
+        out(": ");
+        useInitializer = true;
+        if (bindingIdentifierExist)
+            out(property->bindingIdentifier);
+        if (property->bindingTarget)
+            accept(property->bindingTarget);
+    }
+
+    if (property->initializer) {
+        // CoverInitializedName[?Yield]
+        if (bindingIdentifierExist) {
+            out(" = ");
+            useInitializer = true;
         }
+        if (useInitializer)
+            accept(property->initializer);
     }
     return false;
 }
