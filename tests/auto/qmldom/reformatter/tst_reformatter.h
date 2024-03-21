@@ -665,6 +665,35 @@ private slots:
         QCOMPARE(formattedImport, expectedFormattedImport);
     }
 
+    void methodDefinitions_data()
+    {
+        QTest::addColumn<QString>("methodToBeFormatted");
+        QTest::addColumn<QString>("expectedFormattedMethod");
+
+        // ObjectInitializer
+        QTest::newRow("ObjGetter") << QStringLiteral(u"const o={get a(){},}")
+                                   << QStringLiteral(u"const o = {\nget a(){}\n}");
+        QTest::newRow("ObjSetter") << QStringLiteral(u"const o={set a(a){},}")
+                                   << QStringLiteral(u"const o = {\nset a(a){}\n}");
+
+        // ClassDefinitions
+        QTest::newRow("ClassGetter") << QStringLiteral(u"class A{get a(){}}")
+                                     << QStringLiteral(u"class A {\nget a(){}\n}");
+        QTest::newRow("ClassSetter") << QStringLiteral(u"class A{set a(a){}}")
+                                     << QStringLiteral(u"class A {\nset a(a){}\n}");
+    }
+
+    // https://262.ecma-international.org/7.0/#sec-method-definitions
+    void methodDefinitions()
+    {
+        QFETCH(QString, methodToBeFormatted);
+        QFETCH(QString, expectedFormattedMethod);
+
+        QString formattedMethod = formatJSCode(methodToBeFormatted);
+
+        QCOMPARE(formattedMethod, expectedFormattedMethod);
+    }
+
 private:
 };
 

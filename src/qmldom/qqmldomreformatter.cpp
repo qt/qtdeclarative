@@ -197,14 +197,41 @@ bool ScriptFormatter::visit(PatternPropertyList *ast)
     return false;
 }
 
-// TODO cover/verify PatternProperty properly
+// TODO cover PatternProperty with tests properly
 // https://262.ecma-international.org/7.0/#prod-PropertyDefinition
-// for example, complete MethodDefinition
 bool ScriptFormatter::visit(AST::PatternProperty *property)
 {
-    if (property->type == PatternElement::Getter || property->type == PatternElement::Setter) {
-        // TODO cover/verify MethodDefinition properly
+    if (property->type == PatternElement::Getter || property->type == PatternElement::Setter
+        || property->type == PatternElement::Method) {
+        // TODO cover with tests MethodDefinition properly
         // https://262.ecma-international.org/7.0/#prod-MethodDefinition
+        // TODO unify Getters&Setters handling with FunctionExpression handling
+        if (property->type == PatternProperty::Getter)
+            out("get ");
+        else if (property->type == PatternProperty::Setter)
+            out("set ");
+        FunctionExpression *f = AST::cast<FunctionExpression *>(property->initializer);
+        const bool scoped = f->lbraceToken.length != 0;
+        out(f->functionToken);
+        out(f->lparenToken);
+        accept(f->formals);
+        out(f->rparenToken);
+        out(f->lbraceToken);
+        if (scoped)
+            ++expressionDepth;
+        if (f->body) {
+            if (f->body->next || scoped) {
+                lnAcceptIndented(f->body);
+                lw.newline();
+            } else {
+                auto baseIndent = lw.increaseIndent(1);
+                accept(f->body);
+                lw.decreaseIndent(1, baseIndent);
+            }
+        }
+        if (scoped)
+            --expressionDepth;
+        out(f->rbraceToken);
         return false;
     }
 
@@ -876,39 +903,11 @@ bool ScriptFormatter::visit(ClassDeclaration *ast)
     out(" {");
     int baseIndent = lw.increaseIndent();
     for (ClassElementList *it = ast->elements; it; it = it->next) {
-        PatternProperty *property = it->property;
         lw.newline();
-        preVisit(property);
         if (it->isStatic)
             out("static ");
-        if (property->type == PatternProperty::Getter)
-            out("get ");
-        else if (property->type == PatternProperty::Setter)
-            out("set ");
-        FunctionExpression *f = AST::cast<FunctionExpression *>(property->initializer);
-        const bool scoped = f->lbraceToken.length != 0;
-        out(f->functionToken);
-        out(f->lparenToken);
-        accept(f->formals);
-        out(f->rparenToken);
-        out(f->lbraceToken);
-        if (scoped)
-            ++expressionDepth;
-        if (f->body) {
-            if (f->body->next || scoped) {
-                lnAcceptIndented(f->body);
-                lw.newline();
-            } else {
-                baseIndent = lw.increaseIndent(1);
-                accept(f->body);
-                lw.decreaseIndent(1, baseIndent);
-            }
-        }
-        if (scoped)
-            --expressionDepth;
-        out(f->rbraceToken);
+        accept(it->property);
         lw.newline();
-        postVisit(property);
     }
     lw.decreaseIndent(1, baseIndent);
     out("}");
