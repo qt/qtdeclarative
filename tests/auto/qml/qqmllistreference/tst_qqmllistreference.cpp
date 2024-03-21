@@ -60,6 +60,7 @@ private slots:
     void jsArrayMethodsWithParams();
     void listIgnoresNull_data() { modeData(); }
     void listIgnoresNull();
+    void consoleLogSyntheticList();
 };
 
 class TestType : public QObject
@@ -1080,6 +1081,17 @@ void tst_qqmllistreference::listIgnoresNull()
     }
     QScopedPointer<QObject> object( component.create() );
     QVERIFY(object != nullptr);
+}
+
+void tst_qqmllistreference::consoleLogSyntheticList()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("consoleLogSyntheticList.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QTest::ignoreMessage(
+            QtDebugMsg, QRegularExpression("\\[QObject_QML_[0-9]+\\(0x[0-9a-f]+\\)\\]"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
 }
 
 QTEST_MAIN(tst_qqmllistreference)
