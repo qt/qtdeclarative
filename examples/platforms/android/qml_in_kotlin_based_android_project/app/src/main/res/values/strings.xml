@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">qml_in_kotlin_based_android_project</string>
+    <string name="button">Change color</string>
+    <string name="kotlin">Kotlin</string>
+    <string name="change_qml_background">Tap button to change QML view background color</string>
+    <string name="disconnect_qml_button_signal_listener">Tap switch to disconnect QML button signal listener</string>
+    <string name="connect_qml_button_signal_listener">Tap switch to connect QML button signal listener</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="qml_view_status">QML view status: </string>
+    <string name="qml_view_background_color">QML view background color:</string>
+</resources>
