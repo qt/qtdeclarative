@@ -675,6 +675,17 @@ private slots:
                                    << QStringLiteral(u"const o = {\nget a(){}\n}");
         QTest::newRow("ObjSetter") << QStringLiteral(u"const o={set a(a){},}")
                                    << QStringLiteral(u"const o = {\nset a(a){}\n}");
+        QTest::newRow("ComputedObjPropertyGetter")
+                << QStringLiteral(u"const o={get [a+b](){},}")
+                << QStringLiteral(u"const o = {\nget [a + b](){}\n}");
+
+        // Generator
+        QTest::newRow("ObjPropertyGenerator")
+                << QStringLiteral(u"const o={*a(){1+1;},}")
+                << QStringLiteral(u"const o = {\n*a(){\n1 + 1;\n}\n}");
+        QTest::newRow("ComputedClassPropertyGenerator")
+                << QStringLiteral(u"class A{*[a+b](){}}")
+                << QStringLiteral(u"class A {\n*[a + b](){}\n}");
 
         // ClassDefinitions
         QTest::newRow("ClassGetter") << QStringLiteral(u"class A{get a(){}}")

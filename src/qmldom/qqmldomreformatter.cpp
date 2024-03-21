@@ -197,26 +197,29 @@ bool ScriptFormatter::visit(PatternPropertyList *ast)
     return false;
 }
 
-// TODO cover PatternProperty with tests properly
 // https://262.ecma-international.org/7.0/#prod-PropertyDefinition
 bool ScriptFormatter::visit(AST::PatternProperty *property)
 {
     if (property->type == PatternElement::Getter || property->type == PatternElement::Setter
         || property->type == PatternElement::Method) {
-        // TODO cover with tests MethodDefinition properly
+        // note that MethodDefinitions and FunctionDeclarations have different syntax
         // https://262.ecma-international.org/7.0/#prod-MethodDefinition
-        // TODO unify Getters&Setters handling with FunctionExpression handling
+        // https://262.ecma-international.org/7.0/#prod-FunctionDeclaration
+        // hence visit(FunctionDeclaration*) is not quite appropriate here
         if (property->type == PatternProperty::Getter)
             out("get ");
         else if (property->type == PatternProperty::Setter)
             out("set ");
         FunctionExpression *f = AST::cast<FunctionExpression *>(property->initializer);
-        const bool scoped = f->lbraceToken.length != 0;
-        out(f->functionToken);
+        if (f->isGenerator) {
+            out("*");
+        }
+        accept(property->name);
         out(f->lparenToken);
         accept(f->formals);
         out(f->rparenToken);
         out(f->lbraceToken);
+        const bool scoped = f->lbraceToken.isValid();
         if (scoped)
             ++expressionDepth;
         if (f->body) {
