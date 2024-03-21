@@ -3104,6 +3104,40 @@ private slots:
         }
     }
 
+    // simulate qmlls loading the same file twice like in QTBUG-123591
+    void loadFileTwice()
+    {
+        DomItem qmlObject;
+        DomItem qmlObject2;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+        options.setFlag(DomCreationOption::WithRecovery);
+
+        std::shared_ptr<DomEnvironment> envPtr = DomEnvironment::create(
+                qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, options);
+
+        const QString fileName{ baseDir + u"/propertyBindings.qml"_s };
+        QFile file(fileName);
+        QVERIFY(file.open(QFile::ReadOnly));
+        const QString content = file.readAll();
+
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir + u"/propertyBindings.qml"_s),
+                         [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
+                             qmlObject = newIt.rootQmlObject(GoTo::MostLikely);
+                         });
+        envPtr->loadPendingDependencies();
+
+        // should not assert when loading the same file again
+        auto envPtrChild = envPtr->makeCopy(DomItem(envPtr));
+        envPtrChild->loadFile(
+                FileToLoad::fromMemory(envPtr, baseDir + u"/propertyBindings.qml"_s, content),
+                [&qmlObject2](Path, const DomItem &, const DomItem &newIt) {
+                    qmlObject2 = newIt.rootQmlObject(GoTo::MostLikely);
+                });
+        envPtrChild->loadPendingDependencies();
+    }
+
     void visitTreeFilter()
     {
         DomItem qmlObject;

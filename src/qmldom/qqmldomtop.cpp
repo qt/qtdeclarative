@@ -499,7 +499,7 @@ std::optional<DomItem> DomUniverse::getItemIfHasSameCode(const DomItem &univ, Do
         // Mutex is to sync access to the Value and Value->CurrentItem, which can be modified
         // through updateEnty method and currentItem->refreshedDataAt
         QMutexLocker l(mutex());
-        auto value = getPathValueOrNull(fType, canonicalPath);
+        value = getPathValueOrNull(fType, canonicalPath);
         if (valueHasSameContent(value.get(), codeWithDate.content)) {
             valueItemHasSameCode = true;
             if (value->currentItem()->lastDataUpdateAt() < codeWithDate.date)
