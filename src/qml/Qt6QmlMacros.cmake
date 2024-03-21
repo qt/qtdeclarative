@@ -3786,7 +3786,6 @@ qt6_deploy_qml_imports(TARGET ${arg_TARGET} NO_QT_IMPORTS)
             NAME ${deploy_script_name}
             OUTPUT_SCRIPT deploy_script
             CONTENT "
-include(${QT_DEPLOY_SUPPORT})
 _qt_internal_show_skip_runtime_deploy_message(\"${qt_build_type_string}\")
 _qt_internal_show_skip_qml_runtime_deploy_message()
 ")
