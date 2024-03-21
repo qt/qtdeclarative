@@ -17,36 +17,57 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorImage)
 
-class GeneratorStream : public QTextStream
+class GeneratorStream
 {
 public:
-    GeneratorStream() = default;
-    explicit GeneratorStream(QTextStream *stream)
-        : QTextStream(&m_output, QIODevice::ReadWrite), m_stream(stream)
+    explicit GeneratorStream(QTextStream *result)
+        : m_array(new QByteArray())
+        , m_stream(new QTextStream(m_array, QIODeviceBase::ReadWrite))
+        , m_resultStream(result)
     {}
+
     ~GeneratorStream()
     {
-        flush();
-        if (m_stream && !m_output.isEmpty())
-            *m_stream << m_output << Qt::endl;
+        if (m_stream) {
+            m_stream->flush();
+            delete m_stream;
+        }
+
+        if (m_resultStream && m_array && !m_array->isEmpty())
+            *m_resultStream << *m_array << Qt::endl;
+
+        delete m_array;
     }
 
-    GeneratorStream(GeneratorStream &other) = delete;
-    GeneratorStream &operator=(const GeneratorStream &other) = delete;
     GeneratorStream(GeneratorStream &&other) noexcept
-        : m_stream(std::exchange(other.m_stream, nullptr)), m_output(std::move(other.m_output))
+        : m_array(std::exchange(other.m_array, nullptr))
+        , m_stream(std::exchange(other.m_stream, nullptr))
+        , m_resultStream(std::exchange(other.m_resultStream, nullptr))
     {}
     GeneratorStream &operator=(GeneratorStream &&other) noexcept
     {
+        std::swap(m_resultStream, other.m_resultStream);
         std::swap(m_stream, other.m_stream);
-        std::swap(m_output, other.m_output);
+        std::swap(m_array, other.m_array);
+
         return *this;
     }
 
+    Q_DISABLE_COPY(GeneratorStream)
 private:
+    template<typename T>
+    friend const GeneratorStream &operator<<(const GeneratorStream& str, T val);
+    QByteArray *m_array = nullptr;
     QTextStream *m_stream = nullptr;
-    QByteArray m_output;
+    QTextStream *m_resultStream = nullptr;
 };
+
+template<typename T>
+const GeneratorStream &operator<<(const GeneratorStream& str, T val)
+{
+    *str.m_stream << val;
+    return str;
+}
 
 QQuickQmlGenerator::QQuickQmlGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags, const QString &outFileName)
     : QQuickGenerator(fileName, flags)
