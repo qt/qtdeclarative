@@ -495,8 +495,10 @@ void QQmlDomAstCreator::endVisit(AST::UiPublicMember *el)
 {
     if (auto &lastEl = currentNode(); lastEl.kind == DomType::Binding) {
         Binding &b = std::get<Binding>(lastEl.value);
-        if (m_enableScriptExpressions && scriptNodeStack.size() != 1)
+        if (m_enableScriptExpressions
+            && (scriptNodeStack.size() != 1 || scriptNodeStack.last().isList())) {
             Q_SCRIPTELEMENT_DISABLE();
+        }
         if (m_enableScriptExpressions) {
             b.scriptExpressionValue()->setScriptElement(finalizeScriptExpression(
                     currentScriptNodeEl().takeVariant(), Path().field(Fields::scriptElement),
@@ -1077,7 +1079,7 @@ bool QQmlDomAstCreator::visit(AST::ArgumentList *list)
         if (!m_enableScriptExpressions)
             return false;
 
-        if (scriptNodeStack.empty()) {
+        if (scriptNodeStack.empty() || scriptNodeStack.last().isList()) {
             Q_SCRIPTELEMENT_DISABLE();
             return false;
         }
@@ -1106,7 +1108,7 @@ bool QQmlDomAstCreator::visit(AST::PatternElementList *list)
     for (auto it = list; it; it = it->next) {
         if (it->elision) {
             Node::accept(it->elision, this);
-            if (scriptNodeStack.empty()) {
+            if (scriptNodeStack.empty() || !scriptNodeStack.last().isList()) {
                 Q_SCRIPTELEMENT_DISABLE();
                 return false;
             }
@@ -1115,7 +1117,7 @@ bool QQmlDomAstCreator::visit(AST::PatternElementList *list)
         }
         if (it->element) {
             Node::accept(it->element, this);
-            if (scriptNodeStack.empty()) {
+            if (scriptNodeStack.empty() || scriptNodeStack.last().isList()) {
                 Q_SCRIPTELEMENT_DISABLE();
                 return false;
             }
@@ -1142,7 +1144,7 @@ bool QQmlDomAstCreator::visit(AST::PatternPropertyList *list)
             Node::accept(it->property, this);
             if (!m_enableScriptExpressions)
                 return false;
-            if (scriptNodeStack.empty()) {
+            if (scriptNodeStack.empty() || scriptNodeStack.last().isList()) {
                 Q_SCRIPTELEMENT_DISABLE();
                 return false;
             }
@@ -1346,7 +1348,7 @@ void QQmlDomAstCreator::endVisit(AST::StatementList *list)
     auto current = makeScriptList(list);
 
     for (auto it = list; it; it = it->next) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current.append(scriptNodeStack.takeLast().takeVariant());
     }
 
@@ -1364,15 +1366,15 @@ bool QQmlDomAstCreator::visit(AST::BinaryExpression *)
 
 void QQmlDomAstCreator::endVisit(AST::BinaryExpression *exp)
 {
-    Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.size() < 2);
-
     if (!m_enableScriptExpressions)
         return;
 
     auto current = makeScriptElement<ScriptElements::BinaryExpression>(exp);
     current->addLocation(OperatorTokenRegion, exp->operatorToken);
+    Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
     current->setRight(currentScriptNodeEl().takeVariant());
     removeCurrentScriptNode({});
+    Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
     current->setLeft(currentScriptNodeEl().takeVariant());
     removeCurrentScriptNode({});
 
@@ -1426,19 +1428,19 @@ void QQmlDomAstCreator::endVisit(AST::ForStatement *forStatement)
     current->addLocation(FileLocationRegion::RightParenthesisRegion, forStatement->rparenToken);
 
     if (forStatement->statement) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setBody(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode(std::nullopt);
     }
 
     if (forStatement->expression) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setExpression(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode(std::nullopt);
     }
 
     if (forStatement->condition) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setCondition(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode(std::nullopt);
     }
@@ -1458,7 +1460,7 @@ void QQmlDomAstCreator::endVisit(AST::ForStatement *forStatement)
     }
 
     if (forStatement->initialiser) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setInitializer(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode(std::nullopt);
     }
@@ -1590,7 +1592,7 @@ bool QQmlDomAstCreator::visit(AST::VariableDeclarationList *list)
             Node::accept(it->declaration, this);
             if (!m_enableScriptExpressions)
                 return false;
-            if (scriptNodeStack.empty()) {
+            if (scriptNodeStack.empty() || scriptNodeStack.last().isList()) {
                 Q_SCRIPTELEMENT_DISABLE();
                 return false;
             }
@@ -1697,18 +1699,18 @@ void QQmlDomAstCreator::endVisit(AST::IfStatement *ifStatement)
     current->addLocation(ElseKeywordRegion, ifStatement->elseToken);
 
     if (ifStatement->ko) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setAlternative(scriptNodeStack.last().takeVariant());
         scriptNodeStack.removeLast();
     }
 
     if (ifStatement->ok) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setConsequence(scriptNodeStack.last().takeVariant());
         scriptNodeStack.removeLast();
     }
     if (ifStatement->expression) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setCondition(scriptNodeStack.last().takeVariant());
         scriptNodeStack.removeLast();
     }
@@ -1733,7 +1735,7 @@ void QQmlDomAstCreator::endVisit(AST::ReturnStatement *returnStatement)
     current->addLocation(ReturnKeywordRegion, returnStatement->returnToken);
 
     if (returnStatement->expression) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setExpression(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
@@ -1759,7 +1761,7 @@ void QQmlDomAstCreator::endVisit(AST::FieldMemberExpression *expression)
     current->addLocation(FileLocationRegion::OperatorTokenRegion, expression->dotToken);
 
     if (expression->base) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setLeft(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
@@ -1790,7 +1792,7 @@ void QQmlDomAstCreator::endVisit(AST::ArrayMemberExpression *expression)
     current->addLocation(FileLocationRegion::OperatorTokenRegion, expression->lbracketToken);
 
     if (expression->expression) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         // if scriptNodeStack.last() is fieldmember expression, add expression to it instead of
         // creating new one
         current->setRight(currentScriptNodeEl().takeVariant());
@@ -1798,7 +1800,7 @@ void QQmlDomAstCreator::endVisit(AST::ArrayMemberExpression *expression)
     }
 
     if (expression->base) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setLeft(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
@@ -1834,7 +1836,7 @@ void QQmlDomAstCreator::endVisit(AST::CallExpression *exp)
     }
 
     if (exp->base) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::callee, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
@@ -1924,7 +1926,7 @@ void QQmlDomAstCreator::endVisit(AST::PatternProperty *exp)
         return;
 
     if (exp->name) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::name, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
@@ -2038,7 +2040,7 @@ void QQmlDomAstCreator::endVisit(AST::CaseClause *exp)
     }
 
     if (exp->expression) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
@@ -2062,7 +2064,7 @@ void QQmlDomAstCreator::endVisit(AST::CaseClauses *list)
     auto current = makeScriptList(list);
 
     for (auto it = list; it; it = it->next) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current.append(scriptNodeStack.takeLast().takeVariant());
     }
 
@@ -2094,7 +2096,7 @@ void QQmlDomAstCreator::endVisit(AST::CaseBlock *exp)
     }
 
     if (exp->defaultClause) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::defaultClause, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
@@ -2125,12 +2127,12 @@ void QQmlDomAstCreator::endVisit(AST::SwitchStatement *exp)
     current->addLocation(FileLocationRegion::RightParenthesisRegion, exp->rparenToken);
 
     if (exp->block) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::caseBlock, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
     if (exp->expression) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
@@ -2157,13 +2159,13 @@ void QQmlDomAstCreator::endVisit(AST::WhileStatement *exp)
     current->addLocation(FileLocationRegion::RightParenthesisRegion, exp->rparenToken);
 
     if (exp->statement) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::body, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
 
     if (exp->expression) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
@@ -2191,13 +2193,13 @@ void QQmlDomAstCreator::endVisit(AST::DoWhileStatement *exp)
     current->addLocation(FileLocationRegion::RightParenthesisRegion, exp->rparenToken);
 
     if (exp->expression) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
 
     if (exp->statement) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::body, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
@@ -2224,18 +2226,18 @@ void QQmlDomAstCreator::endVisit(AST::ForEachStatement *exp)
     current->addLocation(FileLocationRegion::RightParenthesisRegion, exp->rparenToken);
 
     if (exp->statement) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::body, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
     if (exp->expression) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
 
     if (exp->lhs) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::bindingElement, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
