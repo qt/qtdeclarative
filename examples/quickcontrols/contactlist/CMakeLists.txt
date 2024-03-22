@@ -4,7 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(contactlist LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
@@ -13,6 +12,8 @@ endif()
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/contactlist")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick)
+
+qt_standard_project_setup(REQUIRES 6.6)
 
 qt_add_executable(contactlistexample WIN32 MACOSX_BUNDLE
     contactmodel.cpp contactmodel.h
