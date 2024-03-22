@@ -276,8 +276,10 @@ void QQuickBorderImage::load()
                                                                : d->url);
             if (!lf.isEmpty()) {
                 QFile file(lf);
-                file.open(QIODevice::ReadOnly);
-                setGridScaledImage(QQuickGridScaledImage(&file));
+                if (!file.open(QIODevice::ReadOnly))
+                    d->setStatus(Error);
+                else
+                    setGridScaledImage(QQuickGridScaledImage(&file));
             } else {
 #if QT_CONFIG(qml_network)
                 d->setProgress(0);
