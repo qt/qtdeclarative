@@ -4582,9 +4582,10 @@ void tst_QQuickTableView::selectionBehaviorCells_data()
 
 void tst_QQuickTableView::selectionBehaviorCells()
 {
-    // Check that the TableView implement QQuickSelectableInterface setSelectionStartPos, setSelectionEndPos
-    // and clearSelection correctly. Do this by calling setSelectionStartPos/setSelectionEndPos on top of
-    // different cells, and see that we end up with the expected selections.
+    // Check that the TableView implement QQuickSelectableInterface startSelection,
+    // setSelectionStartPos, setSelectionEndPos and clearSelection correctly. Do this by
+    // calling setSelectionStartPos/setSelectionEndPos on top of different cells, and see
+    // that we end up with the expected selections.
     QFETCH(QPoint, endCellDist);
     LOAD_TABLEVIEW("tableviewwithselected1.qml");
 
@@ -4614,6 +4615,7 @@ void tst_QQuickTableView::selectionBehaviorCells()
     const QPointF endPos(endItem->x(), endItem->y());
     const QPointF endPosWrapped(endItemWrapped->x(), endItemWrapped->y());
 
+    QVERIFY(tableViewPrivate->startSelection(startPos, Qt::NoModifier));
     tableViewPrivate->setSelectionStartPos(startPos);
     tableViewPrivate->setSelectionEndPos(endPos);
 
@@ -4654,8 +4656,9 @@ void tst_QQuickTableView::selectionBehaviorCells()
 
 void tst_QQuickTableView::selectionBehaviorRows()
 {
-    // Check that the TableView implement QQuickSelectableInterface setSelectionStartPos, setSelectionEndPos
-    // and clearSelection correctly for QQuickTableView::SelectRows.
+    // Check that the TableView implement QQuickSelectableInterface startSelection,
+    // setSelectionStartPos, setSelectionEndPos and clearSelection correctly for
+    // QQuickTableView::SelectRows.
     LOAD_TABLEVIEW("tableviewwithselected1.qml");
 
     TestModel model(10, 10);
@@ -4670,6 +4673,7 @@ void tst_QQuickTableView::selectionBehaviorRows()
     QCOMPARE(selectionModel.hasSelection(), false);
 
     // Drag from row 0 to row 3
+    QVERIFY(tableViewPrivate->startSelection(QPointF(0, 0), Qt::NoModifier));
     tableViewPrivate->setSelectionStartPos(QPointF(0, 0));
     tableViewPrivate->setSelectionEndPos(QPointF(60, 60));
 
@@ -4690,6 +4694,7 @@ void tst_QQuickTableView::selectionBehaviorRows()
     QCOMPARE(selectionModel.hasSelection(), false);
 
     // Drag from row 3 to row 0 (and overshoot mouse)
+    QVERIFY(tableViewPrivate->startSelection(QPointF(60, 60), Qt::NoModifier));
     tableViewPrivate->setSelectionStartPos(QPointF(60, 60));
     tableViewPrivate->setSelectionEndPos(QPointF(-10, -10));
 
@@ -4708,8 +4713,9 @@ void tst_QQuickTableView::selectionBehaviorRows()
 
 void tst_QQuickTableView::selectionBehaviorColumns()
 {
-    // Check that the TableView implement QQuickSelectableInterface setSelectionStartPos, setSelectionEndPos
-    // and clearSelection correctly for QQuickTableView::SelectColumns.
+    // Check that the TableView implement QQuickSelectableInterface startSelection,
+    // setSelectionStartPos, setSelectionEndPos and clearSelection correctly for
+    // QQuickTableView::SelectColumns.
     LOAD_TABLEVIEW("tableviewwithselected1.qml");
 
     TestModel model(10, 10);
@@ -4724,6 +4730,7 @@ void tst_QQuickTableView::selectionBehaviorColumns()
     QCOMPARE(selectionModel.hasSelection(), false);
 
     // Drag from column 0 to column 3
+    QVERIFY(tableViewPrivate->startSelection(QPointF(60, 60), Qt::NoModifier));
     tableViewPrivate->setSelectionStartPos(QPointF(0, 0));
     tableViewPrivate->setSelectionEndPos(QPointF(60, 60));
 
@@ -4744,6 +4751,7 @@ void tst_QQuickTableView::selectionBehaviorColumns()
     QCOMPARE(selectionModel.hasSelection(), false);
 
     // Drag from column 3 to column 0 (and overshoot mouse)
+    QVERIFY(tableViewPrivate->startSelection(QPointF(60, 60), Qt::NoModifier));
     tableViewPrivate->setSelectionStartPos(QPointF(60, 60));
     tableViewPrivate->setSelectionEndPos(QPointF(-10, -10));
 
@@ -4762,8 +4770,8 @@ void tst_QQuickTableView::selectionBehaviorColumns()
 
 void tst_QQuickTableView::selectionBehaviorDisabled()
 {
-    // Check that the TableView implement QQuickSelectableInterface setSelectionStartPos, setSelectionEndPos
-    // and clearSelection correctly for QQuickTableView::SelectionDisabled.
+    // Check that the TableView implement QQuickSelectableInterface startSelection
+    // correctly for QQuickTableView::SelectionDisabled.
     LOAD_TABLEVIEW("tableviewwithselected1.qml");
 
     TestModel model(10, 10);
@@ -4777,18 +4785,18 @@ void tst_QQuickTableView::selectionBehaviorDisabled()
 
     QCOMPARE(selectionModel.hasSelection(), false);
 
-    // Drag from column 0 to column 3
-    tableViewPrivate->setSelectionStartPos(QPointF(0, 0));
-    tableViewPrivate->setSelectionEndPos(QPointF(60, 60));
+    // Try to start a selection
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*TableView.SelectionDisabled"));
+    QVERIFY(!tableViewPrivate->startSelection(QPointF(0, 0), Qt::NoModifier));
 
     QCOMPARE(selectionModel.hasSelection(), false);
 }
 
 void tst_QQuickTableView::testSelectableStartPosEndPosOutsideView()
 {
-    // Call setSelectionStartPos and setSelectionEndPos with positions outside the view.
-    // This should first of all not crash, but instead just clamp the selection to the
-    // cells that are visible inside the view.
+    // Call startSelection, setSelectionStartPos and setSelectionEndPos with positions
+    // outside the view. This should first of all not crash, but instead just clamp the
+    // selection to the cells that are visible inside the view.
     LOAD_TABLEVIEW("tableviewwithselected1.qml");
 
     TestModel model(10, 10);
@@ -4809,6 +4817,7 @@ void tst_QQuickTableView::testSelectableStartPosEndPosOutsideView()
     const QPointF outsideTop(centerPos.x(), -100);
     const QPointF outsideBottom(centerPos.x(), tableView->height() + 100);
 
+    QVERIFY(tableViewPrivate->startSelection(centerPos, Qt::NoModifier));
     tableViewPrivate->setSelectionStartPos(centerPos);
 
     tableViewPrivate->setSelectionEndPos(outsideLeft);

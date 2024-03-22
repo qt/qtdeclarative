@@ -192,7 +192,7 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             // existing selection, start a new selection from the current item
             // to the pressed item.
             if (!m_active) {
-                if (!m_selectable->startSelection(pos))
+                if (!m_selectable->startSelection(pos, modifiers))
                     return;
                 m_selectable->setSelectionStartPos(QPoint{-1, -1});
             }
@@ -201,7 +201,7 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             updateActiveState(true);
         } else if (modifiers & Qt::ControlModifier) {
             // Select a single cell, but keep the old selection (unless
-            // m_selectable->startSelection(pos) returns false, which
+            // m_selectable->startSelection(pos. modifiers) returns false, which
             // it will if selectionMode only allows a single selection).
             if (handleUnderPos(pos) != nullptr) {
                 // Don't allow press'n'hold to start a new
@@ -209,7 +209,7 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
                 return;
             }
 
-            if (!m_selectable->startSelection(pos))
+            if (!m_selectable->startSelection(pos, modifiers))
                 return;
             m_selectable->setSelectionStartPos(pos);
             m_selectable->setSelectionEndPos(pos);
@@ -235,7 +235,7 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             // existing selection, start a new selection from the current item
             // to the pressed item.
             if (!m_active) {
-                if (!m_selectable->startSelection(pos))
+                if (!m_selectable->startSelection(pos, modifiers))
                     return;
                 m_selectable->setSelectionStartPos(QPoint{-1, -1});
             }
@@ -244,9 +244,9 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             updateActiveState(true);
         } else if (modifiers == Qt::ControlModifier) {
             // Select a single cell, but keep the old selection (unless
-            // m_selectable->startSelection(pos) returns false, which
+            // m_selectable->startSelection(pos, modifiers) returns false, which
             // it will if selectionMode only allows a single selection).
-            if (!m_selectable->startSelection(pos))
+            if (!m_selectable->startSelection(pos, modifiers))
                 return;
             m_selectable->setSelectionStartPos(pos);
             m_selectable->setSelectionEndPos(pos);
@@ -255,7 +255,7 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
         } else if (modifiers == Qt::NoModifier) {
             // Select a single cell
             m_selectable->clearSelection();
-            if (!m_selectable->startSelection(pos))
+            if (!m_selectable->startSelection(pos, modifiers))
                 return;
             m_selectable->setSelectionStartPos(pos);
             m_selectable->setSelectionEndPos(pos);
@@ -278,7 +278,7 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             // In that case we continue to extend the active selection instead.
             const bool modifiersHeld = modifiers & (Qt::ControlModifier | Qt::ShiftModifier);
             if (!m_active || !modifiersHeld) {
-                if (!m_selectable->startSelection(startPos))
+                if (!m_selectable->startSelection(startPos, modifiers))
                     return;
                 m_selectable->setSelectionStartPos(startPos);
             }

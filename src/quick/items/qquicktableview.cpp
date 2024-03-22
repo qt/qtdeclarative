@@ -1618,10 +1618,15 @@ QQuickItem *QQuickTableViewPrivate::selectionPointerHandlerTarget() const
     return const_cast<QQuickTableView *>(q_func())->contentItem();
 }
 
-bool QQuickTableViewPrivate::startSelection(const QPointF &pos)
+bool QQuickTableViewPrivate::startSelection(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
     Q_Q(QQuickTableView);
-    Q_UNUSED(pos);
+    if (!selectionModel) {
+        if (warnNoSelectionModel)
+            qmlWarning(q_func()) << "Cannot start selection: no SelectionModel assigned!";
+        warnNoSelectionModel = false;
+        return false;
+    }
 
     if (selectionBehavior == QQuickTableView::SelectionDisabled) {
         qmlWarning(q) << "Cannot start selection: TableView.selectionBehavior == TableView.SelectionDisabled";
@@ -1639,6 +1644,18 @@ bool QQuickTableViewPrivate::startSelection(const QPointF &pos)
     else if (selectionModel)
         existingSelection = selectionModel->selection();
 
+    // If pos is on top of an unselected cell, we start a session where the user selects which
+    // cells to become selected. Otherwise, if pos is on top of an already selected cell and
+    // ctrl is being held, we start a session where the user selects which selected cells to
+    // become unselected.
+    selectionFlag = QItemSelectionModel::Select;
+    if (modifiers & Qt::ControlModifier) {
+        QPoint startCell = clampedCellAtPos(pos);
+        const QModelIndex startIndex = q->index(startCell.y(), startCell.x());
+        if (selectionModel->isSelected(startIndex))
+            selectionFlag = QItemSelectionModel::Deselect;
+    }
+
     selectionStartCell = QPoint(-1, -1);
     selectionEndCell = QPoint(-1, -1);
     q->closeEditor();
@@ -1648,6 +1665,7 @@ bool QQuickTableViewPrivate::startSelection(const QPointF &pos)
 void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
 {
     Q_Q(QQuickTableView);
+    Q_ASSERT(selectionFlag != QItemSelectionModel::NoUpdate);
     if (loadedItems.isEmpty())
         return;
     if (!selectionModel) {
@@ -1704,6 +1722,7 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
 
 void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
 {
+    Q_ASSERT(selectionFlag != QItemSelectionModel::NoUpdate);
     if (loadedItems.isEmpty())
         return;
     if (!selectionModel) {
@@ -1809,11 +1828,19 @@ void QQuickTableViewPrivate::updateSelection(const QRect &oldSelection, const QR
         deselect.merge(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
     }
 
-    // Don't clear the selection that existed before the user started a new selection block
-    deselect.merge(existingSelection, QItemSelectionModel::Deselect);
-
-    selectionModel->select(deselect, QItemSelectionModel::Deselect);
-    selectionModel->select(select, QItemSelectionModel::Select);
+    if (selectionFlag == QItemSelectionModel::Select) {
+        // Don't clear the selection that existed before the user started a new selection block
+        deselect.merge(existingSelection, QItemSelectionModel::Deselect);
+        selectionModel->select(deselect, QItemSelectionModel::Deselect);
+        selectionModel->select(select, QItemSelectionModel::Select);
+    } else if (selectionFlag == QItemSelectionModel::Deselect){
+        QItemSelection oldSelection = existingSelection;
+        oldSelection.merge(select, QItemSelectionModel::Deselect);
+        selectionModel->select(oldSelection, QItemSelectionModel::Select);
+        selectionModel->select(select, QItemSelectionModel::Deselect);
+    } else {
+        Q_UNREACHABLE();
+    }
 }
 
 void QQuickTableViewPrivate::cancelSelectionTracking()
@@ -1822,6 +1849,7 @@ void QQuickTableViewPrivate::cancelSelectionTracking()
     selectionStartCell = QPoint(-1, -1);
     selectionEndCell = QPoint(-1, -1);
     existingSelection.clear();
+    selectionFlag = QItemSelectionModel::NoUpdate;
     if (selectableCallbackFunction)
         selectableCallbackFunction(QQuickSelectable::CallBackFlag::CancelSelection);
 }
@@ -5019,7 +5047,6 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
 
     const QModelIndex currentIndex = selectionModel->currentIndex();
     const QPoint currentCell = q->cellAtIndex(currentIndex);
-    const bool select = (e->modifiers() & Qt::ShiftModifier) && (e->key() != Qt::Key_Backtab);
 
     if (!q->activeFocusOnTab()) {
         switch (e->key()) {
@@ -5051,21 +5078,30 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
     }
 
     auto beginMoveCurrentIndex = [&](){
-        if (!select) {
+        const bool shouldSelect = (e->modifiers() & Qt::ShiftModifier) && (e->key() != Qt::Key_Backtab);
+        const bool startNewSelection = selectionRectangle().isEmpty();
+        if (!shouldSelect) {
             clearSelection();
-        } else if (selectionRectangle().isEmpty()) {
+            cancelSelectionTracking();
+        } else if (startNewSelection) {
+            // Try to start a new selection if no selection exists from before.
+            // The startSelection() call is theoretically allowed to refuse, although this
+            // is less likely when starting a selection using the keyboard.
             const int serializedStartIndex = modelIndexToCellIndex(selectionModel->currentIndex());
             if (loadedItems.contains(serializedStartIndex)) {
                 const QRectF startGeometry = loadedItems.value(serializedStartIndex)->geometry();
-                setSelectionStartPos(startGeometry.center());
-                if (selectableCallbackFunction)
-                    selectableCallbackFunction(QQuickSelectable::CallBackFlag::SelectionRectangleChanged);
+                if (startSelection(startGeometry.center(), Qt::ShiftModifier)) {
+                    setSelectionStartPos(startGeometry.center());
+                    if (selectableCallbackFunction)
+                        selectableCallbackFunction(QQuickSelectable::CallBackFlag::SelectionRectangleChanged);
+                }
             }
         }
     };
 
     auto endMoveCurrentIndex = [&](const QPoint &cell){
-        if (select) {
+        const bool isSelecting = selectionFlag != QItemSelectionModel::NoUpdate;
+        if (isSelecting) {
             if (polishScheduled)
                 forceLayout(true);
             const int serializedEndIndex = modelIndexAtCell(cell);
