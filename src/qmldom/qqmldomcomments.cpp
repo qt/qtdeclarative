@@ -261,22 +261,6 @@ void CommentedElement::writePost(OutWriter &lw, QList<SourceLocation> *locs) con
         c.write(lw, (locs ? &((*locs)[i++]) : nullptr));
 }
 
-/*!
-\brief Given the SourceLocation of the current element returns the comments associated with the
-start and end of item
-
-The map uses an index that is based on 2*the location. Thus for every location l it is possible
-to have two indexes: 2*l (just before) and 2*l+1 (just after).
-This allows to attach comments to indexes representing either just before or after any location
-*/
-QMultiMap<quint32, const QList<Comment> *>
-CommentedElement::commentGroups(SourceLocation elLocation) const
-{
-    return QMultiMap<quint32, const QList<Comment> *>(
-            { { elLocation.begin() * 2, &m_preComments },
-              { elLocation.end() * 2 + 1, &m_postComments } });
-}
-
 using namespace QQmlJS::AST;
 
 class RegionRef

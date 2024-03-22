@@ -114,7 +114,6 @@ public:
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const;
     void writePre(OutWriter &lw, QList<SourceLocation> *locations = nullptr) const;
     void writePost(OutWriter &lw, QList<SourceLocation> *locations = nullptr) const;
-    QMultiMap<quint32, const QList<Comment> *> commentGroups(SourceLocation elLocation) const;
 
     friend bool operator==(const CommentedElement &c1, const CommentedElement &c2)
     {
