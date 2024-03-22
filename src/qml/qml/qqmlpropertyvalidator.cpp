@@ -316,7 +316,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                         }
                         if (QMetaObjectPrivate::get(mo)->flags & DynamicMetaObject) {
                             return recordError(binding->location,
-                                               QString::fromLatin1("Unsupported grouped property access: Property \"%1\" with type \"%2\" has a dynamic meta-object.")
+                                               tr("Unsupported grouped property access: Property \"%1\" with type \"%2\" has a dynamic meta-object.")
                                                .arg(name, QString::fromUtf8(type.name()))
                                                );
                         }
