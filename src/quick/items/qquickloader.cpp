@@ -911,12 +911,24 @@ void QQuickLoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
     const bool needToUpdateWidth = loaderGeometryChanged && q->widthValid();
     const bool needToUpdateHeight = loaderGeometryChanged && q->heightValid();
 
-    if (needToUpdateWidth && needToUpdateHeight)
+    if (needToUpdateWidth && needToUpdateHeight) {
+        /* setSize keeps bindings intact (for backwards compatibility reasons),
+           but here we actually want the loader to control the size, so any
+           prexisting bindings ought to be removed
+        */
+        auto *itemPriv = QQuickItemPrivate::get(item);
+        // takeBinding  would work without the check, but this is more efficient
+        // for the common case where we don't have a binding
+        if (itemPriv->width.hasBinding())
+            itemPriv->width.takeBinding();
+        if (itemPriv->height.hasBinding())
+            itemPriv->height.takeBinding();
         item->setSize(QSizeF(q->width(), q->height()));
-    else if (needToUpdateWidth)
+    } else if (needToUpdateWidth) {
         item->setWidth(q->width());
-    else if (needToUpdateHeight)
+    } else if (needToUpdateHeight) {
         item->setHeight(q->height());
+    }
 
     if (updatingSize)
         return;
