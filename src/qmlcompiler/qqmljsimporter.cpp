@@ -41,12 +41,21 @@ static const QString prefixedName(const QString &prefix, const QString &name)
     return prefix.isEmpty() ? name : (prefix  + QLatin1Char('.') + name);
 }
 
-static QQmlDirParser createQmldirParserForFile(const QString &filename)
+QQmlDirParser QQmlJSImporter::createQmldirParserForFile(const QString &filename)
 {
     QFile f(filename);
-    f.open(QFile::ReadOnly);
     QQmlDirParser parser;
-    parser.parse(QString::fromUtf8(f.readAll()));
+    if (f.open(QFile::ReadOnly)) {
+        parser.parse(QString::fromUtf8(f.readAll()));
+    } else {
+        m_warnings.append({
+            QStringLiteral("Could not open qmldir file: ")
+                + filename,
+            QtWarningMsg,
+            QQmlJS::SourceLocation()
+        });
+    }
+
     return parser;
 }
 

@@ -183,6 +183,7 @@ private:
     void importDependencies(const QQmlJSImporter::Import &import, AvailableTypes *types,
                             const QString &prefix = QString(),
                             QTypeRevision version = QTypeRevision(), bool isDependency = false);
+    QQmlDirParser createQmldirParserForFile(const QString &filename);
     void readQmltypes(const QString &filename, QList<QQmlJSExportedScope> *objects,
                       QList<QQmlDirParser::Import> *dependencies);
     Import readQmldir(const QString &dirname);
