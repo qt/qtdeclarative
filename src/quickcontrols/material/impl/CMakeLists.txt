@@ -24,6 +24,7 @@ qt_internal_add_qml_module(QuickControls2MaterialStyleImpl
     CLASS_NAME QtQuickControls2MaterialStyleImplPlugin
     DEPENDENCIES
         QtQuick/auto
+        QtQuick.Controls.impl/auto
     PLUGIN_TARGET qtquickcontrols2materialstyleimplplugin
     SOURCES
         qquickmaterialbusyindicator.cpp qquickmaterialbusyindicator_p.h
