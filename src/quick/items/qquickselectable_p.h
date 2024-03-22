@@ -30,7 +30,7 @@ public:
 
     virtual QQuickItem *selectionPointerHandlerTarget() const = 0;
 
-    virtual bool startSelection(const QPointF &pos) = 0;
+    virtual bool startSelection(const QPointF &pos, Qt::KeyboardModifiers modifiers) = 0;
     virtual void setSelectionStartPos(const QPointF &pos) = 0;
     virtual void setSelectionEndPos(const QPointF &pos) = 0;
     virtual void clearSelection() = 0;

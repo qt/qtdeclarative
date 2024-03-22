@@ -921,6 +921,7 @@ void tst_qquicktreeview::selectionBehaviorCells()
     const QPointF endPos(endItem->x(), endItem->y());
     const QPointF endPosWrapped(endItemWrapped->x(), endItemWrapped->y());
 
+    QVERIFY(treeViewPrivate->startSelection(startPos, Qt::NoModifier));
     treeViewPrivate->setSelectionStartPos(startPos);
     treeViewPrivate->setSelectionEndPos(endPos);
 
@@ -975,6 +976,7 @@ void tst_qquicktreeview::selectionBehaviorRows()
     QCOMPARE(selectionModel->hasSelection(), false);
 
     // Drag from row 0 to row 3
+    QVERIFY(treeViewPrivate->startSelection(QPointF(0, 0), Qt::NoModifier));
     treeViewPrivate->setSelectionStartPos(QPointF(0, 0));
     treeViewPrivate->setSelectionEndPos(QPointF(80, 60));
 
@@ -995,6 +997,7 @@ void tst_qquicktreeview::selectionBehaviorRows()
     QCOMPARE(selectionModel->hasSelection(), false);
 
     // Drag from row 3 to row 0 (and overshoot mouse)
+    QVERIFY(treeViewPrivate->startSelection(QPointF(80, 60), Qt::NoModifier));
     treeViewPrivate->setSelectionStartPos(QPointF(80, 60));
     treeViewPrivate->setSelectionEndPos(QPointF(-10, -10));
 
@@ -1026,6 +1029,7 @@ void tst_qquicktreeview::selectionBehaviorColumns()
     QCOMPARE(selectionModel->hasSelection(), false);
 
     // Drag from column 0 to column 3
+    QVERIFY(treeViewPrivate->startSelection(QPointF(0, 0), Qt::NoModifier));
     treeViewPrivate->setSelectionStartPos(QPointF(0, 0));
     treeViewPrivate->setSelectionEndPos(QPointF(225, 90));
 
@@ -1046,6 +1050,7 @@ void tst_qquicktreeview::selectionBehaviorColumns()
     QCOMPARE(selectionModel->hasSelection(), false);
 
     // Drag from column 3 to column 0 (and overshoot mouse)
+    QVERIFY(treeViewPrivate->startSelection(QPointF(225, 90), Qt::NoModifier));
     treeViewPrivate->setSelectionStartPos(QPointF(225, 90));
     treeViewPrivate->setSelectionEndPos(QPointF(-10, -10));
 
@@ -1075,10 +1080,11 @@ void tst_qquicktreeview::selectionBehaviorDisabled()
 
     QCOMPARE(selectionModel->hasSelection(), false);
 
-    // Drag from column 0 to column 3
-    treeViewPrivate->setSelectionStartPos(QPointF(0, 0));
-    treeViewPrivate->setSelectionEndPos(QPointF(60, 60));
-
+    // Try to start a selection. treeViewPrivate->startSelection() should
+    // reject that, and and return false. The selectionFlag will there stay as
+    // QItemSelectionModel::NoUpdate, meaning no active selection is ongoing.
+    QVERIFY(!treeViewPrivate->startSelection(QPointF(0, 0), Qt::NoModifier));
+    QCOMPARE(treeViewPrivate->selectionFlag, QItemSelectionModel::NoUpdate);
     QCOMPARE(selectionModel->hasSelection(), false);
 }
 

@@ -436,6 +436,64 @@ TestCase {
                 verify(tableView.selectionModel.isSelected(tableView.model.index(r, c)))
     }
 
+    function test_unselect_click() {
+        // Check at a ctrl click on top a selected cell
+        // will cause the cell to be unselected.
+        let tableView = createTemporaryObject(tableviewComp, testCase)
+        verify(tableView)
+        let selectionRectangle = tableView.selectionRectangle
+        verify(selectionRectangle)
+
+        selectionRectangle.selectionMode = SelectionRectangle.Drag
+
+        // Select some cells
+        tableView.selectionModel.select(tableView.index(0, 0), ItemSelectionModel.Select)
+        tableView.selectionModel.select(tableView.index(0, 1), ItemSelectionModel.Select)
+        tableView.selectionModel.select(tableView.index(0, 3), ItemSelectionModel.Select)
+        tableView.selectionModel.select(tableView.index(1, 0), ItemSelectionModel.Select)
+        compare(tableView.selectionModel.selectedIndexes.length, 4)
+
+        // Do a ctrl-click on top of a selected cell. This
+        // should cause the cell to be unselected.
+        mouseClick(tableView, cellWidth / 2, cellHeight / 2, Qt.LeftButton, Qt.ControlModifier)
+        compare(tableView.selectionModel.selectedIndexes.length, 3)
+        verify(!tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 3)))
+        verify(tableView.selectionModel.isSelected(tableView.model.index(1, 0)))
+    }
+
+    function test_unselect_drag() {
+        // Check at a ctrl drag on top a selected cell
+        // will cause the dragged-over cells to be unselected.
+        let tableView = createTemporaryObject(tableviewComp, testCase)
+        verify(tableView)
+        let selectionRectangle = tableView.selectionRectangle
+        verify(selectionRectangle)
+
+        selectionRectangle.selectionMode = SelectionRectangle.Drag
+
+        // Select some cells
+        tableView.selectionModel.select(tableView.index(0, 0), ItemSelectionModel.Select)
+        tableView.selectionModel.select(tableView.index(0, 1), ItemSelectionModel.Select)
+        tableView.selectionModel.select(tableView.index(0, 3), ItemSelectionModel.Select)
+        tableView.selectionModel.select(tableView.index(1, 0), ItemSelectionModel.Select)
+        compare(tableView.selectionModel.selectedIndexes.length, 4)
+
+        // Do a ctrl-drag on top of the selected cells. This
+        // should cause all the cells to be unselected.
+        mousePress(tableView.contentItem, cellWidth / 2, cellHeight / 2, Qt.LeftButton, Qt.ControlModifier)
+        mouseMove(tableView.contentItem, cellWidth * 4, cellHeight * 2, 0, Qt.LeftButton, Qt.ControlModifier)
+        compare(tableView.selectionModel.selectedIndexes.length, 0)
+
+        // Move the mouse back to cell 2, and release the mouse. Only
+        // the top left cells will then be unselected
+        mouseMove(tableView.contentItem, (cellWidth * 2) - 1, (cellHeight * 2) - 1, 0, Qt.LeftButton, Qt.ControlModifier)
+        mouseRelease(tableView.contentItem, (cellWidth * 2) - 1, (cellHeight * 2) - 1, Qt.LeftButton, Qt.ControlModifier)
+        compare(tableView.selectionModel.selectedIndexes.length, 1)
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 3)))
+    }
+
     function test_handle_position() {
         // Check that the handles end up at the corner of the selection
         // even if if we resize some rows and column while they have
