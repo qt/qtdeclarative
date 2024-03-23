@@ -512,8 +512,10 @@ All warnings can be set to three levels:
             QTextStream(stdout) << QString::fromUtf8(json);
         } else {
             QFile file(fileName);
-            file.open(QFile::WriteOnly);
-            file.write(json);
+            if (file.open(QFile::WriteOnly))
+                file.write(json);
+            else
+                success = false;
         }
     }
 

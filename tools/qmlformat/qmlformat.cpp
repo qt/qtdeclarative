@@ -175,11 +175,14 @@ static bool parseFile(const QString &filename, const Options &options)
         res = fileItem.writeOut(filename, numberOfBackupFiles, lwOptions, &fw, checks);
     } else {
         QFile out;
-        out.open(stdout, QIODevice::WriteOnly);
-        LineWriter lw([&out](QStringView s) { out.write(s.toUtf8()); }, filename, lwOptions);
-        OutWriter ow(lw);
-        res = fileItem.writeOutForFile(ow, checks);
-        ow.flush();
+        if (out.open(stdout, QIODevice::WriteOnly)) {
+            LineWriter lw([&out](QStringView s) { out.write(s.toUtf8()); }, filename, lwOptions);
+            OutWriter ow(lw);
+            res = fileItem.writeOutForFile(ow, checks);
+            ow.flush();
+        } else {
+            res = false;
+        }
     }
     return res;
 }
@@ -259,8 +262,7 @@ Options buildCommandLineOptions(const QCoreApplication &app)
     QStringList files;
     if (!parser.value("files").isEmpty()) {
         QFile file(parser.value("files"));
-        file.open(QIODevice::Text | QIODevice::ReadOnly);
-        if (file.isOpen()) {
+        if (file.open(QIODevice::Text | QIODevice::ReadOnly)) {
             QTextStream in(&file);
             while (!in.atEnd()) {
                 QString file = in.readLine();

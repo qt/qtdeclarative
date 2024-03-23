@@ -230,12 +230,14 @@ static void writeToFile(const QString &path, const QByteArray &data)
     QFileInfo fi(path);
     if (fi.exists() && fi.size() == data.size()) {
         QFile oldFile(path);
-        oldFile.open(QIODevice::ReadOnly);
-        if (oldFile.readAll() == data)
-            return;
+        if (oldFile.open(QIODevice::ReadOnly)) {
+            if (oldFile.readAll() == data)
+                return;
+        }
     }
     QFile file(path);
-    file.open(QIODevice::WriteOnly);
+    if (!file.open(QIODevice::WriteOnly))
+        qFatal("Could not open file %s", qPrintable(path));
     file.write(data);
 }
 
