@@ -247,7 +247,8 @@ quint16 tst_Scenegraph::checksumFileOrDir(const QString &path)
         return 0;
     if (fi.isFile()) {
         QFile f(path);
-        f.open(QIODevice::ReadOnly);
+        if (!f.open(QIODevice::ReadOnly))
+            qFatal("Could not open file %s", qPrintable(path));
         QByteArray contents = f.readAll();
         return qChecksum(contents);
     }
