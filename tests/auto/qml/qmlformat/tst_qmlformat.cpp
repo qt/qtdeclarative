@@ -695,7 +695,8 @@ QString TestQmlformat::runQmlformat(const QString &fileToFormat, QStringList arg
 
     QFile temp(tempFile);
 
-    temp.open(QIODevice::ReadOnly);
+    if (!temp.open(QIODevice::ReadOnly))
+        qFatal("Could not open %s", qPrintable(tempFile));
     QString formatted = QString::fromUtf8(temp.readAll());
 
     return formatted;

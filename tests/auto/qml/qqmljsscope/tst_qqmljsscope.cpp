@@ -35,9 +35,9 @@ class tst_qqmljsscope : public QQmlDataTest
     {
         const QFileInfo fi(url);
         QFile f(fi.absoluteFilePath());
-        f.open(QIODevice::ReadOnly);
-        QByteArray data(fi.size(), Qt::Uninitialized);
-        f.read(data.data(), data.size());
+        if (!f.open(QIODevice::ReadOnly))
+            qFatal("Could not open file %s", qPrintable(url));
+        QByteArray data = f.readAll();
         return QString::fromUtf8(data);
     }
 

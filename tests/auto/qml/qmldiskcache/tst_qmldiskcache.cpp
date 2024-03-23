@@ -1162,7 +1162,7 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
     e->clearComponentCache();
     {
         QFile file(fileName);
-        file.open(QIODevice::WriteOnly | QIODevice::Append);
+        QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Append));
         file.write(" ");
     }
     waitForFileSystem();

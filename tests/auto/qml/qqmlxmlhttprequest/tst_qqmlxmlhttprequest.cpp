@@ -1131,7 +1131,7 @@ void tst_qqmlxmlhttprequest::doFileRequest(std::function<void(QObject *component
     QTemporaryFile writeFile;
     QTemporaryFile readFile;
 
-    writeFile.open();
+    QVERIFY(writeFile.open());
     writeFile.close();
 
     QVERIFY(readFile.open());

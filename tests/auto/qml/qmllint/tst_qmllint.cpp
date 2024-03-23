@@ -1560,7 +1560,7 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
 
             if (QFileInfo(fixedPath).exists()) {
                 QFile fixedFile(fixedPath);
-                fixedFile.open(QFile::ReadOnly);
+                QVERIFY(fixedFile.open(QFile::ReadOnly));
                 QString fixedFileContents = QString::fromUtf8(fixedFile.readAll());
 #ifdef Q_OS_WIN
                 fixedCode = fixedCode.replace(u"\r\n"_s, u"\n"_s);

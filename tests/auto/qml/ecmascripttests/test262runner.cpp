@@ -688,7 +688,10 @@ void Test262Runner::updateTestExpectations()
     }
 
     QTemporaryFile updatedExpectations;
-    updatedExpectations.open();
+    if (!updatedExpectations.open()) {
+        qFatal("Could not open temporary TestExpectations file: %s",
+               qPrintable(updatedExpectations.errorString()));
+    }
 
     while (!file.atEnd()) {
         QByteArray originalLine = file.readLine();
@@ -726,7 +729,10 @@ void Test262Runner::writeTestExpectations()
     QFile file(expectationsFile);
 
     QTemporaryFile expectations;
-    expectations.open();
+    if (!expectations.open()) {
+        qFatal("Could not open temporary TestExpectations file: %s",
+               qPrintable(expectations.errorString()));
+    }
 
     for (const auto &c : std::as_const(testCases)) {
         TestExpectationLine line = TestExpectationLine::fromTestCase(c);
@@ -747,7 +753,10 @@ void Test262Runner::runAsExternalTests()
     for (TestData &testData : tasks) {
         auto runTest = [&] (const char *header, TestCase::Result *result) {
             QTemporaryFile tempFile;
-            tempFile.open();
+            if (!tempFile.open()) {
+                qFatal("Could not open temporary test data file: %s",
+                       qPrintable(tempFile.errorString()));
+            }
             tempFile.write(header);
             tempFile.write(testData.content);
             tempFile.close();

@@ -67,7 +67,8 @@ private:
 QByteArray tst_qjsonbinding::readAsUtf8(const QString &fileName)
 {
     QFile file(testFile(fileName));
-    file.open(QIODevice::ReadOnly);
+    if (!file.open(QIODevice::ReadOnly))
+        qFatal("Cannot open file %s", qPrintable(fileName));
     QTextStream stream(&file);
     return stream.readAll().trimmed().toUtf8();
 }
