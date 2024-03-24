@@ -3374,6 +3374,29 @@ private slots:
         }
     }
 
+    void doNotCrashAtAstComments()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/astComments.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem astComments = fileObject.path(".astComments");
+
+        // Visiting astComment element shouldn't fail
+        QSet<QStringView> comments;
+        astComments.visitTree(
+            Path(),
+            [&comments](const Path &, const DomItem &item, bool) {
+                if (item.internalKind() == DomType::Comment) {
+                    auto comment = item.as<Comment>();
+                    comments << comment->rawComment();
+                }
+                return true;
+            }
+        );
+
+        QVERIFY(comments.contains(u"/*Ast Comment*/ "_s));
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

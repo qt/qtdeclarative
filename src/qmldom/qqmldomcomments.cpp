@@ -673,34 +673,20 @@ private:
 */
 bool AstComments::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
-    bool cont = self.dvItemField(visitor, Fields::commentedElements, [this, &self]() {
-        return self.subMapItem(Map(
-                self.pathFromOwner().field(Fields::commentedElements),
-                [this](const DomItem &map, const QString &key) {
-                    bool ok;
-                    // we expose the comments as map just for debugging purposes,
-                    // as key we use the address hex value as key (keys must be strings)
-                    quintptr v = key.split(QLatin1Char('_')).last().toULong(&ok, 16);
-                    // recover the actual key, and check if it is in the map
-                    AST::Node *n = reinterpret_cast<AST::Node *>(v);
-                    if (ok && m_commentedElements.contains(n))
-                        return map.wrap(PathEls::Key(key), m_commentedElements[n]);
-                    return DomItem();
-                },
-                [this](const DomItem &) {
-                    QSet<QString> res;
-                    for (AST::Node *n : m_commentedElements.keys()) {
-                        QString name;
-                        if (n)
-                            name = QString::number(n->kind); // we should add mapping to
-                                                             // string for this
-                        res.insert(name + QStringLiteral(u"_") + QString::number(quintptr(n), 16));
-                    }
-                    return res;
-                },
-                QLatin1String("CommentedElements")));
-    });
-    return cont;
+    // TODO: QTBUG-123645
+    // Revert this commit to reproduce crash with tst_qmldomitem::doNotCrashAtAstComments
+    QList<Comment> pre;
+    QList<Comment> post;
+    for (const auto &commentedElement : commentedElements().values()) {
+        pre.append(commentedElement.preComments());
+        post.append(commentedElement.postComments());
+    }
+    if (!pre.isEmpty())
+        self.dvWrapField(visitor, Fields::preComments, pre);
+    if (!post.isEmpty())
+        self.dvWrapField(visitor, Fields::postComments, post);
+
+    return false;
 }
 
 CommentCollector::CommentCollector(MutableDomItem item)
