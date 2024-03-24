@@ -75,12 +75,14 @@ public:
 
     enum CommentType {Pre, Post};
 
-    Comment(const QString &c, int newlinesBefore = 1, CommentType type = Pre)
-        : m_comment(c), m_newlinesBefore(newlinesBefore), m_type(type)
+    Comment(const QString &c, const QQmlJS::SourceLocation &loc, int newlinesBefore = 1,
+            CommentType type = Pre)
+        : m_comment(c), m_location(loc), m_newlinesBefore(newlinesBefore), m_type(type)
     {
     }
-    Comment(QStringView c, int newlinesBefore = 1, CommentType type = Pre)
-        : m_comment(c), m_newlinesBefore(newlinesBefore), m_type(type)
+    Comment(QStringView c, const QQmlJS::SourceLocation &loc, int newlinesBefore = 1,
+            CommentType type = Pre)
+        : m_comment(c), m_location(loc), m_newlinesBefore(newlinesBefore), m_type(type)
     {
     }
 
@@ -99,8 +101,11 @@ public:
     }
     friend bool operator!=(const Comment &c1, const Comment &c2) { return !(c1 == c2); }
 
+    QQmlJS::SourceLocation sourceLocation() const { return m_location; };
+
 private:
     QStringView m_comment;
+    QQmlJS::SourceLocation m_location;
     int m_newlinesBefore;
     CommentType m_type;
 };

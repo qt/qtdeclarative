@@ -475,8 +475,9 @@ public:
     {
         const auto [preSpacesIndex, postSpacesIndex, preNewlineCount] = m_spaces;
         return Comment{ m_code.mid(preSpacesIndex, quint32(postSpacesIndex) - preSpacesIndex),
+                        m_commentLocation,
                         static_cast<int>(preNewlineCount),
-                        m_commentType };
+                        m_commentType};
     }
 
 private:
