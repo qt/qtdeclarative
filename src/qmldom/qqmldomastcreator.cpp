@@ -139,7 +139,8 @@ static ScriptElementVariant wrapIntoFieldMemberExpression(const ScriptElementVar
    \internal
     Creates a FieldMemberExpression if the qualified id has dots.
 */
-static ScriptElementVariant fieldMemberExpressionForQualifiedId(AST::UiQualifiedId *qualifiedId)
+static ScriptElementVariant
+fieldMemberExpressionForQualifiedId(const AST::UiQualifiedId *qualifiedId)
 {
     ScriptElementVariant bindable;
     bool first = true;
@@ -491,6 +492,9 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
             pPtr->setNameIdentifiers(finalizeScriptExpression(
                     ScriptElementVariant::fromElement(qmlObjectType),
                     pPathFromOwner.field(Fields::nameIdentifiers), rootMap));
+            // skip binding identifiers of the binding inside the property definition, if there is
+            // one
+            m_skipBindingIdentifiers = el->binding;
         }
         pushEl(pPathFromOwner, *pPtr, el);
         FileLocations::addRegion(nodeStack.last().fileLocations, PropertyKeywordRegion,
@@ -895,6 +899,18 @@ void QQmlDomAstCreator::endVisit(AST::UiObjectDefinition *)
     removeCurrentNode(DomType::QmlObject);
 }
 
+void QQmlDomAstCreator::setBindingIdentifiers(const Path &pathFromOwner,
+                                              const UiQualifiedId *identifiers, Binding *bindingPtr)
+{
+    const bool skipBindingIdentifiers = std::exchange(m_skipBindingIdentifiers, false);
+    if (!m_enableScriptExpressions || skipBindingIdentifiers)
+        return;
+
+    ScriptElementVariant bindable = fieldMemberExpressionForQualifiedId(identifiers);
+    bindingPtr->setBindingIdentifiers(finalizeScriptExpression(
+            bindable, pathFromOwner.field(Fields::bindingIdentifiers), rootMap));
+}
+
 bool QQmlDomAstCreator::visit(AST::UiObjectBinding *el)
 {
     BindingType bType = (el->hasOnToken ? BindingType::OnBinding : BindingType::Normal);
@@ -909,6 +925,8 @@ bool QQmlDomAstCreator::visit(AST::UiObjectBinding *el)
                                              "followed by letters, numbers or underscore, "
                                              "assuming they refer to an id property"))
                                            .withPath(bPathFromOwner)));
+    setBindingIdentifiers(bPathFromOwner, el->qualifiedId, bPtr);
+
     pushEl(bPathFromOwner, *bPtr, el);
     FileLocations::addRegion(nodeStack.last().fileLocations, ColonTokenRegion, el->colonToken);
     FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion, combineLocations(el->qualifiedId));
@@ -1018,9 +1036,7 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                                  el->qualifiedId->identifierToken);
         FileLocations::addRegion(bindingFileLocation, ColonTokenRegion, el->colonToken);
 
-        ScriptElementVariant bindable = fieldMemberExpressionForQualifiedId(el->qualifiedId);
-        bindingPtr->setBindingIdentifiers(finalizeScriptExpression(
-                bindable, pathFromOwner.field(Fields::bindingIdentifiers), rootMap));
+        setBindingIdentifiers(pathFromOwner, el->qualifiedId, bindingPtr);
 
         Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
     }
@@ -1095,6 +1111,9 @@ bool QQmlDomAstCreator::visit(AST::UiArrayBinding *el)
                 astParseErrors()
                         .error(tr("id attributes should have only simple strings as values"))
                         .withPath(bindingPathFromOwner)));
+
+    setBindingIdentifiers(bindingPathFromOwner, el->qualifiedId, bindingPtr);
+
     pushEl(bindingPathFromOwner, *bindingPtr, el);
     FileLocations::addRegion(currentNodeEl().fileLocations, ColonTokenRegion, el->colonToken);
     loadAnnotations(el);
@@ -2320,6 +2339,15 @@ bool QQmlDomAstCreator::visit(AST::ClassExpression *)
 
 void QQmlDomAstCreator::endVisit(AST::ClassExpression *)
 {
+}
+
+bool QQmlDomAstCreator::visit(AST::TemplateLiteral *)
+{
+    // TODO: Add support for template literals
+    // For now, turning off explicitly to avoid unwanted problems
+    if (m_enableScriptExpressions)
+        Q_SCRIPTELEMENT_DISABLE();
+    return true;
 }
 
 bool QQmlDomAstCreator::visit(AST::TryStatement *)
