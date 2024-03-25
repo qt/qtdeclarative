@@ -501,8 +501,9 @@ qt_internal_add_qml_module(Qml
         "${INSTALL_CMAKE_NAMESPACE}QmlFindQmlscInternal.cmake"
         ${extra_cmake_includes}
     GENERATE_CPP_EXPORTS
-        POLICIES
+    POLICIES
         QTP0001
+        QTP0004
 )
 
 _qt_internal_add_qml_deploy_info_finalizer(Qml)

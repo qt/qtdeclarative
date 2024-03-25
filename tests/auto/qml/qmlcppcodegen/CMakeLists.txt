@@ -17,6 +17,8 @@ qt_internal_add_test(tst_qmlcppcodegen
         Qt::GuiPrivate
         codegen_test_module
         codegen_test_moduleplugin
+        codegen_test_hidden
+        codegen_test_hiddenplugin
 )
 
 qt_internal_add_test(tst_qmlcppcodegen_interpreted
@@ -27,6 +29,8 @@ qt_internal_add_test(tst_qmlcppcodegen_interpreted
         Qt::GuiPrivate
         codegen_test_module
         codegen_test_moduleplugin
+        codegen_test_hidden
+        codegen_test_hiddenplugin
     DEFINES
         QT_TEST_FORCE_INTERPRETER
 )

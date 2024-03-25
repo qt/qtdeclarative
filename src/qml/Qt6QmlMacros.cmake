@@ -2487,6 +2487,7 @@ function(qt6_target_qml_sources target)
     endforeach()
 
     set(generated_sources_other_scope)
+    set(extra_qmldirs)
     foreach(qml_file_src IN LISTS arg_QML_FILES)
         # This is to facilitate updating code that used the earlier tech preview
         # API function qt6_target_qml_files()
@@ -2506,6 +2507,11 @@ function(qt6_target_qml_sources target)
 
         get_filename_component(file_absolute ${qml_file_src} ABSOLUTE)
         __qt_get_relative_resource_path_for_file(file_resource_path ${qml_file_src})
+
+        get_filename_component(qml_file_resource_dir ${file_resource_path} DIRECTORY)
+        if(qml_file_resource_dir)
+            list(APPEND extra_qmldirs "${output_dir}/${qml_file_resource_dir}/qmldir")
+        endif()
 
         # For the tooling steps below, run the tools on the copied qml file in
         # the build directory, not the source directory. This is required
@@ -2742,8 +2748,7 @@ function(qt6_target_qml_sources target)
         FILES ${arg_QML_FILES} ${arg_RESOURCES}
         OUTPUT_TARGETS resource_targets
     )
-    math(EXPR counter "${counter} + 1")
-    set_target_properties(${target} PROPERTIES QT_QML_MODULE_RAW_QML_SETS ${counter})
+    list(APPEND output_targets ${resource_targets})
 
     # Save the resource name in a property so we can reference it later in a qml plugin
     # constructor, to avoid discarding the resource if it's in a static library.
@@ -2752,7 +2757,50 @@ function(qt6_target_qml_sources target)
     set_property(TARGET ${target}
         APPEND PROPERTY _qt_qml_module_sanitized_resource_names "${sanitized_resource_name}")
 
-    list(APPEND output_targets ${resource_targets})
+    if(extra_qmldirs)
+        list(REMOVE_DUPLICATES extra_qmldirs)
+        __qt_internal_setup_policy(QTP0004 "6.8.0"
+"You need qmldir files for each extra directory that contains .qml files for your module. \
+Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0004.html for policy details."
+        )
+        qt6_policy(GET QTP0004 generate_extra_qmldirs_policy)
+        if ("${generate_extra_qmldirs_policy}" STREQUAL "NEW")
+            foreach(extra_qmldir IN LISTS extra_qmldirs)
+                set(__qt_qmldir_content "prefer :${arg_PREFIX}")
+                configure_file(
+                    ${__qt_qml_macros_module_base_dir}/Qt6qmldirTemplate.cmake.in
+                    "${extra_qmldir}"
+                    @ONLY
+                )
+
+                set_source_files_properties("${extra_qmldir}"
+                    PROPERTIES GENERATED TRUE
+                )
+            endforeach()
+
+            set(extra_qmldirs_targets)
+            qt6_add_resources(${target} "${resource_name}_extra_qmldirs"
+                PREFIX ${arg_PREFIX}
+                FILES ${extra_qmldirs}
+                BASE ${output_dir}
+                OUTPUT_TARGETS extra_qmldirs_targets
+            )
+            list(APPEND output_targets ${extra_qmldirs_targets})
+
+            set_property(TARGET ${target} PROPERTY _qt_internal_extra_qmldirs ${extra_qmldirs})
+
+            # Save the resource name in a property so we can reference it later in a qml plugin
+            # constructor, to avoid discarding the resource if it's in a static library.
+            __qt_internal_sanitize_resource_name(
+                sanitized_extra_qmldirs_resource_name "${resource_name}_extra_qmldirs")
+            set_property(TARGET ${target}
+                APPEND PROPERTY _qt_qml_module_sanitized_resource_names
+                "${sanitized_extra_qmldirs_resource_name}")
+        endif()
+    endif()
+
+    math(EXPR counter "${counter} + 1")
+    set_target_properties(${target} PROPERTIES QT_QML_MODULE_RAW_QML_SETS ${counter})
 
     if(arg_OUTPUT_TARGETS)
         set(${arg_OUTPUT_TARGETS} ${output_targets} PARENT_SCOPE)
