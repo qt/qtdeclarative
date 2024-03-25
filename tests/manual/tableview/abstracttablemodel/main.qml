@@ -198,6 +198,10 @@ ApplicationWindow {
                         ]
                         Layout.fillWidth: false
                     }
+                    Button {
+                        text: "Clear selection"
+                        onClicked: tableView.selectionModel.clearSelection()
+                    }
                 }
             }
 

@@ -23,6 +23,11 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_PRIVATE_EXPORT QQuickSelectable
 {
 public:
+    enum class CallBackFlag {
+        CancelSelection,
+        SelectionRectangleChanged
+    };
+
     virtual QQuickItem *selectionPointerHandlerTarget() const = 0;
 
     virtual bool startSelection(const QPointF &pos) = 0;
@@ -33,6 +38,8 @@ public:
 
     virtual QRectF selectionRectangle() const = 0;
     virtual QSizeF scrollTowardsSelectionPoint(const QPointF &pos, const QSizeF &step) = 0;
+
+    virtual void setCallback(std::function<void(CallBackFlag)> func) = 0;
 };
 
 QT_END_NAMESPACE

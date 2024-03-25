@@ -176,14 +176,6 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
         m_scrollSpeed = QSizeF(qAbs(dist.width() * 0.007), qAbs(dist.height() * 0.007));
     });
 
-    QObject::connect(m_tapHandler, &QQuickTapHandler::tapped, [this] {
-        const auto modifiers = m_tapHandler->point().modifiers();
-        if (modifiers != Qt::NoModifier)
-            return;
-
-        updateActiveState(false);
-    });
-
     QObject::connect(m_tapHandler, &QQuickTapHandler::pressedChanged, [this]() {
         if (!m_tapHandler->isPressed())
             return;
@@ -223,9 +215,6 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             m_selectable->setSelectionEndPos(pos);
             updateHandles();
             updateActiveState(true);
-        } else if (modifiers == Qt::NoModifier) {
-            // Don't select any cell
-            updateActiveState(false);
         }
     });
 
@@ -284,10 +273,11 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             return;
 
         if (m_dragHandler->active()) {
-            // Start a new selection if no selection exists from before.
-            // Note that if the user pressed ControlModifier while starting
-            // the drag, the first cell will be selected already on press.
-            if (!m_active) {
+            // Start a new selection unless there is an active selection
+            // already, and one of the relevant modifiers are being held.
+            // In that case we continue to extend the active selection instead.
+            const bool modifiersHeld = modifiers & (Qt::ControlModifier | Qt::ShiftModifier);
+            if (!m_active || !modifiersHeld) {
                 if (!m_selectable->startSelection(startPos))
                     return;
                 m_selectable->setSelectionStartPos(startPos);
@@ -481,6 +471,25 @@ void QQuickSelectionRectanglePrivate::connectToTarget()
     if (const auto flickable = qobject_cast<QQuickFlickable *>(m_target)) {
         connect(flickable, &QQuickFlickable::interactiveChanged, this, &QQuickSelectionRectanglePrivate::updateSelectionMode);
     }
+
+    // Add a callback function that tells if the selection was
+    // modified outside of the actions taken by SelectionRectangle.
+    m_selectable->setCallback([this](QQuickSelectable::CallBackFlag flag){
+        switch (flag) {
+        case QQuickSelectable::CallBackFlag::CancelSelection:
+            // The selection is either cleared, or can no longer be
+            // represented as a rectangle with two selection handles.
+            updateActiveState(false);
+            break;
+        case QQuickSelectable::CallBackFlag::SelectionRectangleChanged:
+            // The selection has changed, but the selection is still
+            // rectangular and without holes.
+            updateHandles();
+            break;
+        default:
+            Q_UNREACHABLE();
+        }
+    });
 }
 
 void QQuickSelectionRectanglePrivate::updateSelectionMode()
@@ -559,6 +568,7 @@ void QQuickSelectionRectangle::setTarget(QQuickItem *target)
         d->m_tapHandler->setParent(this);
         d->m_dragHandler->setParent(this);
         d->m_target->disconnect(this);
+        d->m_selectable->setCallback(nullptr);
     }
 
     d->m_target = target;
