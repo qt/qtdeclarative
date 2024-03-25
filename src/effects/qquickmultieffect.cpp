@@ -777,6 +777,7 @@ void QQuickMultiEffect::setMaskInverted(bool inverted)
 
 /*!
     \qmlproperty rect QtQuick.Effects::MultiEffect::itemRect
+    \readonly
 
     Read-only access to effect item rectangle. This can be used e.g. to see
     the area item covers.
