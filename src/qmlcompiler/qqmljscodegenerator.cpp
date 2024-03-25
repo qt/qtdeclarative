@@ -2562,7 +2562,7 @@ void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int 
         }
 
         for (int i = classSize; i < argc; i += 3) {
-            const int nameArg = argc + i + 1;
+            const int nameArg = args + i + 1;
             m_body += u"{ "_s
                     + conversion(
                               registerType(nameArg),
@@ -2570,7 +2570,7 @@ void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int 
                               consumedRegisterVariable(nameArg))
                     + u", "_s;
 
-            const int valueArg = argc + i + 2;
+            const int valueArg = args + i + 2;
             m_body += convertStored(
                               registerType(valueArg).storedType(),
                               propType,
