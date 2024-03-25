@@ -115,6 +115,10 @@ object in C++ is equivalent to creating a new object through
 QQmlComponent::create(). Once created, the object could be manipulated from C++
 or, for example, combined with QQuickWindow to be drawn on screen.
 
+If a compiled type exposes some required properties, `qmltc` will
+require an initial value for those properties in the constructor for
+the generated object.
+
 Additionally, the constructor for a qmltc object can be provided with
 with a callback to set up initial values for the component's
 properties.

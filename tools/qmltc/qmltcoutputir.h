@@ -115,6 +115,19 @@ struct QmltcPropertyInitializer {
     QList<QmltcMethod> propertySetters;
 };
 
+// Represents a generated class that contains a bundle of values to
+// initialize the required properties of a type.
+//
+// This is generally intended to be available for the root component
+// of the document, where it will be used as a constructor argument to
+// force the user to provide initial values for the required
+// properties of the constructed type.
+struct QmltcRequiredPropertiesBundle {
+    QString name;
+
+    QList<QmltcVariable> members;
+};
+
 // Represents QML -> C++ compiled type
 struct QmltcType
 {
@@ -158,6 +171,8 @@ struct QmltcType
     // A proxy class that provides a restricted interface that only
     // allows setting the properties of the type.
     QmltcPropertyInitializer propertyInitializer{};
+
+    std::optional<QmltcRequiredPropertiesBundle> requiredPropertiesBundle{};
 };
 
 // Represents whole QML program, compiled to C++

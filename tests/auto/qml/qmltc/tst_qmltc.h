@@ -36,6 +36,7 @@ private slots:
     void extensionTypeBindings();
     void visibleAliasMethods(); // QTBUG-103956
     void customInitialization(); // QTBUG-120700
+    void requiredPropertiesInitialization();
     void nonStandardIncludesInsideModule(); // QTBUG-104094
     void specialProperties();
     void regexpBindings();

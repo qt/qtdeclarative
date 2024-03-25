@@ -23,6 +23,137 @@ bool qIsReferenceTypeList(const QQmlJSMetaProperty &p)
     return false;
 }
 
+static QList<QQmlJSMetaProperty> unboundRequiredProperties(
+    const QQmlJSScope::ConstPtr &type,
+    QmltcTypeResolver *resolver
+) {
+    QList<QQmlJSMetaProperty> requiredProperties{};
+
+    auto isPropertyRequired = [&type, &resolver](const auto &property) {
+        if (!type->isPropertyRequired(property.propertyName()))
+            return false;
+
+        if (type->hasPropertyBindings(property.propertyName()))
+            return false;
+
+        if (property.isAlias()) {
+            QQmlJSUtils::AliasResolutionVisitor aliasVisitor;
+
+            QQmlJSUtils::ResolvedAlias result =
+                    QQmlJSUtils::resolveAlias(resolver, property, type, aliasVisitor);
+
+            if (result.kind != QQmlJSUtils::AliasTarget_Property)
+                return false;
+
+            // If the top level alias targets a property that is in
+            // the top level scope and that property is required, then
+            // we will already pick up the property during one of the
+            // iterations.
+            // Setting the property or the alias is the same so we
+            // discard one of the two, as otherwise we would require
+            // the user to pass two values for the same property ,in
+            // this case the alias.
+            //
+            // For example in:
+            //
+            // ```
+            // Item {
+            //   id: self
+            //   required property int foo
+            //   property alias bar: self.foo
+            // }
+            // ```
+            //
+            // Both foo and bar are required but setting one or the
+            // other is the same operation so that we should choose
+            // only one.
+            if (result.owner == type &&
+                type->isPropertyRequired(result.property.propertyName()))
+                return false;
+
+            if (result.owner->hasPropertyBindings(result.property.propertyName()))
+                return false;
+        }
+
+        return true;
+    };
+
+    const auto properties = type->properties();
+    std::copy_if(properties.cbegin(), properties.cend(),
+                    std::back_inserter(requiredProperties), isPropertyRequired);
+    std::sort(requiredProperties.begin(), requiredProperties.end(),
+        [](const auto &left, const auto &right) {
+            return left.propertyName() < right.propertyName();
+    });
+
+    return requiredProperties;
+}
+
+
+// Populates the internal representation for a
+// RequiredPropertiesBundle, a class that acts as a bundle of initial
+// values that should be set for the required properties of a type.
+static void compileRequiredPropertiesBundle(
+    QmltcType &current,
+    const QQmlJSScope::ConstPtr &type,
+    QmltcTypeResolver *resolver
+) {
+
+    QList<QQmlJSMetaProperty> requiredProperties = unboundRequiredProperties(type, resolver);
+
+    if (requiredProperties.isEmpty())
+        return;
+
+    current.requiredPropertiesBundle.emplace();
+    current.requiredPropertiesBundle->name = u"RequiredPropertiesBundle"_s;
+
+    current.requiredPropertiesBundle->members.reserve(requiredProperties.size());
+    std::transform(requiredProperties.cbegin(), requiredProperties.cend(),
+                   std::back_inserter(current.requiredPropertiesBundle->members),
+                   [](const QQmlJSMetaProperty &property) {
+                       QString type = qIsReferenceTypeList(property)
+                               ? u"const QList<%1*>&"_s.arg(
+                                       property.type()->valueType()->internalName())
+                               : u"passByConstRefOrValue<%1>"_s.arg(
+                                       property.type()->augmentedInternalName());
+                       return QmltcVariable{ type, property.propertyName() };
+                   });
+}
+
+static void compileRootExternalConstructorBody(
+    QmltcType& current,
+    const QQmlJSScope::ConstPtr &type
+) {
+    current.externalCtor.body << u"// document root:"_s;
+    // if it's document root, we want to create our QQmltcObjectCreationBase
+    // that would store all the created objects
+    current.externalCtor.body << u"QQmltcObjectCreationBase<%1> objectHolder;"_s.arg(
+            type->internalName());
+    current.externalCtor.body
+            << u"QQmltcObjectCreationHelper creator = objectHolder.view();"_s;
+    current.externalCtor.body << u"creator.set(0, this);"_s; // special case
+
+    QString initializerName = u"initializer"_s;
+    if (current.requiredPropertiesBundle) {
+        // Compose new initializer based on the initial values for required properties.
+        current.externalCtor.body << u"auto newInitializer = [&](auto& propertyInitializer) {"_s;
+        for (const auto& member : current.requiredPropertiesBundle->members) {
+            current.externalCtor.body << u"    propertyInitializer.%1(requiredPropertiesBundle.%2);"_s.arg(
+                QmltcPropertyData(member.name).write, member.name
+            );
+        }
+        current.externalCtor.body << u"    initializer(propertyInitializer);"_s;
+        current.externalCtor.body << u"};"_s;
+
+        initializerName = u"newInitializer"_s;
+    }
+
+    // now call init
+    current.externalCtor.body << current.init.name
+                    + u"(&creator, engine, QQmlContextData::get(engine->rootContext()), /* "
+                        u"endInit */ true, %1);"_s.arg(initializerName);
+};
+
 Q_LOGGING_CATEGORY(lcQmltcCompiler, "qml.qmltc.compiler", QtWarningMsg);
 
 const QString QmltcCodeGenerator::privateEngineName = u"ePriv"_s;
@@ -299,11 +430,22 @@ void QmltcCompiler::compileType(
             u"initializer"_s,
             u"[](%1&){}"_s.arg(current.propertyInitializer.name));
 
-        current.externalCtor.parameterList = { engine, parent, initializer };
         current.init.parameterList = { creator, engine, ctxtdata, finalizeFlag, initializer };
         current.beginClass.parameterList = { creator, finalizeFlag };
         current.completeComponent.parameterList = { creator, finalizeFlag };
         current.finalizeComponent.parameterList = { creator, finalizeFlag };
+
+        compileRequiredPropertiesBundle(current, type, m_typeResolver);
+
+        if (current.requiredPropertiesBundle) {
+            QmltcVariable bundle{
+                u"const %1&"_s.arg(current.requiredPropertiesBundle->name),
+                u"requiredPropertiesBundle"_s,
+            };
+            current.externalCtor.parameterList = { engine, bundle, parent, initializer };
+        } else {
+            current.externalCtor.parameterList = { engine, parent, initializer };
+        }
     } else {
         current.externalCtor.parameterList = { creator, engine, parent };
         current.init.parameterList = { creator, engine, ctxtdata };
@@ -327,18 +469,7 @@ void QmltcCompiler::compileType(
     // compilation stub:
     current.externalCtor.body << u"Q_UNUSED(engine)"_s;
     if (documentRoot || inlineComponent) {
-        current.externalCtor.body << u"// document root:"_s;
-        // if it's document root, we want to create our QQmltcObjectCreationBase
-        // that would store all the created objects
-        current.externalCtor.body << u"QQmltcObjectCreationBase<%1> objectHolder;"_s.arg(
-                type->internalName());
-        current.externalCtor.body
-                << u"QQmltcObjectCreationHelper creator = objectHolder.view();"_s;
-        current.externalCtor.body << u"creator.set(0, this);"_s; // special case
-        // now call init
-        current.externalCtor.body << current.init.name
-                        + u"(&creator, engine, QQmlContextData::get(engine->rootContext()), /* "
-                          u"endInit */ true, initializer);";
+        compileRootExternalConstructorBody(current, type);
     } else {
         current.externalCtor.body << u"// not document root:"_s;
         // just call init, we don't do any setup here otherwise
