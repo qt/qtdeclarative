@@ -1289,11 +1289,14 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
             if (name == u"id")
                 return QQmlLSUtilsExpressionType{ name, owner.value(), QmlObjectIdIdentifier };
 
+
             if (QQmlJSScope::ConstPtr targetScope = findScopeOfSpecialItems(owner.value(), item)) {
-                return QQmlLSUtilsExpressionType{ name, targetScope,
-                                                  resolveNameInQmlScope(name, targetScope)->type };
+                const auto signalOrProperty = resolveNameInQmlScope(name, targetScope);
+                if (!signalOrProperty)
+                    return {};
+                return QQmlLSUtilsExpressionType{ name, targetScope, signalOrProperty->type };
             }
-            auto signalOrProperty = resolveNameInQmlScope(name, owner.value());
+            const auto signalOrProperty = resolveNameInQmlScope(name, owner.value());
             if (signalOrProperty)
                 return QQmlLSUtilsExpressionType{ name, owner.value(), signalOrProperty->type };
 
@@ -1310,6 +1313,8 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
         if (const auto scope = object->semanticScope()) {
             const auto name = item.name();
             const auto resolved = resolveNameInQmlScope(name, scope);
+            if (!resolved)
+                return {};
             switch (options) {
             case ResolveOwnerType:
                 return QQmlLSUtilsExpressionType{name, scope->parentScope(), resolved->type};
@@ -1347,9 +1352,13 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
 
             if (QQmlJSScope::ConstPtr targetScope =
                         findScopeOfSpecialItems(scope.value()->parentScope(), item)) {
+                const auto signalOrProperty = resolveNameInQmlScope(object->name, targetScope);
+                if (!signalOrProperty)
+                    return {};
+
                 return QQmlLSUtilsExpressionType{
                     object->name, targetScope,
-                    resolveNameInQmlScope(object->name, targetScope)->type
+                    signalOrProperty->type
                 };
             }
 
@@ -1380,8 +1389,10 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
         const auto scope = item.qmlObject().semanticScope();
         const auto name = item.field(Fields::value).value().toString();
         if (QQmlJSScope::ConstPtr targetScope = findScopeOfSpecialItems(scope, item)) {
-                return QQmlLSUtilsExpressionType{ name, targetScope,
-                                                  resolveNameInQmlScope(name, targetScope)->type };
+            const auto signalOrProperty = resolveNameInQmlScope(name, targetScope);
+            if (!signalOrProperty)
+                return {};
+            return QQmlLSUtilsExpressionType{ name, targetScope, signalOrProperty->type };
         }
         return {};
     }
