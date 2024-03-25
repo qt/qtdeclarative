@@ -1743,6 +1743,7 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
         return;
 
     // Update selection model
+    QScopedValueRollback callbackGuard(inSelectionModelUpdate, true);
     updateSelection(prevSelection, selection());
 }
 
@@ -1791,6 +1792,7 @@ void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
         return;
 
     // Update selection model
+    QScopedValueRollback callbackGuard(inSelectionModelUpdate, true);
     updateSelection(prevSelection, selection());
 }
 
@@ -1859,14 +1861,22 @@ void QQuickTableViewPrivate::updateSelection(const QRect &oldSelection, const QR
     selectionModel->select(select, QItemSelectionModel::Select);
 }
 
-void QQuickTableViewPrivate::clearSelection()
+void QQuickTableViewPrivate::cancelSelectionTracking()
 {
+    // Cancel any ongoing key/mouse aided selection tracking
     selectionStartCell = QPoint(-1, -1);
     selectionEndCell = QPoint(-1, -1);
     existingSelection.clear();
+    if (selectableCallbackFunction)
+        selectableCallbackFunction(QQuickSelectable::CallBackFlag::CancelSelection);
+}
 
-    if (selectionModel)
-        selectionModel->clearSelection();
+void QQuickTableViewPrivate::clearSelection()
+{
+    if (!selectionModel)
+        return;
+    QScopedValueRollback callbackGuard(inSelectionModelUpdate, true);
+    selectionModel->clearSelection();
 }
 
 void QQuickTableViewPrivate::normalizeSelection()
@@ -2002,6 +2012,11 @@ QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, c
     }
 
     return dist;
+}
+
+void QQuickTableViewPrivate::setCallback(std::function<void (CallBackFlag)> func)
+{
+    selectableCallbackFunction = func;
 }
 
 QQuickTableViewAttached *QQuickTableViewPrivate::getAttachedObject(const QObject *object) const
@@ -4099,10 +4114,11 @@ bool QQuickTableViewPrivate::currentInSelectionModel(const QPoint &cell) const
 
 void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected)
 {
-    if (!selectionModel->hasSelection()) {
-        // Ensure that we cancel any ongoing key/mouse-based selections
-        // if selectionModel.clearSelection() is called.
-        clearSelection();
+    if (!inSelectionModelUpdate) {
+        // The selection model was manipulated outside of TableView
+        // and SelectionRectangle. In that case we cancel any ongoing
+        // selection tracking.
+        cancelSelectionTracking();
     }
 
     const auto &selectedIndexes = selected.indexes();
@@ -4934,8 +4950,10 @@ void QQuickTableViewPrivate::handleTap(const QQuickHandlerPoint &point)
     // the current selection and move the current index instead.
     if (pointerNavigationEnabled) {
         q->closeEditor();
-        if (selectionBehavior != QQuickTableView::SelectionDisabled)
+        if (selectionBehavior != QQuickTableView::SelectionDisabled) {
             clearSelection();
+            cancelSelectionTracking();
+        }
         setCurrentIndexFromTap(point.position());
     }
 }
@@ -5074,6 +5092,8 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
             if (loadedItems.contains(serializedStartIndex)) {
                 const QRectF startGeometry = loadedItems.value(serializedStartIndex)->geometry();
                 setSelectionStartPos(startGeometry.center());
+                if (selectableCallbackFunction)
+                    selectableCallbackFunction(QQuickSelectable::CallBackFlag::SelectionRectangleChanged);
             }
         }
     };
@@ -5086,6 +5106,8 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
             if (loadedItems.contains(serializedEndIndex)) {
                 const QRectF endGeometry = loadedItems.value(serializedEndIndex)->geometry();
                 setSelectionEndPos(endGeometry.center());
+                if (selectableCallbackFunction)
+                    selectableCallbackFunction(QQuickSelectable::CallBackFlag::SelectionRectangleChanged);
             }
         }
         selectionModel->setCurrentIndex(q->modelIndex(cell), QItemSelectionModel::NoUpdate);

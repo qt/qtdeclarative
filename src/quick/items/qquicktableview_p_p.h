@@ -360,6 +360,8 @@ public:
     QPointer<QItemSelectionModel> selectionModel;
     QQuickTableView::SelectionBehavior selectionBehavior = QQuickTableView::SelectCells;
     QQuickTableView::SelectionMode selectionMode = QQuickTableView::ExtendedSelection;
+    std::function<void(CallBackFlag)> selectableCallbackFunction;
+    bool inSelectionModelUpdate = false;
 
     int assignedPositionViewAtRowAfterRebuild = 0;
     int assignedPositionViewAtColumnAfterRebuild = 0;
@@ -587,6 +589,8 @@ public:
     void normalizeSelection() override;
     QRectF selectionRectangle() const override;
     QSizeF scrollTowardsSelectionPoint(const QPointF &pos, const QSizeF &step) override;
+    void setCallback(std::function<void(CallBackFlag)> func) override;
+    void cancelSelectionTracking();
 
     QPoint clampedCellAtPos(const QPointF &pos) const;
     virtual void updateSelection(const QRect &oldSelection, const QRect &newSelection);
