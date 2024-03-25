@@ -54,7 +54,7 @@ private:
     void handleBaseNodeSetup(const QSvgNode *node);
     void handleBaseNode(const QSvgNode *node);
     void handleBaseNodeEnd(const QSvgNode *node);
-    void handlePathNode(const QSvgNode *node, const QPainterPath &path, Qt::PenCapStyle capStyle = Qt::SquareCap);
+    void handlePathNode(const QSvgNode *node, const QPainterPath &path);
     void outputShapePath(QPainterPath pathCopy, const PathNodeInfo &info);
     static QString gradientCssDescription(const QGradient *gradient);
     static QString colorCssDescription(QColor color);

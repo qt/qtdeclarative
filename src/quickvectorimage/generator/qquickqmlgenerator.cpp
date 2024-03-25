@@ -246,7 +246,7 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     Q_UNUSED(pathSelector)
     Q_ASSERT(painterPath || quadPath);
 
-    const bool noPen = info.strokeColor == QColorConstants::Transparent;
+    const bool noPen = info.strokeStyle.color == QColorConstants::Transparent;
     if (pathSelector == QQuickVectorImageGenerator::StrokePath && noPen)
         return;
 
@@ -275,11 +275,17 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     if (noPen || !(pathSelector & QQuickVectorImageGenerator::StrokePath)) {
         stream() << "strokeColor: \"transparent\"";
     } else {
-        stream() << "strokeColor: \"" << info.strokeColor.name(QColor::HexArgb) << "\"";
-        stream() << "strokeWidth: " << info.strokeWidth;
+        stream() << "strokeColor: \"" << info.strokeStyle.color.name(QColor::HexArgb) << "\"";
+        stream() << "strokeWidth: " << info.strokeStyle.width;
+        stream() << "capStyle: " << QQuickVectorImageGenerator::Utils::strokeCapStyleString(info.strokeStyle.lineCapStyle);
+        stream() << "joinStyle: " << QQuickVectorImageGenerator::Utils::strokeJoinStyleString(info.strokeStyle.lineJoinStyle);
+        stream() << "miterLimit: " << info.strokeStyle.miterLimit;
+        if (info.strokeStyle.dashArray.length() != 0) {
+            stream() << "strokeStyle: " << "ShapePath.DashLine";
+            stream() << "dashPattern: " << QQuickVectorImageGenerator::Utils::listString(info.strokeStyle.dashArray);
+            stream() << "dashOffset: " << info.strokeStyle.dashOffset;
+        }
     }
-    if (info.capStyle == Qt::FlatCap)
-        stream() << "capStyle: ShapePath.FlatCap"; //### TODO Add the rest of the styles, as well as join styles etc.
 
     if (!(pathSelector & QQuickVectorImageGenerator::FillPath)) {
         stream() << "fillColor: \"transparent\"";

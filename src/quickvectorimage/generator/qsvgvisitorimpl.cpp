@@ -34,52 +34,6 @@ using namespace Qt::StringLiterals;
 
 Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorImage)
 
-static inline bool isPathContainer(const QSvgStructureNode *node)
-{
-    bool foundPath = false;
-    for (const auto *child : node->renderers()) {
-        switch (child->type()) {
-            // nodes that shouldn't go inside Shape{}
-        case QSvgNode::Switch:
-        case QSvgNode::Doc:
-        case QSvgNode::Group:
-        case QSvgNode::Animation:
-        case QSvgNode::Use:
-        case QSvgNode::Video:
-            //qCDebug(lcQuickVectorGraphics) << "NOT path container because" << node->typeName() ;
-            return false;
-
-            // nodes that could go inside Shape{}
-        case QSvgNode::Defs:
-        case QSvgNode::Image:
-        case QSvgNode::Textarea:
-        case QSvgNode::Text:
-        case QSvgNode::Tspan:
-            break;
-
-            // nodes that are done as pure ShapePath{}
-        case QSvgNode::Rect:
-        case QSvgNode::Circle:
-        case QSvgNode::Ellipse:
-        case QSvgNode::Line:
-        case QSvgNode::Path:
-        case QSvgNode::Polygon:
-        case QSvgNode::Polyline:
-            if (!child->style().transform.isDefault()) {
-                //qCDebug(lcQuickVectorGraphics) << "NOT path container because local transform";
-                return false;
-            }
-            foundPath = true;
-            break;
-        default:
-            qCDebug(lcQuickVectorImage) << "Unhandled type in switch" << child->type();
-            break;
-        }
-    }
-    //qCDebug(lcQuickVectorGraphics) << "Container" << node->nodeId() << node->typeName()  << "is" << foundPath;
-    return foundPath;
-}
-
 class QSvgStyleResolver
 {
 public:
@@ -141,17 +95,6 @@ public:
         return strokeColor;
     }
 
-    qreal currentStrokeOpacity() const
-    {
-        return m_svgState.strokeOpacity;
-    }
-
-    float currentStrokeWidth() const
-    {
-        float penWidth = m_dummyPainter.pen().widthF();
-        return penWidth ? penWidth : 1;
-    }
-
     static QGradient applyOpacityToGradient(const QGradient &gradient, float opacity)
     {
         QGradient grad = gradient;
@@ -166,6 +109,17 @@ public:
         return grad;
     }
 
+    float currentStrokeWidth() const
+    {
+        float penWidth = m_dummyPainter.pen().widthF();
+        return penWidth ? penWidth : 1;
+    }
+
+    QPen currentStroke() const
+    {
+        return m_dummyPainter.pen();
+    }
+
 protected:
     QPainter m_dummyPainter;
     QImage m_dummyImage;
@@ -174,6 +128,67 @@ protected:
 };
 
 Q_GLOBAL_STATIC(QSvgStyleResolver, styleResolver)
+
+namespace {
+inline bool isPathContainer(const QSvgStructureNode *node)
+{
+    bool foundPath = false;
+    for (const auto *child : node->renderers()) {
+        switch (child->type()) {
+            // nodes that shouldn't go inside Shape{}
+        case QSvgNode::Switch:
+        case QSvgNode::Doc:
+        case QSvgNode::Group:
+        case QSvgNode::Animation:
+        case QSvgNode::Use:
+        case QSvgNode::Video:
+            //qCDebug(lcQuickVectorGraphics) << "NOT path container because" << node->typeName() ;
+            return false;
+
+            // nodes that could go inside Shape{}
+        case QSvgNode::Defs:
+        case QSvgNode::Image:
+        case QSvgNode::Textarea:
+        case QSvgNode::Text:
+        case QSvgNode::Tspan:
+            break;
+
+            // nodes that are done as pure ShapePath{}
+        case QSvgNode::Rect:
+        case QSvgNode::Circle:
+        case QSvgNode::Ellipse:
+        case QSvgNode::Line:
+        case QSvgNode::Path:
+        case QSvgNode::Polygon:
+        case QSvgNode::Polyline:
+            if (!child->style().transform.isDefault()) {
+                //qCDebug(lcQuickVectorGraphics) << "NOT path container because local transform";
+                return false;
+            }
+            foundPath = true;
+            break;
+        default:
+            qCDebug(lcQuickVectorImage) << "Unhandled type in switch" << child->type();
+            break;
+        }
+    }
+    //qCDebug(lcQuickVectorGraphics) << "Container" << node->nodeId() << node->typeName()  << "is" << foundPath;
+    return foundPath;
+}
+
+void populateStrokeStyle(StrokeStyle &srokeStyle)
+{
+    QPen p = styleResolver->currentStroke();
+    srokeStyle.lineCapStyle = p.capStyle();
+    srokeStyle.lineJoinStyle = p.joinStyle() == Qt::SvgMiterJoin ? Qt::MiterJoin : p.joinStyle(); //TODO support SvgMiterJoin
+    srokeStyle.miterLimit = p.miterLimit();
+    srokeStyle.dashOffset = p.dashOffset();
+    srokeStyle.dashArray = p.dashPattern();
+    srokeStyle.color = styleResolver->currentStrokeColor();
+    srokeStyle.width = p.widthF();
+}
+
+};
 
 QSvgVisitorImpl::QSvgVisitorImpl(const QString svgFileName, QQuickGenerator *generator)
     : m_svgFileName(svgFileName)
@@ -277,11 +292,10 @@ void QSvgVisitorImpl::visitPathNode(const QSvgPath *node)
 
 void QSvgVisitorImpl::visitLineNode(const QSvgLine *node)
 {
-    // TODO: proper end caps (should be flat by default?)
     QPainterPath p;
     p.moveTo(node->line().p1());
     p.lineTo(node->line().p2());
-    handlePathNode(node, p, Qt::FlatCap);
+    handlePathNode(node, p);
 }
 
 void QSvgVisitorImpl::visitPolygonNode(const QSvgPolygon *node)
@@ -293,7 +307,7 @@ void QSvgVisitorImpl::visitPolygonNode(const QSvgPolygon *node)
 void QSvgVisitorImpl::visitPolylineNode(const QSvgPolyline *node)
 {
     QPainterPath p = QQuickVectorImageGenerator::Utils::polygonToPath(node->polygon(), false);
-    handlePathNode(node, p, Qt::FlatCap);
+    handlePathNode(node, p);
 }
 
 QString QSvgVisitorImpl::gradientCssDescription(const QGradient *gradient)
@@ -526,11 +540,11 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                     info.painterPath = p;
 
                     if (fmt.hasProperty(QTextCharFormat::TextOutline)) {
-                        info.strokeWidth = fmt.textOutline().widthF();
-                        info.strokeColor = fmt.textOutline().color();
+                        info.strokeStyle.width = fmt.textOutline().widthF();
+                        info.strokeStyle.color = fmt.textOutline().color();
                     } else {
-                        info.strokeColor = styleResolver->currentStrokeColor();
-                        info.strokeWidth = styleResolver->currentStrokeWidth();
+                        info.strokeStyle.color = styleResolver->currentStrokeColor();
+                        info.strokeStyle.width = styleResolver->currentStrokeWidth();
                     }
 
                     if (info.grad.type() == QGradient::NoGradient && styleResolver->currentFillGradient() != nullptr)
@@ -738,7 +752,7 @@ void QSvgVisitorImpl::handleBaseNodeEnd(const QSvgNode *node)
 
 }
 
-void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &path, Qt::PenCapStyle capStyle)
+void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &path)
 {
     handleBaseNodeSetup(node);
 
@@ -749,10 +763,8 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
         info.fillRule = fillStyle->fillRule();
 
     info.painterPath = path;
-    info.capStyle = capStyle;
     info.fillColor = styleResolver->currentFillColor();
-    info.strokeColor = styleResolver->currentStrokeColor();
-    info.strokeWidth = styleResolver->currentStrokeWidth();
+    populateStrokeStyle(info.strokeStyle);
     if (styleResolver->currentFillGradient() != nullptr)
         info.grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
 

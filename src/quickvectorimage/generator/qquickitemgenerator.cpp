@@ -123,7 +123,7 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     Q_UNUSED(pathSelector)
     Q_ASSERT(painterPath || quadPath);
 
-    const bool noPen = info.strokeColor == QColorConstants::Transparent;
+    const bool noPen = info.strokeStyle.color == QColorConstants::Transparent;
     if (pathSelector == QQuickVectorImageGenerator::StrokePath && noPen)
         return;
 
@@ -145,11 +145,17 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     if (noPen || !(pathSelector & QQuickVectorImageGenerator::StrokePath)) {
         shapePath->setStrokeColor(Qt::transparent);
     } else {
-        shapePath->setStrokeColor(info.strokeColor);
-        shapePath->setStrokeWidth(info.strokeWidth);
+        shapePath->setStrokeColor(info.strokeStyle.color);
+        shapePath->setStrokeWidth(info.strokeStyle.width);
+        shapePath->setCapStyle(QQuickShapePath::CapStyle(info.strokeStyle.lineCapStyle));
+        shapePath->setJoinStyle(QQuickShapePath::JoinStyle(info.strokeStyle.lineJoinStyle));
+        shapePath->setMiterLimit(info.strokeStyle.miterLimit);
+        if (info.strokeStyle.dashArray.length() != 0) {
+            shapePath->setStrokeStyle(QQuickShapePath::DashLine);
+            shapePath->setDashPattern(info.strokeStyle.dashArray.toVector());
+            shapePath->setDashOffset(info.strokeStyle.dashOffset);
+        }
     }
-
-    shapePath->setCapStyle(QQuickShapePath::CapStyle(info.capStyle));
 
     if (!(pathSelector & QQuickVectorImageGenerator::FillPath))
         shapePath->setFillColor(Qt::transparent);

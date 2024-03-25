@@ -193,6 +193,70 @@ inline QString toSvgString(const QQuadPath &path)
     return svgPathString;
 }
 
+inline QString strokeCapStyleString(Qt::PenCapStyle strokeCapStyle)
+{
+    QString capStyle;
+    switch (strokeCapStyle) {
+    case Qt::FlatCap:
+        capStyle = QStringLiteral("ShapePath.FlatCap");
+        break;
+    case Qt::SquareCap:
+        capStyle = QStringLiteral("ShapePath.SquareCap");
+        break;
+    case Qt::RoundCap:
+        capStyle = QStringLiteral("ShapePath.RoundCap");
+        break;
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+
+    return capStyle;
+}
+
+inline QString strokeJoinStyleString(Qt::PenJoinStyle strokeJoinStyle)
+{
+    QString joinStyle;
+    switch (strokeJoinStyle) {
+    case Qt::MiterJoin:
+        joinStyle = QStringLiteral("ShapePath.MiterJoin");
+        break;
+    case Qt::BevelJoin:
+        joinStyle = QStringLiteral("ShapePath.BevelJoin");
+        break;
+    case Qt::RoundJoin:
+        joinStyle = QStringLiteral("ShapePath.RoundJoin");
+        break;
+    default:
+        //TODO: Add support for SvgMiter case
+        Q_UNREACHABLE();
+        break;
+    }
+
+    return joinStyle;
+}
+
+template<typename T>
+inline QString listString(QList<T> list)
+{
+    if (list.isEmpty())
+        return QStringLiteral("[]");
+
+    QString l;
+    QTextStream stream(&l);
+    stream << "[";
+
+    if (list.length() > 1) {
+        for (int i = 0; i < list.length() - 1; i++) {
+            T v = list[i];
+            stream << v << ", ";
+        }
+    }
+
+    stream << list.last() << "]";
+    return l;
+}
+
 }
 
 QT_END_NAMESPACE

@@ -44,14 +44,23 @@ struct ImageNodeInfo : NodeInfo
     QRectF rect;
 };
 
+struct StrokeStyle
+{
+    Qt::PenCapStyle lineCapStyle = Qt::SquareCap;
+    Qt::PenJoinStyle lineJoinStyle = Qt::MiterJoin;
+    qreal miterLimit = 4;
+    qreal dashOffset = 0;
+    QList<qreal> dashArray;
+    QColor color = QColorConstants::Transparent;
+    qreal width = 1.0;
+};
+
 struct PathNodeInfo : NodeInfo
 {
     QPainterPath painterPath;
     Qt::FillRule fillRule = Qt::FillRule::WindingFill;
-    Qt::PenCapStyle capStyle = Qt::SquareCap;
-    QColor strokeColor;
-    qreal strokeWidth;
     QColor fillColor;
+    StrokeStyle strokeStyle;
     QGradient grad;
 };
 
