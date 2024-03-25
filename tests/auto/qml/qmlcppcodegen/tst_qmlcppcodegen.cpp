@@ -4937,6 +4937,14 @@ void tst_QmlCppCodegen::variantMap()
 
     QCOMPARE(o->objectName(), "a b"_L1);
     QCOMPARE(o->property("r"), QVariant::fromValue(QRectF(12, 13, 14, 15)));
+
+    const QVariantMap expected = QVariantMap {
+        { u"1"_s, QVariant::fromValue<std::nullptr_t>(nullptr) },
+        { u"19"_s, QVariant::fromValue(u"19"_s) },
+        { u"25"_s, QVariant() }
+    };
+
+    QCOMPARE(o->property("v").toMap(), expected);
 }
 
 void tst_QmlCppCodegen::voidConversion()
