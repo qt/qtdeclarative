@@ -1679,6 +1679,7 @@ void tst_qmlls_utils::resolveExpressionType_data()
     QTest::addColumn<QQmlLSUtilsIdentifierType>("expectedType");
 
     const int noLine = -1;
+    const QString noFile;
 
     {
         const QString JSDefinitionsQml = testFile(u"JSDefinitions.qml"_s);
@@ -1711,6 +1712,24 @@ void tst_qmlls_utils::resolveExpressionType_data()
                                       << JSDefinitionsQml << childLine << MethodIdentifier;
         QTest::addRow("parentMethod") << JSDefinitionsQml << 14 << 9 << ResolveOwnerType
                                       << JSDefinitionsQml << parentLine << MethodIdentifier;
+    }
+
+    {
+        const QString bindingsOnDeferredQml =
+                testFile(u"resolveExpressionType/BindingsOnDeferred.qml"_s);
+        const QString qQuickControl = u"private/qquickcontrol_p.h"_s;
+        const QString qQuickKeysAttachedType = u"private/qquickitem_p.h"_s;
+        QTest::addRow("bindingOnId") << bindingsOnDeferredQml << 12 << 14 << ResolveOwnerType
+                                     << bindingsOnDeferredQml << 8 << QmlObjectIdIdentifier;
+        QTest::addRow("bindingOnQualifiedDeferredProperty")
+                << bindingsOnDeferredQml << 12 << 24 << ResolveOwnerType << qQuickControl << noLine
+                << PropertyIdentifier;
+        QTest::addRow("groupedPropertyBindingOnId")
+                << bindingsOnDeferredQml << 14 << 14 << ResolveOwnerType << bindingsOnDeferredQml
+                << 8 << QmlObjectIdIdentifier;
+        QTest::addRow("someDeferredProperty")
+                << bindingsOnDeferredQml << 15 << 22 << ResolveOwnerType << qQuickControl << noLine
+                << PropertyIdentifier;
     }
 
     {
@@ -1786,6 +1805,10 @@ void tst_qmlls_utils::resolveExpressionType_data()
                 << derivedType << 29 << 14 << ResolveOwnerType << qQuickKeysAttachedType << noLine
                 << SignalHandlerIdentifier;
 
+        QTest::addRow("actualTypeOfAttachedProperty")
+                << derivedType << 29 << 14 << ResolveActualTypeForFieldMemberExpression << noFile
+                << noLine << SignalHandlerIdentifier;
+
         QTest::addRow("id")
                 << derivedType << 7 << 10 << ResolveOwnerType << derivedType << 6 << QmlObjectIdIdentifier;
         QTest::addRow("propertyBinding")
@@ -1821,11 +1844,16 @@ void tst_qmlls_utils::resolveExpressionType()
     auto definition = QQmlLSUtils::resolveExpressionType(locations.front().domItem, resolveOption);
 
     QVERIFY(definition);
-    QVERIFY(definition->semanticScope);
-    QCOMPARE(definition->semanticScope->filePath(), expectedFile);
-    if (expectedLine != -1) {
-        QQmlJS::SourceLocation location = definition->semanticScope->sourceLocation();
-        QCOMPARE((int)location.startLine, expectedLine);
+    if (!expectedFile.isEmpty()) {
+        QVERIFY(definition->semanticScope);
+        QCOMPARE(definition->semanticScope->filePath(), expectedFile);
+
+        if (expectedLine != -1) {
+            QQmlJS::SourceLocation location = definition->semanticScope->sourceLocation();
+            QCOMPARE((int)location.startLine, expectedLine);
+        }
+    } else {
+        QVERIFY(!definition->semanticScope);
     }
     QCOMPARE(definition->type, expectedType);
 }

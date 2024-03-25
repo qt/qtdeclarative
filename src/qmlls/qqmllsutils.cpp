@@ -1071,12 +1071,12 @@ methodFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStrin
                                                   findDefiningScopeForMethod(current, name),
                                                   *type };
             case ResolveActualTypeForFieldMemberExpression:
-                // not implemented, but JS functions have methods and properties
-                // see
+                // QQmlJSScopes were not implemented for methods yet, but JS functions have methods
+                // and properties see
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
-                // for the list of properties/methods of functions
+                // for the list of properties/methods of functions. Therefore return a null scope.
                 // see also code below for non-qualified method access
-                return {};
+                return QQmlLSUtilsExpressionType{ name, {}, *type };
             }
         }
 
@@ -1090,7 +1090,7 @@ methodFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStrin
                     };
                 case ResolveActualTypeForFieldMemberExpression:
                     // Properties and methods of JS methods are not supported yet
-                    return {};
+                    return QQmlLSUtilsExpressionType{ name, {}, SignalHandlerIdentifier };
                 }
             }
         }
@@ -1131,58 +1131,67 @@ propertyFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStr
 /*!
 \internal
 See comment on methodFromReferrerScope: the same applies to property bindings.
+
+If resolver is not null then it is used to resolve the id with which a generalized grouped
+properties starts.
 */
 static std::optional<QQmlLSUtilsExpressionType>
 propertyBindingFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QString &name,
-                          QQmlLSUtilsResolveOptions options)
+                                 QQmlLSUtilsResolveOptions options,
+                                 QQmlJSTypeResolver *resolverForIds)
 {
-    if (auto bindings = referrerScope->propertyBindings(name); !bindings.isEmpty()) {
-        const auto binding = bindings.front();
+    auto bindings = referrerScope->propertyBindings(name);
+    if (bindings.isEmpty())
+        return {};
 
-        if ((binding.bindingType() != QQmlSA::BindingType::AttachedProperty) &&
-            (binding.bindingType() != QQmlSA::BindingType::GroupProperty))
+    const auto binding = bindings.front();
+
+    if ((binding.bindingType() != QQmlSA::BindingType::AttachedProperty)
+        && (binding.bindingType() != QQmlSA::BindingType::GroupProperty))
+        return {};
+
+    const bool bindingIsAttached = binding.bindingType() == QQmlSA::BindingType::AttachedProperty;
+
+    // Generalized grouped properties, like Bindings or PropertyChanges, for example, have bindings
+    // starting in an id (like `someId.someProperty: ...`).
+    // If `someid` is not a property and is a deferred name, then it should be an id.
+    if (!bindingIsAttached && !referrerScope->hasProperty(name)
+        && referrerScope->isNameDeferred(name)) {
+        if (!resolverForIds)
             return {};
 
-        const bool bindingIsAttached =
-                binding.bindingType() == QQmlSA::BindingType::AttachedProperty;
+        QQmlJSRegisterContent fromId = resolverForIds->scopedType(referrerScope, name);
+        if (fromId.variant() == QQmlJSRegisterContent::ObjectById)
+            return QQmlLSUtilsExpressionType{ name, fromId.type(), QmlObjectIdIdentifier };
 
-        const auto getTypeIdentifier = [&bindingIsAttached, &referrerScope, &name]{
-            if (bindingIsAttached)
-                return AttachedTypeIdentifier;
-
-            // TODO: QTBUG-123618: you can actually have grouped properties on deferred properties
-            // that are not id's!
-            // If generalized group property, then it is actually an id.
-            if (referrerScope->isNameDeferred(name)) {
-                return QmlObjectIdIdentifier;
-            }
-            return GroupedPropertyIdentifier;
-        };
-
-        const auto getScope = [&bindingIsAttached, &binding]() -> QQmlJSScope::ConstPtr {
-            if (bindingIsAttached)
-                return binding.attachingType();
-
-            return binding.groupType();
-        };
-
-        switch (options) {
-        case ResolveOwnerType: {
-            return QQmlLSUtilsExpressionType{
-                name,
-                // note: always return the type of the attached type as the owner.
-                // Find usages on "Keys.", for example, should yield all usages of the "Keys"
-                // attached property.
-                bindingIsAttached ? getScope() : findDefiningScopeForProperty(referrerScope, name),
-                getTypeIdentifier()
-            };
-        }
-        case ResolveActualTypeForFieldMemberExpression:
-            return QQmlLSUtilsExpressionType{name, getScope(), getTypeIdentifier()};
-        }
+        return QQmlLSUtilsExpressionType{ name, {}, QmlObjectIdIdentifier };
     }
 
-    return {};
+    const auto typeIdentifier =
+            bindingIsAttached ? AttachedTypeIdentifier : GroupedPropertyIdentifier;
+
+    const auto getScope = [&bindingIsAttached, &binding]() -> QQmlJSScope::ConstPtr {
+        if (bindingIsAttached)
+            return binding.attachingType();
+
+        return binding.groupType();
+    };
+
+    switch (options) {
+    case ResolveOwnerType: {
+        return QQmlLSUtilsExpressionType{
+            name,
+            // note: always return the type of the attached type as the owner.
+            // Find usages on "Keys.", for example, should yield all usages of the "Keys"
+            // attached property.
+            bindingIsAttached ? getScope() : findDefiningScopeForProperty(referrerScope, name),
+            typeIdentifier
+        };
+    }
+    case ResolveActualTypeForFieldMemberExpression:
+        return QQmlLSUtilsExpressionType{ name, getScope(), typeIdentifier };
+    }
+    Q_UNREACHABLE_RETURN({});
 }
 
 /*! \internal
@@ -1262,7 +1271,7 @@ resolveFieldMemberExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions 
     if (auto scope = methodFromReferrerScope(owner->semanticScope, name, options))
         return *scope;
 
-    if (auto scope = propertyBindingFromReferrerScope(owner->semanticScope,name, options))
+    if (auto scope = propertyBindingFromReferrerScope(owner->semanticScope, name, options, nullptr))
         return *scope;
 
     if (auto scope = propertyFromReferrerScope(owner->semanticScope, name, options))
@@ -1334,17 +1343,17 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     if (auto scope = methodFromReferrerScope(referrerScope, name, options))
         return scope;
 
+    const auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
+    if (!resolver)
+        return {};
+
     // check if its found as a property binding
-    if (auto scope = propertyBindingFromReferrerScope(referrerScope, name, options))
+    if (auto scope = propertyBindingFromReferrerScope(referrerScope, name, options, resolver.get()))
         return *scope;
 
     // check if its an (unqualified) property
     if (auto scope = propertyFromReferrerScope(referrerScope, name, options))
         return *scope;
-
-    const auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
-    if (!resolver)
-        return {};
 
     // Returns the baseType, can't use it with options.
     if (auto scope = resolver->typeForName(name)) {
