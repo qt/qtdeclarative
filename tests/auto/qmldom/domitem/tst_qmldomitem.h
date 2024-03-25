@@ -3229,6 +3229,92 @@ private slots:
         QVERIFY(success);
     }
 
+    void fileLocationRegions_data()
+    {
+        QTest::addColumn<QString>("filePath");
+        QTest::addColumn<FileLocationRegion>("region");
+        QTest::addColumn<QSet<QQmlJS::SourceLocation>>("expectedLocs");
+
+        QTest::newRow("import") << baseDir + u"/fileLocationRegions/imports.qml"_s << ImportTokenRegion <<
+        QSet {
+            QQmlJS::SourceLocation{112, 6, 4, 1},
+            QQmlJS::SourceLocation{127, 6, 5, 1},
+        };
+        QTest::newRow("importUri") << baseDir + u"/fileLocationRegions/imports.qml"_s << ImportUriRegion <<
+        QSet {
+            QQmlJS::SourceLocation{119, 7, 4, 8},
+            QQmlJS::SourceLocation{152, 16, 6, 8},
+            QQmlJS::SourceLocation{186, 9, 7, 8}
+        };
+        QTest::newRow("asToken") << baseDir + u"/fileLocationRegions/imports.qml"_s << AsTokenRegion <<
+        QSet {
+            QQmlJS::SourceLocation{169, 2, 6, 25}
+        };
+        QTest::newRow("version") << baseDir + u"/fileLocationRegions/imports.qml"_s << VersionRegion <<
+        QSet {
+            QQmlJS::SourceLocation{140, 4, 5, 14}
+        };
+        QTest::newRow("namespace") << baseDir + u"/fileLocationRegions/imports.qml"_s << IdNameRegion <<
+        QSet {
+            QQmlJS::SourceLocation{172, 6, 6, 28}
+        };
+    }
+
+    void fileLocationRegions()
+    {
+        QFETCH(QString, filePath);
+        QFETCH(FileLocationRegion, region);
+        QFETCH(QSet<QQmlJS::SourceLocation>, expectedLocs);
+        auto envPtr = DomEnvironment::create(
+                QStringList(),
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+        QFile f(filePath);
+        QVERIFY(f.open(QIODevice::ReadOnly | QIODevice::Text));
+        QString code = f.readAll();
+        DomItem file;
+        envPtr->loadFile(FileToLoad::fromMemory(envPtr, filePath, code),
+                         [&file](Path, const DomItem &, const DomItem &newIt) {
+                             file = newIt.fileObject();
+                         });
+        envPtr->loadPendingDependencies();
+
+        const auto tree = FileLocations::treeOf(file);
+        using AttachedInfo = AttachedInfoT<FileLocations>;
+        QSet<QQmlJS::SourceLocation> locs;
+        auto visitor = [&](const Path &currentPath, const AttachedInfo::Ptr &attachedInfo){
+            Q_UNUSED(currentPath);
+            const auto regions = attachedInfo->info().regions;
+            if (regions.contains(region)) {
+               locs << regions.value(region);
+            }
+            return true;
+        };
+        AttachedInfo::visitTree(tree, visitor, Path());
+
+        [&] {
+            QVERIFY(locs.contains(expectedLocs));
+        }();
+
+        if (QTest::currentTestFailed()) {
+            qDebug() << "Got:\n";
+            for (auto &x : locs) {
+                qDebug() << "Offset: " << x.offset
+                         << ", Length:" << x.length
+                         << ", Startline: " << x.startLine
+                         << ", StartColumn: " << x.startColumn;
+            }
+            qDebug() << "But expected: \n";
+            for (auto &x : expectedLocs) {
+                qDebug() << "Offset: " << x.offset
+                         << ", Length:" << x.length
+                         << ", Startline: " << x.startLine
+                         << ", StartColumn: " << x.startColumn;
+            }
+        }
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

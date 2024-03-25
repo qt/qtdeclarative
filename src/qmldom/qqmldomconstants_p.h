@@ -389,6 +389,7 @@ enum FileLocationRegion : int {
     ThrowKeywordRegion,
     TryKeywordRegion,
     TypeIdentifierRegion,
+    VersionRegion,
     WhileKeywordRegion,
 };
 Q_ENUM_NS(FileLocationRegion);

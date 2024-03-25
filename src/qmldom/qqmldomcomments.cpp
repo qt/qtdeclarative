@@ -444,6 +444,9 @@ bool AstRangesVisitor::shouldSkipRegion(const DomItem &item, FileLocationRegion 
         return (region == FileLocationRegion::RightBraceRegion
                           || region == FileLocationRegion::LeftBraceRegion);
     }
+    case DomType::Import:
+    case DomType::ImportScope:
+        return region == FileLocationRegion::IdentifierRegion;
     default:
         return false;
     }

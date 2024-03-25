@@ -409,19 +409,21 @@ bool QQmlDomAstCreator::visit(UiImport *el)
     auto envPtr = qmlFile.environment().ownerAs<DomEnvironment>();
     const bool loadDependencies =
             !envPtr->options().testFlag(DomEnvironment::Option::NoDependencies);
+    FileLocations::Tree fileLocation;
     if (el->importUri != nullptr) {
         const Import import =
                 Import::fromUriString(toString(el->importUri), v, el->importId.toString());
-        createMap(DomType::Import, qmlFilePtr->addImport(import), el);
+        fileLocation = createMap(DomType::Import, qmlFilePtr->addImport(import), el);
 
         if (loadDependencies) {
             envPtr->loadModuleDependency(import.uri.moduleUri(), import.version,
                                          DomItem::Callback());
         }
+        FileLocations::addRegion(fileLocation, ImportUriRegion, combineLocations(el->importUri));
     } else {
         const Import import =
                 Import::fromFileString(el->fileName.toString(), el->importId.toString());
-        createMap(DomType::Import, qmlFilePtr->addImport(import), el);
+        fileLocation = createMap(DomType::Import, qmlFilePtr->addImport(import), el);
 
         if (loadDependencies) {
             const QString currentFileDir =
@@ -430,11 +432,26 @@ bool QQmlDomAstCreator::visit(UiImport *el)
                                      envPtr, import.uri.absoluteLocalPath(currentFileDir)),
                              DomItem::Callback(), DomType::QmlDirectory);
         }
+        FileLocations::addRegion(fileLocation, ImportUriRegion, el->fileNameToken);
     }
     if (m_loadFileLazily && loadDependencies) {
         envPtr->loadPendingDependencies();
         envPtr->commitToBase(qmlFile.environment().item());
     }
+
+    if (el->importToken.isValid())
+        FileLocations::addRegion(fileLocation, ImportTokenRegion, el->importToken);
+
+    if (el->asToken.isValid())
+        FileLocations::addRegion(fileLocation, AsTokenRegion, el->asToken);
+
+    if (el->importIdToken.isValid())
+        FileLocations::addRegion(fileLocation, IdNameRegion, el->importIdToken);
+
+    if (el->version)
+        FileLocations::addRegion(fileLocation, VersionRegion, combineLocations(el->version));
+
+
     return true;
 }
 
