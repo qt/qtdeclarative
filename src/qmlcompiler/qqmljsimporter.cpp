@@ -16,8 +16,8 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
-static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qmltypes");
+static const QLatin1String SlashQmldir        = QLatin1String("/qmldir");
+static const QLatin1String PluginsDotQmltypes = QLatin1String("plugins.qmltypes");
 
 
 QQmlJS::Import::Import(QString prefix, QString name, QTypeRevision version, bool isFile,
@@ -168,10 +168,58 @@ QQmlJSImporter::QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFil
 {
 }
 
-QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
+static QString resolvePreferredPath(
+        const QString &qmldirPath, const QString &prefer, QQmlJSResourceFileMapper *mapper)
 {
+    if (prefer.isEmpty())
+        return qmldirPath;
+
+    if (!prefer.endsWith(u'/')) {
+        qWarning() << "Ignoring invalid prefer path" << prefer << "(has to end with slash)";
+        return qmldirPath;
+    }
+
+    if (prefer.startsWith(u':')) {
+        // Resource path: Resolve via resource file mapper if possible.
+        if (!mapper)
+            return qmldirPath;
+
+        Q_ASSERT(prefer.endsWith(u'/'));
+        const auto entry = mapper->entry(
+                QQmlJSResourceFileMapper::resourceFileFilter(prefer.mid(1) + SlashQmldir.mid(1)));
+
+        // This can be empty if the .qrc files does not belong to this module.
+        // In that case we trust the given qmldir file.
+        return entry.filePath.endsWith(SlashQmldir)
+                ? entry.filePath
+                : qmldirPath;
+    }
+
+    // Host file system path. This should be rare. We don't generate it.
+    const QFileInfo f(prefer + SlashQmldir);
+    const QString canonical = f.canonicalFilePath();
+    if (canonical.isEmpty()) {
+        qWarning() << "No qmldir at" << prefer;
+        return qmldirPath;
+    }
+    return canonical;
+}
+
+QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &modulePath)
+{
+    const QString moduleQmldirPath = modulePath + SlashQmldir;
+    auto reader = createQmldirParserForFile(moduleQmldirPath);
+
+    const QString resolvedQmldirPath
+            = resolvePreferredPath(moduleQmldirPath, reader.preferredPath(), m_mapper);
+    if (resolvedQmldirPath != moduleQmldirPath)
+        reader = createQmldirParserForFile(resolvedQmldirPath);
+
+    // Leave the trailing slash
+    Q_ASSERT(resolvedQmldirPath.endsWith(SlashQmldir));
+    QStringView resolvedPath = QStringView(resolvedQmldirPath).chopped(SlashQmldir.size() - 1);
+
     Import result;
-    auto reader = createQmldirParserForFile(path + SlashQmldir);
     result.name = reader.typeNamespace();
 
     result.isStaticModule = reader.isStaticModule();
@@ -182,12 +230,13 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     const auto typeInfos = reader.typeInfos();
     for (const auto &typeInfo : typeInfos) {
         const QString typeInfoPath = QFileInfo(typeInfo).isRelative()
-                ? path + u'/' + typeInfo : typeInfo;
+                ? resolvedPath + typeInfo
+                : typeInfo;
         readQmltypes(typeInfoPath, &result.objects, &result.dependencies);
     }
 
     if (typeInfos.isEmpty() && !reader.plugins().isEmpty()) {
-        const QString defaultTypeInfoPath = path + SlashPluginsDotQmltypes;
+        const QString defaultTypeInfoPath = resolvedPath + PluginsDotQmltypes;
         if (QFile::exists(defaultTypeInfoPath)) {
             m_warnings.append({
                                   QStringLiteral("typeinfo not declared in qmldir file: ")
@@ -202,11 +251,11 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     QHash<QString, QQmlJSExportedScope> qmlComponents;
     const auto components = reader.components();
     for (auto it = components.begin(), end = components.end(); it != end; ++it) {
-        const QString filePath = path + QLatin1Char('/') + it->fileName;
+        const QString filePath = resolvedPath + it->fileName;
         if (!QFile::exists(filePath)) {
             m_warnings.append({
                                   it->fileName + QStringLiteral(" is listed as component in ")
-                                        + path + SlashQmldir
+                                        + resolvedQmldirPath
                                         + QStringLiteral(" but does not exist.\n"),
                                   QtWarningMsg,
                                   QQmlJS::SourceLocation()
@@ -233,7 +282,7 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
 
     const auto scripts = reader.scripts();
     for (const auto &script : scripts) {
-        const QString filePath = path + QLatin1Char('/') + script.fileName;
+        const QString filePath = resolvedPath + script.fileName;
         auto mo = result.scripts.find(script.fileName);
         if (mo == result.scripts.end())
             mo = result.scripts.insert(script.fileName, { localFile2ScopeTree(filePath), {} });

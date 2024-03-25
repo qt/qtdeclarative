@@ -73,6 +73,8 @@ private Q_SLOTS:
     void autoqmltypes();
     void resources();
 
+    void multiDirectory();
+
     void requiredProperty();
 
     void settingsFile();
@@ -446,6 +448,17 @@ void TestQmllint::resources()
         callQmllint(testFile("relPathQrc/Foo/Thing.qml"), true, nullptr, {}, {},
                 { testFile("relPathQrc/resources.qrc") });
     }
+}
+
+void TestQmllint::multiDirectory()
+{
+    callQmllint(
+            testFile("MultiDirectory/qml/Inner.qml"), true, nullptr,
+            {}, {}, { testFile("MultiDirectory/multi.qrc") });
+
+    callQmllint(
+            testFile("MultiDirectory/qml/pages/Page.qml"), true, nullptr,
+            {}, {}, { testFile("MultiDirectory/multi.qrc") });
 }
 
 void TestQmllint::dirtyQmlCode_data()
