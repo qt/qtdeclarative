@@ -1015,10 +1015,11 @@ void QQuickTextEditPrivate::accessibilityActiveChanged(bool active)
         return;
 
     Q_Q(QQuickTextEdit);
-    QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
-    Q_ASSERT(accessibleAttached);
-    accessibleAttached->setRole(effectiveAccessibleRole());
-    accessibleAttached->set_readOnly(q->isReadOnly());
+    if (QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(
+                qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true))) {
+        accessibleAttached->setRole(effectiveAccessibleRole());
+        accessibleAttached->set_readOnly(q->isReadOnly());
+    }
 }
 
 QAccessible::Role QQuickTextEditPrivate::accessibleRole() const
