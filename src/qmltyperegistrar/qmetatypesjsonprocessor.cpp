@@ -156,6 +156,7 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
     QString registrationHelper;
     for (const auto &obj: m_types) {
         const QString className = obj[S_CLASS_NAME].toString();
+        const QString qualifiedClassName = obj[S_QUALIFIED_CLASS_NAME].toString();
         const QString foreignClassName = className + u"Foreign";
         const auto classInfos = obj[S_CLASS_INFOS].toArray();
         QStringList qmlElements;
@@ -191,10 +192,10 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
         const QString spaces = u"    "_s;
         if (isNamespace) {
             registrationHelper += u"\nnamespace "_s + foreignClassName + u"{\n    Q_NAMESPACE\n"_s;
-            registrationHelper += spaces + u"QML_FOREIGN_NAMESPACE(" + className + u")\n"_s;
+            registrationHelper += spaces + u"QML_FOREIGN_NAMESPACE(" + qualifiedClassName + u")\n"_s;
         } else {
             registrationHelper += u"\nstruct "_s + foreignClassName + u"{\n    Q_GADGET\n"_s;
-            registrationHelper += spaces + u"QML_FOREIGN(" + className + u")\n"_s;
+            registrationHelper += spaces + u"QML_FOREIGN(" + qualifiedClassName + u")\n"_s;
         }
         registrationHelper += spaces + qmlElements.join(u"\n"_s) + u"\n"_s;
         if (isSingleton)
