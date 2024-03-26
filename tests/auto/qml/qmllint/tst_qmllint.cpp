@@ -2107,5 +2107,5 @@ void TestQmllint::quickPlugin()
 }
 #endif
 
-QTEST_MAIN(TestQmllint)
+QTEST_GUILESS_MAIN(TestQmllint)
 #include "tst_qmllint.moc"
