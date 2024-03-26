@@ -54,6 +54,10 @@ MainWindow::MainWindow(QWidget *parent)
     setDirList(list);
 
     connect(ui->hsScale, &QAbstractSlider::valueChanged, m_manager, &SvgManager::setScale);
+    connect(ui->hsScale, &QAbstractSlider::valueChanged, m_svgPainter, &SvgPainter::setScale);
+    connect(ui->hsScale, &QAbstractSlider::valueChanged, this, &MainWindow::setScale);
+    int scale = m_settings->value(QStringLiteral("scale"), 10).toInt();
+    ui->hsScale->setValue(scale);
 }
 
 void MainWindow::loadDirectory(const QString &newDir)
@@ -68,6 +72,11 @@ void MainWindow::setDirList(const QStringList &list)
         ui->cbCurrentDir->addItem(dirName);
 
     m_settings->setValue(QStringLiteral("directories"), list.join(QLatin1Char(',')));
+}
+
+void MainWindow::setScale(const int scale)
+{
+    m_settings->setValue(QStringLiteral("scale"), scale);
 }
 
 void MainWindow::updateCurrentDir(const QString &s)

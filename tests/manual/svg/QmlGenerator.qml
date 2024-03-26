@@ -6,8 +6,10 @@ import SvgImageTest
 
 Item {
     id: item
-    width: childrenRect.width
-    height: childrenRect.height
+    width: childrenRect.width * (SvgManager.scale / 10.0)
+    height: childrenRect.height * (SvgManager.scale / 10.0)
+    scale: SvgManager.scale / 10
+    transformOrigin: Item.TopLeft
 
     property var dynamicObject: null
     Connections {

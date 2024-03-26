@@ -18,25 +18,32 @@ class SvgPainter : public QWidget
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
+    Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged)
 public:
     explicit SvgPainter(QWidget *parent = nullptr);
 
     QUrl source() const;
     void setSource(const QUrl &newSource);
 
+    qreal scale() const;
+    void setScale(const qreal scale);
 
 signals:
     void sourceChanged();
+    void scaleChanged();
 
-#ifndef SVGWIDGET
+
 protected:
+#ifndef SVGWIDGET
     QSize sizeHint() const override;
-    void paintEvent(QPaintEvent *) override;
 #endif
+    void paintEvent(QPaintEvent *) override;
+
 
 private:
     QUrl m_source;
     QSize m_size;
+    qreal m_scale;
 };
 
 #endif // SVGPAINTER_H

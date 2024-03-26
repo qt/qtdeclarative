@@ -12,12 +12,13 @@ SvgPainter::SvgPainter(QWidget *parent)
 #else
     : QWidget{parent}
 #endif
+    , m_scale(10)
 {
 #ifndef SVGWIDGET
     connect(this, SIGNAL(sourceChanged()), this, SLOT(update()));
 #endif
 
-    setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+    connect(this, SIGNAL(scaleChanged()), this, SLOT(update()));
 }
 
 QUrl SvgPainter::source() const
@@ -36,14 +37,30 @@ void SvgPainter::setSource(const QUrl &newSource)
     emit sourceChanged();
 }
 
+qreal SvgPainter::scale() const
+{
+    return m_scale;
+}
+
+void SvgPainter::setScale(const qreal scale)
+{
+    if (m_scale == scale)
+        return;
+    m_scale = scale;
+    emit scaleChanged();
+}
+
 #ifndef SVGWIDGET
 QSize SvgPainter::sizeHint() const
 {
-    return !m_source.isEmpty() ? m_size : QSize(1, 1);
+    return !m_source.isEmpty() ? m_size * m_scale / 10.0 : QSize(1, 1);
 }
+#endif
 
-void SvgPainter::paintEvent(QPaintEvent *)
+void SvgPainter::paintEvent(QPaintEvent *event)
 {
+#ifndef SVGWIDGET
+    Q_UNUSED(event)
     if (!m_source.isEmpty()) {
         QPainter p(this);
         p.fillRect(rect(), Qt::white);
@@ -52,8 +69,13 @@ void SvgPainter::paintEvent(QPaintEvent *)
         renderer.setAspectRatioMode(Qt::KeepAspectRatio);
         renderer.render(&p);
         m_size = renderer.defaultSize();
-        setMaximumSize(m_size);
-        setMinimumSize(m_size);
+        setFixedSize(m_size * m_scale / 10.0);
     }
-}
+#else
+    m_size = renderer()->defaultSize();
+    setFixedSize(m_size * m_scale / 10.0);
+    QSvgWidget::paintEvent(event);
 #endif
+
+}
+

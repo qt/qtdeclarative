@@ -34,6 +34,7 @@ private slots:
 private:
     void updateCurrentDir(const QString &newDir);
     void setDirList(const QStringList &list);
+    void setScale(const int scale);
 
     Ui::MainWindow *ui;
     SvgManager *m_manager = nullptr;
