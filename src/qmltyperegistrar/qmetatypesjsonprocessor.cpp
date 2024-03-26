@@ -135,6 +135,7 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
         QString qmlAttached;
         bool isSingleton = false;
         bool isExplicitlyUncreatable = false;
+        bool isNamespace = obj[u"namespace"].toBool();
         for (QJsonValue entry: classInfos) {
             const auto name = entry[u"name"].toString();
             const auto value = entry[u"value"].toString();
@@ -159,8 +160,13 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
         if (qmlElement.isEmpty())
             continue; // no relevant entries found
         const QString spaces = u"    "_s;
-        registrationHelper += u"\nstruct "_s + foreignClassName + u"{\n    Q_GADGET\n"_s;
-        registrationHelper += spaces + u"QML_FOREIGN(" + className + u")\n"_s;
+        if (isNamespace) {
+            registrationHelper += u"\nnamespace "_s + foreignClassName + u"{\n    Q_NAMESPACE\n"_s;
+            registrationHelper += spaces + u"QML_FOREIGN_NAMESPACE(" + className + u")\n"_s;
+        } else {
+            registrationHelper += u"\nstruct "_s + foreignClassName + u"{\n    Q_GADGET\n"_s;
+            registrationHelper += spaces + u"QML_FOREIGN(" + className + u")\n"_s;
+        }
         registrationHelper += spaces + qmlElement + u"\n"_s;
         if (isSingleton)
             registrationHelper += spaces + u"QML_SINGLETON\n"_s;
@@ -172,7 +178,10 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
         }
         if (!qmlAttached.isEmpty())
             registrationHelper += spaces + qmlAttached + u"\n";
-        registrationHelper += u"};\n";
+        registrationHelper += u"}";
+        if (!isNamespace)
+            registrationHelper += u";";
+        registrationHelper += u"\n";
     }
     return registrationHelper;
 }
