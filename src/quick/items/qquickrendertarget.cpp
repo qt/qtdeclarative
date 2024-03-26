@@ -32,6 +32,7 @@ QQuickRenderTargetPrivate::QQuickRenderTargetPrivate(const QQuickRenderTargetPri
       devicePixelRatio(other.devicePixelRatio),
       sampleCount(other.sampleCount),
       u(other.u),
+      customDepthTexture(other.customDepthTexture),
       mirrorVertically(other.mirrorVertically),
       multisampleResolve(other.multisampleResolve)
 {
@@ -159,6 +160,66 @@ void QQuickRenderTarget::setMirrorVertically(bool enable)
 
     detach();
     d->mirrorVertically = enable;
+}
+
+/*!
+    \return the currently set depth texture or, in most cases, \nullptr.
+
+    The value is only non-null when setDepthTexture() was called.
+
+    \since 6.8
+ */
+QRhiTexture *QQuickRenderTarget::depthTexture() const
+{
+    return d->customDepthTexture;
+}
+
+/*!
+    Requests using the given \a texture as the depth or depth-stencil buffer.
+    Ownership of \a texture is not taken.
+
+    The request is only taken into account when relevant. For example, calling
+    this function has no effect with fromRhiRenderTarget(), fromPaintDevice(),
+    or fromOpenGLRenderBuffer().
+
+    Normally a depth-stencil buffer is created automatically, transparently to
+    the user of QQuickRenderTarget. Therefore, there is no need to call this
+    function in most cases when working with QQuickRenderTarget. In special
+    circumstances, it can however become essential to be able to provide a
+    texture to render depth (or depth and stencil) data into, instead of letting
+    Qt Quick create its own intermediate textures or buffers. An example of this
+    is \l{https://www.khronos.org/openxr/}{OpenXR} and its extensions such as
+    \l{https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#XR_KHR_composition_layer_depth}{XR_KHR_composition_layer_depth}.
+    In order to "submit the depth buffer" to the XR compositor, one has to, in
+    practice, retrieve an already created depth (depth-stencil) texture from
+    OpenXR (from the XrSwapchain) and use that texture as the render target for
+    depth data. That would not be possible without this function.
+
+    \note The \a texture is always expected to be a non-multisample 2D texture
+    or texture array (for multiview). If MSAA is involved, the samples are
+    resolved into \a texture at the end of the render pass, regardless of having
+    the MultisampleResolve flag set or not. MSAA is only supported for depth
+    (depth-stencil) textures when the underlying 3D API supports this, and this
+    support is not universally available. See \l{QRhi::ResolveDepthStencil}{the
+    relevant QRhi feature flag} for details. When this is not supported and
+    multisampling is requested in combination with a custom depth texture, \a
+    texture is not going to be touched during rendering and a warning is
+    printed.
+
+    \since 6.8
+
+    \note When it comes to OpenGL and OpenGL ES, using depth textures is not
+    functional on OpenGL ES 2.0 and requires at least OpenGL ES 3.0. Multisample
+    (MSAA) support is not available without at least OpenGL ES 3.1, or OpenGL
+    3.0 on desktop.
+ */
+void QQuickRenderTarget::setDepthTexture(QRhiTexture *texture)
+{
+    if (d->customDepthTexture == texture)
+        return;
+
+    detach();
+    d->customDepthTexture = texture;
 }
 
 /*!
@@ -1225,6 +1286,10 @@ static bool createRhiRenderTarget(QRhiTexture *texture,
                                   QRhi *rhi,
                                   QQuickWindowRenderTarget *dst)
 {
+    // Simple path: no user-supplied depth texture. So create our own
+    // depth-stencil buffer, using renderbuffers (so this is still GLES 2.0
+    // compatible), with MSAA support being GLES 3.0 compatible.
+
     sampleCount = QSGRhiSupport::chooseSampleCount(sampleCount, rhi);
     if (sampleCount <= 1)
         multisampleResolve = false;
@@ -1309,7 +1374,137 @@ static bool createRhiRenderTarget(QRhiTexture *texture,
     return true;
 }
 
+static bool createRhiRenderTargetWithDepthTexture(QRhiTexture *texture,
+                                                  QRhiTexture *depthTexture,
+                                                  const QSize &pixelSize,
+                                                  int sampleCount,
+                                                  bool multisampleResolve,
+                                                  QRhi *rhi,
+                                                  QQuickWindowRenderTarget *dst)
+{
+    // This version takes a user-supplied depthTexture. That texture is always
+    // non-multisample. If sample count is > 1, we still need our own
+    // multisample depth-stencil buffer, and the depth(stencil) data is expected
+    // to be resolved (and written out) to depthTexture, _if_ the underlying API
+    // supports it (see QRhi's ResolveDepthStencil feature). The intermediate,
+    // multisample depth-stencil buffer must be a texture here (not
+    // renderbuffer), specifically for OpenGL ES and its related multisample
+    // extensions.
+
+    sampleCount = QSGRhiSupport::chooseSampleCount(sampleCount, rhi);
+    if (sampleCount <= 1)
+        multisampleResolve = false;
+
+    std::unique_ptr<QRhiTexture> depthStencil;
+    if (dst->implicitBuffers.depthStencilTexture) {
+        if (dst->implicitBuffers.depthStencilTexture->pixelSize() == pixelSize
+            && dst->implicitBuffers.depthStencilTexture->sampleCount() == sampleCount)
+        {
+            depthStencil.reset(dst->implicitBuffers.depthStencilTexture);
+            dst->implicitBuffers.depthStencilTexture = nullptr;
+        }
+    }
+
+    std::unique_ptr<QRhiTexture> colorBuffer;
+    QRhiTexture::Flags multisampleTextureFlags;
+    QRhiTexture::Format multisampleTextureFormat = texture->format();
+    if (multisampleResolve) {
+        multisampleTextureFlags = QRhiTexture::RenderTarget;
+        if (texture->flags().testFlag(QRhiTexture::sRGB))
+            multisampleTextureFlags |= QRhiTexture::sRGB;
+
+        if (dst->implicitBuffers.multisampleTexture) {
+            if (dst->implicitBuffers.multisampleTexture->pixelSize() == pixelSize
+                && dst->implicitBuffers.multisampleTexture->format() == multisampleTextureFormat
+                && dst->implicitBuffers.multisampleTexture->sampleCount() == sampleCount
+                && dst->implicitBuffers.multisampleTexture->flags().testFlags(multisampleTextureFlags))
+            {
+                colorBuffer.reset(dst->implicitBuffers.multisampleTexture);
+                dst->implicitBuffers.multisampleTexture = nullptr;
+            }
+        }
+    }
+
+    dst->implicitBuffers.reset(rhi);
+
+    bool needsDepthStencilBuffer = true;
+    if (sampleCount <= 1) {
+        depthStencil.reset();
+        needsDepthStencilBuffer = false;
+    }
+    if (depthTexture->pixelSize() != pixelSize) {
+        qWarning("Custom depth texture size (%dx%d) does not match the QQuickRenderTarget (%dx%d)",
+                    depthTexture->pixelSize().width(),
+                    depthTexture->pixelSize().height(),
+                    pixelSize.width(),
+                    pixelSize.height());
+        return false;
+    }
+    if (depthTexture->sampleCount() > 1) {
+        qWarning("Custom depth texture cannot be multisample");
+        return false;
+    }
+    if (needsDepthStencilBuffer && !depthStencil) {
+        depthStencil.reset(rhi->newTexture(QRhiTexture::D24S8, pixelSize, sampleCount, QRhiTexture::RenderTarget));
+        depthStencil->setName(QByteArrayLiteral("Depth-stencil texture for QQuickRenderTarget"));
+        if (!depthStencil->create()) {
+            qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
+            return false;
+        }
+    }
+
+    if (multisampleResolve && !colorBuffer) {
+        colorBuffer.reset(rhi->newTexture(multisampleTextureFormat, pixelSize, sampleCount, multisampleTextureFlags));
+        colorBuffer->setName(QByteArrayLiteral("Multisample color buffer for QQuickRenderTarget"));
+        colorBuffer->setWriteViewFormat(texture->writeViewFormat());
+        if (!colorBuffer->create()) {
+            qWarning("Failed to build multisample color buffer for QQuickRenderTarget");
+            return false;
+        }
+    }
+
+    QRhiColorAttachment colorAttachment;
+    if (multisampleResolve) {
+        colorAttachment.setTexture(colorBuffer.get());
+        colorAttachment.setResolveTexture(texture);
+    } else {
+        colorAttachment.setTexture(texture);
+    }
+
+    QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
+    if (sampleCount > 1) {
+        rtDesc.setDepthTexture(depthStencil.get());
+        if (rhi->isFeatureSupported(QRhi::ResolveDepthStencil))
+            rtDesc.setDepthResolveTexture(depthTexture);
+        else
+            qWarning("Depth-stencil resolve is not supported by the underlying 3D API, depth contents will not be resolved");
+    } else {
+        rtDesc.setDepthTexture(depthTexture);
+    }
+
+    std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    rt->setName(QByteArrayLiteral("RT for QQuickRenderTarget"));
+    std::unique_ptr<QRhiRenderPassDescriptor> rp(rt->newCompatibleRenderPassDescriptor());
+    rt->setRenderPassDescriptor(rp.get());
+
+    if (!rt->create()) {
+        qWarning("Failed to build texture render target for QQuickRenderTarget");
+        return false;
+    }
+
+    dst->rt.renderTarget = rt.release();
+    dst->rt.owns = true;
+    dst->res.rpDesc = rp.release();
+    if (depthStencil)
+        dst->implicitBuffers.depthStencilTexture = depthStencil.release();
+    if (multisampleResolve)
+        dst->implicitBuffers.multisampleTexture = colorBuffer.release();
+
+    return true;
+}
+
 static bool createRhiRenderTargetMultiView(QRhiTexture *texture,
+                                           QRhiTexture *maybeCustomDepthTexture,
                                            const QSize &pixelSize,
                                            int arraySize,
                                            int sampleCount,
@@ -1317,6 +1512,11 @@ static bool createRhiRenderTargetMultiView(QRhiTexture *texture,
                                            QRhi *rhi,
                                            QQuickWindowRenderTarget *dst)
 {
+    // Multiview path, working with texture arrays. Optionally with a
+    // user-supplied, non-multisample depth texture (array). (same semantics
+    // then as with createRhiRenderTargetWithDepthTexture, but everything is a
+    // 2D texture array here)
+
     sampleCount = QSGRhiSupport::chooseSampleCount(sampleCount, rhi);
     if (sampleCount <= 1)
         multisampleResolve = false;
@@ -1355,7 +1555,31 @@ static bool createRhiRenderTargetMultiView(QRhiTexture *texture,
 
     dst->implicitBuffers.reset(rhi);
 
-    if (!depthStencil) {
+    bool needsDepthStencilBuffer = true;
+    if (maybeCustomDepthTexture) {
+        if (sampleCount <= 1) {
+            depthStencil.reset();
+            needsDepthStencilBuffer = false;
+        }
+        if (maybeCustomDepthTexture->arraySize() != arraySize) {
+            qWarning("Custom depth texture array size (%d) does not match QQuickRenderTarget (%d)",
+                     maybeCustomDepthTexture->arraySize(), arraySize);
+            return false;
+        }
+        if (maybeCustomDepthTexture->pixelSize() != pixelSize) {
+            qWarning("Custom depth texture size (%dx%d) does not match the QQuickRenderTarget (%dx%d)",
+                     maybeCustomDepthTexture->pixelSize().width(),
+                     maybeCustomDepthTexture->pixelSize().height(),
+                     pixelSize.width(),
+                     pixelSize.height());
+            return false;
+        }
+        if (maybeCustomDepthTexture->sampleCount() > 1) {
+            qWarning("Custom depth texture cannot be multisample");
+            return false;
+        }
+    }
+    if (needsDepthStencilBuffer && !depthStencil) {
         depthStencil.reset(rhi->newTextureArray(QRhiTexture::D24S8, arraySize, pixelSize, sampleCount, QRhiTexture::RenderTarget));
         depthStencil->setName(QByteArrayLiteral("Depth-stencil buffer (multiview) for QQuickRenderTarget"));
         if (!depthStencil->create()) {
@@ -1384,9 +1608,26 @@ static bool createRhiRenderTargetMultiView(QRhiTexture *texture,
     }
 
     QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
-    rtDesc.setDepthTexture(depthStencil.get());
-    std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc,
-                                                                            QRhiTextureRenderTarget::DoNotStoreDepthStencilContents));
+    if (sampleCount > 1) {
+        rtDesc.setDepthTexture(depthStencil.get());
+        if (maybeCustomDepthTexture) {
+            if (rhi->isFeatureSupported(QRhi::ResolveDepthStencil))
+                rtDesc.setDepthResolveTexture(maybeCustomDepthTexture);
+            else
+                qWarning("Depth-stencil resolve is not supported by the underlying 3D API, depth contents will not be resolved");
+        }
+    } else {
+        if (depthStencil)
+            rtDesc.setDepthTexture(depthStencil.get());
+        else if (maybeCustomDepthTexture)
+            rtDesc.setDepthTexture(maybeCustomDepthTexture);
+    }
+
+    QRhiTextureRenderTarget::Flags rtFlags;
+    if (!maybeCustomDepthTexture)
+        rtFlags |= QRhiTextureRenderTarget::DoNotStoreDepthStencilContents;
+
+    std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc, rtFlags));
     rt->setName(QByteArrayLiteral("RT for multiview QQuickRenderTarget"));
     std::unique_ptr<QRhiRenderPassDescriptor> rp(rt->newCompatibleRenderPassDescriptor());
     rt->setRenderPassDescriptor(rp.get());
@@ -1399,7 +1640,8 @@ static bool createRhiRenderTargetMultiView(QRhiTexture *texture,
     dst->rt.renderTarget = rt.release();
     dst->rt.owns = true;
     dst->res.rpDesc = rp.release();
-    dst->implicitBuffers.depthStencilTexture = depthStencil.release();
+    if (depthStencil)
+        dst->implicitBuffers.depthStencilTexture = depthStencil.release();
     if (multisampleResolve)
         dst->implicitBuffers.multisampleTexture = colorBuffer.release();
 
@@ -1435,8 +1677,13 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
             qWarning("Failed to build wrapper texture for QQuickRenderTarget");
             return false;
         }
-        if (!createRhiRenderTarget(texture.get(), pixelSize, sampleCount, multisampleResolve, rhi, dst))
-            return false;
+        if (customDepthTexture) {
+            if (!createRhiRenderTargetWithDepthTexture(texture.get(), customDepthTexture, pixelSize, sampleCount, multisampleResolve, rhi, dst))
+                return false;
+        } else {
+            if (!createRhiRenderTarget(texture.get(), pixelSize, sampleCount, multisampleResolve, rhi, dst))
+                return false;
+        }
         dst->res.texture = texture.release();
     }
         return true;
@@ -1458,7 +1705,7 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
             qWarning("Failed to build wrapper texture array for QQuickRenderTarget");
             return false;
         }
-        if (!createRhiRenderTargetMultiView(texture.get(), pixelSize, arraySize, sampleCount, multisampleResolve, rhi, dst))
+        if (!createRhiRenderTargetMultiView(texture.get(), customDepthTexture, pixelSize, arraySize, sampleCount, multisampleResolve, rhi, dst))
              return false;
         dst->res.texture = texture.release();
     }
@@ -1471,6 +1718,8 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
             qWarning("Failed to build wrapper renderbuffer for QQuickRenderTarget");
             return false;
         }
+        if (customDepthTexture)
+            qWarning("Custom depth texture is not supported with renderbuffers in QQuickRenderTarget");
         if (!createRhiRenderTargetWithRenderBuffer(renderbuffer.get(), pixelSize, sampleCount, rhi, dst))
             return false;
         dst->res.renderBuffer = renderbuffer.release();
@@ -1510,6 +1759,8 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
                 }
             }
         }
+        if (customDepthTexture)
+            qWarning("Custom depth texture is not supported with QRhiRenderTarget in QQuickRenderTarget");
         return true;
 
     case Type::PaintDevice:

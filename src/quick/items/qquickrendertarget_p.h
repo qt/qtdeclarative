@@ -72,6 +72,7 @@ public:
         QPaintDevice *paintDevice;
     } u;
 
+    QRhiTexture *customDepthTexture = nullptr;
     bool mirrorVertically = false;
     bool multisampleResolve = false;
 };

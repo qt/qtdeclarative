@@ -19,6 +19,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickRenderTargetPrivate;
 class QRhiRenderTarget;
+class QRhiTexture;
 class QPaintDevice;
 
 class Q_QUICK_EXPORT QQuickRenderTarget
@@ -41,6 +42,9 @@ public:
 
     bool mirrorVertically() const;
     void setMirrorVertically(bool enable);
+
+    QRhiTexture *depthTexture() const;
+    void setDepthTexture(QRhiTexture *texture);
 
 #if QT_CONFIG(opengl) || defined(Q_QDOC)
     static QQuickRenderTarget fromOpenGLTexture(uint textureId, const QSize &pixelSize, int sampleCount = 1);
