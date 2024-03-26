@@ -16,4 +16,15 @@ namespace Hello {
     Q_ENUM_NS(World)
 }
 
+namespace Universe {
+    namespace Galaxy {
+        Q_NAMESPACE
+        QML_NAMED_ELEMENT(Solar)
+        enum class Solar {
+            Earth,
+        };
+        Q_ENUM_NS(Solar)
+    }
+}
+
 #endif // ENUM_NS_HELLO_H
