@@ -949,21 +949,11 @@ bool QQmlImports::getQmldirContent(
     Q_ASSERT(qmldir);
 
     *qmldir = typeLoader->qmldirContent(qmldirIdentifier);
-    if ((*qmldir).hasContent()) {
-        // Ensure that parsing was successful
-        if ((*qmldir).hasError()) {
-            QUrl url = QUrl::fromLocalFile(qmldirIdentifier);
-            const QList<QQmlError> qmldirErrors = (*qmldir).errors(uri);
-            for (int i = 0; i < qmldirErrors.size(); ++i) {
-                QQmlError error = qmldirErrors.at(i);
-                error.setUrl(url);
-                errors->append(error);
-            }
-            return false;
-        }
-    }
+    if (!qmldir->hasContent() || !qmldir->hasError())
+        return true;
 
-    return true;
+    errors->append(qmldir->errors(uri, QUrl::fromLocalFile(qmldirIdentifier)));
+    return false;
 }
 
 QString QQmlImports::resolvedUri(const QString &dir_arg, QQmlImportDatabase *database)
