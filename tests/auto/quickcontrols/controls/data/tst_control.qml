@@ -467,6 +467,36 @@ TestCase {
     }
 
     Component {
+        id: backgroundTest2
+        Button {
+            id: btn
+            width: 100
+            height: 100
+            topInset: 0
+            objectName: ""
+
+            background: Rectangle {
+                id: bg
+                implicitHeight: 80
+                border.color: "red"
+                y: btn.objectName === "aaa" ? 20 : 0
+            }
+        }
+    }
+
+    // QTBUG-120033: Make sure that the binding for y on the tab button's background doesn't get removed
+    function test_background2() {
+        let button = createTemporaryObject(backgroundTest2, testCase)
+        verify(button)
+
+        verify(button.background.y === 0)
+        button.objectName = "aaa"
+        verify(button.background.y === 20)
+        button.objectName = ""
+        verify(button.background.y === 0)
+    }
+
+    Component {
         id: component2
         T.Control {
             id: item2
