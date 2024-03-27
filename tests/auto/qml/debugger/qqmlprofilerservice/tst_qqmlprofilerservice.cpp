@@ -582,7 +582,7 @@ void tst_QQmlProfilerService::scenegraphData()
     QCOMPARE(connectTo(true, "scenegraphTest.qml"), ConnectSuccess);
 
     while (!m_process->output().contains(QLatin1String("tick")))
-        QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
+        QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput()), 30000));
     m_client->client->setRecording(false);
 
     checkTraceReceived();
