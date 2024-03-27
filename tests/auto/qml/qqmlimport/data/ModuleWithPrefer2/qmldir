@@ -1,0 +1,3 @@
+module ModuleWithPrefer2
+prefer :/qqmlimport/ModuleWithPrefer2/
+Preferred 1.0 Preferred.qml

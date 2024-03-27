@@ -60,6 +60,7 @@ private slots:
     void importDependenciesPrecedence();
     void cleanup();
     void envResourceImportPath();
+    void preferResourcePath_data();
     void preferResourcePath();
     void invalidFileImport_data();
     void invalidFileImport();
@@ -104,12 +105,21 @@ void tst_QQmlImport::envResourceImportPath()
         QVERIFY((importPaths.contains(path.startsWith(u':') ? QLatin1String("qrc") + path : path)));
 }
 
+void tst_QQmlImport::preferResourcePath_data()
+{
+    QTest::addColumn<QUrl>("file");
+    QTest::addRow("without qmldir") << testFileUrl("prefer.qml");
+    QTest::addRow("with qmldir") << testFileUrl("prefer2.qml");
+}
+
 void tst_QQmlImport::preferResourcePath()
 {
+    QFETCH(QUrl, file);
+
     QQmlEngine engine;
     engine.addImportPath(dataDirectory());
 
-    QQmlComponent component(&engine, testFileUrl("prefer.qml"));
+    QQmlComponent component(&engine, file);
     QVERIFY2(component.isReady(), component.errorString().toUtf8());
     QScopedPointer<QObject> o(component.create());
     QCOMPARE(o->objectName(), "right");

@@ -50,6 +50,14 @@ qt_internal_add_resource(tst_qqmlimport "preferred"
         "Preferred.qml"
 )
 
+qt_internal_add_resource(tst_qqmlimport "preferred2"
+    PREFIX
+        "/qqmlimport/ModuleWithPrefer2/"
+    FILES
+        "Preferred.qml"
+        "qmldir"
+)
+
 ## Scopes:
 #####################################################################
 

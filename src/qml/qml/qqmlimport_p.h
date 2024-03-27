@@ -235,6 +235,8 @@ private:
             QQmlTypeLoader *typeLoader, const QString &uri, QTypeRevision version,
             const QQmlTypeLoaderQmldirContent *qmldir, QList<QQmlError> *errors);
 
+    QString redirectQmldirContent(QQmlTypeLoader *typeLoader, QQmlTypeLoaderQmldirContent *qmldir);
+
     bool getQmldirContent(
             QQmlTypeLoader *typeLoader,  const QString &qmldirIdentifier, const QString &uri,
             QQmlTypeLoaderQmldirContent *qmldir, QList<QQmlError> *errors);

@@ -489,18 +489,8 @@ bool QQmlImportInstance::setQmldirContent(const QString &resolvedUrl,
                                           const QQmlTypeLoaderQmldirContent &qmldir,
                                           QQmlImportNamespace *nameSpace, QList<QQmlError> *errors)
 {
-
-    const QString preferredPath = qmldir.preferredPath();
-    if (preferredPath.isEmpty()) {
-        Q_ASSERT(resolvedUrl.endsWith(Slash));
-        url = resolvedUrl;
-    } else {
-        Q_ASSERT(preferredPath.endsWith(Slash));
-        if (preferredPath.startsWith(u':'))
-            url = QStringLiteral("qrc") + preferredPath;
-        else
-            url = QUrl::fromLocalFile(preferredPath).toString();
-    }
+    Q_ASSERT(resolvedUrl.endsWith(Slash));
+    url = resolvedUrl;
 
     qmlDirComponents = qmldir.components();
 
@@ -934,6 +924,23 @@ QTypeRevision QQmlImports::importExtension(
     return importer.importPlugins();
 }
 
+QString QQmlImports::redirectQmldirContent(
+        QQmlTypeLoader *typeLoader, QQmlTypeLoaderQmldirContent *qmldir)
+{
+    const QString preferredPath = qmldir->preferredPath();
+    const QString url = preferredPath.startsWith(u':')
+        ? QStringLiteral("qrc") + preferredPath
+        : QUrl::fromLocalFile(preferredPath).toString();
+
+    QQmlTypeLoaderQmldirContent redirected
+            = typeLoader->qmldirContent(url + QLatin1String("qmldir"));
+
+    // Ignore errors: If the qmldir doesn't exist, stick to the old one.
+    if (redirected.hasContent() && !redirected.hasError())
+        *qmldir = std::move(redirected);
+    return url;
+}
+
 bool QQmlImports::getQmldirContent(
         QQmlTypeLoader *typeLoader, const QString &qmldirIdentifier, const QString &uri,
         QQmlTypeLoaderQmldirContent *qmldir, QList<QQmlError> *errors)
@@ -1181,7 +1188,11 @@ QTypeRevision QQmlImports::addLibraryImport(
                 if (!version.isValid())
                     return QTypeRevision();
 
-                if (!inserted->setQmldirContent(qmldirUrl, qmldir, nameSpace, errors))
+                const QString resolvedUrl = qmldir.hasRedirection()
+                        ? redirectQmldirContent(typeLoader, &qmldir)
+                        : qmldirUrl;
+
+                if (!inserted->setQmldirContent(resolvedUrl, qmldir, nameSpace, errors))
                     return QTypeRevision();
             }
         }
@@ -1360,6 +1371,9 @@ QTypeRevision QQmlImports::addFileImport(
             if (!version.isValid())
                 return QTypeRevision();
 
+            if (qmldir.hasRedirection())
+                url = redirectQmldirContent(typeLoader, &qmldir);
+
             if (!inserted->setQmldirContent(url, qmldir, nameSpace, errors))
                 return QTypeRevision();
 
@@ -1399,7 +1413,11 @@ QTypeRevision QQmlImports::updateQmldirContent(
             if (!version.isValid())
                 return QTypeRevision();
 
-            if (import->setQmldirContent(qmldirUrl, qmldir, nameSpace, errors)) {
+            const QString resolvedUrl = qmldir.hasRedirection()
+                    ? redirectQmldirContent(typeLoader, &qmldir)
+                    : qmldirUrl;
+
+            if (import->setQmldirContent(resolvedUrl, qmldir, nameSpace, errors)) {
                 if (import->qmlDirComponents.isEmpty() && import->qmlDirScripts.isEmpty()) {
                     // The implicit import qmldir can be empty, and plugins have no extra versions
                     if (uri != QLatin1String(".") && !QQmlMetaType::matchingModuleVersion(uri, version).isValid()) {
