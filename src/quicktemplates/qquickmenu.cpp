@@ -313,10 +313,20 @@ bool QQuickMenuPrivate::createNativeMenu()
     if (!handle)
         return false;
 
-    q->connect(handle.get(), &QPlatformMenu::aboutToShow, q, &QQuickPopup::aboutToShow);
-    q->connect(handle.get(), &QPlatformMenu::aboutToHide, q, [this](){
+    q->connect(handle.get(), &QPlatformMenu::aboutToShow, q, [q, this](){
+        emit q->aboutToShow();
+        visible = true;
+        emit q->visibleChanged();
+        emit q->openedChanged();
+        opened();
+    });
+    q->connect(handle.get(), &QPlatformMenu::aboutToHide, q, [q, this](){
         qCDebug(lcNativeMenus) << "QPlatformMenu::aboutToHide called; about to call setVisible(false) on Menu";
-        q_func()->setVisible(false);
+        emit q->aboutToHide();
+        visible = false;
+        emit q->visibleChanged();
+        emit q->openedChanged();
+        emit q->closed();
     });
 
     recursivelyCreateNativeMenuItems(q);
