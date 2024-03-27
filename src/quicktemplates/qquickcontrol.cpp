@@ -335,12 +335,22 @@ void QQuickControlPrivate::resizeBackground()
     bool changeHeight = false;
     if (((!p->widthValid() || !extra.isAllocated() || !extra->hasBackgroundWidth) && qFuzzyIsNull(background->x()))
             || (extra.isAllocated() && (extra->hasLeftInset || extra->hasRightInset))) {
-        background->setX(getLeftInset());
+        const auto leftInset = getLeftInset();
+        if (!qt_is_nan(leftInset) && p->x.valueBypassingBindings() != leftInset) {
+            // We bypass the binding here to prevent it from being removed
+            p->x.setValueBypassingBindings(leftInset);
+            p->dirty(DirtyType::Position);
+        }
         changeWidth = !p->width.hasBinding();
     }
     if (((!p->heightValid() || !extra.isAllocated() || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
             || (extra.isAllocated() && (extra->hasTopInset || extra->hasBottomInset))) {
-        background->setY(getTopInset());
+        const auto topInset = getTopInset();
+        if (!qt_is_nan(topInset) && p->y.valueBypassingBindings() != topInset) {
+            // We bypass the binding here to prevent it from being removed
+            p->y.setValueBypassingBindings(topInset);
+            p->dirty(DirtyType::Position);
+        }
         changeHeight = !p->height.hasBinding();
     }
     if (changeHeight || changeWidth) {
