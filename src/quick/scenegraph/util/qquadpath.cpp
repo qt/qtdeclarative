@@ -611,7 +611,7 @@ QRectF QQuadPath::controlPointRect() const
 int QQuadPath::elementCountRecursive() const
 {
     int count = 0;
-    iterateElements([&](const QQuadPath::Element &) { count++; });
+    iterateElements([&](const QQuadPath::Element &, int) { count++; });
     return count;
 }
 
@@ -704,7 +704,7 @@ QQuadPath QQuadPath::flattened() const
 {
     QQuadPath res;
     res.reserve(elementCountRecursive());
-    iterateElements([&](const QQuadPath::Element &element) { res.m_elements.append(element); });
+    iterateElements([&](const QQuadPath::Element &elem, int) { res.m_elements.append(elem); });
     res.setPathHints(pathHints());
     res.setFillRule(fillRule());
     return res;
@@ -941,7 +941,7 @@ QDebug operator<<(QDebug stream, const QQuadPath &path)
            << path.elementCountRecursive() << " leaf elements, "
            << (path.fillRule() == Qt::OddEvenFill ? "OddEven" : "Winding") << Qt::endl;
     int count = 0;
-    path.iterateElements([&](const QQuadPath::Element &e) {
+    path.iterateElements([&](const QQuadPath::Element &e, int) {
         stream << " " << count++ << (e.isSubpathStart() ? " >" : " ");
         printElement(stream, e);
         stream << Qt::endl;

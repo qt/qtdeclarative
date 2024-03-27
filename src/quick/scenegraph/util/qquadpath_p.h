@@ -248,7 +248,7 @@ public:
             if (c.childCount() > 0)
                 iterateChildrenOf(c, lambda);
             else
-                lambda(c);
+                lambda(c, -(i + 1));
         }
     }
 
@@ -261,29 +261,31 @@ public:
             if (c.childCount() > 0)
                 iterateChildrenOf(c, lambda);
             else
-                lambda(c);
+                lambda(c, -(i + 1));
         }
     }
 
     template<typename Func>
     void iterateElements(Func &&lambda)
     {
-        for (auto &e : m_elements) {
+        for (int i = 0; i < m_elements.size(); i++) {
+            Element &e = m_elements[i];
             if (e.childCount() > 0)
                 iterateChildrenOf(e, lambda);
             else
-                lambda(e);
+                lambda(e, i);
         }
     }
 
     template<typename Func>
     void iterateElements(Func &&lambda) const
     {
-        for (auto &e : m_elements) {
+        for (int i = 0; i < m_elements.size(); i++) {
+            const Element &e = m_elements[i];
             if (e.childCount() > 0)
                 iterateChildrenOf(e, lambda);
             else
-                lambda(e);
+                lambda(e, i);
         }
     }
 
