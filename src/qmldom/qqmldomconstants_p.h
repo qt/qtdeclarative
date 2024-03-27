@@ -354,6 +354,7 @@ enum FileLocationRegion : int {
     EllipsisTokenRegion,
     ElseKeywordRegion,
     EnumKeywordRegion,
+    EnumValueRegion,
     EqualTokenRegion,
     ForKeywordRegion,
     FinallyKeywordRegion,

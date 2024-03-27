@@ -3302,6 +3302,22 @@ private slots:
                          QQmlJS::SourceLocation{ 195, 8, 6, 35 },
                          QQmlJS::SourceLocation{ 230, 4, 7, 27 },
                          QQmlJS::SourceLocation{ 235, 11, 7, 32 }};
+
+        QTest::newRow("enum-keyword")
+                << baseDir + u"/fileLocationRegions/enums.qml"_s << EnumKeywordRegion
+                << QSet{ QQmlJS::SourceLocation{ 139, 4, 7, 5 }};
+        QTest::newRow("enum-id")
+                << baseDir + u"/fileLocationRegions/enums.qml"_s << IdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 144, 3, 7, 10 }};
+        QTest::newRow("enum-member")
+                << baseDir + u"/fileLocationRegions/enums.qml"_s << IdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 158, 3, 8, 9 },
+                         QQmlJS::SourceLocation{ 175, 3, 9, 9 },
+                        QQmlJS::SourceLocation{ 188, 3, 10, 9 }};
+        QTest::newRow("enum-value")
+                << baseDir + u"/fileLocationRegions/enums.qml"_s << EnumValueRegion
+                << QSet{ QQmlJS::SourceLocation{ 164, 1, 8, 15 },
+                         QQmlJS::SourceLocation{ 194, 2, 10, 15 }};
     }
 
     void fileLocationRegions()
