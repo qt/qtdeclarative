@@ -57,6 +57,7 @@ private:
     void handlePathNode(const QSvgNode *node, const QPainterPath &path, Qt::PenCapStyle capStyle = Qt::SquareCap);
     void outputShapePath(QPainterPath pathCopy, const PathNodeInfo &info);
     static QString gradientCssDescription(const QGradient *gradient);
+    static QString colorCssDescription(QColor color);
 
 private:
     QString m_svgFileName;

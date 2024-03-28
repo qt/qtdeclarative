@@ -49,9 +49,9 @@ struct PathNodeInfo : NodeInfo
     QPainterPath painterPath;
     Qt::FillRule fillRule = Qt::FillRule::WindingFill;
     Qt::PenCapStyle capStyle = Qt::SquareCap;
-    QString strokeColor;
+    QColor strokeColor;
     qreal strokeWidth;
-    QString fillColor;
+    QColor fillColor;
     QGradient grad;
 };
 
@@ -64,8 +64,8 @@ struct TextNodeInfo : NodeInfo
     QString text;
     QFont font;
     Qt::Alignment alignment;
-    QString color;
-    QString strokeColor;
+    QColor fillColor;
+    QColor strokeColor;
 };
 
 enum class StructureNodeStage
