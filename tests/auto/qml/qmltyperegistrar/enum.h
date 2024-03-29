@@ -25,6 +25,16 @@ namespace Universe {
         };
         Q_ENUM_NS(Solar)
     }
+
+    class Blackhole {
+        Q_GADGET
+        QML_ELEMENT
+        public:
+        enum SagittariusA {
+            Singularity
+        };
+        Q_ENUM(SagittariusA)
+    };
 }
 
 #endif // ENUM_NS_HELLO_H
