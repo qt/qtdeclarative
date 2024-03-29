@@ -208,7 +208,7 @@ Item {
         }
 
         function test_flowLeftToRightDefaultPositions() {
-            ignoreWarning("QGridLayoutEngine::addItem: Cell (1, 0) already taken");
+            ignoreWarning(/QGridLayoutEngine::addItem: Can't add .* at cell \(1, 0\) because it's already taken by .*/);
             var layout = createTemporaryObject(layout_flowLeftToRightDefaultPositions_Component, container);
             compare(layout.implicitWidth, 40);
             compare(layout.children[0].x, 0);

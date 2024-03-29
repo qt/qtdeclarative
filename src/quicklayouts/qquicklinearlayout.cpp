@@ -811,6 +811,7 @@ void QQuickGridLayout::insertLayoutItems()
             layoutItem->setStretchFactor(hStretch, Qt::Horizontal);
         if (vStretch >= 0)
             layoutItem->setStretchFactor(vStretch, Qt::Vertical);
+
         d->engine.insertItem(layoutItem, -1);
     }
 }
