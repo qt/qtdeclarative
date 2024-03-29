@@ -313,7 +313,7 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
                 newProperty.setIsWritable(targetProperty.isWritable());
                 newProperty.setIsPointer(targetProperty.isPointer());
 
-                if (!typeScope.isNull()) {
+                if (!typeScope.isNull() && !object->isPropertyLocallyRequired(property.propertyName())) {
                     object->setPropertyLocallyRequired(
                             newProperty.propertyName(),
                             typeScope->isPropertyRequired(targetProperty.propertyName()));

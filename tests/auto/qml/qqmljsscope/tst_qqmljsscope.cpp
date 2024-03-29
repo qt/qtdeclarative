@@ -92,6 +92,7 @@ private Q_SLOTS:
     void signalCreationDifferences();
     void allTypesAvailable();
     void shadowing();
+    void requiredAlias();
 
 #ifdef LABS_QML_MODELS_PRESENT
     void componentWrappedObjects();
@@ -237,6 +238,16 @@ void tst_qqmljsscope::shadowing()
 
     QCOMPARE(methods[u"method_not_shadowed"_s].parameterNames().size(), 1);
     QCOMPARE(methods[u"method_shadowed"_s].parameterNames().size(), 0);
+}
+
+void tst_qqmljsscope::requiredAlias()
+{
+    QQmlJSScope::ConstPtr root = run(u"requiredAlias.qml"_s);
+    QVERIFY(root);
+
+    // Check whether aliases marked as required are required
+    QVERIFY(root->isPropertyRequired("sameScopeAlias"));
+    QVERIFY(root->isPropertyRequired("innerScopeAlias"));
 }
 
 #ifdef LABS_QML_MODELS_PRESENT
