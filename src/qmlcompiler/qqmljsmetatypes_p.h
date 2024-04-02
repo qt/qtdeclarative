@@ -221,6 +221,9 @@ public:
     QString methodName() const { return m_name; }
     void setMethodName(const QString &name) { m_name = name; }
 
+    QQmlJS::SourceLocation sourceLocation() const { return m_sourceLocation; }
+    void setSourceLocation(QQmlJS::SourceLocation location) { m_sourceLocation = location; }
+
     QQmlJSMetaReturnType returnValue() const { return m_returnType; }
     void setReturnValue(const QQmlJSMetaReturnType returnValue) { m_returnType = returnValue; }
     QString returnTypeName() const { return m_returnType.typeName(); }
@@ -337,6 +340,8 @@ public:
 
 private:
     QString m_name;
+
+    QQmlJS::SourceLocation m_sourceLocation;
 
     QQmlJSMetaReturnType m_returnType;
     QList<QQmlJSMetaParameter> m_parameters;

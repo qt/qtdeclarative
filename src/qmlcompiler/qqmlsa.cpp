@@ -314,6 +314,11 @@ QString MethodPrivate::methodName() const
     return m_method.methodName();
 }
 
+QQmlSA::SourceLocation MethodPrivate::sourceLocation() const
+{
+    return QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(m_method.sourceLocation());
+}
+
 MethodType MethodPrivate::methodType() const
 {
     return m_method.methodType();
@@ -374,6 +379,15 @@ MethodType Method::methodType() const
 {
     Q_D(const Method);
     return d->methodType();
+}
+
+/*!
+    Returns the location in the QML code where this method is defined.
+ */
+QQmlSA::SourceLocation Method::sourceLocation() const
+{
+    Q_D(const Method);
+    return d->sourceLocation();
 }
 
 bool Method::operatorEqualsImpl(const Method &lhs, const Method &rhs)

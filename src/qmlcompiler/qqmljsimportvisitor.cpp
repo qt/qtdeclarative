@@ -1590,6 +1590,8 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         QQmlJSMetaMethod method;
         method.setMethodType(QQmlJSMetaMethodType::Signal);
         method.setMethodName(publicMember->name.toString());
+        method.setSourceLocation(combine(publicMember->firstSourceLocation(),
+                                         publicMember->lastSourceLocation()));
         while (param) {
             method.addParameter(
                     QQmlJSMetaParameter(
@@ -1725,6 +1727,7 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
     if (!name.isEmpty()) {
         QQmlJSMetaMethod method(name);
         method.setMethodType(QQmlJSMetaMethodType::Method);
+        method.setSourceLocation(combine(fexpr->firstSourceLocation(), fexpr->lastSourceLocation()));
 
         if (!m_pendingMethodAnnotations.isEmpty()) {
             method.setAnnotations(m_pendingMethodAnnotations);

@@ -114,6 +114,7 @@ private Q_SLOTS:
     void attachedTypeResolution();
     void builtinTypeResolution_data();
     void builtinTypeResolution();
+    void methodAndSignalSourceLocation();
 
 public:
     tst_qqmljsscope()
@@ -927,6 +928,35 @@ void tst_qqmljsscope::builtinTypeResolution()
     TestPass pass{ manager.get() };
     auto element = pass.resolveBuiltinType(typeName);
     QCOMPARE(element.isNull(), !valid);
+}
+
+void tst_qqmljsscope::methodAndSignalSourceLocation()
+{
+    QmlIR::Document document(false);
+    auto jsscope = run(u"methodAndSignalSourceLocation.qml"_s, false);
+
+    std::array<std::array<int, 9>, 2> offsetsByLineEnding = {
+        std::array{ 29, 51, 74, 102, 128, 160, 219, 235, 257 }, // 1 char line endings
+        std::array{ 32, 55, 79, 108, 135, 168, 231, 248, 271 }  // 2 char line endinds
+    };
+
+    // Try to detect the size of line endings as they lead to different source locations
+    auto offset1 = jsscope->methods("f1")[0].sourceLocation().offset;
+    QVERIFY(offset1 == 29 || offset1 == 32);
+    bool oneCharEndings = offset1 == 29;
+    std::array<int, 9> &offsets = oneCharEndings ? offsetsByLineEnding[0] : offsetsByLineEnding[1];
+
+    using namespace QQmlJS;
+    QCOMPARE(jsscope->methods("f1")[0].sourceLocation(), SourceLocation(offsets[0], 17, 4, 5));
+    QCOMPARE(jsscope->methods("f2")[0].sourceLocation(), SourceLocation(offsets[1], 18, 5, 5));
+    QCOMPARE(jsscope->methods("f3")[0].sourceLocation(), SourceLocation(offsets[2], 23, 6, 5));
+    QCOMPARE(jsscope->methods("f4")[0].sourceLocation(), SourceLocation(offsets[3], 21, 7, 5));
+    QCOMPARE(jsscope->methods("f5")[0].sourceLocation(), SourceLocation(offsets[4], 27, 8, 5));
+    QCOMPARE(jsscope->methods("f6")[0].sourceLocation(), SourceLocation(offsets[5], oneCharEndings ? 53 : 55, 9, 5));
+
+    QCOMPARE(jsscope->methods("s1")[0].sourceLocation(), SourceLocation(offsets[6], 11, 13, 5));
+    QCOMPARE(jsscope->methods("s2")[0].sourceLocation(), SourceLocation(offsets[7], 17, 14, 5));
+    QCOMPARE(jsscope->methods("s3")[0].sourceLocation(), SourceLocation(offsets[8], 28, 15, 5));
 }
 
 QTEST_MAIN(tst_qqmljsscope)

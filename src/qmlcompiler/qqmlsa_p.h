@@ -121,6 +121,7 @@ public:
     MethodPrivate(Method *, const MethodPrivate &);
 
     QString methodName() const;
+    QQmlSA::SourceLocation sourceLocation() const;
     MethodType methodType() const;
 
     static QQmlSA::Method createMethod(const QQmlJSMetaMethod &);
