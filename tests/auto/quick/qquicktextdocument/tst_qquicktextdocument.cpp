@@ -202,22 +202,22 @@ void tst_qquicktextdocument::sourceAndSave_data()
     QTest::addColumn<QQuickTextEdit::TextFormat>("textFormat");
     QTest::addColumn<QString>("source");
     QTest::addColumn<std::optional<QStringConverter::Encoding>>("expectedEncoding");
-    QTest::addColumn<QQuickTextEdit::TextFormat>("expectedTextFormat");
+    QTest::addColumn<Qt::TextFormat>("expectedTextFormat");
     QTest::addColumn<int>("minCharCount");
     QTest::addColumn<QString>("expectedPlainText");
 
     const std::optional<QStringConverter::Encoding> nullEnc;
 
     QTest::newRow("plain") << QQuickTextEdit::PlainText << "hello.txt"
-        << nullEnc << QQuickTextEdit::PlainText << 15 << u"Γειά σου Κόσμε!"_s;
+        << nullEnc << Qt::PlainText << 15 << u"Γειά σου Κόσμε!"_s;
     QTest::newRow("markdown") << QQuickTextEdit::MarkdownText << "hello.md"
-        << nullEnc << QQuickTextEdit::MarkdownText << 15 << u"Γειά σου Κόσμε!"_s;
+        << nullEnc << Qt::MarkdownText << 15 << u"Γειά σου Κόσμε!"_s;
     QTest::newRow("html") << QQuickTextEdit::RichText << "hello.html"
         << std::optional<QStringConverter::Encoding>(QStringConverter::Utf8)
-        << QQuickTextEdit::RichText << 15 << u"Γειά σου Κόσμε!"_s;
+        << Qt::RichText << 15 << u"Γειά σου Κόσμε!"_s;
     QTest::newRow("html-utf16be") << QQuickTextEdit::AutoText << "hello-utf16be.html"
         << std::optional<QStringConverter::Encoding>(QStringConverter::Utf16BE)
-        << QQuickTextEdit::RichText << 15 << u"Γειά σου Κόσμε!"_s;
+        << Qt::RichText << 15 << u"Γειά σου Κόσμε!"_s;
 }
 
 void tst_qquicktextdocument::sourceAndSave()
@@ -225,7 +225,7 @@ void tst_qquicktextdocument::sourceAndSave()
     QFETCH(QQuickTextEdit::TextFormat, textFormat);
     QFETCH(QString, source);
     QFETCH(std::optional<QStringConverter::Encoding>, expectedEncoding);
-    QFETCH(QQuickTextEdit::TextFormat, expectedTextFormat);
+    QFETCH(Qt::TextFormat, expectedTextFormat);
     QFETCH(int, minCharCount);
     QFETCH(QString, expectedPlainText);
 
