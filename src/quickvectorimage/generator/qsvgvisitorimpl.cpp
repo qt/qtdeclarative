@@ -440,9 +440,8 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     if (font.pixelSize() <= 0 && font.pointSize() > 0)
         font.setPixelSize(font.pointSize()); // Pixel size stored as point size by SVG parser
 
+#ifndef QT_NO_TEXTHTMLPARSER
     if (needsPathNode) {
-        QPainterPath path;
-
         QTextDocument document;
         document.setHtml(text);
         if (isTextArea && node->size().width() > 0)
@@ -455,8 +454,6 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
             QTextLayout *lout = block.layout();
 
             if (lout != nullptr) {
-                QTextCharFormat currentFormat;
-
                 auto addPathForFormat = [&](QPainterPath p, QTextCharFormat fmt) {
                     PathNodeInfo info;
                     fillCommonNodeInfo(node, info);
@@ -533,7 +530,9 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 
             block = block.next();
         }
-    } else {
+    } else
+#endif
+    {
         TextNodeInfo info;
         fillCommonNodeInfo(node, info);
 
