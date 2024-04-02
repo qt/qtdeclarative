@@ -841,7 +841,7 @@ QQuadPath QQuadPath::dashed(qreal lineWidth, const QList<qreal> &dashPattern, qr
     for (float dashLength : pattern) {
         if (dashLength > startOffset)
             break;
-        startIndex++;
+        startIndex = (startIndex + 1) % pattern.size(); // The % guards against accuracy issues
         startOffset -= dashLength;
     }
 
