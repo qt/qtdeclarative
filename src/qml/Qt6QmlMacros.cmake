@@ -30,8 +30,6 @@ function(qt6_add_qml_module target)
         NO_CACHEGEN
         NO_RESOURCE_TARGET_PATH
         NO_IMPORT_SCAN
-        # TODO: Remove once all usages have also been removed
-        SKIP_TYPE_REGISTRATION
         ENABLE_TYPE_COMPILER
 
         # Used to mark modules as having static side effects (i.e. if they install an image provider)
@@ -109,12 +107,6 @@ function(qt6_add_qml_module target)
             "INSTALL_LOCATION will be ignored. This function does not handle "
             "installation, please update your project to install the target "
             "directly."
-        )
-    endif()
-
-    if(arg_SKIP_TYPE_REGISTRATION)
-        message(AUTHOR_WARNING
-            "SKIP_TYPE_REGISTRATION is no longer used and will be ignored."
         )
     endif()
 
