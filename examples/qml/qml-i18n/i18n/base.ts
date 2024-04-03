@@ -2,9 +2,9 @@
 <!DOCTYPE TS>
 <TS version="2.1" sourcelanguage="en">
 <context>
-    <name>qml-i18n</name>
+    <name>Main</name>
     <message>
-        <location filename="../qml-i18n.qml" line="68"/>
+        <location filename="../Main.qml" line="21"/>
         <source>Hello</source>
         <translation type="unfinished"></translation>
     </message>
