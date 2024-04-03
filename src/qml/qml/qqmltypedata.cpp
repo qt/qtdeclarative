@@ -196,6 +196,20 @@ void QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::setObjectId(
 }
 
 template<>
+void QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::resolveGeneralizedGroupProperty(
+        const CompiledObject &component, CompiledBinding *binding)
+{
+    // We cannot make it fail here. It might be a custom-parsed property
+    for (int i = 0, count = component.namedObjectsInComponentCount(); i < count; ++i) {
+        const int candidateIndex = component.namedObjectsInComponentTable()[i];
+        if (m_compiler->objectAt(candidateIndex)->idNameIndex == binding->propertyNameIndex) {
+            m_propertyCaches->set(binding->value.objectIndex, m_propertyCaches->at(candidateIndex));
+            return;
+        }
+    }
+}
+
+template<>
 typename QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::AliasResolutionResult
 QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::resolveAliasesInObject(
         const CompiledObject &component, int objectIndex, QQmlError *error)

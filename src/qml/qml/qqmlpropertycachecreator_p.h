@@ -374,23 +374,6 @@ inline QQmlPropertyCache::ConstPtr QQmlPropertyCacheCreator<ObjectContainer>::pr
                 return nullptr;
             }
             return QQmlMetaType::propertyCache(attachedMo);
-        } else if (binding->isGroupProperty()) {
-            const auto *obj = objectContainer->objectAt(binding->value.objectIndex);
-            if (!stringAt(obj->inheritedTypeNameIndex).isEmpty())
-                return nullptr;
-
-            for (int i = 0, end = objectContainer->objectCount(); i != end; ++i) {
-                const auto *ext = objectContainer->objectAt(i);
-                if (ext->idNameIndex != binding->propertyNameIndex)
-                    continue;
-
-                if (ext->inheritedTypeNameIndex == 0)
-                    return nullptr;
-
-                QQmlBindingInstantiationContext pendingContext(i, &(*binding), QString(), nullptr);
-                pendingGroupPropertyBindings->append(pendingContext);
-                return nullptr;
-            }
         }
     }
     return nullptr;

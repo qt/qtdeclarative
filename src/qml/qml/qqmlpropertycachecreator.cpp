@@ -183,12 +183,7 @@ void QQmlPendingGroupPropertyBindings::resolveMissingPropertyCaches(
         if (propertyCaches->at(groupPropertyObjectIndex))
             continue;
 
-        if (pendingBinding.instantiatingPropertyName.isEmpty()) {
-            // Generalized group property.
-            auto cache = propertyCaches->at(pendingBinding.referencingObjectIndex);
-            propertyCaches->set(groupPropertyObjectIndex, cache);
-            continue;
-        }
+        Q_ASSERT(!pendingBinding.instantiatingPropertyName.isEmpty());
 
         if (!pendingBinding.referencingObjectPropertyCache) {
             pendingBinding.referencingObjectPropertyCache
