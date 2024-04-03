@@ -1,2 +1,5 @@
 module Charts
-plugin chartsplugin
+optional plugin chartsplugin
+typeinfo plugins.qmltypes
+depends QtQuick
+prefer :/qt/qml/Charts/

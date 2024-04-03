@@ -4,9 +4,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(chapter4-customPropertyTypes LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+
+qt_standard_project_setup(REQUIRES 6.5)
+
 #![0]
 qt_add_executable(chapter4-customPropertyTypes
     main.cpp
@@ -28,8 +29,7 @@ target_link_libraries(chapter4-customPropertyTypes PUBLIC
 #![1]
 qt_add_qml_module(chapter4-customPropertyTypes
     URI Charts
-    QML_FILES app.qml
-    NO_RESOURCE_TARGET_PATH
+    QML_FILES App.qml
     DEPENDENCIES QtQuick
 )
 #![1]

@@ -4,9 +4,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(chapter6-plugins LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 find_package(Qt6 REQUIRED COMPONENTS Qml Quick)
+
+qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(chapter6-plugins
     main.cpp
@@ -24,8 +24,7 @@ target_link_libraries(chapter6-plugins PRIVATE
 
 qt_add_qml_module(chapter6-plugins
     URI ChartsApp
-    QML_FILES app.qml
-    NO_RESOURCE_TARGET_PATH
+    QML_FILES App.qml
 )
 
 add_subdirectory(Charts)
