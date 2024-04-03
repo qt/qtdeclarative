@@ -194,17 +194,6 @@ void QQmlThread::shutdown()
     Q_ASSERT(!d->m_shutdown);
 
     d->m_shutdown = true;
-    for (;;) {
-        if (d->mainSync || !d->mainList.isEmpty()) {
-            d->unlock();
-            d->mainEvent();
-            d->lock();
-        } else if (!d->threadList.isEmpty()) {
-            d->wait();
-        } else {
-            break;
-        }
-    }
 
     if (QCoreApplication::closingDown())
         d->quit();
@@ -213,6 +202,10 @@ void QQmlThread::shutdown()
 
     d->unlock();
     d->QThread::wait();
+
+    // Discard all remaining messages.
+    // We don't need the lock anymore because the thread is dead.
+    discardMessages();
 }
 
 bool QQmlThread::isShutdown() const
