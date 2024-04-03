@@ -58,8 +58,8 @@ T.SpinBox {
     }
 
     up.indicator: Item {
-        x: parent.width - width
-        y: (parent.height / 2) - height
+        x: control.width - width
+        y: (control.height / 2) - height
         implicitWidth: upAndDown.width
         implicitHeight: upAndDown.height / 2
 
@@ -67,7 +67,7 @@ T.SpinBox {
     }
 
     down.indicator: Item {
-        x: parent.width - width
+        x: control.width - width
         y: up.indicator.y + upAndDown.height / 2
         implicitWidth: upAndDown.width
         implicitHeight: upAndDown.height / 2
