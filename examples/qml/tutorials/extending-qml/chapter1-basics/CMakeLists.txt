@@ -4,9 +4,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(chapter1-basics LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+
+qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(chapter1-basics
     main.cpp
@@ -27,8 +27,7 @@ target_link_libraries(chapter1-basics PUBLIC
 #![0]
 qt_add_qml_module(chapter1-basics
     URI Charts
-    QML_FILES app.qml
-    NO_RESOURCE_TARGET_PATH
+    QML_FILES App.qml
     DEPENDENCIES QtQuick
 )
 #![0]

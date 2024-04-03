@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 #endif
 //![0]
     view.setResizeMode(QQuickView::SizeRootObjectToView);
-    view.setSource(QUrl("qrc:///app.qml"));
+    view.loadFromModule("ChartsApp", "App");
     view.show();
     return app.exec();
 }
