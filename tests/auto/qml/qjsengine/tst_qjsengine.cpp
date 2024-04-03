@@ -318,6 +318,7 @@ private slots:
     void optionalChainWithElementLookup();
 
     void deleteDefineCycle();
+    void deleteFromSparseArray();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -6395,6 +6396,26 @@ void tst_QJSEngine::deleteDefineCycle()
   }
   )"), {}, 1, &stackTrace);
   QVERIFY(stackTrace.isEmpty());
+}
+
+void tst_QJSEngine::deleteFromSparseArray()
+{
+    QJSEngine engine;
+
+    // Should not crash
+    const QJSValue result = engine.evaluate(QLatin1String(R"((function() {
+        let o = [];
+        o[10000] = 10;
+        o[20000] = 20;
+        for (let k in o)
+            delete o[k];
+        return o;
+    })())"));
+
+    QVERIFY(result.isArray());
+    QCOMPARE(result.property("length").toNumber(), 20001);
+    QVERIFY(result.property(10000).isUndefined());
+    QVERIFY(result.property(20000).isUndefined());
 }
 
 QTEST_MAIN(tst_QJSEngine)
