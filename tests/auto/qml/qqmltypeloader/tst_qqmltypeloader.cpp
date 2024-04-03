@@ -48,6 +48,7 @@ private slots:
     void circularDependency();
     void declarativeCppAndQmlDir();
     void signalHandlersAreCompatible();
+    void loadTypeOnShutdown();
 
 private:
     void checkSingleton(const QString & dataDirectory);
@@ -734,6 +735,49 @@ void tst_QQMLTypeLoader::signalHandlersAreCompatible()
     QSKIP("qrc and file system is the same thing on Android");
 #endif
     QVERIFY(unitFromCachegen->url() != unitFromTypeCompiler->url());
+}
+
+void tst_QQMLTypeLoader::loadTypeOnShutdown()
+{
+    bool dead1 = false;
+    bool dead2 = false;
+
+    {
+        QQmlEngine engine;
+        auto good = new QQmlComponent(
+                &engine, testFileUrl("doesExist.qml"),
+                QQmlComponent::CompilationMode::Asynchronous, &engine);
+        QObject::connect(
+                good, &QQmlComponent::statusChanged, &engine,
+                [&](QQmlComponent::Status) {
+
+            // Must not call this if the engine is already dead.
+            QVERIFY(engine.rootContext());
+
+        });
+
+        QObject::connect(good, &QQmlComponent::destroyed, good, [&]() { dead1 = true; });
+        QVERIFY(good->isLoading());
+
+        auto bad = new QQmlComponent(
+                &engine, testFileUrl("doesNotExist.qml"),
+                QQmlComponent::CompilationMode::Asynchronous, &engine);
+        QObject::connect(
+                bad, &QQmlComponent::statusChanged, &engine,
+                [&](QQmlComponent::Status) {
+
+            // Must not call this if the engine is already dead.
+            // Must also not leak memory from the events the error produces.
+            QVERIFY(engine.rootContext());
+
+        });
+
+        QObject::connect(bad, &QQmlComponent::destroyed, bad, [&]() { dead2 = true; });
+        QVERIFY(bad->isLoading());
+    }
+
+    QVERIFY(dead1);
+    QVERIFY(dead2);
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)
