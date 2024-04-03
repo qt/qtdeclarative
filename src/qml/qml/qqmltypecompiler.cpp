@@ -807,6 +807,17 @@ bool QQmlComponentAndAliasResolver<QQmlTypeCompiler>::wrapImplicitComponent(QmlI
 }
 
 template<>
+void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveGeneralizedGroupProperty(
+        const CompiledObject &component, CompiledBinding *binding)
+{
+    Q_UNUSED(component);
+    // We cannot make it fail here. It might be a custom-parsed property
+    const int targetObjectIndex = m_idToObjectIndex.value(binding->propertyNameIndex, -1);
+    if (targetObjectIndex != -1)
+        m_propertyCaches->set(binding->value.objectIndex, m_propertyCaches->at(targetObjectIndex));
+}
+
+template<>
 typename QQmlComponentAndAliasResolver<QQmlTypeCompiler>::AliasResolutionResult
 QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
         const CompiledObject &component, int objectIndex, QQmlError *error)
