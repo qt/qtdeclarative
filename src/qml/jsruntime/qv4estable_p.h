@@ -53,12 +53,13 @@
 
 #include "qv4value_p.h"
 
+class tst_qv4estable;
+
 QT_BEGIN_NAMESPACE
 
-namespace QV4
-{
+namespace QV4 {
 
-class ESTable
+class Q_AUTOTEST_EXPORT ESTable
 {
 public:
     ESTable();
@@ -76,13 +77,15 @@ public:
     void removeUnmarkedKeys();
 
 private:
+    friend class ::tst_qv4estable;
+
     Value *m_keys = nullptr;
     Value *m_values = nullptr;
     uint m_size = 0;
     uint m_capacity = 0;
 };
 
-}
+} // namespace QV4
 
 QT_END_NAMESPACE
 
