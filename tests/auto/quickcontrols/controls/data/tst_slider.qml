@@ -620,12 +620,12 @@ TestCase {
             { tag: "SnapOnRelease (-1..1)", snapMode: Slider.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
             { tag: "SnapOnRelease (1..-1)", snapMode: Slider.SnapOnRelease, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
             // Live
-            { tag: "SnapAlwaysLive", snapMode: Slider.SnapAlways, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 1, 1] },
-            { tag: "SnapAlwaysLive", snapMode: Slider.SnapAlways, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0, 0] },
-            { tag: "NoSnapLive", snapMode: Slider.NoSnap, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 0.6, 0.6] },
-            { tag: "NoSnapLive", snapMode: Slider.NoSnap, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0.4, 0.4] },
-            { tag: "SnapOnReleaseLive", snapMode: Slider.SnapOnRelease, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 0.6, 1] },
-            { tag: "SnapOnReleaseLive", snapMode: Slider.SnapOnRelease, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0.4, 0] },
+            { tag: "SnapAlwaysLive1", snapMode: Slider.SnapAlways, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 1, 1] },
+            { tag: "SnapAlwaysLive2", snapMode: Slider.SnapAlways, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0, 0] },
+            { tag: "NoSnapLive1", snapMode: Slider.NoSnap, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 0.6, 0.6] },
+            { tag: "NoSnapLive2", snapMode: Slider.NoSnap, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0.4, 0.4] },
+            { tag: "SnapOnReleaseLive1", snapMode: Slider.SnapOnRelease, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 0.6, 1] },
+            { tag: "SnapOnReleaseLive2", snapMode: Slider.SnapOnRelease, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0.4, 0] },
         ]
     }
 
