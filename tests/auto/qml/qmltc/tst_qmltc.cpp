@@ -21,6 +21,7 @@
 #include "qjsvalueassignments.h"
 #include "extensiontypebindings.h"
 #include "qtbug103956_main.h"
+#include "qtbug120700_main.h"
 #include "nonstandardinclude.h"
 #include "specialproperties.h"
 #include "regexpbindings.h"
@@ -158,6 +159,8 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/SubComponent.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/MainComponent.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/qtbug103956_main.qml"),
+
+        QUrl("qrc:/qt/qml/QmltcTests/qtbug120700_main.qml"),
 
         QUrl("qrc:/qt/qml/QmltcTests/signalHandlers.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/javaScriptFunctions.qml"),
@@ -830,6 +833,57 @@ void tst_qmltc::visibleAliasMethods()
     PREPEND_NAMESPACE(qtbug103956_main) created(&e);
     QVERIFY(created.firstComponent());
     QCOMPARE(created.firstComponent()->setMe(), true);
+}
+
+// QTBUG-120700
+void tst_qmltc::customInitialization()
+{
+    int valueToTest = 10;
+
+    QQuickItem firstItem;
+    QQuickItem secondItem;
+
+    QQmlEngine e;
+    PREPEND_NAMESPACE(qtbug120700_main)
+    created(&e, nullptr, [valueToTest, &firstItem, &secondItem](auto& component) {
+        component.setSomeValue(valueToTest);
+        component.setSomeComplexValueThatWillBeSet(valueToTest);
+        component.setPropertyFromExtension(static_cast<double>(valueToTest));
+        component.setDefaultedBindable(static_cast<double>(valueToTest));
+        component.setValueTypeList({1, 2, 3, 4});
+        component.setObjectTypeList({&firstItem, &secondItem});
+        component.setExtensionObjectList({&firstItem, &secondItem});
+        component.setCppObjectList({&firstItem, &secondItem});
+    });
+
+    // QTBUG-114403: onValueChanged should have not been triggered
+    // when setting the initial value for the property.
+    // If this is true then the handler was called.
+    QCOMPARE(created.wasSomeValueChanged(), false);
+
+    // someComplexValueThatWillBeSet is set through a binding in the
+    // QML code, but is initialized when the instance is created.
+    // The bindings, which is generally set after the custom
+    // initialization was perfomed, should not overwrite the initial
+    // value that the user provided.
+    // On the other side, someComplexValueThatWillNotBeSet should
+    // still respect the original binding as an initial value for it
+    // was not provided.
+    QCOMPARE(created.someComplexValueThatWillBeSet(), valueToTest);
+    QCOMPARE(created.someComplexValueThatWillNotBeSet(), 5);
+
+    QCOMPARE(created.someValue(), valueToTest);
+    QCOMPARE(created.someValueAlias(), valueToTest);
+    QCOMPARE(created.someValueBinding(), valueToTest + 1);
+    QCOMPARE(created.property("propertyFromExtension").toDouble(), static_cast<double>(valueToTest));
+    QCOMPARE(created.bindableDefaultedBindable().value(), static_cast<double>(valueToTest));
+    QCOMPARE(created.valueTypeList(), QList({1, 2, 3, 4}));
+    QCOMPARE(created.objectTypeList().toList<QList<QQuickItem*>>(), QList({&firstItem, &secondItem}));
+    QCOMPARE(
+        created.property("extensionObjectList").value<QQmlListProperty<QQuickItem>>().toList<QList<QQuickItem*>>(),
+        QList({&firstItem, &secondItem})
+    );
+    QCOMPARE(created.getCppObjectList().toList<QList<QQuickItem*>>(), QList({&firstItem, &secondItem}));
 }
 
 // QTBUG-104094

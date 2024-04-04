@@ -5,8 +5,6 @@ import QtQuick
 import QtQuick.Shapes
 
 ControlledShape {
-    fillRule: ShapePath.OddEvenFill
-
     delegate: [
         PathPolyline {
             path: [ point1.pt,

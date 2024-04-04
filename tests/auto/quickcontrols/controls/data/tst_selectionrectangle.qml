@@ -727,4 +727,53 @@ TestCase {
            }
         }
     }
+
+    function test_programmatic_unselect() {
+        // Check that the SelectionRectangle will be deactivated if the
+        // selection is changed programatically.
+        let tableView = createTemporaryObject(tableviewComp, testCase)
+        verify(tableView)
+        let selectionRectangle = tableView.selectionRectangle
+        verify(selectionRectangle)
+
+        selectionRectangle.selectionMode = SelectionRectangle.Drag
+
+        verify(!tableView.selectionModel.hasSelection)
+        mouseDrag(tableView, 1, 1, (cellWidth * 2) - 2, 1, Qt.LeftButton)
+        compare(tableView.selectionModel.selectedIndexes.length, 2)
+        verify(selectionRectangle.active)
+
+        tableView.selectionModel.clearSelection()
+        verify(!selectionRectangle.active)
+    }
+
+    function test_extend_using_keyboard() {
+        // Check that the bottom-right selection handle will move if an
+        // acitve selection is extended with the keyboard
+        let tableView = createTemporaryObject(tableviewComp, testCase)
+        verify(tableView)
+        let selectionRectangle = tableView.selectionRectangle
+        verify(selectionRectangle)
+
+        selectionRectangle.bottomRightHandle = bottomRightHandleComp
+        selectionRectangle.selectionMode = SelectionRectangle.Drag
+
+        tableView.forceActiveFocus()
+        verify(!tableView.selectionModel.hasSelection)
+        mouseDrag(tableView, 1, 1, (cellWidth * 2) - 2, 1, Qt.LeftButton)
+        compare(tableView.selectionModel.selectedIndexes.length, 2)
+        verify(selectionRectangle.active)
+        verify(bottomRightHandle)
+        compare(bottomRightHandle.x, (cellWidth * 2) - (bottomRightHandle.width / 2))
+        compare(bottomRightHandle.y, cellHeight - (bottomRightHandle.height / 2))
+
+        keyPress(Qt.Key_Down, Qt.ShiftModifier)
+        keyRelease(Qt.Key_Down, Qt.ShiftModifier)
+        keyPress(Qt.Key_Right, Qt.ShiftModifier)
+        keyRelease(Qt.Key_Right, Qt.ShiftModifier)
+        verify(selectionRectangle.active)
+        compare(tableView.selectionModel.selectedIndexes.length, 6)
+        compare(bottomRightHandle.x, (cellWidth * 3) - (bottomRightHandle.width / 2))
+        compare(bottomRightHandle.y, (cellHeight * 2) - (bottomRightHandle.height / 2))
+    }
 }

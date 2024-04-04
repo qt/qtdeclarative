@@ -16,6 +16,7 @@
 #include "qqmldomastdumper_p.h"
 #include "qqmldomlinewriter_p.h"
 #include "qqmldom_utils_p.h"
+#include "qqmldomscriptelements_p.h"
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
@@ -658,6 +659,9 @@ QQmlJSScope::ConstPtr DomItem::semanticScope() const
                 } else if constexpr (std::is_same_v<T, SimpleObjectWrap>) {
                     if (const MethodInfo *mi = e->template as<MethodInfo>()) {
                         return mi->semanticScope();
+                    }
+                    if (const auto *propertyDefinition = e->template as<PropertyDefinition>()) {
+                        return propertyDefinition->semanticScope();
                     }
                 } else if constexpr (std::is_same_v<T, ScriptElementDomWrapper>) {
                     return e.element().base()->semanticScope();
@@ -1455,10 +1459,15 @@ bool DomItem::hasAnnotations() const
 
     Compared to the AST::Visitor*, openingVisitor and closingVisitor are called in the same order as
    the visit() and endVisit()-calls.
+
+    Filtering allows to not visit certain part of the trees, and is checked before(!) the lazy child
+   is instantiated via its lambda. For example, visiting propertyInfos or defaultPropertyname takes
+   a lot of time because it resolves and collects all properties inherited from base types, and
+   might not even be relevant for the visitors.
  */
-bool DomItem::visitTree(
-        const Path &basePath, DomItem::ChildrenVisitor visitor, VisitOptions options,
-        DomItem::ChildrenVisitor openingVisitor, DomItem::ChildrenVisitor closingVisitor) const
+bool DomItem::visitTree(const Path &basePath, DomItem::ChildrenVisitor visitor,
+                        VisitOptions options, DomItem::ChildrenVisitor openingVisitor,
+                        DomItem::ChildrenVisitor closingVisitor, const FieldFilter &filter) const
 {
     if (!*this)
         return true;
@@ -1471,16 +1480,19 @@ bool DomItem::visitTree(
             closingVisitor(basePath, *this, true);
         }
     });
-    return visitEl([this, basePath, visitor, openingVisitor, closingVisitor, options](auto &&el) {
+    return visitEl([this, basePath, visitor, openingVisitor, closingVisitor, options,
+                    &filter](auto &&el) {
         return el->iterateDirectSubpathsConst(
                 *this,
-                [this, basePath, visitor, openingVisitor, closingVisitor,
-                 options](const PathEls::PathComponent &c, function_ref<DomItem()> itemF) {
+                [this, basePath, visitor, openingVisitor, closingVisitor, options,
+                 &filter](const PathEls::PathComponent &c, function_ref<DomItem()> itemF) {
                     Path pNow;
                     if (!(options & VisitOption::NoPath)) {
                         pNow = basePath;
                         pNow = pNow.appendComponent(c);
                     }
+                    if (!filter(*this, c, DomItem{}))
+                        return true;
                     DomItem item = itemF();
                     bool directChild = isCanonicalChild(item);
                     if (!directChild && !(options & VisitOption::VisitAdopted))
@@ -1496,7 +1508,7 @@ bool DomItem::visitTree(
                         closingVisitor(pNow, item, directChild);
                     } else {
                         return item.visitTree(pNow, visitor, options | VisitOption::VisitSelf,
-                                              openingVisitor, closingVisitor);
+                                              openingVisitor, closingVisitor, filter);
                     }
                     return true;
                 });

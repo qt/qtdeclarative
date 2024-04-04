@@ -73,6 +73,7 @@ protected:
     bool visit(AST::PatternElementList *ast) override;
 
     bool visit(AST::PatternPropertyList *ast) override;
+    bool visit(AST::PatternProperty *property) override;
 
     bool visit(AST::NestedExpression *ast) override;
     bool visit(AST::IdentifierPropertyName *ast) override;

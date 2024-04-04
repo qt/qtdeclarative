@@ -162,6 +162,8 @@ private slots:
     void methodOnListLookup();
     void methods();
     void modulePrefix();
+    void multiDirectory_data();
+    void multiDirectory();
     void multiForeign();
     void multiLookup();
     void multipleCtors();
@@ -2237,6 +2239,18 @@ void tst_QmlCppCodegen::idAccess()
     QObject *ttt = qmlContext(object.data())->objectForName(u"ttt"_s);
     QFont f = qvariant_cast<QFont>(ttt->property("font"));
     QCOMPARE(f.pointSize(), 22);
+
+    QObject::connect(object.data(), &QObject::objectNameChanged, ttt, [&](){
+        ttt->setParent(nullptr);
+        QJSEngine::setObjectOwnership(ttt, QJSEngine::CppOwnership);
+        object.reset(ttt);
+    });
+
+    QVERIFY(object->objectName().isEmpty());
+    QVERIFY(ttt->objectName().isEmpty());
+    ttt->setProperty("text", u"kill"_s);
+    QCOMPARE(object.data(), ttt);
+    QCOMPARE(ttt->objectName(), u"context"_s);
 }
 
 void tst_QmlCppCodegen::ignoredFunctionReturn()
@@ -2596,13 +2610,13 @@ void tst_QmlCppCodegen::invisibleSingleton()
     qmlClearTypeRegistrations();
 
     QQmlEngine engine;
-    const QUrl copy(u"qrc:/qt/qml/TestTypes/hidden/Main.qml"_s);
+    const QUrl copy(u"qrc:/qt/qml/HiddenTestTypes/hidden/Main.qml"_s);
     QQmlComponent c(&engine, copy);
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
 
     QTest::ignoreMessage(
                 QtWarningMsg,
-                "qrc:/qt/qml/TestTypes/hidden/Main.qml:4:5: "
+                "qrc:/qt/qml/HiddenTestTypes/hidden/Main.qml:4:5: "
                 "Unable to assign [undefined] to QColor");
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
@@ -3279,6 +3293,29 @@ void tst_QmlCppCodegen::modulePrefix()
     QCOMPARE(rootObject->property("foo").toDateTime(), QDateTime(QDate(1911, 3, 4), QTime()));
     QCOMPARE(rootObject->property("bar").toDateTime(), QDateTime(QDate(1911, 3, 4), QTime()));
     QCOMPARE(rootObject->property("baz").toString(), QStringLiteral("ItIsTheSingleton"));
+}
+
+void tst_QmlCppCodegen::multiDirectory_data()
+{
+    QTest::addColumn<QUrl>("url");
+    QTest::addRow("from qt_add_qml_module")
+            << QUrl(u"qrc:/qt/qml/TestTypes/extra/extra.qml"_s);
+#ifndef VERY_OLD_CMAKE
+    QTest::addRow("from qt_target_qml_sources")
+            << QUrl(u"qrc:/qt/qml/TestTypes/extra2/extra.qml"_s);
+#endif
+}
+
+void tst_QmlCppCodegen::multiDirectory()
+{
+    QFETCH(QUrl, url);
+    QQmlEngine engine;
+    QQmlComponent component(&engine, url);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> rootObject(component.create());
+    QVERIFY(rootObject);
+
+    QCOMPARE(rootObject->property("r").value<QRectF>(), QRectF(4, 6, 8, 10));
 }
 
 void tst_QmlCppCodegen::multiForeign()
@@ -4925,6 +4962,14 @@ void tst_QmlCppCodegen::variantMap()
 
     QCOMPARE(o->objectName(), "a b"_L1);
     QCOMPARE(o->property("r"), QVariant::fromValue(QRectF(12, 13, 14, 15)));
+
+    const QVariantMap expected = QVariantMap {
+        { u"1"_s, QVariant::fromValue<std::nullptr_t>(nullptr) },
+        { u"19"_s, QVariant::fromValue(u"19"_s) },
+        { u"25"_s, QVariant() }
+    };
+
+    QCOMPARE(o->property("v").toMap(), expected);
 }
 
 void tst_QmlCppCodegen::voidConversion()

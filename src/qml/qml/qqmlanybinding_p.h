@@ -459,8 +459,7 @@ private:
                 delete  qqmlptr;
         } else if (d.isT2()) {
             QPropertyBindingPrivate *priv = d.asT2();
-            priv->ref--;
-            if (!priv->ref)
+            if (!priv->deref())
                 QPropertyBindingPrivate::destroyAndFreeMemory(priv);
         }
         d = static_cast<QQmlAbstractBinding *>(nullptr);

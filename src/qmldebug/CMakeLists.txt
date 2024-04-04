@@ -39,4 +39,5 @@ qt_internal_add_module(QmlDebugPrivate
         Qt::Network
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate
+    NO_GENERATE_CPP_EXPORTS
 )

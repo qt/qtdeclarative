@@ -1101,14 +1101,17 @@ void QQuickFlickablePrivate::handlePressEvent(QPointerEvent *event)
     }
     q->setKeepMouseGrab(stealMouse);
 
-    maybeBeginDrag(computeCurrentTime(event), event->points().first().position());
+    maybeBeginDrag(computeCurrentTime(event), event->points().first().position(),
+                   event->isSinglePointEvent() ? static_cast<QSinglePointEvent *>(event)->buttons()
+                                               : Qt::NoButton);
 }
 
-void QQuickFlickablePrivate::maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn)
+void QQuickFlickablePrivate::maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn, Qt::MouseButtons buttons)
 {
     Q_Q(QQuickFlickable);
     clearDelayedPress();
-    pressed = true;
+    // consider dragging only when event is left mouse button or touch event which has no button
+    pressed = buttons.testFlag(Qt::LeftButton) || (buttons == Qt::NoButton);
 
     if (hData.transitionToBounds)
         hData.transitionToBounds->stopTransition();
@@ -1443,9 +1446,15 @@ void QQuickFlickablePrivate::handleReleaseEvent(QPointerEvent *event)
     flickBoost = canBoost ? qBound(1.0, flickBoost+0.25, QML_FLICK_MULTIFLICK_MAXBOOST) : 1.0;
     const int flickThreshold = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::FlickStartDistance).toInt();
 
+    bool anyPointGrabbed = event->points().constEnd() !=
+            std::find_if(event->points().constBegin(),event->points().constEnd(),
+                [q, event](const QEventPoint &point) { return event->exclusiveGrabber(point) == q; });
+
     bool flickedVertically = false;
     vVelocity *= flickBoost;
-    bool isVerticalFlickAllowed = q->yflick() && qAbs(vVelocity) > _q_MinimumFlickVelocity && qAbs(pos.y() - pressPos.y()) > flickThreshold;
+    const bool isVerticalFlickAllowed = anyPointGrabbed &&
+            q->yflick() && qAbs(vVelocity) > _q_MinimumFlickVelocity &&
+            qAbs(pos.y() - pressPos.y()) > flickThreshold;
     if (isVerticalFlickAllowed) {
         velocityTimeline.reset(vData.smoothVelocity);
         vData.smoothVelocity.setValue(-vVelocity);
@@ -1454,7 +1463,9 @@ void QQuickFlickablePrivate::handleReleaseEvent(QPointerEvent *event)
 
     bool flickedHorizontally = false;
     hVelocity *= flickBoost;
-    bool isHorizontalFlickAllowed = q->xflick() && qAbs(hVelocity) > _q_MinimumFlickVelocity && qAbs(pos.x() - pressPos.x()) > flickThreshold;
+    const bool isHorizontalFlickAllowed = anyPointGrabbed &&
+            q->xflick() && qAbs(hVelocity) > _q_MinimumFlickVelocity &&
+            qAbs(pos.x() - pressPos.x()) > flickThreshold;
     if (isHorizontalFlickAllowed) {
         velocityTimeline.reset(hData.smoothVelocity);
         hData.smoothVelocity.setValue(-hVelocity);

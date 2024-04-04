@@ -47,6 +47,13 @@ public:
     QString qmldirLocation() const { return m_location; }
     QString preferredPath() const { return m_parser.preferredPath(); }
 
+    bool hasRedirection() const
+    {
+        const QString preferred = preferredPath();
+        return !preferred.isEmpty()
+                && preferred != QStringView(m_location).chopped(strlen("qmldir"));
+    }
+
     bool designerSupported() const { return m_parser.designerSupported(); }
     bool hasTypeInfo() const { return !m_parser.typeInfos().isEmpty(); }
 

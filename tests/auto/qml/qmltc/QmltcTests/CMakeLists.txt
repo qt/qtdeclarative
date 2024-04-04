@@ -22,6 +22,7 @@ set(cpp_sources
     cpptypes/singletontype.h cpptypes/singletontype.cpp
     cpptypes/typewithnamespace.h cpptypes/typewithnamespace.cpp
     cpptypes/typewithsignal.h
+    cpptypes/custominitialization.h
 )
 
 set(qml_sources
@@ -49,6 +50,10 @@ set(qml_sources
     qtbug103956/SubComponent.qml
     qtbug103956/MainComponent.qml
     qtbug103956/qtbug103956_main.qml
+
+    qtbug120700_main.qml
+
+    qtbug123476.qml
 
     signalHandlers.qml
     javaScriptFunctions.qml

@@ -152,14 +152,17 @@ struct QmltcCodeGenerator
 /*!
     \internal
 
-    Generates \a{current.init}'s code. The init method sets up a QQmlContext for
-    the object and (in case \a type is a document root) calls other object
-    creation methods in a well-defined order:
+    Generates \a{current.init}'s code. The init method sets up a
+    QQmlContext for the object and (in case \a type is a document
+    root) calls other object creation methods, and a user-provided
+    initialization callback, in a well-defined order:
     1. current.beginClass
     2. current.endInit
-    3. current.completeComponent
-    4. current.finalizeComponent
-    5. current.handleOnCompleted
+    3. user-provided initialization function
+    4. current.setComplexBindings
+    5. current.completeComponent
+    6. current.finalizeComponent
+    7. current.handleOnCompleted
 
     This function returns a QScopeGuard with the final instructions that have to
     be generated at a later point, once everything else is compiled.
@@ -294,8 +297,14 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
                                          .arg(current.beginClass.name);
             current.init.body << QStringLiteral("    %1(creator, engine);")
                                          .arg(current.endInit.name);
-            current.init.body << QStringLiteral("    %1(creator, engine);")
-                                         .arg(current.setComplexBindings.name);
+
+            current.init.body << QStringLiteral("    {");
+            current.init.body << QStringLiteral("        PropertyInitializer propertyInitializer(*this);");
+            current.init.body << QStringLiteral("        initializer(propertyInitializer);");
+            current.init.body << QStringLiteral("        %1(creator, engine, propertyInitializer.initializedCache);").arg(current.setComplexBindings.name);
+            current.init.body << QStringLiteral("    }");
+
+
             current.init.body << QStringLiteral("    %1(creator, /* finalize */ true);")
                                          .arg(current.completeComponent.name);
             current.init.body << QStringLiteral("    %1(creator, /* finalize */ true);")

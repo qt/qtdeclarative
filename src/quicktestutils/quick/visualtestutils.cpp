@@ -111,7 +111,13 @@ void QQuickVisualTestUtils::PointLerper::move(int x, int y, int steps, int delay
     move(QPoint(x, y), steps, delayInMilliseconds);
 };
 
-bool QQuickVisualTestUtils::delegateVisible(QQuickItem *item)
+/*!
+    \internal
+
+    Returns \c true if \c {item->isVisible()} returns \c true, and
+    the item is not culled.
+*/
+bool QQuickVisualTestUtils::isDelegateVisible(QQuickItem *item)
 {
     return item->isVisible() && !QQuickItemPrivate::get(item)->culled;
 }

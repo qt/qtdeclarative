@@ -171,6 +171,12 @@ The \l OUTPUT_DIRECTORY argument determines where the \c qmldir and typeinfo
 files will be written to. If the QML module has a plugin, that plugin will also
 be created in the same directory as the \c qmldir file.
 
+If \l{QTP0004} policy is set to \c NEW, for each further directory that contains
+\c{.qml} files another \c qmldir file is generated. These extra \c qmldir files
+merely redirect to the module's base directory via a \c prefer directive. This
+is so that all the QML components in a module can access each other, no matter
+which directory they are stored in.
+
 If using a statically built Qt, the backing target's \c{.qml} files will be
 scanned during the CMake configure run to determine the imports used by the
 module and to set up linking relationships (the \c{NO_IMPORT_SCAN} keyword

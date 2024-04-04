@@ -153,7 +153,7 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndContext(void *device, vo
     that the native resource exists as long as necessary.
 
  */
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_QDOC)
+#if QT_CONFIG(metal) || defined(Q_QDOC)
 QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndCommandQueue(MTLDevice *device,
                                                                      MTLCommandQueue *commandQueue)
 {

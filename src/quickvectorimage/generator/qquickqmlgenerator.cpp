@@ -17,36 +17,57 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorImage)
 
-class GeneratorStream : public QTextStream
+class GeneratorStream
 {
 public:
-    GeneratorStream() = default;
-    explicit GeneratorStream(QTextStream *stream)
-        : QTextStream(&m_output, QIODevice::ReadWrite), m_stream(stream)
+    explicit GeneratorStream(QTextStream *result)
+        : m_array(new QByteArray())
+        , m_stream(new QTextStream(m_array, QIODeviceBase::ReadWrite))
+        , m_resultStream(result)
     {}
+
     ~GeneratorStream()
     {
-        flush();
-        if (m_stream && !m_output.isEmpty())
-            *m_stream << m_output << Qt::endl;
+        if (m_stream) {
+            m_stream->flush();
+            delete m_stream;
+        }
+
+        if (m_resultStream && m_array && !m_array->isEmpty())
+            *m_resultStream << *m_array << Qt::endl;
+
+        delete m_array;
     }
 
-    GeneratorStream(GeneratorStream &other) = delete;
-    GeneratorStream &operator=(const GeneratorStream &other) = delete;
     GeneratorStream(GeneratorStream &&other) noexcept
-        : m_stream(std::exchange(other.m_stream, nullptr)), m_output(std::move(other.m_output))
+        : m_array(std::exchange(other.m_array, nullptr))
+        , m_stream(std::exchange(other.m_stream, nullptr))
+        , m_resultStream(std::exchange(other.m_resultStream, nullptr))
     {}
     GeneratorStream &operator=(GeneratorStream &&other) noexcept
     {
+        std::swap(m_resultStream, other.m_resultStream);
         std::swap(m_stream, other.m_stream);
-        std::swap(m_output, other.m_output);
+        std::swap(m_array, other.m_array);
+
         return *this;
     }
 
+    Q_DISABLE_COPY(GeneratorStream)
 private:
+    template<typename T>
+    friend const GeneratorStream &operator<<(const GeneratorStream& str, T val);
+    QByteArray *m_array = nullptr;
     QTextStream *m_stream = nullptr;
-    QByteArray m_output;
+    QTextStream *m_resultStream = nullptr;
 };
+
+template<typename T>
+const GeneratorStream &operator<<(const GeneratorStream& str, T val)
+{
+    *str.m_stream << val;
+    return str;
+}
 
 QQuickQmlGenerator::QQuickQmlGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags, const QString &outFileName)
     : QQuickGenerator(fileName, flags)
@@ -133,6 +154,9 @@ bool QQuickQmlGenerator::generateDefsNode(const NodeInfo &info)
 
 void QQuickQmlGenerator::generateImageNode(const ImageNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     QString fn = info.image.hasAlphaChannel() ? QStringLiteral("svg_asset_%1.png").arg(info.image.cacheKey())
                                               : QStringLiteral("svg_asset_%1.jpg").arg(info.image.cacheKey());
     // For now we just create a copy of the image in the current directory
@@ -157,6 +181,9 @@ void QQuickQmlGenerator::generateImageNode(const ImageNodeInfo &info)
 
 void QQuickQmlGenerator::generatePath(const PathNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     if (m_inShapeItem) {
         if (!info.isDefaultTransform)
             qWarning() << "Skipped transform for node" << info.nodeId << "type" << info.typeName << "(this is not supposed to happen)";
@@ -226,7 +253,7 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     if (pathSelector == QQuickVectorImageGenerator::StrokePath && noPen)
         return;
 
-    const bool noFill = !info.grad && info.fillColor == u"transparent";
+    const bool noFill = info.grad.type() == QGradient::NoGradient && info.fillColor == u"transparent";
     if (pathSelector == QQuickVectorImageGenerator::FillPath && noFill)
         return;
 
@@ -258,8 +285,8 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
 
     if (!(pathSelector & QQuickVectorImageGenerator::FillPath)) {
         stream() << "fillColor: \"transparent\"";
-    } else if (auto *grad = info.grad) {
-        generateGradient(grad, boundingRect);
+    } else if (info.grad.type() != QGradient::NoGradient) {
+        generateGradient(&info.grad, boundingRect);
     } else {
         stream() << "fillColor: \"" << info.fillColor << "\"";
 
@@ -285,6 +312,9 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
 
 void QQuickQmlGenerator::generateNode(const NodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     stream() << "// Missing Implementation for SVG Node: " << info.typeName;
     stream() << "// Adding an empty Item and skipping";
     stream() << "Item {";
@@ -294,6 +324,9 @@ void QQuickQmlGenerator::generateNode(const NodeInfo &info)
 
 void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     static int counter = 0;
     stream() << "Item {";
     generateNodeBase(info);
@@ -367,6 +400,9 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
 
 void QQuickQmlGenerator::generateUseNode(const UseNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     if (info.stage == StructureNodeStage::Start) {
         stream() << "Item {";
         generateNodeBase(info);
@@ -379,8 +415,11 @@ void QQuickQmlGenerator::generateUseNode(const UseNodeInfo &info)
     }
 }
 
-void QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
+bool QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return false;
+
     if (info.stage == StructureNodeStage::Start) {
         if (!info.forceSeparatePaths && info.isPathContainer) {
             stream() << shapeName() <<" {";
@@ -414,13 +453,16 @@ void QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
         stream() << "}";
         m_inShapeItem = false;
     }
+
+    return true;
 }
 
-void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
+bool QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
 {
     m_indentLevel = 0;
-    if (info.stage == StructureNodeStage::Start) {
-        const QStringList comments = m_commentString.split(u'\n');
+    const QStringList comments = m_commentString.split(u'\n');
+
+    if (!isNodeVisible(info)) {
         if (comments.isEmpty())
             stream() << "// Generated from SVG";
         else
@@ -429,7 +471,31 @@ void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
 
         stream() << "import QtQuick";
         stream() << "import QtQuick.Shapes" << Qt::endl;
+        stream() << "Item {";
+        m_indentLevel++;
 
+        double w = info.size.width();
+        double h = info.size.height();
+        if (w > 0)
+            stream() << "implicitWidth: " << w;
+        if (h > 0)
+            stream() << "implicitHeight: " << h;
+
+        m_indentLevel--;
+        stream() << "}";
+
+        return false;
+    }
+
+    if (info.stage == StructureNodeStage::Start) {
+        if (comments.isEmpty())
+            stream() << "// Generated from SVG";
+        else
+            for (const auto &comment : comments)
+                stream() << "// " << comment;
+
+        stream() << "import QtQuick";
+        stream() << "import QtQuick.Shapes" << Qt::endl;
         stream() << "Item {";
         m_indentLevel++;
 
@@ -456,6 +522,8 @@ void QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
         stream() << "}";
         m_inShapeItem = false;
     }
+
+    return true;
 }
 
 QString QQuickQmlGenerator::indent()

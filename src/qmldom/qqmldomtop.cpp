@@ -218,7 +218,8 @@ static DomType fileTypeForPath(const DomItem &self, const QString &canonicalFile
         return DomType::QmldirFile;
     } else if (QFileInfo(canonicalFilePath).isDir()) {
         return DomType::QmlDirectory;
-    } else if (canonicalFilePath.endsWith(u".js", Qt::CaseInsensitive)) {
+    } else if (canonicalFilePath.endsWith(u".js", Qt::CaseInsensitive)
+               || canonicalFilePath.endsWith(u".mjs", Qt::CaseInsensitive)) {
         return DomType::JsFile;
     }
     else {
@@ -396,8 +397,9 @@ std::shared_ptr<QmlFile> DomUniverse::parseQmlFile(const QString &code, const Fi
     envPtr->addQmlFile(qmlFile);
     DomItem env(envPtr);
     if (qmlFile->isValid()) {
-        // TODO: do not call populateQmlFile on lazy qml files!
-        envPtr->populateFromQmlFile(MutableDomItem(env.copy(qmlFile)));
+        // do not call populateQmlFile twice on lazy qml files if the importer already does it!
+        if (!creationOptions.testFlag(DomCreationOption::WithSemanticAnalysis))
+            envPtr->populateFromQmlFile(MutableDomItem(env.copy(qmlFile)));
     } else {
         QString errs;
         DomItem qmlFileObj = env.copy(qmlFile);
@@ -497,7 +499,7 @@ std::optional<DomItem> DomUniverse::getItemIfHasSameCode(const DomItem &univ, Do
         // Mutex is to sync access to the Value and Value->CurrentItem, which can be modified
         // through updateEnty method and currentItem->refreshedDataAt
         QMutexLocker l(mutex());
-        auto value = getPathValueOrNull(fType, canonicalPath);
+        value = getPathValueOrNull(fType, canonicalPath);
         if (valueHasSameContent(value.get(), codeWithDate.content)) {
             valueItemHasSameCode = true;
             if (value->currentItem()->lastDataUpdateAt() < codeWithDate.date)
@@ -780,55 +782,36 @@ void LoadInfo::doAddDependencies(const DomItem &self)
     DomItem el = self.path(elementCanonicalPath());
     if (el.internalKind() == DomType::ExternalItemInfo) {
         DomItem currentFile = el.field(Fields::currentItem);
-        DomItem currentImports = currentFile.field(Fields::imports);
         QString currentFilePath = currentFile.canonicalFilePath();
-        int iEnd = currentImports.indexes();
-        for (int i = 0; i < iEnd; ++i) {
-            DomItem import = currentImports.index(i);
-            if (const Import *importPtr = import.as<Import>()) {
-                if (importPtr->uri.isDirectory()) {
-                    QString path = importPtr->uri.absoluteLocalPath(currentFilePath);
-                    if (!path.isEmpty()) {
-                        addDependency(self,
-                                      Dependency { QString(), importPtr->version, path,
-                                                   DomType::QmlDirectory });
-                    } else {
-                        self.addError(DomEnvironment::myErrors().error(
-                                tr("Ignoring dependencies for non resolved path import %1")
-                                        .arg(importPtr->uri.toString())));
-                    }
-                } else {
-                    addDependency(self,
-                                  Dependency { importPtr->uri.moduleUri(), importPtr->version,
-                                               QString(), DomType::ModuleIndex });
-                }
-            }
-        }
-        DomItem currentQmltypesFiles = currentFile.field(Fields::qmltypesFiles);
-        int qEnd = currentQmltypesFiles.indexes();
-        for (int i = 0; i < qEnd; ++i) {
-            DomItem qmltypesRef = currentQmltypesFiles.index(i);
-            if (const Reference *ref = qmltypesRef.as<Reference>()) {
-                Path canonicalPath = ref->referredObjectPath[2];
-                if (canonicalPath && !canonicalPath.headName().isEmpty())
-                    addDependency(self,
-                                  Dependency { QString(), Version(), canonicalPath.headName(),
-                                               DomType::QmltypesFile });
-            }
-        }
-        DomItem currentQmlFiles = currentFile.field(Fields::qmlFiles);
-        currentQmlFiles.visitKeys([this, &self](const QString &, const DomItem &els) {
-            return els.visitIndexes([this, &self](const DomItem &el) {
-                if (const Reference *ref = el.as<Reference>()) {
+        // do not mess with QmlFile's lazy-loading
+        if (currentFile.internalKind() != DomType::QmlFile) {
+            DomItem currentQmltypesFiles = currentFile.field(Fields::qmltypesFiles);
+            int qEnd = currentQmltypesFiles.indexes();
+            for (int i = 0; i < qEnd; ++i) {
+                DomItem qmltypesRef = currentQmltypesFiles.index(i);
+                if (const Reference *ref = qmltypesRef.as<Reference>()) {
                     Path canonicalPath = ref->referredObjectPath[2];
                     if (canonicalPath && !canonicalPath.headName().isEmpty())
-                        addDependency(self,
-                                      Dependency { QString(), Version(), canonicalPath.headName(),
-                                                   DomType::QmlFile });
+                        addDependency(
+                                self,
+                                Dependency{ QString(), Version(), canonicalPath.headName(),
+                                            DomType::QmltypesFile });
                 }
-                return true;
+            }
+            DomItem currentQmlFiles = currentFile.field(Fields::qmlFiles);
+            currentQmlFiles.visitKeys([this, &self](const QString &, const DomItem &els) {
+                return els.visitIndexes([this, &self](const DomItem &el) {
+                    if (const Reference *ref = el.as<Reference>()) {
+                        Path canonicalPath = ref->referredObjectPath[2];
+                        if (canonicalPath && !canonicalPath.headName().isEmpty())
+                            addDependency(self,
+                                          Dependency{ QString(), Version(),
+                                                      canonicalPath.headName(), DomType::QmlFile });
+                    }
+                    return true;
+                });
             });
-        });
+        }
     } else if (shared_ptr<ModuleIndex> elPtr = el.ownerAs<ModuleIndex>()) {
         const auto qmldirs = elPtr->qmldirsToLoad(el);
         for (const Path &qmldirPath : qmldirs) {
@@ -876,6 +859,10 @@ void LoadInfo::addDependency(const DomItem &self, const Dependency &dep)
 \class QQmlJS::Dom::DomEnvironment
 
 \brief Represents a consistent set of types organized in modules, it is the top level of the DOM
+
+The DomEnvironment keeps a pointer m_lastValidBase to the last used valid DomEnvironment in the
+commitToBase() method. This allows the qqmldomastcreator to commit lazily loaded dependencies to the
+valid environment used by qmlls.
  */
 
 ErrorGroups DomEnvironment::myErrors()
@@ -1831,6 +1818,11 @@ DomEnvironment::DomEnvironment(const QStringList &loadPaths, Options options,
 {
 }
 
+/*!
+\internal
+Do not call this method inside of DomEnvironment's constructor! It requires weak_from_this() that
+only works after the constructor call finished.
+*/
 DomEnvironment::SemanticAnalysis &DomEnvironment::semanticAnalysis()
 {
     if (m_semanticAnalysis)
@@ -1839,6 +1831,38 @@ DomEnvironment::SemanticAnalysis &DomEnvironment::semanticAnalysis()
     Q_ASSERT(domCreationOptions().testFlag(DomCreationOption::WithSemanticAnalysis));
 
     m_semanticAnalysis = SemanticAnalysis(m_loadPaths);
+    const auto &importer = m_semanticAnalysis->m_importer;
+
+    importer->setImportVisitor([self = weak_from_this(), base = m_base](
+                                       QQmlJS::AST::Node *rootNode, QQmlJSImporter *importer,
+                                       const QQmlJSImporter::ImportVisitorPrerequisites &p) {
+        Q_UNUSED(rootNode);
+        Q_UNUSED(importer);
+
+        // support the "commitToBase" workflow, which does changes in a temporary
+        // DomEnvironment. if the current DomEnvironment is temporary (e.g. the weak pointer is
+        // null), then we assume that the current DomEnvironment was committed to base and then
+        // destructed. Use the base DomEnvironment instead.
+        std::shared_ptr<DomEnvironment> envPtr;
+        if (auto ptr = self.lock()) {
+            envPtr = ptr;
+        } else {
+            envPtr = base;
+        }
+        // populate QML File if from implicit import directory
+        // use the version in DomEnvironment and do *not* load from disk.
+        auto it = envPtr->m_qmlFileWithPath.constFind(p.m_logger->fileName());
+        if (it == envPtr->m_qmlFileWithPath.constEnd()) {
+            qCDebug(domLog) << "Import visitor tried to lazily load file \""
+                            << p.m_logger->fileName()
+                            << "\", but that file was not found in the DomEnvironment. Was this "
+                               "file not discovered by the Dom's dependency loading mechanism?";
+            return;
+        }
+        const DomItem qmlFile = it.value()->currentItem(DomItem(envPtr));
+        envPtr->populateFromQmlFile(MutableDomItem(qmlFile));
+    });
+
     return *m_semanticAnalysis;
 }
 
@@ -1877,6 +1901,11 @@ DomEnvironment::DomEnvironment(const shared_ptr<DomEnvironment> &parent,
 
 void DomEnvironment::addQmlFile(const std::shared_ptr<QmlFile> &file, AddOption options)
 {
+    if (domCreationOptions().testFlag(DomCreationOption::WithSemanticAnalysis)) {
+        const QQmlJSScope::Ptr &handle =
+                semanticAnalysis().m_importer->importFile(file->canonicalFilePath());
+        file->setHandleForPopulation(handle);
+    }
     addExternalItem(file, file->canonicalFilePath(), options);
 }
 
@@ -1931,6 +1960,7 @@ bool DomEnvironment::commitToBase(
     }
     {
         QMutexLocker lBase(base()->mutex()); // be more careful about makeCopy calls with lock?
+        m_base->m_semanticAnalysis = m_semanticAnalysis;
         m_base->m_globalScopeWithName.insert(my_globalScopeWithName);
         m_base->m_qmlDirectoryWithPath.insert(my_qmlDirectoryWithPath);
         m_base->m_qmldirFileWithPath.insert(my_qmldirFileWithPath);
@@ -1958,28 +1988,31 @@ bool DomEnvironment::commitToBase(
             }
         }
     }
-    if (validEnvPtr) {
+    if (validEnvPtr)
+        m_lastValidBase = validEnvPtr;
+    if (m_lastValidBase) {
         QMutexLocker lValid(
-                validEnvPtr->mutex()); // be more careful about makeCopy calls with lock?
-        validEnvPtr->m_globalScopeWithName.insert(my_globalScopeWithName);
-        validEnvPtr->m_qmlDirectoryWithPath.insert(my_qmlDirectoryWithPath);
-        validEnvPtr->m_qmldirFileWithPath.insert(my_qmldirFileWithPath);
+                m_lastValidBase->mutex()); // be more careful about makeCopy calls with lock?
+        m_base->m_semanticAnalysis = m_semanticAnalysis;
+        m_lastValidBase->m_globalScopeWithName.insert(my_globalScopeWithName);
+        m_lastValidBase->m_qmlDirectoryWithPath.insert(my_qmlDirectoryWithPath);
+        m_lastValidBase->m_qmldirFileWithPath.insert(my_qmldirFileWithPath);
         for (auto it = my_qmlFileWithPath.cbegin(), end = my_qmlFileWithPath.cend(); it != end;
              ++it) {
             if (it.value() && it.value()->current && it.value()->current->isValid())
-                validEnvPtr->m_qmlFileWithPath.insert(it.key(), it.value());
+                m_lastValidBase->m_qmlFileWithPath.insert(it.key(), it.value());
         }
         for (auto it = my_jsFileWithPath.cbegin(), end = my_jsFileWithPath.cend(); it != end;
              ++it) {
             if (it.value() && it.value()->current && it.value()->current->isValid())
-                validEnvPtr->m_jsFileWithPath.insert(it.key(), it.value());
+                m_lastValidBase->m_jsFileWithPath.insert(it.key(), it.value());
         }
-        validEnvPtr->m_qmltypesFileWithPath.insert(my_qmltypesFileWithPath);
-        validEnvPtr->m_loadInfos.insert(my_loadInfos);
+        m_lastValidBase->m_qmltypesFileWithPath.insert(my_qmltypesFileWithPath);
+        m_lastValidBase->m_loadInfos.insert(my_loadInfos);
         for (auto it = my_moduleIndexWithUri.cbegin(), end = my_moduleIndexWithUri.cend();
              it != end; ++it) {
             QMap<int, shared_ptr<ModuleIndex>> &myVersions =
-                    validEnvPtr->m_moduleIndexWithUri[it.key()];
+                    m_lastValidBase->m_moduleIndexWithUri[it.key()];
             for (auto it2 = it.value().cbegin(), end2 = it.value().cend(); it2 != end2; ++it2) {
                 auto oldV = myVersions.value(it2.key());
                 DomItem it2Obj = self.copy(it2.value());
@@ -2145,6 +2178,8 @@ void DomEnvironment::populateFromQmlFile(MutableDomItem &&qmlFile)
         // the logger filename is used to populate the QQmlJSScope filepath.
         logger.setFileName(qmlFile.canonicalFilePath());
 
+        qmlFilePtr->setFileLocationsTree(FileLocations::createTree(qmlFile.canonicalPath()));
+
         auto setupFile = [&qmlFilePtr, &qmlFile, this](auto &&visitor) {
             Q_UNUSED(this); // note: integrity requires "this" to be in the capture list, while
                             // other compilers complain about "this" being unused in the lambda
@@ -2158,6 +2193,7 @@ void DomEnvironment::populateFromQmlFile(MutableDomItem &&qmlFile)
             auto scope = analysis.m_importer->importFile(qmlFile.canonicalFilePath());
             auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(scope, qmlFile, &logger,
                                                                         analysis.m_importer.get());
+            v->enableLoadFileLazily(true);
             v->enableScriptExpressions(m_domCreationOptions.testFlag(DomCreationOption::WithScriptExpressions));
 
             setupFile(v.get());

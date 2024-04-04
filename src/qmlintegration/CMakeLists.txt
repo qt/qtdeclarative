@@ -7,4 +7,5 @@ qt_internal_add_module(QmlIntegration
         qqmlintegration.h
     LIBRARIES
         Qt::Core
+    NO_GENERATE_CPP_EXPORTS
 )

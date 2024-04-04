@@ -102,6 +102,7 @@ Item {
         ScriptAction { script: demoItem.stackView.currentItem.incrementCurrentIndex() }
         PauseAnimation { duration: 1000 }
         ScriptAction { script: demoItem.stackView.currentItem.launched(qsTr("Notifications"), "NotificationsPage.qml", "") }
+        PauseAnimation { duration: 2000 }
 
         // Go back to the launcher page.
         ScriptAction { script: demoItem.stackView.pop(null) }

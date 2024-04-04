@@ -1,5 +1,5 @@
 # Copyright (C) 2022 The Qt Company Ltd.
-# SPDX-License-Identifier: BSD-3-Clause
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 set_source_files_properties(CheckBox.qml TabSet.qml TextField.qml
     PROPERTIES
@@ -35,22 +35,4 @@ qt_add_qml_module(${PROJECT_NAME}_shared
         "images/qt-logo.png"
         "images/slider_handle.png"
         "images/tab.png"
-)
-
-include(QtBundleQmlModuleForMacOS.cmake)
-# Puts the shared qml module plugin and qmldir into the macOS app bundle directory.
-# Only call this function if your main project has the MACOSX_BUNDLE option set.
-function(bundle_shared app_target)
-    set(qml_module_target "${PROJECT_NAME}_shared")
-    add_qml_module_to_macos_app_bundle("${app_target}" "${qml_module_target}")
-endfunction()
-
-set(INSTALL_SHAREDDIR "${INSTALL_EXAMPLESDIR}/quick/${PROJECT_NAME}/shared")
-install(TARGETS ${PROJECT_NAME}_shared
-    RUNTIME DESTINATION "${INSTALL_SHAREDDIR}"
-    LIBRARY DESTINATION "${INSTALL_SHAREDDIR}"
-)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qmldir
-    DESTINATION "${INSTALL_SHAREDDIR}"
 )

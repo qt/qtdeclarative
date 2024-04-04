@@ -20,4 +20,7 @@ Item {
             return foo; // should be in inlineUsages
         }
     }
+
+    property InlineComponentProvider fromAnotherFile: InlineComponentProvider {}
+    property InlineComponentProvider.IC1 fromAnotherFile2: InlineComponentProvider.IC1 {}
 }

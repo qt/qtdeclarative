@@ -69,7 +69,7 @@ public:
 };
 #endif
 
-#if defined(Q_OS_APPLE)
+#if QT_CONFIG(metal)
 class Q_QUICK_EXPORT QSGTexturePlatformMetal : public QNativeInterface::QSGMetalTexture
 {
 public:
@@ -121,7 +121,7 @@ public:
     QSGTexturePlatformD3D11 m_d3d11TextureAccessor;
     QSGTexturePlatformD3D12 m_d3d12TextureAccessor;
 #endif
-#if defined(Q_OS_APPLE)
+#if QT_CONFIG(metal)
     QSGTexturePlatformMetal m_metalTextureAccessor;
 #endif
 #if QT_CONFIG(vulkan)

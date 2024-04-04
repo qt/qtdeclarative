@@ -360,6 +360,8 @@ private slots:
 
     void hangOnWarning();
 
+    void groupPropertyFromNonExposedBaseClass();
+
     void listEnumConversion();
     void deepInlineComponentScriptBinding();
 
@@ -411,6 +413,8 @@ private slots:
     void asValueType();
 
     void longConversion();
+
+    void enumPropsManyUnderylingTypes();
 
     void typedEnums_data();
     void typedEnums();
@@ -6862,6 +6866,25 @@ void tst_qqmllanguage::hangOnWarning()
     QVERIFY(object != nullptr);
 }
 
+void tst_qqmllanguage::groupPropertyFromNonExposedBaseClass()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("derivedFromUnexposedBase.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    auto root = qobject_cast<DerivedFromUnexposedBase *>(o.get());
+    QVERIFY(root);
+    QVERIFY(root->group);
+    QCOMPARE(root->group->value, 42);
+    QCOMPARE(root->groupGadget.value, 42);
+
+    c.loadUrl(testFileUrl("dynamicGroupPropertyRejected.qml"));
+    QVERIFY(c.isError());
+    QVERIFY2(c.errorString().contains("Unsupported grouped property access"), qPrintable(c.errorString()));
+}
+
 void tst_qqmllanguage::listEnumConversion()
 {
     QQmlEngine e;
@@ -8007,6 +8030,22 @@ void tst_qqmllanguage::longConversion()
         QCOMPARE(val.metaType(), QMetaType::fromType<bool>());
         QVERIFY(!val.toBool());
     }
+}
+
+void tst_qqmllanguage::enumPropsManyUnderylingTypes()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("enumPropsManyUnderlyingTypes.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    auto *enumObject = qobject_cast<EnumPropsManyUnderlyingTypes *>(o.get());
+    QCOMPARE(enumObject->si8prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
+    QCOMPARE(enumObject->ui8prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
+    QCOMPARE(enumObject->si16prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
+    QCOMPARE(enumObject->ui16prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
+    QCOMPARE(enumObject->si64prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
+    QCOMPARE(enumObject->ui64prop, EnumPropsManyUnderlyingTypes::ResolvedValue);
 }
 
 void tst_qqmllanguage::asValueType()

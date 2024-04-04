@@ -1728,6 +1728,8 @@ void tst_QJSEngine::valueConversion_basic()
 
 void tst_QJSEngine::valueConversion_QVariant()
 {
+    QT_WARNING_PUSH
+    QT_WARNING_DISABLE_DEPRECATED
     QJSEngine eng;
     // qScriptValueFromValue() should be "smart" when the argument is a QVariant
     {
@@ -1817,6 +1819,7 @@ void tst_QJSEngine::valueConversion_QVariant()
         QVERIFY(val.isObject());
         QCOMPARE(val.property(42).toString(), map.value(QStringLiteral("42")).toString());
     }
+    QT_WARNING_POP
 }
 
 void tst_QJSEngine::valueConversion_basic2()

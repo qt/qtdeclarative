@@ -112,7 +112,7 @@ void tst_RenderControl::renderAndReadBackWithRhi_data()
 #ifdef Q_OS_WIN
     QTest::newRow("D3D11") << QSGRendererInterface::Direct3D11Rhi;
 #endif
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     QTest::newRow("Metal") << QSGRendererInterface::MetalRhi;
 #endif
 }

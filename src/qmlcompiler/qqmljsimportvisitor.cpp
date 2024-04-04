@@ -313,7 +313,7 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
                 newProperty.setIsWritable(targetProperty.isWritable());
                 newProperty.setIsPointer(targetProperty.isPointer());
 
-                if (!typeScope.isNull()) {
+                if (!typeScope.isNull() && !object->isPropertyLocallyRequired(property.propertyName())) {
                     object->setPropertyLocallyRequired(
                             newProperty.propertyName(),
                             typeScope->isPropertyRequired(targetProperty.propertyName()));
@@ -2311,7 +2311,7 @@ void QQmlJSImportVisitor::importFromHost(const QString &path, const QString &pre
 void QQmlJSImportVisitor::importFromQrc(const QString &path, const QString &prefix,
                                         const QQmlJS::SourceLocation &location)
 {
-    if (const auto &mapper = m_importer->resourceFileMapper()) {
+    if (const QQmlJSResourceFileMapper *mapper = m_importer->resourceFileMapper()) {
         if (mapper->isFile(path)) {
             const auto entry = m_importer->resourceFileMapper()->entry(
                     QQmlJSResourceFileMapper::resourceFileFilter(path));

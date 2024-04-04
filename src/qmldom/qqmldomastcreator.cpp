@@ -335,16 +335,34 @@ bool QQmlDomAstCreator::visit(UiProgram *program)
     FileLocations::addRegion(rootMap, MainRegion, combineLocations(program));
     pushEl(p, *cPtr, program);
 
-    // add implicit directory import
+    auto envPtr = qmlFile.environment().ownerAs<DomEnvironment>();
+    const bool loadDependencies =
+            !envPtr->options().testFlag(DomEnvironment::Option::NoDependencies);
+    // add implicit directory import and load them in the Dom
     if (!fInfo.canonicalPath().isEmpty()) {
         Import selfDirImport(QmlUri::fromDirectoryString(fInfo.canonicalPath()));
         selfDirImport.implicit = true;
         qmlFilePtr->addImport(selfDirImport);
+
+        if (loadDependencies) {
+            const QString currentFileDir =
+                    QFileInfo(qmlFile.canonicalFilePath()).dir().canonicalPath();
+            envPtr->loadFile(FileToLoad::fromFileSystem(
+                                     envPtr, selfDirImport.uri.absoluteLocalPath(currentFileDir)),
+                             DomItem::Callback(), DomType::QmlDirectory);
+        }
     }
-    // add implicit imports from the environment (QML, QtQml for example)
+    // add implicit imports from the environment (QML, QtQml for example) and load them in the Dom
     for (Import i : qmlFile.environment().ownerAs<DomEnvironment>()->implicitImports()) {
         i.implicit = true;
         qmlFilePtr->addImport(i);
+
+        if (loadDependencies)
+            envPtr->loadModuleDependency(i.uri.moduleUri(), i.version, DomItem::Callback());
+    }
+    if (m_loadFileLazily && loadDependencies) {
+        envPtr->loadPendingDependencies();
+        envPtr->commitToBase(qmlFile.environment().item());
     }
 
     return true;
@@ -386,16 +404,36 @@ bool QQmlDomAstCreator::visit(UiImport *el)
         v.majorVersion = el->version->version.majorVersion();
     if (el->version && el->version->version.hasMinorVersion())
         v.minorVersion = el->version->version.minorVersion();
-    if (el->importUri != nullptr)
-        createMap(DomType::Import,
-                  qmlFilePtr->addImport(Import::fromUriString(toString(el->importUri), v,
-                                                              el->importId.toString())),
-                  el);
-    else
-        createMap(DomType::Import,
-                  qmlFilePtr->addImport(
-                          Import::fromFileString(el->fileName.toString(), el->importId.toString())),
-                  el);
+
+    auto envPtr = qmlFile.environment().ownerAs<DomEnvironment>();
+    const bool loadDependencies =
+            !envPtr->options().testFlag(DomEnvironment::Option::NoDependencies);
+    if (el->importUri != nullptr) {
+        const Import import =
+                Import::fromUriString(toString(el->importUri), v, el->importId.toString());
+        createMap(DomType::Import, qmlFilePtr->addImport(import), el);
+
+        if (loadDependencies) {
+            envPtr->loadModuleDependency(import.uri.moduleUri(), import.version,
+                                         DomItem::Callback());
+        }
+    } else {
+        const Import import =
+                Import::fromFileString(el->fileName.toString(), el->importId.toString());
+        createMap(DomType::Import, qmlFilePtr->addImport(import), el);
+
+        if (loadDependencies) {
+            const QString currentFileDir =
+                    QFileInfo(qmlFile.canonicalFilePath()).dir().canonicalPath();
+            envPtr->loadFile(FileToLoad::fromFileSystem(
+                                     envPtr, import.uri.absoluteLocalPath(currentFileDir)),
+                             DomItem::Callback(), DomType::QmlDirectory);
+        }
+    }
+    if (m_loadFileLazily && loadDependencies) {
+        envPtr->loadPendingDependencies();
+        envPtr->commitToBase(qmlFile.environment().item());
+    }
     return true;
 }
 
@@ -446,6 +484,14 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
         PropertyDefinition *pPtr;
         Path pPathFromOwner =
                 current<QmlObject>().addPropertyDef(p, AddOption::KeepExisting, &pPtr);
+        if (m_enableScriptExpressions) {
+            auto qmlObjectType = makeGenericScriptElement(el->memberType, DomType::ScriptType);
+            qmlObjectType->insertChild(Fields::typeName,
+                                       fieldMemberExpressionForQualifiedId(el->memberType));
+            pPtr->setNameIdentifiers(finalizeScriptExpression(
+                    ScriptElementVariant::fromElement(qmlObjectType),
+                    pPathFromOwner.field(Fields::nameIdentifiers), rootMap));
+        }
         pushEl(pPathFromOwner, *pPtr, el);
         FileLocations::addRegion(nodeStack.last().fileLocations, PropertyKeywordRegion,
                                  el->propertyToken());
@@ -1234,6 +1280,20 @@ bool QQmlDomAstCreator::visit(AST::UiInlineComponent *el)
     QString cName = els.join(QLatin1Char('.'));
     QmlComponent *compPtr;
     Path p = qmlFilePtr->addComponent(QmlComponent(cName), AddOption::KeepExisting, &compPtr);
+
+    if (m_enableScriptExpressions) {
+        auto inlineComponentType =
+                makeGenericScriptElement(el->identifierToken, DomType::ScriptType);
+
+        auto typeName = std::make_shared<ScriptElements::IdentifierExpression>(el->identifierToken);
+        typeName->setName(el->name);
+        inlineComponentType->insertChild(Fields::typeName,
+                                         ScriptElementVariant::fromElement(typeName));
+        compPtr->setNameIdentifiers(
+                finalizeScriptExpression(ScriptElementVariant::fromElement(inlineComponentType),
+                                         p.field(Fields::nameIdentifiers), rootMap));
+    }
+
     pushEl(p, *compPtr, el);
     FileLocations::addRegion(nodeStack.last().fileLocations, ComponentKeywordRegion,
                              el->componentToken);
@@ -1247,7 +1307,7 @@ void QQmlDomAstCreator::endVisit(AST::UiInlineComponent *)
     QmlComponent &component = std::get<QmlComponent>(currentNode().value);
     QStringList nameEls = component.name().split(QChar::fromLatin1('.'));
     QString key = nameEls.mid(1).join(QChar::fromLatin1('.'));
-    QmlComponent *cPtr = valueFromMultimap(qmlFilePtr->m_components, key, currentIndex());
+    QmlComponent *cPtr = valueFromMultimap(qmlFilePtr->lazyMembers().m_components, key, currentIndex());
     Q_ASSERT(cPtr);
     *cPtr = component;
     removeCurrentNode(DomType::QmlComponent);
@@ -2857,8 +2917,16 @@ void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomBeforeEndvisit()
                 [&scope](auto &&e) {
                     using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
                     if constexpr (std::is_same_v<U, PropertyDefinition>) {
-                        e.scope = scope;
-                        Q_ASSERT(e.scope);
+                        // Make sure to use the property definition scope instead of the binding
+                        // scope. If the current scope is a binding scope (this happens when the
+                        // property definition has a binding, like `property int i: 45` for
+                        // example), then the property definition scope is the parent of the current
+                        // scope.
+                        e.setSemanticScope(scope->scopeType() == QQmlSA::ScopeType::JSFunctionScope
+                                                   ? scope->parentScope()
+                                                   : scope);
+                        Q_ASSERT(e.semanticScope()
+                                 && e.semanticScope()->scopeType() == QQmlSA::ScopeType::QMLScope);
                     }
                 },
                 m_domCreator.currentNodeEl(1).item.value);
@@ -2868,8 +2936,8 @@ void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomBeforeEndvisit()
                 [&scope](auto &&e) {
                     using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
                     if constexpr (std::is_same_v<U, PropertyDefinition>) {
-                        e.scope = scope;
-                        Q_ASSERT(e.scope);
+                        e.setSemanticScope(scope);
+                        Q_ASSERT(e.semanticScope());
                     } else if constexpr (std::is_same_v<U, MethodInfo>) {
                         if (e.methodType == MethodInfo::Signal) {
                             e.setSemanticScope(scope);

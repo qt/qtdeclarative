@@ -19,4 +19,10 @@ Item {
             return rootId.recursive(123)
         }
     }
+
+    RecursiveInOtherFile {
+        id: fromOtherFile
+    }
+
+    property int helloRecursiveFromOtherFile: fromOtherFile.recursive(42)
 }

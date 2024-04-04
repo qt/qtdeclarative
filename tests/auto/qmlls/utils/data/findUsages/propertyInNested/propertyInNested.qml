@@ -42,4 +42,15 @@ Item {
             return _p2 + p2
         }
     }
+
+    NestedComponentInFile {
+        id: myNestedInFile
+    }
+    function nestedUsagesInFile() {
+        let x = myNestedInFile.inner.inner.inner.helloProperty;
+        let a = myNestedInFile.p2
+        let b = myNestedInFile.inner.p2
+        let c = myNestedInFile.inner.inner.p2
+        let d = myNestedInFile.inner.inner.inner.p2
+    }
 }

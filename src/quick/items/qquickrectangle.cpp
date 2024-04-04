@@ -353,6 +353,7 @@ void QQuickRectangle::doUpdate()
     \qmlpropertygroup QtQuick::Rectangle::border
     \qmlproperty int QtQuick::Rectangle::border.width
     \qmlproperty color QtQuick::Rectangle::border.color
+    \qmlproperty bool QtQuick::Rectangle::border.pixelAligned
 
     The width and color used to draw the border of the rectangle.
 
@@ -362,6 +363,10 @@ void QQuickRectangle::doUpdate()
     rectangle itself or its position relative to other items if anchors are used.
 
     The border is rendered within the rectangle's boundaries.
+
+    If \c pixelAligned is \c true (the default), the rendered border width is rounded to a whole
+    number of pixels, after device pixel ratio scaling. Setting \c pixelAligned to \c false will
+    allow fractional border widths, which may be desirable when \c antialiasing is enabled.
 */
 QQuickPen *QQuickRectangle::border()
 {

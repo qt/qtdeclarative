@@ -23,4 +23,5 @@ QtObject {
     property int innerVal: Enums.Patron
     property int illegal1: Cats.Patron // Shouldn't be found
     property int illegal2: Patron // Shouldn't be found
+    property int alien: EnumsFromAnotherFile.FromAnotherUniverse
 }

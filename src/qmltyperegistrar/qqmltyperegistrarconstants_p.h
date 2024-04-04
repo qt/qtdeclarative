@@ -55,6 +55,7 @@ static constexpr QLatin1StringView S_IS_READONLY                  { "isReadonly"
 static constexpr QLatin1StringView S_IS_REQUIRED                  { "isRequired" };
 static constexpr QLatin1StringView S_IS_SCOPED                    { "isScoped" };
 static constexpr QLatin1StringView S_IS_SINGLETON                 { "isSingleton" };
+static constexpr QLatin1StringView S_IS_STRUCTURED                { "isStructured" };
 static constexpr QLatin1StringView S_METHOD                       { "Method" };
 static constexpr QLatin1StringView S_MODULE                       { "Module" };
 static constexpr QLatin1StringView S_NAME                         { "name" };
@@ -153,8 +154,8 @@ static constexpr QLatin1StringView S_EXTENSION_IS_NAMESPACE       { "QML.Extensi
 static constexpr QLatin1StringView S_FOREIGN                      { "QML.Foreign" };
 static constexpr QLatin1StringView S_FOREIGN_IS_NAMESPACE         { "QML.ForeignIsNamespace" };
 static constexpr QLatin1StringView S_HAS_CUSTOM_PARSER            { "QML.HasCustomParser" };
-static constexpr QLatin1StringView S_OMIT_FROM_QML_TYPES          { "QML.OmitFromQmlTypes" };
 static constexpr QLatin1StringView S_REMOVED_IN_VERSION           { "QML.RemovedInVersion" };
+static constexpr QLatin1StringView S_ROOT                         { "QML.Root" };
 static constexpr QLatin1StringView S_SEQUENCE                     { "QML.Sequence" };
 static constexpr QLatin1StringView S_SINGLETON                    { "QML.Singleton" };
 static constexpr QLatin1StringView S_UNCREATABLE_REASON           { "QML.UncreatableReason" };

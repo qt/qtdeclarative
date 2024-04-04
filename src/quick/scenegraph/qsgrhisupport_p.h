@@ -56,7 +56,7 @@ public:
     static QRhiTexture::Format toRhiTextureFormatFromDXGI(uint format, QRhiTexture::Flags *flags);
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     static QRhiTexture::Format toRhiTextureFormatFromMetal(uint format, QRhiTexture::Flags *flags);
 #endif
 

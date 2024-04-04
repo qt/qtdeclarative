@@ -397,7 +397,8 @@ public:
         ArgumentStructure,
         ReturnType,
         JSCode, // Used for storing the content of the whole .js file as "one" Expression
-        MJSCode, // Used for storing the content of the whole .mjs file as "one" Expression
+        ESMCode, // Used for storing the content of the whole ECMAScript module (.mjs) as "one"
+                 // Expression
     };
     Q_ENUM(ExpressionType);
     constexpr static DomType kindValue = DomType::ScriptExpression;
@@ -511,7 +512,7 @@ private:
     enum class ParseMode {
         QML,
         JS,
-        MJS, // module js
+        ESM, // ECMAScript module
     };
 
     inline ParseMode resolveParseMode()
@@ -521,8 +522,8 @@ private:
             // unfortunately there are no documentation explaining this resolution
             // this was just moved from the original implementation
             return ParseMode::QML;
-        case ExpressionType::MJSCode:
-            return ParseMode::MJS;
+        case ExpressionType::ESMCode:
+            return ParseMode::ESM;
         default:
             return ParseMode::JS;
         }
@@ -623,6 +624,9 @@ public:
                        QmlObject **aPtr = nullptr);
     void updatePathFromOwner(const Path &newPath);
 
+    QQmlJSScope::ConstPtr semanticScope() const { return m_semanticScope; }
+    void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_semanticScope = scope; }
+
     QString name;
     Access access = Access::Public;
     QString typeName;
@@ -630,6 +634,7 @@ public:
     bool isList = false;
     QList<QmlObject> annotations;
     RegionComments comments;
+    QQmlJSScope::ConstPtr m_semanticScope;
 };
 
 struct QMLDOM_EXPORT LocallyResolvedAlias
@@ -671,6 +676,11 @@ public:
         cont = cont && self.dvValueField(visitor, Fields::bindable, bindable);
         cont = cont && self.dvValueField(visitor, Fields::notify, notify);
         cont = cont && self.dvReferenceField(visitor, Fields::type, typePath());
+        if (m_nameIdentifiers) {
+            cont = cont && self.dvItemField(visitor, Fields::nameIdentifiers, [this, &self]() {
+                return self.subScriptElementWrapperItem(m_nameIdentifiers);
+            });
+        }
         return cont;
     }
 
@@ -679,6 +689,8 @@ public:
     bool isAlias() const { return typeName == u"alias"; }
     bool isParametricType() const;
     void writeOut(const DomItem &self, OutWriter &lw) const;
+    ScriptElementVariant nameIdentifiers() const { return m_nameIdentifiers; }
+    void setNameIdentifiers(const ScriptElementVariant &name) { m_nameIdentifiers = name; }
 
     QString read;
     QString write;
@@ -688,7 +700,7 @@ public:
     bool isPointer = false;
     bool isDefaultMember = false;
     bool isRequired = false;
-    QQmlJSScope::ConstPtr scope;
+    ScriptElementVariant m_nameIdentifiers;
 };
 
 class QMLDOM_EXPORT PropertyInfo
@@ -755,8 +767,6 @@ public:
                                      QLatin1String("function foo(){\n"), QLatin1String("\n}\n"));
     }
     MethodInfo() = default;
-    QQmlJSScope::ConstPtr semanticScope() const { return m_semanticScope; }
-    void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_semanticScope = scope; }
 
     // TODO: make private + add getters/setters
     QList<MethodParameter> parameters;
@@ -764,7 +774,6 @@ public:
     std::shared_ptr<ScriptExpression> body;
     std::shared_ptr<ScriptExpression> returnType;
     bool isConstructor = false;
-    QQmlJSScope::ConstPtr m_semanticScope;
 };
 
 class QMLDOM_EXPORT EnumItem
@@ -1113,12 +1122,6 @@ public:
         setIsCreatable(true);
     }
 
-    QmlComponent(const QmlComponent &o)
-        : Component(o), m_nextComponentPath(o.m_nextComponentPath), m_ids(o.m_ids)
-    {
-    }
-    QmlComponent &operator=(const QmlComponent &) = default;
-
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
 
     const QMultiMap<QString, Id> &ids() const & { return m_ids; }
@@ -1138,12 +1141,17 @@ public:
 
     void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_semanticScope = scope; }
     QQmlJSScope::ConstPtr semanticScope() const { return m_semanticScope; }
+    ScriptElementVariant nameIdentifiers() const { return m_nameIdentifiers; }
+    void setNameIdentifiers(const ScriptElementVariant &name) { m_nameIdentifiers = name; }
 
 private:
     friend class QQmlDomAstCreator;
     Path m_nextComponentPath;
     QMultiMap<QString, Id> m_ids;
     QQmlJSScope::ConstPtr m_semanticScope;
+    // m_nameIdentifiers contains the name of the component as FieldMemberExpression, and therefore
+    // only exists in inline components!
+    ScriptElementVariant m_nameIdentifiers;
 };
 
 class QMLDOM_EXPORT GlobalComponent final : public Component

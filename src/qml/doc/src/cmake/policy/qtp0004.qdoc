@@ -1,0 +1,34 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qt-cmake-policy-qtp0004.html
+\ingroup qt-cmake-policies
+
+\title QTP0004
+\keyword qt_cmake_policy_qtp0004
+
+\summary {Extra directories with QML files in a QML module need extra qmldir files.}
+
+This policy was introduced in Qt 6.8. It causes the build system to generate
+an extra qmldir file for each additional directory that contains QML files in
+a QML module.
+
+Enabling this policy ensures that the implicit import of each of the QML
+components in your module is the same as the module itself. This means that
+all the components can see each other without explicitly importing the module.
+
+The \c OLD behavior of this policy is that a qmldir file is only generated for
+the root directory of a module.
+
+The \c NEW behavior of this policy is that for each directory with QML files in
+a module a separate qmldir file is generated.
+
+Qt 6.8 issues warnings if you do not explicitly set the policy.
+
+\qtpolicydeprecatedbehavior
+
+\sa qt_policy, {qt6_standard_project_setup}{qt_standard_project_setup()},
+    qt_cmake_policies, qt_add_qml_module
+
+*/

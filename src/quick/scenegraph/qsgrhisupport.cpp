@@ -97,7 +97,7 @@ void QSGRhiSupport::applySettings()
             }
 #if defined(Q_OS_WIN)
             m_rhiBackend = QRhi::D3D11;
-#elif defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#elif QT_CONFIG(metal)
             m_rhiBackend = QRhi::Metal;
 #elif QT_CONFIG(opengl)
             m_rhiBackend = QRhi::OpenGLES2;
@@ -120,7 +120,7 @@ void QSGRhiSupport::applySettings()
 
 void QSGRhiSupport::adjustToPlatformQuirks()
 {
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     // A macOS VM may not have Metal support at all. We have to decide at this
     // point, it will be too late afterwards, and the only way is to see if
     // MTLCreateSystemDefaultDevice succeeds.
@@ -612,7 +612,7 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromDXGI(uint format, QRhiT
 }
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
 namespace QSGRhiSupportMac {
     QRhiTexture::Format toRhiTextureFormatFromMetal(uint format, QRhiTexture::Flags *flags);
 }
@@ -772,7 +772,7 @@ static const void *qsgrhi_d3d12_rifResource(QSGRendererInterface::Resource res, 
 }
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
 static const void *qsgrhi_mtl_rifResource(QSGRendererInterface::Resource res, const QRhiNativeHandles *nat,
                                     const QRhiNativeHandles *cbNat)
 {
@@ -849,7 +849,7 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
     case QRhi::D3D12:
         return qsgrhi_d3d12_rifResource(res, nat);
 #endif
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     case QRhi::Metal:
     {
         QRhiCommandBuffer *cb = rc->currentFrameCommandBuffer();
@@ -1262,7 +1262,7 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
         }
     }
 #endif
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     if (backend == QRhi::Metal) {
         QRhiMetalInitParams rhiParams;
         if (customDevD->type == QQuickGraphicsDevicePrivate::Type::DeviceAndCommandQueue) {
@@ -1595,7 +1595,7 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormat(uint nativeFormat, QRhiTex
     case QRhi::D3D12:
         return toRhiTextureFormatFromDXGI(nativeFormat, flags);
 #endif
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     case QRhi::Metal:
         return toRhiTextureFormatFromMetal(nativeFormat, flags);
 #endif

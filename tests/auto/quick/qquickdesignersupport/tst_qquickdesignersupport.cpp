@@ -42,6 +42,7 @@ private slots:
     void testDotProperties();
     void testItemReparenting();
     void testPropertyNames();
+    void regressionTestAllProperties();
 };
 
 
@@ -781,6 +782,37 @@ void tst_qquickdesignersupport::testPropertyNames()
     names = QQuickDesignerSupportProperties::propertyNameListForWritableProperties(recursiveProperty);
     QVERIFY(!names.isEmpty());
     QVERIFY(!names.contains("testProperty"));
+}
+
+void tst_qquickdesignersupport::regressionTestAllProperties()
+{
+    QScopedPointer<QQuickView> view(new QQuickView);
+    view->engine()->setOutputWarningsToStandardError(false);
+    view->setSource(testFileUrl("regTestProperties.qml"));
+
+    QVERIFY(view->errors().isEmpty());
+    QQuickItem *rootItem = view->rootObject();
+    QVERIFY(rootItem);
+
+    QObject *component = rootItem->findChild<QObject*>("testComponent");
+
+    QVERIFY(component);
+    QCOMPARE(component->objectName(), QLatin1String("testComponent"));
+
+    QVERIFY(component);
+
+    QQuickDesignerSupport::PropertyNameList names
+            = QQuickDesignerSupportProperties::allPropertyNames(component);
+    QVERIFY(!names.isEmpty());
+
+    const QByteArrayList expectedNames = QByteArrayList {
+        "objectName", "currentCategory", "materialsNames", "model"
+    };
+
+    QCOMPARE(names, expectedNames);
+    names = QQuickDesignerSupportProperties::propertyNameListForWritableProperties(component);
+    QVERIFY(!names.isEmpty());
+    QCOMPARE(names, expectedNames);
 }
 
 QTEST_MAIN(tst_qquickdesignersupport)

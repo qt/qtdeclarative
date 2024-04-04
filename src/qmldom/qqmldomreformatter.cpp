@@ -188,59 +188,78 @@ bool ScriptFormatter::visit(PatternElementList *ast)
 bool ScriptFormatter::visit(PatternPropertyList *ast)
 {
     for (PatternPropertyList *it = ast; it; it = it->next) {
-        PatternProperty *assignment = AST::cast<PatternProperty *>(it->property);
-        if (assignment) {
-            preVisit(assignment);
-            accept(assignment->name);
-            bool useInitializer = false;
-            const bool bindingIdentifierExist = !assignment->bindingIdentifier.isEmpty();
-            if (assignment->colonToken.length > 0) {
-                out(": ");
-                useInitializer = true;
-                if (bindingIdentifierExist)
-                    out(assignment->bindingIdentifier);
-                if (assignment->bindingTarget)
-                    accept(assignment->bindingTarget);
-            }
-
-            if (assignment->initializer) {
-                if (bindingIdentifierExist) {
-                    out(" = ");
-                    useInitializer = true;
-                }
-                if (useInitializer)
-                    accept(assignment->initializer);
-            }
-
-            if (it->next) {
-                out(",");
-                newLine();
-            }
-            postVisit(assignment);
-            continue;
+        accept(it->property);
+        if (it->next) {
+            out(",");
+            newLine();
         }
+    }
+    return false;
+}
 
-        PatternPropertyList *getterSetter = AST::cast<PatternPropertyList *>(it->next);
-        if (getterSetter && getterSetter->property) {
-            switch (getterSetter->property->type) {
-            case PatternElement::Getter:
-                out("get");
-                break;
-            case PatternElement::Setter:
-                out("set");
-                break;
-            default:
-                break;
-            }
-
-            accept(getterSetter->property->name);
-            out("(");
-            // accept(getterSetter->formals);  // TODO
-            out(")");
-            out(" {");
-            // accept(getterSetter->functionBody);  // TODO
-            out(" }");
+// https://262.ecma-international.org/7.0/#prod-PropertyDefinition
+bool ScriptFormatter::visit(AST::PatternProperty *property)
+{
+    if (property->type == PatternElement::Getter || property->type == PatternElement::Setter
+        || property->type == PatternElement::Method) {
+        // note that MethodDefinitions and FunctionDeclarations have different syntax
+        // https://262.ecma-international.org/7.0/#prod-MethodDefinition
+        // https://262.ecma-international.org/7.0/#prod-FunctionDeclaration
+        // hence visit(FunctionDeclaration*) is not quite appropriate here
+        if (property->type == PatternProperty::Getter)
+            out("get ");
+        else if (property->type == PatternProperty::Setter)
+            out("set ");
+        FunctionExpression *f = AST::cast<FunctionExpression *>(property->initializer);
+        if (f->isGenerator) {
+            out("*");
         }
+        accept(property->name);
+        out(f->lparenToken);
+        accept(f->formals);
+        out(f->rparenToken);
+        out(f->lbraceToken);
+        const bool scoped = f->lbraceToken.isValid();
+        if (scoped)
+            ++expressionDepth;
+        if (f->body) {
+            if (f->body->next || scoped) {
+                lnAcceptIndented(f->body);
+                lw.newline();
+            } else {
+                auto baseIndent = lw.increaseIndent(1);
+                accept(f->body);
+                lw.decreaseIndent(1, baseIndent);
+            }
+        }
+        if (scoped)
+            --expressionDepth;
+        out(f->rbraceToken);
+        return false;
+    }
+
+    // IdentifierReference[?Yield]
+    accept(property->name);
+    bool useInitializer = false;
+    const bool bindingIdentifierExist = !property->bindingIdentifier.isEmpty();
+    if (property->colonToken.isValid()) {
+        // PropertyName[?Yield] : AssignmentExpression[In, ?Yield]
+        out(": ");
+        useInitializer = true;
+        if (bindingIdentifierExist)
+            out(property->bindingIdentifier);
+        if (property->bindingTarget)
+            accept(property->bindingTarget);
+    }
+
+    if (property->initializer) {
+        // CoverInitializedName[?Yield]
+        if (bindingIdentifierExist) {
+            out(" = ");
+            useInitializer = true;
+        }
+        if (useInitializer)
+            accept(property->initializer);
     }
     return false;
 }
@@ -887,39 +906,11 @@ bool ScriptFormatter::visit(ClassDeclaration *ast)
     out(" {");
     int baseIndent = lw.increaseIndent();
     for (ClassElementList *it = ast->elements; it; it = it->next) {
-        PatternProperty *property = it->property;
         lw.newline();
-        preVisit(property);
         if (it->isStatic)
             out("static ");
-        if (property->type == PatternProperty::Getter)
-            out("get ");
-        else if (property->type == PatternProperty::Setter)
-            out("set ");
-        FunctionExpression *f = AST::cast<FunctionExpression *>(property->initializer);
-        const bool scoped = f->lbraceToken.length != 0;
-        out(f->functionToken);
-        out(f->lparenToken);
-        accept(f->formals);
-        out(f->rparenToken);
-        out(f->lbraceToken);
-        if (scoped)
-            ++expressionDepth;
-        if (f->body) {
-            if (f->body->next || scoped) {
-                lnAcceptIndented(f->body);
-                lw.newline();
-            } else {
-                baseIndent = lw.increaseIndent(1);
-                accept(f->body);
-                lw.decreaseIndent(1, baseIndent);
-            }
-        }
-        if (scoped)
-            --expressionDepth;
-        out(f->rbraceToken);
+        accept(it->property);
         lw.newline();
-        postVisit(property);
     }
     lw.decreaseIndent(1, baseIndent);
     out("}");

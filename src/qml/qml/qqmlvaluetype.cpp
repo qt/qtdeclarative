@@ -55,16 +55,25 @@ void QQmlGadgetPtrWrapper::write(
 QVariant QQmlGadgetPtrWrapper::value() const
 {
     Q_ASSERT(m_gadgetPtr);
-    return QVariant(metaType(), m_gadgetPtr);
+
+    const QMetaType m = metaType();
+    return m == QMetaType::fromType<QVariant>()
+            ? *static_cast<const QVariant *>(m_gadgetPtr)
+            : QVariant(m, m_gadgetPtr);
 }
 
 void QQmlGadgetPtrWrapper::setValue(const QVariant &value)
 {
     Q_ASSERT(m_gadgetPtr);
-    Q_ASSERT(metaType() == value.metaType());
-    const QQmlValueType *type = valueType();
-    type->destruct(m_gadgetPtr);
-    type->construct(m_gadgetPtr, value.constData());
+
+    const QMetaType m = metaType();
+    m.destruct(m_gadgetPtr);
+    if (m == QMetaType::fromType<QVariant>()) {
+        m.construct(m_gadgetPtr, &value);
+    } else {
+        Q_ASSERT(m == value.metaType());
+        m.construct(m_gadgetPtr, value.constData());
+    }
 }
 
 int QQmlGadgetPtrWrapper::metaCall(QMetaObject::Call type, int id, void **argv)

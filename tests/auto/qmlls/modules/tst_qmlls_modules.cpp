@@ -457,7 +457,7 @@ void tst_qmlls_modules::goToTypeDefinition_data()
     QTest::newRow("PropertyType") << yyyPath << 30 << 14 << someBasePath << 2 << 0 << 4 << 1;
 
     QTest::newRow("TypeInIC") << yyyPath << 29 << 36 << someBasePath << 2 << 0 << 4 << 1;
-    QTest::newRow("ICTypeDefinition") << yyyPath << 29 << 15 << yyyPath << 29 << 18 << 29 << 48;
+    QTest::newRow("ICTypeDefinition") << yyyPath << 29 << 15 << yyyPath << 29 << 14 << 29 << 16;
 }
 
 void tst_qmlls_modules::goToTypeDefinition()
@@ -790,9 +790,6 @@ void tst_qmlls_modules::documentFormatting()
 {
     QFETCH(QString, originalFile);
     QFETCH(QString, expectedFile);
-
-    QSKIP("crashes on unrelated files during implicit directory import, to be unskipped once the "
-          "lazy-loading from QTBUG-122645 is done");
 
     ignoreDiagnostics();
 
@@ -1380,8 +1377,7 @@ void tst_qmlls_modules::qmldirImports()
         completionOk = true;
     });
 
-    // TODO: change timeout back to 5000 once the lazyloading of QTBUG-122645 is done!
-    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk && completionOk, 30000);
+    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk && completionOk, 5000);
 }
 
 void tst_qmlls_modules::quickFixes_data()

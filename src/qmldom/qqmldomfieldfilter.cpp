@@ -1,7 +1,9 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+
 #include "qqmldomfieldfilter_p.h"
 #include "qqmldompath_p.h"
+#include "qqmldomitem_p.h"
 #include "QtCore/qglobal.h"
 
 QT_BEGIN_NAMESPACE
@@ -117,6 +119,11 @@ bool FieldFilter::addFilter(const QString &fFields)
         }
     }
     return true;
+}
+
+FieldFilter FieldFilter::noFilter()
+{
+    return FieldFilter{ {}, {} };
 }
 
 FieldFilter FieldFilter::defaultFilter()

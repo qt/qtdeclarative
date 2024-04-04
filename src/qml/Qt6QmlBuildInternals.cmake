@@ -417,6 +417,18 @@ function(qt_internal_add_qml_module target)
             FILES ${arg_OUTPUT_DIRECTORY}/qmldir
             DESTINATION "${arg_INSTALL_DIRECTORY}"
         )
+
+        get_target_property(extra_qmldirs ${target} _qt_internal_extra_qmldirs)
+        if(extra_qmldirs)
+            foreach(extra_qmldir IN LISTS extra_qmldirs)
+                __qt_get_relative_resource_path_for_file(qmldir_resource_path ${extra_qmldir})
+                get_filename_component(qmldir_dir ${qmldir_resource_path} DIRECTORY)
+                qt_install(
+                    FILES ${extra_qmldir}
+                    DESTINATION "${arg_INSTALL_DIRECTORY}/${qmldir_dir}"
+                )
+            endforeach()
+        endif()
     endif()
 
     if(arg_INSTALL_SOURCE_QMLTYPES)

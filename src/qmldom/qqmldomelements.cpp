@@ -142,6 +142,11 @@ bool QmlComponent::iterateDirectSubpaths(const DomItem &self, DirectVisitor visi
     cont = cont && self.dvValueLazyField(visitor, Fields::subComponents, [this, &self]() {
         return this->subComponents(self);
     });
+    if (m_nameIdentifiers) {
+        cont = cont && self.dvItemField(visitor, Fields::nameIdentifiers, [this, &self]() {
+            return self.subScriptElementWrapperItem(m_nameIdentifiers);
+        });
+    }
     return cont;
 }
 
@@ -1718,7 +1723,7 @@ AST::Node *ScriptExpression::parse(const ParseMode mode)
             return parser.parse();
         case ParseMode::JS:
             return parser.parseScript();
-        case ParseMode::MJS:
+        case ParseMode::ESM:
             return parser.parseModule();
         default:
             Q_UNREACHABLE_RETURN(false);

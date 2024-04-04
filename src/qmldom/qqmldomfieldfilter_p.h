@@ -15,11 +15,13 @@
 // We mean it.
 //
 
+#include "qqmldom_fwd_p.h"
 #include "qqmldom_global.h"
-#include "qqmldomitem_p.h"
-#include "qqmldomastcreator_p.h"
-#include "qqmldomcomments_p.h"
+#include "qqmldompath_p.h"
 
+#include <QtCore/qobject.h>
+#include <QtCore/qmap.h>
+#include <QtCore/qset.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -35,6 +37,7 @@ public:
     bool addFilter(const QString &f);
     bool operator()(const DomItem &, const Path &, const DomItem &) const;
     bool operator()(const DomItem &, const PathEls::PathComponent &c, const DomItem &) const;
+    static FieldFilter noFilter();
     static FieldFilter defaultFilter();
     static FieldFilter noLocationFilter();
     static FieldFilter compareFilter();

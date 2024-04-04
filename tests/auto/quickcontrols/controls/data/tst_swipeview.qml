@@ -696,4 +696,68 @@ TestCase {
         compare(page4.width, control.contentItem.width)
         compare(page4.height, control.contentItem.height)
     }
+
+    Component {
+        id: doublePageWithLabels
+        SwipeView {
+            anchors.fill: parent
+            property alias item1: item1
+            property alias item2: item2
+            Item {
+                id: item1
+                property alias label: label1
+                Label { id: label1; anchors.centerIn: parent; text: "1"; }
+            }
+            Item {
+                id: item2
+                property alias label: label2
+                Label { id: label2; anchors.centerIn: parent; text: "2"; }
+            }
+        }
+    }
+
+    function test_rightClick_data() {
+        return [
+            { tag: "mouse_left", mouse: true, button: Qt.LeftButton },
+            { tag: "mouse_right", mouse: true, button: Qt.RightButton },
+            { tag: "touch", touch: true }
+        ]
+    }
+
+    function test_rightClick(data) {
+        let swipeView = createTemporaryObject(doublePageWithLabels, testCase)
+        verify(swipeView)
+        let item1 = swipeView.item1
+        verify(item1)
+        let item2 = swipeView.item2
+        verify(item2)
+        let label1 = item1.label
+        verify(label1)
+        let label2 = item2.label
+        verify(label2)
+        const swipeListView = swipeView.contentItem
+        verify(swipeListView)
+
+        swipeView.currentIndex = 0
+        compare(swipeView.currentIndex, 0)
+        compare(swipeView.currentItem, item1)
+        tryCompare(swipeListView, "contentX", 0, 1000)
+        compare(item2.x, swipeListView.width)
+
+        let touch = data.touch ? touchEvent(swipeView) : null
+
+        if (data.touch) {
+            touch.press(0, label1, label1.width / 2, label1.height / 2)
+            touch.commit()
+            touch.release(0, label1, label1.width / 2, label1.height / 2)
+            touch.commit()
+        } else if (data.mouse) {
+            mouseClick(label1, label1.width / 2, label1.height / 2, data.button)
+        }
+        swipeView.currentIndex = 1
+        compare(swipeView.currentIndex, 1)
+        compare(swipeView.currentItem, item2)
+        tryCompare(swipeListView, "contentX", swipeListView.width, 1000)
+        compare(item2.x, swipeListView.width)
+    }
 }

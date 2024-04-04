@@ -56,18 +56,6 @@ static inline float testSideOfLineByNormal(QVector2D a, QVector2D n, QVector2D p
     return dot;
 };
 
-template<typename Func>
-void iteratePath(const QQuadPath &path, int index, Func &&lambda)
-{
-    const auto &element = path.elementAt(index);
-    if (element.childCount() == 0) {
-        lambda(element, index);
-    } else {
-        for (int i = 0; i < element.childCount(); ++i)
-            iteratePath(path, element.indexOfChild(i), lambda);
-    }
-}
-
 static inline float determinant(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3)
 {
     return p1.x() * (p2.y() - p3.y())
@@ -438,7 +426,8 @@ QList<TriangleData> simplePointTriangulator(const QList<QVector2D> &pts, const Q
     return ret;
 }
 
-static bool needsSplit(const QQuadPath::Element &el)
+
+inline bool needsSplit(const QQuadPath::Element &el)
 {
     Q_ASSERT(!el.isLine());
     const auto v1 = el.controlPoint() - el.startPoint();
@@ -446,28 +435,24 @@ static bool needsSplit(const QQuadPath::Element &el)
     float cos = QVector2D::dotProduct(v1, v2) / (v1.length() * v2.length());
     return cos < 0.9;
 }
-static void splitElementIfNecessary(QQuadPath &path, int index)
-{
-    auto &e = path.elementAt(index);
-    if (e.isLine())
-        return;
-    if (e.childCount() == 0) {
-        if (needsSplit(e))
-            path.splitElementAt(index);
-    } else {
-        const int childCount = e.childCount();
-        for (int i = 0; i < childCount; ++i)
-            splitElementIfNecessary(path, path.indexOfChildAt(index, i));
+
+
+inline void splitElementIfNecessary(QQuadPath *path, int index, int level) {
+    if (level > 0 && needsSplit(path->elementAt(index))) {
+        path->splitElementAt(index);
+        splitElementIfNecessary(path, path->indexOfChildAt(index, 0), level - 1);
+        splitElementIfNecessary(path, path->indexOfChildAt(index, 1), level - 1);
     }
 }
 
 static QQuadPath subdivide(const QQuadPath &path, int subdivisions)
 {
     QQuadPath newPath = path;
+    newPath.iterateElements([&](QQuadPath::Element &e, int index) {
+        if (!e.isLine())
+            splitElementIfNecessary(&newPath, index, subdivisions);
+    });
 
-    for (int i = 0; i < subdivisions; ++i)
-        for (int j = 0; j < newPath.elementCount(); j++)
-            splitElementIfNecessary(newPath, j);
     return newPath;
 }
 
@@ -1692,34 +1677,32 @@ void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
                     [&uv](QVector2D) { return uv; });
     };
 
-    for (int i = 0; i < fillPath.elementCount(); ++i) {
-        iteratePath(fillPath, i, [&](const QQuadPath::Element &element, int index) {
-            QVector2D sp(element.startPoint());
-            QVector2D cp(element.controlPoint());
-            QVector2D ep(element.endPoint());
-            QVector2D rsp = roundVec2D(sp);
+    fillPath.iterateElements([&](const QQuadPath::Element &element, int index) {
+        QVector2D sp(element.startPoint());
+        QVector2D cp(element.controlPoint());
+        QVector2D ep(element.endPoint());
+        QVector2D rsp = roundVec2D(sp);
 
-            if (element.isSubpathStart())
-                internalHull.moveTo(sp.toPointF());
-            if (element.isLine()) {
+        if (element.isSubpathStart())
+            internalHull.moveTo(sp.toPointF());
+        if (element.isLine()) {
+            internalHull.lineTo(ep.toPointF());
+            pointHash.insert(rsp, index);
+        } else {
+            QVector2D rep = roundVec2D(ep);
+            QVector2D rcp = roundVec2D(cp);
+            if (element.isConvex()) {
                 internalHull.lineTo(ep.toPointF());
+                addTriangleForConvex(element, rsp, rep, rcp);
                 pointHash.insert(rsp, index);
             } else {
-                QVector2D rep = roundVec2D(ep);
-                QVector2D rcp = roundVec2D(cp);
-                if (element.isConvex()) {
-                    internalHull.lineTo(ep.toPointF());
-                    addTriangleForConvex(element, rsp, rep, rcp);
-                    pointHash.insert(rsp, index);
-                } else {
-                    internalHull.lineTo(cp.toPointF());
-                    internalHull.lineTo(ep.toPointF());
+                internalHull.lineTo(cp.toPointF());
+                internalHull.lineTo(ep.toPointF());
                     addTriangleForConcave(element, rsp, rep, rcp);
-                    pointHash.insert(rcp, index);
-                }
+                pointHash.insert(rcp, index);
             }
-        });
-    }
+        }
+    });
 
     // Points in p are already rounded do 1/32
     // Returns false if the triangle needs to be split. Adds the triangle to the graphics buffers and returns true otherwise.

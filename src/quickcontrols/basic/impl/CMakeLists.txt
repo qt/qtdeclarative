@@ -10,6 +10,8 @@ qt_internal_add_qml_module(QuickControls2BasicStyleImpl
     VERSION "${PROJECT_VERSION}"
     CLASS_NAME QtQuickControls2BasicStyleImplPlugin
     PLUGIN_TARGET qtquickcontrols2basicstyleimplplugin
+    DEPENDENCIES
+        QtQuick/auto
     SOURCES
         qquickbasicbusyindicator.cpp qquickbasicbusyindicator_p.h
         qquickbasicdial.cpp qquickbasicdial_p.h

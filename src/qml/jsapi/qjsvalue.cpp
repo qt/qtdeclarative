@@ -452,8 +452,17 @@ bool QJSValue::isCallable() const
 }
 
 /*!
+  \deprecated [6.9]
   Returns true if this QJSValue is a variant value;
   otherwise returns false.
+
+  \warning This function is likely to give unexpected results.
+  A variant value is only constructed by the QJSEngine in a very
+  limited number of cases. This used to be different before Qt
+  5.14, where \l{QJSEngine::toScriptValue} would have created
+  them for more types instead of corresponding ECMAScript types.
+  You can get a valid \l QVariant via \l toVariant for many values
+  for which \c{isVariant} returns false.
 
   \sa toVariant()
 */

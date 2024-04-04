@@ -71,6 +71,9 @@ bool QQuickItemGenerator::generateDefsNode(const NodeInfo &info)
 
 void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     auto *imageItem = new QQuickImage;
     auto *imagePriv = static_cast<QQuickImageBasePrivate*>(QQuickItemPrivate::get(imageItem));
     imagePriv->pix.setImage(info.image);
@@ -88,6 +91,9 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
 
 void QQuickItemGenerator::generatePath(const PathNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     if (m_inShapeItem) {
         if (!info.isDefaultTransform)
             qCWarning(lcQuickVectorImage) << "Skipped transform for node" << info.nodeId << "type" << info.typeName << "(this is not supposed to happen)";
@@ -122,7 +128,7 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     if (pathSelector == QQuickVectorImageGenerator::StrokePath && noPen)
         return;
 
-    const bool noFill = !info.grad && info.fillColor == u"transparent";
+    const bool noFill = info.grad.type() == QGradient::NoGradient && info.fillColor == u"transparent";
     if (pathSelector == QQuickVectorImageGenerator::FillPath && noFill)
         return;
 
@@ -147,8 +153,8 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
 
     if (!(pathSelector & QQuickVectorImageGenerator::FillPath))
         shapePath->setFillColor(Qt::transparent);
-    else if (auto *grad = info.grad)
-        generateGradient(grad, shapePath, boundingRect);
+    else if (info.grad.type() != QGradient::NoGradient)
+        generateGradient(&info.grad, shapePath, boundingRect);
     else
         shapePath->setFillColor(QColor::fromString(info.fillColor));
 
@@ -215,6 +221,9 @@ void QQuickItemGenerator::generateGradient(const QGradient *grad, QQuickShapePat
 
 void QQuickItemGenerator::generateNode(const NodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     qCWarning(lcQuickVectorImage) << "SVG NODE NOT IMPLEMENTED: "
                                      << info.nodeId
                                      << " type: " << info.typeName;
@@ -222,6 +231,9 @@ void QQuickItemGenerator::generateNode(const NodeInfo &info)
 
 void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     QQuickItem *alignItem = nullptr;
     QQuickText *textItem = nullptr;
 
@@ -284,6 +296,9 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
 
 void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return;
+
     if (info.stage == StructureNodeStage::Start) {
         QQuickItem *item = new QQuickItem();
         item->setPosition(info.startPos);
@@ -295,8 +310,11 @@ void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
 
 }
 
-void QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
+bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
 {
+    if (!isNodeVisible(info))
+        return false;
+
     if (info.stage == StructureNodeStage::Start) {
         if (!info.forceSeparatePaths && info.isPathContainer) {
             m_inShapeItem = true;
@@ -316,10 +334,28 @@ void QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
         m_parentShapeItem = nullptr;
         m_items.pop();
     }
+
+    return true;
 }
 
-void QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
+bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
 {
+    if (!isNodeVisible(info)) {
+        QQuickItem *item = new QQuickItem();
+        item->setParentItem(m_parentItem);
+
+        if (info.size.width() > 0)
+            m_parentItem->setImplicitWidth(info.size.width());
+
+        if (info.size.height() > 0)
+            m_parentItem->setImplicitHeight(info.size.height());
+
+        item->setWidth(m_parentItem->implicitWidth());
+        item->setHeight(m_parentItem->implicitHeight());
+
+        return false;
+    }
+
     if (info.stage == StructureNodeStage::Start) {
         QQuickItem *item = !info.viewBox.isEmpty() ? new QQuickVectorImageGenerator::Utils::ViewBoxItem(info.viewBox) : new QQuickItem;
         addCurrentItem(item, info);
@@ -337,6 +373,8 @@ void QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
         m_parentShapeItem = nullptr;
         m_items.pop();
     }
+
+    return true;
 }
 
 QQuickItem *QQuickItemGenerator::currentItem()

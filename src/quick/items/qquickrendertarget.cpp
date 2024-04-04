@@ -719,7 +719,7 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D12Texture(void *texture,
 
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_QDOC)
+#if QT_CONFIG(metal) || defined(Q_QDOC)
 QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uint format,
                                                         const QSize &pixelSize, int sampleCount)
 {
@@ -1385,7 +1385,8 @@ static bool createRhiRenderTargetMultiView(QRhiTexture *texture,
 
     QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
     rtDesc.setDepthTexture(depthStencil.get());
-    std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc,
+                                                                            QRhiTextureRenderTarget::DoNotStoreDepthStencilContents));
     rt->setName(QByteArrayLiteral("RT for multiview QQuickRenderTarget"));
     std::unique_ptr<QRhiRenderPassDescriptor> rp(rt->newCompatibleRenderPassDescriptor());
     rt->setRenderPassDescriptor(rp.get());

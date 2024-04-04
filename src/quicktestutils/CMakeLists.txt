@@ -34,6 +34,7 @@ qt_internal_add_module(QuickTestUtilsPrivate
         Qt::Network
         Qt::Qml
         Qt::QmlPrivate
+    NO_GENERATE_CPP_EXPORTS
 )
 
 if(TARGET Qt::Quick)

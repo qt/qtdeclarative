@@ -314,6 +314,7 @@ public:
 
     void runGC();
     bool tryForceGCCompletion();
+    void runFullGC();
 
     void dumpStats() const;
 
@@ -376,7 +377,7 @@ private:
 
         bool didGCRun = false;
         if (aggressiveGC) {
-            runGC();
+            runFullGC();
             didGCRun = true;
         }
 

@@ -757,10 +757,11 @@ private slots:
 
         QString testFile = baseDir + u"/inlineComponents.qml"_s;
 
+        DomCreationOptions options{ DomCreationOption::WithScriptExpressions };
         auto envPtr = DomEnvironment::create(
                 QStringList(),
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies, options);
 
         DomItem tFile;
         envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, testFile),
@@ -778,6 +779,13 @@ private slots:
 
         QCOMPARE(ic3.size(), 1);
         QCOMPARE(ic3.front().name(), "inlineComponents.IC3");
+        QCOMPARE(ic3.front().field(Fields::nameIdentifiers).internalKind(), DomType::ScriptType);
+        QCOMPARE(ic3.front()
+                         .field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .value()
+                         .toString(),
+                 u"IC3"_s);
 
         auto ic1 = rootQmlObject.lookup("IC1", LookupType::Type, LookupOption::Normal,
                                         [](const ErrorMessage &) {});
@@ -2406,7 +2414,8 @@ private slots:
         }
     }
 
-    void plainJSDOM_data() {
+    void plainJSDOM_data()
+    {
         QTest::addColumn<QString>("filename");
         QTest::addColumn<QString>("content");
 
@@ -2415,9 +2424,14 @@ private slots:
         QTest::newRow("import")
                 << "import.js"
                 << QString(u".import \"main.js\" as Main\nconsole.log(Main.a);\n"_s);
+        QTest::newRow("simplestJSmodule")
+                << "simplestJSmodule.mjs" << QString(u"export function entry() {}\n"_s);
     }
 
-    void plainJSDOM() {
+    // Verifies that DOM can load .js and .mjs files and
+    // parse / store the content inside the ScriptExpression
+    void plainJSDOM()
+    {
         using namespace Qt::StringLiterals;
         QFETCH(QString, filename);
         QFETCH(QString, content);
@@ -2436,6 +2450,7 @@ private slots:
         exprAsString.replace("\r\n", "\n");
         QCOMPARE(exprAsString, content);
     }
+
 private:
     struct DomItemWithLocation
     {
@@ -3018,11 +3033,156 @@ private slots:
                  u"QQ");
     }
 
-    void mjsExpression()
+    void scriptExpression()
     {
-        const ScriptExpression mjsExpr("export function a(){}",
-                                       ScriptExpression::ExpressionType::MJSCode);
-        QVERIFY(mjsExpr.localErrors().empty());
+        // verifying support of ECMA script modules by ScriptExpression
+        const ScriptExpression esmExport("export function a(){}",
+                                         ScriptExpression::ExpressionType::ESMCode);
+        QVERIFY(esmExport.localErrors().empty());
+    }
+
+    void semanticAnalysis()
+    {
+
+        DomItem baseItem;
+        DomItem derivedItem;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+
+        auto envPtr =
+                DomEnvironment::create(qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option{}, options);
+
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, baseDir + u"/Base.qml"_s),
+                [&baseItem](Path, const DomItem &, const DomItem &newIt) {
+                    baseItem = newIt.rootQmlObject(GoTo::MostLikely);
+                });
+
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, baseDir + u"/Derived.qml"_s),
+                [&derivedItem](Path, const DomItem &, const DomItem &newIt) {
+                    derivedItem = newIt.rootQmlObject(GoTo::MostLikely);
+                });
+        envPtr->loadPendingDependencies();
+
+        const auto baseScope = baseItem.semanticScope();
+        const auto derivedScope = derivedItem.semanticScope();
+
+        QCOMPARE_NE(baseScope, QQmlJSScope::ConstPtr{});
+        QCOMPARE(baseScope, derivedScope->baseType());
+    }
+
+    void propertyDefinitionScopes()
+    {
+        DomItem qmlObject;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+
+        auto envPtr =
+                DomEnvironment::create(qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option{}, options);
+
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir + u"/propertyBindings.qml"_s),
+                         [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
+                             qmlObject = newIt.rootQmlObject(GoTo::MostLikely);
+                         });
+        envPtr->loadPendingDependencies();
+
+        {
+            const auto a = qmlObject.field(Fields::propertyDefs).key(u"a").index(0);
+            const auto scopeA = a.semanticScope();
+            QCOMPARE_NE(scopeA, QQmlJSScope::ConstPtr{});
+            QCOMPARE(scopeA->scopeType(), QQmlSA::ScopeType::QMLScope);
+        }
+
+        {
+            const auto b = qmlObject.field(Fields::propertyDefs).key(u"b").index(0);
+            const auto scopeB = b.semanticScope();
+            QCOMPARE_NE(scopeB, QQmlJSScope::ConstPtr{});
+            QCOMPARE(scopeB->scopeType(), QQmlSA::ScopeType::QMLScope);
+        }
+    }
+
+    // simulate qmlls loading the same file twice like in QTBUG-123591
+    void loadFileTwice()
+    {
+        DomItem qmlObject;
+        DomItem qmlObject2;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+        options.setFlag(DomCreationOption::WithRecovery);
+
+        std::shared_ptr<DomEnvironment> envPtr = DomEnvironment::create(
+                qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, options);
+
+        const QString fileName{ baseDir + u"/propertyBindings.qml"_s };
+        QFile file(fileName);
+        QVERIFY(file.open(QFile::ReadOnly));
+        const QString content = file.readAll();
+
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir + u"/propertyBindings.qml"_s),
+                         [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
+                             qmlObject = newIt.rootQmlObject(GoTo::MostLikely);
+                         });
+        envPtr->loadPendingDependencies();
+
+        // should not assert when loading the same file again
+        auto envPtrChild = envPtr->makeCopy(DomItem(envPtr));
+        envPtrChild->loadFile(
+                FileToLoad::fromMemory(envPtr, baseDir + u"/propertyBindings.qml"_s, content),
+                [&qmlObject2](Path, const DomItem &, const DomItem &newIt) {
+                    qmlObject2 = newIt.rootQmlObject(GoTo::MostLikely);
+                });
+        envPtrChild->loadPendingDependencies();
+    }
+
+    void visitTreeFilter()
+    {
+        DomItem qmlObject;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+
+        auto envPtr =
+                DomEnvironment::create(qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option{}, options);
+
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir + u"/visitTreeFilter.qml"_s),
+                         [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
+                             qmlObject = newIt.rootQmlObject(GoTo::MostLikely);
+                         });
+        envPtr->loadPendingDependencies();
+
+        FieldFilter filter({}, { { QString(), QString::fromUtf16(Fields::propertyDefs) } });
+
+        // check if propertyDefs is visited without the filter
+        bool success = false;
+        qmlObject.visitTree(
+                Path(), emptyChildrenVisitor, VisitOption::Recurse | VisitOption::VisitSelf,
+                [&success](const Path &p, const DomItem &, bool) {
+                    const QString pathString = p.toString();
+                    if (p && p.checkHeadName(Fields::propertyDefs)) {
+                        success = true;
+                    }
+                    return true;
+                },
+                emptyChildrenVisitor);
+        QVERIFY(success);
+
+        // check that propertyDefs is not visited with the filter
+        success = true;
+        qmlObject.visitTree(
+                Path(), emptyChildrenVisitor, VisitOption::Recurse | VisitOption::VisitSelf,
+                [&success](const Path &p, const DomItem &, bool) {
+                    if (p && p.checkHeadName(Fields::propertyDefs)) {
+                        qWarning() << "Filter did not filter propertyDefs at path" << p;
+                        success = false;
+                    }
+                    return true;
+                },
+                emptyChildrenVisitor, filter);
+        QVERIFY(success);
     }
 
 private:

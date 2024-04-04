@@ -9,6 +9,8 @@
 
 #include <QString>
 #include <QPainter>
+#include <QTextDocument>
+#include <QTextLayout>
 #include <QMatrix4x4>
 #include <QQuickItem>
 
@@ -27,6 +29,8 @@
 #include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
+
+using namespace Qt::StringLiterals;
 
 Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorImage)
 
@@ -261,26 +265,77 @@ void QSvgVisitorImpl::visitPolylineNode(const QSvgPolyline *node)
     handlePathNode(node, p, Qt::FlatCap);
 }
 
+QString QSvgVisitorImpl::gradientCssDescription(const QGradient *gradient)
+{
+    QString cssDescription;
+    if (gradient->type() == QGradient::LinearGradient) {
+        const QLinearGradient *linearGradient = static_cast<const QLinearGradient *>(gradient);
+
+        cssDescription += " -qt-foreground: qlineargradient("_L1;
+        cssDescription += "x1:"_L1 + QString::number(linearGradient->start().x()) + u',';
+        cssDescription += "y1:"_L1 + QString::number(linearGradient->start().y()) + u',';
+        cssDescription += "x2:"_L1 + QString::number(linearGradient->finalStop().x()) + u',';
+        cssDescription += "y2:"_L1 + QString::number(linearGradient->finalStop().y()) + u',';
+    } else if (gradient->type() == QGradient::RadialGradient) {
+        const QRadialGradient *radialGradient = static_cast<const QRadialGradient *>(gradient);
+
+        cssDescription += " -qt-foreground: qradialgradient("_L1;
+        cssDescription += "cx:"_L1 + QString::number(radialGradient->center().x()) + u',';
+        cssDescription += "cy:"_L1 + QString::number(radialGradient->center().y()) + u',';
+        cssDescription += "fx:"_L1 + QString::number(radialGradient->focalPoint().x()) + u',';
+        cssDescription += "fy:"_L1 + QString::number(radialGradient->focalPoint().y()) + u',';
+        cssDescription += "radius:"_L1 + QString::number(radialGradient->radius()) + u',';
+    } else {
+        const QConicalGradient *conicalGradient = static_cast<const QConicalGradient *>(gradient);
+
+        cssDescription += " -qt-foreground: qconicalgradient("_L1;
+        cssDescription += "cx:"_L1 + QString::number(conicalGradient->center().x()) + u',';
+        cssDescription += "cy:"_L1 + QString::number(conicalGradient->center().y()) + u',';
+        cssDescription += "angle:"_L1 + QString::number(conicalGradient->angle()) + u',';
+    }
+
+    const QStringList coordinateModes = { "logical"_L1, "stretchtodevice"_L1, "objectbounding"_L1, "object"_L1 };
+    cssDescription += "coordinatemode:"_L1;
+    cssDescription += coordinateModes.at(int(gradient->coordinateMode()));
+    cssDescription += u',';
+
+    const QStringList spreads = { "pad"_L1, "reflect"_L1, "repeat"_L1 };
+    cssDescription += "spread:"_L1;
+    cssDescription += spreads.at(int(gradient->spread()));
+
+    for (const QGradientStop &stop : gradient->stops()) {
+        cssDescription += ",stop:"_L1;
+        cssDescription += QString::number(stop.first);
+        cssDescription += u' ';
+        cssDescription += stop.second.name();
+    }
+
+    cssDescription += ");"_L1;
+
+    return cssDescription;
+}
 
 void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 {
-    // TODO: fallback to path for gradient fill
-
     handleBaseNodeSetup(node);
     const bool isTextArea = node->type() == QSvgNode::Textarea;
 
     QString text;
     bool needsRichText = false;
     bool preserveWhiteSpace = node->whitespaceMode() == QSvgText::Preserve;
+    const QGradient *mainGradient = styleResolver->currentFillGradient();
+    bool needsPathNode = mainGradient != nullptr;
     for (const auto *tspan : node->tspans()) {
         if (!tspan) {
             text += QStringLiteral("<br>");
             continue;
         }
 
-        QFont font;
-        if (!tspan->style().font.isDefault())
-            font = tspan->style().font->qfont();
+        // Note: We cannot get the font directly from the style, since this does
+        // not apply the weight, since this is relative and depends on current state.
+        handleBaseNodeSetup(tspan);
+        QFont font = styleResolver->painter().font();
+
         QString styleTagContent;
 
         if ((font.resolveMask() & QFont::FamilyResolved)
@@ -304,8 +359,25 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
             styleTagContent += QStringLiteral("font-variant: small-caps;");
         }
 
+        if (styleResolver->currentFillGradient() != nullptr
+            && styleResolver->currentFillGradient() != mainGradient) {
+            styleTagContent += gradientCssDescription(styleResolver->currentFillGradient()) + u';';
+            needsPathNode = true;
+        }
+
+        QString strokeColor = styleResolver->currentStrokeColor();
+        if (!strokeColor.isEmpty()) {
+            styleTagContent += QStringLiteral("-qt-stroke-color:%1;").arg(strokeColor);
+            styleTagContent += QStringLiteral("-qt-stroke-width:%1;").arg(styleResolver->currentStrokeWidth());
+            needsPathNode = true;
+        }
+
         if (tspan->whitespaceMode() == QSvgText::Preserve && !preserveWhiteSpace)
             styleTagContent += QStringLiteral("white-space: pre-wrap;");
+
+        QString content = tspan->text().toHtmlEscaped();
+        content.replace(QLatin1Char('\t'), QLatin1Char(' '));
+        content.replace(QLatin1Char('\n'), QLatin1Char(' '));
 
         needsRichText = needsRichText || !styleTagContent.isEmpty();
         if (!styleTagContent.isEmpty())
@@ -327,10 +399,6 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         bool fontTag = !spanColor.isEmpty();
         if (fontTag)
             text += QStringLiteral("<font color=\"%1\">").arg(spanColor);
-
-        QString content = tspan->text().toHtmlEscaped();
-        content.replace(QLatin1Char('\t'), QLatin1Char(' '));
-        content.replace(QLatin1Char('\n'), QLatin1Char(' '));
 
         if (font.resolveMask() & QFont::CapitalizationResolved) {
             switch (font.capitalization()) {
@@ -359,10 +427,11 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         if (font.resolveMask() & QFont::WeightResolved && font.bold())
             text += QStringLiteral("</b>");
 
-        if (needsRichText)
+        if (!styleTagContent.isEmpty())
             text += QStringLiteral("</span>");
-    }
 
+        handleBaseNodeEnd(tspan);
+    }
 
     if (preserveWhiteSpace && (needsRichText || styleResolver->currentFillGradient() != nullptr))
         text = QStringLiteral("<span style=\"white-space: pre-wrap\">") + text + QStringLiteral("</span>");
@@ -371,20 +440,115 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     if (font.pixelSize() <= 0 && font.pointSize() > 0)
         font.setPixelSize(font.pointSize()); // Pixel size stored as point size by SVG parser
 
-    TextNodeInfo info;
-    fillCommonNodeInfo(node, info);
+    if (needsPathNode) {
+        QPainterPath path;
 
-    info.position = node->position();
-    info.size = node->size();
-    info.font = font;
-    info.text = text;
-    info.isTextArea = isTextArea;
-    info.needsRichText = needsRichText;
-    info.color = styleResolver->currentFillColor();
-    info.alignment = styleResolver->states().textAnchor;
-    info.strokeColor = styleResolver->currentStrokeColor();
+        QTextDocument document;
+        document.setHtml(text);
+        if (isTextArea && node->size().width() > 0)
+            document.setTextWidth(node->size().width());
+        document.setDefaultFont(font);
+        document.pageCount(); // Force layout
 
-    m_generator->generateTextNode(info);
+        QTextBlock block = document.firstBlock();
+        while (block.isValid()) {
+            QTextLayout *lout = block.layout();
+
+            if (lout != nullptr) {
+                QTextCharFormat currentFormat;
+
+                auto addPathForFormat = [&](QPainterPath p, QTextCharFormat fmt) {
+                    PathNodeInfo info;
+                    fillCommonNodeInfo(node, info);
+                    auto fillStyle = node->style().fill;
+                    if (fillStyle)
+                        info.fillRule = fillStyle->fillRule();
+
+                    if (fmt.hasProperty(QTextCharFormat::ForegroundBrush)) {
+                        info.fillColor = fmt.foreground().color().name();
+                        if (fmt.foreground().gradient() != nullptr && fmt.foreground().gradient()->type() != QGradient::NoGradient)
+                            info.grad = *fmt.foreground().gradient();
+                    } else {
+                        info.fillColor = styleResolver->currentFillColor();
+                    }
+
+                    info.painterPath = p;
+                    if (fmt.hasProperty(QTextCharFormat::TextOutline)) {
+                        info.strokeWidth = fmt.textOutline().widthF();
+                        info.strokeColor = fmt.textOutline().color().name();
+                    } else {
+                        info.strokeColor = styleResolver->currentStrokeColor();
+                        info.strokeWidth = styleResolver->currentStrokeWidth();
+                    }
+                    if (info.grad.type() == QGradient::NoGradient && styleResolver->currentFillGradient() != nullptr)
+                        info.grad = *styleResolver->currentFillGradient();
+
+                    m_generator->generatePath(info);
+                };
+
+                qreal baselineOffset = -QFontMetricsF(font).ascent();
+                if (lout->lineCount() > 0 && lout->lineAt(0).isValid())
+                    baselineOffset = -lout->lineAt(0).ascent();
+
+                const QPointF baselineTranslation(0.0, baselineOffset);
+                auto glyphsToPath = [&](QList<QGlyphRun> glyphRuns) {
+                    QPainterPath path;
+                    path.setFillRule(Qt::WindingFill);
+                    for (const QGlyphRun &glyphRun : glyphRuns) {
+                        QRawFont font = glyphRun.rawFont();
+                        QList<quint32> glyphIndexes = glyphRun.glyphIndexes();
+                        QList<QPointF> positions = glyphRun.positions();
+
+                        for (qsizetype j = 0; j < glyphIndexes.size(); ++j) {
+                            quint32 glyphIndex = glyphIndexes.at(j);
+                            const QPointF &pos = positions.at(j);
+
+                            QPainterPath p = font.pathForGlyph(glyphIndex);
+                            p.translate(pos + node->position() + baselineTranslation);
+                            path.addPath(p);
+                        }
+                    }
+
+                    return path;
+                };
+
+                QList<QTextLayout::FormatRange> formats = block.textFormats();
+                for (int i = 0; i < formats.size(); ++i) {
+                    QTextLayout::FormatRange range = formats.at(i);
+
+                    // If we hit a "multi" anchor, it means we have additional formats to apply
+                    // for both this and the subsequent range, so we merge them.
+                    if (!range.format.anchorNames().isEmpty()
+                        && range.format.anchorNames().first().startsWith(QStringLiteral("multi"))
+                        && i < formats.size() - 1) {
+                        QTextLayout::FormatRange nextRange = formats.at(++i);
+                        range.length += nextRange.length;
+                        range.format.merge(nextRange.format);
+                    }
+                    QList<QGlyphRun> glyphRuns = lout->glyphRuns(range.start, range.length);
+                    QPainterPath path = glyphsToPath(glyphRuns);
+                    addPathForFormat(path, range.format);
+                }
+            }
+
+            block = block.next();
+        }
+    } else {
+        TextNodeInfo info;
+        fillCommonNodeInfo(node, info);
+
+        info.position = node->position();
+        info.size = node->size();
+        info.font = font;
+        info.text = text;
+        info.isTextArea = isTextArea;
+        info.needsRichText = needsRichText;
+        info.color = styleResolver->currentFillColor();
+        info.alignment = styleResolver->states().textAnchor;
+        info.strokeColor = styleResolver->currentStrokeColor();
+
+        m_generator->generateTextNode(info);
+    }
 
     handleBaseNodeEnd(node);
 }
@@ -430,9 +594,7 @@ bool QSvgVisitorImpl::visitStructureNodeStart(const QSvgStructureNode *node)
     info.isPathContainer = isPathContainer(node);
     info.stage = StructureNodeStage::Start;
 
-    m_generator->generateStructureNode(info);
-
-    return true;
+    return m_generator->generateStructureNode(info);;
 }
 
 void QSvgVisitorImpl::visitStructureNodeEnd(const QSvgStructureNode *node)
@@ -461,9 +623,7 @@ bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgTinyDocument *node)
     info.isPathContainer = isPathContainer(node);
     info.stage = StructureNodeStage::Start;
 
-    m_generator->generateRootNode(info);
-
-    return true;
+    return m_generator->generateRootNode(info);;
 }
 
 void QSvgVisitorImpl::visitDocumentNodeEnd(const QSvgTinyDocument *node)
@@ -488,6 +648,8 @@ void QSvgVisitorImpl::fillCommonNodeInfo(const QSvgNode *node, NodeInfo &info)
     info.transform = !info.isDefaultTransform ? node->style().transform->qtransform() : QTransform();
     info.isDefaultOpacity = node->style().opacity.isDefault();
     info.opacity = !info.isDefaultOpacity ? node->style().opacity->opacity() : 1.0;
+    info.isVisible = node->isVisible();
+    info.isDisplayed = node->displayMode() != QSvgNode::DisplayMode::NoneMode;
 }
 
 void QSvgVisitorImpl::handleBaseNodeSetup(const QSvgNode *node)
@@ -536,7 +698,8 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
     info.fillColor = styleResolver->currentFillColor();
     info.strokeColor = styleResolver->currentStrokeColor();
     info.strokeWidth = styleResolver->currentStrokeWidth();
-    info.grad = styleResolver->currentFillGradient();
+    if (styleResolver->currentFillGradient() != nullptr)
+        info.grad = *styleResolver->currentFillGradient();
 
     m_generator->generatePath(info);
 

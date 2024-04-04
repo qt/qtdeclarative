@@ -218,8 +218,11 @@ void QmltcCompiler::compileType(
                 return scope->parentScope();
             return scope;
         };
-        current.otherCode << u"friend class %1;"_s.arg(
-                realQmlScope(type->parentScope())->internalName());
+
+        const auto& realScope = realQmlScope(type->parentScope());
+        if (realScope != rootType) {
+            current.otherCode << u"friend class %1;"_s.arg(realScope->internalName());
+        }
     }
 
     // make QQmltcObjectCreationHelper a friend of every type since it provides
@@ -248,6 +251,17 @@ void QmltcCompiler::compileType(
     current.finalizeComponent.access = QQmlJSMetaMethod::Protected;
     current.handleOnCompleted.access = QQmlJSMetaMethod::Protected;
 
+    current.propertyInitializer.name = u"PropertyInitializer"_s;
+    current.propertyInitializer.constructor.access = QQmlJSMetaMethod::Public;
+    current.propertyInitializer.constructor.name = current.propertyInitializer.name;
+    current.propertyInitializer.constructor.parameterList = {
+        QmltcVariable(u"%1&"_s.arg(current.cppType), u"component"_s)
+    };
+    current.propertyInitializer.component.cppType = current.cppType + u"&";
+    current.propertyInitializer.component.name = u"component"_s;
+    current.propertyInitializer.initializedCache.cppType = u"QSet<QString>"_s;
+    current.propertyInitializer.initializedCache.name = u"initializedCache"_s;
+
     current.baselineCtor.name = current.cppType;
     current.externalCtor.name = current.cppType;
     current.init.name = u"QML_init"_s;
@@ -267,16 +281,26 @@ void QmltcCompiler::compileType(
     QmltcVariable creator(u"QQmltcObjectCreationHelper*"_s, u"creator"_s);
     QmltcVariable engine(u"QQmlEngine*"_s, u"engine"_s);
     QmltcVariable parent(u"QObject*"_s, u"parent"_s, u"nullptr"_s);
+    QmltcVariable initializedCache(
+        u"[[maybe_unused]] const QSet<QString>&"_s,
+        u"initializedCache"_s,
+        u"{}"_s
+    );
     QmltcVariable ctxtdata(u"const QQmlRefPointer<QQmlContextData>&"_s, u"parentContext"_s);
     QmltcVariable finalizeFlag(u"bool"_s, u"canFinalize"_s);
     current.baselineCtor.parameterList = { parent };
     current.endInit.parameterList = { creator, engine };
-    current.setComplexBindings.parameterList = { creator, engine };
+    current.setComplexBindings.parameterList = { creator, engine, initializedCache };
     current.handleOnCompleted.parameterList = { creator };
 
     if (documentRoot || inlineComponent) {
-        current.externalCtor.parameterList = { engine, parent };
-        current.init.parameterList = { creator, engine, ctxtdata, finalizeFlag };
+        QmltcVariable initializer(
+            u"[[maybe_unused]] qxp::function_ref<void(%1&)>"_s.arg(current.propertyInitializer.name),
+            u"initializer"_s,
+            u"[](%1&){}"_s.arg(current.propertyInitializer.name));
+
+        current.externalCtor.parameterList = { engine, parent, initializer };
+        current.init.parameterList = { creator, engine, ctxtdata, finalizeFlag, initializer };
         current.beginClass.parameterList = { creator, finalizeFlag };
         current.completeComponent.parameterList = { creator, finalizeFlag };
         current.finalizeComponent.parameterList = { creator, finalizeFlag };
@@ -314,7 +338,7 @@ void QmltcCompiler::compileType(
         // now call init
         current.externalCtor.body << current.init.name
                         + u"(&creator, engine, QQmlContextData::get(engine->rootContext()), /* "
-                          u"endInit */ true);";
+                          u"endInit */ true, initializer);";
     } else {
         current.externalCtor.body << u"// not document root:"_s;
         // just call init, we don't do any setup here otherwise
@@ -362,6 +386,102 @@ static Iterator partitionBindings(Iterator first, Iterator last)
     });
 }
 
+// Populates the propertyInitializer of the current type based on the
+// available properties.
+//
+// A propertyInitializer is a generated class that provides a
+// restricted interface that only allows setting property values and
+// internally keep tracks of which properties where actually set,
+// intended to be used to allow the user to set up the initial values
+// when creating an instance of a component.
+//
+// For each property of the current type that is known, is not private
+// and is writable, a setter method is generated.
+// Each setter method knows how to set a specific property, so as to
+// provide a strongly typed interface to property setting, as if the
+// relevant C++ type was used directly.
+//
+// Each setter uses the write method for the proprerty when available
+// and otherwise falls back to a the more generic
+// `QObject::setProperty` for properties where a WRITE method is not
+// available or in scope.
+static void compilePropertyInitializer(QmltcType &current, const QQmlJSScope::ConstPtr &type) {
+    static auto isFromExtension = [](const QQmlJSMetaProperty &property, const QQmlJSScope::ConstPtr &scope) {
+        return scope->ownerOfProperty(scope, property.propertyName()).extensionSpecifier != QQmlJSScope::NotExtension;
+    };
+
+    current.propertyInitializer.constructor.initializerList << u"component{component}"_s;
+
+    auto properties = type->properties().values();
+    for (auto& property: properties) {
+        if (property.index() == -1) continue;
+        if (property.isPrivate()) continue;
+        if (!property.isWritable() && !qIsReferenceTypeList(property)) continue;
+
+        const QString name = property.propertyName();
+
+        current.propertyInitializer.propertySetters.emplace_back();
+        auto& compiledSetter = current.propertyInitializer.propertySetters.back();
+
+        compiledSetter.userVisible = true;
+        compiledSetter.returnType = u"void"_s;
+        compiledSetter.name = QmltcPropertyData(property).write;
+
+        if (qIsReferenceTypeList(property)) {
+            compiledSetter.parameterList.emplaceBack(
+                QQmlJSUtils::constRefify(u"QList<%1*>"_s.arg(property.type()->valueType()->internalName())),
+                name + u"_", QString()
+            );
+        } else {
+            compiledSetter.parameterList.emplaceBack(
+                QQmlJSUtils::constRefify(getUnderlyingType(property)), name + u"_", QString()
+            );
+        }
+
+        if (qIsReferenceTypeList(property)) {
+            compiledSetter.body << u"QQmlListReference list_ref_(&%1, \"%2\");"_s.arg(
+               current.propertyInitializer.component.name, name
+            );
+            compiledSetter.body << u"list_ref_.clear();"_s;
+            compiledSetter.body << u"for (const auto& list_item_ : %1_)"_s.arg(name);
+            compiledSetter.body << u"    list_ref_.append(list_item_);"_s;
+        } else if (
+            QQmlJSUtils::bindablePropertyHasDefaultAccessor(property, QQmlJSUtils::PropertyAccessor_Write)
+        ) {
+            compiledSetter.body  << u"%1.%2().setValue(%3_);"_s.arg(
+                current.propertyInitializer.component.name, property.bindable(), name);
+        } else if (type->hasOwnProperty(name)) {
+            compiledSetter.body << u"%1.%2(%3_);"_s.arg(
+                current.propertyInitializer.component.name, QmltcPropertyData(property).write, name);
+        } else if (property.write().isEmpty() || isFromExtension(property, type)) {
+            // We can end here if a WRITE method is not available or
+            // if the method is available but not in this scope, so
+            // that we fallback to the string-based setters..
+            //
+            // For example, types that makes use of QML_EXTENDED
+            // types, will have the extension types properties
+            // available and with a WRITE method, but the WRITE method
+            // will not be available to the extended type, from C++,
+            // as the type does not directly inherit from the
+            // extension type.
+            //
+            // We specifically scope `setProperty` to `QObject` as
+            // certain types might have shadowed the method.
+            // For example, in QtQuick, some types have a property
+            // called `property` with a `setProperty` WRITE method
+            // that will produce the shadowing.
+            compiledSetter.body << u"%1.QObject::setProperty(\"%2\", QVariant::fromValue(%2_));"_s.arg(
+                current.propertyInitializer.component.name, name);
+        } else {
+            compiledSetter.body << u"%1.%2(%3_);"_s.arg(
+                current.propertyInitializer.component.name, property.write(), name);
+        }
+
+        compiledSetter.body << u"%1.insert(\"%2\");"_s.arg(
+            current.propertyInitializer.initializedCache.name, name);
+    }
+}
+
 void QmltcCompiler::compileTypeElements(QmltcType &current, const QQmlJSScope::ConstPtr &type)
 {
     // compile components of a type:
@@ -404,6 +524,7 @@ void QmltcCompiler::compileTypeElements(QmltcType &current, const QQmlJSScope::C
     auto bindings = type->ownPropertyBindingsInQmlIROrder();
     partitionBindings(bindings.begin(), bindings.end());
 
+    compilePropertyInitializer(current, type);
     compileBinding(current, bindings.begin(), bindings.end(), type, { type });
 }
 
@@ -1777,9 +1898,12 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
         current.children << compileScriptBindingPropertyChangeHandler(
                 binding, objectType, m_urlMethodName, bindingFunctorName, objectClassName);
 
+        current.setComplexBindings.body << u"if (!%1.contains(\"%2\"))"_s.arg(
+            current.propertyInitializer.initializedCache.name, propertyName);
+
         // TODO: this could be dropped if QQmlEngine::setContextForObject() is
         // done before currently generated C++ object is constructed
-        current.setComplexBindings.body << bindingSymbolName + u".reset(new QPropertyChangeHandler<"
+        current.setComplexBindings.body << u"    "_s + bindingSymbolName + u".reset(new QPropertyChangeHandler<"
                         + bindingFunctorName + u">("
                         + QmltcCodeGenerator::wrap_privateClass(accessor.name, *actualProperty)
                         + u"->" + bindableString + u"().onValueChanged(" + bindingFunctorName + u"("

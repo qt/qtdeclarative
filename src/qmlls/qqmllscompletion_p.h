@@ -204,9 +204,6 @@ private:
                                  QDuplicateTracker<QString> *usedNames,
                                  BackInsertIterator it) const;
 
-    // TODO: split implementation into suggestSnippetsFor{Left,Right}HandSideOfBinding + move to plugin
-    void suggestQuickSnippetsCompletion(const DomItem &itemAtPosition, BackInsertIterator it) const;
-
     void suggestSnippetsForLeftHandSideOfBinding(const DomItem &items,
                                                  BackInsertIterator result) const;
 

@@ -1,0 +1,5 @@
+module MultiDirectory
+prefer :/qt/qml/MultiDirectory
+Outer 1.0 Outer.qml
+Inner 1.0 qml/Inner.qml
+Page 1.0 qml/pages/Page.qml

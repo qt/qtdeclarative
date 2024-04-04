@@ -364,10 +364,11 @@ void tst_QJSValue::toString()
     // variant should use internal valueOf(), then fall back to QVariant::toString(),
     // then fall back to "QVariant(typename)"
     QJSValue variant = eng.toScriptValue(QPoint(10, 20));
+    QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QVERIFY(!variant.isVariant());
+    QT_WARNING_POP
     QCOMPARE(variant.toString(), QString::fromLatin1("QPoint(10, 20)"));
     variant = eng.toScriptValue(QUrl());
-    QVERIFY(!variant.isVariant());
     QVERIFY(variant.isUrl());
     QVERIFY(variant.toString().isEmpty());
 

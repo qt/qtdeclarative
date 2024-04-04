@@ -392,7 +392,18 @@ QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(const DomItem 
 
 DomItem QQmlLSUtils::baseObject(const DomItem &object)
 {
-    auto prototypes = object.qmlObject().field(QQmlJS::Dom::Fields::prototypes);
+    DomItem prototypes;
+    DomItem qmlObject = object.qmlObject();
+    // object is (or is inside) an inline component definition
+    if (object.internalKind() == DomType::QmlComponent || !qmlObject) {
+        prototypes = object.component()
+                             .field(Fields::objects)
+                             .index(0)
+                             .field(QQmlJS::Dom::Fields::prototypes);
+    } else {
+        // object is (or is inside) a QmlObject
+        prototypes = qmlObject.field(QQmlJS::Dom::Fields::prototypes);
+    }
     switch (prototypes.indexes()) {
     case 0:
         return {};
@@ -487,14 +498,22 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
                     FilterUpOptions::ReturnOuter)) {
 
             const QString name = fieldMemberExpressionBits(type.field(Fields::typeName)).join(u'.');
-            if (type.directParent().internalKind() == DomType::QmlObject) {
+            switch (type.directParent().internalKind()) {
+            case DomType::QmlObject:
                 // is the type name of a QmlObject, like Item in `Item {...}`
                 typeDefinition = baseObject(type.directParent());
-            } else {
+                break;
+            case DomType::QmlComponent:
+                typeDefinition = type.directParent();
+                return locationFromDomItem(typeDefinition, FileLocationRegion::IdentifierRegion);
+                break;
+            default:
                 // is a type annotation, like Item in `function f(x: Item) { ... }`
                 typeDefinition = object.path(Paths::lookupTypePath(name));
+                if (typeDefinition.internalKind() == DomType::Export) {
+                    typeDefinition = typeDefinition.field(Fields::type).get();
+                }
             }
-
             break;
         }
         if (DomItem id = object.filterUp(
@@ -631,6 +650,7 @@ static std::optional<SignalOrProperty> resolveNameInQmlScope(const QString &name
         if (methods.front().methodType() == QQmlJSMetaMethodType::Signal) {
             return SignalOrProperty{ name, SignalIdentifier };
         }
+        return SignalOrProperty{ name, MethodIdentifier };
     }
     return std::nullopt;
 }
@@ -695,26 +715,107 @@ static QStringList namesOfPossibleUsages(const QString &name,
     return namesToCheck;
 }
 
-/*! \internal
-    \brief finds the scope that a property, method or enum is first defined.
-    Starts looking for the name starting from the given scope and traverse
-    through base and extension types.
-*/
-static QQmlJSScope::ConstPtr findDefiningScopeForNames(QQmlJSScope::ConstPtr referrerScope, const QStringList &namesToCheck)
+template<typename Predicate>
+QQmlJSScope::ConstPtr findDefiningScopeIf(QQmlJSScope::ConstPtr referrerScope, Predicate &&check)
 {
     QQmlJSScope::ConstPtr result;
     QQmlJSUtils::searchBaseAndExtensionTypes(referrerScope, [&](QQmlJSScope::ConstPtr scope) {
-        for (const auto &name : namesToCheck) {
-            if (scope->hasOwnProperty(name) || scope->hasOwnMethod(name) || scope->hasOwnEnumeration(name)) {
-                result = scope;
-                return true;
-            }
+        if (check(scope)) {
+            result = scope;
+            return true;
         }
         return false;
     });
 
     return result;
 }
+
+/*!
+\internal
+\brief Finds the scope where a property is first defined.
+
+Starts looking for the name starting from the given scope and traverse through base and
+extension types.
+*/
+static QQmlJSScope::ConstPtr findDefiningScopeForProperty(QQmlJSScope::ConstPtr referrerScope,
+                                                          const QString &nameToCheck)
+{
+    return findDefiningScopeIf(referrerScope, [&nameToCheck](const QQmlJSScope::ConstPtr &scope) {
+        return scope->hasOwnProperty(nameToCheck);
+    });
+}
+
+/*!
+\internal
+See also findDefiningScopeForProperty().
+
+Special case: you can also bind to a signal handler.
+*/
+static QQmlJSScope::ConstPtr findDefiningScopeForBinding(QQmlJSScope::ConstPtr referrerScope,
+                                                         const QString &nameToCheck)
+{
+    return findDefiningScopeIf(referrerScope, [&nameToCheck](const QQmlJSScope::ConstPtr &scope) {
+        return scope->hasOwnProperty(nameToCheck) || scope->hasOwnMethod(nameToCheck);
+    });
+}
+
+/*!
+\internal
+See also findDefiningScopeForProperty().
+*/
+static QQmlJSScope::ConstPtr findDefiningScopeForMethod(QQmlJSScope::ConstPtr referrerScope,
+                                                        const QString &nameToCheck)
+{
+    return findDefiningScopeIf(referrerScope, [&nameToCheck](const QQmlJSScope::ConstPtr &scope) {
+        return scope->hasOwnMethod(nameToCheck);
+    });
+}
+
+/*!
+\internal
+See also findDefiningScopeForProperty().
+*/
+static QQmlJSScope::ConstPtr findDefiningScopeForEnumeration(QQmlJSScope::ConstPtr referrerScope,
+                                                             const QString &nameToCheck)
+{
+    return findDefiningScopeIf(referrerScope, [&nameToCheck](const QQmlJSScope::ConstPtr &scope) {
+        return scope->hasOwnEnumeration(nameToCheck);
+    });
+}
+
+/*!
+\internal
+See also findDefiningScopeForProperty().
+*/
+static QQmlJSScope::ConstPtr findDefiningScopeForEnumerationKey(QQmlJSScope::ConstPtr referrerScope,
+                                                          const QString &nameToCheck)
+{
+    return findDefiningScopeIf(referrerScope, [&nameToCheck](const QQmlJSScope::ConstPtr &scope) {
+        return scope->hasOwnEnumerationKey(nameToCheck);
+    });
+}
+
+/*!
+    Filter away the parts of the Dom not needed for find usages, by following the profiler's
+   information.
+    1. "propertyInfos" tries to require all inherited properties of some QmlObject. That is super
+   slow (profiler says it eats 90% of the time needed by `tst_qmlls_utils findUsages`!) and is not
+   needed for usages.
+    2. "get" tries to resolve references, like base types saved in prototypes for example, and is not
+   needed to find usages. Profiler says it eats 70% of the time needed by `tst_qmlls_utils
+   findUsages`.
+    3. "defaultPropertyName" also recurses through base types and is not needed to find usages.
+*/
+static FieldFilter filterForFindUsages()
+{
+    FieldFilter filter{ {},
+                        {
+                                { QString(), QString::fromUtf16(Fields::propertyInfos) },
+                                { QString(), QString::fromUtf16(Fields::defaultPropertyName) },
+                                { QString(), QString::fromUtf16(Fields::get) },
+                        } };
+    return filter;
+};
 
 static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &name,
                                          QList<QQmlLSUtilsLocation> &result)
@@ -724,19 +825,18 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
         return;
 
     const QStringList namesToCheck = namesOfPossibleUsages(name, item, expressionType->semanticScope);
-    QQmlJSScope::ConstPtr targetType = findDefiningScopeForNames(expressionType->semanticScope, namesToCheck);
 
-    const auto addLocationIfTypeMatchesTarget = [&result, &targetType, &namesToCheck](const DomItem &toBeResolved,
-                                                                FileLocationRegion subRegion) {
+    const auto addLocationIfTypeMatchesTarget = [&result,
+                                                 &expressionType](const DomItem &toBeResolved,
+                                                                  FileLocationRegion subRegion) {
         const auto currentType = QQmlLSUtils::resolveExpressionType(
                 toBeResolved, QQmlLSUtilsResolveOptions::ResolveOwnerType);
         if (!currentType)
             return;
 
-        const auto foundBaseType =
-                findDefiningScopeForNames(currentType->semanticScope, namesToCheck);
-
-        if (foundBaseType == targetType) {
+        const QQmlJSScope::ConstPtr target = expressionType->semanticScope;
+        const QQmlJSScope::ConstPtr current = currentType->semanticScope;
+        if (target == current) {
             auto tree = FileLocations::treeOf(toBeResolved);
             QQmlJS::SourceLocation sourceLocation;
 
@@ -750,8 +850,8 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
         }
     };
 
-    auto findUsages = [&addLocationIfTypeMatchesTarget, &name, &namesToCheck](Path, const DomItem &current,
-                                                                bool) -> bool {
+    auto findUsages = [&addLocationIfTypeMatchesTarget, &name,
+                       &namesToCheck](Path, const DomItem &current, bool) -> bool {
         bool continueForChildren = true;
         if (auto scope = current.semanticScope()) {
             // is the current property shadowed by some JS identifier? ignore current + its children
@@ -809,13 +909,18 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
             return continueForChildren;
         };
 
-        Q_UNREACHABLE_RETURN(continueForChildren);;
+        Q_UNREACHABLE_RETURN(continueForChildren);
     };
 
-    item.containingFile()
-            .field(Fields::components)
-            .visitTree(Path(), emptyChildrenVisitor, VisitOption::Recurse | VisitOption::VisitSelf,
-                       findUsages);
+    const DomItem qmlFiles = item.top().field(Fields::qmlFileWithPath);
+    const auto filter = filterForFindUsages();
+    for (const QString &file : qmlFiles.keys()) {
+        const DomItem currentFileComponents =
+                qmlFiles.key(file).field(Fields::currentItem).field(Fields::components);
+        currentFileComponents.visitTree(Path(), emptyChildrenVisitor,
+                                        VisitOption::Recurse | VisitOption::VisitSelf, findUsages,
+                                        emptyChildrenVisitor, filter);
+    }
 }
 
 static QQmlLSUtilsLocation locationFromJSIdentifierDefinition(const DomItem &definitionOfItem,
@@ -868,7 +973,8 @@ static void findUsagesHelper(
                     return false;
                 }
                 return true;
-            });
+            },
+            emptyChildrenVisitor, filterForFindUsages());
 
     const QQmlLSUtilsLocation definition =
             locationFromJSIdentifierDefinition(definitionOfItem, name);
@@ -898,6 +1004,15 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(const DomItem &item)
     case DomType::Binding:
     case DomType::MethodInfo: {
         const QString name = item.field(Fields::name).value().toString();
+        findUsagesHelper(item, name, result);
+        break;
+    }
+    case DomType::QmlComponent: {
+        QString name = item.field(Fields::name).value().toString();
+
+        // get rid of extra qualifiers
+        if (const auto dotIndex = name.indexOf(u'.'); dotIndex != -1)
+            name = name.sliced(dotIndex + 1);
         findUsagesHelper(item, name, result);
         break;
     }
@@ -934,25 +1049,60 @@ hasMethodOrSignal(const QQmlJSScope::ConstPtr &scope, const QString &name)
     return type;
 }
 
-// note: ignores the QQmlLSUtilsResolveOptions because function properties/prototypes are not
-// implemented
+/*!
+\internal
+Searches for a method by traversing the parent scopes.
+
+We assume here that it is possible to call methods from parent scope to simplify things, as the
+linting module already warns about calling methods from parent scopes.
+
+Note: in QML, one can only call methods from the current scope, and from the QML file root scope.
+Everything else needs a qualifier.
+*/
 static std::optional<QQmlLSUtilsExpressionType>
 methodFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QString &name,
-                        QQmlLSUtilsResolveOptions = ResolveOwnerType)
+                        QQmlLSUtilsResolveOptions options)
 {
     for (QQmlJSScope::ConstPtr current = referrerScope; current; current = current->parentScope()) {
-        if (auto type = hasMethodOrSignal(current, name))
-            return QQmlLSUtilsExpressionType{ name, current, *type };
+        if (auto type = hasMethodOrSignal(current, name)) {
+            switch (options) {
+            case ResolveOwnerType:
+                return QQmlLSUtilsExpressionType{ name,
+                                                  findDefiningScopeForMethod(current, name),
+                                                  *type };
+            case ResolveActualTypeForFieldMemberExpression:
+                // not implemented, but JS functions have methods and properties
+                // see
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
+                // for the list of properties/methods of functions
+                // see also code below for non-qualified method access
+                return {};
+            }
+        }
 
         if (const auto signalName = QQmlSignalNames::handlerNameToSignalName(name)) {
             if (auto type = hasMethodOrSignal(current, *signalName)) {
-                return QQmlLSUtilsExpressionType{ name, current, SignalHandlerIdentifier };
+                switch (options) {
+                case ResolveOwnerType:
+                    return QQmlLSUtilsExpressionType{
+                        name, findDefiningScopeForMethod(current, *signalName),
+                        SignalHandlerIdentifier
+                    };
+                case ResolveActualTypeForFieldMemberExpression:
+                    // Properties and methods of JS methods are not supported yet
+                    return {};
+                }
             }
         }
     }
     return {};
 }
 
+
+/*!
+\internal
+See comment on methodFromReferrerScope: the same applies to properties.
+*/
 static std::optional<QQmlLSUtilsExpressionType>
 propertyFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QString &propertyName,
                           QQmlLSUtilsResolveOptions options)
@@ -965,8 +1115,10 @@ propertyFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStr
         if (auto property = current->property(resolved->name); property.isValid()) {
             switch (options) {
             case ResolveOwnerType:
-                return QQmlLSUtilsExpressionType{ propertyName, current,
-                                                  resolved->type };
+                return QQmlLSUtilsExpressionType{
+                    propertyName, findDefiningScopeForProperty(current, propertyName),
+                    resolved->type
+                };
             case ResolveActualTypeForFieldMemberExpression:
                 return QQmlLSUtilsExpressionType{ propertyName, property.type(),
                                                   resolved->type };
@@ -976,6 +1128,10 @@ propertyFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStr
     return {};
 }
 
+/*!
+\internal
+See comment on methodFromReferrerScope: the same applies to property bindings.
+*/
 static std::optional<QQmlLSUtilsExpressionType>
 propertyBindingFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QString &name,
                           QQmlLSUtilsResolveOptions options)
@@ -987,33 +1143,39 @@ propertyBindingFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, con
             (binding.bindingType() != QQmlSA::BindingType::GroupProperty))
             return {};
 
-        const auto getTypeIdentifier = [&binding, &referrerScope, &name]{
-            switch (binding.bindingType()) {
-            case QQmlSA::BindingType::AttachedProperty: return AttachedTypeIdentifier;
-            case QQmlSA::BindingType::GroupProperty: {
-                // If generalized group property, then it is actually an id.
-                if (referrerScope->isNameDeferred(name)) {
-                    return QmlObjectIdIdentifier;
-                }
-                return GroupedPropertyIdentifier;
+        const bool bindingIsAttached =
+                binding.bindingType() == QQmlSA::BindingType::AttachedProperty;
+
+        const auto getTypeIdentifier = [&bindingIsAttached, &referrerScope, &name]{
+            if (bindingIsAttached)
+                return AttachedTypeIdentifier;
+
+            // TODO: QTBUG-123618: you can actually have grouped properties on deferred properties
+            // that are not id's!
+            // If generalized group property, then it is actually an id.
+            if (referrerScope->isNameDeferred(name)) {
+                return QmlObjectIdIdentifier;
             }
-            default:
-                Q_UNREACHABLE();
-            }
+            return GroupedPropertyIdentifier;
         };
 
-        const auto getScope = [&binding]{
-            switch (binding.bindingType()) {
-            case QQmlSA::BindingType::AttachedProperty: return binding.attachingType();
-            case QQmlSA::BindingType::GroupProperty: return binding.groupType();
-            default:
-                Q_UNREACHABLE();
-            }
+        const auto getScope = [&bindingIsAttached, &binding]() -> QQmlJSScope::ConstPtr {
+            if (bindingIsAttached)
+                return binding.attachingType();
+
+            return binding.groupType();
         };
 
         switch (options) {
         case ResolveOwnerType: {
-            return QQmlLSUtilsExpressionType{ name, referrerScope, getTypeIdentifier()};
+            return QQmlLSUtilsExpressionType{
+                name,
+                // note: always return the type of the attached type as the owner.
+                // Find usages on "Keys.", for example, should yield all usages of the "Keys"
+                // attached property.
+                bindingIsAttached ? getScope() : findDefiningScopeForProperty(referrerScope, name),
+                getTypeIdentifier()
+            };
         }
         case ResolveActualTypeForFieldMemberExpression:
             return QQmlLSUtilsExpressionType{name, getScope(), getTypeIdentifier()};
@@ -1097,53 +1259,41 @@ resolveFieldMemberExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions 
     if (!owner)
         return {};
 
-    if (auto methods = owner.value().semanticScope->methods(name); !methods.isEmpty()) {
-        switch (options) {
-        case ResolveOwnerType: {
-            const bool isSignal = methods.front().methodType() == QQmlJSMetaMethodType::Signal;
-            QQmlLSUtilsIdentifierType type = isSignal ? QQmlLSUtilsIdentifierType::SignalIdentifier
-                                                      : QQmlLSUtilsIdentifierType::MethodIdentifier;
-            return QQmlLSUtilsExpressionType{ name, owner->semanticScope, type };
-        }
-        case ResolveActualTypeForFieldMemberExpression:
-            // not implemented, but JS functions have methods and properties
-            // see
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
-            // for the list of properties/methods of functions
-            // see also code below for non-qualified method access
-            break;
-        }
-    }
+    if (auto scope = methodFromReferrerScope(owner->semanticScope, name, options))
+        return *scope;
 
     if (auto scope = propertyBindingFromReferrerScope(owner->semanticScope,name, options))
         return *scope;
 
-    if (auto property = owner->semanticScope->property(name); property.isValid()) {
-        switch (options) {
-        case ResolveOwnerType:
-            return QQmlLSUtilsExpressionType{ name, owner->semanticScope,
-                                              QQmlLSUtilsIdentifierType::PropertyIdentifier };
-        case ResolveActualTypeForFieldMemberExpression:
-            return QQmlLSUtilsExpressionType{ name, property.type(),
-                                              QQmlLSUtilsIdentifierType::PropertyIdentifier };
-        }
-    }
+    if (auto scope = propertyFromReferrerScope(owner->semanticScope, name, options))
+        return *scope;
 
     // Ignore enum usages from other files for now.
     if (owner->type == QmlComponentIdentifier) {
         // Check if name is a enum value <TypeName>.<EnumValue>
-        // Enumerations defined in the current file live under the root element scope
-        // This should be changed once we support find-usages in external files
-        const auto scope = item.rootQmlObject(GoTo::MostLikely).semanticScope();
+        // Enumerations should live under the root element scope of the file that defines the enum,
+        // therefore use the DomItem to find the root element of the qml file instead of directly
+        // using owner->semanticScope.
+        const auto scope = item.goToFile(owner->semanticScope->filePath())
+                                   .rootQmlObject(GoTo::MostLikely)
+                                   .semanticScope();
         if (scope->hasEnumerationKey(name)) {
             return QQmlLSUtilsExpressionType{name, scope, EnumeratorValueIdentifier};
         }
         // Or it is a enum name <TypeName>.<EnumName>.<EnumValue>
         else if (scope->hasEnumeration(name)) {
             return QQmlLSUtilsExpressionType{name, scope, EnumeratorIdentifier};
-        } else {
-            return owner;
         }
+
+        // check inline components <TypeName>.<InlineComponentName>
+        for (auto it = owner->semanticScope->childScopesBegin(),
+                  end = owner->semanticScope->childScopesEnd();
+             it != end; ++it) {
+            if ((*it)->inlineComponentName() == name) {
+                return QQmlLSUtilsExpressionType{ name, *it, QmlComponentIdentifier };
+            }
+        }
+        return {};
     }
 
     qCDebug(QQmlLSUtilsLog) << "Could not find identifier expression for" << item.internalKindStr();
@@ -1207,11 +1357,9 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
                 name, attachedScope, QQmlLSUtilsIdentifierType::AttachedTypeIdentifier
             };
         }
-        // Check if it is a component
-        if (item.component().name() == name) {
-            return QQmlLSUtilsExpressionType{ name, item.component().semanticScope(),
-                                            QmlComponentIdentifier };
-        }
+
+        // its a (inline) component!
+        return QQmlLSUtilsExpressionType{ name, scope, QmlComponentIdentifier };
     }
 
     // check if its an id
@@ -1231,6 +1379,56 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     return {};
 }
 
+static std::optional<QQmlLSUtilsExpressionType>
+resolveSignalOrPropertyExpressionType(const QString &name, const QQmlJSScope::ConstPtr &scope,
+                                      QQmlLSUtilsResolveOptions options)
+{
+    auto signalOrProperty = resolveNameInQmlScope(name, scope);
+    if (!signalOrProperty)
+        return {};
+
+    switch (signalOrProperty->type) {
+    case PropertyIdentifier:
+        switch (options) {
+        case ResolveOwnerType:
+            return QQmlLSUtilsExpressionType{ name, findDefiningScopeForProperty(scope, name),
+                                              signalOrProperty->type };
+        case ResolveActualTypeForFieldMemberExpression:
+            return QQmlLSUtilsExpressionType{ name, scope->property(name).type(),
+                                              signalOrProperty->type };
+        }
+        Q_UNREACHABLE_RETURN({});
+    case PropertyChangedHandlerIdentifier:
+        switch (options) {
+        case ResolveOwnerType:
+            return QQmlLSUtilsExpressionType{
+                name, findDefiningScopeForProperty(scope, signalOrProperty->name),
+                signalOrProperty->type
+            };
+        case ResolveActualTypeForFieldMemberExpression:
+            // Properties and methods are not implemented on methods.
+            Q_UNREACHABLE_RETURN({});
+        }
+        Q_UNREACHABLE_RETURN({});
+    case SignalHandlerIdentifier:
+    case PropertyChangedSignalIdentifier:
+    case SignalIdentifier:
+    case MethodIdentifier:
+        switch (options) {
+        case ResolveOwnerType: {
+            return QQmlLSUtilsExpressionType{ name, findDefiningScopeForMethod(scope, name),
+                                              signalOrProperty->type };
+        }
+        case ResolveActualTypeForFieldMemberExpression:
+            // Properties and methods are not implemented on methods.
+            Q_UNREACHABLE_RETURN({});
+        }
+        Q_UNREACHABLE_RETURN({});
+    default:
+        Q_UNREACHABLE_RETURN({});
+    }
+}
+
 /*!
    \internal
     Resolves the type of the given DomItem, when possible (e.g., when there are enough type
@@ -1246,9 +1444,17 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
     }
     case DomType::PropertyDefinition: {
         auto propertyDefinition = item.as<PropertyDefinition>();
-        if (propertyDefinition && propertyDefinition->scope) {
-            const auto &scope = propertyDefinition->scope;
-            return QQmlLSUtilsExpressionType{ propertyDefinition->name, scope, PropertyIdentifier };
+        if (propertyDefinition && propertyDefinition->semanticScope()) {
+            const auto &scope = propertyDefinition->semanticScope();
+            switch (options) {
+            case ResolveOwnerType:
+                return QQmlLSUtilsExpressionType{ propertyDefinition->name, scope,
+                                                  PropertyIdentifier };
+            case ResolveActualTypeForFieldMemberExpression:
+                // There should not be any PropertyDefinition inside a FieldMemberExpression.
+                Q_UNREACHABLE_RETURN({});
+            }
+            Q_UNREACHABLE_RETURN({});
         }
         return {};
     }
@@ -1264,13 +1470,23 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
                 return QQmlLSUtilsExpressionType{ name, owner.value(), QmlObjectIdIdentifier };
 
             if (QQmlJSScope::ConstPtr targetScope = findScopeOfSpecialItems(owner.value(), item)) {
-                return QQmlLSUtilsExpressionType{ name, targetScope,
-                                                  resolveNameInQmlScope(name, targetScope)->type };
+                const auto signalOrProperty = resolveNameInQmlScope(name, targetScope);
+                if (!signalOrProperty)
+                    return {};
+                switch (options) {
+                case ResolveOwnerType:
+                    return QQmlLSUtilsExpressionType{
+                        name, findDefiningScopeForBinding(targetScope, signalOrProperty->name),
+                        signalOrProperty->type
+                    };
+                case ResolveActualTypeForFieldMemberExpression:
+                    // Bindings can't be inside of FieldMemberExpressions.
+                    Q_UNREACHABLE_RETURN({});
+                }
             }
-            auto signalOrProperty = resolveNameInQmlScope(name, owner.value());
-            if (signalOrProperty)
-                return QQmlLSUtilsExpressionType{ name, owner.value(), signalOrProperty->type };
-
+            if (auto result = resolveSignalOrPropertyExpressionType(name, owner.value(), options)) {
+                return result;
+            }
             qDebug(QQmlLSUtilsLog) << "QQmlLSUtils::resolveExpressionType() could not resolve the"
                                       "type of a Binding.";
         }
@@ -1281,17 +1497,40 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
         auto object = item.as<QmlObject>();
         if (!object)
             return {};
-        if (const auto scope = object->semanticScope()) {
+        if (auto scope = object->semanticScope()) {
             const auto name = item.name();
-            const auto resolved = resolveNameInQmlScope(name, scope);
+            const bool isComponent = name.front().isUpper();
+            if (isComponent)
+                scope = scope->baseType();
+            const QQmlLSUtilsIdentifierType type =
+                    isComponent ? QmlComponentIdentifier : GroupedPropertyIdentifier;
             switch (options) {
             case ResolveOwnerType:
-                return QQmlLSUtilsExpressionType{name, scope->parentScope(), resolved->type};
+                return QQmlLSUtilsExpressionType{ name, scope, type };
             case ResolveActualTypeForFieldMemberExpression:
-                return QQmlLSUtilsExpressionType{name, scope, resolved->type};
+                return QQmlLSUtilsExpressionType{ name, scope, type};
             }
         }
         return {};
+    }
+    case DomType::QmlComponent: {
+        auto component = item.as<QmlComponent>();
+        if (!component)
+            return {};
+        const auto scope = component->semanticScope();
+        if (!scope)
+            return {};
+
+        QString name = item.name();
+        if (auto dotIndex = name.indexOf(u'.'); dotIndex != -1)
+            name = name.sliced(dotIndex + 1);
+        switch (options) {
+        case ResolveOwnerType:
+            return QQmlLSUtilsExpressionType{ name, scope, QmlComponentIdentifier };
+        case ResolveActualTypeForFieldMemberExpression:
+            return QQmlLSUtilsExpressionType{ name, scope, QmlComponentIdentifier };
+        }
+        Q_UNREACHABLE_RETURN({});
     }
     case DomType::MethodInfo: {
         auto object = item.as<MethodInfo>();
@@ -1302,10 +1541,20 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
 
             if (QQmlJSScope::ConstPtr targetScope =
                         findScopeOfSpecialItems(scope.value()->parentScope(), item)) {
-                return QQmlLSUtilsExpressionType{
-                    object->name, targetScope,
-                    resolveNameInQmlScope(object->name, targetScope)->type
-                };
+                const auto signalOrProperty = resolveNameInQmlScope(object->name, targetScope);
+                if (!signalOrProperty)
+                    return {};
+
+                switch (options) {
+                case ResolveOwnerType:
+                    return QQmlLSUtilsExpressionType{ object->name,
+                                                      findDefiningScopeForMethod(
+                                                              targetScope, signalOrProperty->name),
+                                                      signalOrProperty->type };
+                case ResolveActualTypeForFieldMemberExpression:
+                    // not supported for methods
+                    return {};
+                }
             }
 
             // in case scope is the semantic scope for the function bodies: grab the owner's scope
@@ -1313,9 +1562,10 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
             if (scope.value()->scopeType() == QQmlJSScope::ScopeType::JSFunctionScope)
                 scope = scope.value()->parentScope();
 
-            if (auto type = hasMethodOrSignal(scope.value(), object->name))
-                return QQmlLSUtilsExpressionType{ object->name, scope.value(), type.value() };
-
+            if (auto result = resolveSignalOrPropertyExpressionType(object->name, scope.value(),
+                                                                    options)) {
+                return result;
+            }
             qDebug(QQmlLSUtilsLog) << "QQmlLSUtils::resolveExpressionType() could not resolve the"
                                       "type of a MethodInfo.";
         }
@@ -1335,24 +1585,57 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
         const auto scope = item.qmlObject().semanticScope();
         const auto name = item.field(Fields::value).value().toString();
         if (QQmlJSScope::ConstPtr targetScope = findScopeOfSpecialItems(scope, item)) {
-                return QQmlLSUtilsExpressionType{ name, targetScope,
-                                                  resolveNameInQmlScope(name, targetScope)->type };
+            const auto signalOrProperty = resolveNameInQmlScope(name, targetScope);
+            if (!signalOrProperty)
+                return {};
+            switch (options) {
+            case ResolveOwnerType:
+                return QQmlLSUtilsExpressionType{
+                    name, findDefiningScopeForProperty(targetScope, signalOrProperty->name),
+                    signalOrProperty->type
+                };
+            case ResolveActualTypeForFieldMemberExpression:
+                // ScriptLiteral's can't be inside of FieldMemberExpression's, especially when they
+                // are inside a special item.
+                Q_UNREACHABLE_RETURN({});
+            }
         }
         return {};
     }
     case DomType::EnumItem: {
         const QString enumValue = item.field(Fields::name).value().toString();
          QQmlJSScope::ConstPtr referrerScope = item.rootQmlObject(GoTo::MostLikely).semanticScope();
-        if (referrerScope->hasEnumerationKey(enumValue))
-            return QQmlLSUtilsExpressionType{enumValue, referrerScope, EnumeratorValueIdentifier};
-        return {};
+         if (!referrerScope->hasEnumerationKey(enumValue))
+             return {};
+         switch (options) {
+             // special case: use the owner's scope here, as enums do not have their own
+             // QQmlJSScope.
+         case ResolveActualTypeForFieldMemberExpression:
+         case ResolveOwnerType:
+             return QQmlLSUtilsExpressionType{
+                 enumValue, findDefiningScopeForEnumerationKey(referrerScope, enumValue),
+                 EnumeratorValueIdentifier
+             };
+             return {};
+         }
+         Q_UNREACHABLE_RETURN({});
     }
     case DomType::EnumDecl: {
         const QString enumName = item.field(Fields::name).value().toString();
         QQmlJSScope::ConstPtr referrerScope = item.rootQmlObject(GoTo::MostLikely).semanticScope();
-        if (referrerScope->hasEnumeration(enumName))
-            return QQmlLSUtilsExpressionType{enumName, referrerScope, EnumeratorIdentifier};
-        return {};
+        if (!referrerScope->hasEnumeration(enumName))
+            return {};
+        switch (options) {
+        // special case: use the owner's scope here, as enums do not have their own QQmlJSScope.
+        case ResolveActualTypeForFieldMemberExpression:
+        case ResolveOwnerType:
+            return QQmlLSUtilsExpressionType{
+                enumName, findDefiningScopeForEnumeration(referrerScope, enumName),
+                EnumeratorIdentifier
+            };
+        }
+
+        Q_UNREACHABLE_RETURN({});
     }
     default: {
         qCDebug(QQmlLSUtilsLog) << "Type" << item.internalKindStr()
@@ -1499,7 +1782,6 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(const DomItem &
         result.filename = domId.canonicalFilePath();
         return result;
     }
-    case QmlObjectIdentifier:
     case SingletonIdentifier:
     case EnumeratorIdentifier:
     case EnumeratorValueIdentifier:
@@ -1576,7 +1858,6 @@ expressionTypeWithDefinition(const QQmlLSUtilsExpressionType &ownerType)
     }
     case JavaScriptIdentifier:
     case QmlObjectIdIdentifier:
-    case QmlObjectIdentifier:
     case SingletonIdentifier:
     case EnumeratorIdentifier:
     case EnumeratorValueIdentifier:
@@ -1641,7 +1922,6 @@ std::optional<QQmlLSUtilsErrorMessage> QQmlLSUtils::checkNameForRename(
     case PropertyIdentifier:
     case SignalIdentifier:
     case MethodIdentifier:
-    case QmlObjectIdentifier:
     default:
         break;
     };

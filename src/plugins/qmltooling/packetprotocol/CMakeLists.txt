@@ -16,4 +16,5 @@ qt_internal_add_module(PacketProtocolPrivate
         qversionedpacket_p.h
     PUBLIC_LIBRARIES
         Qt::CorePrivate
+    NO_GENERATE_CPP_EXPORTS
 )

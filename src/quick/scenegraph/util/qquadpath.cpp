@@ -453,26 +453,26 @@ QQuadPath::Element::FillSide QQuadPath::fillSideOf(int elementIdx, float element
 
 void QQuadPath::addElement(const QVector2D &control, const QVector2D &endPoint, bool isLine)
 {
-    if (qFuzzyCompare(currentPoint, endPoint))
+    if (qFuzzyCompare(m_currentPoint, endPoint))
         return; // 0 length element, skip
 
-    isLine = isLine || isPointNearLine(control, currentPoint, endPoint); // Turn flat quad into line
+    isLine = isLine || isPointNearLine(control, m_currentPoint, endPoint); // Turn flat quad into line
 
     m_elements.resize(m_elements.size() + 1);
     Element &elem = m_elements.last();
-    elem.sp = currentPoint;
-    elem.cp = isLine ? (0.5f * (currentPoint + endPoint)) : control;
+    elem.sp = m_currentPoint;
+    elem.cp = isLine ? (0.5f * (m_currentPoint + endPoint)) : control;
     elem.ep = endPoint;
     elem.m_isLine = isLine;
-    elem.m_isSubpathStart = subPathToStart;
-    subPathToStart = false;
-    currentPoint = endPoint;
+    elem.m_isSubpathStart = m_subPathToStart;
+    m_subPathToStart = false;
+    m_currentPoint = endPoint;
 }
 
 void QQuadPath::addElement(const Element &e)
 {
-    subPathToStart = false;
-    currentPoint = e.endPoint();
+    m_subPathToStart = false;
+    m_currentPoint = e.endPoint();
     m_elements.append(e);
 }
 
@@ -611,7 +611,7 @@ QRectF QQuadPath::controlPointRect() const
 int QQuadPath::elementCountRecursive() const
 {
     int count = 0;
-    iterateElements([&](const QQuadPath::Element &) { count++; });
+    iterateElements([&](const QQuadPath::Element &, int) { count++; });
     return count;
 }
 
@@ -657,7 +657,7 @@ QQuadPath QQuadPath::subPathsClosed(bool *didClose) const
     Q_ASSERT(m_childElements.isEmpty());
     bool closed = false;
     QQuadPath res = *this;
-    res.subPathToStart = false;
+    res.m_subPathToStart = false;
     res.m_elements = {};
     res.m_elements.reserve(elementCount());
     int subStart = -1;
@@ -666,7 +666,7 @@ QQuadPath QQuadPath::subPathsClosed(bool *didClose) const
         const auto &element = m_elements.at(i);
         if (element.m_isSubpathStart) {
             if (subStart >= 0 && m_elements[i - 1].ep != m_elements[subStart].sp) {
-                res.currentPoint = m_elements[i - 1].ep;
+                res.m_currentPoint = m_elements[i - 1].ep;
                 res.lineTo(m_elements[subStart].sp);
                 closed = true;
                 auto &endElement = res.m_elements.last();
@@ -685,7 +685,7 @@ QQuadPath QQuadPath::subPathsClosed(bool *didClose) const
     }
 
     if (subStart >= 0 && m_elements.last().ep != m_elements[subStart].sp) {
-        res.currentPoint = m_elements.last().ep;
+        res.m_currentPoint = m_elements.last().ep;
         res.lineTo(m_elements[subStart].sp);
         closed = true;
     }
@@ -704,7 +704,7 @@ QQuadPath QQuadPath::flattened() const
 {
     QQuadPath res;
     res.reserve(elementCountRecursive());
-    iterateElements([&](const QQuadPath::Element &element) { res.m_elements.append(element); });
+    iterateElements([&](const QQuadPath::Element &elem, int) { res.m_elements.append(elem); });
     res.setPathHints(pathHints());
     res.setFillRule(fillRule());
     return res;
@@ -841,7 +841,7 @@ QQuadPath QQuadPath::dashed(qreal lineWidth, const QList<qreal> &dashPattern, qr
     for (float dashLength : pattern) {
         if (dashLength > startOffset)
             break;
-        startIndex++;
+        startIndex = (startIndex + 1) % pattern.size(); // The % guards against accuracy issues
         startOffset -= dashLength;
     }
 
@@ -941,7 +941,7 @@ QDebug operator<<(QDebug stream, const QQuadPath &path)
            << path.elementCountRecursive() << " leaf elements, "
            << (path.fillRule() == Qt::OddEvenFill ? "OddEven" : "Winding") << Qt::endl;
     int count = 0;
-    path.iterateElements([&](const QQuadPath::Element &e) {
+    path.iterateElements([&](const QQuadPath::Element &e, int) {
         stream << " " << count++ << (e.isSubpathStart() ? " >" : " ");
         printElement(stream, e);
         stream << Qt::endl;

@@ -184,7 +184,9 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
         // and in approximately the same direction
         qreal minAngle =  361;
         qreal maxAngle = -361;
-        bool allOverThreshold = !event->isEndEvent();
+        bool allOverThreshold = QQuickDeliveryAgentPrivate::isTouchEvent(event) ?
+                static_cast<QTouchEvent *>(event)->touchPointStates() != QEventPoint::Released :
+                !event->isEndEvent();
         QVector<QEventPoint> chosenPoints;
 
         if (event->isBeginEvent())

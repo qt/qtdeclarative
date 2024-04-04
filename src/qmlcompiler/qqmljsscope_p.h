@@ -240,6 +240,7 @@ public:
 
     bool hasEnumeration(const QString &name) const;
     bool hasEnumerationKey(const QString &name) const;
+    bool hasOwnEnumerationKey(const QString &name) const;
     QQmlJSMetaEnum enumeration(const QString &name) const;
     QHash<QString, QQmlJSMetaEnum> enumerations() const;
 

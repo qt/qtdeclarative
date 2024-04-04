@@ -44,6 +44,77 @@ struct MyCustomVariantType
 };
 Q_DECLARE_METATYPE(MyCustomVariantType);
 
+
+class Group : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(int value MEMBER value)
+
+public:
+    Group(QObject *parent = nullptr) : QObject(parent) {}
+    int value = 0;
+};
+
+
+struct GroupGadget
+{
+    Q_GADGET
+
+    Q_PROPERTY(int value MEMBER value)
+
+public:
+    friend bool operator==(GroupGadget g1, GroupGadget g2) { return g1.value == g2.value; }
+    friend bool operator!=(GroupGadget g1, GroupGadget g2) { return !(g1 == g2); }
+    int value = 0;
+};
+
+struct FakeDynamicObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString value MEMBER value)
+
+public:
+    FakeDynamicObject() {}
+    QString value;
+};
+
+QT_BEGIN_NAMESPACE
+namespace QtPrivate {
+// don't do this at home – we override the meta-object which QMetaType collects for
+// FakeDynamicObject* properties
+template<>
+struct MetaObjectForType<FakeDynamicObject *, void>
+{
+    static const QMetaObject *metaObjectFunction(const QMetaTypeInterface *);
+};
+}
+QT_END_NAMESPACE
+
+class UnexposedBase : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(Group *group MEMBER group)
+    Q_PROPERTY(GroupGadget groupGadget MEMBER groupGadget)
+    Q_PROPERTY(FakeDynamicObject *dynamic MEMBER dynamic)
+public:
+    UnexposedBase(QObject *parent = nullptr) : QObject(parent)
+    {
+        group = new Group(this);
+    }
+    Group *group;
+    GroupGadget groupGadget;
+    FakeDynamicObject *dynamic = nullptr;
+};
+
+class DerivedFromUnexposedBase : public UnexposedBase
+{
+    Q_OBJECT
+    QML_ELEMENT
+};
+
+
 class MyAttachedObject : public QObject
 {
     Q_OBJECT
@@ -1292,6 +1363,40 @@ public:
     Q_INVOKABLE bool byteArrayMethod_Overloaded(QVariant) {
         return false;
     }
+};
+
+class EnumPropsManyUnderlyingTypes : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    enum  si8 : qint8 { ResolvedValue = 1};
+    enum  ui8 : quint8 {};
+    enum si16 : qint16 {};
+    enum ui16 : quint16 {};
+    enum ui64 : qint64 {};
+    enum si64 : quint64 {};
+    Q_ENUM(si8)
+    Q_ENUM(ui8)
+    Q_ENUM(si16)
+    Q_ENUM(ui16)
+    Q_ENUM(si64)
+    Q_ENUM(ui64)
+
+
+    Q_PROPERTY(si8  si8prop MEMBER si8prop)
+    Q_PROPERTY(ui8  ui8prop MEMBER ui8prop)
+    Q_PROPERTY(si16 si16prop MEMBER si16prop)
+    Q_PROPERTY(ui16 ui16prop MEMBER ui16prop)
+    Q_PROPERTY(si64 si64prop MEMBER si64prop)
+    Q_PROPERTY(ui64 ui64prop MEMBER ui64prop)
+
+    si8 si8prop = si8(0);
+    ui8 ui8prop = ui8(0);
+    si16 si16prop = si16(0);
+    ui16 ui16prop = ui16(0);
+    si64 si64prop = si64(0);
+    ui64 ui64prop = ui64(0);
 };
 
 Q_DECLARE_METATYPE(MyEnum2Class::EnumB)

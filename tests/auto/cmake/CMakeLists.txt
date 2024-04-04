@@ -155,5 +155,7 @@ if(TARGET Qt::Quick)
             )
         endif()
     endif()
+
+    add_subdirectory(qmltc_build_failures)
 endif()
 

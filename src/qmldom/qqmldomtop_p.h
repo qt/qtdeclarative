@@ -1085,6 +1085,7 @@ private:
 
     const Options m_options;
     const std::shared_ptr<DomEnvironment> m_base;
+    std::shared_ptr<DomEnvironment> m_lastValidBase;
     const std::shared_ptr<DomUniverse> m_universe;
     QStringList m_loadPaths; // paths for qml
     QString m_globalScopeName;

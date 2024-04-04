@@ -544,6 +544,13 @@ signals:
     void clonedSignal(int i = 7);
 };
 
+class Unconstructible
+{
+    Q_GADGET
+    QML_VALUE_TYPE(unconstructible)
+    int m_i = 11;
+};
+
 class Constructible
 {
     Q_GADGET
@@ -777,6 +784,14 @@ struct EnumList
     QML_SEQUENTIAL_CONTAINER(NetworkManager::NM)
 };
 
+class ConstInvokable : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    Q_INVOKABLE const QObject *getObject() { return nullptr; }
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -827,6 +842,7 @@ private slots:
     void duplicateExportWarnings();
     void clonedSignal();
     void baseVersionInQmltypes();
+    void unconstructibleValueType();
     void constructibleValueType();
     void structuredValueType();
     void anonymousAndUncreatable();
@@ -847,6 +863,7 @@ private slots:
     void relatedAddedInVersion();
     void longNumberTypes();
     void enumList();
+    void constReturnType();
 
 private:
     QByteArray qmltypesData;

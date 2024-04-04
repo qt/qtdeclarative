@@ -73,6 +73,8 @@ private Q_SLOTS:
     void autoqmltypes();
     void resources();
 
+    void multiDirectory();
+
     void requiredProperty();
 
     void settingsFile();
@@ -446,6 +448,17 @@ void TestQmllint::resources()
         callQmllint(testFile("relPathQrc/Foo/Thing.qml"), true, nullptr, {}, {},
                 { testFile("relPathQrc/resources.qrc") });
     }
+}
+
+void TestQmllint::multiDirectory()
+{
+    callQmllint(
+            testFile("MultiDirectory/qml/Inner.qml"), true, nullptr,
+            {}, {}, { testFile("MultiDirectory/multi.qrc") });
+
+    callQmllint(
+            testFile("MultiDirectory/qml/pages/Page.qml"), true, nullptr,
+            {}, {}, { testFile("MultiDirectory/multi.qrc") });
 }
 
 void TestQmllint::dirtyQmlCode_data()
@@ -1127,6 +1140,12 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                        Message{
                                u"Namespace 'test' of 'test.Grid' must start with an upper case letter."_s },
                } };
+    QTest::newRow("notQmlRootMethods")
+            << QStringLiteral("notQmlRootMethods.qml")
+            << Result{ {
+                       Message{ u"Member \"deleteLater\" not found on type \"QtObject\""_s },
+                       Message{ u"Member \"destroyed\" not found on type \"QtObject\""_s },
+               } };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1250,6 +1269,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QVariant") << QStringLiteral("qvariant.qml");
     QTest::newRow("Accessible") << QStringLiteral("accessible.qml");
     QTest::newRow("qjsroot") << QStringLiteral("qjsroot.qml");
+    QTest::newRow("qmlRootMethods") << QStringLiteral("qmlRootMethods.qml");
     QTest::newRow("InlineComponent") << QStringLiteral("inlineComponent.qml");
     QTest::newRow("InlineComponentWithComponents") << QStringLiteral("inlineComponentWithComponents.qml");
     QTest::newRow("InlineComponentsChained") << QStringLiteral("inlineComponentsChained.qml");
@@ -1310,6 +1330,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QQmlScriptString") << QStringLiteral("scriptstring.qml");
     QTest::newRow("QEventPoint") << QStringLiteral("qEventPoint.qml");
     QTest::newRow("locale") << QStringLiteral("locale.qml");
+    QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
 }
 
 void TestQmllint::cleanQmlCode()
@@ -2099,5 +2120,5 @@ void TestQmllint::quickPlugin()
 }
 #endif
 
-QTEST_MAIN(TestQmllint)
+QTEST_GUILESS_MAIN(TestQmllint)
 #include "tst_qmllint.moc"

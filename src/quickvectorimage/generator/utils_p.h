@@ -180,7 +180,7 @@ inline QString toSvgString(const QQuadPath &path)
 {
     QString svgPathString;
     QTextStream strm(&svgPathString);
-    path.iterateElements([&](const QQuadPath::Element &e){
+    path.iterateElements([&](const QQuadPath::Element &e, int) {
         if (e.isSubpathStart())
             strm << "M " << e.startPoint().x() << " " << e.startPoint().y() << " ";
         if (e.isLine())

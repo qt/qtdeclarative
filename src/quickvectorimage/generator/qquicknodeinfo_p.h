@@ -34,6 +34,8 @@ struct NodeInfo
     qreal opacity;
     bool isDefaultTransform;
     bool isDefaultOpacity;
+    bool isVisible;
+    bool isDisplayed; // TODO: Map to display enum in QtSvg
 };
 
 struct ImageNodeInfo : NodeInfo
@@ -50,7 +52,7 @@ struct PathNodeInfo : NodeInfo
     QString strokeColor;
     qreal strokeWidth;
     QString fillColor;
-    const QGradient *grad;
+    QGradient grad;
 };
 
 struct TextNodeInfo : NodeInfo

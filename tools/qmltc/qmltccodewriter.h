@@ -27,6 +27,7 @@ struct QmltcCodeWriter
     static void write(QmltcOutputWrapper &code, const QmltcDtor &dtor);
     static void write(QmltcOutputWrapper &code, const QmltcVariable &var);
     static void write(QmltcOutputWrapper &code, const QmltcProperty &prop);
+    static void write(QmltcOutputWrapper &code, const QmltcPropertyInitializer &propertyInitializer, const QmltcType& wrappedType);
 
 private:
     static void writeUrl(QmltcOutputWrapper &code, const QmltcMethod &urlMethod); // special

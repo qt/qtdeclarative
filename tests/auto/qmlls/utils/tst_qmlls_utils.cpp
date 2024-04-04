@@ -27,12 +27,21 @@ static QString printSet(const QSet<QString> &s)
     return r;
 }
 
+static QString readFileContent(const QString &testFileName) {
+        QFile file(testFileName);
+        if (file.open(QIODeviceBase::ReadOnly))
+            return QString::fromUtf8(file.readAll());
+        return QString{};
+};
+
 std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>
 tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
 {
-    CacheKey cacheKey = filePath;
-    if (auto entry = cache.find(cacheKey); entry != cache.end())
-        return *entry;
+    CacheKey cacheKey = QDir::cleanPath(filePath + u"/.."_s);
+    if (auto entry = cache.find(cacheKey); entry != cache.end()) {
+        DomItem env{ *entry };
+        return { env, env.field(QQmlJS::Dom::Fields::qmlFileWithPath).key(filePath) };
+    };
 
     QStringList qmltypeDirs =
             QStringList({ dataDirectory(), QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
@@ -56,7 +65,8 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
     envPtr->loadPendingDependencies();
     envPtr->loadBuiltins();
 
-    return cache[cacheKey] = std::make_tuple(env, file);
+    cache[cacheKey] = envPtr;
+    return std::make_tuple(env, file);
 }
 
 void tst_qmlls_utils::textOffsetRowColumnConversions_data()
@@ -184,7 +194,7 @@ void tst_qmlls_utils::findItemFromLocation_data()
                                     // start of the "property"-token of the "e" property
                                     << -1 << positionAfterOneIndent;
 
-    QTest::addRow("property-in-ic") << file1Qml << 28 << 36 << firstResult << outOfOne
+    QTest::addRow("property-in-ic") << file1Qml << 28 << 38 << firstResult << outOfOne
                                     << QQmlJS::Dom::DomType::PropertyDefinition << -1 << 26;
 
     QTest::addRow("onCChild") << file1Qml << 16 << positionAfterOneIndent << firstResult << outOfOne
@@ -223,8 +233,7 @@ void tst_qmlls_utils::findItemFromLocation_data()
     QTest::addRow("onWhitespaceBetweenCAndD2") << file1Qml << 17 << 24 << firstResult << outOfOne
                                                << QQmlJS::Dom::DomType::Map << 16 << 8;
 
-    // check workaround for inline components
-    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne
+    QTest::addRow("ic") << file1Qml << 15 << 5 << firstResult << outOfOne
                         << QQmlJS::Dom::DomType::QmlComponent << -1 << 5;
     QTest::addRow("ic2") << file1Qml << 15 << 20 << firstResult << outOfOne
                          << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1 << 18;
@@ -349,7 +358,7 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     QTest::addRow("onWhitespaceBetweenCAndD")
             << file1Qml << 17 << 24 << firstResult << outOfOne << noResultExpected << -1 << -1;
 
-    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne << file1Qml << -1 << 18;
+    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne << file1Qml << 15 << 15;
     QTest::addRow("icBase") << file1Qml << 15 << 20 << firstResult << outOfOne
                             << u"TODO: file location for C++ defined types?"_s << -1 << -1;
     QTest::addRow("ic3") << file1Qml << 15 << 33 << firstResult << outOfOne << file1Qml << -1 << 18;
@@ -461,12 +470,12 @@ void tst_qmlls_utils::findLocationOfItem_data()
 
     QTest::addRow("root-element") << file1Qml << 6 << 2 << -1 << 1;
 
-    QTest::addRow("property-a") << file1Qml << 9 << 17 << -1 << positionAfterOneIndent;
+    QTest::addRow("property-a") << file1Qml << 9 << 18 << -1 << positionAfterOneIndent;
     QTest::addRow("property-a2") << file1Qml << 9 << 10 << -1 << positionAfterOneIndent;
     QTest::addRow("nested-C") << file1Qml << 20 << 9 << -1 << -1;
     QTest::addRow("nested-C2") << file1Qml << 23 << 13 << -1 << -1;
     QTest::addRow("D") << file1Qml << 17 << 33 << -1 << 32;
-    QTest::addRow("property-d") << file1Qml << 12 << 15 << -1 << positionAfterOneIndent;
+    QTest::addRow("property-d-var-type") << file1Qml << 12 << 15 << -1 << 14;
 
     QTest::addRow("import") << file1Qml << 4 << 6 << -1 << 1;
 }
@@ -680,7 +689,7 @@ void tst_qmlls_utils::findUsages_data()
 
     {
         QList<QQmlLSUtilsLocation> expectedUsages;
-        const auto testFileName = testFile("findUsages/jsIdentifier.qml");
+        const auto testFileName = testFile("findUsages/jsIdentifier/jsIdentifier.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 13, strlen("sum"));
@@ -704,8 +713,10 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
-        const auto testFileName = testFile("findUsages/property.qml");
+        const auto testFileName = testFile("findUsages/property/property.qml");
+        const auto otherFile = testFile("findUsages/property/PropertyFromAnotherFile.qml");
         const auto testFileContent = readFileContent(testFileName);
+        const auto otherFileContent = readFileContent(otherFile);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 18, strlen("helloProperty"));
@@ -735,11 +746,29 @@ void tst_qmlls_utils::findUsages_data()
             QTest::addRow("findPropertyFromDeclarationInIC") << 27 << 22 << ICHelloPropertyUsages;
             QTest::addRow("findPropertyFromUsageInIC") << 29 << 20 << ICHelloPropertyUsages;
         }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(otherFile, otherFileContent, 4, 18, strlen("helloProperty"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 42, 9, strlen("helloProperty"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 44, 20, strlen("helloProperty"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 46, 9, strlen("OnHelloPropertyChanged"));
+            const auto helloPropertyUsages = makeUsages(testFileName, expectedUsages);
+
+            QTest::addRow("findPropertyFromOtherFile") << 42 << 13 << helloPropertyUsages;
+        }
     }
     {
-        QList<QQmlLSUtilsLocation> expectedUsages;
-        const auto testFileName = testFile("findUsages/propertyInNested.qml");
+        const auto testFileName = testFile("findUsages/propertyInNested/propertyInNested.qml");
         const auto testFileContent = readFileContent(testFileName);
+
+        const auto componentFileName =
+                testFile("findUsages/propertyInNested/NestedComponentInFile.qml");
+        const auto componentFileContent = readFileContent(componentFileName);
+
+        const auto componentFileName3 =
+                testFile("findUsages/propertyInNested/NestedComponentInFile3.qml");
+        const auto componentFileContent3 = readFileContent(componentFileName);
+
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 7, 18, strlen("p2"));
@@ -779,16 +808,45 @@ void tst_qmlls_utils::findUsages_data()
         }
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(componentFileName, componentFileContent, 4, 37, strlen("inner"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 50, 32, strlen("inner"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 52, 32, strlen("inner"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 53, 32, strlen("inner"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 54, 32, strlen("inner"));
+            const auto nestedComponent3Usages = makeUsages(testFileName, expectedUsages);
+            const auto nestedComponent3UsagesFromOtherFile =
+                    makeUsages(componentFileName, expectedUsages);
+            QTest::addRow("findPropertyFromUsageInFieldMemberExpressionFromOtherFile")
+                    << 50 << 33 << nestedComponent3Usages;
+
+            QTest::addRow("findFieldMemberExpressionUsageFromPropertyDefinitionFromOtherFile")
+                    << 4 << 38 << nestedComponent3UsagesFromOtherFile;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 35, 38, strlen("p2"));
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 20, 22, strlen("p2"));
             const auto nestedComponent3P2Usages = makeUsages(testFileName, expectedUsages);
             QTest::addRow("findProperty2FromUsageInFieldMemberExpression")
                     << 35 << 39 << nestedComponent3P2Usages;
         }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(componentFileName3, componentFileContent3,
+                                                        5, 18, strlen("p2"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 53, 44,
+                                                        strlen("p2"));
+            const auto nestedComponent3P2Usages = makeUsages(testFileName, expectedUsages);
+            const auto nestedComponent3P2UsagesFromOtherFile = makeUsages(componentFileName3, expectedUsages);
+            QTest::addRow("findProperty2FromUsageInFieldMemberExpressionInOtherFile")
+                    << 53 << 44 << nestedComponent3P2Usages;
+            QTest::addRow("findProperty2FromUsageInDefinitionInOtherFile")
+                    << 5 << 19 << nestedComponent3P2UsagesFromOtherFile;
+        }
     }
     {
         QList<QQmlLSUtilsLocation> expectedUsages;
-        const auto testFileName = testFile("findUsages/idUsages.qml");
+        const auto testFileName = testFile("findUsages/idUsages/idUsages.qml");
         const auto testFileContent = readFileContent(testFileName);
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 7, 9, strlen("rootId"));
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 11, 17, strlen("rootId"));
@@ -799,7 +857,7 @@ void tst_qmlls_utils::findUsages_data()
     }
     {
         QList<QQmlLSUtilsLocation> expectedUsages;
-        const auto testFileName = testFile("findUsages/recursive.qml");
+        const auto testFileName = testFile("findUsages/recursive/recursive.qml");
         const auto testFileContent = readFileContent(testFileName);
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 14, strlen("recursive"));
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 24, strlen("recursive"));
@@ -816,8 +874,40 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("findFunctionUsageFromDefinition") << 8 << 17 << recursiveUsages;
     }
     {
-        const auto testFileName = testFile("findUsages/signalsAndHandlers.qml");
+        QList<QQmlLSUtilsLocation> expectedUsages;
+        const auto testFileName = testFile("findUsages/recursive/recursive.qml");
         const auto testFileContent = readFileContent(testFileName);
+        const auto otherFileName = testFile("findUsages/recursive/RecursiveInOtherFile.qml");
+        const auto otherFileContent = readFileContent(otherFileName);
+
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 27, 61,
+                                                    strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(otherFileName, otherFileContent, 4, 14,
+                                                    strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(otherFileName, otherFileContent, 6, 24,
+                                                    strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(otherFileName, otherFileContent, 6, 34,
+                                                    strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(otherFileName, otherFileContent, 6, 51,
+                                                    strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(otherFileName, otherFileContent, 6, 68,
+                                                    strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(otherFileName, otherFileContent, 8, 20,
+                                                    strlen("recursive"));
+
+        const auto recursiveUsages = makeUsages(testFileName, expectedUsages);
+        QTest::addRow("findFunctionUsageFromOtherFile") << 27 << 64 << recursiveUsages;
+        const auto recursiveUsagesFromOtherFile = makeUsages(otherFileName, expectedUsages);
+        QTest::addRow("findFunctionUsageFromSameFile") << 6 << 39 << recursiveUsagesFromOtherFile;
+        QTest::addRow("findFunctionUsageFromDefinitionInOtherFile")
+                << 4 << 14 << recursiveUsagesFromOtherFile;
+    }
+    {
+        const auto testFileName = testFile("findUsages/signalsAndHandlers/signalsAndHandlers.qml");
+        const auto testFileContent = readFileContent(testFileName);
+
+        const auto otherFileName = testFile("findUsages/signalsAndHandlers/widthChangedInAnotherFile.qml");
+        const auto otherFileContent = readFileContent(otherFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 12, strlen("helloSignal"));
@@ -833,6 +923,7 @@ void tst_qmlls_utils::findUsages_data()
         }
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(otherFileName, otherFileContent, 5, 5, strlen("onWidthChanged"));
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 13, strlen("widthChanged"));
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 27, 17, strlen("widthChanged"));
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 28, 20, strlen("widthChanged"));
@@ -845,7 +936,7 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
-        const auto testFileName = testFile("findUsages/binding.qml");
+        const auto testFileName = testFile("findUsages/binding/binding.qml");
         const auto testFileContent = readFileContent(testFileName);
         QList<QQmlLSUtilsLocation> expectedUsages;
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 18,
@@ -857,7 +948,7 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("findBindingUsagesFromBinding") << 10 << 19 << helloPropertyBindingUsages;
     }
     {
-        const auto testFileName = testFile("findUsages/signalAndHandlers2.qml");
+        const auto testFileName = testFile("findUsages/signalsAndHandlers/signalAndHandlers2.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
@@ -924,7 +1015,7 @@ void tst_qmlls_utils::findUsages_data()
     }
     {
         QList<QQmlLSUtilsLocation> expectedUsages;
-        const auto testFileName = testFile("findUsages/connections.qml");
+        const auto testFileName = testFile("findUsages/connections/connections.qml");
         const auto testFileContent = readFileContent(testFileName);
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 9, strlen("onClicked"));
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 17, 23, strlen("clicked"));
@@ -940,7 +1031,8 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("findSignalsInConnectionFromFunction") << 16 << 22 << signalInConnection;
     }
     {
-        const auto testFileName = testFile("findUsages/parametersAndDeconstruction.qml");
+        const auto testFileName =
+                testFile("findUsages/parametersAndDeconstruction/parametersAndDeconstruction.qml");
         const auto testFileContent = readFileContent(testFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
@@ -984,16 +1076,23 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
-        const auto testFileName = testFile("findUsages/groupPropertyUsage.qml");
+        const auto testFileName = testFile("findUsages/groupPropertyUsage/groupPropertyUsage.qml");
         const auto testFileContent = readFileContent(testFileName);
+        const auto otherFileName = testFile("findUsages/groupPropertyUsage/fontFamilyUsage.qml");
+        const auto otherFileContent = readFileContent(otherFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(otherFileName, otherFileContent, 5, 34, strlen("family"));
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 14, 17, strlen("family"));
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 35, strlen("family"));
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 10, strlen("family"));
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 33, 48, strlen("family"));
             const auto groupPropertyUsages1 = makeUsages(testFileName, expectedUsages);
             QTest::addRow("groupPropertyUsages1") << 14 << 17 << groupPropertyUsages1;
+            const auto groupPropertyUsages1FromOtherFile =
+                    makeUsages(otherFileName, expectedUsages);
+            QTest::addRow("groupPropertyUsages1FromOtherFile")
+                    << 5 << 37 << groupPropertyUsages1FromOtherFile;
         }
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
@@ -1008,7 +1107,8 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
-        const auto testFileName = testFile("findUsages/attachedPropertyUsage.qml");
+        const auto testFileName =
+                testFile("findUsages/attachedPropertyUsage/attachedPropertyUsage.qml");
         const auto testFileContent = readFileContent(testFileName);
         QList<QQmlLSUtilsLocation> expectedUsages;
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 5, strlen("Keys"));
@@ -1017,7 +1117,7 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("attachedPropertyUsages") << 12 << 25 << attachedPropertyUsages;
     }
     {
-        const auto testFileName = testFile("findUsages/inlineComponents.qml");
+        const auto testFileName = testFile("findUsages/inlineComponents/inlineComponents.qml");
         const auto testFileContent = readFileContent(testFileName);
         QList<QQmlLSUtilsLocation> expectedUsages;
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 22, strlen("foo"));
@@ -1030,7 +1130,7 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("inlineUsagesFromJsScope") << 20 << 20 << inlineUsages;
     }
     {
-        const auto testFileName = testFile("findUsages/propertyChanges.qml");
+        const auto testFileName = testFile("findUsages/propertyChanges/propertyChanges.qml");
         const auto testFileContent = readFileContent(testFileName);
         QList<QQmlLSUtilsLocation> expectedUsages;
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 9, strlen("onClicked"));
@@ -1041,7 +1141,7 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("propertyChanges1") << 16 << 21 << propertyChanges;
     }
     {
-        const auto testFileName = testFile("findUsages/bindings.qml");
+        const auto testFileName = testFile("findUsages/bindings/bindings.qml");
         const auto testFileContent = readFileContent(testFileName);
         QList<QQmlLSUtilsLocation> expectedUsages;
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 11, 23, strlen("patronChanged"));
@@ -1053,12 +1153,14 @@ void tst_qmlls_utils::findUsages_data()
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 13, 20, strlen("patronChanged"));
         expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 20, 23, strlen("\"patronChanged\""));
         const auto bindings = makeUsages(testFileName, expectedUsages);
-        QTest::addRow("propertyInBindingsFromDecl") << 11 << 22 << bindings;
+        QTest::addRow("propertyInBindingsFromDecl") << 11 << 23 << bindings;
         QTest::addRow("generalizedGroupPropertyBindings") << 27 << 19 << bindings;
     }
     {
-        const auto testFileName = testFile("findUsages/Enums.qml");
+        const auto testFileName = testFile("findUsages/enums/Enums.qml");
         const auto testFileContent = readFileContent(testFileName);
+        const auto otherFileName = testFile("findUsages/enums/EnumsFromAnotherFile.qml");
+        const auto otherFileContent = readFileContent(otherFileName);
         {
             QList<QQmlLSUtilsLocation> expectedUsages;
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 9, strlen("Patron"));
@@ -1075,6 +1177,75 @@ void tst_qmlls_utils::findUsages_data()
             const auto enums = makeUsages(testFileName, expectedUsages);
             QTest::addRow("enumNameFromDeclaration") << 8 << 10 << enums;
             QTest::addRow("enumNameFromUsage") << 22 << 30 << enums;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 26, 46,
+                                                        strlen("FromAnotherUniverse"));
+            expectedUsages << QQmlLSUtilsLocation::from(otherFileName, otherFileContent, 4, 68,
+                                                        strlen("FromAnotherUniverse"));
+            const auto enums = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("enumNameFromDeclarationInOtherFile") << 26 << 50 << enums;
+            const auto enumsFromOtherFile = makeUsages(otherFileName, expectedUsages);
+            QTest::addRow("enumNameFromUsageFromOtherFile") << 4 << 81 << enumsFromOtherFile;
+        }
+    }
+    {
+        const auto testFileName = testFile("findUsages/inlineComponents/inlineComponents2.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 4, 15, strlen("MyIC"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 5, 5, strlen("MyIC"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 5, 12, strlen("MyIC"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 5, 19, strlen("MyIC"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 6, 19, strlen("MyIC"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 6, 26, strlen("MyIC"));
+            const auto inlineComponents = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findICUsagesFromDefinition") << 4 << 16 << inlineComponents;
+            QTest::addRow("findICUsagesFromDefinition2") << 4 << 9 << inlineComponents;
+            QTest::addRow("findICUsagesFromUsage") << 5 << 19 << inlineComponents;
+            QTest::addRow("findICUsagesFromTypeUsage") << 6 << 19 << inlineComponents;
+        }
+    }
+    {
+        const auto testFileName = testFile("findUsages/inlineComponents/inlineComponents.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        const auto providerFileName =
+                testFile("findUsages/inlineComponents/InlineComponentProvider.qml");
+        const auto providerFileContent = readFileContent(providerFileName);
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(providerFileName, providerFileContent, 4,
+                                                        15, strlen("IC1"));
+            expectedUsages << QQmlLSUtilsLocation::from(providerFileName, providerFileContent, 5,
+                                                        36, strlen("IC1"));
+            expectedUsages << QQmlLSUtilsLocation::from(providerFileName, providerFileContent, 7, 5,
+                                                        strlen("IC1"));
+            expectedUsages << QQmlLSUtilsLocation::from(providerFileName, providerFileContent, 17,
+                                                        13, strlen("IC1"));
+
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 25, 38,
+                                                        strlen("IC1"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 25, 84,
+                                                        strlen("IC1"));
+
+            {
+                const auto usagesForTestFile = makeUsages(testFileName, expectedUsages);
+                QTest::addRow("findICUsagesFromTypeAnnotationInOtherFiles")
+                        << 25 << 39 << usagesForTestFile;
+                QTest::addRow("findICUsagesFromInstantiationInOtherFiles")
+                        << 25 << 84 << usagesForTestFile;
+            }
+
+            {
+                const auto usagesInProviderFile = makeUsages(providerFileName, expectedUsages);
+
+                QTest::addRow("findICUsagesFromDefinitionInOtherFiles")
+                        << 4 << 16 << usagesInProviderFile;
+                QTest::addRow("findICUsagesFromInstantiationInOtherFiles2")
+                        << 17 << 14 << usagesInProviderFile;
+            }
         }
     }
 }
@@ -1117,18 +1288,7 @@ void tst_qmlls_utils::findUsages()
             }
         }
     }
-    QEXPECT_FAIL("propertyChanges1",
-                 "Is temporary broken because of the works of QTBUG-122645, should work again once "
-                 "dependency loading for lazy qmlfiles is done.",
-                 Abort);
-    QEXPECT_FAIL("propertyInBindingsFromDecl",
-                 "Is temporary broken because of the works of QTBUG-122645, should work again once "
-                 "dependency loading for lazy qmlfiles is done.",
-                 Abort);
-    QEXPECT_FAIL("generalizedGroupPropertyBindings",
-                 "Is temporary broken because of the works of QTBUG-122645, should work again once "
-                 "dependency loading for lazy qmlfiles is done.",
-                 Abort);
+
     QCOMPARE(usages, data.expectedUsages);
 }
 
@@ -1143,12 +1303,9 @@ void tst_qmlls_utils::renameUsages_data()
     QTest::addColumn<QString>("expectedError");
 
     const QString testFileName = testFile(u"JSUsages.qml"_s);
-    QString testFileContent;
-    {
-        QFile file(testFileName);
-        QVERIFY(file.open(QIODeviceBase::ReadOnly));
-        testFileContent = QString::fromUtf8(file.readAll());
-    }
+    const QString testFileNameFromAnotherFile = testFile(u"JSUsagesFromAnotherFile.qml"_s);
+    const QString testFileContent = readFileContent(testFileName);
+    const QString testFileFromAnotherFileContent = readFileContent(testFileNameFromAnotherFile);
 
     const QString noError;
     const QList<QQmlLSUtilsEdit> noRenames;
@@ -1209,6 +1366,8 @@ void tst_qmlls_utils::renameUsages_data()
                               u"freshPropertyNameChanged"_s),
         QQmlLSUtilsEdit::from(testFileName, testFileContent, 153, 5,
                               strlen("onHelloPropertyChanged"), u"onFreshPropertyNameChanged"_s),
+        QQmlLSUtilsEdit::from(testFileNameFromAnotherFile, testFileFromAnotherFileContent, 12, 16,
+                              strlen("helloProperty"), u"freshPropertyName"_s),
     };
 
     QList<QQmlLSUtilsEdit> nestedComponentRename{
@@ -1513,38 +1672,45 @@ void tst_qmlls_utils::resolveExpressionType_data()
     // keep in mind that line and character are starting at 1!
     QTest::addColumn<int>("line");
     QTest::addColumn<int>("character");
+    QTest::addColumn<QQmlLSUtilsResolveOptions>("resolveOption");
     QTest::addColumn<QString>("expectedFile");
     // startline of the owners definition
     QTest::addColumn<int>("expectedLine");
+    QTest::addColumn<QQmlLSUtilsIdentifierType>("expectedType");
+
+    const int noLine = -1;
 
     {
         const QString JSDefinitionsQml = testFile(u"JSDefinitions.qml"_s);
         const int parentLine = 6;
         const int childLine = 31;
 
-        QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << parentLine;
-        QTest::addRow("childIddInChild")
-                << JSDefinitionsQml << 37 << 30 << JSDefinitionsQml << childLine;
-        QTest::addRow("parentIdInChild")
-                << JSDefinitionsQml << 37 << 43 << JSDefinitionsQml << parentLine;
+        QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << ResolveOwnerType << JSDefinitionsQml
+                            << parentLine << QmlObjectIdIdentifier;
+        QTest::addRow("childIddInChild") << JSDefinitionsQml << 37 << 30 << ResolveOwnerType
+                                         << JSDefinitionsQml << childLine << QmlObjectIdIdentifier;
+        QTest::addRow("parentIdInChild") << JSDefinitionsQml << 37 << 43 << ResolveOwnerType
+                                         << JSDefinitionsQml << parentLine << QmlObjectIdIdentifier;
 
-        QTest::addRow("propertyI")
-                << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << parentLine;
-        QTest::addRow("qualifiedPropertyI")
-                << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << parentLine;
-        QTest::addRow("propertyIInChild")
-                << JSDefinitionsQml << 37 << 21 << JSDefinitionsQml << childLine;
+        QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << ResolveOwnerType
+                                   << JSDefinitionsQml << parentLine << PropertyIdentifier;
+        QTest::addRow("qualifiedPropertyI") << JSDefinitionsQml << 15 << 21 << ResolveOwnerType
+                                            << JSDefinitionsQml << parentLine << PropertyIdentifier;
+        QTest::addRow("propertyIInChild") << JSDefinitionsQml << 37 << 21 << ResolveOwnerType
+                                          << JSDefinitionsQml << childLine << PropertyIdentifier;
         QTest::addRow("qualifiedChildPropertyIInChild")
-                << JSDefinitionsQml << 37 << 35 << JSDefinitionsQml << childLine;
+                << JSDefinitionsQml << 37 << 35 << ResolveOwnerType << JSDefinitionsQml
+                << childLine << PropertyIdentifier;
         QTest::addRow("qualifiedParentPropertyIInChild")
-                << JSDefinitionsQml << 37 << 49 << JSDefinitionsQml << parentLine;
+                << JSDefinitionsQml << 37 << 49 << ResolveOwnerType << JSDefinitionsQml
+                << parentLine << PropertyIdentifier;
 
-        QTest::addRow("childMethod")
-                << JSDefinitionsQml << 48 << 23 << JSDefinitionsQml << childLine;
-        QTest::addRow("childMethod2")
-                << JSDefinitionsQml << 44 << 20 << JSDefinitionsQml << childLine;
-        QTest::addRow("parentMethod")
-                << JSDefinitionsQml << 14 << 9 << JSDefinitionsQml << parentLine;
+        QTest::addRow("childMethod") << JSDefinitionsQml << 48 << 23 << ResolveOwnerType
+                                     << JSDefinitionsQml << childLine << MethodIdentifier;
+        QTest::addRow("childMethod2") << JSDefinitionsQml << 44 << 20 << ResolveOwnerType
+                                      << JSDefinitionsQml << childLine << MethodIdentifier;
+        QTest::addRow("parentMethod") << JSDefinitionsQml << 14 << 9 << ResolveOwnerType
+                                      << JSDefinitionsQml << parentLine << MethodIdentifier;
     }
 
     {
@@ -1553,19 +1719,80 @@ void tst_qmlls_utils::resolveExpressionType_data()
         const int nestedComponent2Line = 46;
         const int nestedComponent3Line = 51;
         const int nestedComponent4Line = 57;
-        QTest::addRow("propertyAccess:inner.inner")
-                << JSUsagesQml << 68 << 34 << JSUsagesQml << nestedComponent2Line;
-        QTest::addRow("propertyAccess:inner.inner2")
-                << JSUsagesQml << 69 << 34 << JSUsagesQml << nestedComponent2Line;
+        QTest::addRow("propertyAccess:inner.inner") << JSUsagesQml << 68 << 34 << ResolveOwnerType
+                                                    << JSUsagesQml << nestedComponent2Line << PropertyIdentifier;
+        QTest::addRow("propertyAccess:inner.inner2") << JSUsagesQml << 69 << 34 << ResolveOwnerType
+                                                     << JSUsagesQml << nestedComponent2Line << PropertyIdentifier;
         QTest::addRow("propertyAccess:inner.inner.inner")
-                << JSUsagesQml << 69 << 40 << JSUsagesQml << nestedComponent3Line;
+                << JSUsagesQml << 69 << 40 << ResolveOwnerType << JSUsagesQml
+                << nestedComponent3Line << PropertyIdentifier;
         QTest::addRow("propertyAccess:inner.inner.inner.p2")
-                << JSUsagesQml << 69 << 44 << JSUsagesQml << nestedComponent4Line;
+                << JSUsagesQml << 69 << 44 << ResolveOwnerType << JSUsagesQml
+                << nestedComponent4Line << PropertyIdentifier;
 
         QTest::addRow("propertyAccess:helloProperty")
-                << JSUsagesQml << 65 << 68 << JSUsagesQml << rootLine;
+                << JSUsagesQml << 65 << 68 << ResolveOwnerType << JSUsagesQml << rootLine << PropertyIdentifier;
         QTest::addRow("propertyAccess:nestedHelloProperty")
-                << JSUsagesQml << 65 << 46 << JSUsagesQml << nestedComponent4Line;
+                << JSUsagesQml << 65 << 46 << ResolveOwnerType << JSUsagesQml
+                << nestedComponent4Line << PropertyIdentifier;
+    }
+
+    {
+        const QString derivedType = testFile(u"resolveExpressionType/DerivedType.qml"_s);
+        const QString derived2Type = testFile(u"resolveExpressionType/Derived2.qml"_s);
+        const QString baseType = testFile(u"resolveExpressionType/BaseType.qml"_s);
+        const QString qQuickValueTypes = u"private/qquickvaluetypes_p.h"_s;
+        const QString qQuickKeysAttachedType = u"private/qquickitem_p.h"_s;
+
+        const int baseTypeLine = 6;
+        const int derivedTypeLine = 6;
+        const int keysLine = 29;
+
+        QTest::addRow("ownerOfMethod")
+                << derivedType << 9 << 13 << ResolveOwnerType << baseType << baseTypeLine << MethodIdentifier;
+        QTest::addRow("ownerOfMethod2")
+                << derivedType << 15 << 33 << ResolveOwnerType << baseType << baseTypeLine << MethodIdentifier;
+        QTest::addRow("ownerOfQualifiedMethod")
+                << derivedType << 22 << 46 << ResolveOwnerType << baseType << baseTypeLine << MethodIdentifier;
+
+        QTest::addRow("ownerOfProperty")
+                << derivedType << 10 << 22 << ResolveOwnerType << baseType << baseTypeLine << PropertyIdentifier;
+        QTest::addRow("ownerOfProperty2")
+                << derivedType << 16 << 37 << ResolveOwnerType << baseType << baseTypeLine << PropertyIdentifier;
+        QTest::addRow("ownerOfQualifiedProperty")
+                << derivedType << 23 << 46 << ResolveOwnerType << baseType << baseTypeLine << PropertyIdentifier;
+
+        QTest::addRow("ownerOfOwnProperty")
+                << derivedType << 16 << 23 << ResolveOwnerType << derivedType << derivedTypeLine << PropertyIdentifier;
+
+        QTest::addRow("ownerOfSignal")
+                << derivedType << 11 << 13 << ResolveOwnerType << baseType << baseTypeLine << SignalIdentifier;
+        QTest::addRow("ownerOfSignal2")
+                << derivedType << 18 << 37 << ResolveOwnerType << baseType << baseTypeLine << SignalIdentifier;
+        QTest::addRow("ownerOfSignalHandler")
+                << derivedType << 19 << 10 << ResolveOwnerType << baseType << baseTypeLine << SignalHandlerIdentifier;
+        QTest::addRow("ownerOfQualifiedSignal")
+                << derivedType << 25 << 22 << ResolveOwnerType << baseType << baseTypeLine << SignalIdentifier;
+
+        QTest::addRow("ownerOfGroupedProperty")
+                << derivedType << 28 << 7 << ResolveOwnerType << baseType << baseTypeLine << GroupedPropertyIdentifier;
+        QTest::addRow("ownerOfGroupedProperty2")
+                << derivedType << 28 << 17 << ResolveOwnerType << qQuickValueTypes << noLine
+                << PropertyIdentifier;
+
+        QTest::addRow("ownerOfAttachedProperty")
+                << derivedType << 29 << 6 << ResolveOwnerType << derivedType << keysLine << AttachedTypeIdentifier;
+        QTest::addRow("ownerOfAttachedProperty2")
+                << derivedType << 29 << 14 << ResolveOwnerType << qQuickKeysAttachedType << noLine
+                << SignalHandlerIdentifier;
+
+        QTest::addRow("id")
+                << derivedType << 7 << 10 << ResolveOwnerType << derivedType << 6 << QmlObjectIdIdentifier;
+        QTest::addRow("propertyBinding")
+                << derivedType << 31 << 13 << ResolveOwnerType << baseType << baseTypeLine << PropertyIdentifier;
+
+        QTest::addRow("qmlObject")
+                << derivedType << 6 << 4 << ResolveOwnerType << derived2Type << 4 << QmlComponentIdentifier;
     }
 }
 
@@ -1574,8 +1801,10 @@ void tst_qmlls_utils::resolveExpressionType()
     QFETCH(QString, filePath);
     QFETCH(int, line);
     QFETCH(int, character);
+    QFETCH(QQmlLSUtilsResolveOptions, resolveOption);
     QFETCH(QString, expectedFile);
     QFETCH(int, expectedLine);
+    QFETCH(QQmlLSUtilsIdentifierType, expectedType);
 
     // they all start at 1.
     Q_ASSERT(line > 0);
@@ -1589,13 +1818,16 @@ void tst_qmlls_utils::resolveExpressionType()
 
     QCOMPARE(locations.size(), 1);
 
-    auto definition = QQmlLSUtils::resolveExpressionType(
-            locations.front().domItem, QQmlLSUtilsResolveOptions::ResolveOwnerType);
+    auto definition = QQmlLSUtils::resolveExpressionType(locations.front().domItem, resolveOption);
 
     QVERIFY(definition);
+    QVERIFY(definition->semanticScope);
     QCOMPARE(definition->semanticScope->filePath(), expectedFile);
-    QQmlJS::SourceLocation location = definition->semanticScope->sourceLocation();
-    QCOMPARE((int)location.startLine, expectedLine);
+    if (expectedLine != -1) {
+        QQmlJS::SourceLocation location = definition->semanticScope->sourceLocation();
+        QCOMPARE((int)location.startLine, expectedLine);
+    }
+    QCOMPARE(definition->type, expectedType);
 }
 
 void tst_qmlls_utils::isValidEcmaScriptIdentifier_data()

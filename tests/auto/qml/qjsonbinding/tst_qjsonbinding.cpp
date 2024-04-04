@@ -144,7 +144,9 @@ void tst_qjsonbinding::cppJsConversion()
 
     {
         QJSValue jsValue = eng.toScriptValue(jsonValue);
+        QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
         QVERIFY(!jsValue.isVariant());
+        QT_WARNING_POP
         switch (jsonValue.type()) {
         case QJsonValue::Null:
             QVERIFY(jsValue.isNull());
@@ -193,7 +195,6 @@ void tst_qjsonbinding::cppJsConversion()
     if (jsonValue.isObject()) {
         QJsonObject jsonObject = jsonValue.toObject();
         QJSValue jsObject = eng.toScriptValue(jsonObject);
-        QVERIFY(!jsObject.isVariant());
         QVERIFY(jsObject.isObject());
 
         QJSValue stringified = stringify.call(QJSValueList() << jsObject);
@@ -205,7 +206,6 @@ void tst_qjsonbinding::cppJsConversion()
     } else if (jsonValue.isArray()) {
         QJsonArray jsonArray = jsonValue.toArray();
         QJSValue jsArray = eng.toScriptValue(jsonArray);
-        QVERIFY(!jsArray.isVariant());
         QVERIFY(jsArray.isArray());
 
         QJSValue stringified = stringify.call(QJSValueList() << jsArray);
