@@ -16,7 +16,6 @@ qt_add_executable(contactlistexample WIN32 MACOSX_BUNDLE
 
 qt_add_qml_module(contactlistexample
     URI contactlist
-    NO_RESOURCE_TARGET_PATH
     QML_FILES
         "ContactDelegate.ui.qml"
         "ContactDialog.qml"
