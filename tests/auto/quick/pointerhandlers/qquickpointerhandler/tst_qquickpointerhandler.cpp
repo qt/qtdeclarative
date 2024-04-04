@@ -162,6 +162,7 @@ public:
 
 class EventHandler : public QQuickPointerHandler
 {
+    Q_OBJECT
 public:
     EventHandler(QQuickItem *parent = nullptr) :
         QQuickPointerHandler(parent) {}
