@@ -113,4 +113,5 @@ qt_enable_autogen_tool(tst-qmltyperegistrar-enum "moc" ON)
 target_link_libraries(tst-qmltyperegistrar-enum PRIVATE Qt::Qml tst-qmltyperegistrar-enum-foreign)
 
 qt_add_qml_module(tst-qmltyperegistrar-enum URI TstEnum OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/TstEnum)
+qt_autogen_tools_initial_setup(tst-qmltyperegistrar-enumplugin)
 qt_generate_foreign_qml_types(tst-qmltyperegistrar-enum-foreign tst-qmltyperegistrar-enum)
