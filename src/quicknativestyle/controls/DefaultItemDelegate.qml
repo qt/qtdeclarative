@@ -9,8 +9,6 @@ import QtQuick.NativeStyle as NativeStyle
 T.ItemDelegate {
     id: control
 
-    readonly property bool __notCustomizable: true
-
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
@@ -30,7 +28,5 @@ T.ItemDelegate {
         implicitHeight: 20
         color: Qt.darker(control.highlighted
             ? control.palette.highlight : control.palette.button, control.down ? 1.05 : 1)
-
-        readonly property bool __ignoreNotCustomizable: true
     }
 }
