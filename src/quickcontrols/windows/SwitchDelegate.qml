@@ -30,6 +30,8 @@ T.SwitchDelegate {
 
     contentItem: NativeStyle.DefaultItemDelegateIconLabel {
         color: control.highlighted ? control.palette.button : control.palette.windowText
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     background: Rectangle {

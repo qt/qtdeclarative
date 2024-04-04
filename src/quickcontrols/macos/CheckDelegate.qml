@@ -24,7 +24,9 @@ T.CheckDelegate {
     spacing: 6
     padding: 6
 
-    contentItem: NativeStyle.DefaultItemDelegateIconLabel {}
+    contentItem: NativeStyle.DefaultItemDelegateIconLabel {
+        readonly property bool __ignoreNotCustomizable: true
+    }
 
     indicator: NativeStyle.CheckDelegate {
         x: control.text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
