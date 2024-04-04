@@ -3404,6 +3404,47 @@ private slots:
         QVERIFY(comments.contains(u"/*Ast Comment*/ "_s));
     }
 
+    void commentLocations()
+    {
+        auto envPtr = DomEnvironment::create(
+        QStringList(),
+        QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+        const auto filePath = baseDir + u"/fileLocationRegions/comments.qml"_s;
+        QFile f(filePath);
+        QVERIFY(f.open(QIODevice::ReadOnly | QIODevice::Text));
+        QString code = f.readAll();
+        DomItem file;
+        envPtr->loadFile(FileToLoad::fromMemory(envPtr, filePath, code),
+                         [&file](Path, const DomItem &, const DomItem &newIt) {
+                             file = newIt.fileObject();
+                         });
+        envPtr->loadPendingDependencies();
+
+        const auto expctedCommentLocations = QSet {
+        QQmlJS::SourceLocation(0, 41, 1, 1),
+        QQmlJS::SourceLocation(42,68, 2, 1),
+        QQmlJS::SourceLocation(126,25, 6, 1),
+        QQmlJS::SourceLocation(152,14, 10, 1),
+        QQmlJS::SourceLocation(167,21, 11, 1)
+        };
+
+        QSet<SourceLocation> locs;
+        file.fileObject(GoTo::MostLikely).visitTree(Path(), [&locs](Path, const DomItem &item, bool){
+            if (item.internalKind() == DomType::Comment) {
+                const auto comment = item.as<Comment>();
+                if (comment) {
+                    locs << comment->info().sourceLocation();
+                }
+            }
+            return true;
+        }, VisitOption::Default, emptyChildrenVisitor, emptyChildrenVisitor);
+
+
+        QCOMPARE(locs, expctedCommentLocations);
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;
