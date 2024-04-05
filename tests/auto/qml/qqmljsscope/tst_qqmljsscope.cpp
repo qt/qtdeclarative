@@ -71,6 +71,7 @@ class tst_qqmljsscope : public QQmlDataTest
         logger.setCode(sourceCode);
         logger.setSilent(expectErrorsOrWarnings);
         QQmlJSScope::Ptr target = QQmlJSScope::create();
+        target->setOwnModuleName(u"HelloModule"_s);
         QQmlJSImportVisitor visitor(target, &m_importer, &logger, dataDirectory());
         QQmlJSTypeResolver typeResolver { &m_importer };
         typeResolver.init(&visitor, document->program);
@@ -108,6 +109,7 @@ private Q_SLOTS:
     void extensions();
     void emptyBlockBinding();
     void hasOwnEnumerationKeys();
+    void ownModuleName();
     void resolvedNonUniqueScopes();
     void compilationUnitsAreCompatible();
     void attachedTypeResolution_data();
@@ -707,6 +709,33 @@ void tst_qqmljsscope::hasOwnEnumerationKeys()
     QVERIFY(extended->hasOwnEnumerationKey(u"ThisIsTheFlagFromExtended"_s));
     QVERIFY(!extended->hasOwnEnumerationKey(u"ThisIsTheEnumFromExtension"_s));
     QVERIFY(!extended->hasOwnEnumerationKey(u"ThisIsTheFlagFromExtension"_s));
+}
+
+void tst_qqmljsscope::ownModuleName()
+{
+    const QString moduleName = u"HelloModule"_s;
+    QQmlJSScope::ConstPtr root = run(u"ownModuleName.qml"_s);
+    QVERIFY(root);
+    QCOMPARE(root->moduleName(), moduleName);
+    QCOMPARE(root->ownModuleName(), moduleName);
+
+    QCOMPARE(root->childScopes().size(), 2);
+    QQmlJSScope::ConstPtr child = root->childScopes().front();
+    QVERIFY(child);
+    // only root and inline components have own module names, but the child should be able to query
+    // its component's module Name via moduleName()
+    QCOMPARE(child->ownModuleName(), QString());
+    QCOMPARE(child->moduleName(), moduleName);
+
+    QQmlJSScope::ConstPtr ic = root->childScopes()[1];
+    QVERIFY(ic);
+    QCOMPARE(ic->ownModuleName(), moduleName);
+    QCOMPARE(ic->moduleName(), moduleName);
+
+    QQmlJSScope::ConstPtr icChild = ic->childScopes().front();
+    QVERIFY(icChild);
+    QCOMPARE(icChild->ownModuleName(), QString());
+    QCOMPARE(icChild->moduleName(), moduleName);
 }
 
 void tst_qqmljsscope::resolvedNonUniqueScopes()

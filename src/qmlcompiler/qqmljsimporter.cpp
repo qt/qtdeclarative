@@ -929,7 +929,7 @@ void QQmlJSImporter::setQualifiedNamesOn(const Import &import)
         if (auto *factory = object.scope.factory()) {
             factory->setModuleName(import.name);
         } else {
-            object.scope->setModuleName(import.name);
+            object.scope->setOwnModuleName(import.name);
         }
     }
 }

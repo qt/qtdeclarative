@@ -282,8 +282,9 @@ public:
     QQmlJSScope::ConstPtr baseType() const { return m_baseType.scope; }
     QTypeRevision baseTypeRevision() const { return m_baseType.revision; }
 
-    QString moduleName() const { return m_moduleName; }
-    void setModuleName(const QString &moduleName) { m_moduleName = moduleName; }
+    QString moduleName() const;
+    QString ownModuleName() const { return m_moduleName; }
+    void setOwnModuleName(const QString &moduleName) { m_moduleName = moduleName; }
 
     void clearBaseType() { m_baseType = {}; }
     void setBaseTypeError(const QString &baseTypeError);
