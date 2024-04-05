@@ -2178,8 +2178,6 @@ void DomEnvironment::populateFromQmlFile(MutableDomItem &&qmlFile)
         // the logger filename is used to populate the QQmlJSScope filepath.
         logger.setFileName(qmlFile.canonicalFilePath());
 
-        qmlFilePtr->setFileLocationsTree(FileLocations::createTree(qmlFile.canonicalPath()));
-
         auto setupFile = [&qmlFilePtr, &qmlFile, this](auto &&visitor) {
             Q_UNUSED(this); // note: integrity requires "this" to be in the capture list, while
                             // other compilers complain about "this" being unused in the lambda
