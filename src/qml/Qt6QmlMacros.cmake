@@ -13,9 +13,17 @@ set(__qt_qml_macros_module_base_dir "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "
 include(GNUInstallDirs)
 _qt_internal_add_deploy_support("${CMAKE_CURRENT_LIST_DIR}/Qt6QmlDeploySupport.cmake")
 
+# This function is used to parse DEPENDENCY and IMPORT entries passed to qt_add_qml_module
+# It takes the entry as a mandatory argument, and then sets the following
+# user provided properties in the callers scope
+# OUTPUT_URI <property>: the URI of the module; mandatory argument
+# OUTPUT_VERSION <property>: the requested version of the module; will potentially be empty; mandatory
+# OUTPUT_MODULE_LOCATION <property>: the folder in which the module is located; optional; can be used to extract potential import path
+# OUTPUT_MODULE_TARGET <property>: the target corresponding to the module
+
 function(_qt_internal_parse_qml_module_dependency dependency was_marked_as_target)
     set(args_option "")
-    set(args_single OUTPUT_URI OUTPUT_VERSION OUTPUT_MODULE_LOCATION)
+    set(args_single OUTPUT_URI OUTPUT_VERSION OUTPUT_MODULE_LOCATION OUTPUT_MODULE_TARGET)
     set(args_multi QML_FILES IMPORT_PATHS)
 
     cmake_parse_arguments(PARSE_ARGV 2 arg
@@ -80,6 +88,11 @@ function(_qt_internal_parse_qml_module_dependency dependency was_marked_as_targe
         else()
             set(${arg_OUTPUT_MODULE_LOCATION} "NOTFOUND" PARENT_SCOPE)
         endif()
+    endif()
+    if (arg_OUTPUT_MODULE_TARGET AND was_marked_as_target)
+        set(${arg_OUTPUT_MODULE_TARGET} "${dep_targetOrName}" PARENT_SCOPE)
+    else()
+        set(${arg_OUTPUT_MODULE_TARGET} "" PARENT_SCOPE)
     endif()
 endfunction()
 
