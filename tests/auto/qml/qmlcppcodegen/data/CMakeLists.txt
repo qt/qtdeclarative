@@ -332,6 +332,7 @@ qt6_add_qml_module(codegen_test_hidden
         hidden/Main.qml
         hidden/Style.qml
     OUTPUT_DIRECTORY HiddenTestTypes
+    __QT_INTERNAL_DISAMBIGUATE_QMLDIR_RESOURCE
 )
 
 add_dependencies(codegen_test_hidden Qt::Quick)
@@ -370,6 +371,7 @@ qt6_add_qml_module(codegen_test_module
     RESOURCES
         ${resource_files}
     OUTPUT_DIRECTORY TestTypes # Make sure tst_qmlcachegen doesn't see our output
+    __QT_INTERNAL_DISAMBIGUATE_QMLDIR_RESOURCE
 )
 
 if(${CMAKE_VERSION} GREATER_EQUAL "3.19.0")
@@ -414,6 +416,7 @@ qt6_add_qml_module(codegen_test_module_verify
         ${resource_files}
     OUTPUT_DIRECTORY verify/TestTypes # Make sure tst_qmlcachegen doesn't see our output
     TARGET_PATH verify/TestTypes      # Different target path to avoid resource file name clashes
+    __QT_INTERNAL_DISAMBIGUATE_QMLDIR_RESOURCE
 )
 
 add_dependencies(codegen_test_module_verify Qt::Quick Qt::QuickTemplates2 Qt::QuickShapesPrivate)
