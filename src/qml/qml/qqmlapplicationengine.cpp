@@ -257,10 +257,9 @@ void QQmlApplicationEnginePrivate::ensureLoadingFinishes(QQmlComponent *c)
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
 
-    // quit on error
-    QObject::connect(&engine, QQmlApplicationEngine::objectCreationFailed,
-                     QCoreApplication::instance(), QCoreApplication::quit,
-                     Qt::QueuedConnection);
+    // exit on error
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
+        &app, []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
     engine.load(QUrl());
     return app.exec();
   \endcode
