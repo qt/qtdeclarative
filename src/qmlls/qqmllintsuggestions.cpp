@@ -57,7 +57,7 @@ static void codeActionHandler(
         int version = data[u"version"].toInt();
         QJsonArray suggestions = data[u"suggestions"].toArray();
 
-        QList<TextDocumentEdit> edits;
+        QList<WorkspaceEdit::DocumentChange> edits;
         QString message;
         for (const QJsonValue &suggestion : suggestions) {
             QString replacement = suggestion[u"replacement"].toString();

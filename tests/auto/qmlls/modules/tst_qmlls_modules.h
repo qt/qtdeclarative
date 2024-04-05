@@ -37,6 +37,8 @@ public:
     std::optional<QByteArray> openFile(const QString &uri);
     std::optional<QByteArray> openFileFromAbsolutePath(const QString &uri);
     void ignoreDiagnostics();
+    void compareQTextDocumentEdit(const QLspSpecification::TextDocumentEdit &a,
+                                  const QLspSpecification::TextDocumentEdit &b);
 private slots:
     void init() final;
     void cleanup();

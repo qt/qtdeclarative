@@ -874,7 +874,7 @@ void tst_qmlls_modules::renameUsages_data()
     // TODO: create workspace edit for the tests
     QLspSpecification::WorkspaceEdit sumRenames{
         std::nullopt, // TODO
-        QList<TextDocumentEdit>{
+        QList<QLspSpecification::WorkspaceEdit::DocumentChange>{
                 TextDocumentEdit{
                         OptionalVersionedTextDocumentIdentifier{ { jsIdentifierUsagesUri } },
                         {
@@ -905,6 +905,38 @@ void tst_qmlls_modules::renameUsages_data()
                    "Invalid EcmaScript identifier!",
                    std::nullopt,
                };
+}
+
+void tst_qmlls_modules::compareQTextDocumentEdit(const TextDocumentEdit &a,
+                                                 const TextDocumentEdit &b)
+{
+
+    QCOMPARE(a.textDocument.uri, b.textDocument.uri);
+    QVERIFY(a.textDocument.uri.startsWith("file://"));
+    QCOMPARE(a.textDocument.version, b.textDocument.version);
+    QCOMPARE(a.edits.size(), b.edits.size());
+
+    for (qsizetype j = 0; j < a.edits.size(); ++j) {
+        std::visit(
+                [](auto &&textEdit, auto &&expectedTextEdit) {
+                    using U = std::decay_t<decltype(textEdit)>;
+                    using V = std::decay_t<decltype(expectedTextEdit)>;
+
+                    if constexpr (std::conjunction_v<std::is_same<U, V>,
+                                                     std::is_same<U, TextEdit>>) {
+                        QCOMPARE(textEdit.range.start.line, expectedTextEdit.range.start.line);
+                        QCOMPARE(textEdit.range.start.character,
+                                 expectedTextEdit.range.start.character);
+                        QCOMPARE(textEdit.range.end.line, expectedTextEdit.range.end.line);
+                        QCOMPARE(textEdit.range.end.character,
+                                 expectedTextEdit.range.end.character);
+                        QCOMPARE(textEdit.newText, expectedTextEdit.newText);
+                    } else {
+                        QFAIL("Comparison not implemented");
+                    }
+                },
+                a.edits[j], b.edits[j]);
+    }
 }
 
 void tst_qmlls_modules::renameUsages()
@@ -944,66 +976,24 @@ void tst_qmlls_modules::renameUsages()
                 QCOMPARE(result->documentChanges.has_value(),
                          expectedEdit.documentChanges.has_value());
 
-                std::visit(
-                        [&expectedError](auto &&documentChanges, auto &&expectedDocumentChanges) {
-                            if (!expectedError.message.isEmpty())
-                                QVERIFY2(false, "No expected error was thrown.");
+                auto &documentChanges = *result->documentChanges;
+                auto &expectedDocumentChanges = *expectedEdit.documentChanges;
 
-                            QCOMPARE(documentChanges.size(), expectedDocumentChanges.size());
-                            using U = std::decay_t<decltype(documentChanges)>;
-                            using V = std::decay_t<decltype(expectedDocumentChanges)>;
+                if (!expectedError.message.isEmpty())
+                    QVERIFY2(false, "No expected error was thrown.");
 
-                            if constexpr (std::conjunction_v<
-                                                  std::is_same<U, V>,
-                                                  std::is_same<U, QList<TextDocumentEdit>>>) {
-                                for (qsizetype i = 0; i < expectedDocumentChanges.size(); ++i) {
-                                    QCOMPARE(documentChanges[i].textDocument.uri,
-                                             expectedDocumentChanges[i].textDocument.uri);
-                                    QVERIFY(documentChanges[i].textDocument.uri.startsWith(
-                                            "file://"));
-                                    QCOMPARE(documentChanges[i].textDocument.version,
-                                             expectedDocumentChanges[i].textDocument.version);
-                                    QCOMPARE(documentChanges[i].edits.size(),
-                                             expectedDocumentChanges[i].edits.size());
+                QCOMPARE(documentChanges.size(), expectedDocumentChanges.size());
 
-                                    for (qsizetype j = 0; j < documentChanges[i].edits.size();
-                                         ++j) {
-                                        std::visit(
-                                                [](auto &&textEdit, auto &&expectedTextEdit) {
-                                                    using U = std::decay_t<decltype(textEdit)>;
-                                                    using V = std::decay_t<
-                                                            decltype(expectedTextEdit)>;
-
-                                                    if constexpr (std::conjunction_v<
-                                                                          std::is_same<U, V>,
-                                                                          std::is_same<U,
-                                                                                       TextEdit>>) {
-                                                        QCOMPARE(textEdit.range.start.line,
-                                                                 expectedTextEdit.range.start.line);
-                                                        QCOMPARE(textEdit.range.start.character,
-                                                                 expectedTextEdit.range.start
-                                                                         .character);
-                                                        QCOMPARE(textEdit.range.end.line,
-                                                                 expectedTextEdit.range.end.line);
-                                                        QCOMPARE(textEdit.range.end.character,
-                                                                 expectedTextEdit.range.end
-                                                                         .character);
-                                                        QCOMPARE(textEdit.newText,
-                                                                 expectedTextEdit.newText);
-                                                    } else {
-                                                        QFAIL("Comparison not implemented");
-                                                    }
-                                                },
-                                                documentChanges[i].edits[j],
-                                                expectedDocumentChanges[i].edits[j]);
-                                    }
-                                }
-
-                            } else {
-                                QFAIL("Comparison not implemented");
-                            }
-                        },
-                        result->documentChanges.value(), expectedEdit.documentChanges.value());
+                for (qsizetype i = 0; i < expectedDocumentChanges.size(); ++i) {
+                    QCOMPARE(documentChanges[i].index(), expectedDocumentChanges[i].index());
+                    if (std::holds_alternative<TextDocumentEdit>(documentChanges[i])) {
+                        compareQTextDocumentEdit(
+                                std::get<TextDocumentEdit>(documentChanges[i]),
+                                std::get<TextDocumentEdit>(expectedDocumentChanges[i]));
+                    } else {
+                        QFAIL("TODO: implement me!");
+                    }
+                }
             },
             [clean, &expectedError](const ResponseError &err) {
                 QScopeGuard cleanup(clean);
@@ -1487,12 +1477,12 @@ void tst_qmlls_modules::quickFixes()
 
         QVERIFY(codeAction.edit);
         QVERIFY(codeAction.edit->documentChanges);
-        QVERIFY(std::holds_alternative<QList<TextDocumentEdit>>(*codeAction.edit->documentChanges));
-        auto edits = std::get<QList<TextDocumentEdit>>(*codeAction.edit->documentChanges);
+        const auto &edits =  *codeAction.edit->documentChanges;
         QCOMPARE(edits.size(), 1);
-        QCOMPARE(edits.front().edits.size(), 1);
-        QVERIFY(std::holds_alternative<TextEdit>(edits.front().edits.front()));
-        auto textEdit = std::get<TextEdit>(edits.front().edits.front());
+        const auto& firstEdit = std::get<TextDocumentEdit>(edits.front());
+        QCOMPARE(firstEdit.edits.size(), 1);
+        QVERIFY(std::holds_alternative<TextEdit>(firstEdit.edits.front()));
+        auto textEdit = std::get<TextEdit>(firstEdit.edits.front());
 
         // make sure that the quick fix does something
         QCOMPARE(textEdit.newText, replacementText);
