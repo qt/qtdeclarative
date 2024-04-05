@@ -40,12 +40,14 @@ public:
         : QQuickPaintedItem(parent)
         , paintNode(nullptr)
         , paintRequests(0)
+        , painterHadAA(false)
     {
     }
 
     void paint(QPainter *painter) override
     {
         ++paintRequests;
+        painterHadAA = painter->testRenderHint(QPainter::Antialiasing);
         clipRect = painter->clipBoundingRect();
     }
 #if QT_CONFIG(opengl)
@@ -66,9 +68,12 @@ public:
     QSGSoftwarePainterNode *paintNode;
 #endif
     int paintRequests;
+    bool painterHadAA;
     QRectF clipRect;
 };
 
+static bool hasDirtyAAFlag(QQuickItem *item) {
+    return QQuickItemPrivate::get(item)->dirtyAttributes & QQuickItemPrivate::Antialiasing; }
 static bool hasDirtyContentFlag(QQuickItem *item) {
     return QQuickItemPrivate::get(item)->dirtyAttributes & QQuickItemPrivate::Content; }
 static void clearDirtyContentFlag(QQuickItem *item) {
@@ -167,32 +172,35 @@ void tst_QQuickPaintedItem::antialiasing()
 
     item.setAntialiasing(false);
     QCOMPARE(item.antialiasing(), false);
-    QCOMPARE(hasDirtyContentFlag(&item), false);
+    QCOMPARE(hasDirtyAAFlag(&item), false);
 
     item.update();
     QTRY_COMPARE(hasDirtyContentFlag(&item), false);
     QVERIFY(item.paintNode);
     QCOMPARE(item.paintNode->smoothPainting(), false);
+    QCOMPARE(item.painterHadAA, false);
 
     item.setAntialiasing(true);
     QCOMPARE(item.antialiasing(), true);
-    QCOMPARE(hasDirtyContentFlag(&item), true);
+    QCOMPARE(hasDirtyAAFlag(&item), true);
 
-    QTRY_COMPARE(hasDirtyContentFlag(&item), false);
+    QTRY_COMPARE(hasDirtyAAFlag(&item), false);
     QVERIFY(item.paintNode);
     QCOMPARE(item.paintNode->smoothPainting(), true);
+    QCOMPARE(item.painterHadAA, true);
 
     item.setAntialiasing(true);
     QCOMPARE(item.antialiasing(), true);
-    QCOMPARE(hasDirtyContentFlag(&item), false);
+    QCOMPARE(hasDirtyAAFlag(&item), false);
 
     item.setAntialiasing(false);
     QCOMPARE(item.antialiasing(), false);
-    QCOMPARE(hasDirtyContentFlag(&item), true);
+    QCOMPARE(hasDirtyAAFlag(&item), true);
 
-    QTRY_COMPARE(hasDirtyContentFlag(&item), false);
+    QTRY_COMPARE(hasDirtyAAFlag(&item), false);
     QVERIFY(item.paintNode);
     QCOMPARE(item.paintNode->smoothPainting(), false);
+    QCOMPARE(item.painterHadAA, false);
 }
 
 void tst_QQuickPaintedItem::mipmap()

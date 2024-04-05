@@ -87,7 +87,6 @@ QQuickPaintedItemPrivate::QQuickPaintedItemPrivate()
     , fillColor(Qt::transparent)
     , renderTarget(QQuickPaintedItem::Image)
     , opaquePainting(false)
-    , antialiasing(false)
     , mipmap(false)
     , textureProvider(nullptr)
     , node(nullptr)
@@ -177,6 +176,7 @@ void QQuickPaintedItem::setOpaquePainting(bool opaque)
     QQuickItem::update();
 }
 
+//### Qt7: remove the aa functions; they shadow the QQuickItem property
 /*!
     Returns true if antialiased painting is enabled; otherwise, false is returned.
 
@@ -186,8 +186,7 @@ void QQuickPaintedItem::setOpaquePainting(bool opaque)
 */
 bool QQuickPaintedItem::antialiasing() const
 {
-    Q_D(const QQuickPaintedItem);
-    return d->antialiasing;
+    return QQuickItem::antialiasing();
 }
 
 /*!
@@ -199,13 +198,7 @@ bool QQuickPaintedItem::antialiasing() const
 */
 void QQuickPaintedItem::setAntialiasing(bool enable)
 {
-    Q_D(QQuickPaintedItem);
-
-    if (d->antialiasing == enable)
-        return;
-
-    d->antialiasing = enable;
-    update();
+    QQuickItem::setAntialiasing(enable);
 }
 
 /*!
@@ -550,7 +543,7 @@ QSGNode *QQuickPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
 
     node->setPreferredRenderTarget(d->renderTarget);
     node->setFastFBOResizing(d->performanceHints & FastFBOResizing);
-    node->setSmoothPainting(d->antialiasing);
+    node->setSmoothPainting(antialiasing());
     node->setLinearFiltering(d->smooth);
     node->setMipmapping(d->mipmap);
     node->setOpaquePainting(d->opaquePainting);
