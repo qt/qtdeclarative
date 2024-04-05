@@ -128,6 +128,7 @@ private slots:
     void functionLookup();
     void objectInVar();
     void functionTakingVar();
+    void getLookupOfScript();
     void testIsnan();
     void fallbackLookups();
     void typedArray();
@@ -2196,6 +2197,16 @@ void tst_QmlCppCodegen::functionTakingVar()
     e->executeRuntimeFunction(document, 0, o.data(), 1, args, types);
 
     QCOMPARE(o->property("c"), QVariant::fromValue<int>(11));
+}
+
+void tst_QmlCppCodegen::getLookupOfScript()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/NotificationItem.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), u"heading"_s);
 }
 
 void tst_QmlCppCodegen::testIsnan()
