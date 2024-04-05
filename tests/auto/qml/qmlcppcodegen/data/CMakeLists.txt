@@ -54,6 +54,8 @@ set(qml_files
     GetOptionalLookupOnQJSValueNonStrict.qml
     GetOptionalLookupShadowed.qml
     Loopy.qml
+    NotificationItem.qml
+    NotificationsUtils.js
     OkType.qml
     Panel.qml
     Planner.qml
