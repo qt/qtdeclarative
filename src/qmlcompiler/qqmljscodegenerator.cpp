@@ -1301,6 +1301,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
     }
     case QQmlJSRegisterContent::ScopeAttached:
     case QQmlJSRegisterContent::Singleton:
+    case QQmlJSRegisterContent::Script:
     case QQmlJSRegisterContent::MetaType: {
         generateTypeLookup(index);
         return;
