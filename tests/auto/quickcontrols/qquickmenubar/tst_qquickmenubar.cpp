@@ -75,8 +75,8 @@ tst_qquickmenubar::tst_qquickmenubar()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
-    std::unique_ptr<QPlatformMenuBar> pmb(QGuiApplicationPrivate::platformTheme()->createPlatformMenuBar());
-    nativeMenuBarSupported = pmb != nullptr;
+    QQuickMenuBar mb;
+    nativeMenuBarSupported = QQuickMenuBarPrivate::get(&mb)->useNativeMenuBar();
 }
 
 bool tst_qquickmenubar::hasWindowActivation()
@@ -717,7 +717,8 @@ void tst_qquickmenubar::addRemove_data()
     QTest::addColumn<QString>("testUrl");
     QTest::addColumn<bool>("native");
     QTest::newRow("menuitems, not native") << QStringLiteral("empty.qml") << false;
-    QTest::newRow("menuitems, native") << QStringLiteral("empty.qml") << true;
+    if (nativeMenuBarSupported)
+        QTest::newRow("menuitems, native") << QStringLiteral("empty.qml") << true;
 }
 
 void tst_qquickmenubar::addRemove()
@@ -733,7 +734,7 @@ void tst_qquickmenubar::addRemove()
     QVERIFY(menuBar);
     QQuickMenuBarPrivate *menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
     QCOMPARE(menuBarPrivate->useNativeMenuBar(), native);
-    if (native && nativeMenuBarSupported)
+    if (native)
         QVERIFY(menuBarPrivate->nativeHandle());
 
     QQmlComponent component(&engine);
@@ -806,7 +807,8 @@ void tst_qquickmenubar::addRemoveInlineMenus_data()
 {
     QTest::addColumn<bool>("native");
     QTest::newRow("not native") << false;
-    QTest::newRow("native") << true;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
 }
 
 void tst_qquickmenubar::addRemoveInlineMenus()
@@ -851,7 +853,8 @@ void tst_qquickmenubar::addRemoveMenuFromQml_data()
 {
     QTest::addColumn<bool>("native");
     QTest::newRow("not native") << false;
-    QTest::newRow("native") << true;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
 }
 
 void tst_qquickmenubar::addRemoveMenuFromQml()
@@ -901,7 +904,8 @@ void tst_qquickmenubar::insert_data()
 {
     QTest::addColumn<bool>("native");
     QTest::newRow("not native") << false;
-    QTest::newRow("native") << true;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
 }
 
 void tst_qquickmenubar::insert()
@@ -964,7 +968,8 @@ void tst_qquickmenubar::addRemoveExistingMenus_data()
 {
     QTest::addColumn<bool>("native");
     QTest::newRow("not native") << false;
-    QTest::newRow("native") << true;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
 }
 
 void tst_qquickmenubar::addRemoveExistingMenus()
@@ -1095,7 +1100,6 @@ void tst_qquickmenubar::AA_DontUseNativeMenuBar()
 {
     // Check that we end up with a non-native menu bar when AA_DontUseNativeMenuBar is set.
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     QQmlApplicationEngine engine;
     engine.load(testFileUrl("menus.qml"));
 
@@ -1112,6 +1116,15 @@ void tst_qquickmenubar::AA_DontUseNativeMenuBar()
     QVERIFY(menuBar->count() > 0);
     QVERIFY(menuBar->height() > 0);
     QCOMPARE(contents->height(), window->height() - menuBar->height());
+
+    // If the menu bar is not native, the menus should not be native either.
+    // The main reason for this limitation is that a native menu typically
+    // run in separate native event loop which will not forward mouse events
+    // to Qt. And this is needed for a non-native menu bar to work (e.g to
+    // support hovering over the menu bar items to open and close menus).
+    const auto firstMenu = menuBar->menuAt(0);
+    QVERIFY(firstMenu);
+    QVERIFY(!QQuickMenuPrivate::get(firstMenu)->maybeNativeHandle());
 }
 
 void tst_qquickmenubar::containerItems_data()
@@ -1119,9 +1132,11 @@ void tst_qquickmenubar::containerItems_data()
     QTest::addColumn<QString>("testUrl");
     QTest::addColumn<bool>("native");
     QTest::newRow("menuitems, not native") << QStringLiteral("menubaritems.qml") << false;
-    QTest::newRow("menuitems, native") << QStringLiteral("menubaritems.qml") << true;
     QTest::newRow("menus, not native") << QStringLiteral("menus.qml") << false;
-    QTest::newRow("menus, native") << QStringLiteral("menus.qml") << true;
+    if (nativeMenuBarSupported) {
+        QTest::newRow("menuitems, native") << QStringLiteral("menubaritems.qml") << true;
+        QTest::newRow("menus, native") << QStringLiteral("menus.qml") << true;
+    }
 }
 
 void tst_qquickmenubar::containerItems()
@@ -1179,7 +1194,8 @@ void tst_qquickmenubar::mixedContainerItems_data()
 {
     QTest::addColumn<bool>("native");
     QTest::newRow("not native") << false;
-    QTest::newRow("native") << true;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
 }
 
 void tst_qquickmenubar::mixedContainerItems()
@@ -1246,8 +1262,10 @@ void tst_qquickmenubar::applicationWindow_data()
     QTest::addColumn<bool>("initiallyVisible");
     QTest::newRow("initially not native, visible") << false << true;
     QTest::newRow("initially not native, hidden") << false << false;
-    QTest::newRow("initially native, visible") << true << true;
-    QTest::newRow("initially native, hidden") << true << false;
+    if (nativeMenuBarSupported) {
+        QTest::newRow("initially native, visible") << true << true;
+        QTest::newRow("initially native, hidden") << true << false;
+    }
 }
 
 void tst_qquickmenubar::applicationWindow()
@@ -1275,7 +1293,7 @@ void tst_qquickmenubar::applicationWindow()
         menuBar->setVisible(visible);
 
         const bool nativeMenuBarVisible = bool(menuBarPrivate->nativeHandle());
-        QCOMPARE(nativeMenuBarVisible, nativeMenuBarSupported && initiallyNative && visible);
+        QCOMPARE(nativeMenuBarVisible, initiallyNative && visible);
 
         if (!visible) {
             QVERIFY(!menuBar->isVisible());
@@ -1296,7 +1314,8 @@ void tst_qquickmenubar::menubarAsHeader_data()
 {
     QTest::addColumn<bool>("native");
     QTest::newRow("not native") << false;
-    QTest::newRow("native") << true;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
 }
 
 void tst_qquickmenubar::menubarAsHeader()
@@ -1318,7 +1337,7 @@ void tst_qquickmenubar::menubarAsHeader()
     QQuickItem *contents = window->property("contents").value<QQuickItem *>();
     QVERIFY(contents);
     QVERIFY(menuBar->count() > 0);
-    QCOMPARE(menuBarPrivate->nativeHandle() != nullptr, nativeMenuBarSupported && native);
+    QCOMPARE(menuBarPrivate->nativeHandle() != nullptr, native);
 
     if (menuBarPrivate->nativeHandle()) {
         // Using native menubar

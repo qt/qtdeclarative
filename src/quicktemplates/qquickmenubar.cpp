@@ -448,7 +448,29 @@ QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
 
 bool QQuickMenuBarPrivate::useNativeMenuBar() const
 {
+    // We current only use native menu bars on macOS. Especially, the
+    // QPA menu bar for Windows is old and unused, and looks broken and non-native.
+#ifdef Q_OS_MACOS
     return !QCoreApplication::testAttribute(Qt::AA_DontUseNativeMenuBar);
+#else
+    return false;
+#endif
+}
+
+bool QQuickMenuBarPrivate::useNativeMenu(const QQuickMenu *menu) const
+{
+    Q_Q(const QQuickMenuBar);
+    if (!useNativeMenuBar())
+        return false;
+
+    // Since we cannot hide a QPlatformMenu, we have to avoid
+    // creating it if it shouldn't be visible in the menu bar.
+    for (int i = 0; i < q->count(); ++i) {
+        if (q->menuAt(i) == menu)
+            return itemAt(i)->isVisible();
+    }
+
+    return true;
 }
 
 void QQuickMenuBarPrivate::syncNativeMenuBarVisible()

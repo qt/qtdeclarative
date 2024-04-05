@@ -67,6 +67,7 @@ public:
 
     QPlatformMenuBar *nativeHandle() const;
     bool useNativeMenuBar() const;
+    bool useNativeMenu(const QQuickMenu *menu) const;
     void syncNativeMenuBarVisible();
     void createNativeMenuBar();
     void removeNativeMenuBar();
