@@ -391,6 +391,23 @@ private:
 
     void updateCacheIndices(int start = 0, int end = -1);
 
+    template<typename ArrayLike>
+    void setArrayLike(QV4::ScopedObject *o, QV4::String *propertyName, ListElement *e, ArrayLike *a)
+    {
+        const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
+        if (r.type == ListLayout::Role::List) {
+            ListModel *subModel = new ListModel(r.subLayout, nullptr);
+
+            int arrayLength = a->getLength();
+            for (int j=0 ; j < arrayLength ; ++j) {
+                *o = a->get(j);
+                subModel->append(*o);
+            }
+
+            e->setListPropertyFast(r, subModel);
+        }
+    }
+
     friend class ListElement;
     friend class QQmlListModelWorkerAgent;
     friend class QQmlListModelParser;
