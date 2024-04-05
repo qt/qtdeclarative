@@ -818,6 +818,12 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
     if (!expressionType)
         return;
 
+    // for Qml file components: add their filename as an usage for the renaming operation
+    if (expressionType->type == QmlComponentIdentifier
+        && !expressionType->semanticScope->isInlineComponent()) {
+        result.appendFilenameUsage(expressionType->semanticScope->filePath());
+    }
+
     const QStringList namesToCheck = namesOfPossibleUsages(name, item, expressionType->semanticScope);
 
     const auto addLocationIfTypeMatchesTarget =
@@ -2078,6 +2084,11 @@ RenameUsages renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
         else if (filename.endsWith(u".qml"_s))
             extension = u".qml"_s;
         else
+            continue;
+
+        QFileInfo info(filename);
+        // do not rename the file if it has a custom type name in the qmldir
+        if (!info.isFile() || info.baseName() != oldName)
             continue;
 
         const QString newFilename =

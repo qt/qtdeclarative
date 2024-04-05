@@ -871,6 +871,12 @@ void tst_qmlls_modules::renameUsages_data()
         QVERIFY(file.open(QIODeviceBase::ReadOnly));
         jsIdentifierUsagesContent = QString::fromUtf8(file.readAll());
     }
+    QString renamingContent;
+    {
+        QFile file(testFile("renameUsages/main.qml").toUtf8());
+        QVERIFY(file.open(QIODeviceBase::ReadOnly));
+        renamingContent = QString::fromUtf8(file.readAll());
+    }
 
     // TODO: create workspace edit for the tests
     QLspSpecification::WorkspaceEdit sumRenames{
@@ -906,6 +912,51 @@ void tst_qmlls_modules::renameUsages_data()
                    "Invalid EcmaScript identifier!",
                    std::nullopt,
                };
+
+    const QString renameUsagesPath = u"renameUsages/main.qml"_s;
+    const QByteArray renameUsagesUri = testFileUrl("renameUsages/main.qml").toEncoded();
+    const QByteArray renameMeUri = testFileUrl("renameUsages/RenameMe.qml").toEncoded();
+    const QByteArray renameMe2Uri = testFileUrl("renameUsages/RenameMe2.ui.qml").toEncoded();
+
+    const QByteArray newFileUri = testFileUrl("renameUsages/HelloWorld.qml").toEncoded();
+    const QByteArray newFileUri2 = testFileUrl("renameUsages/HelloWorld.ui.qml").toEncoded();
+
+    {
+
+        const QLspSpecification::WorkspaceEdit qmlComponentRename{
+            std::nullopt,
+            QList<QLspSpecification::WorkspaceEdit::DocumentChange>{
+                    TextDocumentEdit{
+                            OptionalVersionedTextDocumentIdentifier{ { renameUsagesUri } },
+                            {
+                                    TextEdit{ rangeFrom(renamingContent, 4, 5,
+                                                        strlen("RenameMe")),
+                                              "HelloWorld" },
+                            } },
+                    RenameFile{ "rename", renameMeUri, newFileUri } }
+        };
+
+        QTest::addRow("renameQmlComponent")
+                << renameUsagesPath << 4 << 8 << u"HelloWorld"_s << qmlComponentRename << noError;
+    }
+
+    {
+        QLspSpecification::WorkspaceEdit qmlComponentRename{
+            std::nullopt,
+            QList<QLspSpecification::WorkspaceEdit::DocumentChange>{
+                    TextDocumentEdit{
+                            OptionalVersionedTextDocumentIdentifier{ { renameUsagesUri } },
+                            {
+                                    TextEdit{ rangeFrom(renamingContent, 5, 5,
+                                                        strlen("RenameMe2")),
+                                              "HelloWorld" },
+                            } },
+                    RenameFile{ "rename", renameMe2Uri, newFileUri2 } }
+        };
+
+        QTest::addRow("renameUiQmlComponent")
+                << renameUsagesPath << 5 << 8 << u"HelloWorld"_s << qmlComponentRename << noError;
+    }
 }
 
 void tst_qmlls_modules::compareQTextDocumentEdit(const TextDocumentEdit &a,
@@ -966,7 +1017,7 @@ void tst_qmlls_modules::renameUsages()
     auto clean = [didFinish]() { *didFinish = true; };
     m_protocol->requestRename(
             params,
-            [&](auto res) {
+            [&](auto &&res) {
                 QScopeGuard cleanup(clean);
                 auto *result = std::get_if<QLspSpecification::WorkspaceEdit>(&res);
 
@@ -991,6 +1042,22 @@ void tst_qmlls_modules::renameUsages()
                         compareQTextDocumentEdit(
                                 std::get<TextDocumentEdit>(documentChanges[i]),
                                 std::get<TextDocumentEdit>(expectedDocumentChanges[i]));
+                    } else if (std::holds_alternative<RenameFile>(documentChanges[i])) {
+                        const auto &actual = std::get<RenameFile>(documentChanges[i]);
+                        const auto &expected = std::get<RenameFile>(expectedDocumentChanges[i]);
+
+                        QCOMPARE(actual.kind, expected.kind);
+                        QCOMPARE(expected.kind, "rename");
+                        QCOMPARE(actual.oldUri, expected.oldUri);
+                        QCOMPARE(actual.newUri, expected.newUri);
+                        QCOMPARE(actual.options.has_value(), expected.options.has_value());
+                        if (expected.options.has_value()) {
+                            QCOMPARE(actual.options->overwrite, expected.options->overwrite);
+                            QCOMPARE(actual.options->ignoreIfExists,
+                                     expected.options->ignoreIfExists);
+                        }
+                        QCOMPARE(actual.annotationId, expected.annotationId);
+
                     } else {
                         QFAIL("TODO: implement me!");
                     }

@@ -1567,6 +1567,37 @@ void tst_qmlls_utils::renameUsages_data()
         {}
     };
 
+    const QString renameFileQml = testFile("renaming/main.qml");
+    const QString renameFileQmlContent = readFileContent(renameFileQml);
+    const QQmlLSUtils::RenameUsages renameComponent1{
+        {
+            QQmlLSUtils::Edit::from(renameFileQml, renameFileQmlContent, 4, 5,
+                                    strlen("RenameMe"), u"FreshNewComponentName"_s),
+        },
+        {
+            { testFile("renaming/RenameMe.qml"),
+                        testFile(u"renaming/FreshNewComponentName.qml"_s) },
+        }
+    };
+    const QQmlLSUtils::RenameUsages renameComponent2{
+        {
+            QQmlLSUtils::Edit::from(renameFileQml, renameFileQmlContent, 5, 5,
+                                    strlen("RenameMe2"), u"AnotherOneThankYou"_s),
+        },
+        {
+            { testFile("renaming/RenameMe2.ui.qml"),
+                        testFile(u"renaming/AnotherOneThankYou.ui.qml"_s) },
+        }
+    };
+    const QQmlLSUtils::RenameUsages renameComponentNamedByQmldir{
+        {
+            QQmlLSUtils::Edit::from(renameFileQml, renameFileQmlContent, 6, 5,
+                                    strlen("HelloWorld"), u"AnotherOneThankYou"_s),
+        },
+        // make sure that the file itself does not get renamed
+        {}
+    };
+
     const QString parserError = u"Invalid EcmaScript identifier!"_s;
 
     QTest::addRow("renameMethod") << testFileName << 72 << 19 << u"newNameNewMe"_s << methodFRename
@@ -1628,6 +1659,16 @@ void tst_qmlls_utils::renameUsages_data()
 
     QTest::addRow("JSIdentifierStartsWithNumber")
             << testFileName << 67 << 13 << u"123"_s << noRenames << parserError;
+
+    QTest::addRow("renameQmlFile") << testFile(u"renaming/main.qml"_s) << 4 << 9
+                                   << u"FreshNewComponentName"_s << renameComponent1 << noError;
+
+    QTest::addRow("renameUiQmlFile") << testFile(u"renaming/main.qml"_s) << 5 << 9
+                                     << u"AnotherOneThankYou"_s << renameComponent2 << noError;
+
+    QTest::addRow("renameQmlFileRenamedByQmldir")
+            << testFile(u"renaming/main.qml"_s) << 6 << 8 << u"AnotherOneThankYou"_s
+            << renameComponentNamedByQmldir << noError;
 }
 
 void tst_qmlls_utils::renameUsages()

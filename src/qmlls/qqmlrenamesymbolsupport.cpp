@@ -105,6 +105,15 @@ void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArg
         }
         editsByFileForResult.append(editsForCurrentFile);
     }
+
+    // if files need to be renamed, then do it after the text edits
+    for (const auto &rename : renames.renameInFilename()) {
+        QLspSpecification::RenameFile currentRenameFile;
+        currentRenameFile.kind = "rename";
+        currentRenameFile.oldUri = QUrl::fromLocalFile(rename.oldFilename).toEncoded();
+        currentRenameFile.newUri = QUrl::fromLocalFile(rename.newFilename).toEncoded();
+        editsByFileForResult.append(currentRenameFile);
+    }
 }
 
 QT_END_NAMESPACE
