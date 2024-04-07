@@ -137,7 +137,10 @@ void QSGSoftwarePainterNode::update()
 
 void QSGSoftwarePainterNode::paint(QPainter *painter)
 {
+    bool before = painter->testRenderHint(QPainter::SmoothPixmapTransform);
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, m_linear_filtering);
     painter->drawPixmap(0, 0, m_size.width(), m_size.height(), m_pixmap);
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, before);
 }
 
 void QSGSoftwarePainterNode::paint()
