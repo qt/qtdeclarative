@@ -55,6 +55,7 @@ private slots:
     void sectionIsCompatibleWithBoundComponents();
     void sectionGeometryChange();
     void areaZeroviewDoesNotNeedlesslyPopulateWholeModel();
+    void viewportAvoidUndesiredMovementOnSetCurrentIndex();
 
     void delegateContextHandling();
     void fetchMore_data();
@@ -132,6 +133,33 @@ void tst_QQuickListView2::dragDelegateWithMouseArea_data()
         const char *enumValueName = QMetaEnum::fromType<QQuickItemView::LayoutDirection>().valueToKey(layDir);
         QTest::newRow(enumValueName) << static_cast<QQuickItemView::LayoutDirection>(layDir);
     }
+}
+
+void tst_QQuickListView2::viewportAvoidUndesiredMovementOnSetCurrentIndex()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QVERIFY(window);
+    window->setFlag(Qt::FramelessWindowHint);
+    window->setSource(testFileUrl("viewportAvoidUndesiredMovementOnSetCurrentIndex.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QVERIFY(window->rootObject());
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QVERIFY(listview);
+    listview->setCurrentIndex(2); // change current item
+    // partially obscure first item
+    QCOMPARE(listview->contentY(), 0);
+    listview->setContentY(50);
+    QTRY_COMPARE(listview->contentY(), 50);
+    listview->setCurrentIndex(0); // change current item back to first one
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+    // that shouldn't have caused any movement
+    QCOMPARE(listview->contentY(), 50);
+
+    // that even applies to the case where the current item is completely out of the viewport
+    listview->setCurrentIndex(25);
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+    QCOMPARE(listview->contentY(), 50);
 }
 
 void tst_QQuickListView2::dragDelegateWithMouseArea()

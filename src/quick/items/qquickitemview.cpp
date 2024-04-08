@@ -1267,7 +1267,9 @@ void QQuickItemView::trackedPositionChanged()
         return;
     }
 
-    if (d->moveReason == QQuickItemViewPrivate::SetIndex) {
+    const bool needMoveToTrackHighlight = d->autoHighlight || d->highlightRange != NoHighlightRange;
+
+    if (d->moveReason == QQuickItemViewPrivate::SetIndex && needMoveToTrackHighlight) {
         qreal trackedPos = d->trackedItem->position();
         qreal trackedSize = d->trackedItem->size();
         qreal viewPos = d->isContentFlowReversed() ? -d->position()-d->size() : d->position();
