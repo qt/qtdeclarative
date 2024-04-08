@@ -2045,8 +2045,14 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
           || d->extra->enterKeyAttached->type() == Qt::EnterKeyDefault) {
 
             QQuickItem *next = const_cast<QQuickTextInput*>(this)->nextItemInFocusChain();
-            while (next && next != this && !next->activeFocusOnTab())
+            QQuickItem *originalNext = next;
+            while (next && next != this && !next->activeFocusOnTab()) {
                 next = next->nextItemInFocusChain();
+                if (next == originalNext) {
+                    // There seems to be no suitable element in the focus chain
+                    next = nullptr;
+                }
+            }
             if (next) {
                 const auto nextYPos = next->mapToGlobal(QPoint(0, 0)).y();
                 const auto currentYPos = this->mapToGlobal(QPoint(0, 0)).y();
