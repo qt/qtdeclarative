@@ -2350,8 +2350,8 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
         return true;
     case QMetaType::QJsonArray: {
         Scope scope(engine);
-        ScopedArrayObject a(scope, value);
-        jsonArrayPtr = new (&allocData) QJsonArray(JsonObject::toJsonArray(a));
+        ScopedObject o(scope, value);
+        jsonArrayPtr = new (&allocData) QJsonArray(JsonObject::toJsonArray(o));
         return true;
     }
     case  QMetaType::QJsonObject: {
