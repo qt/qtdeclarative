@@ -737,8 +737,6 @@ public:
         m_bindingContent = Content::ValueSource { typeName, type };
     }
 
-    QString literalTypeName() const;
-
     // ### TODO: here and below: Introduce an allowConversion parameter, if yes, enable conversions e.g. bool -> number?
     bool boolValue() const;
 

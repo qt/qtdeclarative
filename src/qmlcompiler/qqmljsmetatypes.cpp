@@ -18,21 +18,6 @@ bool QQmlJSMetaPropertyBinding::isValid() const
     return !m_propertyName.isEmpty() && bindingType() != QQmlSA::BindingType::Invalid;
 }
 
-QString QQmlJSMetaPropertyBinding::literalTypeName() const
-{
-    if (std::holds_alternative<Content::BoolLiteral>(m_bindingContent))
-        return QLatin1String("bool");
-    else if (std::holds_alternative<Content::NumberLiteral>(m_bindingContent))
-        return QLatin1String("double");
-    else if (std::holds_alternative<Content::StringLiteral>(m_bindingContent))
-        return QLatin1String("string");
-    else if (std::holds_alternative<Content::RegexpLiteral>(m_bindingContent))
-        return QLatin1String("regexp");
-    else if (std::holds_alternative<Content::Null>(m_bindingContent))
-        return QLatin1String("$internal$.std::nullptr_t");
-    return {};
-}
-
 bool QQmlJSMetaPropertyBinding::boolValue() const
 {
     if (auto boolLit = std::get_if<Content::BoolLiteral>(&m_bindingContent))

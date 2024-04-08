@@ -447,7 +447,7 @@ void tst_qqmldirparser::parse()
     QFETCH(bool, designerSupported);
 
     QFile f(testFile(file));
-    f.open(QIODevice::ReadOnly);
+    QVERIFY(f.open(QIODevice::ReadOnly));
 
     QQmlDirParser p;
     p.parse(f.readAll());

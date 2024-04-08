@@ -22,4 +22,8 @@ Item {
 
     id: idBinding
 
+    property var arrayBinding
+    arrayBinding:[]
+    property var objectBinding
+    objectBinding: Item {}
 }

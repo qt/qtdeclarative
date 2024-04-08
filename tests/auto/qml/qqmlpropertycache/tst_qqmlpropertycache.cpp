@@ -36,6 +36,7 @@ private slots:
     void restrictRegistrationVersion();
     void rejectOverriddenFinal();
     void overriddenSignals();
+    void duplicateIdsAndGeneralizedGroupProperties();
 
 private:
     QQmlEngine engine;
@@ -772,6 +773,20 @@ void tst_qqmlpropertycache::overriddenSignals()
                             "invalid override of property change signal or superclass signal")));
     QQmlComponent c3(&engine, c3Url);
     // Should be an error, but we can't enforce it yet.
+}
+
+void tst_qqmlpropertycache::duplicateIdsAndGeneralizedGroupProperties()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("duplicateIdsAndGeneralizedGroupProperties.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "1 true true true");
+    QTest::ignoreMessage(QtDebugMsg, "2 false true true");
+    QTest::ignoreMessage(QtDebugMsg, "3 false false true");
+    QTest::ignoreMessage(QtDebugMsg, "4 false false false");
+
+    QScopedPointer<QObject> o(c.create());
 }
 
 QTEST_MAIN(tst_qqmlpropertycache)

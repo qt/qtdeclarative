@@ -1,5 +1,6 @@
 <RCC>
-    <qresource prefix="/">
-        <file>app.qml</file>
+    <qresource prefix="/qt/qml/ChartsApp">
+        <file>App.qml</file>
+        <file>qmldir</file>
     </qresource>
 </RCC>

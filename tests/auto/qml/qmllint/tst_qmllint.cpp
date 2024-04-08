@@ -97,6 +97,7 @@ private Q_SLOTS:
     void lintModule();
 
     void testLineEndings();
+    void valueTypesFromString();
 
 #if QT_CONFIG(library)
     void testPlugin();
@@ -1331,6 +1332,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QEventPoint") << QStringLiteral("qEventPoint.qml");
     QTest::newRow("locale") << QStringLiteral("locale.qml");
     QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
+    QTest::newRow("dontCheckJSTypes") << QStringLiteral("dontCheckJSTypes.qml");
 }
 
 void TestQmllint::cleanQmlCode()
@@ -1560,7 +1562,7 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
 
             if (QFileInfo(fixedPath).exists()) {
                 QFile fixedFile(fixedPath);
-                fixedFile.open(QFile::ReadOnly);
+                QVERIFY(fixedFile.open(QFile::ReadOnly));
                 QString fixedFileContents = QString::fromUtf8(fixedFile.readAll());
 #ifdef Q_OS_WIN
                 fixedCode = fixedCode.replace(u"\r\n"_s, u"\n"_s);
@@ -1947,6 +1949,25 @@ void TestQmllint::testLineEndings()
 
         QCOMPARE(lintResult, QQmlJSLinter::LintResult::HasWarnings);
     }
+}
+
+void TestQmllint::valueTypesFromString()
+{
+    runTest("valueTypesFromString.qml",
+            Result{ {
+                            Message{
+                                    u"Binding is not supported: Type QSizeF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                            Message{
+                                    u"Binding is not supported: Type QRectF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                            Message{
+                                    u"Binding is not supported: Type QPointF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                    },
+                    { /*bad messages */ },
+                    {
+                            Message{ u"({ width: 30, height: 50 })"_s },
+                            Message{ u"({ x: 10, y: 20, width: 30, height: 50 })"_s },
+                            Message{ u"({ x: 30, y: 50 })"_s },
+                    } });
 }
 
 #if QT_CONFIG(library)

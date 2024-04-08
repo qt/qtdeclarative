@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.impl as ControlsImpl
+import QtQuick.Controls.impl
 import QtQuick.Dialogs.quickimpl as DialogsQuickImpl
 
 DialogsQuickImpl.FileDialogDelegate {

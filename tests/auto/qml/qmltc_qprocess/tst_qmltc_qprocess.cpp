@@ -54,6 +54,7 @@ private slots:
     void exports();
     void qmlBaseFromAnotherModule();
     void invalidTypeAnnotation();
+    void constructFromString();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -325,6 +326,18 @@ void tst_qmltc_qprocess::exports()
 
     QVERIFY(header.contains(u"#include \"exportheader.h\"\n"_s));
     QVERIFY(!implementation.contains(u"exportheader.h"_s));
+}
+
+void tst_qmltc_qprocess::constructFromString()
+{
+    const auto errors = runQmltc(u"constructFromString.qml"_s, false);
+    const QString warningMessage =
+            u"constructFromString.qml:%1:%2: Binding is not supported: Type %3 should be"
+            u" constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a"
+            u" string."_s;
+    QVERIFY(errors.contains(warningMessage.arg(4).arg(23).arg(u"QPointF")));
+    QVERIFY(errors.contains(warningMessage.arg(5).arg(23).arg(u"QRectF")));
+    QVERIFY(errors.contains(warningMessage.arg(6).arg(23).arg(u"QSizeF")));
 }
 
 QTEST_MAIN(tst_qmltc_qprocess)

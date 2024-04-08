@@ -846,6 +846,9 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
         if (propertyResolution(baseType, propertyName) != PropertyMissing)
             return;
 
+        if (baseType->isScript())
+            return;
+
         std::optional<QQmlJSFixSuggestion> fixSuggestion;
 
         if (auto suggestion = QQmlJSUtils::didYouMean(propertyName, baseType->properties().keys(),

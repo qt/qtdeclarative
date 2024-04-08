@@ -2542,6 +2542,9 @@ private slots:
             a) scriptelement is accessible from the DomItem (is it correclty attached?)
             b) scriptelement has the correct path (is its pathFromOwner the path where it was
         attached?)
+
+        For bindings to objects, arrays and scripts, check that the bindingIdentifiers are correctly
+        attached in the Dom.
         */
 
         {
@@ -2614,6 +2617,41 @@ private slots:
             DomItem scriptElement = body.field(Fields::scriptElement);
             QCOMPARE(scriptElement.internalKind(), DomType::ScriptBlockStatement);
             QCOMPARE(scriptElement.pathFromOwner(), Path().field(Fields::scriptElement));
+            compareFileLocationsPathWithCanonicalPath(scriptElement);
+        }
+
+        {
+            DomItem binding = rootQmlObject.field(Fields::bindings).key("arrayBinding");
+            QCOMPARE(binding.indexes(), 1);
+            QCOMPARE(binding.index(0).field(Fields::value).internalKind(),
+                     DomType::ScriptExpression);
+            QCOMPARE(binding.index(0)
+                             .field(Fields::value)
+                             .field(Fields::scriptElement)
+                             .internalKind(),
+                     DomType::ScriptArray);
+            // Fields::value is in the path of the owner, and therefore should not be in
+            // pathFromOwner!
+            DomItem scriptElement =
+                    binding.index(0).field(Fields::value).field(Fields::scriptElement);
+            QCOMPARE(scriptElement.pathFromOwner(), Path().field(Fields::scriptElement));
+            compareFileLocationsPathWithCanonicalPath(scriptElement);
+            // also check that the left hand side of the binding is correctly attached to the Dom:
+            scriptElement = binding.index(0).field(Fields::bindingIdentifiers);
+            QCOMPARE(scriptElement.pathFromOwner(),
+                     Path::fromString(u".components[\"\"][0].objects[0].bindings[\"arrayBinding\"]["
+                                      u"0].bindingIdentifiers"));
+            compareFileLocationsPathWithCanonicalPath(scriptElement);
+        }
+        {
+            DomItem binding = rootQmlObject.field(Fields::bindings).key("objectBinding");
+            QCOMPARE(binding.indexes(), 1);
+            QCOMPARE(binding.index(0).field(Fields::value).internalKind(), DomType::QmlObject);
+            // check that the left hand side of the binding is correctly attached to the Dom:
+            DomItem scriptElement = binding.index(0).field(Fields::bindingIdentifiers);
+            QCOMPARE(scriptElement.pathFromOwner(),
+                     Path::fromString(u".components[\"\"][0].objects[0].bindings[\"objectBinding\"]["
+                                      u"0].bindingIdentifiers"));
             compareFileLocationsPathWithCanonicalPath(scriptElement);
         }
     }
@@ -2823,6 +2861,12 @@ private slots:
 
         QTest::addRow("inactiveVisitorMarkerCrash")
                 << baseDir + u"/inactiveVisitorMarkerCrash.qml"_s;
+
+        QTest::addRow("templateStrings")
+                << baseDir + u"/crashes/templateStrings.qml"_s;
+
+        QTest::addRow("lambda")
+                << baseDir + u"/crashes/lambda.qml"_s;
     }
     void crashes()
     {

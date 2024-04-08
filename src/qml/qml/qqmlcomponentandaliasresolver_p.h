@@ -27,6 +27,12 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcQmlTypeCompiler);
 
+// This class primarily resolves component boundaries in a document.
+// With the information about boundaries, it then goes on to resolve aliases and generalized
+// group properties. Both rely on IDs as first part of their expressions and the IDs have
+// to be located in surrounding components. That's why we have to do this with the component
+// boundaries in mind.
+
 template<typename ObjectContainer>
 class QQmlComponentAndAliasResolver
 {
@@ -55,12 +61,14 @@ private:
     [[nodiscard]] bool markAsComponent(int index) const;
     [[nodiscard]] AliasResolutionResult resolveAliasesInObject(
             const CompiledObject &component, int objectIndex, QQmlError *error);
+    void resolveGeneralizedGroupProperty(const CompiledObject &component, CompiledBinding *binding);
     [[nodiscard]] bool wrapImplicitComponent(CompiledBinding *binding);
 
     [[nodiscard]] QQmlError findAndRegisterImplicitComponents(
             const CompiledObject *obj, const QQmlPropertyCache::ConstPtr &propertyCache);
     [[nodiscard]] QQmlError collectIdsAndAliases(int objectIndex);
     [[nodiscard]] QQmlError resolveAliases(int componentIndex);
+    void resolveGeneralizedGroupProperties(int componentIndex);
     [[nodiscard]] QQmlError resolveComponentsInInlineComponentRoot(int root);
 
     QString stringAt(int idx) const { return m_compiler->stringAt(idx); }
@@ -111,6 +119,7 @@ private:
     // indices of the objects that are actually Component {}
     QVector<quint32> m_componentRoots;
     QVector<int> m_objectsWithAliases;
+    QVector<CompiledBinding *> m_generalizedGroupProperties;
     typename ObjectContainer::IdToObjectMap m_idToObjectIndex;
 };
 
@@ -330,6 +339,7 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolve(int root)
 
         m_idToObjectIndex.clear();
         m_objectsWithAliases.clear();
+        m_generalizedGroupProperties.clear();
 
         if (const QQmlError error = collectIdsAndAliases(rootBinding->value.objectIndex);
                 error.isValid()) {
@@ -340,17 +350,24 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolve(int root)
 
         if (const QQmlError error = resolveAliases(m_componentRoots.at(i)); error.isValid())
             return error;
+
+        resolveGeneralizedGroupProperties(m_componentRoots.at(i));
     }
 
     // Collect ids and aliases for root
     m_idToObjectIndex.clear();
     m_objectsWithAliases.clear();
+    m_generalizedGroupProperties.clear();
 
     if (const QQmlError error = collectIdsAndAliases(root); error.isValid())
         return error;
 
     allocateNamedObjects(m_compiler->objectAt(root));
-    return resolveAliases(root);
+    if (const QQmlError error = resolveAliases(root); error.isValid())
+        return error;
+
+    resolveGeneralizedGroupProperties(root);
+    return QQmlError();
 }
 
 template<typename ObjectContainer>
@@ -375,9 +392,19 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::collectIdsAndAliases(i
     for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd();
          binding != end; ++binding) {
         switch (binding->type()) {
+        case QV4::CompiledData::Binding::Type_GroupProperty: {
+            const auto *inner = m_compiler->objectAt(binding->value.objectIndex);
+            if (m_compiler->stringAt(inner->inheritedTypeNameIndex).isEmpty()) {
+                const auto cache = m_propertyCaches->at(objectIndex);
+                if (!cache || !cache->property(
+                            m_compiler->stringAt(binding->propertyNameIndex), nullptr, nullptr)) {
+                    m_generalizedGroupProperties.append(binding);
+                }
+            }
+        }
+        Q_FALLTHROUGH();
         case QV4::CompiledData::Binding::Type_Object:
         case QV4::CompiledData::Binding::Type_AttachedProperty:
-        case QV4::CompiledData::Binding::Type_GroupProperty:
             if (const QQmlError error = collectIdsAndAliases(binding->value.objectIndex);
                     error.isValid()) {
                 return error;
@@ -437,6 +464,15 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolveAliases(int com
     }
 
     return QQmlError();
+}
+
+template<typename ObjectContainer>
+void QQmlComponentAndAliasResolver<ObjectContainer>::resolveGeneralizedGroupProperties(
+        int componentIndex)
+{
+    const auto &component = *m_compiler->objectAt(componentIndex);
+    for (CompiledBinding *binding : m_generalizedGroupProperties)
+        resolveGeneralizedGroupProperty(component, binding);
 }
 
 QT_END_NAMESPACE

@@ -138,6 +138,13 @@ private:
     bool m_enableScriptExpressions = false;
     bool m_loadFileLazily = false;
 
+    // A Binding inside a UiPublicMember (= a Property definition) will shadow the
+    // propertydefinition's binding identifiers with its own binding identifiers. Therefore, disable
+    // bindingIdentifiers for the Binding inside a Property definition by using this flag.
+    bool m_skipBindingIdentifiers = false;
+
+    void setBindingIdentifiers(const Path &pathFromOwner, const AST::UiQualifiedId *identifiers,
+                               Binding *bindingPtr);
     template<typename T>
     QmlStackElement &currentEl(int idx = 0)
     {
@@ -421,6 +428,8 @@ public:
 
     bool visit(AST::ClassExpression *) override;
     void endVisit(AST::ClassExpression *) override;
+
+    bool visit(AST::TemplateLiteral *) override;
 
     bool visit(AST::TryStatement *) override;
     void endVisit(AST::TryStatement *) override;

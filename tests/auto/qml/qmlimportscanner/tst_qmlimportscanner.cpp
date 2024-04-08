@@ -149,7 +149,7 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
     QVERIFY(generated.isArray());
 
     QFile imports(resultFile);
-    imports.open(QIODevice::ReadOnly);
+    QVERIFY(imports.open(QIODevice::ReadOnly));
     QJsonDocument expected = QJsonDocument::fromJson(imports.readAll(), &error);
     QCOMPARE(error.error, QJsonParseError::NoError);
     QVERIFY(expected.isArray());

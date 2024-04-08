@@ -464,7 +464,7 @@ void tst_qmltyperegistrar::consistencyWarnings()
     r.write(output, "tst_qmltyperegistrar_qmltyperegistrations.cpp");
 
     QTemporaryFile pluginTypes;
-    pluginTypes.open();
+    QVERIFY(pluginTypes.open());
 
     expectWarning("Warning: tst_qmltyperegistrar.h:: Refusing to generate non-lowercase name "
                   "Invisible for unknown foreign type");

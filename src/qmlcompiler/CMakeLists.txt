@@ -20,6 +20,7 @@ qt_internal_add_module(QmlCompiler
         qqmljsimporter.cpp qqmljsimporter_p.h
         qqmljsimportvisitor.cpp qqmljsimportvisitor_p.h
         qqmljsliteralbindingcheck.cpp qqmljsliteralbindingcheck_p.h
+        qqmljsvaluetypefromstringcheck.cpp qqmljsvaluetypefromstringcheck_p.h
         qqmljsloadergenerator.cpp qqmljsloadergenerator_p.h
         qqmljslogger_p.h qqmljslogger.cpp
         qqmljsloggingutils.h qqmljsloggingutils.cpp qqmljsloggingutils_p.h

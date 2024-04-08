@@ -549,16 +549,15 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
 
             typeResolver.init(&v, parser.rootNode());
 
-            QQmlJSLiteralBindingCheck literalCheck;
-            literalCheck.run(&v, &typeResolver);
-
             using PassManagerPtr = std::unique_ptr<
                     QQmlSA::PassManager, decltype(&QQmlSA::PassManagerPrivate::deletePassManager)>;
-            PassManagerPtr passMan(nullptr, &QQmlSA::PassManagerPrivate::deletePassManager);
+            PassManagerPtr passMan(QQmlSA::PassManagerPrivate::createPassManager(&v, &typeResolver),
+                                   &QQmlSA::PassManagerPrivate::deletePassManager);
+            passMan->registerPropertyPass(
+                    std::make_unique<QQmlJSLiteralBindingCheck>(passMan.get()), QString(),
+                    QString(), QString());
 
             if (m_enablePlugins) {
-                passMan.reset(QQmlSA::PassManagerPrivate::createPassManager(&v, &typeResolver));
-
                 for (const Plugin &plugin : m_plugins) {
                     if (!plugin.isValid() || !plugin.isEnabled())
                         continue;
@@ -568,9 +567,8 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                     instance->registerPasses(passMan.get(),
                                              QQmlJSScope::createQQmlSAElement(v.result()));
                 }
-
-                passMan->analyze(QQmlJSScope::createQQmlSAElement(v.result()));
             }
+            passMan->analyze(QQmlJSScope::createQQmlSAElement(v.result()));
 
             success = !m_logger->hasWarnings() && !m_logger->hasErrors();
 

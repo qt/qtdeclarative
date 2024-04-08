@@ -42,6 +42,7 @@ private slots:
     void cacheModuleScripts();
     void reuseStaticMappings();
     void invalidateSaveLoadCache();
+    void duplicateIdsInInlineComponents();
 
     void inlineComponentDoesNotCauseConstantInvalidation_data();
     void inlineComponentDoesNotCauseConstantInvalidation();
@@ -1162,7 +1163,7 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
     e->clearComponentCache();
     {
         QFile file(fileName);
-        file.open(QIODevice::WriteOnly | QIODevice::Append);
+        QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Append));
         file.write(" ");
     }
     waitForFileSystem();
@@ -1184,6 +1185,77 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
     QVERIFY2(unit->loadFromDisk(url, QFileInfo(fileName).lastModified(), &errorString), qPrintable(errorString));
 
     QVERIFY(unit->unitData() != oldUnit->unitData());
+}
+
+void tst_qmldiskcache::duplicateIdsInInlineComponents()
+{
+    // Exercise the case of loading strange generalized group properties from .qmlc.
+
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    const QByteArray contents = QByteArrayLiteral(R"(
+        import QtQml
+        QtObject {
+            component First : QtObject {
+                property QtObject aa: QtObject {
+                    id: a
+                }
+                property Binding bb: Binding {
+                    a.objectName: "test1"
+                }
+            }
+
+            component Second : QtObject {
+                property QtObject aa: QtObject {
+                    id: a
+                }
+                property Binding bb: Binding {
+                    a.objectName: "test2"
+                }
+
+                property Component cc: QtObject {
+                    property QtObject aa: QtObject {
+                        id: a
+                    }
+                    property Binding bb: Binding {
+                        a.objectName: "test3"
+                    }
+                }
+            }
+
+            property First first: First {}
+            property Second second: Second {}
+            property QtObject third: second.cc.createObject();
+
+            objectName: first.aa.objectName + second.aa.objectName + third.aa.objectName;
+        }
+    )");
+
+    {
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+        QVERIFY2(testCompiler.verify(), qPrintable(testCompiler.lastErrorString));
+    }
+
+    {
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->objectName(), "test1test2test3");
+    }
+
+    engine.clearComponentCache();
+
+    {
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->objectName(), "test1test2test3");
+    }
 }
 
 void tst_qmldiskcache::inlineComponentDoesNotCauseConstantInvalidation_data()

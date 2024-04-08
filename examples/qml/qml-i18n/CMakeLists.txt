@@ -1,4 +1,4 @@
-# Copyright (C) 2022 The Qt Company Ltd.
+# Copyright (C) 2024 The Qt Company Ltd.
 # SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 cmake_minimum_required(VERSION 3.16)
@@ -18,13 +18,13 @@ target_link_libraries(qmli18n PRIVATE
 )
 
 qt_add_qml_module(qmli18n
-    URI translated
+    URI Translated
     QML_FILES
-        qml-i18n.qml
+        Main.qml
 )
 
 qt_add_translations(qmli18n
-    RESOURCE_PREFIX /qt/qml/translated/i18n
+    RESOURCE_PREFIX /qt/qml/Translated/i18n
     TS_FILE_BASE qml
     TS_FILE_DIR i18n
 )
