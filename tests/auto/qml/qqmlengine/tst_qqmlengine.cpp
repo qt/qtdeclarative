@@ -80,6 +80,7 @@ private slots:
     void lockedRootObject();
     void crossReferencingSingletonsDeletion();
     void bindingInstallUseAfterFree();
+    void variantListQJsonConversion();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1731,6 +1732,21 @@ void tst_qqmlengine::bindingInstallUseAfterFree()
     QQmlComponent c(&engine, testFileUrl("bindingInstallUseAfterFree.qml"));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     std::unique_ptr<QObject> o{ c.create() };
+    QVERIFY(o);
+}
+
+void tst_qqmlengine::variantListQJsonConversion()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("variantListQJsonConversion.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtMsgType::QtDebugMsg, R"(["cpp","variant","list"])");
+    QTest::ignoreMessage(QtMsgType::QtDebugMsg, R"({"test":["cpp","variant","list"]})");
+    QTest::ignoreMessage(QtMsgType::QtDebugMsg,
+                         R"([{"objectName":"o0"},{"objectName":"o1"},{"objectName":"o2"}])");
+
+    QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
 }
 
