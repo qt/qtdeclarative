@@ -90,6 +90,7 @@ private:
 
 class QQmlPreviewFileEngineHandler : public QAbstractFileEngineHandler
 {
+    Q_DISABLE_COPY_MOVE(QQmlPreviewFileEngineHandler)
 public:
     QQmlPreviewFileEngineHandler(QQmlPreviewFileLoader *loader);
     std::unique_ptr<QAbstractFileEngine> create(const QString &fileName) const override;
