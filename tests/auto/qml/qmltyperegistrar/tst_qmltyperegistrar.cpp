@@ -540,45 +540,45 @@ void tst_qmltyperegistrar::uncreatable()
 #if QT_DEPRECATED_SINCE(6, 4)
     QTest::ignoreMessage(
                 QtWarningMsg,
-                "Singleton SingletonIncreatable needs either a default constructor or, "
-                "when adding a default constructor is infeasible, a public static "
-                "create(QQmlEngine *, QJSEngine *) method.");
+                "Singleton SingletonIncreatable needs to be a concrete class with either a "
+                "default constructor or, when adding a default constructor is infeasible, "
+                "a public static create(QQmlEngine *, QJSEngine *) method.");
     qmlRegisterTypesAndRevisions<SingletonIncreatable>("A", 1);
     QTest::ignoreMessage(
                 QtWarningMsg,
-                "Singleton SingletonIncreatable2 needs either a default constructor or, "
-                "when adding a default constructor is infeasible, a public static "
-                "create(QQmlEngine *, QJSEngine *) method.");
+                "Singleton SingletonIncreatable2 needs to be a concrete class with either a "
+                "default constructor or, when adding a default constructor is infeasible, "
+                "a public static create(QQmlEngine *, QJSEngine *) method.");
     qmlRegisterTypesAndRevisions<SingletonIncreatable2>("A", 1);
     QTest::ignoreMessage(
                 QtWarningMsg,
-                "Singleton SingletonIncreatable3 needs either a default constructor or, "
-                "when adding a default constructor is infeasible, a public static "
-                "create(QQmlEngine *, QJSEngine *) method.");
+                "Singleton SingletonIncreatable3 needs to be a concrete class with either a "
+                "default constructor or, when adding a default constructor is infeasible, "
+                "a public static create(QQmlEngine *, QJSEngine *) method.");
     qmlRegisterTypesAndRevisions<SingletonIncreatable3>("A", 1);
     QTest::ignoreMessage(
                 QtWarningMsg,
-                "Singleton SingletonIncreatable4 needs either a default constructor or, "
-                "when adding a default constructor is infeasible, a public static "
-                "create(QQmlEngine *, QJSEngine *) method.");
+                "Singleton SingletonIncreatable4 needs to be a concrete class with either a "
+                "default constructor or, when adding a default constructor is infeasible, "
+                "a public static create(QQmlEngine *, QJSEngine *) method.");
     qmlRegisterTypesAndRevisions<SingletonIncreatable4>("A", 1);
     QTest::ignoreMessage(
                 QtWarningMsg,
-                "Singleton SingletonIncreatableExtended needs either a default constructor or, "
-                "when adding a default constructor is infeasible, a public static "
-                "create(QQmlEngine *, QJSEngine *) method.");
+                "Singleton SingletonIncreatableExtended needs to be a concrete class with either a "
+                "default constructor or, when adding a default constructor is infeasible, "
+                "a public static create(QQmlEngine *, QJSEngine *) method.");
     qmlRegisterTypesAndRevisions<SingletonIncreatableExtended>("A", 1);
     QTest::ignoreMessage(
                 QtWarningMsg,
-                "Singleton SingletonForeign needs either a default constructor or, "
-                "when adding a default constructor is infeasible, a public static "
-                "create(QQmlEngine *, QJSEngine *) method.");
+                "Singleton SingletonForeign needs to be a concrete class with either a "
+                "default constructor or, when adding a default constructor is infeasible, "
+                "a public static create(QQmlEngine *, QJSEngine *) method.");
     qmlRegisterTypesAndRevisions<SingletonLocalUncreatable1>("A", 1);
     QTest::ignoreMessage(
                 QtWarningMsg,
-                "Singleton SingletonForeign needs either a default constructor or, "
-                "when adding a default constructor is infeasible, a public static "
-                "create(QQmlEngine *, QJSEngine *) method.");
+                "Singleton SingletonForeign needs to be a concrete class with either a "
+                "default constructor or, when adding a default constructor is infeasible, "
+                "a public static create(QQmlEngine *, QJSEngine *) method.");
     qmlRegisterTypesAndRevisions<SingletonLocalUncreatable2>("A", 1);
 #endif
 
