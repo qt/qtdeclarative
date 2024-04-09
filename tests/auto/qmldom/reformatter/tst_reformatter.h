@@ -705,6 +705,65 @@ private slots:
         QCOMPARE(formattedMethod, expectedFormattedMethod);
     }
 
+    void statementList_data()
+    {
+        QTest::addColumn<QString>("codeToBeFormatted");
+        QTest::addColumn<QString>("expectedFormattedCode");
+
+        QTest::newRow("StatementsOnTheSameLine")
+                << QStringLiteral(u"a=1;b=1;") << QStringLiteral(u"a = 1;\nb = 1;");
+
+        QTest::newRow("StatementsOnSuccessiveLines")
+                << QStringLiteral(u"a=1;\nb=1;") << QStringLiteral(u"a = 1;\nb = 1;");
+
+        QTest::newRow("EmptyLineBetweenStatements")
+                << QStringLiteral(u"a=1;\n\nb=1;") << QStringLiteral(u"a = 1;\n\nb = 1;");
+
+        QTest::newRow("MultipleEmptyLinesBetweenStatements")
+                << QStringLiteral(u"a=1;\n\n\n\n\n\nb=1;") << QStringLiteral(u"a = 1;\n\nb = 1;");
+
+        QTest::newRow("MultilineStatementWithStatementOnTheFollowingLine")
+                << QStringLiteral(u"console.log(\n\n);\nb = 1;")
+                << QStringLiteral(u"console.log();\nb = 1;");
+
+        QTest::newRow("StatementWithPostCommentAndStatementOnTheFollowingLine")
+                << QStringLiteral(u"a=1;//\nb=1;") << QStringLiteral(u"a = 1;//\nb = 1;");
+
+        QTest::newRow("StatementWithPostCommentAndEmptyLineToNextStatement")
+                << QStringLiteral(u"a=1;//\n\nb=1;") << QStringLiteral(u"a = 1;//\n\nb = 1;");
+
+        QTest::newRow("StatementWithPostCommentAndMultipleEmptyLinesToNextStatement")
+                << QStringLiteral(u"a=1;//\n\n\n\n\nb=1;") << QStringLiteral(u"a = 1;//\n\nb = 1;");
+
+        QTest::newRow("StatementsWithCommentInBetweenThem")
+                << QStringLiteral(u"a=1;\n//\nb=1;") << QStringLiteral(u"a = 1;\n//\nb = 1;");
+
+        QTest::newRow("StatementsWithCommentAndSingleEmptyLineInBetweenThem")
+                << QStringLiteral(u"a=1;\n\n//\n\nb=1;")
+                << QStringLiteral(u"a = 1;\n\n//\n\nb = 1;");
+
+        QTest::newRow("StatementsWithCommentAndMultipleEmptyLinesInBetweenThem")
+                << QStringLiteral(u"a=1;\n\n\n\n//\n\n\nb=1;")
+                << QStringLiteral(u"a = 1;\n\n//\n\nb = 1;");
+
+        QTest::newRow("StatementWithSingleEmptyLineAndPreCommentOnNextStatement")
+                << QStringLiteral(u"a=1;\n\n//\nb=1;") << QStringLiteral(u"a = 1;\n\n//\nb = 1;");
+
+        QTest::newRow("StatementWithMultipleEmptyLinesAndPreCommentOnNextStatement")
+                << QStringLiteral(u"a=1;\n\n\n\n\n\n\n\n//\nb=1;")
+                << QStringLiteral(u"a = 1;\n\n//\nb = 1;");
+    }
+
+    void statementList()
+    {
+        QFETCH(QString, codeToBeFormatted);
+        QFETCH(QString, expectedFormattedCode);
+
+        QString formattedCode = formatJSCode(codeToBeFormatted);
+
+        QCOMPARE(formattedCode, expectedFormattedCode);
+    }
+
 private:
 };
 

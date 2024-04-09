@@ -4,6 +4,7 @@ function one() {
         a = 5;
     }
 }
+
 function two(a, b) {
     for (; b < 5; ++b) {
         a = a * b;
