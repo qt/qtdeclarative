@@ -692,7 +692,7 @@ void tst_RenderControl::renderAndReadBackWithVulkanAndCustomDepthTexture()
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 
 #ifdef Q_OS_ANDROID
-    if (api == QSGRendererInterface::Vulkan)
+    if (QQuickWindow::graphicsApi() == QSGRendererInterface::Vulkan)
         QSKIP("Vulkan support is broken in Android emulator, skipping");
 #endif
 
