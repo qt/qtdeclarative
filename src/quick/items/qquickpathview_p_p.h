@@ -75,7 +75,7 @@ public:
     void clear();
     void updateMappedRange();
     qreal positionOfIndex(qreal index) const;
-    bool isInBound(qreal position, qreal lower, qreal upper) const;
+    bool isInBound(qreal position, qreal lower, qreal upper, bool emptyRangeCheck = true) const;
     void createHighlight();
     void updateHighlight();
     void setHighlightPosition(qreal pos);
@@ -140,6 +140,7 @@ public:
     int pathItems;
     int requestedIndex;
     int cacheSize;
+    int requestedCacheSize;
     qreal requestedZ;
     QList<QQuickItem *> items;
     QList<QQuickItem *> itemCache;
