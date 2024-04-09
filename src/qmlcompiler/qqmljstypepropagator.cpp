@@ -1561,6 +1561,7 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
     const auto valueType = m_typeResolver->globalType(valueContained);
 
     const bool canHaveSideEffects = (baseType.isProperty() && baseType.isWritable())
+            || baseContained->isListProperty()
             || baseType.isConversion();
 
     const auto setReturnType = [&](const QQmlJSScope::ConstPtr type) {

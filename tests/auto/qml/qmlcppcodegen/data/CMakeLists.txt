@@ -228,6 +228,7 @@ set(qml_files
     pressAndHoldButton.qml
     reduceWithNullThis.qml
     readEnumFromInstance.qml
+    readonlyListProperty.qml
     registerPropagation.qml
     registerelimination.qml
     renameAdjust.qml
