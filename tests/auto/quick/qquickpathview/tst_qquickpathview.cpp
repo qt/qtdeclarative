@@ -132,6 +132,8 @@ private slots:
     void requiredPropertiesInDelegatePreventUnrelated();
     void touchMove();
     void mousePressAfterFlick();
+    void qtbug90479();
+    void overCached();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -2893,6 +2895,44 @@ void tst_QQuickPathView::mousePressAfterFlick() // QTBUG-115121
     QTRY_VERIFY(!pathview->isMoving());
     QCOMPARE(flickEndedSpy.size(), 1);
     QCOMPARE(pressedSpy.size(), 0);
+}
+
+void tst_QQuickPathView::qtbug90479()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("qtbug90479.qml"));
+
+    window->show();
+    qApp->processEvents();
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview);
+
+    // cache items will be created async. Let's wait...
+    QTest::qWait(1000);
+
+    // Should create just pathItemCount amount and not destroy any
+    QCOMPARE(pathview->property("delegatesCreated").toInt(), 6);
+    QCOMPARE(pathview->property("delegatesDestroyed").toInt(), 0);
+}
+
+void tst_QQuickPathView::overCached()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("overcached.qml"));
+
+    window->show();
+    qApp->processEvents();
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview);
+
+    // cache items will be created async. Let's wait...
+    QTest::qWait(1000);
+
+    // Should create max model + 1 amount with the current implementation
+    QVERIFY(pathview->property("delegatesCreated").toInt() <= 16);
+    QVERIFY(pathview->property("delegatesDestroyed").toInt() <= 1);
 }
 
 QTEST_MAIN(tst_QQuickPathView)

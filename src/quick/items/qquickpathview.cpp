@@ -67,7 +67,7 @@ QQuickPathViewPrivate::QQuickPathViewPrivate()
     , dragMargin(0), deceleration(100)
     , maximumFlickVelocity(QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::FlickMaximumVelocity).toReal())
     , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
-    , pathItems(-1), requestedIndex(-1), cacheSize(0), requestedZ(0)
+    , pathItems(-1), requestedIndex(-1), cacheSize(0), requestedCacheSize(0), requestedZ(0)
     , moveReason(Other), movementDirection(QQuickPathView::Shortest), moveDirection(QQuickPathView::Shortest)
     , attType(nullptr), highlightComponent(nullptr), highlightItem(nullptr)
     , moveHighlight(this, &QQuickPathViewPrivate::setHighlightPosition)
@@ -233,6 +233,10 @@ void QQuickPathViewPrivate::clear()
 
 void QQuickPathViewPrivate::updateMappedRange()
 {
+    // Update the actual cache size to be at max
+    // the available non-visible items.
+    cacheSize = qMax(0, qMin(requestedCacheSize, modelCount - pathItems));
+
     if (model && pathItems != -1 && pathItems < modelCount) {
         mappedRange = qreal(modelCount)/pathItems;
         mappedCache = qreal(cacheSize)/pathItems/2; // Half of cache at each end
@@ -267,9 +271,10 @@ qreal QQuickPathViewPrivate::positionOfIndex(qreal index) const
 
 // returns true if position is between lower and upper, taking into
 // account the circular space.
-bool QQuickPathViewPrivate::isInBound(qreal position, qreal lower, qreal upper) const
+bool QQuickPathViewPrivate::isInBound(qreal position, qreal lower,
+                                      qreal upper, bool emptyRangeCheck) const
 {
-    if (qFuzzyCompare(lower, upper))
+    if (emptyRangeCheck && qFuzzyCompare(lower, upper))
         return true;
     if (lower > upper) {
         if (position > upper && position > lower)
@@ -1297,16 +1302,16 @@ void QQuickPathView::resetPathItemCount()
 int QQuickPathView::cacheItemCount() const
 {
     Q_D(const QQuickPathView);
-    return d->cacheSize;
+    return d->requestedCacheSize;
 }
 
 void QQuickPathView::setCacheItemCount(int i)
 {
     Q_D(QQuickPathView);
-    if (i == d->cacheSize || i < 0)
+    if (i == d->requestedCacheSize || i < 0)
         return;
 
-    d->cacheSize = i;
+    d->requestedCacheSize = i;
     d->updateMappedRange();
     refill();
     emit cacheItemCountChanged();
@@ -2027,8 +2032,8 @@ void QQuickPathView::refill()
             if (idx >= d->modelCount)
                 idx = 0;
             qreal nextPos = d->positionOfIndex(idx);
-            while ((d->isInBound(nextPos, endPos, 1 + d->mappedCache) || !d->items.size())
-                    && d->items.size() < count+d->cacheSize) {
+            while ((d->isInBound(nextPos, endPos, 1 + d->mappedCache, false) || !d->items.size())
+                   && d->items.size() < count + d->cacheSize) {
                 qCDebug(lcItemViewDelegateLifecycle) << "append" << idx << "@" << nextPos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.size();
                 QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1);
                 if (!item) {
