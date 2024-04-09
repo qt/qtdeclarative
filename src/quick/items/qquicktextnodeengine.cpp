@@ -1035,6 +1035,12 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
             line.setPosition(QPointF(0, 0));
             layout.endLayout();
 
+            // set the color for the bullets, instead of using the previous QTextBlock's color.
+            if (charFormat.foreground().style() == Qt::NoBrush)
+                setTextColor(textColor);
+            else
+                setTextColor(charFormat.foreground().color());
+
             QList<QGlyphRun> glyphRuns = layout.glyphRuns();
             for (int i=0; i<glyphRuns.size(); ++i)
                 addUnselectedGlyphs(glyphRuns.at(i));
