@@ -190,6 +190,7 @@ private slots:
     void propertyOfParent();
     void reduceWithNullThis();
     void readEnumFromInstance();
+    void readonlyListProperty();
     void registerElimination();
     void registerPropagation();
     void renameAdjust();
@@ -3948,6 +3949,17 @@ void tst_QmlCppCodegen::readEnumFromInstance()
     int result = 0;
     QMetaObject::invokeMethod(object.data(), "cyclePriority", Q_RETURN_ARG(int, result));
     QCOMPARE(result, 0);
+}
+
+void tst_QmlCppCodegen::readonlyListProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/readonlyListProperty.qml"_s));
+    QVERIFY2(component.isReady(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QCOMPARE(object->property("l").toInt(), 4);
 }
 
 void tst_QmlCppCodegen::registerElimination()
