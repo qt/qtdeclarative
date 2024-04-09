@@ -4965,7 +4965,6 @@ void QQuickItem::forceActiveFocus()
 
 void QQuickItem::forceActiveFocus(Qt::FocusReason reason)
 {
-    Q_D(QQuickItem);
     setFocus(true, reason);
     QQuickItem *parent = parentItem();
     QQuickItem *scope = nullptr;
@@ -4976,14 +4975,6 @@ void QQuickItem::forceActiveFocus(Qt::FocusReason reason)
                 scope = parent;
         }
         parent = parent->parentItem();
-    }
-    // In certain reparenting scenarios, d->focus might be true and the scope
-    // might also have focus, so that setFocus() returns early without actually
-    // acquiring active focus, because it thinks it already has it. In that
-    // case, try to set the DeliveryAgent's active focus. (QTBUG-89736).
-    if (scope && !d->activeFocus) {
-        if (auto da = d->deliveryAgentPrivate())
-            da->setFocusInScope(scope, this, Qt::OtherFocusReason);
     }
 }
 
@@ -7870,15 +7861,16 @@ void QQuickItem::setFocus(bool focus)
 void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
 {
     Q_D(QQuickItem);
-    if (d->focus == focus)
+    // Need to find our nearest focus scope
+    QQuickItem *scope = parentItem();
+    while (scope && !scope->isFocusScope() && scope->parentItem())
+        scope = scope->parentItem();
+
+    if (d->focus == focus && (!focus || !scope || QQuickItemPrivate::get(scope)->subFocusItem == this))
         return;
 
     bool notifyListeners = false;
     if (d->window || d->parentItem) {
-        // Need to find our nearest focus scope
-        QQuickItem *scope = parentItem();
-        while (scope && !scope->isFocusScope() && scope->parentItem())
-            scope = scope->parentItem();
         if (d->window) {
             auto da = d->deliveryAgentPrivate();
             Q_ASSERT(da);
