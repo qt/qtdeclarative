@@ -1113,20 +1113,33 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
                 = m_typeResolver->globalType(m_typeResolver->stringType());
 
         if (argc > 0) {
-            const QQmlJSScope::ConstPtr firstArg
-                    = m_typeResolver->containedType(m_state.registers[argv].content);
-            if (firstArg->isReferenceType()) {
+            const QQmlJSRegisterContent firstContent = m_state.registers[argv].content;
+            const QQmlJSScope::ConstPtr firstArg = m_typeResolver->containedType(firstContent);
+            switch (firstArg->accessSemantics()) {
+            case QQmlJSScope::AccessSemantics::Reference:
                 // We cannot know whether this will be a logging category at run time.
                 // Therefore we always pass any object types as special last argument.
                 addReadRegister(argv, m_typeResolver->globalType(
                                     m_typeResolver->genericType(firstArg)));
-            } else {
+                break;
+            case QQmlJSScope::AccessSemantics::Sequence:
+                addReadRegister(argv, firstContent);
+                break;
+            default:
                 addReadRegister(argv, stringType);
+                break;
             }
         }
 
-        for (int i = 1; i < argc; ++i)
-            addReadRegister(argv + i, stringType);
+        for (int i = 1; i < argc; ++i) {
+            const QQmlJSRegisterContent argContent = m_state.registers[argv + i].content;
+            const QQmlJSScope::ConstPtr arg = m_typeResolver->containedType(argContent);
+            addReadRegister(
+                    argv + i,
+                    arg->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+                            ? argContent
+                            : stringType);
+        }
 
         m_state.setHasSideEffects(true);
         setAccumulator(m_typeResolver->returnType(

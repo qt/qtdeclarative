@@ -155,6 +155,7 @@ private slots:
     void listLength();
     void listOfInvisible();
     void listPropertyAsModel();
+    void listToString();
     void lotsOfRegisters();
     void math();
     void mathMinMax();
@@ -2990,6 +2991,30 @@ void tst_QmlCppCodegen::listPropertyAsModel()
 
     QQmlListReference children(o.data(), "children");
     QCOMPARE(children.count(), 5);
+}
+
+void tst_QmlCppCodegen::listToString()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/listToString.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "[one,two]");
+    QTest::ignoreMessage(QtDebugMsg, "one,two");
+    QTest::ignoreMessage(QtDebugMsg, "[1,2]");
+    QTest::ignoreMessage(QtDebugMsg, "1,2");
+    QTest::ignoreMessage(
+            QtDebugMsg,
+            QRegularExpression("\\[QObject_QML_[0-9]+\\(0x[0-9a-f]+\\),"
+                               "QObject_QML_[0-9]+\\(0x[0-9a-f]+\\)\\]"));
+    QTest::ignoreMessage(
+            QtDebugMsg,
+            QRegularExpression("QObject_QML_[0-9]+\\(0x[0-9a-f]+\\),"
+                               "QObject_QML_[0-9]+\\(0x[0-9a-f]+\\)"));
+
+    QTest::ignoreMessage(QtDebugMsg, "[a,b]");
+
+    QScopedPointer<QObject> o(c.create());
 }
 
 void tst_QmlCppCodegen::lotsOfRegisters()

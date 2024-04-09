@@ -190,6 +190,7 @@ set(qml_files
     listIndices.qml
     listOfInvisible.qml
     listPropertyAsModel.qml
+    listToString.qml
     listlength.qml
     math.qml
     mathMinMax.qml

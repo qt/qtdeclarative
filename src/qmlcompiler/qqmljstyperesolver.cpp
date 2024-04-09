@@ -1364,6 +1364,11 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
         return true;
     }
 
+    if (equals(to, m_stringType)
+            && from->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
+        return canConvertFromTo(from->valueType(), m_stringType);
+    }
+
     return false;
 }
 

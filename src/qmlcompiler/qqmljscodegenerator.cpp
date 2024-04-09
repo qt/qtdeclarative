@@ -1969,18 +1969,35 @@ bool QQmlJSCodeGenerator::inlineConsoleMethod(const QString &name, int argc, int
     m_body += u"    if (category && category->isEnabled(" + type + u")) {\n";
 
     m_body += u"        const QString message = ";
+
+    const auto stringConversion = [&](int i) -> QString {
+        const QQmlJSScope::ConstPtr stored = m_state.readRegister(argv + i).storedType();
+        if (m_typeResolver->equals(stored, m_typeResolver->stringType())) {
+            return convertStored(
+                    registerType(argv + i).storedType(),
+                    m_typeResolver->stringType(), consumedRegisterVariable(argv + i));
+        } else if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
+            addInclude(u"QtQml/qjslist.h"_s);
+            return u"u'[' + QJSList(&"_s + registerVariable(argv + i)
+                    + u", aotContext->engine).toString() + u']'"_s;
+        } else {
+            reject(u"converting arguments for console method to string"_s);
+            return QString();
+        }
+    };
+
     if (argc > 0) {
-        const QString firstArgStringConversion = convertStored(
+        if (firstArgIsReference) {
+            const QString firstArgStringConversion = convertStored(
                     registerType(argv).storedType(),
                     m_typeResolver->stringType(), registerVariable(argv));
-        if (firstArgIsReference) {
             m_body += u"(firstArgIsCategory ? QString() : (" + firstArgStringConversion;
             if (argc > 1)
                 m_body += u".append(QLatin1Char(' ')))).append(";
             else
                 m_body += u"))";
         } else {
-            m_body += firstArgStringConversion;
+            m_body += stringConversion(0);
             if (argc > 1)
                 m_body += u".append(QLatin1Char(' ')).append(";
         }
@@ -1988,9 +2005,7 @@ bool QQmlJSCodeGenerator::inlineConsoleMethod(const QString &name, int argc, int
         for (int i = 1; i < argc; ++i) {
             if (i > 1)
                 m_body += u".append(QLatin1Char(' ')).append("_s;
-            m_body += convertStored(
-                        registerType(argv + i).storedType(),
-                        m_typeResolver->stringType(), consumedRegisterVariable(argv + i)) + u')';
+            m_body += stringConversion(i) + u')';
         }
     } else {
         m_body += u"QString()";
@@ -4061,6 +4076,16 @@ QString QQmlJSCodeGenerator::convertStored(
         const auto argumentTypes = ctor.parameters();
         return (isExtension ? to->extensionType().scope->internalName() : to->internalName())
                 + u"("_s + convertStored(from, argumentTypes[0].type(), variable) + u")"_s;
+    }
+
+    if (m_typeResolver->equals(to, m_typeResolver->stringType())
+            && from->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
+        addInclude(u"QtQml/qjslist.h"_s);
+
+        // Extend the life time of whatever variable is across the call to toString().
+        // variable may be an rvalue.
+        return u"[&](auto &&l){ return QJSList(&l, aotContext->engine).toString(); }("_s
+                + variable + u')';
     }
 
     // TODO: add more conversions
