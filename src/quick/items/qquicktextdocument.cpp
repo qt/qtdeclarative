@@ -589,10 +589,24 @@ QSizeF QQuickTextImageHandler::intrinsicSize(
 {
     if (format.isImageFormat()) {
         QTextImageFormat imageFormat = format.toImageFormat();
-        const int width = qRound(imageFormat.width());
+        int width = qRound(imageFormat.width());
         const bool hasWidth = imageFormat.hasProperty(QTextFormat::ImageWidth) && width > 0;
         const int height = qRound(imageFormat.height());
         const bool hasHeight = imageFormat.hasProperty(QTextFormat::ImageHeight) && height > 0;
+        const auto maxWidth = imageFormat.maximumWidth();
+        const bool hasMaxWidth = imageFormat.hasProperty(QTextFormat::ImageMaxWidth) && maxWidth.type() != QTextLength::VariableLength;
+
+        int effectiveMaxWidth = INT_MAX;
+        if (hasMaxWidth) {
+            if (maxWidth.type() == QTextLength::PercentageLength) {
+                effectiveMaxWidth = (doc->pageSize().width() - 2 * doc->documentMargin()) * maxWidth.value(100) / 100;
+            } else {
+                effectiveMaxWidth = maxWidth.rawValue();
+            }
+
+            width = qMin(effectiveMaxWidth, width);
+        }
+
         QSizeF size(width, height);
         if (!hasWidth || !hasHeight) {
             QVariant res = doc->resource(QTextDocument::ImageResource, QUrl(imageFormat.name()));
@@ -607,11 +621,17 @@ QSizeF QQuickTextImageHandler::intrinsicSize(
                 return size;
             }
             QSize imgSize = image.size();
+            if (imgSize.width()  > effectiveMaxWidth) {
+                // image is bigger than effectiveMaxWidth, scale it down
+                imgSize.setHeight(effectiveMaxWidth * imgSize.height() / (qreal) imgSize.width());
+                imgSize.setWidth(effectiveMaxWidth);
+            }
+
             if (!hasWidth) {
                 if (!hasHeight)
                     size.setWidth(imgSize.width());
                 else
-                    size.setWidth(qRound(height * (imgSize.width() / (qreal) imgSize.height())));
+                    size.setWidth(qMin(effectiveMaxWidth, qRound(height * (imgSize.width() / (qreal) imgSize.height()))));
             }
             if (!hasHeight) {
                 if (!hasWidth)
