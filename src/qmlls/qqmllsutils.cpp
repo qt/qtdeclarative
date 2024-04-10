@@ -1625,7 +1625,6 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
                  enumValue, findDefiningScopeForEnumerationKey(referrerScope, enumValue),
                  EnumeratorValueIdentifier
              };
-             return {};
          }
          Q_UNREACHABLE_RETURN({});
     }

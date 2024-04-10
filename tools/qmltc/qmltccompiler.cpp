@@ -425,7 +425,7 @@ void QmltcCompiler::compileType(
     current.handleOnCompleted.parameterList = { creator };
 
     if (documentRoot || inlineComponent) {
-        QmltcVariable initializer(
+        const QmltcVariable initializer(
             u"[[maybe_unused]] qxp::function_ref<void(%1&)>"_s.arg(current.propertyInitializer.name),
             u"initializer"_s,
             u"[](%1&){}"_s.arg(current.propertyInitializer.name));

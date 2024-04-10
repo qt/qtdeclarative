@@ -84,13 +84,13 @@ QQmlSA::Property LiteralBindingCheckBase::getProperty(const QString &propertyNam
     if (!QQmlSA::Binding::isLiteralBinding(binding.bindingType()))
         return {};
 
-    const QString unqualifiedPropertyName = [&propertyName]() {
+    const QString unqualifiedPropertyName = [&propertyName]() -> QString {
         if (auto idx = propertyName.lastIndexOf(u'.'); idx != -1 && idx != propertyName.size() - 1)
             return propertyName.sliced(idx + 1);
         return propertyName;
     }();
-    const auto property = bindingScope.property(unqualifiedPropertyName);
-    return property;
+
+    return bindingScope.property(unqualifiedPropertyName);
 }
 
 

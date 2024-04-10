@@ -1386,7 +1386,7 @@ void QQmlJSCodeGenerator::generate_GetOptionalLookup(int index, int offset)
 {
     INJECT_TRACE_INFO(generate_GetOptionalLookup);
 
-    auto accumulatorIn = m_state.accumulatorIn();
+    const QQmlJSRegisterContent accumulatorIn = m_state.accumulatorIn();
     QString accumulatorVarIn = m_state.accumulatorVariableIn;
 
     const auto &annotation = (*m_annotations)[currentInstructionOffset()];
