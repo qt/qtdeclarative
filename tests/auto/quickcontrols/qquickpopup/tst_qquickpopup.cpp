@@ -65,6 +65,7 @@ private slots:
     void activeFocusAfterExit();
     void activeFocusOnDelayedEnter();
     void activeFocusDespiteLowerStackingOrder();
+    void activeFocusItemAfterWindowInactive();
     void hover_data();
     void hover();
     void wheel_data();
@@ -952,6 +953,53 @@ void tst_QQuickPopup::activeFocusDespiteLowerStackingOrder()
     QVERIFY(popup2->isOpened());
     QTRY_VERIFY(!popup1->isVisible());
     QVERIFY(!popup1->hasActiveFocus());
+}
+
+void tst_QQuickPopup::activeFocusItemAfterWindowInactive()
+{
+    if (!hasWindowActivation())
+        QSKIP("Window activation is not supported");
+
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusAfterWindowInactive.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowFocused(window));
+
+    QQuickPopup *popup = helper.appWindow->property("popup").value<QQuickPopup*>();
+    QQuickButton *button = helper.appWindow->property("button").value<QQuickButton*>();
+    QVERIFY(popup);
+    QVERIFY(button);
+
+    popup->open();
+    QVERIFY(popup->isVisible());
+    QTRY_VERIFY(popup->isOpened());
+    QVERIFY(popup->hasActiveFocus());
+    QVERIFY(!button->hasActiveFocus());
+
+    popup->close();
+    QVERIFY(!popup->isVisible());
+    QTRY_VERIFY(!popup->isOpened());
+    QVERIFY(button->hasActiveFocus());
+    QCOMPARE(window->activeFocusItem(), button);
+
+    popup->open();
+    QVERIFY(popup->isVisible());
+    QTRY_VERIFY(popup->isOpened());
+
+    QQuickWindow newWindow;
+    newWindow.setTitle("newFocusWindow");
+    newWindow.show();
+    newWindow.requestActivate();
+    QVERIFY(QTest::qWaitForWindowFocused(&newWindow));
+
+    popup->close();
+    QCOMPARE(QGuiApplication::focusWindow(), &newWindow);
+
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowFocused(window));
+    QCOMPARE(window->activeFocusItem(), button);
 }
 
 void tst_QQuickPopup::hover_data()
