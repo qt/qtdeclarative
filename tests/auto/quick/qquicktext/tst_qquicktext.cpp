@@ -53,6 +53,7 @@ private slots:
     void wrap();
     void elide();
     void elideParentChanged();
+    void elideRelayoutAfterZeroWidth_data();
     void elideRelayoutAfterZeroWidth();
     void multilineElide_data();
     void multilineElide();
@@ -589,10 +590,19 @@ void tst_qquicktext::elideParentChanged()
     QCOMPARE(actualItemImageGrab, expectedItemImageGrab);
 }
 
+void tst_qquicktext::elideRelayoutAfterZeroWidth_data()
+{
+    QTest::addColumn<QByteArray>("fileName");
+
+    QTest::newRow("no_margins") << QByteArray("elideZeroWidth.qml");
+    QTest::newRow("with_margins") << QByteArray("elideZeroWidthWithMargins.qml");
+}
+
 void tst_qquicktext::elideRelayoutAfterZeroWidth()
 {
+    QFETCH(const QByteArray, fileName);
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("elideZeroWidth.qml"));
+    QQmlComponent component(&engine, testFileUrl(fileName.constData()));
     QScopedPointer<QObject> root(component.create());
     QVERIFY2(root, qPrintable(component.errorString()));
     QVERIFY(root->property("ok").toBool());
