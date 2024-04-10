@@ -71,4 +71,6 @@ Item {
     function fromDifferentFiles() {
         let x = bt.helloProperty + bt.helloFunction()
     }
+
+    property BaseType.MyBaseInlineComponent inlineCompFromDifferentFile
 }

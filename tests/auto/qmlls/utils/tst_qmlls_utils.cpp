@@ -1618,6 +1618,10 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
             << JSDefinitionsQml << 44 << 37 << JSDefinitionsQml << 18 << 14 << strlen("ffff");
     QTest::addRow("functionFromDifferentFile")
             << JSDefinitionsQml << 72 << 47 << BaseTypeQml << 25 << 14 << strlen("helloFunction");
+    QTest::addRow("componentFromFile")
+            << JSDefinitionsQml << 68 << 28 << BaseTypeQml << 6 << 1 << strlen("Item");
+    QTest::addRow("inlineComponentFromDifferentFile")
+            << JSDefinitionsQml << 75 << 27 << BaseTypeQml << 9 << 38 << strlen("Item");
 }
 
 void tst_qmlls_utils::findDefinitionFromLocation()
