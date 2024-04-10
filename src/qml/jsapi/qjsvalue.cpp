@@ -451,6 +451,7 @@ bool QJSValue::isCallable() const
     return QJSValuePrivate::asManagedType<FunctionObject>(this);
 }
 
+#if QT_DEPRECATED_SINCE(6, 9)
 /*!
   \deprecated [6.9]
   Returns true if this QJSValue is a variant value;
@@ -475,6 +476,7 @@ bool QJSValue::isVariant() const
             return true;
     return false;
 }
+#endif
 
 /*!
   Returns the string value of this QJSValue, as defined in
