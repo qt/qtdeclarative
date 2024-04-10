@@ -8,6 +8,7 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
+#include <QtQmlToolingSettings/private/qqmltoolingutils_p.h>
 #include <QtCore/qdiriterator.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonarray.h>
@@ -164,6 +165,17 @@ int main(int argv, char *argc[])
     parser.addOption(buildDirOption);
     settings.addOption(buildDir);
 
+    QString qmlImportPath = QStringLiteral(u"qml-import-path");
+    QCommandLineOption qmlImportPathOption(
+            QStringList() << "I", QLatin1String("Look for QML modules in the specified directory"),
+            qmlImportPath);
+    parser.addOption(qmlImportPathOption);
+
+    QCommandLineOption environmentOption(
+            QStringList() << "E",
+            QLatin1String("Use the QML_IMPORT_PATH environment variable to look for QML Modules"));
+    parser.addOption(environmentOption);
+
     QCommandLineOption writeDefaultsOption(
             QStringList() << "write-defaults",
             QLatin1String("Writes defaults settings to .qmlls.ini and exits (Warning: This "
@@ -232,49 +244,60 @@ int main(int argv, char *argc[])
         qmlServer.codeModel()->disableCMakeCalls();
     }
 
-    const QStringList envPaths =
-            qEnvironmentVariable("QMLLS_BUILD_DIRS").split(u',', Qt::SkipEmptyParts);
-    for (const QString &envPath : envPaths) {
-        QFileInfo info(envPath);
-        if (!info.exists()) {
-            qWarning() << "Argument" << buildDir << "passed via QMLLS_BUILD_DIRS does not exist.";
-        } else if (!info.isDir()) {
-            qWarning() << "Argument" << buildDir
-                       << "passed via QMLLS_BUILD_DIRS is not a directory.";
-        }
-    }
-
-    QStringList buildDirs;
     if (parser.isSet(buildDirOption)) {
-        buildDirs = parser.values(buildDirOption);
-        for (const QString &buildDir : buildDirs) {
-            QFileInfo info(buildDir);
-            if (!info.exists()) {
-                qWarning() << "Argument" << buildDir << "passed to --build-dir does not exist.";
-            } else if (!info.isDir()) {
-                qWarning() << "Argument" << buildDir << "passed to --build-dir is not a directory.";
-            }
-        }
-        qmlServer.codeModel()->setBuildPathsForRootUrl(QByteArray(), buildDirs);
-    }
+        const QStringList dirs =
+                QQmlToolingUtils::getAndWarnForInvalidDirsFromOption(parser, buildDirOption);
 
-    if (!buildDirs.isEmpty()) {
-        qInfo() << "Using the build directories passed via the --build-dir option:"
-                << buildDirs.join(", ");
-    } else if (!envPaths.isEmpty()) {
-        qInfo() << "Using the build directories passed via the QMLLS_BUILD_DIRS environment "
-                   "variable"
-                << buildDirs.join(", ");
+        qInfo().nospace().noquote()
+                << "Using build directories passed by -b: \"" << dirs.join(u"\", \""_s) << "\".";
+
+        qmlServer.codeModel()->setBuildPathsForRootUrl(QByteArray(), dirs);
+    } else if (QStringList dirsFromEnv =
+                       QQmlToolingUtils::getAndWarnForInvalidDirsFromEnv("QMLLS_BUILD_DIRS");
+               !dirsFromEnv.isEmpty()) {
+
+        // warn now at qmlls startup that those directories will be used later in qqmlcodemodel when
+        // searching for build folders.
+        qInfo().nospace().noquote() << "Using build directories passed from environment variable "
+                                       "\"QMLLS_BUILD_DIRS\": \""
+                                    << dirsFromEnv.join(u"\", \""_s) << "\".";
+
     } else {
         qInfo() << "Using the build directories found in the .qmlls.ini file. Your build folder "
                    "might not be found if no .qmlls.ini files are present in the root source "
                    "folder.";
     }
-
-    if (buildDirs.isEmpty() && envPaths.isEmpty()) {
-        qInfo() << "Build directory path omitted: Your source folders will be searched for "
-                   ".qmlls.ini files.";
+    QStringList importPaths{ QLibraryInfo::path(QLibraryInfo::QmlImportsPath) };
+    if (parser.isSet(qmlImportPathOption)) {
+        const QStringList pathsFromOption =
+                QQmlToolingUtils::getAndWarnForInvalidDirsFromOption(parser, qmlImportPathOption);
+        qInfo().nospace().noquote() << "Using import directories passed by -I: \""
+                                    << pathsFromOption.join(u"\", \""_s) << "\".";
+        importPaths << pathsFromOption;
     }
+    if (parser.isSet(environmentOption)) {
+        if (const QStringList dirsFromEnv =
+                    QQmlToolingUtils::getAndWarnForInvalidDirsFromEnv(u"QML_IMPORT_PATH"_s);
+            !dirsFromEnv.isEmpty()) {
+            qInfo().nospace().noquote()
+                    << "Using import directories passed from environment variable "
+                       "\"QML_IMPORT_PATH\": \""
+                    << dirsFromEnv.join(u"\", \""_s) << "\".";
+            importPaths << dirsFromEnv;
+        }
+
+        if (const QStringList dirsFromEnv2 =
+                    QQmlToolingUtils::getAndWarnForInvalidDirsFromEnv(u"QML2_IMPORT_PATH"_s);
+            !dirsFromEnv2.isEmpty()) {
+            qInfo().nospace().noquote()
+                    << "Using import directories passed from the deprecated environment variable "
+                       "\"QML2_IMPORT_PATH\": \""
+                    << dirsFromEnv2.join(u"\", \""_s) << "\".";
+            importPaths << dirsFromEnv2;
+        }
+    }
+    qmlServer.codeModel()->setImportPaths(importPaths);
+
     StdinReader r;
     QObject::connect(&r, &StdinReader::receivedData,
                      qmlServer.server(), &QLanguageServer::receiveData);

@@ -101,6 +101,8 @@ public:
     QStringList buildPathsForRootUrl(const QByteArray &url);
     QStringList buildPathsForFileUrl(const QByteArray &url);
     void setBuildPathsForRootUrl(QByteArray url, const QStringList &paths);
+    QStringList importPaths() const { return m_importPaths; };
+    void setImportPaths(const QStringList &paths) { m_importPaths = paths; };
     void removeRootUrls(const QList<QByteArray> &urls);
     QQmlToolingSettings *settings();
     QStringList findFilePathsFromFileNames(const QStringList &fileNames) const;
@@ -136,6 +138,7 @@ private:
     int m_indexInProgressCost = 0;
     int m_indexDoneCost = 0;
     int m_nUpdateInProgress = 0;
+    QStringList m_importPaths;
     QQmlJS::Dom::DomItem m_currentEnv;
     QQmlJS::Dom::DomItem m_validEnv;
     QByteArray m_lastOpenDocumentUpdated;

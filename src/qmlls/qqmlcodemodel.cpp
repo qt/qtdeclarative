@@ -83,15 +83,14 @@ worker thread (or more) that work on it exist.
 
 QQmlCodeModel::QQmlCodeModel(QObject *parent, QQmlToolingSettings *settings)
     : QObject { parent },
+      m_importPaths(QLibraryInfo::path(QLibraryInfo::QmlImportsPath)),
       m_currentEnv(std::make_shared<DomEnvironment>(
-              QStringList(QLibraryInfo::path(QLibraryInfo::QmlImportsPath)),
-              DomEnvironment::Option::SingleThreaded,
+              m_importPaths, DomEnvironment::Option::SingleThreaded,
               DomCreationOptions{} | DomCreationOption::WithRecovery
                       | DomCreationOption::WithScriptExpressions
                       | DomCreationOption::WithSemanticAnalysis)),
       m_validEnv(std::make_shared<DomEnvironment>(
-              QStringList(QLibraryInfo::path(QLibraryInfo::QmlImportsPath)),
-              DomEnvironment::Option::SingleThreaded,
+              m_importPaths, DomEnvironment::Option::SingleThreaded,
               DomCreationOptions{} | DomCreationOption::WithRecovery
                       | DomCreationOption::WithScriptExpressions
                       | DomCreationOption::WithSemanticAnalysis)),
@@ -594,7 +593,7 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
         m_rebuildRequired = false;
     }
 
-    loadPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
+    loadPaths.append(m_importPaths);
     if (std::shared_ptr<DomEnvironment> newCurrentPtr = newCurrent.ownerAs<DomEnvironment>()) {
         newCurrentPtr->setLoadPaths(loadPaths);
     }
