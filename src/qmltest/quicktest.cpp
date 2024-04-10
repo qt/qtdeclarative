@@ -340,7 +340,7 @@ private:
 
     TestCaseEnumerationResult enumerateTestCases(
             const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-            const Object *object = nullptr)
+            const QV4::CompiledData::Object *object = nullptr)
     {
         QQmlType testCaseType;
         for (quint32 i = 0, count = compilationUnit->importCount(); i < count; ++i) {
@@ -362,7 +362,7 @@ private:
 
         if (!object) // Start at root of compilation unit if not enumerating a specific child
             object = compilationUnit->objectAt(0);
-        if (object->hasFlag(Object::IsInlineComponentRoot))
+        if (object->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot))
             return result;
 
         if (const auto superTypeUnit = compilationUnit->resolvedTypes.value(
@@ -409,7 +409,7 @@ private:
 
         for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
             if (binding->type() == QV4::CompiledData::Binding::Type_Object) {
-                const Object *child = compilationUnit->objectAt(binding->value.objectIndex);
+                const QV4::CompiledData::Object *child = compilationUnit->objectAt(binding->value.objectIndex);
                 result << enumerateTestCases(compilationUnit, child);
             }
         }
