@@ -39,10 +39,8 @@ public:
     QQmlListProperty<QQuickMenu> menus();
     QQmlListProperty<QObject> contentData();
 
-    QQuickItem *beginCreateItem(QQuickMenu *menu);
-    void completeCreateItem();
-
-    QQuickItem *createItem(QQuickMenu *menu);
+    QQuickItem *createItemFromDelegate();
+    QQuickMenuBarItem *createMenuBarItem(QQuickMenu *menu);
 
     bool isCurrentMenuOpen();
     void openCurrentMenu();
@@ -57,7 +55,7 @@ public:
     void onItemTriggered();
     void onMenuAboutToHide();
 
-    void insertMenu(int index, QQuickMenu *menu, QQuickItem *delegateItem);
+    void insertMenu(int index, QQuickMenu *menu, QQuickMenuBarItem *delegateItem);
     QQuickMenu *takeMenu(int index);
     void insertNativeMenu(QQuickMenu *menu);
     void removeNativeMenu(QQuickMenu *menu);

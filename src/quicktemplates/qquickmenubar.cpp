@@ -48,12 +48,12 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcMenuBar, "qt.quick.controls.menubar")
 
-QQuickItem *QQuickMenuBarPrivate::beginCreateItem(QQuickMenu *menu)
+static const char* kCreatedFromDelegate = "_qt_createdFromDelegate";
+
+QQuickItem *QQuickMenuBarPrivate::createItemFromDelegate()
 {
     Q_Q(QQuickMenuBar);
-    if (!delegate)
-        return nullptr;
-
+    Q_ASSERT(delegate);
     QQmlContext *context = delegate->creationContext();
     if (!context)
         context = qmlContext(q);
@@ -65,26 +65,45 @@ QQuickItem *QQuickMenuBarPrivate::beginCreateItem(QQuickMenu *menu)
         return nullptr;
     }
 
-    if (QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(item))
-        menuBarItem->setMenu(menu);
     QQml_setParent_noEvent(item, q);
-
-    return item;
-}
-
-void QQuickMenuBarPrivate::completeCreateItem()
-{
-    if (!delegate)
-        return;
-
     delegate->completeCreate();
+
+    return item;
 }
 
-QQuickItem *QQuickMenuBarPrivate::createItem(QQuickMenu *menu)
+QQuickMenuBarItem *QQuickMenuBarPrivate::createMenuBarItem(QQuickMenu *menu)
 {
-    QQuickItem *item = beginCreateItem(menu);
-    completeCreateItem();
-    return item;
+    Q_Q(QQuickMenuBar);
+
+    QQuickMenuBarItem *menuBarItem = nullptr;
+    if (delegate) {
+        QQuickItem *item = createItemFromDelegate();
+        menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+        if (!menuBarItem) {
+            qmlWarning(q) << "cannot insert menu: the delegate is not a MenuBarItem.";
+            delete item;
+        }
+    }
+
+    if (!menuBarItem) {
+        // When we fail to create a delegate item, create a hidden placeholder
+        // instead. This is needed, since we store the menus inside the container
+        // using MenuBarItem. And without a MenuBarItem, we would therefore lose
+        // the menu, even if the delegate is changed later.
+        qCDebug(lcMenuBar) << "creating hidden placeholder MenuBarItem for:" << menu->title();
+        menuBarItem = new QQuickMenuBarItem(q);
+        menuBarItem->setParentItem(q);
+        menuBarItem->setVisible(false);
+    }
+
+    menuBarItem->setMenu(menu);
+
+    // Tag the menuBarItem, so that we know which container items to change if the
+    // delegate is changed. This is needed since you can add MenuBarItems directly
+    // to the menu bar, which should not change when the delegate changes.
+    menuBarItem->setProperty(kCreatedFromDelegate, true);
+
+    return menuBarItem;
 }
 
 bool QQuickMenuBarPrivate::isCurrentMenuOpen()
@@ -249,7 +268,7 @@ void QQuickMenuBarPrivate::contentData_append(QQmlListProperty<QObject> *prop, Q
     auto menuBarPriv = QQuickMenuBarPrivate::get(menuBar);
 
     if (auto *menu = qobject_cast<QQuickMenu *>(obj)) {
-        QQuickItem *delegateItem = menuBarPriv->createItem(menu);
+        QQuickMenuBarItem *delegateItem = menuBarPriv->createMenuBarItem(menu);
         menuBarPriv->insertMenu(menuBar->count(), menu, delegateItem);
         QQuickContainerPrivate::contentData_append(prop, delegateItem);
         return;
@@ -402,26 +421,11 @@ void QQuickMenuBarPrivate::syncMenuBarItemVisibilty(QQuickMenuBarItem *menuBarIt
     }
 }
 
-void QQuickMenuBarPrivate::insertMenu(int index, QQuickMenu *menu, QQuickItem *delegateItem)
+void QQuickMenuBarPrivate::insertMenu(int index, QQuickMenu *menu, QQuickMenuBarItem *menuBarItem)
 {
     Q_Q(QQuickMenuBar);
     if (!menu) {
         qmlWarning(q) << "cannot insert menu: menu is null.";
-        return;
-    }
-    if (!delegateItem) {
-        // To be 100% cross-platform, we require that a delegate item is successfully
-        // created in order to add a menu to the menubar, even if we use a native
-        // menubar. Otherwise an application can end up having a menubar on platforms
-        // where native menubars are available, but fail to show one on other platforms.
-        qmlWarning(q) << "cannot insert menu: could not create an item from the delegate.";
-        return;
-    }
-    QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(delegateItem);
-    if (!menuBarItem) {
-        // We require the delegate to be a MenuBarItem, since we don't store the
-        // menus directly in the container, but indirectly using MenuBarItem.menu.
-        qmlWarning(q) << "cannot insert menu: the delegate is not a MenuBarItem.";
         return;
     }
 
@@ -435,7 +439,7 @@ void QQuickMenuBarPrivate::insertMenu(int index, QQuickMenu *menu, QQuickItem *d
     // Always insert menu into the container, even when using a native
     // menubar, so that container API such as 'count' and 'itemAt'
     // continues to work as expected.
-    q->insertItem(index, delegateItem);
+    q->insertItem(index, menuBarItem);
 
     // Create or remove a native (QPlatformMenu) menu. Note that we should only create
     // a native menu if it's supposed to be visible in the menu bar.
@@ -627,6 +631,21 @@ void QQuickMenuBar::setDelegate(QQmlComponent *delegate)
         return;
 
     d->delegate = delegate;
+
+    for (int i = count() - 1; i >= 0; --i) {
+        auto item = itemAt(i);
+        if (!item->property(kCreatedFromDelegate).toBool())
+            continue;
+
+        QQuickMenuBarItem *menuBarItem = static_cast<QQuickMenuBarItem *>(item);
+        if (QQuickMenu *menu = menuBarItem->menu()) {
+            removeMenu(menu);
+            d->insertMenu(i, menu, d->createMenuBarItem(menu));
+        } else {
+            removeItem(menuBarItem);
+        }
+    }
+
     emit delegateChanged();
 }
 
@@ -657,7 +676,7 @@ void QQuickMenuBar::addMenu(QQuickMenu *menu)
         return;
     }
 
-    d->insertMenu(count(), menu, d->createItem(menu));
+    d->insertMenu(count(), menu, d->createMenuBarItem(menu));
 }
 
 /*!
@@ -673,7 +692,7 @@ void QQuickMenuBar::insertMenu(int index, QQuickMenu *menu)
         return;
     }
 
-    d->insertMenu(index, menu, d->createItem(menu));
+    d->insertMenu(index, menu, d->createMenuBarItem(menu));
 }
 
 /*!

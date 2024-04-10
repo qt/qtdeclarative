@@ -61,6 +61,10 @@ private slots:
     void applicationWindow();
     void menubarAsHeader_data();
     void menubarAsHeader();
+    void changeDelegate_data();
+    void changeDelegate();
+    void invalidDelegate_data();
+    void invalidDelegate();
 
 private:
     static bool hasWindowActivation();
@@ -1411,6 +1415,181 @@ void tst_qquickmenubar::menubarAsHeader()
         // Not using native menubar
         QCOMPARE(contents->height(), window->height() - menuBar->height());
     }
+}
+
+void tst_qquickmenubar::changeDelegate_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::newRow("not native") << false;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::changeDelegate()
+{
+    // Check that you can change the delegate, and that this
+    // will produce new delegate items, except for the MenuBarItem
+    // that is created inline in the QML code, and hence doesn't use the delegate.
+    QFETCH(bool, native);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("nodelegate.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    QCOMPARE(menuBar->count(), 3);
+
+    QQmlComponent delegate1(&engine);
+    delegate1.setData("import QtQuick.Controls; MenuBarItem {}", QUrl());
+    menuBar->setDelegate(&delegate1);
+
+    auto menuBarItem0_v1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(0));
+    auto menuBarItem1_v1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(1));
+    auto menuBarItem2_v1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(2));
+    QVERIFY(menuBarItem0_v1);
+    QVERIFY(menuBarItem1_v1);
+    QVERIFY(menuBarItem2_v1);
+    QVERIFY(menuBarItem0_v1->isVisible());
+    QVERIFY(menuBarItem1_v1->isVisible());
+    QVERIFY(menuBarItem2_v1->isVisible());
+    QVERIFY(menuBarItem0_v1->menu());
+    QVERIFY(menuBarItem1_v1->menu());
+    QVERIFY(menuBarItem2_v1->menu());
+    QCOMPARE(menuBar->menuAt(0), menuBarItem0_v1->menu());
+    QCOMPARE(menuBar->menuAt(1), menuBarItem1_v1->menu());
+    QCOMPARE(menuBar->menuAt(2), menuBarItem2_v1->menu());
+
+    // Change the delegate
+    QQmlComponent delegate2(&engine);
+    delegate2.setData("import QtQuick.Controls; MenuBarItem {}", QUrl());
+    menuBar->setDelegate(&delegate2);
+
+    auto menuBarItem0_v2 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(0));
+    auto menuBarItem1_v2 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(1));
+    auto menuBarItem2_v2 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(2));
+    QVERIFY(menuBarItem0_v2);
+    QVERIFY(menuBarItem1_v2);
+    QVERIFY(menuBarItem2_v2);
+
+    // The delegate items should now have changed, except for
+    // menuBarItem2, which is not created from the delegate.
+    QVERIFY(menuBarItem0_v2 != menuBarItem0_v1);
+    QVERIFY(menuBarItem1_v2 != menuBarItem1_v1);
+    QCOMPARE(menuBarItem2_v2, menuBarItem2_v1);
+
+    QVERIFY(menuBarItem0_v2->isVisible());
+    QVERIFY(menuBarItem1_v2->isVisible());
+    QVERIFY(menuBarItem2_v2->isVisible());
+    QVERIFY(menuBarItem0_v2->menu());
+    QVERIFY(menuBarItem1_v2->menu());
+    QVERIFY(menuBarItem2_v2->menu());
+    QCOMPARE(menuBar->menuAt(0), menuBarItem0_v2->menu());
+    QCOMPARE(menuBar->menuAt(1), menuBarItem1_v2->menu());
+    QCOMPARE(menuBar->menuAt(2), menuBarItem2_v2->menu());
+}
+
+void tst_qquickmenubar::invalidDelegate_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::addColumn<bool>("useInvalidDelegate");
+    QTest::newRow("not native, no delegate") << false << false;
+    QTest::newRow("not native, invalid delegate") << false << true;
+    if (nativeMenuBarSupported) {
+        QTest::newRow("native, no delegate") << true << false;
+        QTest::newRow("native, invalid delegate") << true << true;
+    }
+}
+
+void tst_qquickmenubar::invalidDelegate()
+{
+    // Check that QQuickMenuBar can handle a delegate that is either null, or not a
+    // MenuBarItem. The former won't produce any warnings, but the latter should.
+    // In either case, this will not produce visible menus in the menu bar, except
+    // for the menus that are wrapped inside inline MenuBarItems, and therefore
+    // not using the delegate.
+    // To ensure that we still bookkeep the menus for the failing delegates, in case
+    // the delegate changes later, and that functions such as menuAt(index) continues
+    // to work, hidden placeholder MenuBarItems will be used instead.
+    QFETCH(bool, native);
+    QFETCH(bool, useInvalidDelegate);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+
+    if (useInvalidDelegate) {
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot insert menu.*"));
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot insert menu.*"));
+    }
+
+    if (useInvalidDelegate)
+        engine.load(testFileUrl("invaliddelegate.qml"));
+    else
+        engine.load(testFileUrl("nodelegate.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    QCOMPARE(menuBar->count(), 3);
+
+    // Menu 2 is an inline MenuBarItem, and is unaffected by the delegate
+    auto inlineMenuBarItem = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(2));
+
+    for (int i = 0; i <= 2; ++i) {
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(i));
+        QVERIFY(menuBarItem);
+        auto menu = menuBarItem->menu();
+        QVERIFY(menu);
+        QCOMPARE(menu, menuBar->menuAt(i));
+        if (menuBarItem == inlineMenuBarItem) {
+            QVERIFY(menuBarItem->isVisible());
+            QCOMPARE(bool(QQuickMenuPrivate::get(menu)->maybeNativeHandle()), native);
+        } else {
+            // Menus created from the invalid delegate should be hidden. They should also
+            // not have a native handle, since they should not be in a native menu bar.
+            QVERIFY(!menuBarItem->isVisible());
+            QVERIFY(!bool(QQuickMenuPrivate::get(menu)->maybeNativeHandle()));
+        }
+    }
+
+    // Add a new menu. This one should also be inserted into a placeholder MenuBarItem
+    if (useInvalidDelegate)
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot insert menu.*"));
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick.Controls; Menu { }", QUrl());
+    auto menu = qobject_cast<QQuickMenu *>(component.create());
+    QVERIFY(menu);
+
+    menuBar->addMenu(menu);
+    QCOMPARE(menuBar->count(), 4);
+    auto menuBarItem3 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(3));
+    QVERIFY(menuBarItem3);
+    QVERIFY(!menuBarItem3->isVisible());
+    QCOMPARE(menuBar->menuAt(3), menu);
+    QCOMPARE(menuBar->menuAt(3), menuBarItem3->menu());
+    QVERIFY(!QQuickMenuPrivate::get(menu)->maybeNativeHandle());
+
+    // Finally, set a valid delegate. This will make all MenuBarItems visible.
+    QQmlComponent delegate(&engine);
+    delegate.setData("import QtQuick.Controls; MenuBarItem { }", QUrl());
+    menuBar->setDelegate(&delegate);
+
+    for (int i = 0; i <= 3; ++i) {
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(i));
+        QVERIFY(menuBarItem);
+        QVERIFY(menuBarItem->isVisible());
+        auto menu = menuBarItem->menu();
+        QVERIFY(menu);
+        QCOMPARE(menu, menuBar->menuAt(i));
+        QCOMPARE(bool(QQuickMenuPrivate::get(menu)->maybeNativeHandle()), native);
+    }
+
+    // inlineMenuBarItem was not created from a delegate, and shouldn't change
+    QCOMPARE(qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(2)), inlineMenuBarItem);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)
