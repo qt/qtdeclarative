@@ -1476,7 +1476,7 @@ Returns a \l Component object created for the type specified by \a moduleUri and
 import QtQuick
 QtObject {
     id: root
-    property Component myComponent: Qt.createComponent(Rectangle, root)
+    property Component myComponent: Qt.createComponent("QtQuick", "Rectangle", Component.Asynchronous, root)
 }
 \endqml
 This overload mostly behaves as the \c url based version, but can be used
