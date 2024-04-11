@@ -2025,6 +2025,7 @@ void QQuickPathView::refill()
                     startPos = d->highlightRangeStart;
                 // With no items, then "end" is just off the top so we populate via append
                 endIdx = (qRound(d->modelCount - d->offset) - 1) % d->modelCount;
+                endIdx = qMax(-1, endIdx); // endIdx shouldn't be smaller than -1
                 endPos = d->positionOfIndex(endIdx);
             }
             //Append
