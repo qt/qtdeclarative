@@ -61,6 +61,7 @@ public:
     QQuickMenu *takeMenu(int index);
     void insertNativeMenu(QQuickMenu *menu);
     void removeNativeMenu(QQuickMenu *menu);
+    void syncMenuBarItemVisibilty(QQuickMenuBarItem *menuBarItem);
 
     QWindow *window() const;
     int menuIndex(QQuickMenu *menu) const;

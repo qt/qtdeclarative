@@ -435,6 +435,22 @@ void QQuickMenuPrivate::syncWithNativeMenu()
     qCDebug(lcNativeMenus) << "... finished syncing" << q;
 }
 
+void QQuickMenuPrivate::removeNativeMenu()
+{
+    // Remove the native menu, including it's native menu items
+    Q_Q(QQuickMenu);
+    const int qtyItemsToRemove = nativeItems.size();
+    if (qtyItemsToRemove != 0)
+        Q_ASSERT(q->count() == qtyItemsToRemove);
+    for (int i = 0; i < qtyItemsToRemove; ++i)
+        removeNativeItem(0);
+    Q_ASSERT(nativeItems.isEmpty());
+
+    // removeNativeItem will take care of destroying sub-menus and resetting their native data,
+    // but as the root menu, we have to take care of our own.
+    resetNativeData();
+}
+
 void QQuickMenuPrivate::syncWithUseNativeMenu()
 {
     Q_Q(QQuickMenu);
@@ -444,18 +460,9 @@ void QQuickMenuPrivate::syncWithUseNativeMenu()
         return;
 
     if (maybeNativeHandle() && !useNativeMenu()) {
-        // Switch to a non-native menu by removing the native items.
+        // Switch to a non-native menu by removing the native menu and its native items.
         // Note that there's nothing to do if a native menu was requested but we failed to create it.
-        const int qtyItemsToRemove = nativeItems.size();
-        if (qtyItemsToRemove != 0)
-            Q_ASSERT(q->count() == qtyItemsToRemove);
-        for (int i = 0; i < qtyItemsToRemove; ++i)
-            removeNativeItem(0);
-        Q_ASSERT(nativeItems.isEmpty());
-
-        // removeNativeItem will take care of destroying sub-menus and resetting their native data,
-        // but as the root menu, we have to take care of our own.
-        resetNativeData();
+        removeNativeMenu();
     } else if (useNativeMenu()) {
         Q_ASSERT(nativeItems.isEmpty());
         // Try to create a native menu.

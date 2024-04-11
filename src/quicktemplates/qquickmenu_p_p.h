@@ -51,6 +51,7 @@ public:
     QQuickMenu *rootMenu() const;
     bool useNativeMenu() const;
     bool createNativeMenu();
+    void removeNativeMenu();
     void syncWithNativeMenu();
     void syncWithUseNativeMenu();
     static void recursivelyDestroyNativeSubMenus(QQuickMenu *menu);

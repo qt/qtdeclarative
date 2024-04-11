@@ -45,6 +45,8 @@ private slots:
     void addRemoveMenuFromQml();
     void insert_data();
     void insert();
+    void showAndHideMenuBarItems_data();
+    void showAndHideMenuBarItems();
     void removeMenuThatIsOpen();
     void addRemoveExistingMenus_data();
     void addRemoveExistingMenus();
@@ -938,6 +940,69 @@ void tst_qquickmenubar::insert()
     menuBar->insertMenu(2, menu2.data());
     QCOMPARE(menuBar->count(), initialMenuCount + 2);
     QCOMPARE(menuBar->menuAt(2), menu2.data());
+}
+
+void tst_qquickmenubar::showAndHideMenuBarItems_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::newRow("not native") << false;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::showAndHideMenuBarItems()
+{
+    // Check that you can toggle MenuBarItem.visible to show and hide menus in the
+    // menu bar. Note that this is not the same as setting Menu.visible, which will
+    // instead open or close the menus.
+    QFETCH(bool, native);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("showandhide.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    QCOMPARE(menuBar->count(), 4);
+
+    auto menuBarItem0 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(0));
+    auto menuBarItem1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(1));
+    auto menuBarItem2 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(2));
+    auto menuBarItem3 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(3));
+
+    // Initially, the three first MenuBarItems are visible, but the 4th is hidden
+    QVERIFY(menuBarItem0->isVisible());
+    QVERIFY(menuBarItem1->isVisible());
+    QVERIFY(menuBarItem2->isVisible());
+    QVERIFY(!menuBarItem3->isVisible());
+
+    // Native and visible QQuickMenus should be backed by
+    // QPlatformMenus. Otherwise the handle should be nullptr.
+    QCOMPARE(bool(QQuickMenuPrivate::get(menuBarItem0->menu())->maybeNativeHandle()), native);
+    QCOMPARE(bool(QQuickMenuPrivate::get(menuBarItem1->menu())->maybeNativeHandle()), native);
+    QCOMPARE(bool(QQuickMenuPrivate::get(menuBarItem2->menu())->maybeNativeHandle()), native);
+    QVERIFY(!QQuickMenuPrivate::get(menuBarItem3->menu())->maybeNativeHandle());
+
+    // Make the hidden MenuBarItem visible
+    menuBarItem3->setVisible(true);
+    QCOMPARE(bool(QQuickMenuPrivate::get(menuBarItem3->menu())->maybeNativeHandle()), native);
+    QCOMPARE(menuBar->count(), 4);
+    // Hide it again
+    menuBarItem3->setVisible(false);
+    QVERIFY(!QQuickMenuPrivate::get(menuBarItem3->menu())->maybeNativeHandle());
+    QCOMPARE(menuBar->count(), 4);
+
+    // Toggle the visibility of a MenuBarItem created from the
+    // delegate, which is also initially visible.
+    menuBarItem0->setVisible(false);
+    QVERIFY(!QQuickMenuPrivate::get(menuBarItem0->menu())->maybeNativeHandle());
+    QCOMPARE(menuBar->count(), 4);
+    // Hide it again
+    menuBarItem0->setVisible(true);
+    QCOMPARE(bool(QQuickMenuPrivate::get(menuBarItem0->menu())->maybeNativeHandle()), native);
+    QCOMPARE(menuBar->count(), 4);
 }
 
 void tst_qquickmenubar::removeMenuThatIsOpen()

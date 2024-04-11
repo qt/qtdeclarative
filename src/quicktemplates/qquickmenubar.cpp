@@ -335,32 +335,36 @@ void QQuickMenuBarPrivate::insertNativeMenu(QQuickMenu *menu)
     Q_ASSERT(handle);
     Q_ASSERT(menu);
 
-    QQuickMenu *insertBefore = nullptr;
     QPlatformMenu *insertBeforeHandle = nullptr;
 
-    // This function assumes that the QQuickMenuBarItem that
-    // corresponds to \a menu has already been added to the container
-    // at the correct index. So we search for it, to determine where to
-    // insert it in the native menubar.
+    // This function assumes that the QQuickMenuBarItem that corresponds to \a menu
+    // has already been added to the container at the correct index. So we search for
+    // it, to determine where to insert it in the native menubar. Since the QPA API
+    // expects a pointer to the QPlatformMenu that comes after it, we need to search
+    // for that one as well, since some MenuBarItems in the container can be hidden.
     bool foundInContainer = false;
     for (int i = 0; i < q->count(); ++i) {
         if (q->menuAt(i) != menu)
             continue;
-
         foundInContainer = true;
-        if (i < q->count() - 1) {
-            insertBefore = q->menuAt(i + 1);
-            insertBeforeHandle = QQuickMenuPrivate::get(insertBefore)->nativeHandle();
+
+        for (int j = i + 1; j < q->count(); ++j) {
+            insertBeforeHandle = QQuickMenuPrivate::get(q->menuAt(j))->maybeNativeHandle();
+            if (insertBeforeHandle)
+                break;
         }
+
         break;
     }
 
     Q_ASSERT(foundInContainer);
-    qCDebug(lcMenuBar) << "insert native menu:" << menu << menu->title()
-                       << "before:" << insertBefore << (insertBefore ? insertBefore->title() : QString{});
-
     QQuickMenuPrivate *menuPrivate = QQuickMenuPrivate::get(menu);
-    handle->insertMenu(menuPrivate->nativeHandle(), insertBeforeHandle);
+    if (QPlatformMenu *menuHandle = menuPrivate->nativeHandle()) {
+        qCDebug(lcMenuBar) << "insert native menu:" << menu->title() << menuHandle << "before:" << insertBeforeHandle;
+        handle->insertMenu(menuPrivate->nativeHandle(), insertBeforeHandle);
+    } else {
+        qmlWarning(q) << "failed to create native menu for:" << menu->title();
+    }
 }
 
 void QQuickMenuBarPrivate::removeNativeMenu(QQuickMenu *menu)
@@ -374,6 +378,28 @@ void QQuickMenuBarPrivate::removeNativeMenu(QQuickMenu *menu)
 
     qCDebug(lcMenuBar) << "remove native menu:" << menu << menu->title();
     handle->removeMenu(menuPrivate->nativeHandle());
+    menuPrivate->removeNativeMenu();
+}
+
+void QQuickMenuBarPrivate::syncMenuBarItemVisibilty(QQuickMenuBarItem *menuBarItem)
+{
+    if (!handle) {
+        // We only need to update visibility on native menu bar items
+        return;
+    }
+
+    QQuickMenu *menu = menuBarItem->menu();
+    if (!menu)
+        return;
+    QQuickMenuPrivate *menuPrivate = QQuickMenuPrivate::get(menu);
+
+    if (menuBarItem->isVisible()) {
+        Q_ASSERT(!menuPrivate->maybeNativeHandle());
+        insertNativeMenu(menu);
+    } else {
+        if (menuPrivate->maybeNativeHandle())
+            removeNativeMenu(menu);
+    }
 }
 
 void QQuickMenuBarPrivate::insertMenu(int index, QQuickMenu *menu, QQuickItem *delegateItem)
@@ -391,22 +417,41 @@ void QQuickMenuBarPrivate::insertMenu(int index, QQuickMenu *menu, QQuickItem *d
         qmlWarning(q) << "cannot insert menu: could not create an item from the delegate.";
         return;
     }
-    if (!qobject_cast<QQuickMenuBarItem *>(delegateItem)) {
+    QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(delegateItem);
+    if (!menuBarItem) {
         // We require the delegate to be a MenuBarItem, since we don't store the
         // menus directly in the container, but indirectly using MenuBarItem.menu.
         qmlWarning(q) << "cannot insert menu: the delegate is not a MenuBarItem.";
         return;
     }
 
-    QQuickMenuPrivate::get(menu)->menuBar = q;
+    auto menuPrivate = QQuickMenuPrivate::get(menu);
+    menuPrivate->menuBar = q;
+
+    QObject::connect(menuBarItem, &QQuickMenuBarItem::visibleChanged, [this, menuBarItem]{
+        syncMenuBarItemVisibilty(menuBarItem);
+    });
 
     // Always insert menu into the container, even when using a native
     // menubar, so that container API such as 'count' and 'itemAt'
     // continues to work as expected.
     q->insertItem(index, delegateItem);
 
-    if (handle)
-        insertNativeMenu(menu);
+    // Create or remove a native (QPlatformMenu) menu. Note that we should only create
+    // a native menu if it's supposed to be visible in the menu bar.
+    if (menuBarItem->isVisible()) {
+        if (handle)
+            insertNativeMenu(menu);
+    } else {
+        if (menuPrivate->maybeNativeHandle()) {
+            // If the menu was added from an explicit call to addMenu(m), it will have been
+            // created before we enter here. And in that case, QQuickMenuBar::useNativeMenu(m)
+            // was never called, and a QPlatformMenu might have been created for it. In that
+            // case, we remove it again now, since the menu is not supposed to be visible in
+            // the menu bar.
+            menuPrivate->removeNativeMenu();
+        }
+    }
 }
 
 QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
@@ -430,7 +475,10 @@ QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
     // it (at least if it's non-native).
     menu->dismiss();
 
-    if (handle)
+    if (item == currentItem)
+        activateItem(nullptr);
+
+    if (QQuickMenuPrivate::get(menu)->maybeNativeHandle())
         removeNativeMenu(menu);
 
     removeItem(index, item);
@@ -442,6 +490,7 @@ QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
     item->deleteLater();
 
     QQuickMenuPrivate::get(menu)->menuBar = nullptr;
+    menuBarItem->disconnect(q);
 
     return menu;
 }
@@ -506,8 +555,10 @@ void QQuickMenuBarPrivate::createNativeMenuBar()
     // Add all the native menus. We need to do this right-to-left
     // because of the QPA API (insertBefore).
     for (int i = q->count() - 1; i >= 0; --i) {
-        if (QQuickMenu *menu = q->menuAt(i))
-            insertNativeMenu(menu);
+        if (QQuickMenu *menu = q->menuAt(i)) {
+            if (useNativeMenu(menu))
+                insertNativeMenu(menu);
+        }
     }
 
     // Hide the non-native menubar and set it's height to 0. The
