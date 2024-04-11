@@ -100,6 +100,14 @@ struct QQmlStringForeign
     QML_FOREIGN(QString)
 };
 
+struct QQmlAnyStringViewForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_EXTENDED_JAVASCRIPT(String)
+    QML_FOREIGN(QAnyStringView)
+};
+
 struct QQmlBoolForeign
 {
     Q_GADGET
