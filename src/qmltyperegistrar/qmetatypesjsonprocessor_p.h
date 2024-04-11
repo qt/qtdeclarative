@@ -178,7 +178,7 @@ public:
 
     bool isEmpty() const { return d == &s_empty; }
 
-    QAnyStringView inputFile() const { return d->inputFile; }
+    QString inputFile() const { return d->inputFile; }
     QAnyStringView className() const { return d->className; }
     QAnyStringView qualifiedClassName() const { return d->qualifiedClassName; }
     const BaseType::Container &superClasses() const { return d->superClasses; }
@@ -239,7 +239,18 @@ private:
         NamespaceRegistration
     };
 
-    static RegistrationMode qmlTypeRegistrationMode(const MetaType &classDef);
+    struct PreProcessResult {
+        QAnyStringView foreignPrimitive;
+        RegistrationMode mode;
+    };
+
+    struct PotentialPrimitiveType {
+        QAnyStringView name;
+        QString file;
+    };
+
+    enum class PopulateMode { No, Yes };
+    static PreProcessResult preProcess(const MetaType &classDef, PopulateMode populateMode);
     void addRelatedTypes();
 
     void sortTypes(QVector<MetaType> &types);
@@ -247,8 +258,14 @@ private:
     void processTypes(const QCborMap &types);
     void processForeignTypes(const QCborMap &types);
 
+    bool isPrimitive(QAnyStringView type) const
+    {
+        return std::binary_search(m_primitiveTypes.begin(), m_primitiveTypes.end(), type);
+    }
+
     QList<QString> m_includes;
     QList<QAnyStringView> m_referencedTypes;
+    QList<QAnyStringView> m_primitiveTypes;
     QVector<MetaType> m_types;
     QVector<MetaType> m_foreignTypes;
     bool m_privateIncludes = false;

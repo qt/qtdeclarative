@@ -441,11 +441,22 @@ void tst_qmltyperegistrar::consistencyWarnings()
         QTest::ignoreMessage(QtWarningMsg, message);
     };
 
-    expectWarning("Warning: tst_qmltyperegistrar.h:: NotQObject is used but cannot be found.");
-    expectWarning("Warning: tst_qmltyperegistrar.h:: NotQObject is used but cannot be found.");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: "
+                  "NotQObject is used as base type but cannot be found.");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: NotQObject is used as base type "
+                  "but cannot be found.");
     expectWarning("Warning: tst_qmltyperegistrar.h:: Invisible is declared as foreign type, "
                   "but cannot be found.");
-    expectWarning("Warning: tst_qmltyperegistrar.h:: NotQByteArray is used but cannot be found.");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: NotQByteArray is used as sequence value type "
+                  "but cannot be found.");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: NotAPropertyType is used as property type "
+                  "but cannot be found.");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: NotAnArgumentType is used as argument type "
+                  "but cannot be found.");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: NotAReturnType is used as return type "
+                  "but cannot be found.");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: NotAnUnderlyingType is used as enum type "
+                  "but cannot be found.");
 
     processor.postProcessForeignTypes();
 

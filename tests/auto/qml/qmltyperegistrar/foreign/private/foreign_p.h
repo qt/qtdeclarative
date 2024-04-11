@@ -7,7 +7,6 @@
 #include <QtCore/qobject.h>
 
 // qmltyperegistrar will assume this file is reachable under <private/foreign_p.h>
-// It's not true, but this is how it works on actual private headers in Qt.
 // See the trick in tst_qmltyperegistrar's CMakeLists.txt to turn on the --private-includes option.
 class ForeignPrivate : public QObject
 {

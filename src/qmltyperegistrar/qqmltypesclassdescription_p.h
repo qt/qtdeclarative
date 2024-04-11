@@ -110,5 +110,15 @@ private:
     void collectInterfaces(const MetaType &classDef);
 };
 
+struct ResolvedTypeAlias
+{
+    ResolvedTypeAlias(QAnyStringView alias);
+
+    QAnyStringView type;
+    bool isList = false;
+    bool isPointer = false;
+    bool isConstant = false;
+};
+
 QT_END_NAMESPACE
 #endif // QMLTYPESCLASSDESCRIPTION_P_H

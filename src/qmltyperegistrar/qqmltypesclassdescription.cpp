@@ -12,6 +12,7 @@
 #include <QtCore/qcbormap.h>
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
 using namespace Constants;
 using namespace Constants::MetatypesDotJson;
 using namespace Constants::MetatypesDotJson::Qml;
@@ -452,6 +453,78 @@ FoundType QmlTypesClassDescription::collectRelated(
         return other;
     }
     return FoundType();
+}
+
+
+ResolvedTypeAlias::ResolvedTypeAlias(QAnyStringView alias)
+    : type(alias)
+{
+    if (type.isEmpty())
+        return;
+
+    if (type == "void") {
+        type = "";
+        return;
+    }
+
+    // This is a best effort approach and will not return correct results in the
+    // presence of typedefs.
+
+    auto handleList = [&](QLatin1StringView list) {
+        if (!startsWith(type, list) || type.back() != '>'_L1)
+            return false;
+
+        const int listSize = list.size();
+        const QAnyStringView elementType = trimmed(type.mid(listSize, type.size() - listSize - 1));
+
+        // QQmlListProperty internally constructs the pointer. Passing an explicit '*' will
+        // produce double pointers. QList is only for value types. We can't handle QLists
+        // of pointers (unless specially registered, but then they're not isList).
+        if (elementType.back() == '*'_L1)
+            return false;
+
+        isList = true;
+        type = elementType;
+        return true;
+    };
+
+    if (!handleList("QQmlListProperty<"_L1) && !handleList("QList<"_L1)) {
+        if (type.back() == '*'_L1) {
+            isPointer = true;
+            type = type.chopped(1);
+        }
+        if (startsWith(type, "const "_L1)) {
+            isConstant = true;
+            type = type.sliced(strlen("const "));
+        }
+    }
+
+    if (type == "qreal") {
+#ifdef QT_COORD_TYPE_STRING
+        type = QT_COORD_TYPE_STRING;
+#else
+        type = "double";
+#endif
+    } else if (type == "int8_t") {
+        // TODO: What can we do with "char"? It's ambiguous.
+        type = "qint8";
+    } else if (type == "uchar" || type == "uint8_t") {
+        type = "quint8";
+    } else if (type == "qint16" || type == "int16_t") {
+        type = "short";
+    } else if (type == "quint16" || type == "uint16_t") {
+        type = "ushort";
+    } else if (type == "qint32" || type == "int32_t") {
+        type = "int";
+    } else if (type == "quint32" || type == "uint32_t") {
+        type = "uint";
+    } else if (type == "qint64" || type == "int64_t") {
+        type = "qlonglong";
+    } else if (type == "quint64" || type == "uint64_t") {
+        type = "qulonglong";
+    } else if (type == "QList<QObject*>") {
+        type = "QObjectList";
+    }
 }
 
 QT_END_NAMESPACE
