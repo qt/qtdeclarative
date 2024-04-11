@@ -188,7 +188,7 @@ struct QSGRhiShaderMaterialTypeCache
         QSGMaterialType *type;
     };
     QHash<Key, MaterialType> m_types;
-    QVector<QSGMaterialType *> m_graveyard;
+    QHash<Key, QSGMaterialType *> m_graveyard;
 };
 
 size_t qHash(const QSGRhiShaderMaterialTypeCache::Key &key, size_t seed = 0)
@@ -208,6 +208,14 @@ QSGMaterialType *QSGRhiShaderMaterialTypeCache::ref(const QShader &vs, const QSh
         return it->type;
     }
 
+    auto reuseIt = m_graveyard.constFind(k);
+    if (reuseIt != m_graveyard.cend()) {
+        QSGMaterialType *t = reuseIt.value();
+        m_types.insert(k, { 1, t });
+        m_graveyard.erase(reuseIt);
+        return t;
+    }
+
     QSGMaterialType *t = new QSGMaterialType;
     m_types.insert(k, { 1, t });
     return t;
@@ -220,7 +228,7 @@ void QSGRhiShaderMaterialTypeCache::unref(const QShader &vs, const QShader &fs)
     auto it = m_types.find(k);
     if (it != m_types.end()) {
         if (!--it->ref) {
-            m_graveyard.append(it->type);
+            m_graveyard.insert(k, it->type);
             m_types.erase(it);
         }
     }
