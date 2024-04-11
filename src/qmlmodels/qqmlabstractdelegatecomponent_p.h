@@ -37,6 +37,7 @@ public:
     ~QQmlAbstractDelegateComponent() override;
 
     virtual QQmlComponent *delegate(QQmlAdaptorModel *adaptorModel, int row, int column = 0) const = 0;
+    virtual QString role() const = 0;
 
 Q_SIGNALS:
     void delegateChanged();

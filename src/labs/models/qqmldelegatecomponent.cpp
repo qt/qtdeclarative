@@ -193,6 +193,10 @@ bool QQmlDelegateChoice::match(int row, int column, const QVariant &value) const
     \qmlproperty string Qt.labs.qmlmodels::DelegateChooser::role
     This property holds the role or the property name used to determine the delegate for a given model item.
 
+    \note For \l{QAbstractItemModel} based models, including \l{ListModel}, the DelegateChooser will
+    reevaluate the choice when the model signals that the role has changed. For any other type of model,
+    this choice will only be done once when the item for a given model index is created.
+
     \sa DelegateChoice
 */
 void QQmlDelegateChooser::setRole(const QString &role)

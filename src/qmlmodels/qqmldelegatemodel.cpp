@@ -1465,6 +1465,50 @@ void QQmlDelegateModel::_q_itemsChanged(int index, int count, const QVector<int>
         d->itemsChanged(changes);
         d->emitChanges();
     }
+    const bool needToCheckDelegateChoiceInvalidation = d->m_delegateChooser && !roles.isEmpty();
+    if (!needToCheckDelegateChoiceInvalidation)
+        return;
+
+    // here, we only really can handle AIM based models, because only there
+    // we can do something sensible with roles
+    if (!d->m_adaptorModel.adaptsAim())
+        return;
+
+    const auto aim = d->m_adaptorModel.aim();
+    const auto choiceRole = d->m_delegateChooser->role().toUtf8();
+    const auto &roleNames = aim->roleNames();
+    auto it = std::find_if(roles.begin(), roles.end(), [&](int role) {
+        return roleNames[role] == choiceRole;
+    });
+    if (it == roles.end())
+        return;
+
+    // Compare handleModelReset - we're doing a more localized version
+
+    /* A role change affecting the DelegateChoice is equivalent to removing all
+       affected items (including  invalidating their cache entries) and afterwards
+       reinserting them.
+    */
+    QVector<Compositor::Remove> removes;
+    QVector<Compositor::Insert> inserts;
+    d->m_compositor.listItemsRemoved(&d->m_adaptorModel, index, count, &removes);
+    const QList<QQmlDelegateModelItem *> cache = d->m_cache;
+    for (QQmlDelegateModelItem *item : cache)
+        item->referenceObject();
+    for (const auto& removed: removes) {
+        if (!d->m_cache.isSharedWith(cache))
+            break;
+        QQmlDelegateModelItem *item = cache.value(removed.cacheIndex(), nullptr);
+        if (!d->m_cache.contains(item))
+            continue;
+        if (item->modelIndex() != -1)
+            item->setModelIndex(-1, -1, -1);
+    }
+    for (QQmlDelegateModelItem *item : cache)
+        item->releaseObject();
+    d->m_compositor.listItemsInserted(&d->m_adaptorModel, index, count, &inserts);
+    d->itemsMoved(removes, inserts);
+    d->emitChanges();
 }
 
 static void incrementIndexes(QQmlDelegateModelItem *cacheItem, int count, const int *deltas)
