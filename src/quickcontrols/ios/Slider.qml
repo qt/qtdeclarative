@@ -53,7 +53,9 @@ T.Slider {
             }
 
             NinePatchImage {
-                width: control.handle.width / 2 + control.position * (parent.width - control.handle.width)
+                readonly property real handleWidth: control.handle ? control.handle.width : 0
+
+                width: handleWidth / 2 + control.position * (parent.width - handleWidth)
                 height: parent.height
 
                 source: IOS.url + "slider-progress"
