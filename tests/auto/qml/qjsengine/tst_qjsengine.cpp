@@ -4751,7 +4751,7 @@ public:
 
     bool called = false;
 
-    Q_INVOKABLE void callMe(QQmlV4Function *) {
+    Q_INVOKABLE void callMe(QQmlV4FunctionPtr) {
         called = true;
     }
 };

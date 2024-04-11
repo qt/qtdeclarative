@@ -2953,7 +2953,7 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
         return doCall([&]() {
             ScopedValue rv(scope, Value::undefinedValue());
             QQmlV4Function func(callData, rv, v4);
-            QQmlV4Function *funcptr = &func;
+            QQmlV4FunctionPtr funcptr = &func;
 
             void *args[] = { nullptr, &funcptr };
             object.metacall(QMetaObject::InvokeMetaMethod, method->coreIndex(), args);

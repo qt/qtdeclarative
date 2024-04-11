@@ -14,7 +14,7 @@ class MyType : public QQuickItem
     QML_ELEMENT
 public:
     MyType(QQuickItem *parent = nullptr) : QQuickItem(parent) {}
-    Q_INVOKABLE void name(QQmlV4Function*) const {}
+    Q_INVOKABLE void name(QQmlV4FunctionPtr) const {}
 };
 
 #endif // COMMONTYPES_H

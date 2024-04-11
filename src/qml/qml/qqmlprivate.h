@@ -82,6 +82,9 @@ class QQmlEngine;
 class QQmlCustomParser;
 class QQmlTypeNotAvailable;
 
+class QQmlV4Function;
+using QQmlV4FunctionPtr = QQmlV4Function *;
+
 template<class T>
 QQmlCustomParser *qmlCreateCustomParser()
 {
@@ -1151,5 +1154,7 @@ namespace QQmlPrivate
 } // namespace QQmlPrivate
 
 QT_END_NAMESPACE
+
+Q_DECLARE_OPAQUE_POINTER(QQmlV4FunctionPtr)
 
 #endif // QQMLPRIVATE_H

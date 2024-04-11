@@ -1688,7 +1688,7 @@ QJSValue QtObject::binding(const QJSValue &function) const
                 Encode(e->memoryManager->allocate<QQmlBindingFunction>(f)));
 }
 
-void QtObject::callLater(QQmlV4Function *args)
+void QtObject::callLater(QQmlV4FunctionPtr args)
 {
     m_engine->delayedCallQueue()->addUniquelyAndExecuteLater(m_engine, args);
 }

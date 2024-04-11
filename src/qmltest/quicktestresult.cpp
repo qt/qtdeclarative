@@ -504,7 +504,7 @@ bool QuickTestResult::fuzzyCompare(const QVariant &actual, const QVariant &expec
     return false;
 }
 
-void QuickTestResult::stringify(QQmlV4Function *args)
+void QuickTestResult::stringify(QQmlV4FunctionPtr args)
 {
     if (args->length() < 1)
         args->setReturnValue(QV4::Encode::null());

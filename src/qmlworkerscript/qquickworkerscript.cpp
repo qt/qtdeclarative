@@ -580,7 +580,7 @@ bool QQuickWorkerScript::ready() const
     of ListModel objects, any modifications by the other thread to an object
     passed in \c message will not be reflected in the original object.
 */
-void QQuickWorkerScript::sendMessage(QQmlV4Function *args)
+void QQuickWorkerScript::sendMessage(QQmlV4FunctionPtr args)
 {
     if (!engine()) {
         qWarning("QQuickWorkerScript: Attempt to send message before WorkerScript establishment");

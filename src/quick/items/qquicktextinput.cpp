@@ -1434,7 +1434,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
            Returns the position before the character that is nearest x.
 */
 
-void QQuickTextInput::positionAt(QQmlV4Function *args) const
+void QQuickTextInput::positionAt(QQmlV4FunctionPtr args) const
 {
     Q_D(const QQuickTextInput);
 

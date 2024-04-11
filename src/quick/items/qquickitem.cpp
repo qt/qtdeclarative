@@ -4621,7 +4621,7 @@ void QQuickItem::ensurePolished()
 }
 
 #if QT_DEPRECATED_SINCE(6, 5)
-static bool unwrapMapFromToFromItemArgs(QQmlV4Function *args, const QQuickItem *itemForWarning, const QString &functionNameForWarning,
+static bool unwrapMapFromToFromItemArgs(QQmlV4FunctionPtr args, const QQuickItem *itemForWarning, const QString &functionNameForWarning,
                                         QQuickItem **itemObj, qreal *x, qreal *y, qreal *w, qreal *h, bool *isRect)
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
@@ -4727,7 +4727,7 @@ static bool unwrapMapFromToFromItemArgs(QQmlV4Function *args, const QQuickItem *
 /*!
     \internal
   */
-void QQuickItem::mapFromItem(QQmlV4Function *args) const
+void QQuickItem::mapFromItem(QQmlV4FunctionPtr args) const
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
@@ -4785,7 +4785,7 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 /*!
     \internal
   */
-void QQuickItem::mapToItem(QQmlV4Function *args) const
+void QQuickItem::mapToItem(QQmlV4FunctionPtr args) const
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
@@ -4803,7 +4803,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
     args->setReturnValue(rv.asReturnedValue());
 }
 
-static bool unwrapMapFromToFromGlobalArgs(QQmlV4Function *args, const QQuickItem *itemForWarning, const QString &functionNameForWarning, qreal *x, qreal *y)
+static bool unwrapMapFromToFromGlobalArgs(QQmlV4FunctionPtr args, const QQuickItem *itemForWarning, const QString &functionNameForWarning, qreal *x, qreal *y)
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
     if (args->length() != 1 && args->length() != 2) {
@@ -4861,7 +4861,7 @@ static bool unwrapMapFromToFromGlobalArgs(QQmlV4Function *args, const QQuickItem
 /*!
     \internal
   */
-void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
+void QQuickItem::mapFromGlobal(QQmlV4FunctionPtr args) const
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
@@ -4891,7 +4891,7 @@ void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
 /*!
     \internal
   */
-void QQuickItem::mapToGlobal(QQmlV4Function *args) const
+void QQuickItem::mapToGlobal(QQmlV4FunctionPtr args) const
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);

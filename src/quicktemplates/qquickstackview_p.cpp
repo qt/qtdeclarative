@@ -49,7 +49,7 @@ void QQuickStackViewPrivate::setCurrentItem(QQuickStackElement *element)
     emit q->currentItemChanged();
 }
 
-static bool initProperties(QQuickStackElement *element, const QV4::Value &props, QQmlV4Function *args)
+static bool initProperties(QQuickStackElement *element, const QV4::Value &props, QQmlV4FunctionPtr args)
 {
     if (props.isObject()) {
         const QV4::QObjectWrapper *wrapper = props.as<QV4::QObjectWrapper>();
@@ -63,7 +63,7 @@ static bool initProperties(QQuickStackElement *element, const QV4::Value &props,
     return false;
 }
 
-QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(int from, QQmlV4Function *args, QStringList *errors)
+QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(int from, QQmlV4FunctionPtr args, QStringList *errors)
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
     auto context = v4->callingQmlContext();

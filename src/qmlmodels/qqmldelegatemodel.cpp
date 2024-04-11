@@ -3079,7 +3079,7 @@ bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::Value &value, int *ind
     items that are later replaced by actual data.
 */
 
-void QQmlDelegateModelGroup::insert(QQmlV4Function *args)
+void QQmlDelegateModelGroup::insert(QQmlV4FunctionPtr args)
 {
     Q_D(QQmlDelegateModelGroup);
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
@@ -3142,7 +3142,7 @@ void QQmlDelegateModelGroup::insert(QQmlV4Function *args)
     group remain instantiated when not referenced by any view.
 */
 
-void QQmlDelegateModelGroup::create(QQmlV4Function *args)
+void QQmlDelegateModelGroup::create(QQmlV4FunctionPtr args)
 {
     Q_D(QQmlDelegateModelGroup);
     if (!d->model)
@@ -3220,7 +3220,7 @@ void QQmlDelegateModelGroup::create(QQmlV4Function *args)
     that the previously unresolved item has simply moved.
 
 */
-void QQmlDelegateModelGroup::resolve(QQmlV4Function *args)
+void QQmlDelegateModelGroup::resolve(QQmlV4FunctionPtr args)
 {
     Q_D(QQmlDelegateModelGroup);
     if (!d->model)
@@ -3324,7 +3324,7 @@ void QQmlDelegateModelGroup::resolve(QQmlV4Function *args)
     Removes \a count items starting at \a index from the group.
 */
 
-void QQmlDelegateModelGroup::remove(QQmlV4Function *args)
+void QQmlDelegateModelGroup::remove(QQmlV4FunctionPtr args)
 {
     Q_D(QQmlDelegateModelGroup);
     if (!d->model)
@@ -3364,7 +3364,7 @@ void QQmlDelegateModelGroup::remove(QQmlV4Function *args)
 }
 
 bool QQmlDelegateModelGroupPrivate::parseGroupArgs(
-        QQmlV4Function *args, Compositor::Group *group, int *index, int *count, int *groups) const
+        QQmlV4FunctionPtr args, Compositor::Group *group, int *index, int *count, int *groups) const
 {
     if (!model || !QQmlDelegateModelPrivate::get(model)->m_cacheMetaType)
         return false;
@@ -3398,7 +3398,7 @@ bool QQmlDelegateModelGroupPrivate::parseGroupArgs(
     Adds \a count items starting at \a index to \a groups.
 */
 
-void QQmlDelegateModelGroup::addGroups(QQmlV4Function *args)
+void QQmlDelegateModelGroup::addGroups(QQmlV4FunctionPtr args)
 {
     Q_D(QQmlDelegateModelGroup);
     Compositor::Group group = d->group;
@@ -3428,7 +3428,7 @@ void QQmlDelegateModelGroup::addGroups(QQmlV4Function *args)
     Removes \a count items starting at \a index from \a groups.
 */
 
-void QQmlDelegateModelGroup::removeGroups(QQmlV4Function *args)
+void QQmlDelegateModelGroup::removeGroups(QQmlV4FunctionPtr args)
 {
     Q_D(QQmlDelegateModelGroup);
     Compositor::Group group = d->group;
@@ -3459,7 +3459,7 @@ void QQmlDelegateModelGroup::removeGroups(QQmlV4Function *args)
     their existing groups and added to \a groups.
 */
 
-void QQmlDelegateModelGroup::setGroups(QQmlV4Function *args)
+void QQmlDelegateModelGroup::setGroups(QQmlV4FunctionPtr args)
 {
     Q_D(QQmlDelegateModelGroup);
     Compositor::Group group = d->group;
@@ -3494,7 +3494,7 @@ void QQmlDelegateModelGroup::setGroups(QQmlV4Function *args)
     reordering you have done via this function.
 */
 
-void QQmlDelegateModelGroup::move(QQmlV4Function *args)
+void QQmlDelegateModelGroup::move(QQmlV4FunctionPtr args)
 {
     Q_D(QQmlDelegateModelGroup);
 

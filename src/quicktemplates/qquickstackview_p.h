@@ -20,7 +20,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlV4Function;
 class QQuickTransition;
 class QQuickStackElement;
 class QQuickStackViewPrivate;
@@ -142,9 +141,9 @@ public:
     };
     Q_ENUM(Operation)
 
-    Q_INVOKABLE void push(QQmlV4Function *args);
-    Q_INVOKABLE void pop(QQmlV4Function *args);
-    Q_INVOKABLE void replace(QQmlV4Function *args);
+    Q_INVOKABLE void push(QQmlV4FunctionPtr args);
+    Q_INVOKABLE void pop(QQmlV4FunctionPtr args);
+    Q_INVOKABLE void replace(QQmlV4FunctionPtr args);
 
     Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *pushItems(QList<QQuickStackViewArg> args,
         Operation operation = Immediate);

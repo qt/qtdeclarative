@@ -2385,7 +2385,7 @@ void QQmlListModel::clear()
 
     \sa clear()
 */
-void QQmlListModel::remove(QQmlV4Function *args)
+void QQmlListModel::remove(QQmlV4FunctionPtr args)
 {
     int argLength = args->length();
 
@@ -2473,7 +2473,7 @@ void QQmlListModel::updateTranslations()
     \sa set(), append()
 */
 
-void QQmlListModel::insert(QQmlV4Function *args)
+void QQmlListModel::insert(QQmlV4FunctionPtr args)
 {
     if (args->length() == 2) {
         QV4::Scope scope(args->v4engine());
@@ -2589,7 +2589,7 @@ void QQmlListModel::move(int from, int to, int n)
 
     \sa set(), remove()
 */
-void QQmlListModel::append(QQmlV4Function *args)
+void QQmlListModel::append(QQmlV4FunctionPtr args)
 {
     if (args->length() == 1) {
         QV4::Scope scope(args->v4engine());

@@ -34,7 +34,7 @@ public:
     QQmlLocalStorage(QObject *parent = nullptr) : QObject(parent) {}
     ~QQmlLocalStorage() override = default;
 
-    Q_INVOKABLE void openDatabaseSync(QQmlV4Function* args);
+    Q_INVOKABLE void openDatabaseSync(QQmlV4FunctionPtr args);
 };
 
 QT_END_NAMESPACE

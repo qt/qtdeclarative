@@ -1740,7 +1740,7 @@ QQmlError QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(const RequiredP
 /*!
     \internal
 */
-void QQmlComponent::createObject(QQmlV4Function *args)
+void QQmlComponent::createObject(QQmlV4FunctionPtr args)
 {
     Q_D(QQmlComponent);
     Q_ASSERT(d->engine);
@@ -1889,7 +1889,7 @@ QObject *QQmlComponent::createObject(QObject *parent, const QVariantMap &propert
 /*!
     \internal
 */
-void QQmlComponent::incubateObject(QQmlV4Function *args)
+void QQmlComponent::incubateObject(QQmlV4FunctionPtr args)
 {
     Q_D(QQmlComponent);
     Q_ASSERT(d->engine);

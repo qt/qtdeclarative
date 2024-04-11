@@ -47,7 +47,6 @@ private:
     QQuickWorkerScriptEnginePrivate *d;
 };
 
-class QQmlV4Function;
 class Q_QMLWORKERSCRIPT_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
@@ -69,7 +68,7 @@ public:
     bool ready() const;
 
 public Q_SLOTS:
-    void sendMessage(QQmlV4Function*);
+    void sendMessage(QQmlV4FunctionPtr);
 
 Q_SIGNALS:
     void sourceChanged();

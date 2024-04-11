@@ -233,7 +233,7 @@ public:
 
     bool parseIndex(const QV4::Value &value, int *index, Compositor::Group *group) const;
     bool parseGroupArgs(
-            QQmlV4Function *args, Compositor::Group *group, int *index, int *count, int *groups) const;
+            QQmlV4FunctionPtr args, Compositor::Group *group, int *index, int *count, int *groups) const;
 
     Compositor::Group group;
     QPointer<QQmlDelegateModel> model;

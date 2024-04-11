@@ -21,7 +21,6 @@ class QByteArray;
 class QQmlEngine;
 class QQmlComponent;
 class QQmlIncubator;
-class QQmlV4Function;
 class QQmlComponentPrivate;
 class QQmlComponentAttached;
 
@@ -102,12 +101,12 @@ protected:
 
 #if QT_DEPRECATED_SINCE(6, 3)
     QT_DEPRECATED_X("Use the overload with proper arguments")
-    Q_INVOKABLE void createObject(QQmlV4Function *);
+    Q_INVOKABLE void createObject(QQmlV4FunctionPtr);
 #endif
 
     Q_INVOKABLE QObject *createObject(
             QObject *parent = nullptr, const QVariantMap &properties = {});
-    Q_INVOKABLE void incubateObject(QQmlV4Function *);
+    Q_INVOKABLE void incubateObject(QQmlV4FunctionPtr);
 
 private:
     QQmlComponent(QQmlEngine *, QV4::ExecutableCompilationUnit *compilationUnit, int,

@@ -75,7 +75,7 @@ namespace QV4 { struct QObjectMethod; }
 //     class MyClass : public QObject {
 //         Q_OBJECT
 //         ...
-//         Q_INVOKABLE void myMethod(QQmlV4Function*);
+//         Q_INVOKABLE void myMethod(QQmlV4FunctionPtr);
 //     };
 // The QQmlV8Function - and consequently the arguments and return value - only remains
 // valid during the call.  If the return value isn't set within myMethod(), the will return

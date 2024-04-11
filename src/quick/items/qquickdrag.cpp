@@ -580,7 +580,7 @@ void QQuickDragAttachedPrivate::start(Qt::DropActions supportedActions)
     property for the started sequence.
 */
 
-void QQuickDragAttached::start(QQmlV4Function *args)
+void QQuickDragAttached::start(QQmlV4FunctionPtr args)
 {
     Q_D(QQuickDragAttached);
     if (d->inEvent) {
@@ -856,7 +856,7 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
     property for the started sequence.
 */
 
-void QQuickDragAttached::startDrag(QQmlV4Function *args)
+void QQuickDragAttached::startDrag(QQmlV4FunctionPtr args)
 {
     Q_D(QQuickDragAttached);
 

@@ -324,9 +324,12 @@ void QmlTypesCreator::writeMethods(const QCborArray &methods, QLatin1StringView 
 
         for (qsizetype i = 0, end = arguments.size(); i != end; ++i) {
             const QCborMap obj = arguments[i].toMap();
-            if (i == 0 && end == 1 && obj[MetatypesDotJson::S_TYPE] == QLatin1String("QQmlV4Function*")) {
-                m_qml.writeBooleanBinding(S_IS_JAVASCRIPT_FUNCTION, true);
-                break;
+            if (i == 0 && end == 1) {
+                const QAnyStringView type = toStringView(obj, MetatypesDotJson::S_TYPE);
+                if (type == "QQmlV4FunctionPtr"_L1 || type == "QQmlV4Function*"_L1) {
+                    m_qml.writeBooleanBinding(S_IS_JAVASCRIPT_FUNCTION, true);
+                    break;
+                }
             }
             m_qml.writeStartObject(S_PARAMETER);
             const QAnyStringView name = toStringView(obj, MetatypesDotJson::S_NAME);

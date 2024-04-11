@@ -45,7 +45,6 @@ private:
 
 class QCursor;
 class QQuickItemLayer;
-class QQmlV4Function;
 class QQuickState;
 class QQuickAnchorLine;
 class QQuickTransition;
@@ -323,7 +322,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use typed overload or mapRectFromItem")
-    void mapFromItem(QQmlV4Function*) const;
+    void mapFromItem(QQmlV4FunctionPtr) const;
 #endif
     Q_INVOKABLE QPointF mapFromItem(const QQuickItem *item, const QPointF &point) const;
     // overloads mainly exist for QML
@@ -333,7 +332,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use typed overload or mapRectToItem")
-    void mapToItem(QQmlV4Function*) const;
+    void mapToItem(QQmlV4FunctionPtr) const;
 #endif
     Q_INVOKABLE QPointF mapToItem(const QQuickItem *item, const QPointF &point) const;
     // overloads mainly exist for QML
@@ -343,7 +342,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use the typed overload")
-    Q_REVISION(2, 7) void mapFromGlobal(QQmlV4Function*) const;
+    Q_REVISION(2, 7) void mapFromGlobal(QQmlV4FunctionPtr) const;
 #endif
     Q_REVISION(2, 7) Q_INVOKABLE QPointF mapFromGlobal(qreal x, qreal y) const;
     // overload mainly exists for QML
@@ -351,7 +350,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use the typed overload")
-    Q_REVISION(2, 7) void mapToGlobal(QQmlV4Function*) const;
+    Q_REVISION(2, 7) void mapToGlobal(QQmlV4FunctionPtr) const;
 #endif
     Q_REVISION(2, 7) Q_INVOKABLE  QPointF mapToGlobal(qreal x, qreal y) const;
     // overload only exist for QML

@@ -70,7 +70,7 @@ void QQmlDelayedCallQueue::init(QV4::ExecutionEngine* engine)
     m_tickedMethod = metaObject.method(methodIndex);
 }
 
-QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::ExecutionEngine *engine, QQmlV4Function *args)
+QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::ExecutionEngine *engine, QQmlV4FunctionPtr args)
 {
     QQmlDelayedCallQueue *self = engine->delayedCallQueue();
 
@@ -142,7 +142,7 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::Executi
     return QV4::Encode::undefined();
 }
 
-void QQmlDelayedCallQueue::storeAnyArguments(DelayedFunctionCall &dfc, QQmlV4Function *args, int offset, QV4::ExecutionEngine *engine)
+void QQmlDelayedCallQueue::storeAnyArguments(DelayedFunctionCall &dfc, QQmlV4FunctionPtr args, int offset, QV4::ExecutionEngine *engine)
 {
     const int length = args->length() - offset;
     if (length == 0) {

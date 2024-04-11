@@ -111,7 +111,7 @@ void QQmlPropertyData::load(const QMetaMethod &m)
         m_flags.setHasArguments(true);
         m_flags.setIsV4Function(
                 paramCount == 1 &&
-                m.parameterMetaType(0) == QMetaType::fromType<QQmlV4Function *>());
+                m.parameterMetaType(0) == QMetaType::fromType<QQmlV4FunctionPtr>());
     } else {
         m_flags.setHasArguments(false);
         m_flags.setIsV4Function(false);

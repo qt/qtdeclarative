@@ -301,6 +301,14 @@ struct QQmlScriptStringForeign
     QML_FOREIGN(QQmlScriptString)
 };
 
+struct QQmlV4FunctionPtrForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QQmlV4FunctionPtr)
+    QML_EXTENDED(QQmlV4FunctionPtrForeign)
+};
+
 QT_END_NAMESPACE
 
 #endif // QQMLBUILTINS_H

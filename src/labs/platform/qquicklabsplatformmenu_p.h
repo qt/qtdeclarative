@@ -31,7 +31,6 @@ class QIcon;
 class QWindow;
 class QQuickItem;
 class QPlatformMenu;
-class QQmlV4Function;
 class QQuickLabsPlatformMenuBar;
 class QQuickLabsPlatformMenuItem;
 class QQuickLabsPlatformIconLoader;
@@ -117,7 +116,7 @@ public:
     Q_INVOKABLE void clear();
 
 public Q_SLOTS:
-    void open(QQmlV4Function *args);
+    void open(QQmlV4FunctionPtr args);
     void close();
 
 Q_SIGNALS:
