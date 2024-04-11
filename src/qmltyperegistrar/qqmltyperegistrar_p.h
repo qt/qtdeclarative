@@ -32,12 +32,12 @@ class QmlTypeRegistrar
     QList<quint8> m_pastMajorVersions;
     QList<QString> m_includes;
     bool m_followForeignVersioning = false;
-    QVector<QCborMap> m_types;
-    QVector<QCborMap> m_foreignTypes;
+    QVector<MetaType> m_types;
+    QVector<MetaType> m_foreignTypes;
     QList<QAnyStringView> m_referencedTypes;
 
-    QCborValue findType(QAnyStringView name) const;
-    QCborValue findTypeForeign(QAnyStringView name) const;
+    MetaType findType(QAnyStringView name) const;
+    MetaType findTypeForeign(QAnyStringView name) const;
 
 public:
     void write(QTextStream &os, QAnyStringView outFileName) const;
@@ -46,7 +46,7 @@ public:
     void setModuleVersions(QTypeRevision moduleVersion, const QList<quint8> &pastMajorVersions,
                            bool followForeignVersioning);
     void setIncludes(const QList<QString> &includes);
-    void setTypes(const QVector<QCborMap> &types, const QVector<QCborMap> &foreignTypes);
+    void setTypes(const QVector<MetaType> &types, const QVector<MetaType> &foreignTypes);
     void setReferencedTypes(const QList<QAnyStringView> &referencedTypes);
 
     static bool argumentsFromCommandLineAndFile(QStringList &allArguments,

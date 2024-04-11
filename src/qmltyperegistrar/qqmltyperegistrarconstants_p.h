@@ -116,9 +116,11 @@ static constexpr QLatin1StringView S_NAMESPACE                    { "namespace" 
 static constexpr QLatin1StringView S_NOTIFY                       { "notify" };
 static constexpr QLatin1StringView S_OBJECT                       { "object" };
 static constexpr QLatin1StringView S_PARENT_PROPERTY              { "ParentProperty" };
+static constexpr QLatin1StringView S_PRIVATE                      { "private" };
 static constexpr QLatin1StringView S_PRIVATE_CLASS                { "privateClass" };
 static constexpr QLatin1StringView S_PROPERTIES                   { "properties" };
 static constexpr QLatin1StringView S_PROPERTY                     { "property" };
+static constexpr QLatin1StringView S_PROTECTED                    { "protected" };
 static constexpr QLatin1StringView S_PUBLIC                       { "public" };
 static constexpr QLatin1StringView S_QUALIFIED_CLASS_NAME         { "qualifiedClassName" };
 static constexpr QLatin1StringView S_READ                         { "read" };

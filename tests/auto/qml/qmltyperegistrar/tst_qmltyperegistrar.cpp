@@ -116,8 +116,8 @@ void tst_qmltyperegistrar::pastMajorVersions()
 
 void tst_qmltyperegistrar::implementsInterfaces()
 {
-    QVERIFY(qmltypesData.contains("interfaces: [\"Interface\"]"));
-    QVERIFY(qmltypesData.contains("interfaces: [\"Interface\", \"Interface2\"]"));
+    QVERIFY(qmltypesData.contains("interfaces: [\"Interface1\"]"));
+    QVERIFY(qmltypesData.contains("interfaces: [\"Interface1\", \"Interface2\"]"));
 }
 
 void tst_qmltyperegistrar::namespacedElement()
@@ -404,8 +404,8 @@ void tst_qmltyperegistrar::duplicateExportWarnings()
     MetaTypesJsonProcessor processor(true);
     QVERIFY(processor.processTypes({ ":/duplicatedExports.json" }));
     processor.postProcessTypes();
-    QVector<QCborMap> types = processor.types();
-    QVector<QCborMap> typesforeign = processor.foreignTypes();
+    QVector<MetaType> types = processor.types();
+    QVector<MetaType> typesforeign = processor.foreignTypes();
     r.setTypes(types, typesforeign);
 
     const auto expectWarning = [](const char *message) {
@@ -449,8 +449,8 @@ void tst_qmltyperegistrar::consistencyWarnings()
 
     processor.postProcessForeignTypes();
 
-    QVector<QCborMap> types = processor.types();
-    QVector<QCborMap> typesforeign = processor.foreignTypes();
+    QVector<MetaType> types = processor.types();
+    QVector<MetaType> typesforeign = processor.foreignTypes();
     r.setTypes(types, typesforeign);
 
     QString outputData;
