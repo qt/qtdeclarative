@@ -41,6 +41,7 @@ private slots:
     void unknownContainersAsModel();
     void doNotUnrefObjectUnderConstruction();
     void clearCacheDuringInsertion();
+    void viewUpdatedOnDelegateChoiceAffectingRoleChange();
 };
 
 class AbstractItemModel : public QAbstractItemModel
@@ -592,6 +593,27 @@ void tst_QQmlDelegateModel::clearCacheDuringInsertion()
     std::unique_ptr<QObject> object(component.create());
     QVERIFY(object);
     QTRY_COMPARE(object->property("testModel").toInt(), 0);
+}
+
+void tst_QQmlDelegateModel::viewUpdatedOnDelegateChoiceAffectingRoleChange()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("viewUpdatedOnDelegateChoiceAffectingRoleChange.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+    QQuickItem *listview = object->findChild<QQuickItem *>("listview");
+    QVERIFY(listview);
+    QTRY_VERIFY(listview->property("count").toInt() > 0);
+    bool returnedValue = false;
+    QMetaObject::invokeMethod(object.get(), "verify", Q_RETURN_ARG(bool, returnedValue));
+    QVERIFY(returnedValue);
+    returnedValue = false;
+
+    object->setProperty("triggered", "true");
+    QTRY_VERIFY(listview->property("count").toInt() > 0);
+    QMetaObject::invokeMethod(object.get(), "verify", Q_RETURN_ARG(bool, returnedValue));
+    QVERIFY(returnedValue);
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)

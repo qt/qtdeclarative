@@ -77,7 +77,7 @@ class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlDelegateChooser : public QQmlAbstractDe
     QML_ADDED_IN_VERSION(1, 0)
 
 public:
-    QString role() const { return m_role; }
+    QString role() const final { return m_role; }
     void setRole(const QString &role);
 
     virtual QQmlListProperty<QQmlDelegateChoice> choices();
