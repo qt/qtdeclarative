@@ -57,6 +57,15 @@ void QQmlTreeModelToTableModel::setModel(QAbstractItemModel *arg)
           SLOT(modelRowsAboutToBeMoved(QModelIndex,int,int,QModelIndex,int)) },
         { SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
           SLOT(modelRowsMoved(QModelIndex,int,int,QModelIndex,int)) },
+
+        { SIGNAL(columnsAboutToBeInserted(QModelIndex,int,int)),
+          SLOT(modelColumnsAboutToBeInserted(QModelIndex,int,int))},
+        { SIGNAL(columnsAboutToBeRemoved(QModelIndex,int,int)),
+          SLOT(modelColumnsAboutToBeRemoved(QModelIndex,int,int))},
+        { SIGNAL(columnsInserted(QModelIndex,int,int)),
+          SLOT(modelColumnsInserted(QModelIndex,int,int))},
+        { SIGNAL(columnsRemoved(QModelIndex,int,int)),
+          SLOT(modelColumnsRemoved(QModelIndex,int,int))},
         { nullptr, nullptr }
     };
 
@@ -971,6 +980,40 @@ void QQmlTreeModelToTableModel::modelRowsMoved(const QModelIndex & sourceParent,
 
     disableSignalAggregation();
 
+    ASSERT_CONSISTENCY();
+}
+
+void QQmlTreeModelToTableModel::modelColumnsAboutToBeInserted(const QModelIndex & parent, int start, int end)
+{
+    Q_UNUSED(parent);
+    beginInsertColumns({}, start, end);
+}
+
+void QQmlTreeModelToTableModel::modelColumnsAboutToBeRemoved(const QModelIndex & parent, int start, int end)
+{
+    Q_UNUSED(parent);
+    beginRemoveColumns({}, start, end);
+}
+
+void QQmlTreeModelToTableModel::modelColumnsInserted(const QModelIndex & parent, int start, int end)
+{
+    Q_UNUSED(parent);
+    Q_UNUSED(start);
+    Q_UNUSED(end);
+    endInsertColumns();
+    m_items.clear();
+    showModelTopLevelItems();
+    ASSERT_CONSISTENCY();
+}
+
+void QQmlTreeModelToTableModel::modelColumnsRemoved(const QModelIndex & parent, int start, int end)
+{
+    Q_UNUSED(parent);
+    Q_UNUSED(start);
+    Q_UNUSED(end);
+    endRemoveColumns();
+    m_items.clear();
+    showModelTopLevelItems();
     ASSERT_CONSISTENCY();
 }
 

@@ -118,6 +118,10 @@ private Q_SLOTS:
     void modelRowsInserted(const QModelIndex & parent, int start, int end);
     void modelRowsMoved(const QModelIndex & sourceParent, int sourceStart, int sourceEnd, const QModelIndex & destinationParent, int destinationRow);
     void modelRowsRemoved(const QModelIndex & parent, int start, int end);
+    void modelColumnsAboutToBeInserted(const QModelIndex & parent, int start, int end);
+    void modelColumnsAboutToBeRemoved(const QModelIndex & parent, int start, int end);
+    void modelColumnsInserted(const QModelIndex & parent, int start, int end);
+    void modelColumnsRemoved(const QModelIndex & parent, int start, int end);
 
 private:
     struct TreeItem {
