@@ -76,6 +76,7 @@ private slots:
     void emptyModel();
     void updatedModifiedModel();
     void insertRows();
+    void insertColumns();
     void toggleExpandedUsingArrowKeys();
     void expandAndCollapsUsingDoubleClick();
     void selectionBehaviorCells_data();
@@ -390,6 +391,48 @@ void tst_qquicktreeview::insertRows()
     WAIT_UNTIL_POLISHED;
 
     QCOMPARE(treeView->rows(), 9);
+}
+
+void tst_qquicktreeview::insertColumns()
+{
+    // Check that if we add new columns to the model, TreeView gets updated
+    // to contain the new expected number of rows (flattened to a list)
+    LOAD_TREEVIEW("normaltreeview.qml");
+    treeView->expand(0);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(treeView->columns(), 5);
+
+    const QModelIndex rootNode = model->index(0, 0, QModelIndex());
+    model->insertColumns(0, 2, rootNode);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(treeView->columns(), 7);
+    auto childItem1 = treeViewPrivate->loadedTableItem(QPoint(0, 1))->item;
+    QCOMPARE(childItem1->property("text").toString(), "0, 0 (inserted)");
+    auto childItem2 = treeViewPrivate->loadedTableItem(QPoint(0, 2))->item;
+    QCOMPARE(childItem2->property("text").toString(), "1, 0 (inserted)");
+    auto childItem3 = treeViewPrivate->loadedTableItem(QPoint(0, 3))->item;
+    QCOMPARE(childItem3->property("text").toString(), "2, 0 (inserted)");
+    auto childItem4 = treeViewPrivate->loadedTableItem(QPoint(3, 0))->item;
+    QCOMPARE(childItem4->property("text").toString(), "0, 1");
+    auto childItem5 = treeViewPrivate->loadedTableItem(QPoint(3, 1))->item;
+    QCOMPARE(childItem5->property("text").toString(), "0, 1");
+
+    const QModelIndex indexOfInsertedChild = model->index(1, 0, rootNode);
+    model->insertRows(0, 2, indexOfInsertedChild);
+    treeView->expand(2);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(treeView->rows(), 7);
+    QCOMPARE(treeView->columns(), 7);
+
+    for (int i = 0; i < 7; i++) {
+        for (int j = 0; j < 7; j++) {
+            auto childItem = treeViewPrivate->loadedTableItem(QPoint(j, i))->item;
+            QVERIFY(childItem);
+        }
+    }
 }
 
 void tst_qquicktreeview::expandChildPendingToBeVisible()
