@@ -39,6 +39,7 @@ public:
     int maxDepth() { return 4; }
 
     bool insertRows(int position, int rows, const QModelIndex &parent) override;
+    bool insertColumns(int position, int cols, const QModelIndex &parent) override;
 
 private:
     QScopedPointer<TreeItem> m_rootItem;

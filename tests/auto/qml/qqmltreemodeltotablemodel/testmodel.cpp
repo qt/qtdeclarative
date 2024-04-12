@@ -129,3 +129,31 @@ bool TestModel::insertRows(int position, int rows, const QModelIndex &parent)
     endInsertRows();
     return true;
 }
+
+void insertColumnsRecursive(TreeItem *item, int cols)
+{
+    int pos = item->m_entries.size();
+    for (int col = 0; col < cols; col++)
+        item->m_entries << QVariant(QString("%1, %2 (inserted)").arg(pos + col).arg(col));
+    for (auto child : item->m_childItems)
+        insertColumnsRecursive(child, cols);
+}
+
+bool TestModel::insertColumns(int position, int cols, const QModelIndex &parent)
+{
+    if (!parent.isValid()) {
+        qWarning() << "Cannot insert columns on an invalid parent!";
+        return false;
+    }
+
+    beginInsertColumns(parent, position, position + cols - 1);
+    TreeItem *parentItem = treeItem(parent);
+
+    TreeItem *item = m_rootItem.data();
+
+    insertColumnsRecursive(item, cols);
+    m_columnCount += cols;
+
+    endInsertColumns();
+    return true;
+}
