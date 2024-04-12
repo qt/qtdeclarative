@@ -96,6 +96,7 @@ private Q_SLOTS:
 
     void testLineEndings();
 
+    void ignoreSettingsNotCommandLineOptions();
 #if QT_CONFIG(library)
     void testPlugin();
     void quickPlugin();
@@ -2106,6 +2107,17 @@ void TestQmllint::quickPlugin()
     runTest("pluginQuick_propertyChangesInvalidTarget.qml", Result {}); // we don't care about the specific warnings
 }
 #endif
+
+void TestQmllint::ignoreSettingsNotCommandLineOptions()
+{
+    const QString importPath = testFile(u"ImportPath"_s);
+    // makes sure that ignore settings only ignores settings and not command line options like
+    // "-I".
+    const QString output = runQmllint(testFile(u"NeedImportPath.qml"_s), true,
+                                      QStringList{ u"-I"_s, importPath }, true);
+    // should not complain about not finding the module that is in importPath
+    QCOMPARE(output, QString());
+}
 
 QTEST_MAIN(TestQmllint)
 #include "tst_qmllint.moc"

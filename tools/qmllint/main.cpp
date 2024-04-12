@@ -360,63 +360,61 @@ All warnings can be set to three levels:
     QJsonArray jsonFiles;
 
     for (const QString &filename : positionalArguments) {
-        if (!parser.isSet(ignoreSettings)) {
+        if (!parser.isSet(ignoreSettings))
             settings.search(filename);
-            updateLogLevels();
+        updateLogLevels();
 
-            const QDir fileDir = QFileInfo(filename).absoluteDir();
-            auto addAbsolutePaths = [&](QStringList &list, const QStringList &entries) {
-                for (const QString &file : entries)
-                    list << (QFileInfo(file).isAbsolute() ? file : fileDir.filePath(file));
-            };
+        const QDir fileDir = QFileInfo(filename).absoluteDir();
+        auto addAbsolutePaths = [&](QStringList &list, const QStringList &entries) {
+            for (const QString &file : entries)
+                list << (QFileInfo(file).isAbsolute() ? file : fileDir.filePath(file));
+        };
 
-            resourceFiles = defaultResourceFiles;
+        resourceFiles = defaultResourceFiles;
 
-            addAbsolutePaths(resourceFiles, settings.value(resourceSetting).toStringList());
+        addAbsolutePaths(resourceFiles, settings.value(resourceSetting).toStringList());
 
-            qmldirFiles = defaultQmldirFiles;
-            if (settings.isSet(qmldirFilesSetting)
-                && !settings.value(qmldirFilesSetting).toStringList().isEmpty()) {
-                qmldirFiles = {};
-                addAbsolutePaths(qmldirFiles,
-                                 settings.value(qmldirFilesSetting).toStringList());
-            }
-
-            if (parser.isSet(qmlImportNoDefault)
-                || (settings.isSet(qmlImportNoDefaultSetting)
-                    && settings.value(qmlImportNoDefaultSetting).toBool())) {
-                qmlImportPaths = {};
-            } else {
-                qmlImportPaths = defaultImportPaths;
-            }
-
-            if (parser.isSet(qmlImportPathsOption))
-                qmlImportPaths << parser.values(qmlImportPathsOption);
-
-            addAbsolutePaths(qmlImportPaths, settings.value(qmlImportPathsSetting).toStringList());
-
-            QSet<QString> disabledPlugins;
-
-            if (parser.isSet(pluginsDisable)) {
-                for (const QString &plugin : parser.values(pluginsDisable))
-                    disabledPlugins << plugin.toLower();
-            }
-
-            if (settings.isSet(pluginsDisableSetting)) {
-                for (const QString &plugin : settings.value(pluginsDisableSetting).toStringList())
-                    disabledPlugins << plugin.toLower();
-            }
-
-            linter.setPluginsEnabled(!disabledPlugins.contains("all"));
-
-            if (!linter.pluginsEnabled())
-                continue;
-
-            auto &plugins = linter.plugins();
-
-            for (auto &plugin : plugins)
-                plugin.setEnabled(!disabledPlugins.contains(plugin.name().toLower()));
+        qmldirFiles = defaultQmldirFiles;
+        if (settings.isSet(qmldirFilesSetting)
+            && !settings.value(qmldirFilesSetting).toStringList().isEmpty()) {
+            qmldirFiles = {};
+            addAbsolutePaths(qmldirFiles, settings.value(qmldirFilesSetting).toStringList());
         }
+
+        if (parser.isSet(qmlImportNoDefault)
+            || (settings.isSet(qmlImportNoDefaultSetting)
+                && settings.value(qmlImportNoDefaultSetting).toBool())) {
+            qmlImportPaths = {};
+        } else {
+            qmlImportPaths = defaultImportPaths;
+        }
+
+        if (parser.isSet(qmlImportPathsOption))
+            qmlImportPaths << parser.values(qmlImportPathsOption);
+
+        addAbsolutePaths(qmlImportPaths, settings.value(qmlImportPathsSetting).toStringList());
+
+        QSet<QString> disabledPlugins;
+
+        if (parser.isSet(pluginsDisable)) {
+            for (const QString &plugin : parser.values(pluginsDisable))
+                disabledPlugins << plugin.toLower();
+        }
+
+        if (settings.isSet(pluginsDisableSetting)) {
+            for (const QString &plugin : settings.value(pluginsDisableSetting).toStringList())
+                disabledPlugins << plugin.toLower();
+        }
+
+        linter.setPluginsEnabled(!disabledPlugins.contains("all"));
+
+        if (!linter.pluginsEnabled())
+            continue;
+
+        auto &plugins = linter.plugins();
+
+        for (auto &plugin : plugins)
+            plugin.setEnabled(!disabledPlugins.contains(plugin.name().toLower()));
 
         const bool isFixing = parser.isSet(fixFile);
 
