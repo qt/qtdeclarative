@@ -118,7 +118,7 @@ class QQuickLayoutItemProxyAttachedData : public QObject
     QML_ANONYMOUS
     Q_PROPERTY(bool proxyHasControl READ proxyHasControl NOTIFY controllingProxyChanged)
     Q_PROPERTY(QQuickLayoutItemProxy* controllingProxy READ getControllingProxy NOTIFY controllingProxyChanged)
-    Q_PROPERTY(QList<QQuickLayoutItemProxy*> proxies READ getProxies NOTIFY proxiesChanged)
+    Q_PROPERTY(QQmlListProperty<QQuickLayoutItemProxy> proxies READ getProxies NOTIFY proxiesChanged)
 
 public:
     QQuickLayoutItemProxyAttachedData(QObject *parent);
@@ -128,7 +128,7 @@ public:
     bool takeControl(QQuickLayoutItemProxy *proxy);
     void releaseControl(QQuickLayoutItemProxy *proxy);
     QQuickLayoutItemProxy *getControllingProxy() const;
-    const QList<QQuickLayoutItemProxy*> &getProxies() const;
+    QQmlListProperty<QQuickLayoutItemProxy> getProxies();
     bool proxyHasControl() const;
 
 signals:
