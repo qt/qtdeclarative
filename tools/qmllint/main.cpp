@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
+#include <QtQmlToolingSettings/private/qqmltoolingutils_p.h>
 
 #include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
 #include <QtQmlCompiler/private/qqmljscompiler_p.h>
@@ -121,6 +122,11 @@ All warnings can be set to three levels:
     parser.addOption(qmlImportPathsOption);
     const QString qmlImportPathsSetting = QLatin1String("AdditionalQmlImportPaths");
     settings.addOption(qmlImportPathsSetting);
+
+    QCommandLineOption environmentOption(
+            QStringList() << "E",
+            QLatin1String("Use the QML_IMPORT_PATH environment variable to look for QML Modules"));
+    parser.addOption(environmentOption);
 
     QCommandLineOption qmlImportNoDefault(
                 QStringList() << "bare",
@@ -391,6 +397,34 @@ All warnings can be set to three levels:
 
         if (parser.isSet(qmlImportPathsOption))
             qmlImportPaths << parser.values(qmlImportPathsOption);
+        if (parser.isSet(environmentOption)) {
+            if (silent) {
+                qmlImportPaths << qEnvironmentVariable("QML_IMPORT_PATH")
+                                          .split(QDir::separator(), Qt::SkipEmptyParts)
+                               << qEnvironmentVariable("QML2_IMPORT_PATH")
+                                          .split(QDir::separator(), Qt::SkipEmptyParts);
+            } else {
+                if (const QStringList dirsFromEnv =
+                            QQmlToolingUtils::getAndWarnForInvalidDirsFromEnv(u"QML_IMPORT_PATH"_s);
+                    !dirsFromEnv.isEmpty()) {
+                    qInfo().nospace().noquote()
+                            << "Using import directories passed from environment variable "
+                               "\"QML_IMPORT_PATH\": \""
+                            << dirsFromEnv.join(u"\", \""_s) << "\".";
+                    qmlImportPaths << dirsFromEnv;
+                }
+                if (const QStringList dirsFromEnv =
+                            QQmlToolingUtils::getAndWarnForInvalidDirsFromEnv(
+                                    u"QML2_IMPORT_PATH"_s);
+                    !dirsFromEnv.isEmpty()) {
+                    qInfo().nospace().noquote() << "Using import directories passed from the "
+                                                   "deprecated environment variable "
+                                                   "\"QML2_IMPORT_PATH\": \""
+                                                << dirsFromEnv.join(u"\", \""_s) << "\".";
+                    qmlImportPaths << dirsFromEnv;
+                }
+            }
+        }
 
         addAbsolutePaths(qmlImportPaths, settings.value(qmlImportPathsSetting).toStringList());
 
