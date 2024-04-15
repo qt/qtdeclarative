@@ -1160,7 +1160,9 @@ propertyBindingFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, con
         if (!resolverForIds)
             return {};
 
-        QQmlJSRegisterContent fromId = resolverForIds->scopedType(referrerScope, name);
+        QQmlJSRegisterContent fromId = resolverForIds->scopedType(
+                referrerScope, name, QQmlJSRegisterContent::InvalidLookupIndex,
+                AssumeComponentsAreBound);
         if (fromId.variant() == QQmlJSRegisterContent::ObjectById)
             return QQmlLSUtilsExpressionType{ name, fromId.type(), QmlObjectIdIdentifier };
 
@@ -1372,7 +1374,9 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     }
 
     // check if its an id
-    QQmlJSRegisterContent fromId = resolver->scopedType(referrerScope, name);
+    QQmlJSRegisterContent fromId =
+            resolver->scopedType(referrerScope, name, QQmlJSRegisterContent::InvalidLookupIndex,
+                                 AssumeComponentsAreBound);
     if (fromId.variant() == QQmlJSRegisterContent::ObjectById)
         return QQmlLSUtilsExpressionType{ name, fromId.type(), QmlObjectIdIdentifier };
 

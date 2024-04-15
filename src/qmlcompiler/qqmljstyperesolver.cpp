@@ -997,8 +997,9 @@ static bool isRevisionAllowed(int memberRevision, const QQmlJSScope::ConstPtr &s
     return typeRevision.isValid() && typeRevision >= revision;
 }
 
-QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(
-        const QQmlJSScope::ConstPtr &scope, const QString &name, int lookupIndex) const
+QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr &scope,
+                                                     const QString &name, int lookupIndex,
+                                                     QQmlJSScopesByIdOptions options) const
 {
     const auto isAssignedToDefaultProperty = [this](const QQmlJSScope::ConstPtr &parent,
                                                     const QQmlJSScope::ConstPtr &child) {
@@ -1017,7 +1018,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(
         return false;
     };
 
-    if (QQmlJSScope::ConstPtr identified = m_objectsById.scope(name, scope)) {
+    if (QQmlJSScope::ConstPtr identified = m_objectsById.scope(name, scope, options)) {
         return QQmlJSRegisterContent::create(storedType(identified), identified, lookupIndex,
                                              QQmlJSRegisterContent::ObjectById, scope);
     }
