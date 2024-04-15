@@ -174,6 +174,14 @@ struct QQmlQuint8Foreign
     QML_FOREIGN(quint8)
 };
 
+struct QQmlCharForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_EXTENDED_JAVASCRIPT(Number)
+    QML_FOREIGN(char)
+};
+
 struct QQmlShortForeign
 {
     Q_GADGET
