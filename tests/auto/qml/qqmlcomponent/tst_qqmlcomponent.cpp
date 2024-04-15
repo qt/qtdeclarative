@@ -1413,6 +1413,10 @@ void tst_qqmlcomponent::loadFromModuleFailures_data()
     QTest::addRow("CppSingleton") << u"QtQuick"_s
                                   << u"Application"_s
                                   << u"Application is a singleton, and cannot be loaded"_s;
+    QTest::addRow("passedFileName") << "plainqml"
+                                    << "Plain.qml"
+                                    << R"(Type "Plain" from module "plainqml" contains no inline component named "qml". )"
+                                       R"(To load the type "Plain", drop the ".qml" extension.)";
 }
 
 void tst_qqmlcomponent::loadFromModuleFailures()
@@ -1424,7 +1428,11 @@ void tst_qqmlcomponent::loadFromModuleFailures()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     QSignalSpy errorSpy(&component, &QQmlComponent::statusChanged);
+    QSignalSpy progressSpy(&component, &QQmlComponent::progressChanged);
     component.loadFromModule(uri, typeName);
+    // verify that we changed the progress correctly to 1
+    QTRY_VERIFY(!progressSpy.isEmpty());
+    QTRY_COMPARE(progressSpy.last().at(0).toDouble(), 1.0);
     QVERIFY(!errorSpy.isEmpty());
     QCOMPARE(errorSpy.first().first().value<QQmlComponent::Status>(),
              QQmlComponent::Error);
