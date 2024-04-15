@@ -25,6 +25,9 @@ using namespace QAnyStringViewUtils;
 
 const MetaTypePrivate MetaType::s_empty;
 
+// TODO: This could be optimized to store the objects in a more compact way.
+std::vector<std::unique_ptr<MetaTypePrivate>> s_pool;
+
 static QCborValue fromJson(const QByteArray &json, QJsonParseError *error)
 {
     const QJsonDocument jsonValue = QJsonDocument::fromJson(json, error);
@@ -48,15 +51,6 @@ QList<QAnyStringView> MetaTypesJsonProcessor::namespaces(const MetaType &classDe
     }
 
     return namespaces;
-}
-
-MetaTypesJsonProcessor::~MetaTypesJsonProcessor()
-{
-    for (const MetaType &type : m_types)
-        delete type.d;
-
-    for (const MetaType &type : m_foreignTypes)
-        delete type.d;
 }
 
 bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
@@ -747,5 +741,9 @@ MetaTypePrivate::MetaTypePrivate(const QCborMap &cbor, const QString &inputFile)
     else if (cbor[S_NAMESPACE].toBool())
         kind = Kind::Namespace;
 }
+
+MetaType::MetaType(const QCborMap &cbor, const QString &inputFile)
+    : d(s_pool.emplace_back(std::make_unique<MetaTypePrivate>(cbor, inputFile)).get())
+{}
 
 QT_END_NAMESPACE

@@ -174,9 +174,7 @@ public:
     using Kind = MetaTypePrivate::Kind;
 
     MetaType() = default;
-    MetaType(const QCborMap &cbor, const QString &inputFile)
-        : d(new MetaTypePrivate(cbor, inputFile))
-    {}
+    MetaType(const QCborMap &cbor, const QString &inputFile);
 
     bool isEmpty() const { return d == &s_empty; }
 
@@ -197,8 +195,6 @@ public:
     Kind kind() const { return d->kind; }
 
 private:
-    friend class MetaTypesJsonProcessor;
-
     friend bool operator==(const MetaType &a, const MetaType &b) noexcept
     {
         return a.d == b.d;
@@ -219,7 +215,6 @@ public:
     static QList<QAnyStringView> namespaces(const MetaType &classDef);
 
     MetaTypesJsonProcessor(bool privateIncludes) : m_privateIncludes(privateIncludes) {}
-    ~MetaTypesJsonProcessor();
 
     bool processTypes(const QStringList &files);
 
