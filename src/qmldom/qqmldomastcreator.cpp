@@ -969,7 +969,10 @@ bool QQmlDomAstCreator::visit(AST::UiObjectBinding *el)
     setBindingIdentifiers(bPathFromOwner, el->qualifiedId, bPtr);
 
     pushEl(bPathFromOwner, *bPtr, el);
-    FileLocations::addRegion(nodeStack.last().fileLocations, ColonTokenRegion, el->colonToken);
+    if (el->hasOnToken)
+        FileLocations::addRegion(nodeStack.last().fileLocations, OnTokenRegion, el->colonToken);
+    else
+        FileLocations::addRegion(nodeStack.last().fileLocations, ColonTokenRegion, el->colonToken);
     FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion, combineLocations(el->qualifiedId));
     loadAnnotations(el);
     QmlObject *objValue = bPtr->objectValue();
@@ -1821,6 +1824,7 @@ void QQmlDomAstCreator::endVisit(AST::IfStatement *ifStatement)
     current->addLocation(LeftParenthesisRegion, ifStatement->lparenToken);
     current->addLocation(RightParenthesisRegion, ifStatement->rparenToken);
     current->addLocation(ElseKeywordRegion, ifStatement->elseToken);
+    current->addLocation(IfKeywordRegion, ifStatement->ifToken);
 
     if (ifStatement->ko) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
@@ -2072,6 +2076,7 @@ void QQmlDomAstCreator::endVisit(AST::VariableStatement *statement)
         return;
 
     auto current = makeGenericScriptElement(statement, DomType::ScriptVariableDeclaration);
+    current->addLocation(FileLocationRegion::TypeIdentifierRegion, statement->declarationKindToken);
 
     if (statement->declarations) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
@@ -2105,10 +2110,12 @@ void QQmlDomAstCreator::endVisit(AST::Type *exp)
     if (exp->typeArgument) {
         current->insertChild(Fields::typeArgumentName,
                              fieldMemberExpressionForQualifiedId(exp->typeArgument));
+        current->addLocation(FileLocationRegion::IdentifierRegion, combineLocations(exp->typeArgument));
     }
 
     if (exp->typeId) {
         current->insertChild(Fields::typeName, fieldMemberExpressionForQualifiedId(exp->typeId));
+        current->addLocation(FileLocationRegion::TypeIdentifierRegion, combineLocations(exp->typeId));
     }
 
     pushScriptElement(current);
@@ -2247,6 +2254,7 @@ void QQmlDomAstCreator::endVisit(AST::SwitchStatement *exp)
         return;
 
     auto current = makeGenericScriptElement(exp, DomType::ScriptSwitchStatement);
+    current->addLocation(FileLocationRegion::SwitchKeywordRegion, exp->switchToken);
     current->addLocation(FileLocationRegion::LeftParenthesisRegion, exp->lparenToken);
     current->addLocation(FileLocationRegion::RightParenthesisRegion, exp->rparenToken);
 
@@ -2345,6 +2353,7 @@ void QQmlDomAstCreator::endVisit(AST::ForEachStatement *exp)
         return;
 
     auto current = makeGenericScriptElement(exp, DomType::ScriptForEachStatement);
+    current->addLocation(FileLocationRegion::ForKeywordRegion, exp->forToken);
     current->addLocation(FileLocationRegion::InOfTokenRegion, exp->inOfToken);
     current->addLocation(FileLocationRegion::LeftParenthesisRegion, exp->lparenToken);
     current->addLocation(FileLocationRegion::RightParenthesisRegion, exp->rparenToken);

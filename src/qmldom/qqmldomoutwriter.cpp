@@ -239,7 +239,12 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region)
     case SemicolonTokenRegion:
         codeForRegion = u";"_s;
         break;
-
+    case IfKeywordRegion:
+        codeForRegion = u"if"_s;
+        break;
+    case SwitchKeywordRegion:
+        codeForRegion = u"switch"_s;
+        break;
     // not keywords:
     case ImportUriRegion:
     case IdNameRegion:
