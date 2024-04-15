@@ -28,6 +28,14 @@ class QQuickTextEditPrivate;
 class QQuickTextSelection;
 class QTextBlock;
 
+class QQuickTextBlockForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QTextBlock)
+    QML_EXTENDED(QQuickTextBlockForeign)
+};
+
 class Q_QUICK_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, public QQuickTextInterface
 {
     Q_OBJECT

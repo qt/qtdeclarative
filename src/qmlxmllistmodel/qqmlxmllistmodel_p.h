@@ -50,7 +50,9 @@ struct QQmlXmlListModelQueryJob
 };
 struct QQmlXmlListModelQueryResult
 {
+    Q_GADGET
     QML_ANONYMOUS
+public:
     int queryId;
     QList<QFlatMap<int, QString>> data;
     QList<QPair<void *, QString>> errors;

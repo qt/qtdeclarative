@@ -198,6 +198,22 @@ struct QQmlUshortForeign
     QML_FOREIGN(ushort)
 };
 
+struct QQmlLongForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_EXTENDED_JAVASCRIPT(Number)
+    QML_FOREIGN(long)
+};
+
+struct QQmlUlongForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_EXTENDED_JAVASCRIPT(Number)
+    QML_FOREIGN(ulong)
+};
+
 struct QQmlUintForeign
 {
     Q_GADGET
