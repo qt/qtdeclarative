@@ -372,11 +372,15 @@ int QSGMaterial::compare(const QSGMaterial *other) const
     \endcode
 
     \note The fragment shader should be treated the same way the vertex shader
-    is, even when the fragment shader code has no dependency on the view count.
-    This is because mixing different shader versions within the same graphics
-    pipeline can be problematic, depending on the underlying graphics API. With
-    D3D12 for example, mixing HLSL shaders for shader model 5.0 and 6.1 would
-    generate an error.
+    is, even though the fragment shader code cannot have any dependency on the
+    view count (\c{gl_ViewIndex}), for maximum portability. There are two
+    reasons for including fragment shaders too in the multiview set. One is that
+    mixing different shader versions within the same graphics pipeline can be
+    problematic, depending on the underlying graphics API: with D3D12 for
+    example, mixing HLSL shaders for shader model 5.0 and 6.1 would generate an
+    error. The other is that having \c QSHADER_VIEW_COUNT defined in fragment
+    shaders can be very useful, for example when sharing a uniform buffer layout
+    between the vertex and fragment stages.
 
     \note For OpenGL the minimum GLSL version for vertex shaders relying on
     \c{gl_ViewIndex} is \c 330. Lower versions may be accepted at build time,
