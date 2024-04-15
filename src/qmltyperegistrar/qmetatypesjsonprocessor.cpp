@@ -169,14 +169,13 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
         const QString className = obj.className().toString();
         const QString qualifiedClassName = obj.qualifiedClassName().toString();
         const QString foreignClassName = className + u"Foreign";
-        const auto classInfos = obj.classInfos();
         QStringList qmlElements;
         QString qmlUncreatable;
         QString qmlAttached;
         bool isSingleton = false;
         bool isExplicitlyUncreatable = false;
         bool isNamespace = obj.kind() == MetaType::Kind::Namespace;
-        for (const ClassInfo &entry: classInfos) {
+        for (const ClassInfo &entry: obj.classInfos()) {
             const auto name = entry.name;
             const auto value = entry.value;
             if (name == S_ELEMENT) {
