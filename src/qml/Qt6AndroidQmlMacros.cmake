@@ -89,6 +89,7 @@ function(_qt_internal_collect_qml_root_paths target)
         endforeach()
     endif()
 
+    list(REMOVE_DUPLICATES qml_root_paths)
     set_target_properties(${target} PROPERTIES _qt_internal_qml_root_path "${qml_root_paths}")
 endfunction()
 
