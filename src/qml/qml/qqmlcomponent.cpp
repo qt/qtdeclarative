@@ -29,6 +29,9 @@
 #include <QtCore/qloggingcategory.h>
 #include <qqmlinfo.h>
 
+
+using namespace Qt::Literals::StringLiterals;
+
 namespace {
     Q_CONSTINIT thread_local int creationDepth = 0;
 }
@@ -1354,12 +1357,27 @@ void QQmlComponentPrivate::completeLoadFromModule(QAnyStringView uri, QAnyString
 {
     Q_Q(QQmlComponent);
 
+    // we always mimic the progressChanged behavior from loadUrl
     auto reportError = [&](QString msg) {
         QQmlError error;
         error.setDescription(msg);
         state.errors.push_back(std::move(error));
+        progress = 1;
+        emit q->progressChanged(1);
         emit q->statusChanged(q->Error);
     };
+    auto emitProgressReset = [&](){
+        if (progress != 0) {
+            progress = 0;
+            emit q->progressChanged(0);
+        }
+    };
+    auto emitComplete = [&]() {
+        progress = 1;
+        emit q->progressChanged(1);
+        emit q->statusChanged(q->status());
+    };
+    emitProgressReset();
     if (moduleStatus == LoadHelper::ResolveTypeResult::NoSuchModule) {
         reportError(QLatin1String(R"(No module named "%1" found)").arg(uri.toString()));
     } else if (!type.isValid()) {
@@ -1367,25 +1385,37 @@ void QQmlComponentPrivate::completeLoadFromModule(QAnyStringView uri, QAnyString
                     .arg(uri.toString(), typeName.toString()));
     } else if (type.isCreatable()) {
         clear();
-        // mimic the progressChanged behavior from loadUrl
-        if (progress != 0) {
-            progress = 0;
-            emit q->progressChanged(0);
-        }
         loadedType = type;
-        progress = 1;
-        emit q->progressChanged(1);
-        emit q->statusChanged(q->status());
-
+        emitComplete();
     } else if (type.isComposite()) {
+        // loadUrl takes care of signal emission
         loadUrl(type.sourceUrl(), mode);
     } else if (type.isInlineComponentType()) {
         auto baseUrl = type.sourceUrl();
         baseUrl.setFragment(QString());
-        loadUrl(baseUrl, mode);
-        if (!q->isError()) {
-            inlineComponentName = std::make_unique<QString>(type.elementName());
-            Q_ASSERT(!inlineComponentName->isEmpty());
+        {
+            // we don't want to emit status changes from the "helper" loadUrl below
+            // because it would signal success to early
+            QSignalBlocker blockSignals(q);
+            // we really need to continue in a synchronous way, otherwise we can't check the CU
+            loadUrl(baseUrl, QQmlComponent::PreferSynchronous);
+        }
+        if (q->isError()) {
+            emitComplete();
+            return;
+        }
+        QString elementName = type.elementName();
+        if (compilationUnit->inlineComponentId(elementName) == -1) {
+            QString realTypeName = typeName.toString();
+            realTypeName.truncate(realTypeName.indexOf(u'.'));
+            QString errorMessage = R"(Type "%1" from module "%2" contains no inline component named "%3".)"_L1.arg(
+                    realTypeName, uri.toString(), elementName);
+            if (elementName == u"qml")
+                errorMessage += " To load the type \"%1\", drop the \".qml\" extension."_L1.arg(realTypeName);
+            reportError(std::move(errorMessage));
+        } else {
+            inlineComponentName = std::make_unique<QString>(std::move(elementName));
+            emitComplete();
         }
     } else if (type.isSingleton() || type.isCompositeSingleton()) {
         reportError(QLatin1String(R"(%1 is a singleton, and cannot be loaded)").arg(typeName.toString()));
