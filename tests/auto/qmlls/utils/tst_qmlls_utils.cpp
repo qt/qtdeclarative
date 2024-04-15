@@ -3280,6 +3280,16 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions({})
             << QStringList{ u"QtQuick"_s, attachedTypeName, u"Rectangle"_s, forStatementCompletion,
                             u"x"_s };
+
+    QTest::newRow("assumeBoundComponentsIdFromParent")
+            << testFile("completions/boundComponents.qml") << 14 << 33
+            << ExpectedCompletions{ { u"rootId"_s, CompletionItemKind::Value } }
+            << QStringList{ u"inRoot"_s };
+
+    QTest::newRow("assumeBoundComponentsPropertyFromParent")
+            << testFile("completions/boundComponents.qml") << 14 << 40
+            << ExpectedCompletions{ { u"inRoot"_s, CompletionItemKind::Property } }
+            << QStringList{ u"root"_s };
 }
 
 void tst_qmlls_utils::completions()

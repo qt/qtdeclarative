@@ -22,6 +22,12 @@
 
 QT_BEGIN_NAMESPACE
 
+enum QQmlJSScopesByIdOption: char {
+    Default = 0,
+    AssumeComponentsAreBound = 1,
+};
+Q_DECLARE_FLAGS(QQmlJSScopesByIdOptions, QQmlJSScopesByIdOption);
+
 class QQmlJSScopesById
 {
 public:
@@ -34,11 +40,12 @@ public:
     void setValueTypesAreAddressable(bool addressable) { m_valueTypesAreAddressable = addressable; }
     bool valueTypesAreAddressable() const { return m_valueTypesAreAddressable; }
 
-    QString id(const QQmlJSScope::ConstPtr &scope, const QQmlJSScope::ConstPtr &referrer) const
+    QString id(const QQmlJSScope::ConstPtr &scope, const QQmlJSScope::ConstPtr &referrer,
+               QQmlJSScopesByIdOptions options = Default) const
     {
         const QQmlJSScope::ConstPtr referrerRoot = componentRoot(referrer);
         for (auto it = m_scopesById.begin(), end = m_scopesById.end(); it != end; ++it) {
-            if (*it == scope && isComponentVisible(componentRoot(*it), referrerRoot))
+            if (*it == scope && isComponentVisible(componentRoot(*it), referrerRoot, options))
                 return it.key();
         }
         return QString();
@@ -49,7 +56,8 @@ public:
         Returns the scope that has id \a id in the component to which \a referrer belongs to.
         If no such scope exists, a null scope is returned.
      */
-    QQmlJSScope::ConstPtr scope(const QString &id, const QQmlJSScope::ConstPtr &referrer) const
+    QQmlJSScope::ConstPtr scope(const QString &id, const QQmlJSScope::ConstPtr &referrer,
+                                QQmlJSScopesByIdOptions options = Default) const
     {
         Q_ASSERT(!id.isEmpty());
         const auto range =  m_scopesById.equal_range(id);
@@ -58,7 +66,7 @@ public:
         const QQmlJSScope::ConstPtr referrerRoot = componentRoot(referrer);
 
         for (auto it = range.first; it != range.second; ++it) {
-            if (isComponentVisible(componentRoot(*it), referrerRoot))
+            if (isComponentVisible(componentRoot(*it), referrerRoot, options))
                 return *it;
         }
 
@@ -95,10 +103,11 @@ private:
         return scope;
     }
 
-    bool isComponentVisible(
-            const QQmlJSScope::ConstPtr &observed, const QQmlJSScope::ConstPtr &observer) const
+    bool isComponentVisible(const QQmlJSScope::ConstPtr &observed,
+                            const QQmlJSScope::ConstPtr &observer,
+                            QQmlJSScopesByIdOptions options) const
     {
-        if (!m_componentsAreBound)
+        if (!m_componentsAreBound && !options.testAnyFlag(AssumeComponentsAreBound))
             return observed == observer;
 
         for (QQmlJSScope::ConstPtr scope = observer; scope; scope = scope->parentScope()) {

@@ -120,9 +120,9 @@ public:
 
     QQmlJSRegisterContent builtinType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSRegisterContent globalType(const QQmlJSScope::ConstPtr &type) const;
-    QQmlJSRegisterContent scopedType(
-            const QQmlJSScope::ConstPtr &scope, const QString &name,
-            int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex) const;
+    QQmlJSRegisterContent scopedType(const QQmlJSScope::ConstPtr &scope, const QString &name,
+                                     int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex,
+                                     QQmlJSScopesByIdOptions options = Default) const;
     QQmlJSRegisterContent memberType(
             const QQmlJSRegisterContent &type, const QString &name,
             int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex) const;

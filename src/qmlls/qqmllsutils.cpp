@@ -1273,7 +1273,9 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     }
 
     // check if its an id
-    QQmlJSRegisterContent fromId = resolver->scopedType(referrerScope, name);
+    QQmlJSRegisterContent fromId =
+            resolver->scopedType(referrerScope, name, QQmlJSRegisterContent::InvalidLookupIndex,
+                                 AssumeComponentsAreBound);
     if (fromId.variant() == QQmlJSRegisterContent::ObjectById)
         return QQmlLSUtilsExpressionType{ name, fromId.type(), QmlObjectIdIdentifier };
 
