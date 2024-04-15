@@ -157,6 +157,7 @@ available when you import \c QtQuick.
     \li \l enumeration \c font.hintingPreference
     \li \c object \l [QML] {QtQuick::Text::}{font.features}
     \li \l string \c font.styleName
+    \li \c object \c [QML] {QtQuick::Text::}{font.variableAxes}
     \endlist
 
     Example:
