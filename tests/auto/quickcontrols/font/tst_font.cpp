@@ -38,6 +38,9 @@ private slots:
     void listView();
 
     void resolve();
+
+    void variableAxes_data();
+    void variableAxes();
 };
 
 static QFont testFont()
@@ -369,6 +372,39 @@ void tst_font::resolve()
     QCOMPARE(control4Font.resolveMask(), control2ChildControlFont.resolveMask());
     QCOMPARE(control2ChildControlFont, control2Font);
     QVERIFY(control2ChildControlFont != control4Font);
+}
+
+void tst_font::variableAxes_data()
+{
+    QTest::addColumn<QFont::Tag>("axesName");
+    QTest::addColumn<float>("axesValue");
+
+    QTest::addRow("wght") << QFont::Tag("wght") << 200.0f;
+}
+
+void tst_font::variableAxes()
+{
+    QFETCH(QFont::Tag, axesName);
+    QFETCH(float, axesValue);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QString(R"QML(
+        import QtQuick
+        import QtQuick.Controls
+
+        Text {
+            font.variableAxes: {
+                "%1": %2
+            }
+        }
+    )QML").arg(axesName.toString()).arg(axesValue).toUtf8(), QUrl());
+
+    QScopedPointer<QObject> control(component.create());
+    QVERIFY2(!control.isNull(), qPrintable(component.errorString()));
+
+    const QFont font = control->property("font").value<QFont>();
+    QCOMPARE(font.variableAxisValue(axesName), axesValue);
 }
 
 QTEST_MAIN(tst_font)
