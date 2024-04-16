@@ -73,22 +73,54 @@ QString QQmlJSCodeGenerator::metaTypeFromName(const QQmlJSScope::ConstPtr &type)
             + u"\"); return t; }()"_s;
 }
 
+QString QQmlJSCodeGenerator::compositeListMetaType(const QString &elementName) const
+{
+    return u"[](auto *aotContext) { static const auto t = QQmlPrivate::compositeListMetaType("
+           "aotContext->compilationUnit, \""_s
+            + elementName
+            + u"\"); return t; }(aotContext)"_s;
+}
+
+QString QQmlJSCodeGenerator::compositeMetaType(const QString &elementName) const
+{
+    return u"[](auto *aotContext) { static const auto t = QQmlPrivate::compositeMetaType("
+           "aotContext->compilationUnit, \""_s
+            + elementName
+            + u"\"); return t; }(aotContext)"_s;
+}
+
 QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)
 {
-    if (!objectType->isComposite()) {
-        if (objectType->internalName() == u"QObject"_s
-                || objectType->internalName() == u"QQmlComponent"_s) {
-            return u'&' + objectType->internalName() + u"::staticMetaObject"_s;
+    if (objectType->isComposite()) {
+        const QString name = m_typeResolver->nameForType(objectType);
+        if (name.isEmpty()) {
+            reject(u"retrieving the metaObject of a composite type without an element name."_s);
+            return QString();
         }
-        return metaTypeFromName(objectType) + u".metaObject()"_s;
+        return compositeMetaType(name) + u".metaObject()"_s;
     }
 
-    reject(u"retrieving the metaObject of a composite type without using an instance."_s);
-    return QString();
+    if (objectType->internalName() == u"QObject"_s
+            || objectType->internalName() == u"QQmlComponent"_s) {
+        return u'&' + objectType->internalName() + u"::staticMetaObject"_s;
+    }
+    return metaTypeFromName(objectType) + u".metaObject()"_s;
 }
 
 QString QQmlJSCodeGenerator::metaType(const QQmlJSScope::ConstPtr &type)
 {
+    if (type->isComposite()) {
+        const QString name = m_typeResolver->nameForType(type);
+        if (!name.isEmpty())
+            return compositeMetaType(name);
+    }
+
+    if (type->isListProperty() && type->valueType()->isComposite()) {
+        const QString name = m_typeResolver->nameForType(type->valueType());
+        if (!name.isEmpty())
+            return compositeListMetaType(name);
+    }
+
     return m_typeResolver->equals(m_typeResolver->genericType(type), type)
             ? metaTypeFromType(type)
             : metaTypeFromName(type);
@@ -223,24 +255,26 @@ QT_WARNING_POP
 
     result.code += m_body;
 
-    for (const QQmlJSRegisterContent &argType : std::as_const(function->argumentTypes)) {
-        if (argType.isValid()) {
-            result.argumentTypes.append(
-                        m_typeResolver->originalType(argType.storedType())
-                        ->augmentedInternalName());
-        } else {
-            result.argumentTypes.append(u"void"_s);
-        }
-    }
 
-    if (function->returnType) {
-        result.returnType = function->returnType->internalName();
-        if (function->returnType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
-            result.returnType += u'*';
+    QString signature
+            = u"    struct { QV4::ExecutableCompilationUnit *compilationUnit; } c { unit };\n"
+               "    const auto *aotContext = &c;\n"
+               "    Q_UNUSED(aotContext);\n"_s;
+
+    if (function->returnType.isValid()) {
+        signature += u"    argTypes[0] = %1;\n"_s.arg(
+                metaType(m_typeResolver->containedType(function->returnType)));
     } else {
-        result.returnType = u"void"_s;
+        signature += u"    argTypes[0] = QMetaType();\n"_s;
+    }
+    result.numArguments = function->argumentTypes.length();
+    for (qsizetype i = 0; i != result.numArguments; ++i) {
+        signature += u"    argTypes[%1] = %2;\n"_s.arg(
+                QString::number(i + 1),
+                metaType(m_typeResolver->originalContainedType(function->argumentTypes[i])));
     }
 
+    result.signature = signature;
     return result;
 }
 
@@ -250,16 +284,27 @@ void QQmlJSCodeGenerator::generateReturnError()
 
     m_body += u"aotContext->setReturnValueUndefined();\n"_s;
     const auto ret = m_function->returnType;
-    if (!ret || m_typeResolver->equals(m_function->returnType, m_typeResolver->voidType()))
+    if (!ret.isValid() || m_typeResolver->registerContains(ret, m_typeResolver->voidType()))
         return;
 
-    const QString value = ret->accessSemantics() == QQmlJSScope::AccessSemantics::Reference
-            ? convertStored(m_typeResolver->nullType(), ret, QString())
-            : ret->internalName() + u"()"_s;
-
     m_body += u"if (argv[0]) {\n"_s;
-    m_body += u"    *static_cast<"_s + m_function->returnType->augmentedInternalName()
-            + u" *>(argv[0]) = "_s + value + u";\n"_s;
+
+    const auto contained = m_typeResolver->containedType(ret);
+    const auto stored = ret.storedType();
+    if (contained->isReferenceType() && stored->isReferenceType()) {
+        m_body += u"    *static_cast<"_s
+                + stored->augmentedInternalName()
+                + u" *>(argv[0]) = nullptr;\n"_s;
+    } else if (m_typeResolver->equals(contained, stored)) {
+        m_body += u"    *static_cast<"_s + stored->internalName() + u" *>(argv[0]) = "_s
+                + stored->internalName() + u"();\n"_s;
+    } else {
+        m_body += u"    const QMetaType returnType = "_s
+                + metaType(m_typeResolver->containedType(ret)) + u";\n"_s;
+        m_body += u"    returnType.destruct(argv[0]);\n"_s;
+        m_body += u"    returnType.construct(argv[0]);\n "_s;
+    }
+
     m_body += u"}\n"_s;
 }
 
@@ -273,7 +318,7 @@ void QQmlJSCodeGenerator::generate_Ret()
         resetState();
     });
 
-    if (!m_function->returnType)
+    if (!m_function->returnType.isValid())
         return;
 
     m_body += u"if (argv[0]) {\n"_s;
@@ -301,11 +346,36 @@ void QQmlJSCodeGenerator::generate_Ret()
         m_body += u"        "_s + signalUndefined;
     }
 
-    if (!m_typeResolver->equals(m_function->returnType, m_typeResolver->voidType())) {
-        m_body += u"    *static_cast<"_s + m_function->returnType->augmentedInternalName()
-                +u" *>(argv[0]) = "_s + convertStored(
-                      m_state.accumulatorIn().storedType(), m_function->returnType, in)
+    if (m_typeResolver->registerContains(
+                m_function->returnType, m_typeResolver->voidType())) {
+        m_body += u"}\n"_s;
+        return;
+    }
+
+    const auto contained = m_typeResolver->containedType(m_function->returnType);
+    const auto stored = m_function->returnType.storedType();
+    if (m_typeResolver->equals(contained, stored)
+            || (contained->isReferenceType() && stored->isReferenceType())) {
+        m_body += u"    *static_cast<"_s
+                + stored->augmentedInternalName()
+                + u" *>(argv[0]) = "_s
+                + conversion(m_state.accumulatorIn(), m_function->returnType, in)
                 + u";\n"_s;
+    } else if (m_typeResolver->registerContains(m_state.accumulatorIn(), contained)) {
+        m_body += u"    const QMetaType returnType = "_s + contentType(m_state.accumulatorIn(), in)
+                + u";\n"_s;
+        m_body += u"    returnType.destruct(argv[0]);\n"_s;
+        m_body += u"    returnType.construct(argv[0], "_s
+                + contentPointer(m_state.accumulatorIn(), in) + u");\n"_s;
+    } else {
+        m_body += u"    const auto converted = "_s
+                + conversion(m_state.accumulatorIn(), m_function->returnType, in) + u";\n"_s;
+        m_body += u"    const QMetaType returnType = "_s
+                + contentType(m_function->returnType, u"converted"_s)
+                + u";\n"_s;
+        m_body += u"    returnType.destruct(argv[0]);\n"_s;
+        m_body += u"    returnType.construct(argv[0], "_s
+                + contentPointer(m_function->returnType, u"converted"_s) + u");\n"_s;
     }
 
     m_body += u"}\n"_s;
@@ -2871,8 +2941,7 @@ QString QQmlJSCodeGenerator::contentPointer(const QQmlJSRegisterContent &content
 QString QQmlJSCodeGenerator::contentType(const QQmlJSRegisterContent &content, const QString &var)
 {
     const QQmlJSScope::ConstPtr stored = content.storedType();
-    const QQmlJSScope::ConstPtr contained = QQmlJSScope::nonCompositeBaseType(
-                m_typeResolver->containedType(content));
+    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
     if (m_typeResolver->equals(contained, stored))
         return metaTypeFromType(stored);
 
@@ -2882,13 +2951,14 @@ QString QQmlJSCodeGenerator::contentType(const QQmlJSRegisterContent &content, c
     }
 
     if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
-        return metaTypeFromName(contained);
+        return metaType(contained);
 
-    if (m_typeResolver->isNumeric(stored) && contained->scopeType() == QQmlSA::ScopeType::EnumScope)
-        return metaTypeFromType(contained->baseType());
+    const QQmlJSScope::ConstPtr nonComposite = QQmlJSScope::nonCompositeBaseType(contained);
+    if (m_typeResolver->isNumeric(stored) && nonComposite->scopeType() == QQmlSA::ScopeType::EnumScope)
+        return metaTypeFromType(nonComposite->baseType());
 
-    if (stored->isListProperty() && m_typeResolver->containedType(content)->isListProperty())
-        return metaTypeFromType(m_typeResolver->listPropertyType());
+    if (stored->isListProperty() && contained->isListProperty())
+        return metaType(contained);
 
     reject(u"content type of unsupported wrapper type "_s + content.descriptiveName());
     return QString();

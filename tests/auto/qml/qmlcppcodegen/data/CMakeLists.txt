@@ -125,6 +125,7 @@ set(qml_files
     dialog.qml
     dialogButtonBox.qml
     dynamicscene.qml
+    enforceSignature.qml
     enumConversion.qml
     enumFromBadSingleton.qml
     enumInvalid.qml

@@ -560,7 +560,7 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
     if (aotFunctions.size() <= 1) {
         // FileScopeCodeIndex is always there, but it may be the only one.
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];\n"
-                 "extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), {}, nullptr } };\n");
+                 "extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, 0, nullptr, nullptr } };\n");
     } else {
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];\n"
                  "extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = {\n");
@@ -574,25 +574,18 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
             if (func.key() == FileScopeCodeIndex)
                 continue;
 
-            QString function = QString::fromUtf8(funcHeaderCode) + func.value().code + footer;
+            const QString function = QString::fromUtf8(funcHeaderCode) + func.value().code + footer;
 
-            QString argumentTypes = func.value().argumentTypes.join(
-                        QStringLiteral(">(), QMetaType::fromType<"));
-            if (!argumentTypes.isEmpty()) {
-                argumentTypes = QStringLiteral("QMetaType::fromType<")
-                        + argumentTypes + QStringLiteral(">()");
-            }
-
-            writeStr(QStringLiteral("{ %1, QMetaType::fromType<%2>(), { %3 }, %4 },")
+            writeStr(QStringLiteral("{ %1, %2, [](QV4::ExecutableCompilationUnit *unit, "
+                                    "QMetaType *argTypes) {\n%3}, %4 },")
                      .arg(func.key())
-                     .arg(func.value().returnType)
-                     .arg(argumentTypes)
-                     .arg(function)
+                     .arg(func->numArguments)
+                     .arg(func->signature, function)
                      .toUtf8().constData());
         }
 
         // Conclude the list with a nullptr
-        writeStr("{ 0, QMetaType::fromType<void>(), {}, nullptr }");
+        writeStr("{ 0, 0, nullptr, nullptr }");
         writeStr("};\n");
     }
 

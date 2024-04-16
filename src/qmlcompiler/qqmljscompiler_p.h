@@ -48,9 +48,9 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSCompileError
 struct Q_QMLCOMPILER_EXPORT QQmlJSAotFunction
 {
     QStringList includes;
-    QStringList argumentTypes;
     QString code;
-    QString returnType;
+    QString signature;
+    int numArguments = 0;
 };
 
 class Q_QMLCOMPILER_EXPORT QQmlJSAotCompiler

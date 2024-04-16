@@ -675,7 +675,7 @@ void QQmlBinding::doUpdate(const DeleteWatcher &watcher, QQmlPropertyData::Write
     auto canWrite = [&]() { return !watcher.wasDeleted() && isAddedToObject() && !hasError(); };
     const QV4::Function *v4Function = function();
     if (v4Function && v4Function->kind == QV4::Function::AotCompiled && !hasBoundFunction()) {
-        const auto returnType = v4Function->aotCompiledFunction->returnType;
+        const auto returnType = v4Function->aotCompiledFunction.types[0];
         if (returnType == QMetaType::fromType<QVariant>()) {
             QVariant result;
             const bool isUndefined = !evaluate(&result, returnType);

@@ -21,6 +21,9 @@
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmlmetatype_p.h>
+#include <private/qqmltypeloader_p.h>
+#include <private/qv4executablecompilationunit_p.h>
+#include <private/qv4engine_p.h>
 
 #include <QAtomicInteger>
 
@@ -229,6 +232,27 @@ public:
         }
 
         return nullptr;
+    }
+
+    static QQmlType compositeQmlType(
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit,
+            QQmlTypeLoader *typeLoader, const QString &type)
+    {
+        Q_ASSERT(typeLoader);
+
+        const QQmlType qmltype
+                = unit->typeNameCache->query<QQmlImport::AllowRecursion>(type, typeLoader).type;
+        if (!qmltype.isValid())
+            return qmltype;
+
+        if (qmltype.isInlineComponentType()
+                && !QQmlMetaType::obtainCompilationUnit(qmltype.typeId())) {
+            // If it seems to be an IC type, make sure there is an actual
+            // compilation unit for it. We create inline component types speculatively.
+            return QQmlType();
+        }
+
+        return qmltype;
     }
 
 private:

@@ -96,6 +96,11 @@ public:
     {
         return m_imports.type(name).scope;
     }
+    QString nameForType(const QQmlJSScope::ConstPtr &type) const
+    {
+        return m_imports.name(originalType(type));
+    }
+
     QQmlJSScope::ConstPtr typeFromAST(QQmlJS::AST::Type *type) const;
     QQmlJSScope::ConstPtr typeForConst(QV4::ReturnedValue rv) const;
     QQmlJSRegisterContent typeForBinaryOperation(QSOperator::Op oper,

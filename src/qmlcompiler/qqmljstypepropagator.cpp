@@ -41,7 +41,7 @@ QQmlJSCompilePass::BlocksAndAnnotations QQmlJSTypePropagator::run(
 {
     m_function = function;
     m_error = error;
-    m_returnType = m_typeResolver->globalType(m_function->returnType);
+    m_returnType = m_function->returnType;
 
     do {
         // Reset the error if we need to do another pass

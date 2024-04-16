@@ -247,6 +247,9 @@ protected:
 
     QString metaTypeFromType(const QQmlJSScope::ConstPtr &type) const;
     QString metaTypeFromName(const QQmlJSScope::ConstPtr &type) const;
+    QString compositeMetaType(const QString &elementName) const;
+    QString compositeListMetaType(const QString &elementName) const;
+
     QString contentPointer(const QQmlJSRegisterContent &content, const QString &var);
     QString contentType(const QQmlJSRegisterContent &content, const QString &var);
 
