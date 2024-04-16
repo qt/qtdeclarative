@@ -464,9 +464,9 @@
     Next, we add a drop shadow to the \l {Control::}{background} delegate of
     the Button:
 
-    \code
+    \qml
     // ...
-    import QtGraphicalEffects
+    import QtQuick.Effects
     import MyStyle
     // ...
 
@@ -474,14 +474,15 @@
         // ...
 
         layer.enabled: control.enabled && control.MyStyle.elevation > 0
-        layer.effect: DropShadow {
-            verticalOffset: 1
-            color: control.visualFocus ? "#330066ff" : "#aaaaaa"
-            samples: control.MyStyle.elevation
-            spread: 0.5
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowHorizontalOffset: 3
+            shadowVerticalOffset: 3
+            shadowColor: control.visualFocus ? "#330066ff" : "#aaaaaa"
+            shadowBlur: control.pressed ? 0.8 : 0.4
         }
     }
-    \endcode
+    \endqml
 
     Note that we:
 
