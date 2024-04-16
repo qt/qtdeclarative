@@ -162,6 +162,7 @@ private:
                           const QModelIndex &bottomRight,
                           const QVector<int> &roles);
     void emitQueuedSignals();
+    void connectToModel();
 
     QPointer<QAbstractItemModel> m_model = nullptr;
     QPersistentModelIndex m_rootIndex;
@@ -173,6 +174,7 @@ private:
     bool m_modelLayoutChanged = false;
     int m_signalAggregatorStack = 0;
     QVector<DataChangedParams> m_queuedDataChanged;
+    std::array<QMetaObject::Connection, 15> m_connections;
     int m_column = 0;
 };
 
