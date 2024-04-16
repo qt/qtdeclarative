@@ -284,6 +284,7 @@ private slots:
     void jsonStringifyHugeArray();
 
     void tostringRecursionCheck();
+    void arrayJoinRecursionCheck();
     void arrayIncludesWithLargeArray();
     void printCircularArray();
     void typedArraySet();
@@ -5538,6 +5539,20 @@ void tst_QJSEngine::tostringRecursionCheck()
     }
     main();
     )js");
+
+    QVERIFY(value.isError());
+    QCOMPARE(value.toString(), QLatin1String("RangeError: Maximum call stack size exceeded."));
+}
+
+void tst_QJSEngine::arrayJoinRecursionCheck()
+{
+    QJSEngine engine;
+    auto value = engine.evaluate(R"js(
+    a=[0,1];
+    a[0]=a;
+    a+0
+    )js");
+
     QVERIFY(value.isError());
     QCOMPARE(value.toString(), QLatin1String("RangeError: Maximum call stack size exceeded."));
 }

@@ -573,6 +573,7 @@ ReturnedValue ArrayPrototype::method_join(const FunctionObject *functionObject,
                                           const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(functionObject);
+    CHECK_STACK_LIMITS(scope.engine)
     ScopedObject instance(scope, thisObject->toObject(scope.engine));
 
     if (!instance)
