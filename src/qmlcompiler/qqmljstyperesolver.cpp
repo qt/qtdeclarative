@@ -376,6 +376,16 @@ bool QQmlJSTypeResolver::isUnsignedInteger(const QQmlJSScope::ConstPtr &type) co
             || equals(type, m_uint64Type);
 }
 
+bool QQmlJSTypeResolver::isNativeArrayIndex(const QQmlJSScope::ConstPtr &type) const
+{
+    return (equals(type, m_uint8Type)
+            || equals(type, m_int8Type)
+            || equals(type, m_uint16Type)
+            || equals(type, m_int16Type)
+            || equals(type, m_uint32Type)
+            || equals(type, m_int32Type));
+}
+
 QQmlJSScope::ConstPtr
 QQmlJSTypeResolver::containedType(const QQmlJSRegisterContent &container) const
 {
@@ -1395,11 +1405,11 @@ QQmlJSRegisterContent QQmlJSTypeResolver::lengthProperty(
 {
     QQmlJSMetaProperty prop;
     prop.setPropertyName(u"length"_s);
-    prop.setTypeName(u"int"_s);
-    prop.setType(int32Type());
+    prop.setTypeName(u"qsizetype"_s);
+    prop.setType(sizeType());
     prop.setIsWritable(isWritable);
     return QQmlJSRegisterContent::create(
-            int32Type(), prop, QQmlJSRegisterContent::InvalidLookupIndex,
+            sizeType(), prop, QQmlJSRegisterContent::InvalidLookupIndex,
             QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::Builtin, scope);
 }
 
@@ -1612,7 +1622,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent 
             return scope->valueType();
 
         if (equals(scope, m_forInIteratorPtr))
-            return m_int32Type;
+            return m_sizeType;
 
         if (equals(scope, m_forOfIteratorPtr))
             return list.scopeType()->valueType();

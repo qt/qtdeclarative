@@ -742,7 +742,7 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
     if (m_typeResolver->isNumeric(m_state.accumulatorIn())) {
         const auto contained = m_typeResolver->containedType(m_state.accumulatorIn());
         if (m_typeResolver->isSignedInteger(contained))
-            addReadAccumulator(m_typeResolver->globalType(m_typeResolver->int32Type()));
+            addReadAccumulator(m_typeResolver->globalType(m_typeResolver->sizeType()));
         else if (m_typeResolver->isUnsignedInteger(contained))
             addReadAccumulator(m_typeResolver->globalType(m_typeResolver->uint32Type()));
         else

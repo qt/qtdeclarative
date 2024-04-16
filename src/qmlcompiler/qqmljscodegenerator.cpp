@@ -723,13 +723,11 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
     AccumulatorConverter registers(this);
     const QString baseName = registerVariable(base);
 
-    if (!m_typeResolver->isIntegral(indexType)) {
+    if (!m_typeResolver->isNativeArrayIndex(indexType)) {
         m_body += u"if (!QJSNumberCoercion::isArrayIndex("_s + indexName + u"))\n"_s
                 + voidAssignment
                 + u"else "_s;
-    }
-
-    if (!m_typeResolver->isUnsignedInteger(indexType)) {
+    } else if (!m_typeResolver->isUnsignedInteger(indexType)) {
         m_body += u"if ("_s + indexName + u" < 0)\n"_s
                 + voidAssignment
                 + u"else "_s;
@@ -774,9 +772,9 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
     INJECT_TRACE_INFO(generate_StoreElement);
 
     const QQmlJSRegisterContent baseType = registerType(base);
-    const QQmlJSRegisterContent indexType = registerType(index);
+    const QQmlJSScope::ConstPtr indexType = m_typeResolver->containedType(registerType(index));
 
-    if (!m_typeResolver->isNumeric(registerType(index)) || !baseType.isList()) {
+    if (!m_typeResolver->isNumeric(indexType) || !baseType.isList()) {
         reject(u"StoreElement with non-list base type or non-numeric arguments"_s);
         return;
     }
@@ -794,26 +792,27 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
                                           m_typeResolver->containedType(valueType)));
 
     addInclude(u"QtQml/qjslist.h"_s);
-    m_body += u"if ("_s;
-    if (!m_typeResolver->isIntegral(indexType))
-        m_body += u"QJSNumberCoercion::isArrayIndex("_s + indexName + u") && "_s;
-    if (!m_typeResolver->isUnsignedInteger(m_typeResolver->containedType(indexType)))
-        m_body += indexName + u" >= 0"_s;
+    if (!m_typeResolver->isNativeArrayIndex(indexType))
+        m_body += u"if (QJSNumberCoercion::isArrayIndex("_s + indexName + u")) {\n"_s;
+    else if (!m_typeResolver->isUnsignedInteger(indexType))
+        m_body += u"if ("_s + indexName + u" >= 0) {\n"_s;
+    else
+        m_body += u"{\n"_s;
 
     if (m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->listPropertyType())) {
-        m_body += u" && "_s + indexName + u" < "_s + baseName + u".count(&"_s + baseName
+        m_body += u"    if ("_s + indexName + u" < "_s + baseName + u".count(&"_s + baseName
                 + u"))\n"_s;
-        m_body += u"    "_s + baseName + u".replace(&"_s + baseName
+        m_body += u"        "_s + baseName + u".replace(&"_s + baseName
                 + u", "_s + indexName + u", "_s;
         m_body += conversion(m_state.accumulatorIn(), elementType, m_state.accumulatorVariableIn)
                 + u");\n"_s;
+        m_body += u"}\n"_s;
         return;
     }
 
     if (m_state.isRegisterAffectedBySideEffects(base))
         reject(u"LoadElement on a sequence potentially affected by side effects"_s);
 
-    m_body += u") {\n"_s;
     m_body += u"    if ("_s + indexName + u" >= " + baseName + u".size())\n"_s;
     m_body += u"        QJSList(&"_s + baseName + u", aotContext->engine).resize("_s
             + indexName + u" + 1);\n"_s;
@@ -1381,7 +1380,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         if (stored->isListProperty()) {
             m_body += m_state.accumulatorVariableOut + u" = "_s;
             m_body += conversion(
-                        m_typeResolver->globalType(m_typeResolver->int32Type()),
+                        m_typeResolver->globalType(m_typeResolver->sizeType()),
                         m_state.accumulatorOut(),
                         m_state.accumulatorVariableIn + u".count("_s + u'&'
                             + m_state.accumulatorVariableIn + u')');
@@ -1389,7 +1388,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         } else if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
                    || m_typeResolver->equals(stored, m_typeResolver->stringType())) {
             m_body += m_state.accumulatorVariableOut + u" = "_s
-                    + conversion(m_typeResolver->globalType(m_typeResolver->int32Type()),
+                    + conversion(m_typeResolver->globalType(m_typeResolver->sizeType()),
                                  m_state.accumulatorOut(),
                                  m_state.accumulatorVariableIn + u".length()"_s)
                     + u";\n"_s;
@@ -2321,14 +2320,13 @@ void QQmlJSCodeGenerator::generate_Construct(int func, int argc, int argv)
                     + u"QLatin1String(\"Invalid array length\"));\n"_s;
 
             const QString indexName = registerVariable(argv);
-            const auto indexType = registerType(argv);
-            if (!m_typeResolver->isIntegral(indexType)) {
+            const auto indexType = m_typeResolver->containedType(registerType(argv));
+            if (!m_typeResolver->isNativeArrayIndex(indexType)) {
                 m_body += u"if (!QJSNumberCoercion::isArrayIndex("_s + indexName + u")) {\n"_s
                         + error;
                 generateReturnError();
                 m_body += u"}\n"_s;
-            } else if (!m_typeResolver->isUnsignedInteger(
-                               m_typeResolver->containedType(indexType))) {
+            } else if (!m_typeResolver->isUnsignedInteger(indexType)) {
                 m_body += u"if ("_s + indexName + u" < 0) {\n"_s
                         + error;
                 generateReturnError();
@@ -2340,7 +2338,7 @@ void QQmlJSCodeGenerator::generate_Construct(int func, int argc, int argv)
             m_body += u"QJSList(&"_s + m_state.accumulatorVariableOut
                     + u", aotContext->engine).resize("_s
                     + convertStored(
-                              registerType(argv).storedType(), m_typeResolver->int32Type(),
+                              registerType(argv).storedType(), m_typeResolver->sizeType(),
                               consumedRegisterVariable(argv))
                     + u");\n"_s;
         } else if (!m_error->isValid()) {

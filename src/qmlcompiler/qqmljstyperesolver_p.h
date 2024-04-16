@@ -201,6 +201,7 @@ public:
     bool isIntegral(const QQmlJSScope::ConstPtr &type) const;
     bool isSignedInteger(const QQmlJSScope::ConstPtr &type) const;
     bool isUnsignedInteger(const QQmlJSScope::ConstPtr &type) const;
+    bool isNativeArrayIndex(const QQmlJSScope::ConstPtr &type) const;
 
     bool canHold(const QQmlJSScope::ConstPtr &container,
                  const QQmlJSScope::ConstPtr &contained) const;

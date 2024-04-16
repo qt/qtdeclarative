@@ -24,8 +24,24 @@ QT_BEGIN_NAMESPACE
   \internal
 
   Checks whether \a d contains a value that can serve as an index into an array.
-  For that, \a d must be a non-negative value representable as an int.
+  For that, \a d must be a non-negative value representable as an unsigned 32bit int.
  */
+
+/*!
+  \fn bool QJSNumberCoercion::isArrayIndex(qint64 i)
+  \internal
+
+  Checks whether \a i contains a value that can serve as an index into an array.
+  For that, \a d must be a non-negative value representable as an unsigned 32bit int.
+*/
+
+/*!
+  \fn bool QJSNumberCoercion::isArrayIndex(quint64 i)
+  \internal
+
+  Checks whether \a i contains a value that can serve as an index into an array.
+  For that, \a d must be a value representable as an unsigned 32bit int.
+*/
 
 /*!
   \fn int QJSNumberCoercion::toInteger(double d)
