@@ -261,6 +261,9 @@ public:
 
     bool isComponentRootElement() const;
 
+    void setAliases(const QStringList &aliases) { m_aliases = aliases; }
+    QStringList aliases() const { return m_aliases; }
+
     void setInterfaceNames(const QStringList& interfaces) { m_interfaceNames = interfaces; }
     QStringList interfaceNames() const { return m_interfaceNames; }
 
@@ -516,6 +519,7 @@ private:
     ImportedScope<QQmlJSScope::WeakConstPtr> m_baseType;
 
     ScopeType m_scopeType = ScopeType::QMLScope;
+    QStringList m_aliases;
     QStringList m_interfaceNames;
     QStringList m_ownDeferredNames;
     QStringList m_ownImmediateNames;

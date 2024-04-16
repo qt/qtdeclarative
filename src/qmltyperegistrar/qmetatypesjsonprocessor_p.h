@@ -240,6 +240,7 @@ private:
     };
 
     struct PreProcessResult {
+        QList<QAnyStringView> primitiveAliases;
         QAnyStringView foreignPrimitive;
         RegistrationMode mode;
     };

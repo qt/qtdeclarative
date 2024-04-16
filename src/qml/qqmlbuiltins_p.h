@@ -36,15 +36,53 @@
 #include <QtCore/qtypes.h>
 #include <QtCore/qchar.h>
 
+#include <climits>
+
 #if QT_CONFIG(regularexpression)
 #include <QtCore/qregularexpression.h>
 #endif
 
 QT_BEGIN_NAMESPACE
 
+// moc doesn't do 64bit constants, so we have to determine the size of qsizetype indirectly.
+// We assume that qsizetype is always the same size as a pointer. I haven't seen a platform
+// where this is not the case.
+// Furthermore moc is wrong about pretty much everything on 64bit windows. We need to hardcode
+// the size there.
+// Likewise, we also have to determine the size of long and ulong indirectly.
+
+#if defined(Q_OS_WIN64)
+
+static_assert(sizeof(long) == 4);
+#define QML_LONG_IS_32BIT
+static_assert(sizeof(qsizetype) == 8);
+#define QML_SIZE_IS_64BIT
+
+#elif QT_POINTER_SIZE == 4
+
+static_assert(sizeof(long) == 4);
+#define QML_LONG_IS_32BIT
+static_assert(sizeof(qsizetype) == 4);
+#define QML_SIZE_IS_32BIT
+
+#else
+
+static_assert(sizeof(long) == 8);
+#define QML_LONG_IS_64BIT
+static_assert(sizeof(qsizetype) == 8);
+#define QML_SIZE_IS_64BIT
+
+#endif
+
 #define QML_EXTENDED_JAVASCRIPT(EXTENDED_TYPE) \
     Q_CLASSINFO("QML.Extended", #EXTENDED_TYPE) \
-    Q_CLASSINFO("QML.ExtensionIsJavaScript", "true") \
+    Q_CLASSINFO("QML.ExtensionIsJavaScript", "true")
+
+template<typename A> struct QQmlPrimitiveAliasFriend {};
+
+#define QML_PRIMITIVE_ALIAS(PRIMITIVE_ALIAS) \
+    Q_CLASSINFO("QML.PrimitiveAlias", #PRIMITIVE_ALIAS) \
+    friend QQmlPrimitiveAliasFriend<PRIMITIVE_ALIAS>;
 
 struct QQmlVoidForeign
 {
@@ -81,6 +119,14 @@ struct QQmlIntForeign
     QML_VALUE_TYPE(int)
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(int)
+    QML_PRIMITIVE_ALIAS(qint32)
+    QML_PRIMITIVE_ALIAS(int32_t)
+#ifdef QML_SIZE_IS_32BIT
+    QML_PRIMITIVE_ALIAS(qsizetype)
+#endif
+#ifdef QML_LONG_IS_32BIT
+    QML_PRIMITIVE_ALIAS(long)
+#endif
 };
 
 struct QQmlDoubleForeign
@@ -90,6 +136,9 @@ struct QQmlDoubleForeign
     QML_VALUE_TYPE(double)
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(double)
+#if !defined(QT_COORD_TYPE) || defined(QT_COORD_TYPE_IS_DOUBLE)
+    QML_PRIMITIVE_ALIAS(qreal)
+#endif
 };
 
 struct QQmlStringForeign
@@ -164,6 +213,10 @@ struct QQmlQint8Foreign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(qint8)
+    QML_PRIMITIVE_ALIAS(int8_t)
+#if CHAR_MAX == SCHAR_MAX
+    QML_PRIMITIVE_ALIAS(char)
+#endif
 };
 
 struct QQmlQuint8Foreign
@@ -172,14 +225,11 @@ struct QQmlQuint8Foreign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(quint8)
-};
-
-struct QQmlCharForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_EXTENDED_JAVASCRIPT(Number)
-    QML_FOREIGN(char)
+    QML_PRIMITIVE_ALIAS(uint8_t)
+    QML_PRIMITIVE_ALIAS(uchar)
+#if CHAR_MAX == UCHAR_MAX
+    QML_PRIMITIVE_ALIAS(char)
+#endif
 };
 
 struct QQmlShortForeign
@@ -188,6 +238,8 @@ struct QQmlShortForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(short)
+    QML_PRIMITIVE_ALIAS(qint16)
+    QML_PRIMITIVE_ALIAS(int16_t)
 };
 
 struct QQmlUshortForeign
@@ -196,22 +248,8 @@ struct QQmlUshortForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(ushort)
-};
-
-struct QQmlLongForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_EXTENDED_JAVASCRIPT(Number)
-    QML_FOREIGN(long)
-};
-
-struct QQmlUlongForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_EXTENDED_JAVASCRIPT(Number)
-    QML_FOREIGN(ulong)
+    QML_PRIMITIVE_ALIAS(quint16)
+    QML_PRIMITIVE_ALIAS(uint16_t)
 };
 
 struct QQmlUintForeign
@@ -220,6 +258,11 @@ struct QQmlUintForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(uint)
+    QML_PRIMITIVE_ALIAS(quint32)
+    QML_PRIMITIVE_ALIAS(uint32_t)
+#ifdef QML_LONG_IS_32BIT
+    QML_PRIMITIVE_ALIAS(ulong)
+#endif
 };
 
 struct QQmlQlonglongForeign
@@ -228,6 +271,14 @@ struct QQmlQlonglongForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(qlonglong)
+    QML_PRIMITIVE_ALIAS(qint64)
+    QML_PRIMITIVE_ALIAS(int64_t)
+#ifdef QML_LONG_IS_64BIT
+    QML_PRIMITIVE_ALIAS(long)
+#endif
+#ifdef QML_SIZE_IS_64BIT
+    QML_PRIMITIVE_ALIAS(qsizetype)
+#endif
 };
 
 struct QQmlQulonglongForeign
@@ -236,6 +287,11 @@ struct QQmlQulonglongForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(qulonglong)
+    QML_PRIMITIVE_ALIAS(quint64)
+    QML_PRIMITIVE_ALIAS(uint64_t)
+#ifdef QML_LONG_IS_64BIT
+    QML_PRIMITIVE_ALIAS(ulong)
+#endif
 };
 
 struct QQmlFloatForeign
@@ -244,6 +300,9 @@ struct QQmlFloatForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(float)
+#if defined(QT_COORD_TYPE) && defined(QT_COORD_TYPE_IS_FLOAT)
+    QML_PRIMITIVE_ALIAS(qreal)
+#endif
 };
 
 struct QQmlQCharForeign
@@ -299,7 +358,8 @@ struct QQmlQObjectListForeign
     Q_GADGET
     QML_ANONYMOUS
     QML_FOREIGN(QObjectList)
-    QML_SEQUENTIAL_CONTAINER(QObject *)
+    QML_SEQUENTIAL_CONTAINER(QObject*)
+    QML_PRIMITIVE_ALIAS(QList<QObject*>)
 };
 
 struct QQmlQJSValueForeign

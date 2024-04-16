@@ -38,6 +38,9 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         m_qml.writeStringBinding(S_FILE, collector.file);
     m_qml.writeStringBinding(S_NAME, collector.className);
 
+    if (!collector.primitiveAliases.isEmpty())
+        m_qml.writeStringListBinding(S_ALIASES, collector.primitiveAliases);
+
     if (!collector.accessSemantics.isEmpty())
         m_qml.writeStringBinding(S_ACCESS_SEMANTICS, collector.accessSemantics);
 

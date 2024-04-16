@@ -739,47 +739,47 @@ void tst_qmltyperegistrar::typedEnum()
         exportMetaObjectRevisions: [256]
         Enum {
             name: "UChar"
-            type: "quint8"
+            type: "uchar"
             values: ["V0"]
         }
         Enum {
             name: "Int8_T"
-            type: "qint8"
+            type: "int8_t"
             values: ["V1"]
         }
         Enum {
             name: "UInt8_T"
-            type: "quint8"
+            type: "uint8_t"
             values: ["V2"]
         }
         Enum {
             name: "Int16_T"
-            type: "short"
+            type: "int16_t"
             values: ["V3"]
         }
         Enum {
             name: "UInt16_T"
-            type: "ushort"
+            type: "uint16_t"
             values: ["V4"]
         }
         Enum {
             name: "Int32_T"
-            type: "int"
+            type: "int32_t"
             values: ["V5"]
         }
         Enum {
             name: "UInt32_T"
-            type: "uint"
+            type: "uint32_t"
             values: ["V6"]
         }
         Enum {
             name: "S"
-            type: "short"
+            type: "qint16"
             values: ["A", "B", "C"]
         }
         Enum {
             name: "T"
-            type: "ushort"
+            type: "quint16"
             values: ["D", "E", "F"]
         }
         Enum {
@@ -805,7 +805,7 @@ void tst_qmltyperegistrar::listSignal()
         prototype: "QObject"
         Signal {
             name: "objectListHappened"
-            Parameter { type: "QObjectList" }
+            Parameter { type: "QList<QObject*>" }
         }
     })"));
 }
@@ -993,10 +993,10 @@ void tst_qmltyperegistrar::longNumberTypes()
         exports: ["QmlTypeRegistrarTest/LongNumberTypes 1.0"]
         isCreatable: true
         exportMetaObjectRevisions: [256]
-        Property { name: "a"; type: "qlonglong"; index: 0 }
-        Property { name: "b"; type: "qlonglong"; index: 1 }
-        Property { name: "c"; type: "qulonglong"; index: 2 }
-        Property { name: "d"; type: "qulonglong"; index: 3 }
+        Property { name: "a"; type: "qint64"; index: 0 }
+        Property { name: "b"; type: "int64_t"; index: 1 }
+        Property { name: "c"; type: "quint64"; index: 2 }
+        Property { name: "d"; type: "uint64_t"; index: 3 }
     })"));
 }
 

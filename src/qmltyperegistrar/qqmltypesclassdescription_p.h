@@ -56,6 +56,7 @@ struct QmlTypesClassDescription
     MetaType resolvedClass;
     QAnyStringView file;
     QAnyStringView className;
+    QList<QAnyStringView> primitiveAliases;
     QList<QAnyStringView> elementNames;
     QAnyStringView defaultProp;
     QAnyStringView parentProp;

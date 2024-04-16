@@ -1026,7 +1026,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                           { Message { QStringLiteral("Ready") } } } };
     QTest::newRow("nullBinding") << QStringLiteral("nullBinding.qml")
                                  << Result{ { Message{ QStringLiteral(
-                                            "Cannot assign literal of type null to double") } } };
+                                            "Cannot assign literal of type null to qreal") } } };
     QTest::newRow("missingRequiredAlias")
             << QStringLiteral("missingRequiredAlias.qml")
             << Result { { Message {

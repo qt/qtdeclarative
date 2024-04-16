@@ -25,6 +25,7 @@ namespace Constants {
 namespace DotQmltypes {
 static constexpr QLatin1StringView S_ACCESS_SEMANTICS             { "accessSemantics" };
 static constexpr QLatin1StringView S_ALIAS                        { "alias" };
+static constexpr QLatin1StringView S_ALIASES                      { "aliases" };
 static constexpr QLatin1StringView S_ARGUMENTS                    { "arguments" };
 static constexpr QLatin1StringView S_ATTACHED_TYPE                { "attachedType" };
 static constexpr QLatin1StringView S_BINDABLE                     { "bindable" };
@@ -156,6 +157,7 @@ static constexpr QLatin1StringView S_EXTENSION_IS_NAMESPACE       { "QML.Extensi
 static constexpr QLatin1StringView S_FOREIGN                      { "QML.Foreign" };
 static constexpr QLatin1StringView S_FOREIGN_IS_NAMESPACE         { "QML.ForeignIsNamespace" };
 static constexpr QLatin1StringView S_HAS_CUSTOM_PARSER            { "QML.HasCustomParser" };
+static constexpr QLatin1StringView S_PRIMITIVE_ALIAS              { "QML.PrimitiveAlias" };
 static constexpr QLatin1StringView S_REMOVED_IN_VERSION           { "QML.RemovedInVersion" };
 static constexpr QLatin1StringView S_ROOT                         { "QML.Root" };
 static constexpr QLatin1StringView S_SEQUENCE                     { "QML.Sequence" };

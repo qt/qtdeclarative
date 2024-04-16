@@ -154,6 +154,13 @@ static bool isComposite(const QQmlJSScope::ConstPtr &scope)
     return scope.factory() || scope->isComposite();
 }
 
+static QStringList aliases(const QQmlJSScope::ConstPtr &scope)
+{
+    return isComposite(scope)
+        ? QStringList()
+        : scope->aliases();
+}
+
 QQmlJSImporter::QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
                                bool useOptionalImports)
     : m_importPaths(importPaths),
@@ -407,6 +414,12 @@ void QQmlJSImporter::processImport(const QQmlJS::Import &importDescription,
     const QString modulePrefix = QStringLiteral("$module$");
     QHash<QString, QList<QQmlJSScope::Export>> seenExports;
 
+    const auto insertAliases = [&](const QQmlJSScope::ConstPtr &scope, QTypeRevision revision) {
+        const QStringList cppAliases = aliases(scope);
+        for (const QString &alias : cppAliases)
+            types->cppNames.setType(alias, { scope, revision });
+    };
+
     const auto insertExports = [&](const QQmlJSExportedScope &val, const QString &cppName) {
         QQmlJSScope::Export bestExport;
 
@@ -479,6 +492,8 @@ void QQmlJSImporter::processImport(const QQmlJS::Import &importDescription,
                 : QTypeRevision::zero();
         types->cppNames.setType(cppName, { val.scope, bestRevision });
 
+        insertAliases(val.scope, bestRevision);
+
         const QTypeRevision bestVersion = bestExport.isValid()
                 ? bestExport.version()
                 : QTypeRevision::zero();
@@ -518,6 +533,7 @@ void QQmlJSImporter::processImport(const QQmlJS::Import &importDescription,
             types->qmlNames.setType(
                         prefixedName(internalPrefix, cppName), { val.scope, QTypeRevision() });
             types->cppNames.setType(cppName, { val.scope, QTypeRevision() });
+            insertAliases(val.scope, QTypeRevision());
         } else {
             insertExports(val, cppName);
         }

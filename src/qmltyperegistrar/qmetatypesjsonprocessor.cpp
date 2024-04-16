@@ -227,6 +227,7 @@ MetaTypesJsonProcessor::PreProcessResult MetaTypesJsonProcessor::preProcess(
     // and is not the root object, then it's foreign type has no entry of its own.
     // In that case we need to generate a "primitive" entry.
 
+    QList<QAnyStringView> aliases;
     QAnyStringView foreign;
     RegistrationMode mode = NoRegistration;
     bool isSelfExtendingValueType = false;
@@ -237,6 +238,8 @@ MetaTypesJsonProcessor::PreProcessResult MetaTypesJsonProcessor::preProcess(
     for (const ClassInfo &classInfo : classDef.classInfos()) {
         if (classInfo.name == S_FOREIGN)
             foreign = classInfo.value;
+        else if (classInfo.name == S_PRIMITIVE_ALIAS)
+            aliases.append(classInfo.value);
         else if (classInfo.name == S_EXTENSION_IS_JAVA_SCRIPT)
             hasJavaScriptExtension = (classInfo.value == S_TRUE);
         else if (classInfo.name == S_EXTENDED && classDef.kind() == MetaType::Kind::Gadget)
@@ -267,6 +270,7 @@ MetaTypesJsonProcessor::PreProcessResult MetaTypesJsonProcessor::preProcess(
     }
 
     return PreProcessResult {
+        aliases,
         (!isRootObject && (isSequence || isSelfExtendingValueType || hasJavaScriptExtension))
                 ? foreign
                 : QAnyStringView(),
@@ -667,8 +671,10 @@ void MetaTypesJsonProcessor::processTypes(const QCborMap &types)
             break;
         }
 
-        if (!preprocessed.foreignPrimitive.isEmpty())
+        if (!preprocessed.foreignPrimitive.isEmpty()) {
             m_primitiveTypes.emplaceBack(preprocessed.foreignPrimitive);
+            m_primitiveTypes.append(preprocessed.primitiveAliases);
+        }
     }
 }
 
@@ -681,8 +687,10 @@ void MetaTypesJsonProcessor::processForeignTypes(const QCborMap &types)
         PreProcessResult preprocessed = preProcess(classDef, PopulateMode::No);
 
         m_foreignTypes.emplaceBack(classDef);
-        if (!preprocessed.foreignPrimitive.isEmpty())
+        if (!preprocessed.foreignPrimitive.isEmpty()) {
             m_primitiveTypes.emplaceBack(preprocessed.foreignPrimitive);
+            m_primitiveTypes.append(preprocessed.primitiveAliases);
+        }
     }
 }
 

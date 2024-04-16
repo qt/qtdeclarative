@@ -31,6 +31,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
       m_trackedTypes(std::make_unique<QHash<QQmlJSScope::ConstPtr, TrackedType>>())
 {
     const QQmlJSImporter::ImportedTypes &builtinTypes = m_imports;
+
     m_voidType = builtinTypes.type(u"void"_s).scope;
     assertExtension(m_voidType, "undefined"_L1);
 

@@ -8,6 +8,7 @@ QtObject {
 
     property string file
     required property string name
+    property list<string> aliases: []
     property string prototype
     property list<string> exports: []
     property list<int> exportMetaObjectRevisions
