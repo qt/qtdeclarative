@@ -4,7 +4,7 @@
 /*!
 \page qtqml-tooling-qmlls.html
 \title \QMLLS Reference
-\brief Overview of the \QMLLS (qmlls).
+\brief Overview of \QMLLS (qmlls).
 \ingroup qtqml-tooling
 
 \QMLLS is a tool shipped with Qt that helps you write code
