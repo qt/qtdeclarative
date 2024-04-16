@@ -195,6 +195,7 @@ set(qml_files
     math.qml
     mathMinMax.qml
     mathOperations.qml
+    mathStaticProperties.qml
     mergedObjectRead.qml
     mergedObjectWrite.qml
     methodOnListLookup.qml
@@ -227,6 +228,7 @@ set(qml_files
     popContextAfterRet.qml
     prefixedMetaType.qml
     pressAndHoldButton.qml
+    qtbug113150.qml
     reduceWithNullThis.qml
     readEnumFromInstance.qml
     readonlyListProperty.qml

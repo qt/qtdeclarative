@@ -160,6 +160,7 @@ private slots:
     void math();
     void mathMinMax();
     void mathOperations();
+    void mathStaticProperties();
     void mergedObjectReadWrite();
     void methodOnListLookup();
     void methods();
@@ -3213,6 +3214,26 @@ void tst_QmlCppCodegen::mathOperations()
             }
         }
     }
+}
+
+void tst_QmlCppCodegen::mathStaticProperties()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/mathStaticProperties.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    // Approximate values based on
+    // https://262.ecma-international.org/14.0/#sec-value-properties-of-the-math-object
+    QCOMPARE(object->property("e").toDouble(), 2.7182818284590452354);
+    QCOMPARE(object->property("ln10").toDouble(), 2.302585092994046);
+    QCOMPARE(object->property("ln2").toDouble(), 0.6931471805599453);
+    QCOMPARE(object->property("log10e").toDouble(), 0.4342944819032518);
+    QCOMPARE(object->property("log2e").toDouble(), 1.4426950408889634);
+    QCOMPARE(object->property("pi").toDouble(), 3.1415926535897932);
+    QCOMPARE(object->property("sqrt1_2").toDouble(), 0.7071067811865476);
+    QCOMPARE(object->property("sqrt2").toDouble(), 1.4142135623730951);
 }
 
 void tst_QmlCppCodegen::mergedObjectReadWrite()

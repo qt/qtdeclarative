@@ -882,6 +882,22 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
     }
 
     if (m_state.accumulatorOut().isProperty()) {
+        const QQmlJSScope::ConstPtr mathObject
+                = m_typeResolver->jsGlobalObject()->property(u"Math"_s).type();
+        if (m_typeResolver->registerContains(m_state.accumulatorIn(), mathObject)) {
+            QQmlJSMetaProperty prop;
+            prop.setPropertyName(propertyName);
+            prop.setTypeName(u"double"_s);
+            prop.setType(m_typeResolver->realType());
+            setAccumulator(
+                QQmlJSRegisterContent::create(
+                    m_typeResolver->realType(), prop, m_state.accumulatorIn().resultLookupIndex(), lookupIndex,
+                    QQmlJSRegisterContent::GenericObjectProperty, mathObject)
+            );
+
+            return;
+        }
+
         if (m_typeResolver->registerContains(
                     m_state.accumulatorOut(), m_typeResolver->voidType())) {
             setError(u"Type %1 does not have a property %2 for reading"_s

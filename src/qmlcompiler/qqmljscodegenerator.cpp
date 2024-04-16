@@ -1245,6 +1245,36 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         return;
     }
 
+    if (m_typeResolver->equals(m_state.accumulatorOut().scopeType(), mathObject())) {
+        QString name = m_jsUnitGenerator->lookupName(index);
+
+        double value{};
+        if (name == u"E") {
+            value = std::exp(1.0);
+        } else if (name == u"LN10") {
+            value = log(10.0);
+        } else if (name == u"LN2") {
+            value = log(2.0);
+        } else if (name == u"LOG10E") {
+            value = log10(std::exp(1.0));
+        } else if (name == u"LOG2E") {
+            value = log2(std::exp(1.0));
+        } else if (name == u"PI") {
+            value = 3.14159265358979323846;
+        } else if (name == u"SQRT1_2") {
+            value = std::sqrt(0.5);
+        } else if (name == u"SQRT2") {
+            value = std::sqrt(2.0);
+        } else {
+            Q_UNREACHABLE();
+        }
+
+        m_body += m_state.accumulatorVariableOut + u" = "_s
+                  + conversion(m_typeResolver->realType(), m_state.accumulatorOut(), toNumericString(value))
+                  + u";\n"_s;
+        return;
+    }
+
     if (m_state.accumulatorOut().isImportNamespace()) {
         Q_ASSERT(m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectModulePrefix);
         // If we have an object module prefix, we need to pass through the original object.
