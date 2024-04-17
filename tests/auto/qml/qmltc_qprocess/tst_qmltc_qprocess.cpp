@@ -56,6 +56,7 @@ private slots:
     void invalidTypeAnnotation();
     void constructFromString();
     void unboundRequiredPropertyInInlineComponent();
+    void componentDefinitionInnerRequiredProperty();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -347,6 +348,16 @@ void tst_qmltc_qprocess::unboundRequiredPropertyInInlineComponent()
         const auto errors = runQmltc(u"unboundRequiredPropertyInInlineComponent.qml"_s, false);
         QVERIFY(errors.contains(
                 u"unboundRequiredPropertyInInlineComponent.qml:9:5: Component is missing required property foo from InlineComponent [required]"_s
+        ));
+    }
+}
+
+void tst_qmltc_qprocess::componentDefinitionInnerRequiredProperty()
+{
+    {
+        const auto errors = runQmltc(u"componentDefinitionInnerRequiredProperty.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"componentDefinitionInnerRequiredProperty.qml:11:13: Component is missing required property bar from here [required]"
         ));
     }
 }
