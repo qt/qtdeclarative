@@ -234,8 +234,9 @@ bool tst_Baseline_Controls::renderAndGrab(const QString& qmlFile, const QStringL
     bool res = usePipe ? img.load(&grabber, "ppm") : img.load(tmpfile);
     if (!res || img.isNull()) {
         if (errMsg) {
-            QString s("Failed to grab screen. qmlscenegrabber exitcode: %1. Process error: %2. Stderr:%3");
-            *errMsg = s.arg(grabber.exitCode()).arg(grabber.errorString()).arg(blockify(grabber.readAllStandardError()));
+            QString s("Failed to grab screen in %1. qmlscenegrabber exitcode: %2. Process error: %3. Stderr:%4");
+            *errMsg = s.arg(qmlFile).arg(grabber.exitCode())
+                       .arg(grabber.errorString()).arg(blockify(grabber.readAllStandardError()));
         }
         if (!usePipe)
             QFile::remove(tmpfile);
