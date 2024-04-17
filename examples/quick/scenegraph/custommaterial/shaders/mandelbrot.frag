@@ -30,21 +30,30 @@ void main()
     c.x = (vTexCoord.x - 0.5) / ubuf.zoom + ubuf.center.x;
     c.y = aspect_ratio * (vTexCoord.y - 0.5) / ubuf.zoom + ubuf.center.y;
 
-    int i;
+    int iLast;
     z = c;
-    for (i = 0; i < ubuf.limit; i++) {
+    for (int i = 0; i < 1000000; i++) {
+        if (i >= ubuf.limit)
+        {
+            iLast = i;
+            break;
+        }
         float x = (z.x * z.x - z.y * z.y) + c.x;
         float y = (z.y * z.x + z.x * z.y) + c.y;
 
-        if ((x * x + y * y) > 4.0) break;
+        if ((x * x + y * y) > 4.0)
+        {
+            iLast = i;
+            break;
+        }
         z.x = x;
         z.y = y;
     }
 
-    if (i == ubuf.limit) {
+    if (iLast == ubuf.limit) {
         fragColor = vec4(0.0, 0.0, 0.0, 1.0);
     } else {
-        float f = (i * 1.0) / ubuf.limit;
+        float f = (iLast * 1.0) / ubuf.limit;
         fragColor = mix(color1, color2, sqrt(f));
     }
 }
