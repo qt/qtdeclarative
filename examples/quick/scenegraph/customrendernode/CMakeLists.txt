@@ -29,6 +29,8 @@ qt_add_qml_module(customrendernode
 )
 
 qt6_add_shaders(customrendernode "shaders"
+    # gl_VertexId is in earliest OpenGL ES 3.00, and GLSL 130
+    GLSL "300 es,130"
     PREFIX
         "/scenegraph/customrendernode"
     FILES
