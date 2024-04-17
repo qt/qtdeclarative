@@ -94,6 +94,15 @@ void SquircleRenderer::init()
 
         initializeOpenGLFunctions();
 
+        const float values[] = { -1, -1, 1, -1, -1, 1, 1, 1 };
+
+        m_vbo.create();
+        m_vbo.bind();
+        m_vbo.allocate(values, sizeof(values));
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), nullptr);
+
         m_program = new QOpenGLShaderProgram();
         m_program->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex,
                                                     "attribute highp vec4 vertices;"
@@ -125,23 +134,12 @@ void SquircleRenderer::paint()
     // OpenGL directly.
     m_window->beginExternalCommands();
 
+    m_vbo.bind();
     m_program->bind();
+    m_program->setUniformValue("t", (float)m_t);
 
-    m_program->enableAttributeArray(0);
-
-    float values[] = {
-        -1, -1,
-        1, -1,
-        -1, 1,
-        1, 1
-    };
-
-    // This example relies on (deprecated) client-side pointers for the vertex
-    // input. Therefore, we have to make sure no vertex buffer is bound.
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    m_program->setAttributeArray(0, GL_FLOAT, values, 2);
-    m_program->setUniformValue("t", (float) m_t);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), nullptr);
 
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
@@ -152,7 +150,7 @@ void SquircleRenderer::paint()
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    m_program->disableAttributeArray(0);
+    glDisableVertexAttribArray(0);
     m_program->release();
 
     m_window->endExternalCommands();

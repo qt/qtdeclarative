@@ -8,6 +8,7 @@
 #include <QtQuick/QQuickWindow>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLFunctions>
+#include <QOpenGLBuffer>
 
 
 
@@ -31,6 +32,7 @@ private:
     qreal m_t = 0.0;
     QOpenGLShaderProgram *m_program = nullptr;
     QQuickWindow *m_window = nullptr;
+    QOpenGLBuffer m_vbo;
 };
 //! [1]
 
