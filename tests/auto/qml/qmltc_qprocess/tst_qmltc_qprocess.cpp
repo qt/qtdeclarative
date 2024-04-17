@@ -57,6 +57,7 @@ private slots:
     void constructFromString();
     void unboundRequiredPropertyInInlineComponent();
     void componentDefinitionInnerRequiredProperty();
+    void componentDefinitionInnerRequiredPropertyFromOutside();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -358,6 +359,17 @@ void tst_qmltc_qprocess::componentDefinitionInnerRequiredProperty()
         const auto errors = runQmltc(u"componentDefinitionInnerRequiredProperty.qml"_s, false);
         QVERIFY(errors.contains(
                 u"componentDefinitionInnerRequiredProperty.qml:11:13: Component is missing required property bar from here [required]"
+        ));
+    }
+}
+
+void tst_qmltc_qprocess::componentDefinitionInnerRequiredPropertyFromOutside()
+{
+    {
+        const auto errors =
+                runQmltc(u"componentDefinitionInnerRequiredPropertyFromOutside.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"componentDefinitionInnerRequiredPropertyFromOutside.qml:15:13: Component is missing required property requiredProperty from TypeWithRequiredProperty [required]"
         ));
     }
 }
