@@ -58,6 +58,7 @@ private slots:
     void unboundRequiredPropertyInInlineComponent();
     void componentDefinitionInnerRequiredProperty();
     void componentDefinitionInnerRequiredPropertyFromOutside();
+    void innerLevelRequiredProperty();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -370,6 +371,16 @@ void tst_qmltc_qprocess::componentDefinitionInnerRequiredPropertyFromOutside()
                 runQmltc(u"componentDefinitionInnerRequiredPropertyFromOutside.qml"_s, false);
         QVERIFY(errors.contains(
                 u"componentDefinitionInnerRequiredPropertyFromOutside.qml:15:13: Component is missing required property requiredProperty from TypeWithRequiredProperty [required]"
+        ));
+    }
+}
+
+void tst_qmltc_qprocess::innerLevelRequiredProperty()
+{
+    {
+        const auto errors = runQmltc(u"innerLevelRequiredProperty.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"innerLevelRequiredProperty.qml:7:5: Component is missing required property foo from here [required]"
         ));
     }
 }

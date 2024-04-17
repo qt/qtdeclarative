@@ -47,6 +47,7 @@ qt6_add_qml_module(tst_qmltc_qprocess
         data/unboundRequiredPropertyInInlineComponent.qml
         data/componentDefinitionInnerRequiredProperty.qml
         data/componentDefinitionInnerRequiredPropertyFromOutside.qml
+        data/innerLevelRequiredProperty.qml
 )
 
 set(common_libraries
