@@ -43,6 +43,7 @@ qt6_add_qml_module(tst_qmltc_qprocess
         data/QmlBaseFromAnotherModule.qml
         data/invalidTypeAnnotation.qml
         data/constructFromString.qml
+        data/unboundRequiredPropertyInInlineComponent.qml
 )
 
 set(common_libraries
