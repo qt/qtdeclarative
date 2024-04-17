@@ -1382,7 +1382,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
 /*!
   \qmlproperty int QtQuick::GridView::count
-  This property holds the number of items in the view.
+  This property holds the number of items in the model.
 */
 
 /*!

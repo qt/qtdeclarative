@@ -2411,7 +2411,7 @@ QQuickListView::~QQuickListView()
 
 /*!
   \qmlproperty int QtQuick::ListView::count
-  This property holds the number of items in the view.
+  This property holds the number of items in the model.
 */
 
 /*!
