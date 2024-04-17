@@ -60,7 +60,7 @@ public:
 
         appwindow = qobject_cast<QQuickApplicationWindow *>(window);
         if (preferAppWindow)
-            QObject::connect(this, &QQuickWindow::afterRendering, this, &GrabbingView::startGrabbing);
+            QObject::connect(appwindow, &QQuickWindow::afterRendering, this, &GrabbingView::startGrabbing);
     }
     QQuickApplicationWindow* appWindow() { return appwindow; }
 
