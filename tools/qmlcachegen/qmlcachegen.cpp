@@ -83,6 +83,9 @@ int main(int argc, char **argv)
     QCommandLineOption directCallsOption("direct-calls"_L1, QCoreApplication::translate("main", "This option is ignored."));
     directCallsOption.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(directCallsOption);
+    QCommandLineOption staticOption("static"_L1, QCoreApplication::translate("main", "This option is ignored."));
+    staticOption.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOption(staticOption);
     QCommandLineOption importsOption("i"_L1, QCoreApplication::translate("main", "Import extra qmldir"), QCoreApplication::translate("main", "qmldir file"));
     parser.addOption(importsOption);
     QCommandLineOption importPathOption("I"_L1, QCoreApplication::translate("main", "Look for QML modules in specified directory"), QCoreApplication::translate("main", "import directory"));
