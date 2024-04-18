@@ -243,6 +243,12 @@ private:
     void recordEqualsType(int lhs);
     void recordCompareType(int lhs);
 
+    // helper functions to deal with special cases in generate_ methods
+    void generate_CallProperty_SCMath(int base, int arcg, int argv, const QQmlJSScope::ConstPtr mathObject);
+    void generate_CallProperty_SCconsole(int base, int argc, int argv, const QQmlJSScope::ConstPtr consoleType);
+    void generate_Construct_SCDate(int argc, int argv);
+    void generate_Construct_SCArray(int argc, int argv);
+
     QQmlJSRegisterContent m_returnType;
     QQmlSA::PassManager *m_passManager = nullptr;
     QQmlJSScope::ConstPtr m_attachedContext;

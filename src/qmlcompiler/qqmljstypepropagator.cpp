@@ -1093,6 +1093,68 @@ static bool isLoggingMethod(const QString &consoleMethod)
             || consoleMethod == u"warn" || consoleMethod == u"error";
 }
 
+void QQmlJSTypePropagator::generate_CallProperty_SCMath(int base, int argc, int argv, const QQmlJSScope::ConstPtr mathObject)
+{
+    // If we call a method on the Math object we don't need the actual Math object. We do need
+    // to transfer the type information to the code generator so that it knows that this is the
+    // Math object. Read the base register as void. void isn't stored, and the place where it's
+    // created will be optimized out if there are no other readers. The code generator can
+    // retrieve the original type and determine that it was the Math object.
+
+    addReadRegister(base, m_typeResolver->globalType(m_typeResolver->voidType()));
+
+    QQmlJSRegisterContent realType = m_typeResolver->returnType(
+            m_typeResolver->realType(), QQmlJSRegisterContent::MethodReturnValue, mathObject);
+    for (int i = 0; i < argc; ++i)
+        addReadRegister(argv + i, realType);
+    setAccumulator(realType);
+}
+
+void QQmlJSTypePropagator::generate_CallProperty_SCconsole(int base, int argc, int argv, const QQmlJSScope::ConstPtr consoleType)
+{
+    const QQmlJSRegisterContent voidType
+            = m_typeResolver->globalType(m_typeResolver->voidType());
+
+    // If we call a method on the console object we don't need the console object.
+    addReadRegister(base, voidType);
+
+    const QQmlJSRegisterContent stringType
+            = m_typeResolver->globalType(m_typeResolver->stringType());
+
+    if (argc > 0) {
+        const QQmlJSRegisterContent firstContent = m_state.registers[argv].content;
+        const QQmlJSScope::ConstPtr firstArg = m_typeResolver->containedType(firstContent);
+        switch (firstArg->accessSemantics()) {
+        case QQmlJSScope::AccessSemantics::Reference:
+            // We cannot know whether this will be a logging category at run time.
+            // Therefore we always pass any object types as special last argument.
+            addReadRegister(argv, m_typeResolver->globalType(
+                                          m_typeResolver->genericType(firstArg)));
+            break;
+        case QQmlJSScope::AccessSemantics::Sequence:
+            addReadRegister(argv, firstContent);
+            break;
+        default:
+            addReadRegister(argv, stringType);
+            break;
+        }
+    }
+
+    for (int i = 1; i < argc; ++i) {
+        const QQmlJSRegisterContent argContent = m_state.registers[argv + i].content;
+        const QQmlJSScope::ConstPtr arg = m_typeResolver->containedType(argContent);
+        addReadRegister(
+                argv + i,
+                arg->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+                        ? argContent
+                        : stringType);
+    }
+
+    m_state.setHasSideEffects(true);
+    setAccumulator(m_typeResolver->returnType(
+            m_typeResolver->voidType(), QQmlJSRegisterContent::MethodReturnValue, consoleType));
+}
+
 void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int argc, int argv)
 {
     Q_ASSERT(m_state.registers.contains(base));
@@ -1102,68 +1164,14 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
     const QQmlJSScope::ConstPtr mathObject
             = m_typeResolver->jsGlobalObject()->property(u"Math"_s).type();
     if (m_typeResolver->registerContains(callBase, mathObject)) {
-
-        // If we call a method on the Math object we don't need the actual Math object. We do need
-        // to transfer the type information to the code generator so that it knows that this is the
-        // Math object. Read the base register as void. void isn't stored, and the place where it's
-        // created will be optimized out if there are no other readers. The code generator can
-        // retrieve the original type and determine that it was the Math object.
-        addReadRegister(base, m_typeResolver->globalType(m_typeResolver->voidType()));
-
-        QQmlJSRegisterContent realType = m_typeResolver->returnType(
-                m_typeResolver->realType(), QQmlJSRegisterContent::MethodReturnValue, mathObject);
-        for (int i = 0; i < argc; ++i)
-            addReadRegister(argv + i, realType);
-        setAccumulator(realType);
+        generate_CallProperty_SCMath(base, argc, argv, mathObject);
         return;
     }
 
     const QQmlJSScope::ConstPtr consoleType
             = m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
     if (m_typeResolver->registerContains(callBase, consoleType) && isLoggingMethod(propertyName)) {
-
-        const QQmlJSRegisterContent voidType
-                = m_typeResolver->globalType(m_typeResolver->voidType());
-
-        // If we call a method on the console object we don't need the console object.
-        addReadRegister(base, voidType);
-
-        const QQmlJSRegisterContent stringType
-                = m_typeResolver->globalType(m_typeResolver->stringType());
-
-        if (argc > 0) {
-            const QQmlJSRegisterContent firstContent = m_state.registers[argv].content;
-            const QQmlJSScope::ConstPtr firstArg = m_typeResolver->containedType(firstContent);
-            switch (firstArg->accessSemantics()) {
-            case QQmlJSScope::AccessSemantics::Reference:
-                // We cannot know whether this will be a logging category at run time.
-                // Therefore we always pass any object types as special last argument.
-                addReadRegister(argv, m_typeResolver->globalType(
-                                    m_typeResolver->genericType(firstArg)));
-                break;
-            case QQmlJSScope::AccessSemantics::Sequence:
-                addReadRegister(argv, firstContent);
-                break;
-            default:
-                addReadRegister(argv, stringType);
-                break;
-            }
-        }
-
-        for (int i = 1; i < argc; ++i) {
-            const QQmlJSRegisterContent argContent = m_state.registers[argv + i].content;
-            const QQmlJSScope::ConstPtr arg = m_typeResolver->containedType(argContent);
-            addReadRegister(
-                    argv + i,
-                    arg->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
-                            ? argContent
-                            : stringType);
-        }
-
-        m_state.setHasSideEffects(true);
-        setAccumulator(m_typeResolver->returnType(
-                m_typeResolver->voidType(), QQmlJSRegisterContent::MethodReturnValue, consoleType));
-
+        generate_CallProperty_SCconsole(base, argc, argv, consoleType);
         return;
     }
 
@@ -1817,6 +1825,49 @@ void QQmlJSTypePropagator::generate_TailCall(int func, int thisObject, int argc,
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
+void QQmlJSTypePropagator::generate_Construct_SCDate(int argc, int argv)
+{
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->dateTimeType()));
+
+    if (argc == 1) {
+        const QQmlJSRegisterContent argType = m_state.registers[argv].content;
+        if (m_typeResolver->isNumeric(argType)) {
+            addReadRegister(
+                    argv, m_typeResolver->globalType(m_typeResolver->realType()));
+        } else if (m_typeResolver->registerContains(argType, m_typeResolver->stringType())) {
+            addReadRegister(
+                    argv, m_typeResolver->globalType(m_typeResolver->stringType()));
+        } else if (m_typeResolver->registerContains(argType, m_typeResolver->dateTimeType())
+                   || m_typeResolver->registerContains(argType, m_typeResolver->dateType())
+                   || m_typeResolver->registerContains(argType, m_typeResolver->timeType())) {
+            addReadRegister(
+                    argv, m_typeResolver->globalType(m_typeResolver->dateTimeType()));
+        } else {
+            addReadRegister(
+                    argv, m_typeResolver->globalType(m_typeResolver->jsPrimitiveType()));
+        }
+    } else {
+        constexpr int maxArgc = 7; // year, month, day, hours, minutes, seconds, milliseconds
+        for (int i = 0; i < std::min(argc, maxArgc); ++i) {
+            addReadRegister(
+                    argv + i, m_typeResolver->globalType(m_typeResolver->realType()));
+        }
+    }
+}
+
+void QQmlJSTypePropagator::generate_Construct_SCArray(int argc, int argv)
+{
+    if (argc == 1) {
+        if (m_typeResolver->isNumeric(m_state.registers[argv].content)) {
+            setAccumulator(m_typeResolver->globalType(m_typeResolver->variantListType()));
+            addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->realType()));
+        } else {
+            generate_DefineArray(argc, argv);
+        }
+    } else {
+        generate_DefineArray(argc, argv);
+    }
+}
 void QQmlJSTypePropagator::generate_Construct(int func, int argc, int argv)
 {
     const QQmlJSRegisterContent type = m_state.registers[func].content;
@@ -1827,48 +1878,12 @@ void QQmlJSTypePropagator::generate_Construct(int func, int argc, int argv)
     }
 
     if (type.method() == m_typeResolver->jsGlobalObject()->methods(u"Date"_s)) {
-        setAccumulator(m_typeResolver->globalType(m_typeResolver->dateTimeType()));
-
-        if (argc == 1) {
-            const QQmlJSRegisterContent argType = m_state.registers[argv].content;
-            if (m_typeResolver->isNumeric(argType)) {
-                addReadRegister(
-                        argv, m_typeResolver->globalType(m_typeResolver->realType()));
-            } else if (m_typeResolver->registerContains(argType, m_typeResolver->stringType())) {
-                addReadRegister(
-                        argv, m_typeResolver->globalType(m_typeResolver->stringType()));
-            } else if (m_typeResolver->registerContains(argType, m_typeResolver->dateTimeType())
-                       || m_typeResolver->registerContains(argType, m_typeResolver->dateType())
-                       || m_typeResolver->registerContains(argType, m_typeResolver->timeType())) {
-                addReadRegister(
-                        argv, m_typeResolver->globalType(m_typeResolver->dateTimeType()));
-            } else {
-                addReadRegister(
-                        argv, m_typeResolver->globalType(m_typeResolver->jsPrimitiveType()));
-            }
-        } else {
-            constexpr int maxArgc = 7; // year, month, day, hours, minutes, seconds, milliseconds
-            for (int i = 0; i < std::min(argc, maxArgc); ++i) {
-                addReadRegister(
-                        argv + i, m_typeResolver->globalType(m_typeResolver->realType()));
-            }
-        }
-
+        generate_Construct_SCDate(argc, argv);
         return;
     }
 
     if (type.method() == m_typeResolver->jsGlobalObject()->methods(u"Array"_s)) {
-        if (argc == 1) {
-            if (m_typeResolver->isNumeric(m_state.registers[argv].content)) {
-                setAccumulator(m_typeResolver->globalType(m_typeResolver->variantListType()));
-                addReadRegister(
-                        argv, m_typeResolver->globalType(m_typeResolver->realType()));
-            } else {
-                generate_DefineArray(argc, argv);
-            }
-        } else {
-            generate_DefineArray(argc, argv);
-        }
+        generate_Construct_SCArray(argc, argv);
 
         return;
     }
