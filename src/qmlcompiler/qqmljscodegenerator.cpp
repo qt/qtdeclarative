@@ -1260,7 +1260,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         return;
     }
 
-    if (m_typeResolver->equals(m_state.accumulatorOut().scopeType(), mathObject())) {
+    if (m_typeResolver->equals(m_state.accumulatorOut().scopeType(), m_typeResolver->mathObject())) {
         QString name = m_jsUnitGenerator->lookupName(index);
 
         double value{};
@@ -2156,10 +2156,10 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
     const QQmlJSRegisterContent baseType = registerType(base);
     const QString name = m_jsUnitGenerator->lookupName(index);
 
-    if (m_typeResolver->equals(scope, mathObject())) {
+    if (m_typeResolver->equals(scope, m_typeResolver->mathObject())) {
         if (inlineMathMethod(name, argc, argv))
             return;
-    } else if (m_typeResolver->equals(scope, consoleObject())) {
+    } else if (m_typeResolver->equals(scope, m_typeResolver->consoleObject())) {
         if (inlineConsoleMethod(name, argc, argv))
             return;
     } else if (m_typeResolver->equals(scope, m_typeResolver->stringType())) {

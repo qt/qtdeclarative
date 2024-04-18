@@ -77,6 +77,9 @@ public:
     QQmlJSScope::ConstPtr forInIteratorPtr() const { return m_forInIteratorPtr; }
     QQmlJSScope::ConstPtr forOfIteratorPtr() const { return m_forOfIteratorPtr; }
 
+    QQmlJSScope::ConstPtr mathObject() const;
+    QQmlJSScope::ConstPtr consoleObject() const;
+
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
 
     bool isPrefix(const QString &name) const

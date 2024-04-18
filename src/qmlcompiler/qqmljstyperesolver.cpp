@@ -182,6 +182,16 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
     m_imports = visitor->imports();
 }
 
+QQmlJSScope::ConstPtr QQmlJSTypeResolver::mathObject() const
+{
+    return jsGlobalObject()->property(u"Math"_s).type();
+}
+
+QQmlJSScope::ConstPtr QQmlJSTypeResolver::consoleObject() const
+{
+    return jsGlobalObject()->property(u"console"_s).type();
+}
+
 QQmlJSScope::ConstPtr
 QQmlJSTypeResolver::scopeForLocation(const QV4::CompiledData::Location &location) const
 {

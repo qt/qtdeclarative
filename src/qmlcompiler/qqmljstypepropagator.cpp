@@ -1093,7 +1093,7 @@ static bool isLoggingMethod(const QString &consoleMethod)
             || consoleMethod == u"warn" || consoleMethod == u"error";
 }
 
-void QQmlJSTypePropagator::generate_CallProperty_SCMath(int base, int argc, int argv, const QQmlJSScope::ConstPtr mathObject)
+void QQmlJSTypePropagator::generate_CallProperty_SCMath(int base, int argc, int argv)
 {
     // If we call a method on the Math object we don't need the actual Math object. We do need
     // to transfer the type information to the code generator so that it knows that this is the
@@ -1104,13 +1104,14 @@ void QQmlJSTypePropagator::generate_CallProperty_SCMath(int base, int argc, int 
     addReadRegister(base, m_typeResolver->globalType(m_typeResolver->voidType()));
 
     QQmlJSRegisterContent realType = m_typeResolver->returnType(
-            m_typeResolver->realType(), QQmlJSRegisterContent::MethodReturnValue, mathObject);
+            m_typeResolver->realType(), QQmlJSRegisterContent::MethodReturnValue,
+            m_typeResolver->mathObject());
     for (int i = 0; i < argc; ++i)
         addReadRegister(argv + i, realType);
     setAccumulator(realType);
 }
 
-void QQmlJSTypePropagator::generate_CallProperty_SCconsole(int base, int argc, int argv, const QQmlJSScope::ConstPtr consoleType)
+void QQmlJSTypePropagator::generate_CallProperty_SCconsole(int base, int argc, int argv)
 {
     const QQmlJSRegisterContent voidType
             = m_typeResolver->globalType(m_typeResolver->voidType());
@@ -1152,7 +1153,8 @@ void QQmlJSTypePropagator::generate_CallProperty_SCconsole(int base, int argc, i
 
     m_state.setHasSideEffects(true);
     setAccumulator(m_typeResolver->returnType(
-            m_typeResolver->voidType(), QQmlJSRegisterContent::MethodReturnValue, consoleType));
+            m_typeResolver->voidType(), QQmlJSRegisterContent::MethodReturnValue,
+            m_typeResolver->consoleObject()));
 }
 
 void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int argc, int argv)
@@ -1161,17 +1163,13 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
     const auto callBase = m_state.registers[base].content;
     const QString propertyName = m_jsUnitGenerator->stringForIndex(nameIndex);
 
-    const QQmlJSScope::ConstPtr mathObject
-            = m_typeResolver->jsGlobalObject()->property(u"Math"_s).type();
-    if (m_typeResolver->registerContains(callBase, mathObject)) {
-        generate_CallProperty_SCMath(base, argc, argv, mathObject);
+    if (m_typeResolver->registerContains(callBase, m_typeResolver->mathObject())) {
+        generate_CallProperty_SCMath(base, argc, argv);
         return;
     }
 
-    const QQmlJSScope::ConstPtr consoleType
-            = m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
-    if (m_typeResolver->registerContains(callBase, consoleType) && isLoggingMethod(propertyName)) {
-        generate_CallProperty_SCconsole(base, argc, argv, consoleType);
+    if (m_typeResolver->registerContains(callBase, m_typeResolver->consoleObject()) && isLoggingMethod(propertyName)) {
+        generate_CallProperty_SCconsole(base, argc, argv);
         return;
     }
 

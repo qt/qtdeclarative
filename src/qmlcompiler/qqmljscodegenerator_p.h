@@ -322,18 +322,6 @@ private:
 
     void generate_GetLookupHelper(int index);
 
-    QQmlJSScope::ConstPtr mathObject() const
-    {
-        using namespace Qt::StringLiterals;
-        return m_typeResolver->jsGlobalObject()->property(u"Math"_s).type();
-    }
-
-    QQmlJSScope::ConstPtr consoleObject() const
-    {
-        using namespace Qt::StringLiterals;
-        return m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
-    }
-
     QString resolveValueTypeContentPointer(
             const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
             const QString &variable, const QString &errorMessage);
