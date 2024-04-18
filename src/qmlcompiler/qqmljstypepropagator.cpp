@@ -90,8 +90,8 @@ void QQmlJSTypePropagator::generate_Ret()
                        m_state.accumulatorIn(), m_typeResolver->voidType())) {
         // You can always return undefined.
     } else if (!m_returnType.isValid() && m_state.accumulatorIn().isValid()) {
-        setError(u"function without return type annotation returns %1"_s
-                         .arg(m_state.accumulatorIn().descriptiveName()));
+        setError(u"function without return type annotation returns %1. This may prevent proper "_s
+                 u"compilation to Cpp."_s.arg(m_state.accumulatorIn().descriptiveName()));
 
         if (m_function->isFullyTyped) {
             // Do not complain if the function didn't have a valid annotation in the first place.

@@ -356,7 +356,7 @@ void tst_qqmljsscope::descriptiveNameOfNull()
             stored, property, QQmlJSRegisterContent::InvalidLookupIndex,
             QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::ScopeProperty,
             QQmlJSScope::ConstPtr());
-    QCOMPARE(unscoped.descriptiveName(), u"bar of (invalid type)::foo with type baz"_s);
+    QCOMPARE(unscoped.descriptiveName(), u"(invalid type)::foo with type baz (stored as bar)"_s);
 }
 
 void tst_qqmljsscope::groupedPropertiesConsistency()
