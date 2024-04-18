@@ -28,6 +28,8 @@ Q_DECLARE_JNI_CLASS(Class, "java/lang/Class");
 
 namespace QtAndroidQuickViewEmbedding
 {
+    constexpr const char *uninitializedViewMessage = "because QtQuickView is not loaded or ready yet.";
+
     void createQuickView(JNIEnv*, jobject nativeWindow, jstring qmlUri, jint width, jint height,
                          jlong parentWindowReference, QtJniTypes::StringArray qmlImportPaths)
     {
@@ -73,15 +75,23 @@ namespace QtAndroidQuickViewEmbedding
         });
     }
 
+    std::pair<QQuickView *, QQuickItem *> getViewAndRootObject(jlong windowReference)
+    {
+        QQuickView *view = reinterpret_cast<QQuickView *>(windowReference);
+        QQuickItem *rootObject = Q_LIKELY(view) ? view->rootObject() : nullptr;
+        return std::make_pair(view, rootObject);
+    }
+
     void setRootObjectProperty(JNIEnv *env, jobject object, jlong windowReference,
                                jstring propertyName, jobject value)
     {
         Q_UNUSED(env);
         Q_UNUSED(object);
 
-        QQuickItem *rootObject = reinterpret_cast<QQuickView *>(windowReference)->rootObject();
+        auto [_, rootObject] = getViewAndRootObject(windowReference);
         if (!rootObject) {
-            qWarning() << "QtQuickView instance does not own a root object.";
+            qWarning("Cannot set property %s %s", qPrintable(QJniObject(propertyName).toString()),
+                     uninitializedViewMessage);
             return;
         }
 
@@ -118,20 +128,16 @@ namespace QtAndroidQuickViewEmbedding
         Q_ASSERT(env);
 
         const QString property = QJniObject(propertyName).toString();
-        QQuickView *view = reinterpret_cast<QQuickView *>(windowReference);
-        QQuickItem *rootObject = view->rootObject();
+        auto [_, rootObject] = getViewAndRootObject(windowReference);
         if (!rootObject) {
-            qWarning("Cannot read property %s as the QtQuickView instance (%s)"
-                     "does not own a root object.",
-                     qPrintable(property),
-                     qPrintable(view->source().toString()));
+            qWarning("Cannot get property %s %s", qPrintable(property), uninitializedViewMessage);
             return nullptr;
         }
 
         const QMetaObject *rootMetaObject = rootObject->metaObject();
         int propertyIndex = rootMetaObject->indexOfProperty(property.toUtf8().constData());
         if (propertyIndex < 0) {
-            qWarning("Cannot read property %s as it does not exist in the root QML object.",
+            qWarning("Cannot get property %s as it does not exist in the root QML object.",
                      qPrintable(property));
             return nullptr;
         }
@@ -181,14 +187,10 @@ namespace QtAndroidQuickViewEmbedding
             { "java/lang/Boolean", QMetaType::Type::Bool }
         };
 
-        QQuickView *view = reinterpret_cast<QQuickView *>(windowReference);
-        if (!view) {
-            qWarning() << "QtQuickView is not loaded or ready yet.";
-            return -1;
-        }
-        QQuickItem *rootObject = view->rootObject();
+        auto [view, rootObject] = getViewAndRootObject(windowReference);
         if (!rootObject) {
-            qWarning() << "QtQuickView instance does not own a root object.";
+            qWarning("Cannot connect to signal %s %s",
+                     qPrintable(QJniObject(signalName).toString()), uninitializedViewMessage);
             return -1;
         }
 
@@ -287,10 +289,10 @@ namespace QtAndroidQuickViewEmbedding
     bool removeRootObjectSignalListener(JNIEnv *, jobject, jlong windowReference,
                                        jint signalListenerId)
     {
-        QQuickView *view = reinterpret_cast<QQuickView *>(windowReference);
-        QQuickItem *rootObject = view->rootObject();
+        auto [view, rootObject] = getViewAndRootObject(windowReference);
         if (!rootObject) {
-            qWarning() << "QtQuickView instance does not own a root object.";
+            qWarning("Cannot disconnect the signal connection with id: %i %s", signalListenerId,
+                     uninitializedViewMessage);
             return false;
         }
 
