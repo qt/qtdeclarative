@@ -1342,10 +1342,11 @@ void TestQmllint::compilerWarnings_data()
     QTest::newRow("qQmlV4Function") << QStringLiteral("varargs.qml") << Result::clean() << true;
     QTest::newRow("multiGrouped") << QStringLiteral("multiGrouped.qml") << Result::clean() << true;
 
-    QTest::newRow("shadowable") << QStringLiteral("shadowable.qml")
-                                << Result { { Message { QStringLiteral(
-                                           "with type NotSoSimple can be shadowed") } } }
-                                << true;
+    QTest::newRow("shadowable")
+            << QStringLiteral("shadowable.qml")
+            << Result { { Message {QStringLiteral(
+                       "with type NotSoSimple (stored as QQuickItem) can be shadowed") } } }
+            << true;
     QTest::newRow("tooFewParameters")
             << QStringLiteral("tooFewParams.qml")
             << Result { { Message { QStringLiteral("No matching override found") } } } << true;
@@ -1375,6 +1376,39 @@ void TestQmllint::compilerWarnings_data()
             << Result { { {
                     QStringLiteral("Cannot retrieve a non-object type by ID: stateMachine")
                } } }
+            << true;
+    QTest::newRow("returnTypeAnnotation-component")
+            << QStringLiteral("returnTypeAnnotation_component.qml")
+            << Result{ { { "Could not compile function comp: function without return type "
+                           "annotation returns (component in" },
+                         { "returnTypeAnnotation_component.qml)::c with type Comp (stored as "
+                           "QQuickItem). This may prevent proper compilation to Cpp." } } }
+            << true;
+    QTest::newRow("returnTypeAnnotation-enum")
+            << QStringLiteral("returnTypeAnnotation_enum.qml")
+            << Result{ { { "Could not compile function enumeration: function without return type "
+                           "annotation returns QQuickText::HAlignment::AlignRight (stored as int). "
+                           "This may prevent proper compilation to Cpp." } } }
+            << true;
+    QTest::newRow("returnTypeAnnotation-method")
+            << QStringLiteral("returnTypeAnnotation_method.qml")
+            << Result{ { { "Could not compile function method: function without return type "
+                           "annotation returns (component in " }, // Don't check the build folder path
+                         { "returnTypeAnnotation_method.qml)::f(...) (stored as QJSValue). This may "
+                           "prevent proper compilation to Cpp." } } }
+            << true;
+    QTest::newRow("returnTypeAnnotation-property")
+            << QStringLiteral("returnTypeAnnotation_property.qml")
+            << Result{ { { "Could not compile function prop: function without return type "
+                           "annotation returns (component in " }, // Don't check the build folder path
+                         { "returnTypeAnnotation_property.qml)::i with type int. This may prevent "
+                           "proper compilation to Cpp." } } }
+            << true;
+    QTest::newRow("returnTypeAnnotation-type")
+            << QStringLiteral("returnTypeAnnotation_type.qml")
+            << Result{ { { "Could not compile function type: function without return type "
+                           "annotation returns double. This may prevent proper compilation to "
+                           "Cpp." } } }
             << true;
 }
 
