@@ -443,7 +443,7 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
 
         aotContext.engine = engine->jsEngine();
         aotContext.compilationUnit = function->executableCompilationUnit();
-        function->aotCompiledFunction->functionPtr(&aotContext, argv[0], argv + 1);
+        function->aotCompiledFunction->functionPtr(&aotContext, argv);
     });
 }
 

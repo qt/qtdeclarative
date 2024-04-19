@@ -743,7 +743,7 @@ namespace QQmlPrivate
         qintptr extraData;
         QMetaType returnType;
         QList<QMetaType> argumentTypes;
-        void (*functionPtr)(const AOTCompiledContext *context, void *resultPtr, void **arguments);
+        void (*functionPtr)(const AOTCompiledContext *context, void **argv);
     };
 
 #if QT_DEPRECATED_SINCE(6, 6)

@@ -209,7 +209,7 @@ QT_WARNING_POP
 
             const QString originalValue
                     = u"(*static_cast<"_s + castTargetName(original.storedType())
-                    + u"*>(argumentsPtr["_s + QString::number(argumentIndex) + u"]))"_s;
+                    + u"*>(argv["_s + QString::number(argumentIndex + 1) + u"]))"_s;
 
             if (needsConversion)
                 result.code += conversion(original, argument, originalValue);
@@ -244,55 +244,71 @@ QT_WARNING_POP
     return result;
 }
 
-QString QQmlJSCodeGenerator::errorReturnValue()
+void QQmlJSCodeGenerator::generateReturnError()
 {
-    if (auto ret = m_function->returnType) {
-        return ret->accessSemantics() == QQmlJSScope::AccessSemantics::Reference
-                ? convertStored(m_typeResolver->nullType(), ret, QString())
-                : ret->internalName() + u"()"_s;
-    }
-    return QString();
+    const auto finalizeReturn = qScopeGuard([this]() { m_body += u"return;\n"_s; });
+
+    m_body += u"aotContext->setReturnValueUndefined();\n"_s;
+    const auto ret = m_function->returnType;
+    if (!ret || m_typeResolver->equals(m_function->returnType, m_typeResolver->voidType()))
+        return;
+
+    const QString value = ret->accessSemantics() == QQmlJSScope::AccessSemantics::Reference
+            ? convertStored(m_typeResolver->nullType(), ret, QString())
+            : ret->internalName() + u"()"_s;
+
+    m_body += u"if (argv[0]) {\n"_s;
+    m_body += u"    *static_cast<"_s + m_function->returnType->augmentedInternalName()
+            + u" *>(argv[0]) = "_s + value + u";\n"_s;
+    m_body += u"}\n"_s;
 }
 
 void QQmlJSCodeGenerator::generate_Ret()
 {
     INJECT_TRACE_INFO(generate_Ret);
 
-    if (m_function->returnType) {
-        const QString signalUndefined = u"aotContext->setReturnValueUndefined();\n"_s;
-        if (!m_state.accumulatorVariableIn.isEmpty()) {
-            const QString in = m_state.accumulatorVariableIn;
-            if (m_typeResolver->registerIsStoredIn(
-                        m_state.accumulatorIn(), m_typeResolver->varType())) {
-                m_body += u"if (!"_s + in + u".isValid())\n"_s;
-                m_body += u"    "_s + signalUndefined;
-            } else if (m_typeResolver->registerIsStoredIn(
-                           m_state.accumulatorIn(), m_typeResolver->jsPrimitiveType())) {
-                m_body += u"if ("_s + in
-                        + u".type() == QJSPrimitiveValue::Undefined)\n"_s;
-                m_body += u"    "_s + signalUndefined;
-            } else if (m_typeResolver->registerIsStoredIn(
-                           m_state.accumulatorIn(), m_typeResolver->jsValueType())) {
-                m_body += u"if ("_s + in + u".isUndefined())\n"_s;
-                m_body += u"    "_s + signalUndefined;
-            }
-            m_body += u"return "_s
-                    + convertStored(m_state.accumulatorIn().storedType(), m_function->returnType, in);
-        } else {
-            if (m_typeResolver->equals(m_state.accumulatorIn().storedType(),
-                                       m_typeResolver->voidType())) {
-                m_body += signalUndefined;
-            }
-            m_body += u"return "_s + convertStored(
-                        m_state.accumulatorIn().storedType(), m_function->returnType, QString());
+    const auto finalizeReturn = qScopeGuard([this]() {
+        m_body += u"return;\n"_s;
+        m_skipUntilNextLabel = true;
+        resetState();
+    });
+
+    if (!m_function->returnType)
+        return;
+
+    m_body += u"if (argv[0]) {\n"_s;
+
+    const QString signalUndefined = u"aotContext->setReturnValueUndefined();\n"_s;
+    const QString in = m_state.accumulatorVariableIn;
+
+    if (in.isEmpty()) {
+        if (m_typeResolver->equals(m_state.accumulatorIn().storedType(),
+                                   m_typeResolver->voidType())) {
+            m_body += signalUndefined;
+
         }
-    } else {
-        m_body += u"return"_s;
+    } else if (m_typeResolver->registerIsStoredIn(
+                    m_state.accumulatorIn(), m_typeResolver->varType())) {
+        m_body += u"    if (!"_s + in + u".isValid())\n"_s;
+        m_body += u"        "_s + signalUndefined;
+    } else if (m_typeResolver->registerIsStoredIn(
+                   m_state.accumulatorIn(), m_typeResolver->jsPrimitiveType())) {
+        m_body += u"    if ("_s + in + u".type() == QJSPrimitiveValue::Undefined)\n"_s;
+        m_body += u"        "_s + signalUndefined;
+    } else if (m_typeResolver->registerIsStoredIn(
+                   m_state.accumulatorIn(), m_typeResolver->jsValueType())) {
+        m_body += u"    if ("_s + in + u".isUndefined())\n"_s;
+        m_body += u"        "_s + signalUndefined;
     }
 
-    m_body += u";\n"_s;
-    m_skipUntilNextLabel = true;
-    resetState();
+    if (!m_typeResolver->equals(m_function->returnType, m_typeResolver->voidType())) {
+        m_body += u"    *static_cast<"_s + m_function->returnType->augmentedInternalName()
+                +u" *>(argv[0]) = "_s + convertStored(
+                      m_state.accumulatorIn().storedType(), m_function->returnType, in)
+                + u";\n"_s;
+    }
+
+    m_body += u"}\n"_s;
 }
 
 void QQmlJSCodeGenerator::generate_Debug()
@@ -1208,7 +1224,7 @@ bool QQmlJSCodeGenerator::generateContentPointerCheck(
     generateSetInstructionPointer();
     m_body += u"    aotContext->engine->throwError(QJSValue::TypeError, "_s;
     m_body += u"QLatin1String(\"%1\"));\n"_s.arg(processedErrorMessage);
-    m_body += u"    return "_s + errorReturnValue() + u";\n"_s;
+    generateReturnError();
     m_body += u"}\n"_s;
     return needsVarContentConversion;
 }
@@ -2302,20 +2318,21 @@ void QQmlJSCodeGenerator::generate_Construct(int func, int argc, int argv)
             addInclude(u"QtQml/qjslist.h"_s);
 
             const QString error = u"    aotContext->engine->throwError(QJSValue::RangeError, "_s
-                    + u"QLatin1String(\"Invalid array length\"));\n"_s
-                    + u"    return "_s + errorReturnValue() + u";\n"_s;
+                    + u"QLatin1String(\"Invalid array length\"));\n"_s;
 
             const QString indexName = registerVariable(argv);
             const auto indexType = registerType(argv);
             if (!m_typeResolver->isIntegral(indexType)) {
                 m_body += u"if (!QJSNumberCoercion::isArrayIndex("_s + indexName + u")) {\n"_s
-                        + error
-                        + u"}\n"_s;
+                        + error;
+                generateReturnError();
+                m_body += u"}\n"_s;
             } else if (!m_typeResolver->isUnsignedInteger(
                                m_typeResolver->containedType(indexType))) {
                 m_body += u"if ("_s + indexName + u" < 0) {\n"_s
-                        + error
-                        + u"}\n"_s;
+                        + error;
+                generateReturnError();
+                m_body += u"}\n"_s;
             }
 
             m_body += m_state.accumulatorVariableOut + u" = "_s
@@ -2378,7 +2395,7 @@ void QQmlJSCodeGenerator::generate_ThrowException()
         + conversion(m_state.accumulatorIn(), m_typeResolver->globalType(
                          m_typeResolver->jsValueType()),
                      m_state.accumulatorVariableIn) + u");\n"_s;
-    m_body += u"return "_s + errorReturnValue() + u";\n"_s;
+    generateReturnError();
     m_skipUntilNextLabel = true;
     resetState();
 }
@@ -3282,8 +3299,9 @@ void QQmlJSCodeGenerator::generateSetInstructionPointer()
 
 void QQmlJSCodeGenerator::generateExceptionCheck()
 {
-    m_body += u"if (aotContext->engine->hasError())\n"_s;
-    m_body += u"    return "_s + errorReturnValue() + u";\n"_s;
+    m_body += u"if (aotContext->engine->hasError()) {\n"_s;
+    generateReturnError();
+    m_body += u"}\n"_s;
 }
 
 void QQmlJSCodeGenerator::generateEqualityOperation(

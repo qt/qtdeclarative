@@ -460,29 +460,10 @@ bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl, Q
             QV4::CompiledData::SaveableUnitPointer(unit->unitData()), empty, &error->message);
 }
 
-static const char *wrapCallCode = R"(
-template <typename Binding>
-void wrapCall(const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, void **argumentsPtr, Binding &&binding)
-{
-    using return_type = std::invoke_result_t<Binding, const QQmlPrivate::AOTCompiledContext *, void **>;
-    if constexpr (std::is_same_v<return_type, void>) {
-       Q_UNUSED(dataPtr)
-       binding(aotContext, argumentsPtr);
-    } else {
-        if (dataPtr) {
-           *static_cast<return_type *>(dataPtr) = binding(aotContext, argumentsPtr);
-        } else {
-           binding(aotContext, argumentsPtr);
-        }
-    }
-}
-)";
-
 static const char *funcHeaderCode = R"(
-    [](const QQmlPrivate::AOTCompiledContext *context, void *data, void **argv) {
-        wrapCall(context, data, argv, [](const QQmlPrivate::AOTCompiledContext *aotContext, void **argumentsPtr) {
+    [](const QQmlPrivate::AOTCompiledContext *aotContext, void **argv) {
 Q_UNUSED(aotContext)
-Q_UNUSED(argumentsPtr)
+Q_UNUSED(argv)
 )";
 
 bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFileName, const QV4::CompiledData::SaveableUnitPointer &unit, const QQmlJSAotFunctionMap &aotFunctions, QString *errorString)
@@ -579,13 +560,12 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
     if (aotFunctions.size() <= 1) {
         // FileScopeCodeIndex is always there, but it may be the only one.
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];\n"
-                 "extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), {}, nullptr } };");
+                 "extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), {}, nullptr } };\n");
     } else {
-        writeStr(wrapCallCode);
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];\n"
                  "extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = {\n");
 
-        QString footer = QStringLiteral("});}\n");
+        QString footer = QStringLiteral("}\n");
 
         for (QQmlJSAotFunctionMap::ConstIterator func = aotFunctions.constBegin(),
              end = aotFunctions.constEnd();

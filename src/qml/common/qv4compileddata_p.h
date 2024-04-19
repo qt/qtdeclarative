@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 // Also change the comment behind the number to describe the latest change. This has the added
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
-#define QV4_DATA_STRUCTURE_VERSION 0x40 // Switch the "sticky" and "unicode" regexp flags
+#define QV4_DATA_STRUCTURE_VERSION 0x41 // Change signature of AOT compiled functions
 
 class QIODevice;
 class QQmlTypeNameCache;

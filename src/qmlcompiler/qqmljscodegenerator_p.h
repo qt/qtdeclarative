@@ -242,7 +242,7 @@ protected:
                              const QQmlJSRegisterContent &to,
                              const QString &variable);
 
-    QString errorReturnValue();
+    void generateReturnError();
     void reject(const QString &thing);
 
     QString metaTypeFromType(const QQmlJSScope::ConstPtr &type) const;
