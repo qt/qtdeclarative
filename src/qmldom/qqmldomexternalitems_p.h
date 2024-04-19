@@ -25,6 +25,7 @@
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQmlCompiler/private/qqmljstyperesolver_p.h>
 #include <QtCore/QMetaType>
+#include <QtCore/qregularexpression.h>
 
 #include <limits>
 #include <memory>

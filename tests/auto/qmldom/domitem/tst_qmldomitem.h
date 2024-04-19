@@ -549,6 +549,13 @@ private slots:
             DomItem f2 = env.path(p2);
             QVERIFY2(f2, "Directory dependencies did not load MySingleton.qml");
         }
+        {
+            QString fPath = tFile.canonicalFilePath();
+            QString fPath2 = fPath.mid(0, fPath.lastIndexOf(u'/')) % u"/ImportMeImplicitly.ui.qml";
+            Path p2 = Paths::qmlFileObjectPath(fPath2);
+            DomItem f2 = env.path(p2);
+            QVERIFY2(f2, "Directory dependencies did not load .ui.qml file!");
+        }
     }
 
     void testImports()
