@@ -82,7 +82,6 @@ QQuickTextPrivate::ExtraData::ExtraData()
     , doc(nullptr)
     , minimumPixelSize(12)
     , minimumPointSize(12)
-    , nbActiveDownloads(0)
     , maximumLineCount(INT_MAX)
     , renderTypeQuality(QQuickText::DefaultRenderTypeQuality)
     , lineHeightValid(false)
@@ -357,29 +356,33 @@ void QQuickText::resourceRequestFinished()
 void QQuickText::imageDownloadFinished()
 {
     Q_D(QQuickText);
+    if (!d->extra.isAllocated())
+        return;
 
-    (d->extra->nbActiveDownloads)--;
+    if (std::any_of(d->extra->imgTags.cbegin(), d->extra->imgTags.cend(),
+                    [] (auto *image) { return image->pix && image->pix->isLoading(); })) {
+        // return if we still have any active download
+        return;
+    }
 
     // when all the remote images have been downloaded,
     // if one of the sizes was not specified at parsing time
     // we use the implicit size from pixmapcache and re-layout.
 
-    if (d->extra.isAllocated() && d->extra->nbActiveDownloads == 0) {
-        bool needToUpdateLayout = false;
-        for (QQuickStyledTextImgTag *img : std::as_const(d->extra->visibleImgTags)) {
-            if (!img->size.isValid()) {
-                img->size = img->pix->implicitSize();
-                needToUpdateLayout = true;
-            }
+    bool needToUpdateLayout = false;
+    for (QQuickStyledTextImgTag *img : std::as_const(d->extra->visibleImgTags)) {
+        if (!img->size.isValid()) {
+            img->size = img->pix->implicitSize();
+            needToUpdateLayout = true;
         }
+    }
 
-        if (needToUpdateLayout) {
-            d->textHasChanged = true;
-            d->updateLayout();
-        } else {
-            d->updateType = QQuickTextPrivate::UpdatePaintNode;
-            update();
-        }
+    if (needToUpdateLayout) {
+        d->textHasChanged = true;
+        d->updateLayout();
+    } else {
+        d->updateType = QQuickTextPrivate::UpdatePaintNode;
+        update();
     }
 }
 
@@ -1289,12 +1292,10 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
                 if (!image->pix) {
                     const QQmlContext *context = qmlContext(q);
                     const QUrl url = context->resolvedUrl(q->baseUrl()).resolved(image->url);
-                    image->pix = new QQuickPixmap(context->engine(), url, QRect(), image->size);
+                    image->pix = new QQuickPixmap(context->engine(), url, QRect(), image->size * devicePixelRatio());
+
                     if (image->pix->isLoading()) {
                         image->pix->connectFinished(q, SLOT(imageDownloadFinished()));
-                        if (!extra.isAllocated() || !extra->nbActiveDownloads)
-                            extra.value().nbActiveDownloads = 0;
-                        extra->nbActiveDownloads++;
                     } else if (image->pix->isReady()) {
                         if (!image->size.isValid()) {
                             image->size = image->pix->implicitSize();
@@ -1377,6 +1378,11 @@ void QQuickTextPrivate::updateDocumentText()
         extra->doc->setPlainText(text);
 #endif
     rightToLeftText = extra->doc->toPlainText().isRightToLeft();
+}
+
+qreal QQuickTextPrivate::devicePixelRatio() const
+{
+    return (window ? window->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
 }
 
 /*!
@@ -1901,14 +1907,32 @@ void QQuickText::itemChange(ItemChange change, const ItemChangeData &value)
         break;
 
     case ItemDevicePixelRatioHasChanged:
-        if (d->renderType == NativeRendering) {
-            // Native rendering optimizes for a given pixel grid, so its results must not be scaled.
-            // Text layout code respects the current device pixel ratio automatically, we only need
-            // to rerun layout after the ratio changed.
-            // Changes of implicit size should be minimal; they are hard to avoid.
-            d->implicitWidthValid = false;
-            d->implicitHeightValid = false;
-            d->updateLayout();
+        {
+            bool needUpdateLayout = false;
+            if (d->renderType == NativeRendering) {
+                // Native rendering optimizes for a given pixel grid, so its results must not be scaled.
+                // Text layout code respects the current device pixel ratio automatically, we only need
+                // to rerun layout after the ratio changed.
+                // Changes of implicit size should be minimal; they are hard to avoid.
+                d->implicitWidthValid = false;
+                d->implicitHeightValid = false;
+                needUpdateLayout = true;
+            }
+
+            if (d->extra.isAllocated()) {
+                // check if we have scalable inline images with explicit size set, which should be reloaded
+                for (QQuickStyledTextImgTag *image : std::as_const(d->extra->visibleImgTags)) {
+                    if (image->size.isValid() && QQuickPixmap::isScalableImageFormat(image->url)) {
+                        delete image->pix;
+                        image->pix = nullptr;
+
+                        needUpdateLayout = true;
+                    }
+                }
+            }
+
+            if (needUpdateLayout)
+                d->updateLayout();
         }
         break;
 
@@ -2755,7 +2779,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
             for (QQuickStyledTextImgTag *img : std::as_const(d->extra->visibleImgTags)) {
                 QQuickPixmap *pix = img->pix;
                 if (pix && pix->isReady())
-                    node->addImage(QRectF(img->pos.x() + dx, img->pos.y() + dy, pix->width(), pix->height()), pix->image());
+                    node->addImage(QRectF(img->pos.x() + dx, img->pos.y() + dy, img->size.width(), img->size.height()), pix->image());
             }
         }
     }

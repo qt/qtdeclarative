@@ -56,6 +56,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::Literals::StringLiterals;
+
 Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
 
 #if defined(QT_DEBUG) && QT_CONFIG(thread)
@@ -2006,6 +2008,17 @@ bool QQuickPixmap::isCached(const QUrl &url, const QRect &requestRegion, const Q
     QQuickPixmapCache *store = QQuickPixmapCache::instance();
 
     return store->m_cache.contains(key);
+}
+
+bool QQuickPixmap::isScalableImageFormat(const QUrl &url)
+{
+    if (url.scheme() == "image"_L1)
+        return true;
+
+    const QString stringUrl = url.path(QUrl::PrettyDecoded);
+    return stringUrl.endsWith("svg"_L1)
+            || stringUrl.endsWith("svgz"_L1)
+            || stringUrl.endsWith("pdf"_L1);
 }
 
 bool QQuickPixmap::connectFinished(QObject *object, const char *method)
