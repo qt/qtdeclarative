@@ -711,7 +711,8 @@ public:
     QQmlJS::DiagnosticMessage error() const;
     QUrl url() const;
 
-    Reference binopHelper(QSOperator::Op oper, Reference &left, Reference &right);
+    Reference binopHelper(QQmlJS::AST::BinaryExpression *ast, QSOperator::Op oper, Reference &left,
+                          Reference &right);
     Reference jumpBinop(QSOperator::Op oper, Reference &left, Reference &right);
     struct Arguments { int argc; int argv; bool hasSpread; };
     Arguments pushArgs(QQmlJS::AST::ArgumentList *args);
