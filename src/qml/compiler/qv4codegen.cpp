@@ -1511,7 +1511,7 @@ bool Codegen::visit(BinaryExpression *ast)
         if (hasError())
             return false;
 
-        binopHelper(baseOp(ast->op), tempLeft, right).loadInAccumulator();
+        binopHelper(ast, baseOp(ast->op), tempLeft, right).loadInAccumulator();
         setExprResult(left.storeRetainAccumulator());
 
         break;
@@ -1524,7 +1524,7 @@ bool Codegen::visit(BinaryExpression *ast)
             Reference right = expression(ast->right);
             if (hasError())
                 return false;
-            setExprResult(binopHelper(static_cast<QSOperator::Op>(ast->op), right, left));
+            setExprResult(binopHelper(ast, static_cast<QSOperator::Op>(ast->op), right, left));
             break;
         }
         Q_FALLTHROUGH();
@@ -1559,7 +1559,7 @@ bool Codegen::visit(BinaryExpression *ast)
         if (hasError())
             return false;
 
-        setExprResult(binopHelper(static_cast<QSOperator::Op>(ast->op), left, right));
+        setExprResult(binopHelper(ast, static_cast<QSOperator::Op>(ast->op), left, right));
 
         break;
     }
@@ -1568,8 +1568,11 @@ bool Codegen::visit(BinaryExpression *ast)
     return false;
 }
 
-Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Reference &right)
+Codegen::Reference Codegen::binopHelper(BinaryExpression *ast, QSOperator::Op oper, Reference &left,
+                                        Reference &right)
 {
+    auto loc = combine(ast->left->firstSourceLocation(), ast->right->lastSourceLocation());
+    bytecodeGenerator->setLocation(loc);
     switch (oper) {
     case QSOperator::Add: {
         left = left.storeOnStack();
