@@ -15,16 +15,7 @@
 
 QT_BEGIN_NAMESPACE
 
-bool isScalableImageFormat(const QUrl &url)
-{
-    if (url.scheme() == QLatin1String("image"))
-        return true;
-
-    const QString stringUrl = url.path(QUrl::PrettyDecoded);
-    return stringUrl.endsWith(QLatin1String("svg"))
-        || stringUrl.endsWith(QLatin1String("svgz"))
-        || stringUrl.endsWith(QLatin1String("pdf"));
-}
+using namespace Qt::Literals::StringLiterals;
 
 // This function gives derived classes the chance set the devicePixelRatio
 // if they're not happy with our implementation of it.
@@ -33,7 +24,7 @@ bool QQuickImageBasePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio
     // QQuickImageProvider and SVG and PDF can generate a high resolution image when
     // sourceSize is set. If sourceSize is not set then the provider default size will
     // be used, as usual.
-    const bool setDevicePixelRatio = isScalableImageFormat(url);
+    const bool setDevicePixelRatio = QQuickPixmap::isScalableImageFormat(url);
 
     if (setDevicePixelRatio)
         devicePixelRatio = targetDevicePixelRatio;
@@ -309,7 +300,7 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
         d->devicePixelRatio = 1.0;
         bool updatedDevicePixelRatio = false;
         if (d->sourcesize.isValid()
-            || (isScalableImageFormat(d->url) && d->url.scheme() != QLatin1String("image"))) {
+            || (QQuickPixmap::isScalableImageFormat(d->url) && d->url.scheme() != "image"_L1)) {
             updatedDevicePixelRatio = d->updateDevicePixelRatio(targetDevicePixelRatio);
         }
 
