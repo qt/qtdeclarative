@@ -1049,11 +1049,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
 
     // filter out temporary errors as they do not really affect component's
     // state (they are not part of the document compilation)
-    state.errors.erase(std::remove_if(state.errors.begin(), state.errors.end(),
-                                      [](const QQmlComponentPrivate::AnnotatedQmlError &e) {
-                                          return e.isTransient;
-                                      }),
-                       state.errors.end());
+    state.errors.removeIf([](const auto &e) { return e.isTransient; });
     state.clearRequiredProperties();
 
     if (!q->isReady()) {
