@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include <QtQuick/private/qandroidquickviewembedding_p.h>
+#include <QtQuick/private/qandroidviewsignalmanager_p.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qjnienvironment.h>
@@ -54,7 +55,7 @@ namespace QtAndroidQuickViewEmbedding
             QWindow *parentWindow = reinterpret_cast<QWindow *>(parentWindowReference);
             QQuickView *view = new QQuickView(parentWindow);
             QQmlEngine *engine = view->engine();
-            new SignalHelper(view);
+            new QAndroidViewSignalManager(view);
             QObject::connect(view, &QQuickView::statusChanged,
                              [qtViewObject](QQuickView::Status status) {
                                  qtViewObject.callMethod<void>("handleStatusChange", status);
@@ -194,7 +195,7 @@ namespace QtAndroidQuickViewEmbedding
             return -1;
         }
 
-        SignalHelper *signalHelper = view->findChild<SignalHelper *>();
+        QAndroidViewSignalManager *signalManager = view->findChild<QAndroidViewSignalManager *>();
         const QByteArray javaArgClass = QJniObject(argType).className();
         const char *qArgName =
                 QMetaType(javaToQMetaType.value(javaArgClass, QMetaType::Type::UnknownType)).name();
@@ -233,7 +234,7 @@ namespace QtAndroidQuickViewEmbedding
         if (signalIndex == -1)
             return -1;
 
-        const QMetaObject *helperMetaObject = signalHelper->metaObject();
+        const QMetaObject *helperMetaObject = signalManager->metaObject();
         QByteArray helperSignalSignature = signalSignature;
         helperSignalSignature.replace(0, signalSignature.indexOf('('), "forwardSignal");
         int helperSlotIndex = helperMetaObject->indexOfSlot(helperSignalSignature.constData());
@@ -242,15 +243,17 @@ namespace QtAndroidQuickViewEmbedding
 
         // Return the id if the signal is already connected to the same listener.
         QJniObject listenerJniObject(listener);
-        if (signalHelper->listenersMap.contains(signalSignature)) {
-            auto listenerInfos = signalHelper->listenersMap.values(signalSignature);
-            auto isSameListener = [listenerJniObject](const SignalHelper::ListenerInfo &listenerInfo) {
-                return listenerInfo.listener == listenerJniObject;
-            };
-            auto iterator = std::find_if(listenerInfos.constBegin(),
-                                         listenerInfos.constEnd(),
+        if (signalManager->connectionInfoMap.contains(signalSignature)) {
+            auto connectionInfos = signalManager->connectionInfoMap.values(signalSignature);
+            auto isSameListener =
+                    [listenerJniObject](
+                            const QAndroidViewSignalManager::ConnectionInfo &connectionInfo) {
+                        return connectionInfo.listener == listenerJniObject;
+                    };
+            auto iterator = std::find_if(connectionInfos.constBegin(),
+                                         connectionInfos.constEnd(),
                                          isSameListener);
-            if (iterator != listenerInfos.end()) {
+            if (iterator != connectionInfos.end()) {
                 qWarning("Signal listener with the ID of %i is already connected to %s signal.",
                          iterator->id,
                          signalSignature.constData());
@@ -260,30 +263,30 @@ namespace QtAndroidQuickViewEmbedding
 
         QMetaMethod signalMethod = metaObject->method(signalIndex);
         QMetaMethod signalForwarderMethod = helperMetaObject->method(helperSlotIndex);
-        signalHelper->connectionHandleCounter++;
+        signalManager->connectionHandleCounter++;
 
         QMetaObject::Connection connection;
-        if (signalHelper->listenersMap.contains(signalSignature)) {
-            connection = signalHelper
-                             ->connections[signalHelper->listenersMap.value(signalSignature).id];
+        if (signalManager->connectionInfoMap.contains(signalSignature)) {
+            const int existingId = signalManager->connectionInfoMap.value(signalSignature).id;
+            connection = signalManager->connections[existingId];
         } else {
             connection = QObject::connect(rootObject,
                                           signalMethod,
-                                          signalHelper,
+                                          signalManager,
                                           signalForwarderMethod);
         }
 
-        SignalHelper::ListenerInfo listenerInfo;
-        listenerInfo.listener = listenerJniObject;
-        listenerInfo.javaArgType = javaArgClass;
-        listenerInfo.propertyIndex = propertyIndex;
-        listenerInfo.signalSignature = signalSignature;
-        listenerInfo.id = signalHelper->connectionHandleCounter;
+        QAndroidViewSignalManager::ConnectionInfo connectionInfo;
+        connectionInfo.listener = listenerJniObject;
+        connectionInfo.javaArgType = javaArgClass;
+        connectionInfo.propertyIndex = propertyIndex;
+        connectionInfo.signalSignature = signalSignature;
+        connectionInfo.id = signalManager->connectionHandleCounter;
 
-        signalHelper->listenersMap.insert(signalSignature, listenerInfo);
-        signalHelper->connections.insert(listenerInfo.id, connection);
+        signalManager->connectionInfoMap.insert(signalSignature, connectionInfo);
+        signalManager->connections.insert(connectionInfo.id, connection);
 
-        return listenerInfo.id;
+        return connectionInfo.id;
     }
 
     bool removeRootObjectSignalListener(JNIEnv *, jobject, jlong windowReference,
@@ -296,16 +299,16 @@ namespace QtAndroidQuickViewEmbedding
             return false;
         }
 
-        SignalHelper *signalHelper = view->findChild<SignalHelper *>();
-        if (!signalHelper->connections.contains(signalListenerId))
+        QAndroidViewSignalManager *signalManager = view->findChild<QAndroidViewSignalManager *>();
+        if (!signalManager->connections.contains(signalListenerId))
             return false;
 
         QByteArray signalSignature;
-        for (auto listenerInfoIter = signalHelper->listenersMap.begin();
-             listenerInfoIter != signalHelper->listenersMap.end();) {
+        for (auto listenerInfoIter = signalManager->connectionInfoMap.begin();
+             listenerInfoIter != signalManager->connectionInfoMap.end();) {
             if (listenerInfoIter->id == signalListenerId) {
                 signalSignature = listenerInfoIter->signalSignature;
-                signalHelper->listenersMap.erase(listenerInfoIter);
+                signalManager->connectionInfoMap.erase(listenerInfoIter);
                 break;
             } else {
                 ++listenerInfoIter;
@@ -313,96 +316,11 @@ namespace QtAndroidQuickViewEmbedding
         }
 
         // disconnect if its the last listener associated with the signal signatures
-        if (!signalHelper->listenersMap.contains(signalSignature))
-            rootObject->disconnect(signalHelper->connections.value(signalListenerId));
+        if (!signalManager->connectionInfoMap.contains(signalSignature))
+            rootObject->disconnect(signalManager->connections.value(signalListenerId));
 
-        signalHelper->connections.remove(signalListenerId);
+        signalManager->connections.remove(signalListenerId);
         return true;
-    }
-
-    void SignalHelper::forwardSignal()
-    {
-        invokeListener(sender(), senderSignalIndex(), QVariant());
-    }
-
-    void SignalHelper::forwardSignal(int signalValue)
-    {
-        invokeListener(sender(), senderSignalIndex(), QVariant(signalValue));
-    }
-
-    void SignalHelper::forwardSignal(bool signalValue)
-    {
-        invokeListener(sender(), senderSignalIndex(), QVariant(signalValue));
-    }
-
-    void SignalHelper::forwardSignal(double signalValue)
-    {
-        invokeListener(sender(), senderSignalIndex(), QVariant(signalValue));
-    }
-
-    void SignalHelper::forwardSignal(float signalValue)
-    {
-        invokeListener(sender(), senderSignalIndex(), QVariant(signalValue));
-    }
-
-    void SignalHelper::forwardSignal(QString signalValue)
-    {
-        invokeListener(sender(), senderSignalIndex(), QVariant(signalValue));
-    }
-
-    void SignalHelper::invokeListener(QObject *sender, int senderSignalIndex, QVariant signalValue)
-    {
-        using namespace QtJniTypes;
-
-        const QMetaObject *metaObject = sender->metaObject();
-        const QMetaMethod signalMethod = metaObject->method(senderSignalIndex);
-
-        for (auto listenerInfoIter = listenersMap.constFind(signalMethod.methodSignature());
-             listenerInfoIter != listenersMap.constEnd() &&
-             listenerInfoIter.key() == signalMethod.methodSignature();
-             ++listenerInfoIter) {
-            const ListenerInfo listenerInfo = *listenerInfoIter;
-            const QByteArray javaArgType = listenerInfo.javaArgType;
-            QJniObject jSignalMethodName =
-                    QJniObject::fromString(QLatin1StringView(signalMethod.name()));
-
-            if (listenerInfo.propertyIndex != -1 && javaArgType != Traits<Void>::className())
-                signalValue = metaObject->property(listenerInfo.propertyIndex).read(sender);
-
-            int valueTypeId = signalValue.typeId();
-            QJniObject jValue;
-
-            switch (valueTypeId) {
-            case QMetaType::Type::UnknownType:
-                break;
-            case QMetaType::Type::Int:
-                jValue = qVariantToJniObject<Integer,jint>(signalValue);
-                break;
-            case QMetaType::Type::Double:
-                jValue = qVariantToJniObject<Double,jdouble>(signalValue);
-                break;
-            case QMetaType::Type::Float:
-                jValue = qVariantToJniObject<Float,jfloat>(signalValue);
-                break;
-            case QMetaType::Type::Bool:
-                jValue = qVariantToJniObject<Boolean,jboolean>(signalValue);
-                break;
-            case QMetaType::Type::QString:
-                jValue = QJniObject::fromString(get<QString>(std::move(signalValue)));
-                break;
-            default:
-                qWarning("Mismatching argument types between QML signal (%s) and the Java function "
-                         "(%s). Sending null as argument.",
-                         signalMethod.methodSignature().constData(), javaArgType.constData());
-            }
-
-            QNativeInterface::QAndroidApplication::runOnAndroidMainThread(
-                [listenerInfo, jSignalMethodName, jValue]() {
-                    listenerInfo.listener.callMethod<void, jstring, jobject>("onSignalEmitted",
-                                                            jSignalMethodName.object<jstring>(),
-                                                            jValue.object());
-                });
-        }
     }
 
     bool registerNatives(QJniEnvironment& env) {
