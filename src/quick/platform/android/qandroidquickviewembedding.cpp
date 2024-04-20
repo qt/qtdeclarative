@@ -53,14 +53,13 @@ namespace QtAndroidQuickViewEmbedding
                                         qmlUrl,
                                         importPaths] {
             QWindow *parentWindow = reinterpret_cast<QWindow *>(parentWindowReference);
-            QQuickView *view = new QQuickView(parentWindow);
+            QAndroidQuickView *view = new QAndroidQuickView(parentWindow);
             QQmlEngine *engine = view->engine();
-            new QAndroidViewSignalManager(view);
-            QObject::connect(view, &QQuickView::statusChanged,
-                             [qtViewObject](QQuickView::Status status) {
+            QObject::connect(view, &QAndroidQuickView::statusChanged,
+                             [qtViewObject](QAndroidQuickView::Status status) {
                                  qtViewObject.callMethod<void>("handleStatusChange", status);
                              });
-            view->setResizeMode(QQuickView::SizeRootObjectToView);
+            view->setResizeMode(QAndroidQuickView::SizeRootObjectToView);
             view->setColor(QColor(Qt::transparent));
             view->setWidth(width);
             view->setHeight(height);
@@ -76,9 +75,9 @@ namespace QtAndroidQuickViewEmbedding
         });
     }
 
-    std::pair<QQuickView *, QQuickItem *> getViewAndRootObject(jlong windowReference)
+    std::pair<QAndroidQuickView *, QQuickItem *> getViewAndRootObject(jlong windowReference)
     {
-        QQuickView *view = reinterpret_cast<QQuickView *>(windowReference);
+        QAndroidQuickView *view = reinterpret_cast<QAndroidQuickView *>(windowReference);
         QQuickItem *rootObject = Q_LIKELY(view) ? view->rootObject() : nullptr;
         return std::make_pair(view, rootObject);
     }
@@ -195,7 +194,7 @@ namespace QtAndroidQuickViewEmbedding
             return -1;
         }
 
-        QAndroidViewSignalManager *signalManager = view->findChild<QAndroidViewSignalManager *>();
+        QAndroidViewSignalManager *signalManager = view->signalManager();
         const QByteArray javaArgClass = QJniObject(argType).className();
         const char *qArgName =
                 QMetaType(javaToQMetaType.value(javaArgClass, QMetaType::Type::UnknownType)).name();
@@ -299,7 +298,7 @@ namespace QtAndroidQuickViewEmbedding
             return false;
         }
 
-        QAndroidViewSignalManager *signalManager = view->findChild<QAndroidViewSignalManager *>();
+        QAndroidViewSignalManager *signalManager = view->signalManager();
         if (!signalManager->connections.contains(signalListenerId))
             return false;
 

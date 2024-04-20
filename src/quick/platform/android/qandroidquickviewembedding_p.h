@@ -15,6 +15,8 @@
 // We mean it.
 //
 
+#include <QtQuick/private/qandroidviewsignalmanager_p.h>
+
 #include <QtCore/qjnienvironment.h>
 #include <QtCore/qjnitypes.h>
 #include <QtQuick/qquickview.h>
@@ -41,6 +43,19 @@ namespace QtAndroidQuickViewEmbedding
     bool removeRootObjectSignalListener(JNIEnv *env, jobject, jlong parentWindowReference,
                                        jint signalListenerId);
     Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(removeRootObjectSignalListener)
+
+    class QAndroidQuickView : public QQuickView
+    {
+        Q_OBJECT
+        std::unique_ptr<QAndroidViewSignalManager> m_signalManager;
+
+    public:
+        explicit QAndroidQuickView(QWindow *parent)
+            : QQuickView(parent), m_signalManager(new QAndroidViewSignalManager())
+        {
+        }
+        inline QAndroidViewSignalManager *signalManager() const { return m_signalManager.get(); };
+    };
 };
 
 QT_END_NAMESPACE

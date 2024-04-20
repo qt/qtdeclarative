@@ -17,7 +17,6 @@
 
 #include <QtCore/qobject.h>
 #include <QtCore/qjnitypes.h>
-#include <QtQuick/qquickview.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -34,8 +33,8 @@ public:
         int propertyIndex{ -1 };
     };
 
-    explicit QAndroidViewSignalManager(QQuickView *parent)
-        : QObject(parent), connectionHandleCounter(0)
+    explicit QAndroidViewSignalManager()
+        : QObject(), connectionHandleCounter(0)
     {
     }
     void invokeListener(QObject *sender, int senderSignalIndex, QVariant signalValue);
