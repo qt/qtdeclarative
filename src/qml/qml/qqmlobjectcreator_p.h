@@ -165,11 +165,9 @@ public:
     void removePendingBinding(QObject *target, int propertyIndex)
     {
         QList<DeferredQPropertyBinding> &pendingBindings = sharedState.data()->allQPropertyBindings;
-        auto it = std::remove_if(pendingBindings.begin(), pendingBindings.end(),
-                                 [&](const DeferredQPropertyBinding &deferred) {
+        pendingBindings.removeIf([&](const DeferredQPropertyBinding &deferred) {
             return deferred.properyIndex == propertyIndex && deferred.target == target;
         });
-        pendingBindings.erase(it, pendingBindings.end());
     }
 
 private:
