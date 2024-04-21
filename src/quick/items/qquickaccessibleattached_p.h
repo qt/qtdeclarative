@@ -30,9 +30,11 @@ QT_BEGIN_NAMESPACE
 
 #define STATE_PROPERTY(P) \
     Q_PROPERTY(bool P READ P WRITE set_ ## P NOTIFY P ## Changed FINAL) \
-    bool P() const { return m_state.P ; } \
+    bool P() const { return m_proxying && !m_stateExplicitlySet.P ? m_proxying->P() : m_state.P ; } \
     void set_ ## P(bool arg) \
     { \
+        if (m_proxying) \
+            m_proxying->set_##P(arg);\
         m_stateExplicitlySet.P = true; \
         if (m_state.P == arg) \
             return; \
@@ -84,6 +86,8 @@ public:
     QString name() const {
         if (m_state.passwordEdit)
             return QString();
+        if (m_proxying)
+            return m_proxying->name();
         return m_name;
     }
 
@@ -99,9 +103,15 @@ public:
     }
     void setNameImplicitly(const QString &name);
 
-    QString description() const { return m_description; }
+    QString description() const {
+        return !m_descriptionExplicitlySet && m_proxying ? m_proxying->description() : m_description;
+    }
     void setDescription(const QString &description)
     {
+        if (!m_descriptionExplicitlySet && m_proxying) {
+            disconnect(m_proxying, &QQuickAccessibleAttached::descriptionChanged, this, &QQuickAccessibleAttached::descriptionChanged);
+        }
+        m_descriptionExplicitlySet = true;
         if (m_description != description) {
             m_description = description;
             Q_EMIT descriptionChanged();
@@ -143,6 +153,13 @@ public:
             if (att && (role == QAccessible::NoRole || att->role() == role)) {
                 break;
             }
+            if (auto action = object->property("action").value<QObject *>(); action) {
+                QQuickAccessibleAttached *att = QQuickAccessibleAttached::attachedProperties(action);
+                if (att && (role == QAccessible::NoRole || att->role() == role)) {
+                    object = action;
+                    break;
+                }
+            }
             object = object->parent();
         }
         return object;
@@ -154,6 +171,7 @@ public:
     void availableActions(QStringList *actions) const;
 
     Q_REVISION(6, 2) Q_INVOKABLE static QString stripHtml(const QString &html);
+    void setProxying(QQuickAccessibleAttached *proxying);
 
 public Q_SLOTS:
     void valueChanged() {
@@ -184,14 +202,14 @@ Q_SIGNALS:
     void nextPageAction();
 
 private:
-    QQuickItem *item() const { return qobject_cast<QQuickItem*>(parent()); }
-
     QAccessible::Role m_role;
     QAccessible::State m_state;
     QAccessible::State m_stateExplicitlySet;
     QString m_name;
     bool m_nameExplicitlySet = false;
     QString m_description;
+    bool m_descriptionExplicitlySet = false;
+    QQuickAccessibleAttached* m_proxying = nullptr;
 
     static QMetaMethod sigPress;
     static QMetaMethod sigToggle;

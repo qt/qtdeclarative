@@ -2124,7 +2124,7 @@ void TestQmllint::quickPlugin()
                       Message { u"SplitView attached property only works with Items"_s },
                       Message { u"ScrollIndicator must be attached to a Flickable"_s },
                       Message { u"ScrollBar must be attached to a Flickable or ScrollView"_s },
-                      Message { u"Accessible must be attached to an Item"_s },
+                      Message { u"Accessible must be attached to an Item or an Action"_s },
                       Message { u"EnterKey attached property only works with Items"_s },
                       Message {
                               u"LayoutDirection attached property only works with Items and Windows"_s },

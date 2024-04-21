@@ -18,6 +18,8 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQuick/private/qquickaccessibleattached_p.h>
 #include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
@@ -888,6 +890,12 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
         setCheckable(action->isCheckable());
         setEnabled(action->isEnabled());
     }
+
+#if QT_CONFIG(accessibility)
+    auto attached = qobject_cast<QQuickAccessibleAttached*>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
+    Q_ASSERT(attached);
+    attached->setProxying(qobject_cast<QQuickAccessibleAttached*>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(action, true)));
+#endif
 
     d->action = action;
 
