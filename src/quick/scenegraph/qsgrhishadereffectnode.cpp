@@ -702,7 +702,7 @@ QSGRhiShaderEffectDefaultShader QSGRhiShaderEffectDefaultShader::create(const QS
 {
     QSGRhiShaderEffectDefaultShader s;
     s.shader = loadShaderFromFile(filename);
-    const QList<QShaderDescription::BlockVariable> uboMembers = s.shader.description().uniformBlocks().first().members;
+    const QList<QShaderDescription::BlockVariable> uboMembers = s.shader.description().uniformBlocks().constFirst().members;
     for (const auto &member: uboMembers) {
         if (member.name == QByteArrayLiteral("qt_Matrix"))
             s.matrixArrayByteSize = member.size;
