@@ -993,9 +993,8 @@ QQuickPathAnimationAnimator::QQuickPathAnimationAnimator(QQuickPathAnimationPriv
 QQuickPathAnimationAnimator::~QQuickPathAnimationAnimator()
 {
     if (animationTemplate && pathUpdater()) {
-        QHash<QQuickItem*, QQuickPathAnimationAnimator* >::iterator it =
-                animationTemplate->activeAnimations.find(pathUpdater()->target);
-        if (it != animationTemplate->activeAnimations.end() && it.value() == this)
+        auto it = animationTemplate->activeAnimations.constFind(pathUpdater()->target);
+        if (it != animationTemplate->activeAnimations.cend() && it.value() == this)
             animationTemplate->activeAnimations.erase(it);
     }
 }
