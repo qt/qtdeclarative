@@ -3399,6 +3399,7 @@ BindingProperty: PropertyName T_COLON BindingIdentifier InitializerOpt_In;
     case $rule_number: {
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, stringRef(3), sym(4).Expression);
         node->colonToken = loc(2);
+        node->identifierToken = loc(3);
         sym(1).Node = node;
     } break;
 ./
