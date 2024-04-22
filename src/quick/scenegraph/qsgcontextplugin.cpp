@@ -103,7 +103,7 @@ QSGAdaptationBackendData *contextFactory()
         // caused by run time hocus pocus. If one wants to use the software backend
         // in a GL or Vulkan capable Qt build (or on Windows or Apple platforms), it
         // has to be requested explicitly.
-#if !QT_CONFIG(opengl) && !QT_CONFIG(vulkan) && !defined(Q_OS_WIN) && !defined(Q_OS_MACOS) && !defined(Q_OS_IOS)
+#if !QT_CONFIG(opengl) && !QT_CONFIG(vulkan) && !QT_CONFIG(metal) && !defined(Q_OS_WIN)
         if (requestedBackend.isEmpty())
             requestedBackend = QLatin1String("software");
 #endif
