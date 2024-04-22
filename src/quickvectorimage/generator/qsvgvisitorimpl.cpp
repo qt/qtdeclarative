@@ -232,6 +232,7 @@ void QSvgVisitorImpl::visitImageNode(const QSvgImage *node)
     fillCommonNodeInfo(node, info);
     info.image = node->image();
     info.rect = node->rect();
+    info.externalFileReference = node->filename();
 
     m_generator->generateImageNode(info);
 

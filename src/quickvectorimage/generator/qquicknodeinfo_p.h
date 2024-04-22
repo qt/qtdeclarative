@@ -42,6 +42,7 @@ struct ImageNodeInfo : NodeInfo
 {
     QImage image;
     QRectF rect;
+    QString externalFileReference;
 };
 
 struct StrokeStyle

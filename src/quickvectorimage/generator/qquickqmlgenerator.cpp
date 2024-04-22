@@ -12,6 +12,7 @@
 #include <private/qquickimagebase_p_p.h>
 
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qdir.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -157,11 +158,38 @@ void QQuickQmlGenerator::generateImageNode(const ImageNodeInfo &info)
     if (!isNodeVisible(info))
         return;
 
-    QString fn = info.image.hasAlphaChannel() ? QStringLiteral("svg_asset_%1.png").arg(info.image.cacheKey())
-                                              : QStringLiteral("svg_asset_%1.jpg").arg(info.image.cacheKey());
-    // For now we just create a copy of the image in the current directory
-    info.image.save(fn);
-    qCDebug(lcQuickVectorImage) << "Saving copy of IMAGE" << fn;
+    const QFileInfo outputFileInfo(outputFileName);
+    const QDir outputDir(outputFileInfo.absolutePath());
+
+    QString filePath;
+
+    if (!m_retainFilePaths || info.externalFileReference.isEmpty()) {
+        filePath = m_assetFileDirectory;
+        if (filePath.isEmpty())
+            filePath = outputDir.absolutePath();
+
+        if (!filePath.isEmpty() && !filePath.endsWith(u'/'))
+            filePath += u'/';
+
+        QDir fileDir(filePath);
+        if (!fileDir.exists()) {
+            if (!fileDir.mkpath(QStringLiteral(".")))
+                qCWarning(lcQuickVectorImage) << "Failed to create image resource directory:" << filePath;
+        }
+
+        filePath += QStringLiteral("%1%2.png").arg(m_assetFilePrefix.isEmpty()
+                                                   ? QStringLiteral("svg_asset_")
+                                                   : m_assetFilePrefix)
+                                              .arg(info.image.cacheKey());
+
+        if (!info.image.save(filePath))
+            qCWarning(lcQuickVectorImage) << "Unabled to save image resource" << filePath;
+        qCDebug(lcQuickVectorImage) << "Saving copy of IMAGE" << filePath;
+    } else {
+        filePath = info.externalFileReference;
+    }
+
+    const QFileInfo assetFileInfo(filePath);
 
     // TODO: this requires proper asset management.
     stream() << "Image {";
@@ -172,7 +200,7 @@ void QQuickQmlGenerator::generateImageNode(const ImageNodeInfo &info)
     stream() << "y: " << info.rect.y();
     stream() << "width: " << info.rect.width();
     stream() << "height: " << info.rect.height();
-    stream() << "source: \"" << fn <<"\"";
+    stream() << "source: \"" << outputDir.relativeFilePath(assetFileInfo.absoluteFilePath()) <<"\"";
 
     m_indentLevel--;
 
