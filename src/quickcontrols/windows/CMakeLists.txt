@@ -51,6 +51,9 @@ qt_internal_add_qml_module(qtquickcontrols2windowsstyleplugin
     QML_FILES
         ${qml_files}
     RESOURCES
+        images/checkmark.png
+        images/checkmark@2x.png
+        images/checkmark@3x.png
         images/menuarrow.png
         images/menuarrow@2x.png
         images/menuarrow@3x.png
