@@ -1949,7 +1949,7 @@ static ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQmlPro
                     << "When matching arguments for "
                     << object.className() << "::" << data.name(object.metaObject()) << "():";
         } else {
-            const StackFrame frame = engine->stackTrace().first();
+            const StackFrame frame = stackTrace.first();
             qWarning().noquote() << frame.function + QLatin1Char('@') + frame.source
                             + (frame.line > 0 ? (QLatin1Char(':') + QString::number(frame.line))
                                               : QString());
