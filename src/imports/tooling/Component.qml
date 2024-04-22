@@ -9,11 +9,11 @@ QtObject {
     property string file
     required property string name
     property string prototype
-    property var exports: []
-    property var exportMetaObjectRevisions: []
-    property var interfaces: []
-    property var deferredNames: []
-    property var immediateNames: []
+    property list<string> exports: []
+    property list<int> exportMetaObjectRevisions
+    property list<string> interfaces
+    property list<string> deferredNames
+    property list<string> immediateNames
     property string attachedType
     property string valueType
     property string extension
