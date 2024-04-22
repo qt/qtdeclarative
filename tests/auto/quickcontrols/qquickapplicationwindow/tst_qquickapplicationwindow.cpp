@@ -278,6 +278,10 @@ void tst_QQuickApplicationWindow::implicitFill()
 
 void tst_QQuickApplicationWindow::attachedProperties()
 {
+    if (QGuiApplication::platformName().startsWith(QLatin1String("eglfs"), Qt::CaseInsensitive))
+    {
+        QSKIP("This test uses multiple windows and it crashes on EGLFS because of that");
+    }
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("attachedProperties.qml"));
