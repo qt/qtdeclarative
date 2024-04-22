@@ -428,6 +428,33 @@ void QmlTypesCreator::writeRootMethods(const MetaType &classDef)
     writeMethods(componentMethods, S_METHOD);
 };
 
+void QmlTypesCreator::writeComponent(const QmlTypesClassDescription &collector)
+{
+    m_qml.writeStartObject(S_COMPONENT);
+
+    writeClassProperties(collector);
+
+    if (const MetaType &classDef = collector.resolvedClass; !classDef.isEmpty()) {
+        writeEnums(
+                classDef.enums(),
+                collector.registerEnumClassesScoped
+                        ? EnumClassesMode::Scoped
+                        : EnumClassesMode::Unscoped);
+
+        writeProperties(members(classDef.properties(), m_version));
+
+        if (collector.isRootClass) {
+            writeRootMethods(classDef);
+        } else {
+            writeMethods(members(classDef.sigs(), m_version), S_SIGNAL);
+            writeMethods(members(classDef.methods(), m_version), S_METHOD);
+        }
+
+        writeMethods(constructors(classDef.constructors(), m_version), S_METHOD);
+    }
+    m_qml.writeEndObject();
+}
+
 void QmlTypesCreator::writeComponents()
 {
     for (const MetaType &component : std::as_const(m_ownTypes)) {
@@ -435,29 +462,7 @@ void QmlTypesCreator::writeComponents()
         collector.collect(component, m_ownTypes, m_foreignTypes,
                           QmlTypesClassDescription::TopLevel, m_version);
 
-        m_qml.writeStartObject(S_COMPONENT);
-
-        writeClassProperties(collector);
-
-        if (const MetaType &classDef = collector.resolvedClass; !classDef.isEmpty()) {
-            writeEnums(
-                    classDef.enums(),
-                    collector.registerEnumClassesScoped
-                            ? EnumClassesMode::Scoped
-                            : EnumClassesMode::Unscoped);
-
-            writeProperties(members(classDef.properties(), m_version));
-
-            if (collector.isRootClass) {
-                writeRootMethods(classDef);
-            } else {
-                writeMethods(members(classDef.sigs(), m_version), S_SIGNAL);
-                writeMethods(members(classDef.methods(), m_version), S_METHOD);
-            }
-
-            writeMethods(constructors(classDef.constructors(), m_version), S_METHOD);
-        }
-        m_qml.writeEndObject();
+        writeComponent(collector);
 
         if (collector.resolvedClass != component
                 && std::binary_search(
@@ -468,25 +473,11 @@ void QmlTypesCreator::writeComponents()
             // also generate a description of the local type then. All the QML_* macros are
             // ignored, and the result is an anonymous type.
 
-            m_qml.writeStartObject(S_COMPONENT);
-
             QmlTypesClassDescription collector;
             collector.collectLocalAnonymous(component, m_ownTypes, m_foreignTypes, m_version);
+            Q_ASSERT(!collector.isRootClass);
 
-            writeClassProperties(collector);
-            writeEnums(
-                    component.enums(),
-                    collector.registerEnumClassesScoped
-                            ? EnumClassesMode::Scoped
-                            : EnumClassesMode::Unscoped);
-
-            writeProperties(members(component.properties(), m_version));
-
-            writeMethods(members(component.sigs(), m_version), S_SIGNAL);
-            writeMethods(members(component.methods(), m_version), S_METHOD);
-            writeMethods(constructors(component.constructors(), m_version), S_METHOD);
-
-            m_qml.writeEndObject();
+            writeComponent(collector);
         }
     }
 }
