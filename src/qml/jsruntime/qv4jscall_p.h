@@ -125,10 +125,18 @@ ReturnedValue convertAndCall(
         types[i + 1] = argumentType;
         if (const qsizetype argumentSize = argumentType.sizeOf()) {
             Q_ALLOCA_VAR(void, argument, argumentSize);
-            if (argumentType.flags() & QMetaType::NeedsConstruction)
+            if (argumentType.flags() & QMetaType::NeedsConstruction) {
                 argumentType.construct(argument);
-            if (i < argc)
-                ExecutionEngine::metaTypeFromJS(argv[i], argumentType, argument);
+                if (i < argc)
+                    ExecutionEngine::metaTypeFromJS(argv[i], argumentType, argument);
+            } else if (i >= argc
+                        || !ExecutionEngine::metaTypeFromJS(argv[i], argumentType, argument)) {
+                // If we can't convert the argument, we need to default-construct it even if it
+                // doesn't formally need construction.
+                // E.g. an int doesn't need construction, but we still want it to be 0.
+                argumentType.construct(argument);
+            }
+
             values[i + 1] = argument;
         } else {
             values[i + 1] = nullptr;
@@ -201,13 +209,15 @@ bool convertAndCall(ExecutionEngine *engine, QObject *thisObject,
         // Clear the return value
         resultType.destruct(result);
         resultType.construct(result);
-    } else {
+    } else if (resultType == QMetaType::fromType<QVariant>()) {
         // When the return type is QVariant, JS objects are to be returned as
         // QJSValue wrapped in QVariant. metaTypeFromJS unwraps them, unfortunately.
-        if (resultType == QMetaType::fromType<QVariant>())
-            *static_cast<QVariant *>(result) = ExecutionEngine::toVariant(jsResult, QMetaType {});
-        else
-            ExecutionEngine::metaTypeFromJS(jsResult, resultType, result);
+        *static_cast<QVariant *>(result) = ExecutionEngine::toVariant(jsResult, QMetaType {});
+    } else if (!ExecutionEngine::metaTypeFromJS(jsResult, resultType, result)) {
+        // If we cannot convert, also clear the return value.
+        // The caller may have given us an uninitialized QObject*, expecting it to be overwritten.
+        resultType.destruct(result);
+        resultType.construct(result);
     }
     return !jsResult->isUndefined();
 }
@@ -276,7 +286,7 @@ inline ReturnedValue coerceListType(
     }
 
     if (listValueType.flags() & QMetaType::PointerToQObject) {
-        QV4::Scoped<QmlListWrapper> newList(scope, QmlListWrapper::create(engine, listValueType));
+        QV4::Scoped<QmlListWrapper> newList(scope, QmlListWrapper::create(engine, type));
         QQmlListProperty<QObject> *listProperty = newList->d()->property();
 
         const qsizetype length = array->getLength();

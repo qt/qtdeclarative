@@ -2649,16 +2649,15 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         return true;
     }
 
-    if (metaType == QMetaType::fromType<QQmlListReference>()) {
-        if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
+    if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
+        if (metaType == QMetaType::fromType<QQmlListReference>()) {
             *reinterpret_cast<QQmlListReference *>(data) = wrapper->toListReference();
             return true;
         }
-    }
 
-    if (metaType == QMetaType::fromType<QQmlListProperty<QObject>>()) {
-        if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
-            *reinterpret_cast<QQmlListProperty<QObject> *>(data) = *wrapper->d()->property();
+        const auto wrapperPrivate = wrapper->d();
+        if (wrapperPrivate->propertyType() == metaType) {
+            *reinterpret_cast<QQmlListProperty<QObject> *>(data) = *wrapperPrivate->property();
             return true;
         }
     }
