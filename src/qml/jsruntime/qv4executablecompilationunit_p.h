@@ -268,8 +268,8 @@ private:
 
 IdentifierHash ExecutableCompilationUnit::namedObjectsPerComponent(int componentObjectIndex)
 {
-    auto it = namedObjectsPerComponentCache.find(componentObjectIndex);
-    if (Q_UNLIKELY(it == namedObjectsPerComponentCache.end()))
+    auto it = namedObjectsPerComponentCache.constFind(componentObjectIndex);
+    if (Q_UNLIKELY(it == namedObjectsPerComponentCache.cend()))
         return createNamedObjectsPerComponent(componentObjectIndex);
     Q_ASSERT(!it->isEmpty());
     return *it;

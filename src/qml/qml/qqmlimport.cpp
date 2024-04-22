@@ -527,8 +527,8 @@ QQmlDirScripts QQmlImportInstance::getVersionedScripts(const QQmlDirScripts &qml
                 && (!version.hasMinorVersion()
                     || (sit->version.minorVersion() <= version.minorVersion()))) {
             // Load the highest version that matches
-            QMap<QString, QQmlDirParser::Script>::iterator vit = versioned.find(sit->nameSpace);
-            if (vit == versioned.end()
+            const auto vit = versioned.constFind(sit->nameSpace);
+            if (vit == versioned.cend()
                     || (vit->version.minorVersion() < sit->version.minorVersion())) {
                 versioned.insert(sit->nameSpace, *sit);
             }

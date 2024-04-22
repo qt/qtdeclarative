@@ -207,8 +207,8 @@ public:
     QQmlGadgetPtrWrapper *valueTypeInstance(QMetaType type)
     {
         int typeIndex = type.id();
-        auto it = cachedValueTypeInstances.find(typeIndex);
-        if (it != cachedValueTypeInstances.end())
+        auto it = cachedValueTypeInstances.constFind(typeIndex);
+        if (it != cachedValueTypeInstances.cend())
             return *it;
 
         if (QQmlValueType *valueType = QQmlMetaType::valueType(type)) {

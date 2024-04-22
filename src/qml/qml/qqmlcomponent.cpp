@@ -1222,8 +1222,8 @@ QQmlProperty QQmlComponentPrivate::removePropertyFromRequired(
             Q_ASSERT(data && data->propertyCache);
             targetProp = data->propertyCache->property(targetProp->coreIndex());
         }
-        auto it = requiredProperties->find({createdComponent, targetProp});
-        if (it != requiredProperties->end()) {
+        auto it = requiredProperties->constFind({createdComponent, targetProp});
+        if (it != requiredProperties->cend()) {
             if (wasInRequiredProperties)
                 *wasInRequiredProperties = true;
             requiredProperties->erase(it);
