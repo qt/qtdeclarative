@@ -25,32 +25,43 @@ class MainActivity : AppCompatActivity(), QtQuickView.StatusChangeListener {
         QtQuickView.STATUS_ERROR to "ERROR",
         QtQuickView.STATUS_NULL to "NULL"
     )
+    //! [onCreate]
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //! [binding]
         m_binding = ActivityMainBinding.inflate(layoutInflater)
         val view = m_binding.root
         setContentView(view)
+        //! [binding]
 
         m_binding.signalSwitch.setOnClickListener { switchListener() }
 
+        //! [m_qmlView]
         m_qmlView = QtQuickView(
             this, "qrc:/qt/qml/qml_in_android_view/main.qml",
             "qml_in_android_view"
         )
+        //! [m_qmlView]
+
         // Set status change listener for m_qmlView
         // listener implemented below in OnStatusChanged
+        //! [setStatusChangeListener]
         m_qmlView!!.setStatusChangeListener(this)
+        //! [setStatusChangeListener]
+
+        //! [layoutParams]
         val params: ViewGroup.LayoutParams = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
         )
         m_binding.qmlFrame.addView(m_qmlView, params)
+        //! [layoutParams]
 
         m_binding.changeColorButton.setOnClickListener { onClickListener() }
 
         // Check target device orientation on launch
         handleOrientationChanges()
     }
-
+    //! [onCreate]
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         handleOrientationChanges()
@@ -80,7 +91,7 @@ class MainActivity : AppCompatActivity(), QtQuickView.StatusChangeListener {
         m_binding.qmlFrame.layoutParams = qmlFrameLayoutParams
         m_binding.kotlinLinear.layoutParams = linearLayoutParams
     }
-
+    //! [onClickListener]
     private fun onClickListener() {
         // Set the QML view root object property "colorStringFormat" value to
         // color from Colors.getColor()
@@ -94,6 +105,7 @@ class MainActivity : AppCompatActivity(), QtQuickView.StatusChangeListener {
         // Display the QML View background color in a view
         m_binding.colorBox.setBackgroundColor(Color.parseColor(qmlBackgroundColor))
     }
+    //! [onClickListener]
 
     private fun switchListener() {
         // Disconnect QML button signal listener if switch is On using the saved signal listener Id
@@ -101,7 +113,9 @@ class MainActivity : AppCompatActivity(), QtQuickView.StatusChangeListener {
         if (m_binding.signalSwitch.isChecked) {
             Log.v(TAG, "QML button onClicked signal listener disconnected")
             m_binding.switchText.setText(R.string.connect_qml_button_signal_listener)
+            //! [disconnect qml signal listener]
             m_qmlView!!.disconnectSignalListener(m_qmlButtonSignalListenerId)
+            //! [disconnect qml signal listener]
         } else {
             Log.v(TAG, "QML button onClicked signal listener connected")
             m_binding.switchText.setText(R.string.disconnect_qml_button_signal_listener)
@@ -115,6 +129,7 @@ class MainActivity : AppCompatActivity(), QtQuickView.StatusChangeListener {
         }
     }
 
+    //! [onStatusChanged]
     override fun onStatusChanged(status: Int) {
         Log.v(TAG, "Status of QtQuickView: $status")
 
@@ -126,6 +141,7 @@ class MainActivity : AppCompatActivity(), QtQuickView.StatusChangeListener {
 
         // Connect signal listener to "onClicked" signal from main.qml
         // addSignalListener returns int which can be used later to identify the listener
+        //! [qml signal listener]
         if (status == QtQuickView.STATUS_READY && !m_binding.signalSwitch.isChecked) {
             m_qmlButtonSignalListenerId = m_qmlView!!.connectSignalListener(
                 "onClicked", Any::class.java
@@ -134,5 +150,7 @@ class MainActivity : AppCompatActivity(), QtQuickView.StatusChangeListener {
                 m_binding.kotlinLinear.setBackgroundColor(Color.parseColor(m_colors.getColor()))
             }
         }
+        //! [qml signal listener]
     }
+    //! [onStatusChanged]
 }

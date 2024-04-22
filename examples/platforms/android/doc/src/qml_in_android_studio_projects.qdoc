@@ -2,44 +2,73 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-    \page qml-in-java-based-android-projects-example.html
-    \title QML in Java-Based Android Projects
-    \brief Uses a \l {Qt Quick View Android Class}{QtQuickView} to embed a QML component into a Java-based Android project.
+    \page qml-in-android-studio-projects-example.html
+    \title QML in Android Studio Projects
+    \brief Uses a \l {Qt Quick View Android Class}{QtQuickView}
+    to embed a QML component into Android projects.
     \ingroup qtquickexamples
 
     \section1 Overview
 
     This example contains a QML project that you can import into Android Studio
     with the \l {Qt Tools for Android Studio} plugin
-    and Java project that utilize the \l {Qt Quick View Android Class}{QtQuickView} API.
+    and Java and Kotlin projects that utilize the
+    \l {Qt Quick View Android Class}{QtQuickView} API.
 
     For more information on how QML works, see the \l {Qt Qml}. This
-    documentation will focus on how a QML component is embedded into Java-based
-    Android applications.
+    documentation will focus on how a QML component is embedded into
+    Java- and Kotlin-based Android applications.
 
     \image portrait_java.png
 
-    First, we look at the \c MainActivity's onCreate() method:
+    First, we look at the \c MainActivity's onCreate() method of the Java
+    and Kotlin projects.
+
+    For a Java-based project:
 
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java onCreate
 
-    Where an instance of \l {Qt Quick View Android Class}{QtQuickView} named
-    \c m_qmlView is created by giving it the Java application Context,URI of
-    the QML project's \c main.qml file and the name of the QML project's main
-    library as parameters:
+    For a Kotlin-based project:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt onCreate
+
+    \note in the Kotlin project we use \l {Android: View binding}{View binding}
+    to access the UI components of the application:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt binding
+
+    Inside the \c onCreate() method, an instance of
+    \l {Qt Quick View Android Class}{QtQuickView} named
+    \c m_qmlView is created by giving it the Java/Kotlin application Context,
+    URI of the QML project's \c main.qml file and the name of the QML project's
+    main library as parameters.
+
+    For a Java-based project:
 
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java m_qmlView
 
+    For a Kotlin-based project:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt m_qmlView
+
     \c m_qmlView is then added to Android FrameLayout ViewGroup with
-    appropriate layout parameters:
+    appropriate layout parameters.
+
+    For a Java-based project:
 
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java layoutParams
 
+    For a Kotlin-based project:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt layoutParams
+
     \section1 Interacting with the QML component
 
-    To interact with the imported QML component we first need to implement
+    To interact with the embedded QML component we first need to implement
     the \l {Qt Quick View Android Class}{QtQuickView} public interface
-    \l [Qt Quick View Android Class]{public interface StatusChangeListener}{StatusChangeListener}:
+    \l [Qt Quick View Android Class]{public interface StatusChangeListener}{StatusChangeListener}.
+
+    For a Java-based project:
 
     \code
     public class MainActivity extends AppCompatActivity implements
@@ -48,21 +77,44 @@
     }
     \endcode
 
-    Then, define an override for the \l [Qt Quick View Android Class]{public interface StatusChangeListener}{StatusChangeListener} callback
-    function \c onStatusChanged():
+    IFor a Kotlin-based project:
+
+    \code
+    class MainActivity : AppCompatActivity(), QtQuickView.StatusChangeListener{
+        ...
+    }
+    \endcode
+
+    Then, define an override for the
+    \l [Qt Quick View Android Class]{public interface StatusChangeListener}{StatusChangeListener}
+    callback function \c onStatusChanged().
+
+    For a Java-based project:
 
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java onStatusChanged
 
+    For a Kotlin-based project:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt onStatusChanged
+
     Then, set that listener to listen for status changes of \c m_qmlView
-    with the \l [Qt Quick View Android Class]{public void setStatusChangeListener(StatusChangeListener listener)}{setStatusChangeListener()}:
+    with the \l [Qt Quick View Android Class]{public void setStatusChangeListener(StatusChangeListener listener)}{setStatusChangeListener()}.
+
+    For a Java-based project:
 
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java setStatusChangeListener
+
+    For a Kotlin-based project:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt setStatusChangeListener
 
     The overridden callback function \c onStatusChanged() receives
     \c StatusChanged() signal containing the current
     \l [Qt Quick View Android Class]{Status values}{Status value} of the
-    \c m_qmlView. If this \l [Qt Quick View Android Class]{Status values}{Status value}
-    is confirmed to be \l [Qt Quick View Android Class]{Status values}{STATUS_READY},
+    \c m_qmlView. If this
+    \l [Qt Quick View Android Class]{Status values}{Status value}
+    is confirmed to be
+    \l [Qt Quick View Android Class]{Status values}{STATUS_READY},
     we can start interacting with the QML view.
 
     \section1 Getting and setting QML view property values
@@ -73,11 +125,17 @@
     methods.
 
     The root object of the QML component's background color is set when a click
-    event of a Android button occurs:
+    event of an Android button occurs.
+
+    For a Java-based project:
 
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java onClickListener
 
-    With the \l [Qt Quick View Android Class]{public void setProperty(String propertyName, Object value)}{QtQuickView.setProperty()}
+    For a Kotlin-based project:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt onClickListener
+
+    With the \l [Qt Quick View Android Class]{public void setProperty(StringpropertyName, Object value)}{QtQuickView.setProperty()}
     method we set the "colorStringFormat" property value to a random color
     value that is fetched from the project's \c Colors.java class.
 
@@ -94,9 +152,15 @@
     declared in the QML component root object.
 
     Here we connect a signal listener to the \c onClicked()  signal of the
-    QML component:
+    QML component.
+
+    For a Java-based project:
 
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java qml signal listener
+
+    For a Kotlin-based project:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt qml signal listener
 
     The \c onClicked() signal is emitted every time the button on the QML UI is
     clicked. That signal is then received by this listener and the background
@@ -107,7 +171,13 @@
     returns a unique signal listener id which we store and use later to
     identify and disconnect the listener.
 
+    For a Java-based project:
+
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java disconnect qml signal listener
+
+    For a Kotlin-based project:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt disconnect qml signal listener
 
     Here, the previously connected signal listener is disconnected using the
     \l [Qt Quick View Android Class]{public boolean removeSignalListener(int signalListenerId)}{QtQuickView.disconnectSignalListener()}

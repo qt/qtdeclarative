@@ -97,7 +97,8 @@ imagedirs += images
 
 excludefiles += ../util/qquickpropertychanges_p.h
 examples.fileextensions += "*.qm" \
-                           "*.java"
+                           "*.java" \
+                           "*.kt"
 
 manifestmeta.thumbnail.names += "QtQuick/QML Dynamic View Ordering Tutorial*"
 
