@@ -396,6 +396,8 @@ private slots:
     void writeNumberToEnumAlias();
     void badInlineComponentAnnotation();
 
+    void typedObjectList();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6765,6 +6767,21 @@ void tst_qqmllanguage::badInlineComponentAnnotation()
 
     QCOMPARE(o->property("b").value<QObject *>(), ic);
     QCOMPARE(o->property("c").value<QObject *>(), ic);
+}
+
+void tst_qqmllanguage::typedObjectList()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("typedObjectList.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QJSValue b = o->property("b").value<QJSValue>();
+    auto list = qjsvalue_cast<QQmlListProperty<QQmlComponent>>(b.property(QStringLiteral("b")));
+
+    QCOMPARE(list.count(&list), 1);
+    QVERIFY(list.at(&list, 0) != nullptr);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
