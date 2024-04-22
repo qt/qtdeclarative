@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.Fusion.impl
+import QtQuick.Controls.macOS.impl
 
 T.MenuItem {
     id: control

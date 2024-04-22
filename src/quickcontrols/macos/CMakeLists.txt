@@ -66,6 +66,9 @@ qt_internal_add_qml_module(qtquickcontrols2macosstyleplugin
         images/busyindicator-light.webp
         images/busyindicator-light@2x.webp
         images/busyindicator-light@3x.webp
+        images/checkmark.png
+        images/checkmark@2x.png
+        images/checkmark@3x.png
         images/menuarrow.png
         images/menuarrow@2x.png
         images/menuarrow@3x.png
