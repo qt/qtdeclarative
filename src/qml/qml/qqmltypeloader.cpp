@@ -1230,7 +1230,13 @@ QQmlTypeLoader::QQmlTypeLoader(QV4::ExecutionEngine *engine)
     : m_data(engine)
 {
     QQmlTypeLoaderConfiguredDataPtr data(&m_data);
+#if defined(Q_OS_OHOS)
+    // On HarmonyOS, Qt app and plugins all are Native C++ libraries (.so files).
+    // They have to be kept in entry/libs/${OHOS_ARCH} in .hap package.
+    data->pluginPaths << QCoreApplication::applicationDirPath();
+#else
     data->pluginPaths << QLatin1String(".");
+#endif
     // Search order is:
     // 1. android or macos specific bundle paths.
     // 2. applicationDirPath()
