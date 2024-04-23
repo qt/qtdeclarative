@@ -96,6 +96,10 @@ bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
         highlightImport(item);
         return true;
     }
+    case DomType::Binding: {
+        highlightBinding(item);
+        return true;
+    }
     default:
         return true;
     }
@@ -130,6 +134,31 @@ void HighlightingVisitor::highlightImport(const DomItem &item)
     if (regions.contains(AsTokenRegion)) {
         m_highlights.addHighlight(regions, AsTokenRegion);
         m_highlights.addHighlight(regions[IdNameRegion], int(SemanticTokenTypes::Namespace));
+    }
+}
+
+void HighlightingVisitor::highlightBinding(const DomItem &item)
+{
+    const auto binding = item.as<Binding>();
+    Q_ASSERT(binding);
+    const auto fLocs = FileLocations::treeOf(item);
+    if (!fLocs) {
+        qCDebug(semanticTokens) << "Can't find the locations for" << item.internalKind();
+        return;
+    }
+    const auto regions = fLocs->info().regions;
+    // If dotted name, then defer it to be handled in ScriptIdentifierExpression
+    if (binding->name().contains("."_L1))
+        return;
+
+    if (binding->bindingType() == BindingType::Normal) {
+        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Property));
+        // TODO: Binding property could have been marked as Required, Readonly or Const
+        // Should also add modifier depending on the declaration of the property
+        // Should go to defined scope and check readonly, required and const flags.
+    } else {
+        m_highlights.addHighlight(regions, OnTokenRegion);
+        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Property));
     }
 }
 

@@ -217,6 +217,22 @@ void tst_qmlls_highlighting::highlights_data()
                                              << Token(QQmlJS::SourceLocation(159, 6, 6, 15),
                                                       int(SemanticTokenTypes::Namespace), 0);
     }
+    { // Bindings
+        const auto filePath = m_highlightingDataDir + "/bindings.qml";
+        const auto fileItem = fileObject(filePath);
+
+        // normal binding
+        QTest::addRow("normalBinding") << fileItem
+                                       << Token(QQmlJS::SourceLocation(189, 1, 11, 5),
+                                                int(SemanticTokenTypes::Property), 0);
+        // on binding
+        QTest::addRow("on-binding") << fileItem
+                                    << Token(QQmlJS::SourceLocation(175, 5, 9, 17),
+                                             int(SemanticTokenTypes::Property), 0);
+        QTest::addRow("on-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(172, 2, 9, 14),
+                                             int(SemanticTokenTypes::Keyword), 0);
+    }
 }
 
 void tst_qmlls_highlighting::highlights()

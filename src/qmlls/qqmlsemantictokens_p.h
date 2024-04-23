@@ -92,6 +92,7 @@ public:
 private:
     void highlightComment(const QQmlJS::Dom::DomItem &item);
     void highlightImport(const QQmlJS::Dom::DomItem &item);
+    void highlightBinding(const QQmlJS::Dom::DomItem &item);
 
 private:
     Highlights &m_highlights;
