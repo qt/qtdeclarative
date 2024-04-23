@@ -132,6 +132,7 @@ private slots:
     void visibleChanged();
 
     void lastFocusChangeReason();
+    void focusInScopeChanges();
 
 private:
     QQmlEngine engine;
@@ -4376,6 +4377,58 @@ void tst_QQuickItem::lastFocusChangeReason()
     QGuiApplication::sendEvent(customItem, &wheelEvent);
     QVERIFY(customItem->hasActiveFocus());
     QCOMPARE(customItemPrivate->lastFocusChangeReason(), Qt::MouseFocusReason);
+}
+
+void tst_QQuickItem::focusInScopeChanges()
+{
+    std::unique_ptr<QQuickView> window = std::make_unique<QQuickView>();
+    window->setSource(testFileUrl("focusInScopeChanges.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowFocused(window.get()));
+
+    QQuickItem *main = window->rootObject();
+    QVERIFY(main);
+    QQuickItem *focusScope = main->findChild<QQuickItem *>("focusScope");
+    QQuickItem *rect = main->findChild<QQuickItem *>("rect");
+    QQuickItem *textInput = main->findChild<QQuickItem *>("textInput");
+
+    QVERIFY(focusScope);
+    QVERIFY(rect);
+    QVERIFY(textInput);
+    QVERIFY(window->contentItem());
+
+    QSignalSpy fsActiveFocusSpy(focusScope, SIGNAL(activeFocusChanged(bool)));
+    QSignalSpy rectActiveFocusSpy(rect, SIGNAL(activeFocusChanged(bool)));
+    QSignalSpy textInputActiveFocusSpy(textInput, SIGNAL(activeFocusChanged(bool)));
+
+    // The window's content item will have activeFocus if window is focused
+    QTRY_VERIFY(window->contentItem()->hasActiveFocus());
+
+    QVERIFY(!focusScope->hasActiveFocus());
+    QVERIFY(!rect->hasActiveFocus());
+    QVERIFY(!textInput->hasActiveFocus());
+    QCOMPARE(fsActiveFocusSpy.size(), 0);
+    QCOMPARE(rectActiveFocusSpy.size(), 0);
+    QCOMPARE(textInputActiveFocusSpy.size(), 0);
+
+    // setting focus to rect shouldn't affect activeFocus as long as its
+    // parent focus scope doesn't have the activeFocus
+    rect->setFocus(true);
+    QCOMPARE(fsActiveFocusSpy.size(), 0);
+    QCOMPARE(rectActiveFocusSpy.size(), 0);
+    QCOMPARE(textInputActiveFocusSpy.size(), 0);
+
+    // focusScope is the only child with focus in the parent
+    // scope, so it will gain activeFocus
+    focusScope->setFocus(true);
+    QCOMPARE(fsActiveFocusSpy.size(), 1);
+    QVERIFY(fsActiveFocusSpy.first().at(0).toBool());
+    // rect loses activeFocus because textInput gains it (as a result of code in signal handler)
+    QCOMPARE(rectActiveFocusSpy.size(), 2);
+    QVERIFY(!rect->hasActiveFocus());
+    QCOMPARE(textInputActiveFocusSpy.size(), 1);
+    QVERIFY(textInput->hasActiveFocus());
 }
 
 QTEST_MAIN(tst_QQuickItem)

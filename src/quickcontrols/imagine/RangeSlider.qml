@@ -38,7 +38,7 @@ T.RangeSlider {
                 {"horizontal": control.horizontal},
                 {"disabled": !control.enabled},
                 {"pressed": control.first.pressed},
-                {"focused": control.first.handle.activeFocus},
+                {"focused": control.first.handle?.activeFocus ?? false},
                 {"mirrored": control.mirrored},
                 {"hovered": control.first.hovered}
             ]
@@ -57,7 +57,7 @@ T.RangeSlider {
                 {"horizontal": control.horizontal},
                 {"disabled": !control.enabled},
                 {"pressed": control.second.pressed},
-                {"focused": control.second.handle.activeFocus},
+                {"focused": control.second.handle?.activeFocus ?? false},
                 {"mirrored": control.mirrored},
                 {"hovered": control.second.hovered}
             ]
@@ -80,10 +80,13 @@ T.RangeSlider {
         }
 
         NinePatchImage {
-            x: control.horizontal ? control.first.handle.width / 2 + control.first.position * (parent.width - control.first.handle.width) : (parent.width - width) / 2
-            y: control.horizontal ? (parent.height - height) / 2 : control.first.handle.height / 2 + control.second.visualPosition * (parent.height - control.first.handle.height)
-            width: control.horizontal ? control.second.position * (parent.width - control.first.handle.width) - control.first.position * (parent.width - control.first.handle.width) : parent.width
-            height: control.vertical ? control.second.position * (parent.height - control.first.handle.height) - control.first.position * (parent.height - control.first.handle.height): parent.height
+            readonly property real handleWidth: control.first.handle ? control.first.handle.width : 0
+            readonly property real handleHeight: control.first.handle ? control.first.handle.height : 0
+
+            x: control.horizontal ? handleWidth / 2 + control.first.position * (parent.width - handleWidth) : (parent.width - width) / 2
+            y: control.horizontal ? (parent.height - height) / 2 : handleHeight / 2 + control.second.visualPosition * (parent.height - handleHeight)
+            width: control.horizontal ? control.second.position * (parent.width - handleWidth) - control.first.position * (parent.width - handleWidth) : parent.width
+            height: control.vertical ? control.second.position * (parent.height - handleHeight) - control.first.position * (parent.height - handleHeight): parent.height
 
             source: control.Imagine.url + "rangeslider-progress"
             NinePatchImageSelector on source {

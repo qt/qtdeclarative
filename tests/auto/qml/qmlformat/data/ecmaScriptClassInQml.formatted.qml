@@ -4,11 +4,13 @@ Item {
 
     function f() {
         var count = 0;
+
         class Person {
             constructor(name){
                 this._name = name;
             }
         }
+
         class Employee extends Person {
             constructor(name, age){
                 super(name);

@@ -3199,6 +3199,7 @@ public:
     QStringView name;
     UiPragmaValueList *values;
     SourceLocation pragmaToken;
+    SourceLocation pragmaIdToken;
     SourceLocation colonToken;
     SourceLocation semicolonToken;
 };

@@ -434,7 +434,7 @@ ReturnedValue QQmlNumberExtension::method_fromLocaleString(const QV4::FunctionOb
 //--------------
 // Locale object
 
-void QQmlLocaleValueType::formattedDataSize(QQmlV4Function *args) const
+void QQmlLocaleValueType::formattedDataSize(QQmlV4FunctionPtr args) const
 {
     QV4::Scope scope(args->v4engine());
     const auto doThrow = [&](const QString &message) {
@@ -520,7 +520,7 @@ QList<QQmlLocale::DayOfWeek> QQmlLocaleValueType::weekDays() const
     return result;
 }
 
-void QQmlLocaleValueType::toString(QQmlV4Function *args) const
+void QQmlLocaleValueType::toString(QQmlV4FunctionPtr args) const
 {
     Scope scope(args->v4engine());
     const auto doThrow = [&](const QString &message) {

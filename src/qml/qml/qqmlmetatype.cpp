@@ -668,10 +668,10 @@ QQmlType QQmlMetaType::findCompositeType(
     QQmlMetaTypeDataPtr data;
 
     bool urlExists = true;
-    auto found = data->urlToType.find(normalized);
-    if (found == data->urlToType.end()) {
-        found = data->urlToNonFileImportType.find(normalized);
-        if (found == data->urlToNonFileImportType.end())
+    auto found = data->urlToType.constFind(normalized);
+    if (found == data->urlToType.cend()) {
+        found = data->urlToNonFileImportType.constFind(normalized);
+        if (found == data->urlToNonFileImportType.cend())
             urlExists = false;
     }
 

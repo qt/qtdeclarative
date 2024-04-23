@@ -43,7 +43,7 @@ modules, or to merge sets of QML modules under a common base point.
 
 \title QT_QML_GENERATE_QMLLS_INI
 
-\brief Enables autogeneration of .qmlls.ini files for QML Language Server
+\brief Enables autogeneration of .qmlls.ini files for \QMLLS.
 \cmakevariablesince 6.7
 
 \c QT_QML_GENERATE_QMLLS_INI is a boolean that describes whether

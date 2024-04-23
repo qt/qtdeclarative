@@ -11,6 +11,7 @@
 
 #include <QString>
 
+#include <algorithm>
 #include <limits>
 
 QT_BEGIN_NAMESPACE
@@ -826,8 +827,27 @@ bool ScriptFormatter::visit(StatementList *ast)
         }
 
         accept(it->statement);
-        if (it->next)
-            newLine();
+        if (it->next) {
+            // There might be a post-comment attached to the current
+            // statement or a pre-comment attached to the next
+            // statmente or both.
+            // If any of those are present they will take care of
+            // handling the spacing between the statements so we
+            // don't need to push any newline.
+            auto *commentForCurrentStatement = comments->commentForNode(it->statement);
+            auto *commentForNextStatement = comments->commentForNode(it->next->statement);
+
+            if (
+                (commentForCurrentStatement && !commentForCurrentStatement->postComments().empty())
+                || (commentForNextStatement && !commentForNextStatement->preComments().empty())
+            ) continue;
+
+            quint32 lineDelta = it->next->firstSourceLocation().startLine
+                    - it->statement->lastSourceLocation().startLine;
+            lineDelta = std::clamp(lineDelta, quint32{ 1 }, quint32{ 2 });
+
+            newLine(lineDelta);
+        }
     }
     --expressionDepth;
     return false;

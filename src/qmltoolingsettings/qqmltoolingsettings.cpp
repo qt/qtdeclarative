@@ -3,8 +3,6 @@
 
 #include "qqmltoolingsettings_p.h"
 
-#include <algorithm>
-
 #include <QtCore/qdebug.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfileinfo.h>

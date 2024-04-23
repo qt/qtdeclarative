@@ -34,11 +34,9 @@ using namespace Qt::StringLiterals;
  * arguments and return types into "var".
  */
 
-void QQmlJSShadowCheck::run(
-        InstructionAnnotations *annotations, const Function *function,
-        QQmlJS::DiagnosticMessage *error)
+QQmlJSCompilePass::BlocksAndAnnotations QQmlJSShadowCheck::run(const Function *function,
+                                                               QQmlJS::DiagnosticMessage *error)
 {
-    m_annotations = annotations;
     m_function = function;
     m_error = error;
     m_state = initialState(function);
@@ -52,6 +50,8 @@ void QQmlJSShadowCheck::run(
         if (checkBaseType(base) == Shadowable)
             break;
     }
+
+    return { std::move(m_basicBlocks), std::move(m_annotations) };
 }
 
 void QQmlJSShadowCheck::generate_LoadProperty(int nameIndex)
@@ -89,7 +89,7 @@ void QQmlJSShadowCheck::handleStore(int base, const QString &memberName)
 {
     const int instructionOffset = currentInstructionOffset();
     const QQmlJSRegisterContent &readAccumulator
-            = (*m_annotations)[instructionOffset].readRegisters[Accumulator].content;
+            = m_annotations[instructionOffset].readRegisters[Accumulator].content;
     const auto baseType = m_state.registers[base].content;
 
     // If the accumulator is already read as var, we don't have to do anything.
@@ -136,7 +136,7 @@ void QQmlJSShadowCheck::generate_CallPropertyLookup(int nameIndex, int base, int
 
 QV4::Moth::ByteCodeHandler::Verdict QQmlJSShadowCheck::startInstruction(QV4::Moth::Instr::Type)
 {
-    m_state = nextStateFromAnnotations(m_state, *m_annotations);
+    m_state = nextStateFromAnnotations(m_state, m_annotations);
     return (m_state.hasSideEffects() || m_state.changedRegisterIndex() != InvalidRegister)
             ? ProcessInstruction
             : SkipInstruction;
@@ -189,7 +189,7 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
         // Make it "var". We don't know what it is.
         const QQmlJSScope::ConstPtr varType = m_typeResolver->varType();
         const QQmlJSRegisterContent varContent = m_typeResolver->globalType(varType);
-        InstructionAnnotation &currentAnnotation = (*m_annotations)[currentInstructionOffset()];
+        InstructionAnnotation &currentAnnotation = m_annotations[currentInstructionOffset()];
 
         if (currentAnnotation.changedRegisterIndex != InvalidRegister) {
             m_typeResolver->adjustOriginalType(
@@ -230,7 +230,7 @@ void QQmlJSShadowCheck::checkResettable(
     const QQmlJSRegisterContent varContent = m_typeResolver->globalType(varType);
 
     QQmlJSRegisterContent &readAccumulator
-            = (*m_annotations)[instructionOffset].readRegisters[Accumulator].content;
+            = m_annotations[instructionOffset].readRegisters[Accumulator].content;
     readAccumulator = m_typeResolver->convert(readAccumulator, varContent);
 }
 

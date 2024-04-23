@@ -19,6 +19,7 @@
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQuick/private/qquicktextinput_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
@@ -61,6 +62,7 @@ private slots:
     void hitTest();
     void checkableTest();
     void ignoredTest();
+    void passwordTest();
 };
 
 tst_QQuickAccessible::tst_QQuickAccessible()
@@ -666,6 +668,34 @@ void tst_QQuickAccessible::ignoredTest()
         QAccessibleInterface *child = rectangleA->child(i);
         QCOMPARE(child->text(QAccessible::Name), QString(QLatin1Char(expected[i])));
     }
+    QTestAccessibility::clearEvents();
+}
+
+void tst_QQuickAccessible::passwordTest()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick\nTextInput {\n"
+                      "Accessible.role: Accessible.EditableText\n"
+                      "Accessible.name: \"Password\"\n"
+                      "Accessible.passwordEdit: true\n"
+                      "echoMode: TextInput.Password\n"
+                      "text: \"Green\"\n"
+                      "}", QUrl());
+    auto object = std::unique_ptr<QObject>(component.create());
+    QVERIFY(object != nullptr);
+
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput *>(object.get());
+    QVERIFY(textInput != nullptr);
+
+    const auto passwordCharacter = textInput->passwordCharacter();
+    const auto passwordLength = textInput->text().length();
+    const auto password = passwordCharacter.repeated(passwordLength);
+
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(object.get());
+    QVERIFY(iface);
+    QCOMPARE(iface->text(QAccessible::Value), password);
+
     QTestAccessibility::clearEvents();
 }
 

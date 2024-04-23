@@ -83,16 +83,18 @@ bool QQmlJSLinterCodegen::analyzeFunction(const QV4::Compiler::Context *context,
                                           QQmlJS::DiagnosticMessage *error)
 {
     QQmlJSTypePropagator propagator(m_unitGenerator, &m_typeResolver, m_logger,
-                                    m_passManager);
-    QQmlJSCompilePass::InstructionAnnotations annotations = propagator.run(function, error);
+                                    {}, {}, m_passManager);
+    auto [basicBlocks, annotations] = propagator.run(function, error);
     if (!error->isValid()) {
-        QQmlJSShadowCheck shadowCheck(m_unitGenerator, &m_typeResolver, m_logger);
-        shadowCheck.run(&annotations, function, error);
+        QQmlJSShadowCheck shadowCheck(m_unitGenerator, &m_typeResolver, m_logger, basicBlocks,
+                                      annotations);
+        shadowCheck.run(function, error);
     }
 
     if (!error->isValid()) {
-        QQmlJSStorageGeneralizer generalizer(m_unitGenerator, &m_typeResolver, m_logger);
-        generalizer.run(annotations, function, error);
+        QQmlJSStorageGeneralizer generalizer(m_unitGenerator, &m_typeResolver, m_logger,
+                                             basicBlocks, annotations);
+        generalizer.run(function, error);
     }
 
     if (error->isValid()) {

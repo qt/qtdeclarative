@@ -23,6 +23,7 @@ set(cpp_sources
     cpptypes/typewithnamespace.h cpptypes/typewithnamespace.cpp
     cpptypes/typewithsignal.h
     cpptypes/custominitialization.h
+    cpptypes/typewithrequiredproperties.h
 )
 
 set(qml_sources
@@ -134,6 +135,8 @@ set(qml_sources
     NamespacedTypes.qml
 
     badFile.qml
+
+    requiredProperties.qml
 )
 
 set(js_sources

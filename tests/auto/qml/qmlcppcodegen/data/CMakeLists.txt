@@ -190,10 +190,12 @@ set(qml_files
     listIndices.qml
     listOfInvisible.qml
     listPropertyAsModel.qml
+    listToString.qml
     listlength.qml
     math.qml
     mathMinMax.qml
     mathOperations.qml
+    mathStaticProperties.qml
     mergedObjectRead.qml
     mergedObjectWrite.qml
     methodOnListLookup.qml
@@ -226,8 +228,10 @@ set(qml_files
     popContextAfterRet.qml
     prefixedMetaType.qml
     pressAndHoldButton.qml
+    qtbug113150.qml
     reduceWithNullThis.qml
     readEnumFromInstance.qml
+    readonlyListProperty.qml
     registerPropagation.qml
     registerelimination.qml
     renameAdjust.qml

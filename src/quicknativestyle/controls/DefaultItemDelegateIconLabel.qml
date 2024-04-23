@@ -18,5 +18,4 @@ IconLabel {
     rightPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
 
     readonly property T.ItemDelegate control: parent as T.ItemDelegate
-    readonly property bool __ignoreNotCustomizable: true
 }

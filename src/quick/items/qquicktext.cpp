@@ -2667,8 +2667,10 @@ void QQuickText::geometryChange(const QRectF &newGeometry, const QRectF &oldGeom
             }
         }
     } else if (!heightChanged && widthMaximum) {
-        if (!qFuzzyIsNull(oldGeometry.width())) {
+        if (oldGeometry.width() > 0) {
             // no change to height, width is adequate and wasn't 0 before
+            // (old width could also be negative if it was 0 and the margins
+            // were set)
             goto geomChangeDone;
         }
     }

@@ -354,6 +354,7 @@ enum FileLocationRegion : int {
     EllipsisTokenRegion,
     ElseKeywordRegion,
     EnumKeywordRegion,
+    EnumValueRegion,
     EqualTokenRegion,
     ForKeywordRegion,
     FinallyKeywordRegion,
@@ -389,6 +390,7 @@ enum FileLocationRegion : int {
     ThrowKeywordRegion,
     TryKeywordRegion,
     TypeIdentifierRegion,
+    VersionRegion,
     WhileKeywordRegion,
 };
 Q_ENUM_NS(FileLocationRegion);

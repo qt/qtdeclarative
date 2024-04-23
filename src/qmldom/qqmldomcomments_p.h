@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef QQMLDOMCOMMENTS_P_H
 #define QQMLDOMCOMMENTS_P_H
@@ -75,12 +75,14 @@ public:
 
     enum CommentType {Pre, Post};
 
-    Comment(const QString &c, int newlinesBefore = 1, CommentType type = Pre)
-        : m_comment(c), m_newlinesBefore(newlinesBefore), m_type(type)
+    Comment(const QString &c, const QQmlJS::SourceLocation &loc, int newlinesBefore = 1,
+            CommentType type = Pre)
+        : m_comment(c), m_location(loc), m_newlinesBefore(newlinesBefore), m_type(type)
     {
     }
-    Comment(QStringView c, int newlinesBefore = 1, CommentType type = Pre)
-        : m_comment(c), m_newlinesBefore(newlinesBefore), m_type(type)
+    Comment(QStringView c, const QQmlJS::SourceLocation &loc, int newlinesBefore = 1,
+            CommentType type = Pre)
+        : m_comment(c), m_location(loc), m_newlinesBefore(newlinesBefore), m_type(type)
     {
     }
 
@@ -99,8 +101,11 @@ public:
     }
     friend bool operator!=(const Comment &c1, const Comment &c2) { return !(c1 == c2); }
 
+    QQmlJS::SourceLocation sourceLocation() const { return m_location; };
+
 private:
     QStringView m_comment;
+    QQmlJS::SourceLocation m_location;
     int m_newlinesBefore;
     CommentType m_type;
 };
@@ -114,7 +119,6 @@ public:
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const;
     void writePre(OutWriter &lw, QList<SourceLocation> *locations = nullptr) const;
     void writePost(OutWriter &lw, QList<SourceLocation> *locations = nullptr) const;
-    QMultiMap<quint32, const QList<Comment> *> commentGroups(SourceLocation elLocation) const;
 
     friend bool operator==(const CommentedElement &c1, const CommentedElement &c2)
     {

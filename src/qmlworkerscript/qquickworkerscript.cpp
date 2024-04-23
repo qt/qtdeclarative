@@ -180,8 +180,8 @@ bool QQuickWorkerScriptEnginePrivate::event(QEvent *event)
     } else if (event->type() == (QEvent::Type)WorkerRemoveEvent::WorkerRemove) {
         QMutexLocker locker(&m_lock);
         WorkerRemoveEvent *workerEvent = static_cast<WorkerRemoveEvent *>(event);
-        auto itr = workers.find(workerEvent->workerId());
-        if (itr != workers.end()) {
+        auto itr = workers.constFind(workerEvent->workerId());
+        if (itr != workers.cend()) {
             if (itr->isT1())
                 delete itr->asT1();
             workers.erase(itr);
@@ -417,8 +417,8 @@ int QQuickWorkerScriptEngine::registerWorkerScript(QQuickWorkerScript *owner)
 
 void QQuickWorkerScriptEngine::removeWorkerScript(int id)
 {
-    const auto it = d->workers.find(id);
-    if (it == d->workers.end())
+    const auto it = d->workers.constFind(id);
+    if (it == d->workers.cend())
         return;
 
     if (it->isT1()) {
@@ -580,7 +580,7 @@ bool QQuickWorkerScript::ready() const
     of ListModel objects, any modifications by the other thread to an object
     passed in \c message will not be reflected in the original object.
 */
-void QQuickWorkerScript::sendMessage(QQmlV4Function *args)
+void QQuickWorkerScript::sendMessage(QQmlV4FunctionPtr args)
 {
     if (!engine()) {
         qWarning("QQuickWorkerScript: Attempt to send message before WorkerScript establishment");

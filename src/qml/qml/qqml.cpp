@@ -164,8 +164,8 @@ void QQmlPrivate::qmlRegistrationWarning(
     case UnconstructibleSingleton:
         qWarning()
                 << "Singleton" << metaType.name()
-                << "needs either a default constructor or, when adding a default"
-                << "constructor is infeasible, a public static"
+                << "needs to be a concrete class with either a default constructor"
+                << "or, when adding a default constructor is infeasible, a public static"
                 << "create(QQmlEngine *, QJSEngine *) method.";
         break;
     case NonQObjectWithAtached:

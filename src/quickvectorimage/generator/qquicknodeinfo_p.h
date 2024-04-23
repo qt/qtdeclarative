@@ -1,5 +1,5 @@
 // Copyright (C) 2024 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef QQUICKNODEINFO_P_H
 #define QQUICKNODEINFO_P_H
@@ -49,9 +49,9 @@ struct PathNodeInfo : NodeInfo
     QPainterPath painterPath;
     Qt::FillRule fillRule = Qt::FillRule::WindingFill;
     Qt::PenCapStyle capStyle = Qt::SquareCap;
-    QString strokeColor;
+    QColor strokeColor;
     qreal strokeWidth;
-    QString fillColor;
+    QColor fillColor;
     QGradient grad;
 };
 
@@ -64,8 +64,8 @@ struct TextNodeInfo : NodeInfo
     QString text;
     QFont font;
     Qt::Alignment alignment;
-    QString color;
-    QString strokeColor;
+    QColor fillColor;
+    QColor strokeColor;
 };
 
 enum class StructureNodeStage

@@ -390,6 +390,7 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("javascriptBlock")
             << "javascriptBlock.qml"
             << "javascriptBlock.formatted.qml" << QStringList{} << RunOption::OnCopy;
+
     //plainJS
     QTest::newRow("nestedLambdaWithIfElse")
             << "lambdaWithIfElseInsideLambda.js"

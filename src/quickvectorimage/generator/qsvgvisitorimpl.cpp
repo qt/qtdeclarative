@@ -1,5 +1,5 @@
 // Copyright (C) 2024 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qsvgvisitorimpl_p.h"
 #include "qquickgenerator_p.h"
@@ -87,9 +87,9 @@ public:
     {
         m_dummyImage = QImage(1, 1, QImage::Format_RGB32);
         m_dummyPainter.begin(&m_dummyImage);
-        QPen noPen(Qt::NoPen);
-        noPen.setBrush(Qt::NoBrush);
-        m_dummyPainter.setPen(noPen);
+        QPen defaultPen(Qt::NoBrush, 1, Qt::SolidLine, Qt::FlatCap, Qt::SvgMiterJoin);
+        defaultPen.setMiterLimit(4);
+        m_dummyPainter.setPen(defaultPen);
         m_dummyPainter.setBrush(Qt::black);
     }
 
@@ -101,16 +101,23 @@ public:
     QPainter& painter() { return m_dummyPainter; }
     QSvgExtraStates& states() { return m_svgState; }
 
-    QString currentFillColor() const
+    QColor currentFillColor() const
     {
-        if (m_dummyPainter.brush().style() != Qt::NoBrush) {
-            QColor c(m_dummyPainter.brush().color());
-            c.setAlphaF(m_svgState.fillOpacity);
-            //qCDebug(lcQuickVectorGraphics) << "FILL" << c << m_svgState.fillOpacity << c.name();
-            return c.name(QColor::HexArgb);
-        } else {
-            return QStringLiteral("transparent");
+        if (m_dummyPainter.brush().style() == Qt::NoBrush ||
+            m_dummyPainter.brush().color() == QColorConstants::Transparent) {
+            return QColor(QColorConstants::Transparent);
         }
+
+        QColor fillColor;
+        fillColor = m_dummyPainter.brush().color();
+        fillColor.setAlphaF(m_svgState.fillOpacity);
+
+        return fillColor;
+    }
+
+    qreal currentFillOpacity() const
+    {
+        return m_svgState.fillOpacity;
     }
 
     const QGradient *currentFillGradient() const
@@ -120,19 +127,43 @@ public:
         return nullptr;
     }
 
-    QString currentStrokeColor() const
+    QColor currentStrokeColor() const
     {
-        if (m_dummyPainter.pen().style() != Qt::NoPen)
-            return m_dummyPainter.pen().color().name();
-        else if (m_dummyPainter.pen().brush().style() == Qt::SolidPattern)
-            return m_dummyPainter.pen().brush().color().name();
-        return {};
+        if (m_dummyPainter.pen().brush().style() == Qt::NoBrush ||
+            m_dummyPainter.pen().brush().color() == QColorConstants::Transparent) {
+            return QColor(QColorConstants::Transparent);
+        }
+
+        QColor strokeColor;
+        strokeColor = m_dummyPainter.pen().brush().color();
+        strokeColor.setAlphaF(m_svgState.strokeOpacity);
+
+        return strokeColor;
+    }
+
+    qreal currentStrokeOpacity() const
+    {
+        return m_svgState.strokeOpacity;
     }
 
     float currentStrokeWidth() const
     {
         float penWidth = m_dummyPainter.pen().widthF();
         return penWidth ? penWidth : 1;
+    }
+
+    static QGradient applyOpacityToGradient(const QGradient &gradient, float opacity)
+    {
+        QGradient grad = gradient;
+        QGradientStops stops;
+        for (auto &stop : grad.stops()) {
+            stop.second.setAlphaF(stop.second.alphaF() * opacity);
+            stops.append(stop);
+        }
+
+        grad.setStops(stops);
+
+        return grad;
     }
 
 protected:
@@ -307,10 +338,22 @@ QString QSvgVisitorImpl::gradientCssDescription(const QGradient *gradient)
         cssDescription += ",stop:"_L1;
         cssDescription += QString::number(stop.first);
         cssDescription += u' ';
-        cssDescription += stop.second.name();
+        cssDescription += stop.second.name(QColor::HexArgb);
     }
 
     cssDescription += ");"_L1;
+
+    return cssDescription;
+}
+
+QString QSvgVisitorImpl::colorCssDescription(QColor color)
+{
+    QString cssDescription;
+    cssDescription += QStringLiteral("rgba(");
+    cssDescription += QString::number(color.red()) + QStringLiteral(",");
+    cssDescription += QString::number(color.blue()) + QStringLiteral(",");
+    cssDescription += QString::number(color.green()) + QStringLiteral(",");
+    cssDescription += QString::number(color.alphaF()) + QStringLiteral(")");
 
     return cssDescription;
 }
@@ -361,11 +404,12 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 
         if (styleResolver->currentFillGradient() != nullptr
             && styleResolver->currentFillGradient() != mainGradient) {
-            styleTagContent += gradientCssDescription(styleResolver->currentFillGradient()) + u';';
+            const QGradient grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
+            styleTagContent += gradientCssDescription(&grad) + u';';
             needsPathNode = true;
         }
 
-        QString strokeColor = styleResolver->currentStrokeColor();
+        QString strokeColor = colorCssDescription(styleResolver->currentStrokeColor());
         if (!strokeColor.isEmpty()) {
             styleTagContent += QStringLiteral("-qt-stroke-color:%1;").arg(strokeColor);
             styleTagContent += QStringLiteral("-qt-stroke-width:%1;").arg(styleResolver->currentStrokeWidth());
@@ -379,6 +423,26 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         content.replace(QLatin1Char('\t'), QLatin1Char(' '));
         content.replace(QLatin1Char('\n'), QLatin1Char(' '));
 
+        bool fontTag = false;
+        if (!tspan->style().fill.isDefault()) {
+            auto &b = tspan->style().fill->qbrush();
+            qCDebug(lcQuickVectorImage) << "tspan FILL:" << b;
+            if (b.style() != Qt::NoBrush)
+            {
+                if (qFuzzyCompare(b.color().alphaF() + 1.0, 2.0))
+                {
+                    QString spanColor = b.color().name();
+                    fontTag = !spanColor.isEmpty();
+                    if (fontTag)
+                        text += QStringLiteral("<font color=\"%1\">").arg(spanColor);
+                } else {
+                    QString spanColor = colorCssDescription(b.color());
+                    styleTagContent += QStringLiteral("color:%1").arg(spanColor);
+                }
+            }
+        }
+
+
         needsRichText = needsRichText || !styleTagContent.isEmpty();
         if (!styleTagContent.isEmpty())
             text += QStringLiteral("<span style=\"%1\">").arg(styleTagContent);
@@ -389,16 +453,6 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         if (font.resolveMask() & QFont::StyleResolved && font.italic())
             text += QStringLiteral("<i>");
 
-        QString spanColor;
-        if (!tspan->style().fill.isDefault()) {
-            auto &b = tspan->style().fill->qbrush();
-            qCDebug(lcQuickVectorImage) << "tspan FILL:" << b;
-            if (b.style() != Qt::NoBrush)
-                spanColor = b.color().name();
-        }
-        bool fontTag = !spanColor.isEmpty();
-        if (fontTag)
-            text += QStringLiteral("<font color=\"%1\">").arg(spanColor);
 
         if (font.resolveMask() & QFont::CapitalizationResolved) {
             switch (font.capitalization()) {
@@ -462,7 +516,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                         info.fillRule = fillStyle->fillRule();
 
                     if (fmt.hasProperty(QTextCharFormat::ForegroundBrush)) {
-                        info.fillColor = fmt.foreground().color().name();
+                        info.fillColor = fmt.foreground().color();
                         if (fmt.foreground().gradient() != nullptr && fmt.foreground().gradient()->type() != QGradient::NoGradient)
                             info.grad = *fmt.foreground().gradient();
                     } else {
@@ -470,15 +524,17 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                     }
 
                     info.painterPath = p;
+
                     if (fmt.hasProperty(QTextCharFormat::TextOutline)) {
                         info.strokeWidth = fmt.textOutline().widthF();
-                        info.strokeColor = fmt.textOutline().color().name();
+                        info.strokeColor = fmt.textOutline().color();
                     } else {
                         info.strokeColor = styleResolver->currentStrokeColor();
                         info.strokeWidth = styleResolver->currentStrokeWidth();
                     }
+
                     if (info.grad.type() == QGradient::NoGradient && styleResolver->currentFillGradient() != nullptr)
-                        info.grad = *styleResolver->currentFillGradient();
+                        info.grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
 
                     m_generator->generatePath(info);
                 };
@@ -542,7 +598,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         info.text = text;
         info.isTextArea = isTextArea;
         info.needsRichText = needsRichText;
-        info.color = styleResolver->currentFillColor();
+        info.fillColor = styleResolver->currentFillColor();
         info.alignment = styleResolver->states().textAnchor;
         info.strokeColor = styleResolver->currentStrokeColor();
 
@@ -698,7 +754,7 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
     info.strokeColor = styleResolver->currentStrokeColor();
     info.strokeWidth = styleResolver->currentStrokeWidth();
     if (styleResolver->currentFillGradient() != nullptr)
-        info.grad = *styleResolver->currentFillGradient();
+        info.grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
 
     m_generator->generatePath(info);
 

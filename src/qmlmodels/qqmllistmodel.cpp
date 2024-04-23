@@ -3,22 +3,25 @@
 
 #include "qqmllistmodel_p_p.h"
 #include "qqmllistmodelworkeragent_p.h"
-#include <private/qqmlopenmetaobject_p.h>
-#include <private/qqmljsast_p.h>
-#include <private/qqmljsengine_p.h>
+
 #include <private/qjsvalue_p.h>
 
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qqmljsast_p.h>
+#include <private/qqmljsengine_p.h>
+#include <private/qqmllistwrapper_p.h>
 #include <private/qqmlnotifier_p.h>
+#include <private/qqmlopenmetaobject_p.h>
 
-#include <private/qv4object_p.h>
-#include <private/qv4dateobject_p.h>
-#include <private/qv4urlobject_p.h>
-#include <private/qv4objectiterator_p.h>
 #include <private/qv4alloca_p.h>
+#include <private/qv4dateobject_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4object_p.h>
+#include <private/qv4objectiterator_p.h>
 #include <private/qv4qmlcontext_p.h>
+#include <private/qv4sequenceobject_p.h>
+#include <private/qv4urlobject_p.h>
 
 #include <qqmlcontext.h>
 #include <qqmlinfo.h>
@@ -681,18 +684,11 @@ void ListModel::set(int elementIndex, QV4::Object *object, ListModel::SetElement
                 e->setDoublePropertyFast(r, propertyValue->asDouble());
             }
         } else if (QV4::ArrayObject *a = propertyValue->as<QV4::ArrayObject>()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
-            if (r.type == ListLayout::Role::List) {
-                ListModel *subModel = new ListModel(r.subLayout, nullptr);
-
-                int arrayLength = a->getLength();
-                for (int j=0 ; j < arrayLength ; ++j) {
-                    o = a->get(j);
-                    subModel->append(o);
-                }
-
-                e->setListPropertyFast(r, subModel);
-            }
+            setArrayLike(&o, propertyName, e, a);
+        } else if (QV4::Sequence *s = propertyValue->as<QV4::Sequence>()) {
+            setArrayLike(&o, propertyName, e, s);
+        } else if (QV4::QmlListWrapper *l = propertyValue->as<QV4::QmlListWrapper>()) {
+            setArrayLike(&o, propertyName, e, l);
         } else if (propertyValue->isBoolean()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
             if (r.type == ListLayout::Role::Bool) {
@@ -2389,7 +2385,7 @@ void QQmlListModel::clear()
 
     \sa clear()
 */
-void QQmlListModel::remove(QQmlV4Function *args)
+void QQmlListModel::remove(QQmlV4FunctionPtr args)
 {
     int argLength = args->length();
 
@@ -2477,7 +2473,7 @@ void QQmlListModel::updateTranslations()
     \sa set(), append()
 */
 
-void QQmlListModel::insert(QQmlV4Function *args)
+void QQmlListModel::insert(QQmlV4FunctionPtr args)
 {
     if (args->length() == 2) {
         QV4::Scope scope(args->v4engine());
@@ -2593,7 +2589,7 @@ void QQmlListModel::move(int from, int to, int n)
 
     \sa set(), remove()
 */
-void QQmlListModel::append(QQmlV4Function *args)
+void QQmlListModel::append(QQmlV4FunctionPtr args)
 {
     if (args->length() == 1) {
         QV4::Scope scope(args->v4engine());

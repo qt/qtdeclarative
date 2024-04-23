@@ -49,7 +49,7 @@ public:
 
     void setCurrentItem(QQuickStackElement *element);
 
-    QList<QQuickStackElement *> parseElements(int from, QQmlV4Function *args, QStringList *errors);
+    QList<QQuickStackElement *> parseElements(int from, QQmlV4FunctionPtr args, QStringList *errors);
     QList<QQuickStackElement *> parseElements(const QList<QQuickStackViewArg> &args);
     QQuickStackElement *findElement(QQuickItem *item) const;
     QQuickStackElement *findElement(const QV4::Value &value) const;

@@ -295,7 +295,7 @@ public:
     static void transform_clear(QQmlListProperty<QQuickTransform> *list);
 
     void _q_resourceObjectDeleted(QObject *);
-    quint64 _q_createJSWrapper(QV4::ExecutionEngine *engine);
+    quint64 _q_createJSWrapper(QQmlV4ExecutionEnginePtr engine);
 
     enum ChangeType {
         Geometry = 0x01,

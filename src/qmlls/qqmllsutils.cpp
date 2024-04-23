@@ -1160,7 +1160,9 @@ propertyBindingFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, con
         if (!resolverForIds)
             return {};
 
-        QQmlJSRegisterContent fromId = resolverForIds->scopedType(referrerScope, name);
+        QQmlJSRegisterContent fromId = resolverForIds->scopedType(
+                referrerScope, name, QQmlJSRegisterContent::InvalidLookupIndex,
+                AssumeComponentsAreBound);
         if (fromId.variant() == QQmlJSRegisterContent::ObjectById)
             return QQmlLSUtilsExpressionType{ name, fromId.type(), QmlObjectIdIdentifier };
 
@@ -1372,7 +1374,9 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     }
 
     // check if its an id
-    QQmlJSRegisterContent fromId = resolver->scopedType(referrerScope, name);
+    QQmlJSRegisterContent fromId =
+            resolver->scopedType(referrerScope, name, QQmlJSRegisterContent::InvalidLookupIndex,
+                                 AssumeComponentsAreBound);
     if (fromId.variant() == QQmlJSRegisterContent::ObjectById)
         return QQmlLSUtilsExpressionType{ name, fromId.type(), QmlObjectIdIdentifier };
 
@@ -1625,7 +1629,6 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
                  enumValue, findDefiningScopeForEnumerationKey(referrerScope, enumValue),
                  EnumeratorValueIdentifier
              };
-             return {};
          }
          Q_UNREACHABLE_RETURN({});
     }
@@ -1791,12 +1794,17 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(const DomItem &
         result.filename = domId.canonicalFilePath();
         return result;
     }
+    case QmlComponentIdentifier: {
+        QQmlLSUtilsLocation result;
+        result.sourceLocation = resolvedExpression->semanticScope->sourceLocation();
+        result.filename = resolvedExpression->semanticScope->filePath();
+        return result;
+    }
     case SingletonIdentifier:
     case EnumeratorIdentifier:
     case EnumeratorValueIdentifier:
     case AttachedTypeIdentifier:
     case GroupedPropertyIdentifier:
-    case QmlComponentIdentifier:
         qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::findDefinitionOf was not implemented for type"
                                 << resolvedExpression->type;
         return {};

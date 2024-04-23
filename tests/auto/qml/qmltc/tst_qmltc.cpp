@@ -90,6 +90,7 @@
 #include "qmltablemodel.h"
 #include "stringtourl.h"
 #include "signalconnections.h"
+#include "requiredproperties.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -202,6 +203,7 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/qt/qml/QmltcTests/calqlatrBits.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/valueTypeListProperty.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/appendToQQmlListProperty.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/requiredProperties.qml"),
     };
 
     QQmlEngine e;
@@ -845,8 +847,7 @@ void tst_qmltc::customInitialization()
 
     QQmlEngine e;
     PREPEND_NAMESPACE(qtbug120700_main)
-    created(&e, nullptr, [valueToTest, &firstItem, &secondItem](auto& component) {
-        component.setSomeValue(valueToTest);
+    created(&e, {valueToTest} ,nullptr, [valueToTest, &firstItem, &secondItem](auto& component) {
         component.setSomeComplexValueThatWillBeSet(valueToTest);
         component.setPropertyFromExtension(static_cast<double>(valueToTest));
         component.setDefaultedBindable(static_cast<double>(valueToTest));
@@ -884,6 +885,53 @@ void tst_qmltc::customInitialization()
         QList({&firstItem, &secondItem})
     );
     QCOMPARE(created.getCppObjectList().toList<QList<QQuickItem*>>(), QList({&firstItem, &secondItem}));
+}
+
+void tst_qmltc::requiredPropertiesInitialization()
+{
+    QQuickItem item{};
+
+    int aliasToInnerThatWillBeMarkedRequired = 10;
+    int aliasToPropertyThatShadows = 42;
+    int aliasToRequiredInner = 11;
+    QQuickItem inheritedRequiredProperty{};
+    int nonRequiredInheritedPropertyThatWillBeMarkedRequired = 12;
+    QList<QQuickItem*> objectList{&item};
+    int primitiveType = 13;
+    int propertyThatWillBeMarkedRequired = 14;
+    int requiredAliasToUnrequiredProperty = 15;
+    double requiredPropertyFromExtension = 16.0;
+    QList<int> valueList{1, 2, 3, 4};
+
+    QQmlEngine e;
+    PREPEND_NAMESPACE(requiredProperties) created(
+        &e,
+        {
+            aliasToInnerThatWillBeMarkedRequired,
+            aliasToPropertyThatShadows,
+            aliasToRequiredInner,
+            &inheritedRequiredProperty,
+            nonRequiredInheritedPropertyThatWillBeMarkedRequired,
+            objectList,
+            primitiveType,
+            propertyThatWillBeMarkedRequired,
+            requiredAliasToUnrequiredProperty,
+            requiredPropertyFromExtension,
+            valueList
+        }
+    );
+
+    QCOMPARE(created.aliasToInnerThatWillBeMarkedRequired(), aliasToInnerThatWillBeMarkedRequired);
+    QCOMPARE(created.aliasToPropertyThatShadows(), aliasToPropertyThatShadows);
+    QCOMPARE(created.aliasToRequiredInner(), aliasToRequiredInner);
+    QCOMPARE(created.getInheritedRequiredProperty(), &inheritedRequiredProperty);
+    QCOMPARE(created.getNonRequiredInheritedPropertyThatWillBeMarkedRequired(), nonRequiredInheritedPropertyThatWillBeMarkedRequired);
+    QCOMPARE(created.objectList().toList<QList<QQuickItem*>>(), objectList);
+    QCOMPARE(created.primitiveType(), primitiveType);
+    QCOMPARE(created.propertyThatWillBeMarkedRequired(), propertyThatWillBeMarkedRequired);
+    QCOMPARE(created.requiredAliasToUnrequiredProperty(), requiredAliasToUnrequiredProperty);
+    QCOMPARE(created.property("requiredPropertyFromExtension").toDouble(), requiredPropertyFromExtension);
+    QCOMPARE(created.valueList(), valueList);
 }
 
 // QTBUG-104094
@@ -1132,7 +1180,7 @@ void tst_qmltc::propertyAlias_external()
 void tst_qmltc::propertyAliasAttribute()
 {
     QQmlEngine e;
-    PREPEND_NAMESPACE(propertyAliasAttributes) fromQmltc(&e);
+    PREPEND_NAMESPACE(propertyAliasAttributes) fromQmltc(&e, {""});
 
     QQmlComponent c(&e);
     c.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/propertyAliasAttributes.qml"));

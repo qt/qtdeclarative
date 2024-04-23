@@ -633,8 +633,27 @@ bool QQuickPopupPrivate::prepareExitTransition()
     if (transitionState != ExitTransition) {
         // The setFocus(false) call below removes any active focus before we're
         // able to check it in finalizeExitTransition.
-        if (!hadActiveFocusBeforeExitTransition)
-            hadActiveFocusBeforeExitTransition = popupItem->hasActiveFocus();
+        if (!hadActiveFocusBeforeExitTransition) {
+            const auto hasFocusInRoot = [](QQuickItem *item) {
+                Q_ASSERT(item);
+                if (!item->window() || item->window()->isActive())
+                    return item->hasActiveFocus();
+
+                // fallback for when there's no active window
+                const auto *da = QQuickItemPrivate::get(item)->deliveryAgentPrivate();
+                if (!da || !da->rootItem)
+                    return false;
+
+                QQuickItem *focusItem = da->rootItem;
+                while (focusItem->isFocusScope() && focusItem->scopedFocusItem())
+                    focusItem = focusItem->scopedFocusItem();
+
+                return focusItem == item;
+            };
+
+            hadActiveFocusBeforeExitTransition = hasFocusInRoot(popupItem);
+        }
+
         if (focus)
             popupItem->setFocus(false, Qt::PopupFocusReason);
         transitionState = ExitTransition;

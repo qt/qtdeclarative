@@ -31,7 +31,6 @@ class QQuickCanvasContext;
 
 class QQuickCanvasItemPrivate;
 class QQuickPixmap;
-class QQmlV4Function;
 
 class QQuickCanvasPixmap final : public QQmlRefCounted<QQuickCanvasPixmap>
 {
@@ -110,10 +109,10 @@ public:
 
     QImage toImage(const QRectF& rect = QRectF()) const;
 
-    Q_INVOKABLE void getContext(QQmlV4Function *args);
+    Q_INVOKABLE void getContext(QQmlV4FunctionPtr args);
 
-    Q_INVOKABLE void requestAnimationFrame(QQmlV4Function *args);
-    Q_INVOKABLE void cancelRequestAnimationFrame(QQmlV4Function *args);
+    Q_INVOKABLE void requestAnimationFrame(QQmlV4FunctionPtr args);
+    Q_INVOKABLE void cancelRequestAnimationFrame(QQmlV4FunctionPtr args);
 
     Q_INVOKABLE void requestPaint();
     Q_INVOKABLE void markDirty(const QRectF& dirtyRect = QRectF());

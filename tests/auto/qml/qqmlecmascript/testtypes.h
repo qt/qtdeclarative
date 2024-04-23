@@ -244,7 +244,7 @@ public slots:
     void myinvokable(MyQmlObject *o) { myinvokableObject = o; }
     void variantMethod(const QVariant &v) { m_variant = v; }
     void qjsvalueMethod(const QJSValue &v) { m_qjsvalue = v; }
-    void v8function(QQmlV4Function*);
+    void v8function(QQmlV4FunctionPtr);
     void registeredFlagMethod(Qt::MouseButtons v) { m_buttons = v; }
     QString slotWithReturnValue(const QString &arg) { return arg; }
     int resetCount() { return m_resetCount; }
@@ -931,7 +931,7 @@ public:
 
     Q_INVOKABLE void method_unknown(NonRegisteredType) { invoke(28); }
 
-    Q_INVOKABLE void method_overload2(QQmlV4Function *v)
+    Q_INVOKABLE void method_overload2(QQmlV4FunctionPtr v)
     {
         invoke(31);
         QV4::Scope scope(v->v4engine());

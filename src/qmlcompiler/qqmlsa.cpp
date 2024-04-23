@@ -154,7 +154,7 @@ const QQmlJSMetaPropertyBinding BindingPrivate::binding(const QQmlSA::Binding &b
 }
 
 /*!
-    Returns the type of the property if this element is a group property,
+    Returns the type of the property of this binding if it is a group property,
     otherwise returns an invalid Element.
  */
 Element Binding::groupType() const
@@ -177,7 +177,7 @@ QString Binding::stringValue() const
 }
 
 /*!
-    Returns the name of the property using this binding.
+    Returns the name of the property bound with this binding.
  */
 QString Binding::propertyName() const
 {
@@ -212,8 +212,8 @@ double Binding::numberValue() const
 }
 
 /*!
-    Returns the kind of associated associated script if the content type of
-    this binding is Script, otherwise returns Script_Invalid.
+    Returns the kind of the associated script if the content type of this
+    binding is Script, otherwise returns Script_Invalid.
  */
 QQmlSA::ScriptBindingKind Binding::scriptKind() const
 {
@@ -230,7 +230,7 @@ bool Binding::hasObject() const
 
 /*!
     Returns the type of the associated object if the content type of this
-    binding is Object, otherwise returns an invlaid Element.
+    binding is Object, otherwise returns an invalid Element.
  */
 QQmlSA::Element Binding::objectType() const
 {
@@ -247,7 +247,7 @@ bool Binding::hasUndefinedScriptValue() const
 /*!
     Returns \c true if \a bindingType is a literal type, and \c false
     otherwise. Literal types include strings, booleans, numbers, regular
-    expressions among other.
+    expressions.
  */
 bool QQmlSA::Binding::isLiteralBinding(QQmlSA::BindingType bindingType)
 {
@@ -314,6 +314,11 @@ QString MethodPrivate::methodName() const
     return m_method.methodName();
 }
 
+QQmlSA::SourceLocation MethodPrivate::sourceLocation() const
+{
+    return QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(m_method.sourceLocation());
+}
+
 MethodType MethodPrivate::methodType() const
 {
     return m_method.methodType();
@@ -374,6 +379,15 @@ MethodType Method::methodType() const
 {
     Q_D(const Method);
     return d->methodType();
+}
+
+/*!
+    Returns the location in the QML code where this method is defined.
+ */
+QQmlSA::SourceLocation Method::sourceLocation() const
+{
+    Q_D(const Method);
+    return d->sourceLocation();
 }
 
 bool Method::operatorEqualsImpl(const Method &lhs, const Method &rhs)
@@ -693,7 +707,7 @@ bool Element::hasMethod(const QString &methodName) const
  */
 
 /*!
-    Returns this Elements's method which are not defined on its base or
+    Returns this Elements's methods, which are not defined on its base or
     extension objects.
  */
 Method::Methods Element::ownMethods() const
@@ -702,7 +716,7 @@ Method::Methods Element::ownMethods() const
 }
 
 /*!
-    Returns the location in the QML code where this method is defined.
+    Returns the location in the QML code where this Element is defined.
  */
 QQmlSA::SourceLocation Element::sourceLocation() const
 {
@@ -711,7 +725,7 @@ QQmlSA::SourceLocation Element::sourceLocation() const
 }
 
 /*!
-    Returns the file path of the QML code that defines this method.
+    Returns the file path of the QML code that defines this Element.
  */
 QString Element::filePath() const
 {
@@ -719,7 +733,7 @@ QString Element::filePath() const
 }
 
 /*!
-    Returns whethe this Element has a property binding with the name \a name.
+    Returns whether this Element has a property binding with the name \a name.
  */
 bool Element::hasPropertyBindings(const QString &name) const
 {
@@ -927,8 +941,8 @@ Element GenericPass::resolveAttachedInFileScope(QAnyStringView typeName)
 
 /*!
     Returns the type of \a typeName defined in module \a moduleName.
-    If an attached type and and a non-attached type share the same
-    name (e.g. \c ListView), the \l Element corresponding to the
+    If an attached type and a non-attached type share the same name
+    (for example, \c ListView), the \l Element corresponding to the
     non-attached type is returned.
     To obtain the attached type, use \l resolveAttached.
  */
@@ -943,7 +957,7 @@ Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeN
 
 /*!
     Returns the type of the built-in type identified by \a typeName.
-    Built-in types encompasses \c{C++} types which the  QML engine can handle
+    Built-in types encompass \c{C++} types which the  QML engine can handle
     without any imports (e.g. \l QDateTime and \l QString), global EcmaScript
     objects like \c Number, as well as the \l {QML Global Object}
     {global Qt object}.
@@ -1727,7 +1741,8 @@ QString FixSuggestion::hint() const
 }
 
 /*!
-    Sets uses \a autoApplicable to set whtether this suggested fix can be applied automatically.
+    Sets \a autoApplicable to determine whether this suggested fix can be
+    applied automatically.
  */
 void FixSuggestion::setAutoApplicable(bool autoApplicable)
 {

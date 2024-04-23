@@ -73,9 +73,11 @@ T.RangeSlider {
             }
 
             NinePatchImage {
-                x: control.first.handle.width / 2 + control.first.position * (parent.width - control.first.handle.width)
+                readonly property real handleWidth: control.first.handle ? control.first.handle.width : 0
+
+                x: handleWidth / 2 + control.first.position * (parent.width - handleWidth)
                 y: (parent.height - height) / 2
-                width: control.second.position * (parent.width - control.first.handle.width) - control.first.position * (parent.width - control.first.handle.width)
+                width: control.second.position * (parent.width - handleWidth) - control.first.position * (parent.width - handleWidth)
                 height: parent.height
 
                 source: IOS.url + "slider-progress"

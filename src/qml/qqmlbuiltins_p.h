@@ -100,6 +100,14 @@ struct QQmlStringForeign
     QML_FOREIGN(QString)
 };
 
+struct QQmlAnyStringViewForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_EXTENDED_JAVASCRIPT(String)
+    QML_FOREIGN(QAnyStringView)
+};
+
 struct QQmlBoolForeign
 {
     Q_GADGET
@@ -166,6 +174,14 @@ struct QQmlQuint8Foreign
     QML_FOREIGN(quint8)
 };
 
+struct QQmlCharForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_EXTENDED_JAVASCRIPT(Number)
+    QML_FOREIGN(char)
+};
+
 struct QQmlShortForeign
 {
     Q_GADGET
@@ -180,6 +196,22 @@ struct QQmlUshortForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(ushort)
+};
+
+struct QQmlLongForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_EXTENDED_JAVASCRIPT(Number)
+    QML_FOREIGN(long)
+};
+
+struct QQmlUlongForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_EXTENDED_JAVASCRIPT(Number)
+    QML_FOREIGN(ulong)
 };
 
 struct QQmlUintForeign
@@ -291,6 +323,14 @@ struct QQmlScriptStringForeign
     Q_GADGET
     QML_ANONYMOUS
     QML_FOREIGN(QQmlScriptString)
+};
+
+struct QQmlV4FunctionPtrForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QQmlV4FunctionPtr)
+    QML_EXTENDED(QQmlV4FunctionPtrForeign)
 };
 
 QT_END_NAMESPACE

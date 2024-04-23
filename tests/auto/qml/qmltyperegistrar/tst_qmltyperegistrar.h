@@ -22,28 +22,28 @@
 #include <QtCore/qtemporaryfile.h>
 #include <QtCore/qtimeline.h>
 
-class Interface {};
+class Interface1 {};
 class Interface2 {};
 class Interface3 {};
 
 QT_BEGIN_NAMESPACE
-Q_DECLARE_INTERFACE(Interface, "io.qt.bugreports.Interface");
+Q_DECLARE_INTERFACE(Interface1, "io.qt.bugreports.Interface1");
 Q_DECLARE_INTERFACE(Interface2, "io.qt.bugreports.Interface2");
 Q_DECLARE_INTERFACE(Interface3, "io.qt.bugreports.Interface3");
 QT_END_NAMESPACE
 
-class ImplementsInterfaces : public QObject, public Interface
+class ImplementsInterfaces : public QObject, public Interface1
 {
     Q_OBJECT
     QML_ELEMENT
-    QML_IMPLEMENTS_INTERFACES(Interface)
+    QML_IMPLEMENTS_INTERFACES(Interface1)
 };
 
-class ImplementsInterfaces2 : public QObject, public Interface, public Interface2
+class ImplementsInterfaces2 : public QObject, public Interface1, public Interface2
 {
     Q_OBJECT
     QML_ELEMENT
-    QML_IMPLEMENTS_INTERFACES(Interface Interface2)
+    QML_IMPLEMENTS_INTERFACES(Interface1 Interface2)
 };
 
 class ExcessiveVersion : public QObject

@@ -203,6 +203,22 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code,
     code.rawAppendToHeader(u""); // blank line
 }
 
+void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcRequiredPropertiesBundle &requiredPropertiesBundle)
+{
+    code.rawAppendToHeader(u"struct " + requiredPropertiesBundle.name + u" {");
+
+    {
+        [[maybe_unused]] QmltcOutputWrapper::HeaderIndentationScope headerIndent(&code);
+
+        for (const auto &member : requiredPropertiesBundle.members) {
+            write(code, member);
+        }
+    }
+
+    code.rawAppendToHeader(u"};"_s);
+    code.rawAppendToHeader(u""); // blank line
+}
+
 void QmltcCodeWriter::writeGlobalFooter(QmltcOutputWrapper &code, const QString &sourcePath,
                                         const QString &outNamespace)
 {
@@ -338,6 +354,9 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type,
 
         if (!type.propertyInitializer.name.isEmpty())
             write(code, type.propertyInitializer, type);
+
+        if (type.requiredPropertiesBundle)
+            write(code, *type.requiredPropertiesBundle);
 
         // NB: when non-document root, the externalCtor won't be public - but we
         // really don't care about the output format of such types

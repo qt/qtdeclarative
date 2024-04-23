@@ -35,7 +35,7 @@ public:
 
     bool hasContent() const { return m_hasContent; }
     bool hasError() const { return m_parser.hasError(); }
-    QList<QQmlError> errors(const QString &uri) const;
+    QList<QQmlError> errors(const QString &uri, const QUrl &url) const;
 
     QString typeNamespace() const { return m_parser.typeNamespace(); }
 

@@ -71,7 +71,7 @@ public:
         unsigned isWritableORhasArguments      : 1; // Has WRITE function OR Function takes arguments
         unsigned isResettableORisSignal        : 1; // Has RESET function OR Function is a signal
         unsigned isAliasORisVMESignal          : 1; // Is a QML alias to another property OR Signal was added by QML
-        unsigned isFinalORisV4Function         : 1; // Has FINAL flag OR Function takes QQmlV4Function* args
+        unsigned isFinalORisV4Function         : 1; // Has FINAL flag OR Function takes QQmlV4FunctionPtr args
         unsigned isSignalHandler               : 1; // Function is a signal handler
 
         // TODO: Remove this once we can. Signals should not be overridable.

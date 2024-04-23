@@ -15,14 +15,18 @@
 // We mean it.
 //
 
-#include <QFileInfo>
-#include <QDateTime>
+#include <QtQmlIntegration/qqmlintegration.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qdatetime.h>
+
 #include <private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class FileProperty
 {
+    Q_GADGET
+    QML_ANONYMOUS
 public:
     FileProperty(const QFileInfo &info) :
         mFileName(info.fileName()),

@@ -53,10 +53,11 @@ QString QQmlJSCodeGenerator::castTargetName(const QQmlJSScope::ConstPtr &type) c
 }
 
 QQmlJSCodeGenerator::QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
-        const QV4::Compiler::JSUnitGenerator *unitGenerator,
-        const QQmlJSTypeResolver *typeResolver,
-        QQmlJSLogger *logger)
-    : QQmlJSCompilePass(unitGenerator, typeResolver, logger)
+                                         const QV4::Compiler::JSUnitGenerator *unitGenerator,
+                                         const QQmlJSTypeResolver *typeResolver,
+                                         QQmlJSLogger *logger, BasicBlocks basicBlocks,
+                                         InstructionAnnotations annotations)
+    : QQmlJSCompilePass(unitGenerator, typeResolver, logger, basicBlocks, annotations)
     , m_context(compilerContext)
 {}
 
@@ -94,11 +95,9 @@ QString QQmlJSCodeGenerator::metaType(const QQmlJSScope::ConstPtr &type)
 }
 
 QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function,
-                                           const InstructionAnnotations *annotations,
                                            QQmlJS::DiagnosticMessage *error,
                                            bool basicBlocksValidationFailed)
 {
-    m_annotations = annotations;
     m_function = function;
     m_error = error;
 
@@ -126,7 +125,7 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function,
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_CLANG("-Wrange-loop-analysis")
-    for (const auto &annotation : *m_annotations) {
+    for (const auto &annotation : m_annotations) {
         addVariable(annotation.second.changedRegisterIndex,
                     annotation.second.changedRegister.resultLookupIndex(),
                     annotation.second.changedRegister.storedType());
@@ -1245,6 +1244,36 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         return;
     }
 
+    if (m_typeResolver->equals(m_state.accumulatorOut().scopeType(), mathObject())) {
+        QString name = m_jsUnitGenerator->lookupName(index);
+
+        double value{};
+        if (name == u"E") {
+            value = std::exp(1.0);
+        } else if (name == u"LN10") {
+            value = log(10.0);
+        } else if (name == u"LN2") {
+            value = log(2.0);
+        } else if (name == u"LOG10E") {
+            value = log10(std::exp(1.0));
+        } else if (name == u"LOG2E") {
+            value = log2(std::exp(1.0));
+        } else if (name == u"PI") {
+            value = 3.14159265358979323846;
+        } else if (name == u"SQRT1_2") {
+            value = std::sqrt(0.5);
+        } else if (name == u"SQRT2") {
+            value = std::sqrt(2.0);
+        } else {
+            Q_UNREACHABLE();
+        }
+
+        m_body += m_state.accumulatorVariableOut + u" = "_s
+                  + conversion(m_typeResolver->realType(), m_state.accumulatorOut(), toNumericString(value))
+                  + u";\n"_s;
+        return;
+    }
+
     if (m_state.accumulatorOut().isImportNamespace()) {
         Q_ASSERT(m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectModulePrefix);
         // If we have an object module prefix, we need to pass through the original object.
@@ -1386,10 +1415,10 @@ void QQmlJSCodeGenerator::generate_GetOptionalLookup(int index, int offset)
 {
     INJECT_TRACE_INFO(generate_GetOptionalLookup);
 
-    auto accumulatorIn = m_state.accumulatorIn();
+    const QQmlJSRegisterContent accumulatorIn = m_state.accumulatorIn();
     QString accumulatorVarIn = m_state.accumulatorVariableIn;
 
-    const auto &annotation = (*m_annotations)[currentInstructionOffset()];
+    const auto &annotation = m_annotations[currentInstructionOffset()];
     if (accumulatorIn.storedType()->isReferenceType()) {
         m_body += u"if (!%1)\n"_s.arg(accumulatorVarIn);
         generateJumpCodeWithTypeConversions(offset);
@@ -1969,18 +1998,35 @@ bool QQmlJSCodeGenerator::inlineConsoleMethod(const QString &name, int argc, int
     m_body += u"    if (category && category->isEnabled(" + type + u")) {\n";
 
     m_body += u"        const QString message = ";
+
+    const auto stringConversion = [&](int i) -> QString {
+        const QQmlJSScope::ConstPtr stored = m_state.readRegister(argv + i).storedType();
+        if (m_typeResolver->equals(stored, m_typeResolver->stringType())) {
+            return convertStored(
+                    registerType(argv + i).storedType(),
+                    m_typeResolver->stringType(), consumedRegisterVariable(argv + i));
+        } else if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
+            addInclude(u"QtQml/qjslist.h"_s);
+            return u"u'[' + QJSList(&"_s + registerVariable(argv + i)
+                    + u", aotContext->engine).toString() + u']'"_s;
+        } else {
+            reject(u"converting arguments for console method to string"_s);
+            return QString();
+        }
+    };
+
     if (argc > 0) {
-        const QString firstArgStringConversion = convertStored(
+        if (firstArgIsReference) {
+            const QString firstArgStringConversion = convertStored(
                     registerType(argv).storedType(),
                     m_typeResolver->stringType(), registerVariable(argv));
-        if (firstArgIsReference) {
             m_body += u"(firstArgIsCategory ? QString() : (" + firstArgStringConversion;
             if (argc > 1)
                 m_body += u".append(QLatin1Char(' ')))).append(";
             else
                 m_body += u"))";
         } else {
-            m_body += firstArgStringConversion;
+            m_body += stringConversion(0);
             if (argc > 1)
                 m_body += u".append(QLatin1Char(' ')).append(";
         }
@@ -1988,9 +2034,7 @@ bool QQmlJSCodeGenerator::inlineConsoleMethod(const QString &name, int argc, int
         for (int i = 1; i < argc; ++i) {
             if (i > 1)
                 m_body += u".append(QLatin1Char(' ')).append("_s;
-            m_body += convertStored(
-                        registerType(argv + i).storedType(),
-                        m_typeResolver->stringType(), consumedRegisterVariable(argv + i)) + u')';
+            m_body += stringConversion(i) + u')';
         }
     } else {
         m_body += u"QString()";
@@ -3178,7 +3222,7 @@ void QQmlJSCodeGenerator::generate_GetTemplateObject(int index)
 QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
         QV4::Moth::Instr::Type type)
 {
-    m_state.State::operator=(nextStateFromAnnotations(m_state, *m_annotations));
+    m_state.State::operator=(nextStateFromAnnotations(m_state, m_annotations));
     const auto accumulatorIn = m_state.registers.find(Accumulator);
     if (accumulatorIn != m_state.registers.end()
             && isTypeStorable(m_typeResolver, accumulatorIn.value().content.storedType())) {
@@ -3602,8 +3646,8 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
 {
     QString conversionCode;
     const int absoluteOffset = nextInstructionOffset() + relativeOffset;
-    const auto annotation = m_annotations->find(absoluteOffset);
-    if (annotation != m_annotations->constEnd()) {
+    const auto annotation = m_annotations.find(absoluteOffset);
+    if (static_cast<InstructionAnnotations::const_iterator>(annotation) != m_annotations.constEnd()) {
         const auto &conversions = annotation->second.typeConversions;
 
         for (auto regIt = conversions.constBegin(), regEnd = conversions.constEnd();
@@ -4061,6 +4105,16 @@ QString QQmlJSCodeGenerator::convertStored(
         const auto argumentTypes = ctor.parameters();
         return (isExtension ? to->extensionType().scope->internalName() : to->internalName())
                 + u"("_s + convertStored(from, argumentTypes[0].type(), variable) + u")"_s;
+    }
+
+    if (m_typeResolver->equals(to, m_typeResolver->stringType())
+            && from->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
+        addInclude(u"QtQml/qjslist.h"_s);
+
+        // Extend the life time of whatever variable is across the call to toString().
+        // variable may be an rvalue.
+        return u"[&](auto &&l){ return QJSList(&l, aotContext->engine).toString(); }("_s
+                + variable + u')';
     }
 
     // TODO: add more conversions

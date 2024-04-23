@@ -29,6 +29,7 @@ Item {
 
         if (y == 6) // if comment
             console.log("pippo");
+
         a + b; // comment
 
         // footer

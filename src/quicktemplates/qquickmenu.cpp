@@ -1879,7 +1879,7 @@ void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
 
     \sa dismiss(), Popup::open()
 */
-void QQuickMenu::popup(QQmlV4Function *args)
+void QQuickMenu::popup(QQmlV4FunctionPtr args)
 {
     Q_D(QQuickMenu);
     const int len = args->length();

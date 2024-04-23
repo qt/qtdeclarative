@@ -1288,12 +1288,7 @@ ReturnedValue UrlSearchParamsPrototype::method_delete(const FunctionObject *b, c
         return Encode::undefined();
 
     QList<QStringList> params = o->params();
-
-    auto to_remove = std::remove_if(params.begin(), params.end(), [&name](QStringList pair) {
-                                                                      return pair[0] == name;
-                                                                  });
-
-    params.erase(to_remove, params.end());
+    params.removeIf([&name](const auto &pair) { return pair.at(0) == name; });
 
     o->setParams(params);
 

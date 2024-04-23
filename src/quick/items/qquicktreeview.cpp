@@ -369,8 +369,15 @@ void QQuickTreeViewPrivate::updateSelection(const QRect &oldSelection, const QRe
             deselect.merge(QItemSelection(index, index), QItemSelectionModel::Select);
     }
 
-    selectionModel->select(deselect, QItemSelectionModel::Deselect);
-    selectionModel->select(select, QItemSelectionModel::Select);
+    if (selectionFlag == QItemSelectionModel::Select) {
+        selectionModel->select(deselect, QItemSelectionModel::Deselect);
+        selectionModel->select(select, QItemSelectionModel::Select);
+    } else {
+        QItemSelection oldSelection = existingSelection;
+        oldSelection.merge(select, QItemSelectionModel::Deselect);
+        selectionModel->select(oldSelection, QItemSelectionModel::Select);
+        selectionModel->select(select, QItemSelectionModel::Deselect);
+    }
 }
 
 QQuickTreeView::QQuickTreeView(QQuickItem *parent)

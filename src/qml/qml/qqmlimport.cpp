@@ -527,8 +527,8 @@ QQmlDirScripts QQmlImportInstance::getVersionedScripts(const QQmlDirScripts &qml
                 && (!version.hasMinorVersion()
                     || (sit->version.minorVersion() <= version.minorVersion()))) {
             // Load the highest version that matches
-            QMap<QString, QQmlDirParser::Script>::iterator vit = versioned.find(sit->nameSpace);
-            if (vit == versioned.end()
+            const auto vit = versioned.constFind(sit->nameSpace);
+            if (vit == versioned.cend()
                     || (vit->version.minorVersion() < sit->version.minorVersion())) {
                 versioned.insert(sit->nameSpace, *sit);
             }
@@ -949,21 +949,11 @@ bool QQmlImports::getQmldirContent(
     Q_ASSERT(qmldir);
 
     *qmldir = typeLoader->qmldirContent(qmldirIdentifier);
-    if ((*qmldir).hasContent()) {
-        // Ensure that parsing was successful
-        if ((*qmldir).hasError()) {
-            QUrl url = QUrl::fromLocalFile(qmldirIdentifier);
-            const QList<QQmlError> qmldirErrors = (*qmldir).errors(uri);
-            for (int i = 0; i < qmldirErrors.size(); ++i) {
-                QQmlError error = qmldirErrors.at(i);
-                error.setUrl(url);
-                errors->append(error);
-            }
-            return false;
-        }
-    }
+    if (!qmldir->hasContent() || !qmldir->hasError())
+        return true;
 
-    return true;
+    errors->append(qmldir->errors(uri, QUrl::fromLocalFile(qmldirIdentifier)));
+    return false;
 }
 
 QString QQmlImports::resolvedUri(const QString &dir_arg, QQmlImportDatabase *database)

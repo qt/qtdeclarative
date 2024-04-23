@@ -117,6 +117,8 @@ MessageDialogImpl {
             Layout.bottomMargin: 20
 
             background: Rectangle {
+                implicitWidth: 120
+                implicitHeight: control.Material.textFieldHeight
                 color: Qt.rgba(1,1,1,1)
                 radius: 3
                 border.color: Qt.darker(control.palette.light)

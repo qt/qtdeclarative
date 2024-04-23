@@ -43,6 +43,11 @@ public:
         Flags flags = {};
     };
 
+    struct Environment : public QList<QPair<QString, QString>>
+    {
+        using QList<QPair<QString, QString>>::QList;
+    };
+
 private Q_SLOTS:
     void initTestCase() override;
 
@@ -99,6 +104,11 @@ private Q_SLOTS:
     void testLineEndings();
     void valueTypesFromString();
 
+    void ignoreSettingsNotCommandLineOptions();
+
+    void environment_data();
+    void environment();
+
 #if QT_CONFIG(library)
     void testPlugin();
     void quickPlugin();
@@ -115,10 +125,12 @@ private:
 
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
-                       bool addImportDirs = true, bool absolutePath = true);
+                       bool addImportDirs = true, bool absolutePath = true,
+                       const Environment &env = {});
     QString runQmllint(const QString &fileToLint, bool shouldSucceed,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
-                       bool addImportDirs = true, bool absolutePath = true);
+                       bool addImportDirs = true, bool absolutePath = true,
+                       const Environment &env = {});
     void callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings = nullptr,
                      QStringList importDirs = {}, QStringList qmltypesFiles = {},
                      QStringList resources = {},
@@ -1418,7 +1430,7 @@ void TestQmllint::compilerWarnings()
 QString TestQmllint::runQmllint(const QString &fileToLint,
                                 std::function<void(QProcess &)> handleResult,
                                 const QStringList &extraArgs, bool ignoreSettings,
-                                bool addImportDirs, bool absolutePath)
+                                bool addImportDirs, bool absolutePath, const Environment &env)
 {
     auto qmlImportDir = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
     QStringList args;
@@ -1444,6 +1456,11 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
     QString errors;
     auto verify = [&](bool isSilent) {
         QProcess process;
+        QProcessEnvironment processEnv = QProcessEnvironment::systemEnvironment();
+        for (const auto &entry : env)
+            processEnv.insert(entry.first, entry.second);
+
+        process.setProcessEnvironment(processEnv);
         process.setWorkingDirectory(QFileInfo(absoluteFilePath).absolutePath());
         process.start(m_qmllintPath, args);
         handleResult(process);
@@ -1486,7 +1503,7 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
 
 QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
                                 const QStringList &extraArgs, bool ignoreSettings,
-                                bool addImportDirs, bool absolutePath)
+                                bool addImportDirs, bool absolutePath, const Environment &env)
 {
     return runQmllint(
             fileToLint,
@@ -1499,7 +1516,7 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
                 else
                     QVERIFY(process.exitCode() != 0);
             },
-            extraArgs, ignoreSettings, addImportDirs, absolutePath);
+            extraArgs, ignoreSettings, addImportDirs, absolutePath, env);
 }
 
 void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings,
@@ -2139,7 +2156,67 @@ void TestQmllint::quickPlugin()
             } });
     runTest("pluginQuick_propertyChangesInvalidTarget.qml", Result {}); // we don't care about the specific warnings
 }
+
+void TestQmllint::environment_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<bool>("shouldSucceed");
+    QTest::addColumn<QStringList>("extraArgs");
+    QTest::addColumn<Environment>("env");
+    QTest::addColumn<QString>("expectedWarning");
+
+    const QString fileThatNeedsImportPath = testFile(u"NeedImportPath.qml"_s);
+    const QString importPath = testFile(u"ImportPath"_s);
+    const QString invalidImportPath = testFile(u"ImportPathThatDoesNotExist"_s);
+    const QString noWarningExpected;
+
+    QTest::addRow("missing-import-dir")
+            << fileThatNeedsImportPath << false << QStringList{}
+            << Environment{ { u"QML_IMPORT_PATH"_s, importPath } } << noWarningExpected;
+
+    QTest::addRow("import-dir-via-arg")
+            << fileThatNeedsImportPath << true << QStringList{ u"-I"_s, importPath }
+            << Environment{ { u"QML_IMPORT_PATH"_s, invalidImportPath } } << noWarningExpected;
+
+    QTest::addRow("import-dir-via-env")
+            << fileThatNeedsImportPath << true << QStringList{ u"-E"_s }
+            << Environment{ { u"QML_IMPORT_PATH"_s, importPath } }
+            << u"Using import directories passed from environment variable \"QML_IMPORT_PATH\": \"%1\"."_s
+                       .arg(importPath);
+
+    QTest::addRow("import-dir-via-env2")
+            << fileThatNeedsImportPath << true << QStringList{ u"-E"_s }
+            << Environment{ { u"QML2_IMPORT_PATH"_s, importPath } }
+            << u"Using import directories passed from the deprecated environment variable \"QML2_IMPORT_PATH\": \"%1\"."_s
+                       .arg(importPath);
+}
+
+void TestQmllint::environment()
+{
+    QFETCH(QString, file);
+    QFETCH(bool, shouldSucceed);
+    QFETCH(QStringList, extraArgs);
+    QFETCH(Environment, env);
+    QFETCH(QString, expectedWarning);
+
+    const QString output = runQmllint(file, shouldSucceed, extraArgs, false, true, false, env);
+    if (!expectedWarning.isEmpty()) {
+        QVERIFY(output.contains(expectedWarning));
+    }
+}
+
 #endif
+
+void TestQmllint::ignoreSettingsNotCommandLineOptions()
+{
+    const QString importPath = testFile(u"ImportPath"_s);
+    // makes sure that ignore settings only ignores settings and not command line options like
+    // "-I".
+    const QString output = runQmllint(testFile(u"NeedImportPath.qml"_s), true,
+                                      QStringList{ u"-I"_s, importPath }, true);
+    // should not complain about not finding the module that is in importPath
+    QCOMPARE(output, QString());
+}
 
 QTEST_GUILESS_MAIN(TestQmllint)
 #include "tst_qmllint.moc"

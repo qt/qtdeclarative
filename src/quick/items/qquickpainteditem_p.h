@@ -40,7 +40,6 @@ public:
     QRect dirtyRect;
 
     bool opaquePainting: 1;
-    bool antialiasing: 1;
     bool mipmap: 1;
 
     mutable QQuickPaintedItemTextureProvider *textureProvider;

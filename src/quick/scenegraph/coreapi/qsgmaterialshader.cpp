@@ -208,8 +208,8 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
     clearCachedRendererData();
 
     for (QShader::Stage stage : { QShader::VertexStage, QShader::FragmentStage }) {
-        auto it = shaderFileNames.find(stage);
-        if (it != shaderFileNames.end()) {
+        auto it = shaderFileNames.constFind(stage);
+        if (it != shaderFileNames.cend()) {
             QString fn = *it;
             const QShader s = loadShader(*it);
             if (!s.isValid())

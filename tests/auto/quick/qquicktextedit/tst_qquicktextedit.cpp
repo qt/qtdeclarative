@@ -8,6 +8,8 @@
 #include <QtQuick/QQuickTextDocument>
 #include <QtQuickTest/QtQuickTest>
 #include <QTextDocument>
+#include <QtGui/qtextobject.h>
+#include <QtGui/QTextTable>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
@@ -57,6 +59,8 @@ Q_DECLARE_METATYPE(QKeySequence::StandardKey)
 #endif
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
+// #define DEBUG_WRITE_INPUT
 
 static bool isPlatformWayland()
 {
@@ -158,6 +162,8 @@ private slots:
     void largeTextObservesViewport();
     void largeTextSelection();
     void renderingAroundSelection();
+    void largeTextTables_data();
+    void largeTextTables();
 
     void signal_editingfinished();
 
@@ -3884,6 +3890,105 @@ void tst_qquicktextedit::renderingAroundSelection()
     qCDebug(lcTests) << "font" << textItem->font() << "line positions" << textItem->sortedLinePositions << "should be" << sortedLinePositions;
     QCOMPARE(textItem->lastLinePosition, lastLinePosition);
     QTRY_COMPARE(textItem->sortedLinePositions, sortedLinePositions);
+}
+
+struct OffsetAndExpectedBlocks {
+    int tableIndex;         // which nested frame
+    qreal tableOffset;      // fraction of that frame's height to scroll to
+    int minExpectedBlockCount;
+
+    OffsetAndExpectedBlocks(int i, qreal o, int c)
+        : tableIndex(i), tableOffset(o), minExpectedBlockCount(c) {}
+};
+
+typedef QList<OffsetAndExpectedBlocks> OffsetAndExpectedBlocksList;
+
+void tst_qquicktextedit::largeTextTables_data()
+{
+    QTest::addColumn<int>("tables");
+    QTest::addColumn<int>("tableCols");
+    QTest::addColumn<int>("tableRows");
+    QTest::addColumn<OffsetAndExpectedBlocksList>("steps");
+
+    QTest::newRow("one big table") << 1 << 3 << 70
+                                   << OffsetAndExpectedBlocksList{
+                                      OffsetAndExpectedBlocks(1, 0.75, 150),
+                                      OffsetAndExpectedBlocks(1, 0.5, 150)};
+    QTest::newRow("short tables") << 5 << 3 << 10
+                                  << OffsetAndExpectedBlocksList{
+                                     OffsetAndExpectedBlocks(4, 0.75, 35),
+                                     OffsetAndExpectedBlocks(3, 0.25, 50),
+                                     OffsetAndExpectedBlocks(2, 0.75, 50)};
+}
+
+void tst_qquicktextedit::largeTextTables() // QTBUG-118636
+{
+    QFETCH(int, tables);
+    QFETCH(int, tableCols);
+    QFETCH(int, tableRows);
+    QFETCH(OffsetAndExpectedBlocksList, steps);
+
+    QStringList lines;
+
+    lines << QLatin1String("<h1>") + QTest::currentDataTag() + "</h1>";
+    for (int t = 0; t < tables; ++t) {
+        if (t > 0)
+            lines << QString("<p>table %1</p>").arg(t);
+        lines << "<table border='1'>";
+        for (int r = 0; r < tableRows; ++r) {
+            lines << "  <tr>";
+            for (int c = 0; c < tableCols; ++c)
+                lines << QString("    <td>table %1 cell  %2, %3</td>").arg(t).arg(c).arg(r);
+            lines << "  </tr>";
+        }
+        lines << "</table>";
+    }
+    lines << "<p>here endeth the tables</p>";
+    QString html = lines.join('\n');
+
+#ifdef DEBUG_WRITE_INPUT
+    QFile f(QLatin1String("/tmp/") + QTest::currentDataTag() + ".html");
+    f.open(QFile::WriteOnly);
+    f.write(html.toUtf8());
+    f.close();
+#endif
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("inFlickable.qml")));
+    QQuickFlickable *flick = qmlobject_cast<QQuickFlickable *>(window.rootObject());
+    QVERIFY(flick);
+    QQuickTextEdit *te = window.rootObject()->findChild<QQuickTextEdit *>();
+    QVERIFY(te);
+    auto *tePriv = QQuickTextEditPrivate::get(te);
+    auto font = te->font();
+    font.setPixelSize(10);
+    te->setFont(font);
+
+    te->setTextFormat(QQuickTextEdit::RichText);
+    te->setText(html);
+    te->setFlag(QQuickItem::ItemObservesViewport); // this isn't "large text", but test viewporting anyway
+
+    QTextDocument *doc = te->textDocument()->textDocument();
+    QList<QTextFrame *> frames = doc->rootFrame()->childFrames();
+    frames.prepend(doc->rootFrame());
+    qCDebug(lcTests) << "blocks" << doc->blockCount() << "chars" << doc->characterCount() << "frames" << frames;
+
+    for (const OffsetAndExpectedBlocks &oeb : steps) {
+        QCOMPARE_GT(frames.size(), oeb.tableIndex);
+        const QTextFrame *textFrame = frames.at(oeb.tableIndex);
+        const QTextCursor top = textFrame->firstCursorPosition();
+        const qreal yTop = te->positionToRectangle(top.position()).top();
+        const QTextCursor bottom = textFrame->lastCursorPosition();
+        const qreal yBottom = te->positionToRectangle(bottom.position()).bottom();
+        const qreal y = yTop + (yBottom - yTop) * oeb.tableOffset;
+        qCDebug(lcTests) << "frame" << textFrame << "goes from pos" << top.position() << "y" << yTop
+                         << "to pos" << bottom.position() << "y" << yBottom << "; scrolling to" << y
+                         << "which is at" << oeb.tableOffset << "of table height" << (yBottom - yTop);
+        flick->setContentY(y);
+        qCDebug(lcTests) << tePriv->renderedRegion << "rendered blocks" << tePriv->renderedBlockCount << ":"
+                         << tePriv->firstBlockInViewport << "to" << tePriv->firstBlockPastViewport;
+        QTRY_COMPARE_GE(tePriv->renderedBlockCount, oeb.minExpectedBlockCount);
+    }
 }
 
 void tst_qquicktextedit::signal_editingfinished()

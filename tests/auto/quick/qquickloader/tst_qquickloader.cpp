@@ -64,6 +64,7 @@ private slots:
     void componentToUrl();
     void anchoredLoader();
     void sizeLoaderToItem();
+    void sizeItemToLoader_data();
     void sizeItemToLoader();
     void noResize();
     void networkRequestUrl();
@@ -378,8 +379,29 @@ void tst_QQuickLoader::sizeLoaderToItem()
     QCOMPARE(rect->height(), 30.0);
 }
 
+void tst_QQuickLoader::sizeItemToLoader_data()
+{
+    QTest::addColumn<QString>("property");
+    QTest::addColumn<int>("value");
+    QTest::addColumn<bool>("atOnce");
+
+    QTest::addRow("none_atonce") << "ignore" << 42 << true;
+    QTest::addRow("width_atonce") << "w" << 42 << true;
+    QTest::addRow("height_atonce") << "h" << 42 << true;
+    QTest::addRow("both_atonce") << "both" << 42 << true;
+
+
+    QTest::addRow("none") << "ignore" << 42 << false;
+    QTest::addRow("width") << "w" << 42 << false;
+    QTest::addRow("height") << "h" << 42 << false;
+    QTest::addRow("both") << "both" << 42 << false;
+}
+
 void tst_QQuickLoader::sizeItemToLoader()
 {
+    QFETCH(QString, property);
+    QFETCH(int, value);
+    QFETCH(bool, atOnce);
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/SizeToLoader.qml"));
     QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
@@ -389,17 +411,25 @@ void tst_QQuickLoader::sizeItemToLoader()
 
     QQuickItem *rect = qobject_cast<QQuickItem*>(loader->item());
     QVERIFY(rect);
+    rect->setProperty(property.toUtf8(), value);
     QCOMPARE(rect->width(), 200.0);
     QCOMPARE(rect->height(), 80.0);
 
     // Check resize
     QSizeChangeListener sizeListener(rect);
     const QSizeF size(180, 30);
-    loader->setSize(size);
+    if (atOnce) {
+        loader->setSize(size);
+    } else {
+        loader->setWidth(size.width());
+        loader->setHeight(size.height());
+    }
     QVERIFY2(!sizeListener.isEmpty(), "There should be at least one signal about the size changed");
-    for (const QSizeF sizeOnGeometryChanged : sizeListener) {
-        // Check that we have the correct size on all signals
-        QCOMPARE(sizeOnGeometryChanged, size);
+    if (atOnce) {
+        for (const QSizeF sizeOnGeometryChanged : sizeListener) {
+            // Check that we have the correct size on all signals
+            QCOMPARE(sizeOnGeometryChanged, size);
+        }
     }
     QCOMPARE(rect->width(), size.width());
     QCOMPARE(rect->height(), size.height());

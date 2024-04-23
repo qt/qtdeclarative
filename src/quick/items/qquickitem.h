@@ -45,7 +45,6 @@ private:
 
 class QCursor;
 class QQuickItemLayer;
-class QQmlV4Function;
 class QQuickState;
 class QQuickAnchorLine;
 class QQuickTransition;
@@ -122,7 +121,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
 
     Q_CLASSINFO("DefaultProperty", "data")
     Q_CLASSINFO("ParentProperty", "parent")
-    Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QV4::ExecutionEngine*)")
+    Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QQmlV4ExecutionEnginePtr)")
     QML_NAMED_ELEMENT(Item)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -323,7 +322,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use typed overload or mapRectFromItem")
-    void mapFromItem(QQmlV4Function*) const;
+    void mapFromItem(QQmlV4FunctionPtr) const;
 #endif
     Q_INVOKABLE QPointF mapFromItem(const QQuickItem *item, const QPointF &point) const;
     // overloads mainly exist for QML
@@ -333,7 +332,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use typed overload or mapRectToItem")
-    void mapToItem(QQmlV4Function*) const;
+    void mapToItem(QQmlV4FunctionPtr) const;
 #endif
     Q_INVOKABLE QPointF mapToItem(const QQuickItem *item, const QPointF &point) const;
     // overloads mainly exist for QML
@@ -343,7 +342,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use the typed overload")
-    Q_REVISION(2, 7) void mapFromGlobal(QQmlV4Function*) const;
+    Q_REVISION(2, 7) void mapFromGlobal(QQmlV4FunctionPtr) const;
 #endif
     Q_REVISION(2, 7) Q_INVOKABLE QPointF mapFromGlobal(qreal x, qreal y) const;
     // overload mainly exists for QML
@@ -351,7 +350,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use the typed overload")
-    Q_REVISION(2, 7) void mapToGlobal(QQmlV4Function*) const;
+    Q_REVISION(2, 7) void mapToGlobal(QQmlV4FunctionPtr) const;
 #endif
     Q_REVISION(2, 7) Q_INVOKABLE  QPointF mapToGlobal(qreal x, qreal y) const;
     // overload only exist for QML
@@ -471,7 +470,7 @@ protected:
 
 private:
     Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))
-    Q_PRIVATE_SLOT(d_func(), quint64 _q_createJSWrapper(QV4::ExecutionEngine *))
+    Q_PRIVATE_SLOT(d_func(), quint64 _q_createJSWrapper(QQmlV4ExecutionEnginePtr))
 
     friend class QQuickWindowPrivate;
     friend class QQuickDeliveryAgentPrivate;

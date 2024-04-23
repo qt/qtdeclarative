@@ -86,6 +86,8 @@ public:
         }
     }
 
+    inline virtual QString toString() const override { return QDebug::toString(m_item); }
+
     QQuickItem *layoutItem() const { return m_item; }
 
     QQuickItem *m_item;

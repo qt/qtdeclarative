@@ -26,7 +26,9 @@ T.RadioDelegate {
     icon.width: 16
     icon.height: 16
 
-    contentItem: NativeStyle.DefaultItemDelegateIconLabel {}
+    contentItem: NativeStyle.DefaultItemDelegateIconLabel {
+        readonly property bool __ignoreNotCustomizable: true
+    }
 
     indicator: NativeStyle.RadioDelegate {
         x: control.text

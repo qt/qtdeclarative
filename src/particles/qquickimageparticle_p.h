@@ -358,7 +358,6 @@ private Q_SLOTS:
     void spriteAdvance(int spriteIndex);
     void spritesUpdate(qreal time = 0 );
     void mainThreadFetchImageData();
-    void finishBuildParticleNodes(QSGNode **n);
     void invalidateSceneGraph();
 
 private:
@@ -372,6 +371,7 @@ private:
     QScopedPointer<ImageData> m_opacityTable;
     bool loadingSomething();
 
+    void finishBuildParticleNodes(QSGNode **n);
 
     QColor m_color;
     qreal m_color_variation;

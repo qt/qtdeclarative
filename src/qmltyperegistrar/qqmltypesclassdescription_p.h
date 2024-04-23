@@ -15,6 +15,8 @@
 // We mean it.
 //
 
+#include <private/qmetatypesjsonprocessor_p.h>
+
 #include <QtCore/qstring.h>
 #include <QtCore/qcbormap.h>
 #include <QtCore/qvector.h>
@@ -32,17 +34,17 @@ struct FoundType
     };
 
     FoundType() = default;
-    FoundType(const QCborMap &single, Origin origin);
+    FoundType(const MetaType &single, Origin origin);
 
-    QCborMap native;
-    QCborMap javaScript;
+    MetaType native;
+    MetaType javaScript;
 
     Origin nativeOrigin = Unknown;
     Origin javaScriptOrigin = Unknown;
 
     operator bool() const { return !native.isEmpty() || !javaScript.isEmpty(); }
 
-    QCborMap select(const QCborMap &category, QAnyStringView relation) const;
+    MetaType select(const MetaType &category, QAnyStringView relation) const;
 
 };
 
@@ -51,7 +53,7 @@ struct QmlTypesClassDescription
     // All the string views in this class are based on string data in the JSON they are parsed from.
     // You must keep the relevant QCborValues alive while the QmlTypesClassDescription exists.
 
-    QCborMap resolvedClass;
+    MetaType resolvedClass;
     QAnyStringView file;
     QAnyStringView className;
     QList<QAnyStringView> elementNames;
@@ -84,27 +86,28 @@ struct QmlTypesClassDescription
         RelatedType
     };
 
-    void collect(const QCborMap &classDef, const QVector<QCborMap> &types,
-                 const QVector<QCborMap> &foreign, CollectMode mode,
-                 QTypeRevision defaultRevision);
+    void collect(
+            const MetaType &classDef, const QVector<MetaType> &types,
+            const QVector<MetaType> &foreign, CollectMode mode, QTypeRevision defaultRevision);
     FoundType collectRelated(
-            QAnyStringView related, const QVector<QCborMap> &types,
-            const QVector<QCborMap> &foreign, QTypeRevision defaultRevision,
+            QAnyStringView related, const QVector<MetaType> &types,
+            const QVector<MetaType> &foreign, QTypeRevision defaultRevision,
             const QList<QAnyStringView> &namespaces);
 
     static FoundType findType(
-            const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
+            const QVector<MetaType> &types, const QVector<MetaType> &foreign,
             const QAnyStringView &name, const QList<QAnyStringView> &namespaces);
 
-    void collectLocalAnonymous(const QCborMap &classDef,const QVector<QCborMap> &types,
-                      const QVector<QCborMap> &foreign, QTypeRevision defaultRevision);
+    void collectLocalAnonymous(
+            const MetaType &classDef, const QVector<MetaType> &types,
+            const QVector<MetaType> &foreign, QTypeRevision defaultRevision);
 
 
 private:
     void collectSuperClasses(
-            const QCborMap &classDef, const QVector<QCborMap> &types,
-            const QVector<QCborMap> &foreign, CollectMode mode, QTypeRevision defaultRevision);
-    void collectInterfaces(const QCborMap &classDef);
+            const MetaType &classDef, const QVector<MetaType> &types,
+            const QVector<MetaType> &foreign, CollectMode mode, QTypeRevision defaultRevision);
+    void collectInterfaces(const MetaType &classDef);
 };
 
 QT_END_NAMESPACE

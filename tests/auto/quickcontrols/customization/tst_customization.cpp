@@ -366,7 +366,7 @@ void tst_customization::override_data()
             "macOS",
             {
                 "Button", "CheckBox", "CheckDelegate", "ComboBox", "DelayButton", "Dial",  "Frame",
-                "GroupBox", "ItemDelegate", "ProgressBar", "RadioButton", "RadioDelegate", "SelectionRectangle",
+                "GroupBox", "ProgressBar", "RadioButton", "RadioDelegate", "SelectionRectangle",
                 "RangeSlider", "Slider", "SpinBox", "TextArea", "TextField", "TreeViewDelegate"
                 // TODO: ScrollView, ScrollBar
             }
@@ -375,7 +375,7 @@ void tst_customization::override_data()
             "Windows",
             {
                 "Button", "CheckBox", "CheckDelegate", "ComboBox", "DelayButton", "Frame", "GroupBox",
-                "ItemDelegate", "ProgressBar", "RadioButton", "RadioDelegate", "RangeSlider", "SelectionRectangle",
+                "ProgressBar", "RadioButton", "RadioDelegate", "RangeSlider", "SelectionRectangle",
                 "ScrollBar", "Slider", "SpinBox", "Switch", "SwitchDelegate", "TextArea", "TextField"
             }
         }

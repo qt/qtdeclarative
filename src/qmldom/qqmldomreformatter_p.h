@@ -46,7 +46,7 @@ protected:
         if (loc.length != 0)
             out(loc2Str(loc));
     }
-    inline void newLine() { lw.ensureNewline(); }
+    inline void newLine(quint32 count = 1) { lw.ensureNewline(count); }
 
     inline void accept(AST::Node *node) { AST::Node::accept(node, this); }
     void lnAcceptIndented(AST::Node *node);

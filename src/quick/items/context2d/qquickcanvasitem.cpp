@@ -810,7 +810,7 @@ QSGTextureProvider *QQuickCanvasItem::textureProvider() const
 
 */
 
-void QQuickCanvasItem::getContext(QQmlV4Function *args)
+void QQuickCanvasItem::getContext(QQmlV4FunctionPtr args)
 {
     Q_D(QQuickCanvasItem);
 
@@ -854,7 +854,7 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
     scene.
 */
 
-void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
+void QQuickCanvasItem::requestAnimationFrame(QQmlV4FunctionPtr args)
 {
     QV4::Scope scope(args->v4engine());
     QV4::ScopedFunctionObject f(scope, (*args)[0]);
@@ -883,7 +883,7 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
     This function will cancel the animation callback referenced by \a handle.
 */
 
-void QQuickCanvasItem::cancelRequestAnimationFrame(QQmlV4Function *args)
+void QQuickCanvasItem::cancelRequestAnimationFrame(QQmlV4FunctionPtr args)
 {
     QV4::Scope scope(args->v4engine());
     QV4::ScopedValue v(scope, (*args)[0]);

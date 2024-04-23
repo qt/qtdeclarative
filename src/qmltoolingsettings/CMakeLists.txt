@@ -7,7 +7,10 @@ qt_internal_add_module(QmlToolingSettingsPrivate
     SOURCES
         qqmltoolingsettings_p.h
         qqmltoolingsettings.cpp
+
+        qqmltoolingutils_p.h
+        qqmltoolingutils.cpp
     PUBLIC_LIBRARIES
         Qt::Core
     GENERATE_CPP_EXPORTS
-    )
+)

@@ -6,6 +6,7 @@
 #include "qanystringviewutils_p.h"
 #include "qqmltyperegistrarconstants_p.h"
 #include "qqmltyperegistrarconstants_p.h"
+#include "qmetatypesjsonprocessor_p.h"
 
 #include <QtCore/qcborarray.h>
 #include <QtCore/qcbormap.h>
@@ -23,19 +24,9 @@ QTypeRevision handleInMinorVersion(QTypeRevision revision, int majorVersion)
     return revision;
 }
 
-QAnyStringView interfaceName(const QCborValue &iface)
+QAnyStringView interfaceName(const Interface &iface)
 {
-    using namespace Constants::MetatypesDotJson;
-    using namespace QAnyStringViewUtils;
-
-    if (iface.isArray()) {
-        QCborArray needlessWrapping = iface.toArray();
-        if (needlessWrapping.size() > 0)
-            return toStringView(needlessWrapping[0].toMap(), S_CLASS_NAME);
-        return QAnyStringView();
-    }
-
-    return toStringView(iface.toMap(), S_CLASS_NAME);
+    return iface.className;
 }
 
 static QDebug message(QDebug base, QAnyStringView message, QAnyStringView fileName, int lineNumber)
@@ -50,17 +41,14 @@ QDebug warning(QAnyStringView fileName, int lineNumber)
     return message(qWarning(), "Warning", fileName, lineNumber);
 }
 
-QDebug warning(const QCborMap &classDef)
+QDebug warning(const MetaType &classDef)
 {
     // TODO: Once we have line numbers, use them
-    const QAnyStringView file = QAnyStringViewUtils::toStringView(
-            classDef, Constants::MetatypesDotJson::S_INPUT_FILE);
+    const QAnyStringView file = classDef.inputFile();
     if (!file.isEmpty())
         return warning(file);
 
-    const QAnyStringView name = QAnyStringViewUtils::toStringView(
-            classDef, Constants::MetatypesDotJson::S_QUALIFIED_CLASS_NAME);
-    return warning(name);
+    return warning(classDef.qualifiedClassName());
 }
 
 QDebug error(QAnyStringView fileName, int lineNumber)

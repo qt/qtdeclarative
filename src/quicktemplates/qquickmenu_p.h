@@ -103,7 +103,7 @@ public:
     void popup(QQuickItem *menuItem = nullptr);
     void popup(const QPointF &pos, QQuickItem *menuItem = nullptr);
 
-    Q_REVISION(2, 3) Q_INVOKABLE void popup(QQmlV4Function *args);
+    Q_REVISION(2, 3) Q_INVOKABLE void popup(QQmlV4FunctionPtr args);
     Q_REVISION(2, 3) Q_INVOKABLE void dismiss();
 
 protected:

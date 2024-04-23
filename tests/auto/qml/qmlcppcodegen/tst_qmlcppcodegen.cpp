@@ -155,10 +155,12 @@ private slots:
     void listLength();
     void listOfInvisible();
     void listPropertyAsModel();
+    void listToString();
     void lotsOfRegisters();
     void math();
     void mathMinMax();
     void mathOperations();
+    void mathStaticProperties();
     void mergedObjectReadWrite();
     void methodOnListLookup();
     void methods();
@@ -194,6 +196,7 @@ private slots:
     void propertyOfParent();
     void reduceWithNullThis();
     void readEnumFromInstance();
+    void readonlyListProperty();
     void registerElimination();
     void registerPropagation();
     void renameAdjust();
@@ -2991,6 +2994,30 @@ void tst_QmlCppCodegen::listPropertyAsModel()
     QCOMPARE(children.count(), 5);
 }
 
+void tst_QmlCppCodegen::listToString()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/listToString.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "[one,two]");
+    QTest::ignoreMessage(QtDebugMsg, "one,two");
+    QTest::ignoreMessage(QtDebugMsg, "[1,2]");
+    QTest::ignoreMessage(QtDebugMsg, "1,2");
+    QTest::ignoreMessage(
+            QtDebugMsg,
+            QRegularExpression("\\[QObject_QML_[0-9]+\\(0x[0-9a-f]+\\),"
+                               "QObject_QML_[0-9]+\\(0x[0-9a-f]+\\)\\]"));
+    QTest::ignoreMessage(
+            QtDebugMsg,
+            QRegularExpression("QObject_QML_[0-9]+\\(0x[0-9a-f]+\\),"
+                               "QObject_QML_[0-9]+\\(0x[0-9a-f]+\\)"));
+
+    QTest::ignoreMessage(QtDebugMsg, "[a,b]");
+
+    QScopedPointer<QObject> o(c.create());
+}
+
 void tst_QmlCppCodegen::lotsOfRegisters()
 {
     QQmlEngine engine;
@@ -3187,6 +3214,26 @@ void tst_QmlCppCodegen::mathOperations()
             }
         }
     }
+}
+
+void tst_QmlCppCodegen::mathStaticProperties()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/mathStaticProperties.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    // Approximate values based on
+    // https://262.ecma-international.org/14.0/#sec-value-properties-of-the-math-object
+    QCOMPARE(object->property("e").toDouble(), 2.7182818284590452354);
+    QCOMPARE(object->property("ln10").toDouble(), 2.302585092994046);
+    QCOMPARE(object->property("ln2").toDouble(), 0.6931471805599453);
+    QCOMPARE(object->property("log10e").toDouble(), 0.4342944819032518);
+    QCOMPARE(object->property("log2e").toDouble(), 1.4426950408889634);
+    QCOMPARE(object->property("pi").toDouble(), 3.1415926535897932);
+    QCOMPARE(object->property("sqrt1_2").toDouble(), 0.7071067811865476);
+    QCOMPARE(object->property("sqrt2").toDouble(), 1.4142135623730951);
 }
 
 void tst_QmlCppCodegen::mergedObjectReadWrite()
@@ -4023,6 +4070,17 @@ void tst_QmlCppCodegen::readEnumFromInstance()
     int result = 0;
     QMetaObject::invokeMethod(object.data(), "cyclePriority", Q_RETURN_ARG(int, result));
     QCOMPARE(result, 0);
+}
+
+void tst_QmlCppCodegen::readonlyListProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/readonlyListProperty.qml"_s));
+    QVERIFY2(component.isReady(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QCOMPARE(object->property("l").toInt(), 4);
 }
 
 void tst_QmlCppCodegen::registerElimination()

@@ -3229,6 +3229,174 @@ private slots:
         QVERIFY(success);
     }
 
+    void fileLocationRegions_data()
+    {
+        QTest::addColumn<QString>("filePath");
+        QTest::addColumn<FileLocationRegion>("region");
+        QTest::addColumn<QSet<QQmlJS::SourceLocation>>("expectedLocs");
+
+        QTest::newRow("import") << baseDir + u"/fileLocationRegions/imports.qml"_s << ImportTokenRegion <<
+        QSet {
+            QQmlJS::SourceLocation{112, 6, 4, 1},
+            QQmlJS::SourceLocation{127, 6, 5, 1},
+        };
+        QTest::newRow("importUri") << baseDir + u"/fileLocationRegions/imports.qml"_s << ImportUriRegion <<
+        QSet {
+            QQmlJS::SourceLocation{119, 7, 4, 8},
+            QQmlJS::SourceLocation{152, 16, 6, 8},
+            QQmlJS::SourceLocation{186, 9, 7, 8}
+        };
+        QTest::newRow("asToken") << baseDir + u"/fileLocationRegions/imports.qml"_s << AsTokenRegion <<
+        QSet {
+            QQmlJS::SourceLocation{169, 2, 6, 25}
+        };
+        QTest::newRow("version") << baseDir + u"/fileLocationRegions/imports.qml"_s << VersionRegion <<
+        QSet {
+            QQmlJS::SourceLocation{140, 4, 5, 14}
+        };
+        QTest::newRow("namespace") << baseDir + u"/fileLocationRegions/imports.qml"_s << IdNameRegion <<
+        QSet {
+            QQmlJS::SourceLocation{172, 6, 6, 28}
+        };
+
+        QTest::newRow("function") << baseDir + u"/fileLocationRegions/functions.qml"_s
+                                  << FunctionKeywordRegion
+                                  << QSet{ QQmlJS::SourceLocation{ 139, 9, 7, 5 },
+                                           QQmlJS::SourceLocation{ 195, 9, 10, 9 } };
+
+        QTest::newRow("signal") << baseDir + u"/fileLocationRegions/functions.qml"_s
+                                << SignalKeywordRegion
+                                << QSet{ QQmlJS::SourceLocation{ 234, 6, 13, 5 },
+                                         QQmlJS::SourceLocation{ 254, 6, 14, 5 } };
+        QTest::newRow("return-type-identifier")
+                << baseDir + u"/fileLocationRegions/functions.qml"_s << TypeIdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 154, 3, 7, 20 },
+                         QQmlJS::SourceLocation{ 216, 3, 10, 30 } };
+        QTest::newRow("function-parameter-type-identifier")
+                << baseDir + u"/fileLocationRegions/functions.qml"_s << TypeIdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 209, 3, 10, 23 } };
+        QTest::newRow("signal-parameter-type-identifier")
+                << baseDir + u"/fileLocationRegions/functions.qml"_s << TypeIdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 243, 3, 13, 14 },
+                         QQmlJS::SourceLocation{ 267, 3, 14, 18 } };
+        QTest::newRow("signal-parameter-identifier")
+                << baseDir + u"/fileLocationRegions/functions.qml"_s << IdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 247, 1, 13, 18 },
+                         QQmlJS::SourceLocation{ 264, 1, 14, 15 } };
+
+        QTest::newRow("pragma-keyword")
+                << baseDir + u"/fileLocationRegions/pragmas.qml"_s << PragmaKeywordRegion
+                << QSet{ QQmlJS::SourceLocation{ 112, 6, 4, 1 },
+                         QQmlJS::SourceLocation{ 129, 6, 5, 1 },
+                         QQmlJS::SourceLocation{ 161, 6, 6, 1 },
+                         QQmlJS::SourceLocation{ 204, 6, 7, 1 }};
+        QTest::newRow("pragmaId")
+                << baseDir + u"/fileLocationRegions/pragmas.qml"_s << IdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 119, 9, 4, 8 },
+                         QQmlJS::SourceLocation{ 136, 17, 5, 8 },
+                         QQmlJS::SourceLocation{ 168, 25, 6, 8 },
+                         QQmlJS::SourceLocation{ 211, 17, 7, 8 }};
+        QTest::newRow("pragmaValues")
+                << baseDir + u"/fileLocationRegions/pragmas.qml"_s << PragmaValuesRegion
+                << QSet{ QQmlJS::SourceLocation{ 155, 5, 5, 27 },
+                         QQmlJS::SourceLocation{ 195, 8, 6, 35 },
+                         QQmlJS::SourceLocation{ 230, 4, 7, 27 },
+                         QQmlJS::SourceLocation{ 235, 11, 7, 32 }};
+
+        QTest::newRow("enum-keyword")
+                << baseDir + u"/fileLocationRegions/enums.qml"_s << EnumKeywordRegion
+                << QSet{ QQmlJS::SourceLocation{ 139, 4, 7, 5 }};
+        QTest::newRow("enum-id")
+                << baseDir + u"/fileLocationRegions/enums.qml"_s << IdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 144, 3, 7, 10 }};
+        QTest::newRow("enum-member")
+                << baseDir + u"/fileLocationRegions/enums.qml"_s << IdentifierRegion
+                << QSet{ QQmlJS::SourceLocation{ 158, 3, 8, 9 },
+                         QQmlJS::SourceLocation{ 175, 3, 9, 9 },
+                        QQmlJS::SourceLocation{ 188, 3, 10, 9 }};
+        QTest::newRow("enum-value")
+                << baseDir + u"/fileLocationRegions/enums.qml"_s << EnumValueRegion
+                << QSet{ QQmlJS::SourceLocation{ 164, 1, 8, 15 },
+                         QQmlJS::SourceLocation{ 194, 2, 10, 15 }};
+    }
+
+    void fileLocationRegions()
+    {
+        QFETCH(QString, filePath);
+        QFETCH(FileLocationRegion, region);
+        QFETCH(QSet<QQmlJS::SourceLocation>, expectedLocs);
+        auto envPtr = DomEnvironment::create(
+                QStringList(),
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+        QFile f(filePath);
+        QVERIFY(f.open(QIODevice::ReadOnly | QIODevice::Text));
+        QString code = f.readAll();
+        DomItem file;
+        envPtr->loadFile(FileToLoad::fromMemory(envPtr, filePath, code),
+                         [&file](Path, const DomItem &, const DomItem &newIt) {
+                             file = newIt.fileObject();
+                         });
+        envPtr->loadPendingDependencies();
+
+        const auto tree = FileLocations::treeOf(file);
+        using AttachedInfo = AttachedInfoT<FileLocations>;
+        QSet<QQmlJS::SourceLocation> locs;
+        auto visitor = [&](const Path &currentPath, const AttachedInfo::Ptr &attachedInfo){
+            Q_UNUSED(currentPath);
+            const auto regions = attachedInfo->info().regions;
+            if (regions.contains(region)) {
+               locs << regions.value(region);
+            }
+            return true;
+        };
+        AttachedInfo::visitTree(tree, visitor, Path());
+        [&] {
+            QVERIFY(locs.contains(expectedLocs));
+        }();
+
+        if (QTest::currentTestFailed()) {
+            qDebug() << "Got:\n";
+            for (auto &x : locs) {
+                qDebug() << "Offset: " << x.offset
+                         << ", Length:" << x.length
+                         << ", Startline: " << x.startLine
+                         << ", StartColumn: " << x.startColumn;
+            }
+            qDebug() << "But expected: \n";
+            for (auto &x : expectedLocs) {
+                qDebug() << "Offset: " << x.offset
+                         << ", Length:" << x.length
+                         << ", Startline: " << x.startLine
+                         << ", StartColumn: " << x.startColumn;
+            }
+        }
+    }
+
+    void doNotCrashAtAstComments()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/astComments.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem astComments = fileObject.path(".astComments");
+
+        // Visiting astComment element shouldn't fail
+        QSet<QStringView> comments;
+        astComments.visitTree(
+            Path(),
+            [&comments](const Path &, const DomItem &item, bool) {
+                if (item.internalKind() == DomType::Comment) {
+                    auto comment = item.as<Comment>();
+                    comments << comment->rawComment();
+                }
+                return true;
+            }
+        );
+
+        QVERIFY(comments.contains(u"/*Ast Comment*/ "_s));
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

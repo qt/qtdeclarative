@@ -25,6 +25,7 @@ qt_internal_add_module(QmlCompiler
         qqmljslogger_p.h qqmljslogger.cpp
         qqmljsloggingutils.h qqmljsloggingutils.cpp qqmljsloggingutils_p.h
         qqmljsmetatypes_p.h qqmljsmetatypes.cpp
+        qqmljsoptimizations_p.h qqmljsoptimizations.cpp
         qqmljsregistercontent.cpp qqmljsregistercontent_p.h
         qqmljsresourcefilemapper.cpp qqmljsresourcefilemapper_p.h
         qqmljsscope.cpp qqmljsscope_p.h

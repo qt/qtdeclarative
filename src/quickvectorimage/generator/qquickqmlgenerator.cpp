@@ -1,5 +1,5 @@
 // Copyright (C) 2024 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickqmlgenerator_p.h"
 #include "qquicknodeinfo_p.h"
@@ -220,9 +220,8 @@ void QQuickQmlGenerator::generateGradient(const QGradient *grad, const QRectF &b
         stream() << "y1: " << logRect.top();
         stream() << "x2: " << logRect.right();
         stream() << "y2: " << logRect.bottom();
-        for (auto &stop : linGrad->stops()) {
+        for (auto &stop : linGrad->stops())
             stream() << "GradientStop { position: " << stop.first << "; color: \"" << stop.second.name(QColor::HexArgb) << "\" }";
-        }
         m_indentLevel--;
         stream() << "}";
     } else if (grad->type() == QGradient::RadialGradient) {
@@ -235,9 +234,8 @@ void QQuickQmlGenerator::generateGradient(const QGradient *grad, const QRectF &b
         stream() << "centerRadius: " << radGrad->radius();
         stream() << "focalX:" << radGrad->focalPoint().x();
         stream() << "focalY:" << radGrad->focalPoint().y();
-        for (auto &stop : radGrad->stops()) {
+        for (auto &stop : radGrad->stops())
             stream() << "GradientStop { position: " << stop.first << "; color: \"" << stop.second.name(QColor::HexArgb) << "\" }";
-        }
         m_indentLevel--;
         stream() << "}";
     }
@@ -248,12 +246,12 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     Q_UNUSED(pathSelector)
     Q_ASSERT(painterPath || quadPath);
 
-    QString penName = info.strokeColor;
-    const bool noPen = penName.isEmpty() || penName == u"transparent";
+    const bool noPen = info.strokeColor == QColorConstants::Transparent;
     if (pathSelector == QQuickVectorImageGenerator::StrokePath && noPen)
         return;
 
-    const bool noFill = info.grad.type() == QGradient::NoGradient && info.fillColor == u"transparent";
+    const bool noFill = info.grad.type() == QGradient::NoGradient && info.fillColor == QColorConstants::Transparent;
+
     if (pathSelector == QQuickVectorImageGenerator::FillPath && noFill)
         return;
 
@@ -277,7 +275,7 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     if (noPen || !(pathSelector & QQuickVectorImageGenerator::StrokePath)) {
         stream() << "strokeColor: \"transparent\"";
     } else {
-        stream() << "strokeColor: \"" << penName << "\"";
+        stream() << "strokeColor: \"" << info.strokeColor.name(QColor::HexArgb) << "\"";
         stream() << "strokeWidth: " << info.strokeWidth;
     }
     if (info.capStyle == Qt::FlatCap)
@@ -288,8 +286,7 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     } else if (info.grad.type() != QGradient::NoGradient) {
         generateGradient(&info.grad, boundingRect);
     } else {
-        stream() << "fillColor: \"" << info.fillColor << "\"";
-
+        stream() << "fillColor: \"" << info.fillColor.name(QColor::HexArgb) << "\"";
     }
     if (fillRule == QQuickShapePath::WindingFill)
         stream() << "fillRule: ShapePath.WindingFill";
@@ -368,7 +365,7 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
     }
     counter++;
 
-    stream() << "color: \"" << info.color << "\"";
+    stream() << "color: \"" << info.fillColor.name(QColor::HexArgb) << "\"";
     stream() << "textFormat:" << (info.needsRichText ? "Text.RichText" : "Text.StyledText");
 
     QString s = info.text;
@@ -386,8 +383,8 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
     if (info.font.italic())
         stream() << "font.italic: true";
 
-    if (!info.strokeColor.isEmpty()) {
-        stream() << "styleColor: \"" << info.strokeColor << "\"";
+    if (info.strokeColor != QColorConstants::Transparent) {
+        stream() << "styleColor: \"" << info.strokeColor.name(QColor::HexArgb) << "\"";
         stream() << "style: Text.Outline";
     }
 

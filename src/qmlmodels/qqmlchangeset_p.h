@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include <QtQmlIntegration/qqmlintegration.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qvector.h>
 #include <QtQmlModels/private/qtqmlmodelsglobal_p.h>
@@ -23,6 +24,8 @@ QT_BEGIN_NAMESPACE
 
 class Q_QMLMODELS_EXPORT QQmlChangeSet
 {
+    Q_GADGET
+    QML_ANONYMOUS
 public:
     struct MoveKey
     {

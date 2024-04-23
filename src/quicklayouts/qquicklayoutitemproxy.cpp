@@ -510,9 +510,16 @@ QQuickLayoutItemProxy *QQuickLayoutItemProxyAttachedData::getControllingProxy() 
     \brief QQuickLayoutItemProxyAttachedData::getProxies
     \return a list of all proxies that target the item this data is attached to.
 */
-const QList<QQuickLayoutItemProxy*> &QQuickLayoutItemProxyAttachedData::getProxies() const
+QQmlListProperty<QQuickLayoutItemProxy> QQuickLayoutItemProxyAttachedData::getProxies()
 {
-    return proxies;
+    using Type = QQuickLayoutItemProxy;
+    using Property = QQmlListProperty<Type>;
+
+    return Property(
+        this, &proxies,
+        [](Property *p) { return static_cast<QList<Type *> *>(p->data)->size(); },
+        [](Property *p, qsizetype i) { return static_cast<QList<Type *> *>(p->data)->at(i); }
+    );
 }
 
 /*! \internal

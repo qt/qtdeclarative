@@ -4,10 +4,10 @@
 /*!
 \page qtqml-tooling-qmlls.html
 \title \QMLLS Reference
-\brief Overview of the QML Language Server (qmlls).
+\brief Overview of \QMLLS (qmlls).
 \ingroup qtqml-tooling
 
-QML Language Server is a tool shipped with Qt that helps you write code
+\QMLLS is a tool shipped with Qt that helps you write code
 in your favorite (LSP-supporting) editor.
 See \l{https://microsoft.github.io/language-server-protocol/}{Language Server Protocol}
 for more information.
@@ -29,47 +29,47 @@ more details.
 
 \section2 Linting
 
-QML Language Server can automatically lint opened QML files
+\QMLLS can automatically lint opened QML files
 and display warnings or errors straight in the editor. See
 \l{qmllint Reference}{qmllint} for more information about the linting process.
 
 \section2 Formatting
 
-QML Language Server can format entire files from inside
+\QMLLS can format entire files from inside
 the editor. See \l{qmlformat} for more information about the
 formatting process.
 
 
 \section2 Finding Definitions
 
-QML Language Server can find definitions of JavaScript variables,
+\QMLLS can find definitions of JavaScript variables,
 functions, QML object id's and QML properties from their usages.
 
-QML Language Server can also find the definition of types used in
+\QMLLS can also find the definition of types used in
 type annotations for JavaScript functions, QML object properties,
 and QML object instantiation.
 
 \section2 Finding Usages
 
-QML Language Server can find usages of JavaScript variables,
+\QMLLS can find usages of JavaScript variables,
 QML object properties, JavaScript functions, QML object methods,
 and QML object id's.
 
 \section2 Renaming
 
-QML Language Server can rename JavaScript variables and functions,
+\QMLLS can rename JavaScript variables and functions,
 as well as QML object properties, methods, and id's, as long as
 they are defined in a QML file.
 
 \section2 Suggesting Autocompletion Items
 
-QML Language Server provides autocompletion suggestions for
+\QMLLS provides autocompletion suggestions for
 JavaScript variables, expressions, and statements, as well as
 QML object properties, methods, and id's.
 
 \section2 Tracking Changes in C++ Files
 
-QML Language Server can track changes in C++ files defining QML
+\QMLLS can track changes in C++ files defining QML
 types. It automatically rebuilds CMake QML modules to provide
 accurate and up-to-date warnings and completion items for C++
 defined QML types.
@@ -77,15 +77,15 @@ defined QML types.
 You can
 \l{Disabling automatic CMake builds}{disable this feature}.
 
-\section1 Setting up the QML Language Server in Your Editor
+\section1 Setting up the \QMLLS in Your Editor
 
-\note You can find the QML Language Server binary under
+\note You can find the \QMLLS binary under
 \c{<Qt installation folder>/bin/qmlls} in installations of Qt
 made with \QOI.
 
 \section2 Setting up the Build Directory
 
-QML Language Server needs to know the location of your build
+\QMLLS needs to know the location of your build
 folder. You can pass it the following ways:
 \list
     \li The \c{--build-dir} command line option. In this case
@@ -119,7 +119,7 @@ your editor should invoke \c{qmlls} as follows:
 
 \section1 Configuration File
 
-QML Language Server can be configured via a configuration file \c{.qmlls.ini}.
+\QMLLS can be configured via a configuration file \c{.qmlls.ini}.
 This file should be in the root source directory of the project.
 It should be a text file in the ini-format.
 
@@ -138,18 +138,18 @@ Currently, the configuration file can be used to set the build
 directory of the current project and optionally disable the automatic
 CMake rebuild functionality for C++ defined QML types.
 
-\note QML Language Server can create default configuration files
+\note \QMLLS can create default configuration files
 using the \c{--write-defaults} option. This will overwrite an
 already existing .qmlls.ini file in the current directory.
 
 \section1 Known Limitations
 
-QML Language Server might emit false positive warnings on projects
+\QMLLS might emit false positive warnings on projects
 that were not built, as it needs the build information to find
 QML modules defined in the same project, for example.
 
 Despite covering many common QML features,
-the QML Language Server is still in development with some features
+the \QMLLS is still in development with some features
 yet to be supported:
 
 \list
@@ -159,7 +159,7 @@ yet to be supported:
     \li Supporting all QML and JavaScript language constructs for all features.
 \endlist
 
-The QML code model in the QML Language Server does not yet
+The QML code model in the \QMLLS does not yet
 support all of the JavaScript language constructs, which means that
 some features like navigating to definition and finding usages might not
 work on these language constructs.

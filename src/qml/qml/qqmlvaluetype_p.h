@@ -349,6 +349,14 @@ public:
 };
 #endif
 
+struct QQmlV4ExecutionEnginePtrForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QQmlV4ExecutionEnginePtr)
+    QML_EXTENDED(QQmlV4ExecutionEnginePtrForeign)
+};
+
 QT_END_NAMESPACE
 
 #endif  // QQMLVALUETYPE_P_H

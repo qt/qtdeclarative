@@ -119,7 +119,6 @@ private:
     friend class QQuickDragAttachedPrivate;
 };
 
-class QQmlV4Function;
 class QQuickDragAttached;
 class Q_QUICK_EXPORT QQuickDrag : public QObject
 {
@@ -274,8 +273,8 @@ public:
     bool event(QEvent *event) override;
 
 public Q_SLOTS:
-    void start(QQmlV4Function *);
-    void startDrag(QQmlV4Function *);
+    void start(QQmlV4FunctionPtr);
+    void startDrag(QQmlV4FunctionPtr);
     void cancel();
 
 Q_SIGNALS:

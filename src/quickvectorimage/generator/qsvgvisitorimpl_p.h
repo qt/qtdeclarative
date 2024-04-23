@@ -1,5 +1,5 @@
 // Copyright (C) 2024 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef QSVGVISITORIMPL_P_H
 #define QSVGVISITORIMPL_P_H
@@ -57,6 +57,7 @@ private:
     void handlePathNode(const QSvgNode *node, const QPainterPath &path, Qt::PenCapStyle capStyle = Qt::SquareCap);
     void outputShapePath(QPainterPath pathCopy, const PathNodeInfo &info);
     static QString gradientCssDescription(const QGradient *gradient);
+    static QString colorCssDescription(QColor color);
 
 private:
     QString m_svgFileName;

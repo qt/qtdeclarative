@@ -7,5 +7,6 @@ if (TARGET Qt::QmlLSPrivate)
     add_subdirectory(qqmlcodemodel)
     add_subdirectory(qmlls)
     add_subdirectory(modules)
+    add_subdirectory(cli)
 endif()
 

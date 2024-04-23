@@ -1141,8 +1141,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 return false;
             }
             qCWarning(lcQmlDefaultMethod) << "Assigning an object to a signal handler is deprecated. "
-                                             "Instead, create the object, give it an id, and call the desired slot from the signal handler."
-                                             ;
+                                             "Instead, create the object, give it an id, and call the desired slot "
+                                             "from the signal handler. The object is:" << createdSubObject;
 
             QMetaMethod signalMethod = _qobject->metaObject()->method(bindingProperty->coreIndex());
             if (!QMetaObject::checkConnectArgs(signalMethod, method)) {

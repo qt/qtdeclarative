@@ -31,13 +31,13 @@ class Q_QMLCOMPILER_EXPORT QQmlJSCodeGenerator : public QQmlJSCompilePass
 {
 public:
     QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
-                       const QV4::Compiler::JSUnitGenerator *unitGenerator,
-                       const QQmlJSTypeResolver *typeResolver,
-                       QQmlJSLogger *logger);
+                        const QV4::Compiler::JSUnitGenerator *unitGenerator,
+                        const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
+                        BasicBlocks basicBlocks, InstructionAnnotations annotations);
     ~QQmlJSCodeGenerator() = default;
 
-    QQmlJSAotFunction run(const Function *function, const InstructionAnnotations *annotations,
-                          QQmlJS::DiagnosticMessage *error, bool basicBlocksValidationFailed);
+    QQmlJSAotFunction run(const Function *function, QQmlJS::DiagnosticMessage *error,
+                          bool basicBlocksValidationFailed);
 
 protected:
     struct CodegenState : public State
@@ -348,7 +348,6 @@ private:
     QHash<int, QString> m_labels;
 
     const QV4::Compiler::Context *m_context = nullptr;
-    const InstructionAnnotations *m_annotations = nullptr;
 
     bool m_skipUntilNextLabel = false;
 

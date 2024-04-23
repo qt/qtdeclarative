@@ -166,45 +166,6 @@ const int QMacStylePrivate::PushButtonContentPadding = 6;
 
 QVector<QPointer<QObject> > QMacStylePrivate::scrollBars;
 
-// Title bar gradient colors for Lion were determined by inspecting PSDs exported
-// using CoreUI's CoreThemeDocument; there is no public API to retrieve them
-
-static QLinearGradient titlebarGradientActive()
-{
-    static QLinearGradient darkGradient = [](){
-        QLinearGradient gradient;
-        // FIXME: colors are chosen somewhat arbitrarily and could be fine-tuned,
-        // or ideally determined by calling a native API.
-        gradient.setColorAt(0, QColor(47, 47, 47));
-        return gradient;
-    }();
-    static QLinearGradient lightGradient = [](){
-        QLinearGradient gradient;
-        gradient.setColorAt(0, QColor(235, 235, 235));
-        gradient.setColorAt(0.5, QColor(210, 210, 210));
-        gradient.setColorAt(0.75, QColor(195, 195, 195));
-        gradient.setColorAt(1, QColor(180, 180, 180));
-        return gradient;
-    }();
-    return qt_mac_applicationIsInDarkMode() ? darkGradient : lightGradient;
-}
-
-static QLinearGradient titlebarGradientInactive()
-{
-    static QLinearGradient darkGradient = [](){
-        QLinearGradient gradient;
-        gradient.setColorAt(1, QColor(42, 42, 42));
-        return gradient;
-    }();
-    static QLinearGradient lightGradient = [](){
-        QLinearGradient gradient;
-        gradient.setColorAt(0, QColor(250, 250, 250));
-        gradient.setColorAt(1, QColor(225, 225, 225));
-        return gradient;
-    }();
-    return qt_mac_applicationIsInDarkMode() ? darkGradient : lightGradient;
-}
-
 static const QColor titlebarSeparatorLineActive(111, 111, 111);
 static const QColor titlebarSeparatorLineInactive(131, 131, 131);
 static const QColor darkModeSeparatorLine(88, 88, 88);
@@ -2879,20 +2840,10 @@ void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPai
 //        } break;
 //#endif // QT_CONFIG(tabbar)
     case PE_PanelStatusBar: {
-        // Fill the status bar with the titlebar gradient.
-        QLinearGradient linearGrad;
-        const bool isMainWindow = qt_macWindowMainWindow(opt->window);
-        if (isMainWindow)
-            linearGrad = titlebarGradientActive();
-        else
-            linearGrad = titlebarGradientInactive();
-
-        linearGrad.setStart(0, opt->rect.top());
-        linearGrad.setFinalStop(0, opt->rect.bottom());
-        p->fillRect(opt->rect, linearGrad);
+        p->fillRect(opt->rect, opt->palette.window());
 
         // Draw the black separator line at the top of the status bar.
-        if (isMainWindow)
+        if (qt_macWindowMainWindow(opt->window))
             p->setPen(titlebarSeparatorLineActive);
         else
             p->setPen(titlebarSeparatorLineInactive);
@@ -3497,12 +3448,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
             }
 
             // fill title bar background
-            QLinearGradient linearGrad;
-            linearGrad.setStart(QPointF(0, 0));
-            linearGrad.setFinalStop(QPointF(0, 2 * effectiveRect.height()));
-            linearGrad.setColorAt(0, opt->palette.button().color());
-            linearGrad.setColorAt(1, opt->palette.dark().color());
-            p->fillRect(effectiveRect, linearGrad);
+            p->fillRect(effectiveRect, opt->palette.window());
 
             // draw horizontal line at bottom
             p->setPen(opt->palette.dark().color());
@@ -4860,16 +4806,7 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
             const auto frameAdjust = 1.0 / p->device()->devicePixelRatioF();
             const auto innerFrameRect = outerFrameRect.adjusted(frameAdjust, frameAdjust, -frameAdjust, 0);
             QPainterPath innerFramePath = d->windowPanelPath(innerFrameRect);
-            if (isActive) {
-                QLinearGradient g;
-                g.setStart(QPointF(0, 0));
-                g.setFinalStop(QPointF(0, 2 * opt->rect.height()));
-                g.setColorAt(0, opt->palette.button().color());
-                g.setColorAt(1, opt->palette.dark().color());
-                p->fillPath(innerFramePath, g);
-            } else {
-                p->fillPath(innerFramePath, opt->palette.button());
-            }
+            p->fillPath(innerFramePath, opt->palette.button());
 
             if (titlebar->subControls & (SC_TitleBarCloseButton
                                          | SC_TitleBarMaxButton

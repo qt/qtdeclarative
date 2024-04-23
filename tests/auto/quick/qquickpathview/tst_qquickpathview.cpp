@@ -132,6 +132,9 @@ private slots:
     void requiredPropertiesInDelegatePreventUnrelated();
     void touchMove();
     void mousePressAfterFlick();
+    void qtbug90479();
+    void overCached();
+    void qtbug46487();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -2893,6 +2896,106 @@ void tst_QQuickPathView::mousePressAfterFlick() // QTBUG-115121
     QTRY_VERIFY(!pathview->isMoving());
     QCOMPARE(flickEndedSpy.size(), 1);
     QCOMPARE(pressedSpy.size(), 0);
+}
+
+void tst_QQuickPathView::qtbug90479()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("qtbug90479.qml"));
+
+    window->show();
+    qApp->processEvents();
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview);
+
+    // cache items will be created async. Let's wait...
+    QTest::qWait(1000);
+
+    // Should create just pathItemCount amount and not destroy any
+    QCOMPARE(pathview->property("delegatesCreated").toInt(), 6);
+    QCOMPARE(pathview->property("delegatesDestroyed").toInt(), 0);
+}
+
+void tst_QQuickPathView::overCached()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("overcached.qml"));
+
+    window->show();
+    qApp->processEvents();
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview);
+
+    // cache items will be created async. Let's wait...
+    QTest::qWait(1000);
+
+    // Should create max model + 1 amount with the current implementation
+    QVERIFY(pathview->property("delegatesCreated").toInt() <= 16);
+    QVERIFY(pathview->property("delegatesDestroyed").toInt() <= 1);
+}
+
+class CustomModel : public QAbstractListModel
+{
+public:
+    CustomModel(QObject *parent = 0) : QAbstractListModel(parent) {
+        m_values << 0 << 1 << 2 << 3 << 4;
+    }
+
+    int rowCount(const QModelIndex &parent = QModelIndex()) const {
+        Q_UNUSED(parent);
+        return m_values.count();
+    }
+    QVariant data(const QModelIndex &index, int role) const {
+        if (index.row() < 0 || m_values.count() <= index.row())
+            return QVariant();
+
+        return m_values[index.row()];
+    }
+
+    Q_INVOKABLE void shrink() {
+        beginResetModel();
+        m_values.takeLast();
+        m_values.takeLast();
+        endResetModel();
+    }
+
+private:
+    QList<int> m_values;
+};
+
+void tst_QQuickPathView::qtbug46487()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    CustomModel* model = new CustomModel;
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("customModel", model);
+
+    window->setSource(testFileUrl("qtbug46487.qml"));
+    window->show();
+    qApp->processEvents();
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview);
+
+    QTest::qWait(500);
+
+    // Should create just pathItemCount amount and not destroy any
+    QCOMPARE(pathview->count(), 5);
+    QCOMPARE(pathview->property("delegatesCreated").toInt(), 5);
+    QCOMPARE(pathview->property("delegatesDestroyed").toInt(), 0);
+
+    // Resets the model and removes 2 items.
+    model->shrink();
+    QTest::qWait(500);
+
+    // Should destroy previous items (begin/endResetModel) and
+    // (re)create 3 new items.
+    QCOMPARE(pathview->count(), 3);
+    QCOMPARE(pathview->property("delegatesCreated").toInt(), 5 + 3);
+    QCOMPARE(pathview->property("delegatesDestroyed").toInt(), 5);
 }
 
 QTEST_MAIN(tst_QQuickPathView)

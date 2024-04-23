@@ -106,7 +106,7 @@ public:
     void setWidth(int) { }
 };
 
-void MyQmlObject::v8function(QQmlV4Function *function)
+void MyQmlObject::v8function(QQmlV4FunctionPtr function)
 {
     function->v4engine()->throwError(QStringLiteral("Exception thrown from within QObject slot"));
 }

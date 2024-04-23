@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 import QtQuick
+import QtQuick.Window
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
 import QtQuick.Controls.Fusion
@@ -49,11 +50,13 @@ Rectangle {
         gradient: Gradient {
             GradientStop {
                 position: 0
-                color: Fusion.highlight(indicator.control.palette)
+                color: Qt.alpha(indicator.control.palette.active.highlight,
+                                indicator.Window ? indicator.Window.active ? 1 : 0.5 : 1)
             }
             GradientStop {
                 position: 1
-                color: Qt.lighter(Fusion.highlight(indicator.control.palette), 1.2)
+                color: Qt.alpha(Qt.lighter(indicator.control.palette.active.highlight, 1.2),
+                                indicator.Window ? indicator.Window.active ? 1 : 0.5 : 1)
             }
         }
     }

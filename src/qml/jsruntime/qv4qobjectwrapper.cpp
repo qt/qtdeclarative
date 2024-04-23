@@ -1949,7 +1949,7 @@ static ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQmlPro
                     << "When matching arguments for "
                     << object.className() << "::" << data.name(object.metaObject()) << "():";
         } else {
-            const StackFrame frame = engine->stackTrace().first();
+            const StackFrame frame = stackTrace.first();
             qWarning().noquote() << frame.function + QLatin1Char('@') + frame.source
                             + (frame.line > 0 ? (QLatin1Char(':') + QString::number(frame.line))
                                               : QString());
@@ -2391,8 +2391,8 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
         return true;
     case QMetaType::QJsonArray: {
         Scope scope(engine);
-        ScopedArrayObject a(scope, value);
-        jsonArrayPtr = new (&allocData) QJsonArray(JsonObject::toJsonArray(a));
+        ScopedObject o(scope, value);
+        jsonArrayPtr = new (&allocData) QJsonArray(JsonObject::toJsonArray(o));
         return true;
     }
     case  QMetaType::QJsonObject: {
@@ -2953,7 +2953,7 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
         return doCall([&]() {
             ScopedValue rv(scope, Value::undefinedValue());
             QQmlV4Function func(callData, rv, v4);
-            QQmlV4Function *funcptr = &func;
+            QQmlV4FunctionPtr funcptr = &func;
 
             void *args[] = { nullptr, &funcptr };
             object.metacall(QMetaObject::InvokeMetaMethod, method->coreIndex(), args);

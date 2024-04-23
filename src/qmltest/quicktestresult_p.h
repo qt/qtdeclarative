@@ -91,7 +91,7 @@ public Q_SLOTS:
     void finishTestDataCleanup();
     void finishTestFunction();
 
-    void stringify(QQmlV4Function *args);
+    void stringify(QQmlV4FunctionPtr args);
 
     void fail(const QString &message, const QUrl &location, int line);
     bool verify(bool success, const QString &message,

@@ -25,6 +25,7 @@ using namespace Qt::StringLiterals;
     \instantiates QQuickTextDocument
     \inqmlmodule QtQuick
     \brief A wrapper around TextEdit's backing QTextDocument.
+    \preliminary
 
     To load text into the document, set the \l source property. If the user then
     modifies the text and wants to save the same document, call \l save() to save
@@ -49,7 +50,7 @@ using namespace Qt::StringLiterals;
     This class provides access to the QTextDocument of QQuickTextEdit elements.
     This is provided to allow usage of the \l{Rich Text Processing} functionalities of Qt,
     including document modifications. It can also be used to output content,
-    for example with \l{QTextDocumentWriter}), or provide additional formatting,
+    for example with \l{QTextDocumentWriter}, or provide additional formatting,
     for example with \l{QSyntaxHighlighter}.
 */
 
@@ -69,9 +70,31 @@ QQuickTextDocument::QQuickTextDocument(QQuickItem *parent)
 }
 
 /*!
+    \property QQuickTextDocument::status
+    \brief the status of document loading or saving
+    \since 6.7
+    \preliminary
+
+    This property holds the status of document loading or saving.  It can be one of:
+
+    \value Null                     No file has been loaded
+    \value Loading                  Reading from \l source has begun
+    \value Loaded                   Reading has successfully finished
+    \value Saving                   File writing has begun after save() or saveAs()
+    \value Saved                    Writing has successfully finished
+    \value ReadError                An error occurred while reading from \l source
+    \value WriteError               An error occurred in save() or saveAs()
+    \value NonLocalFileError        saveAs() was called with a URL pointing
+                                    to a remote resource rather than a local file
+
+    \sa errorString, source, save(), saveAs()
+*/
+
+/*!
     \qmlproperty enumeration QtQuick::TextDocument::status
     \readonly
     \since 6.7
+    \preliminary
 
     This property holds the status of document loading or saving.  It can be one of:
 
@@ -112,6 +135,8 @@ QQuickTextDocument::QQuickTextDocument(QQuickItem *parent)
     \snippet qml/textEditStatusSwitch.qml 0
 
     \endlist
+
+    \sa errorString, source, save(), saveAs()
 */
 QQuickTextDocument::Status QQuickTextDocument::status() const
 {
@@ -120,14 +145,26 @@ QQuickTextDocument::Status QQuickTextDocument::status() const
 }
 
 /*!
+    \property QQuickTextDocument::errorString
+    \brief a human-readable string describing the error that occurred during loading or saving, if any
+    \since 6.7
+    \preliminary
+
+    By default this string is empty.
+
+    \sa status, source, save(), saveAs()
+*/
+
+/*!
     \qmlproperty string QtQuick::TextDocument::errorString
     \readonly
     \since 6.7
+    \preliminary
 
     This property holds a human-readable string describing the error that
     occurred during loading or saving, if any; otherwise, an empty string.
 
-    \sa status
+    \sa status, source, save(), saveAs()
 */
 QString QQuickTextDocument::errorString() const
 {
@@ -153,8 +190,27 @@ void QQuickTextDocumentPrivate::setStatus(QQuickTextDocument::Status s, const QS
 }
 
 /*!
+    \property QQuickTextDocument::source
+    \brief the URL from which to load document contents
+    \since 6.7
+    \preliminary
+
+    QQuickTextDocument can handle any text format supported by Qt, loaded from
+    any URL scheme supported by Qt.
+
+    The \c source property cannot be changed while the document's \l modified
+    state is \c true. If the user has modified the document contents, you
+    should prompt the user whether to \l save(), or else discard changes by
+    setting \l modified to \c false before setting the \c source property to a
+    different URL.
+
+    \sa QTextDocumentWriter::supportedDocumentFormats()
+*/
+
+/*!
     \qmlproperty url QtQuick::TextDocument::source
     \since 6.7
+    \preliminary
 
     QQuickTextDocument can handle any text format supported by Qt, loaded from
     any URL scheme supported by Qt.
@@ -194,15 +250,33 @@ void QQuickTextDocument::setSource(const QUrl &url)
 }
 
 /*!
-    \qmlproperty bool QtQuick::TextDocument::modified
+    \property QQuickTextDocument::modified
+    \brief whether the document has been modified by the user
     \since 6.7
+    \preliminary
 
     This property holds whether the document has been modified by the user
     since the last time it was loaded or saved. By default, this property is
     \c false.
 
     As with \l QTextDocument::modified, you can set the modified property:
-    for example, set it to \c false to allow setting the \c source property
+    for example, set it to \c false to allow setting the \l source property
+    to a different URL (thus discarding the user's changes).
+
+    \sa QTextDocument::modified
+*/
+
+/*!
+    \qmlproperty bool QtQuick::TextDocument::modified
+    \since 6.7
+    \preliminary
+
+    This property holds whether the document has been modified by the user
+    since the last time it was loaded or saved. By default, this property is
+    \c false.
+
+    As with \l QTextDocument::modified, you can set the modified property:
+    for example, set it to \c false to allow setting the \l source property
     to a different URL (thus discarding the user's changes).
 
     \sa QTextDocument::modified
@@ -412,9 +486,42 @@ void QQuickTextDocument::setTextDocument(QTextDocument *document)
 */
 
 /*!
+    \preliminary
+    \fn void QQuickTextDocument::sourceChanged()
+*/
+
+/*!
+    \preliminary
+    \fn void QQuickTextDocument::modifiedChanged()
+*/
+
+/*!
+    \preliminary
+    \fn void QQuickTextDocument::statusChanged()
+*/
+
+/*!
+    \preliminary
+    \fn void QQuickTextDocument::errorStringChanged()
+*/
+
+/*!
+    \fn void QQuickTextDocument::save()
+    \since 6.7
+    \preliminary
+
+    Saves the contents to the same file and format specified by \l source.
+
+    \note You can save only to a \l {QUrl::isLocalFile()}{file on a mounted filesystem}.
+
+    \sa source, saveAs()
+*/
+
+/*!
     \qmlmethod void QtQuick::TextDocument::save()
     \brief Saves the contents to the same file and format specified by \l source.
     \since 6.7
+    \preliminary
 
     \note You can save only to a \l {QUrl::isLocalFile()}{file on a mounted filesystem}.
 
@@ -427,16 +534,31 @@ void QQuickTextDocument::save()
 }
 
 /*!
-    \qmlmethod void QtQuick::TextDocument::saveAs(url url)
+    \fn void QQuickTextDocument::saveAs(const QUrl &url)
     \brief Saves the contents to the file and format specified by \a url.
     \since 6.7
+    \preliminary
 
     The file extension in \a url specifies the file format
     (as determined by QMimeDatabase::mimeTypeForUrl()).
 
     \note You can save only to a \l {QUrl::isLocalFile()}{file on a mounted filesystem}.
 
-    \sa source, saveAs()
+    \sa source, save()
+*/
+
+/*!
+    \qmlmethod void QtQuick::TextDocument::saveAs(url url)
+    \brief Saves the contents to the file and format specified by \a url.
+    \since 6.7
+    \preliminary
+
+    The file extension in \a url specifies the file format
+    (as determined by QMimeDatabase::mimeTypeForUrl()).
+
+    \note You can save only to a \l {QUrl::isLocalFile()}{file on a mounted filesystem}.
+
+    \sa source, save()
 */
 void QQuickTextDocument::saveAs(const QUrl &url)
 {

@@ -2172,15 +2172,15 @@ ExecutionEngine::Module ExecutionEngine::moduleForUrl(
 
 ExecutionEngine::Module ExecutionEngine::loadModule(const QUrl &url, const ExecutableCompilationUnit *referrer)
 {
-    const auto nativeModule = nativeModules.find(url);
-    if (nativeModule != nativeModules.end())
+    const auto nativeModule = nativeModules.constFind(url);
+    if (nativeModule != nativeModules.cend())
         return Module { nullptr, *nativeModule };
 
     const QUrl resolved = referrer
             ? referrer->finalUrl().resolved(QQmlTypeLoader::normalize(url))
             : QQmlTypeLoader::normalize(url);
-    auto existingModule = m_compilationUnits.find(resolved);
-    if (existingModule != m_compilationUnits.end())
+    auto existingModule = m_compilationUnits.constFind(resolved);
+    if (existingModule != m_compilationUnits.cend())
         return Module { *existingModule, nullptr };
 
     auto newModule = compileModule(resolved);
@@ -2191,8 +2191,8 @@ ExecutionEngine::Module ExecutionEngine::loadModule(const QUrl &url, const Execu
 
 QV4::Value *ExecutionEngine::registerNativeModule(const QUrl &url, const QV4::Value &module)
 {
-    const auto existingModule = nativeModules.find(url);
-    if (existingModule != nativeModules.end())
+    const auto existingModule = nativeModules.constFind(url);
+    if (existingModule != nativeModules.cend())
         return nullptr;
 
     QV4::Value *val = this->memoryManager->m_persistentValues->allocate();
@@ -2686,16 +2686,15 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         return true;
     }
 
-    if (metaType == QMetaType::fromType<QQmlListReference>()) {
-        if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
+    if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
+        if (metaType == QMetaType::fromType<QQmlListReference>()) {
             *reinterpret_cast<QQmlListReference *>(data) = wrapper->toListReference();
             return true;
         }
-    }
 
-    if (metaType == QMetaType::fromType<QQmlListProperty<QObject>>()) {
-        if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
-            *reinterpret_cast<QQmlListProperty<QObject> *>(data) = *wrapper->d()->property();
+        const auto wrapperPrivate = wrapper->d();
+        if (wrapperPrivate->propertyType() == metaType) {
+            *reinterpret_cast<QQmlListProperty<QObject> *>(data) = *wrapperPrivate->property();
             return true;
         }
     }

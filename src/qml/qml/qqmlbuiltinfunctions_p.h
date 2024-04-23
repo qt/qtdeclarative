@@ -154,7 +154,7 @@ public:
             QObject *parent = nullptr) const;
 
     Q_INVOKABLE QJSValue binding(const QJSValue &function) const;
-    Q_INVOKABLE void callLater(QQmlV4Function *args);
+    Q_INVOKABLE void callLater(QQmlV4FunctionPtr args);
 
 #if QT_CONFIG(translation)
     QString uiLanguage() const;

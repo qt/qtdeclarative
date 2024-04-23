@@ -37,7 +37,7 @@ bool ForbiddenChildrenPropertyValidatorPass::shouldRun(const QQmlSA::Element &el
     if (!element.parentScope())
         return false;
 
-    for (const auto &pair : m_types.asKeyValueRange()) {
+    for (const auto &pair : std::as_const(m_types).asKeyValueRange()) {
         if (element.parentScope().inherits(pair.first))
             return true;
     }
@@ -47,7 +47,7 @@ bool ForbiddenChildrenPropertyValidatorPass::shouldRun(const QQmlSA::Element &el
 
 void ForbiddenChildrenPropertyValidatorPass::run(const QQmlSA::Element &element)
 {
-    for (const auto &elementPair : m_types.asKeyValueRange()) {
+    for (const auto &elementPair : std::as_const(m_types).asKeyValueRange()) {
         const QQmlSA::Element &type = elementPair.first;
         if (!element.parentScope().inherits(type))
             continue;
@@ -434,7 +434,7 @@ VarBindingTypeValidatorPass::VarBindingTypeValidatorPass(
 {
     QMultiHash<QString, QQmlSA::Element> propertyTypes;
 
-    for (const auto pair : expectedPropertyTypes.asKeyValueRange()) {
+    for (const auto &pair : expectedPropertyTypes.asKeyValueRange()) {
         const QQmlSA::Element propType = pair.second.module.isEmpty()
                 ? resolveBuiltinType(pair.second.name)
                 : resolveType(pair.second.module, pair.second.name);

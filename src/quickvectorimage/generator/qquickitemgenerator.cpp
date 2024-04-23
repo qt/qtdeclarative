@@ -1,5 +1,5 @@
 // Copyright (C) 2024 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickitemgenerator_p.h"
 #include "utils_p.h"
@@ -123,12 +123,12 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     Q_UNUSED(pathSelector)
     Q_ASSERT(painterPath || quadPath);
 
-    QString penName = info.strokeColor;
-    const bool noPen = penName.isEmpty() || penName == u"transparent";
+    const bool noPen = info.strokeColor == QColorConstants::Transparent;
     if (pathSelector == QQuickVectorImageGenerator::StrokePath && noPen)
         return;
 
-    const bool noFill = info.grad.type() == QGradient::NoGradient && info.fillColor == u"transparent";
+    const bool noFill = info.grad.type() == QGradient::NoGradient && info.fillColor == QColorConstants::Transparent;
+
     if (pathSelector == QQuickVectorImageGenerator::FillPath && noFill)
         return;
 
@@ -145,7 +145,7 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     if (noPen || !(pathSelector & QQuickVectorImageGenerator::StrokePath)) {
         shapePath->setStrokeColor(Qt::transparent);
     } else {
-        shapePath->setStrokeColor(QColor::fromString(penName));
+        shapePath->setStrokeColor(info.strokeColor);
         shapePath->setStrokeWidth(info.strokeWidth);
     }
 
@@ -156,7 +156,7 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     else if (info.grad.type() != QGradient::NoGradient)
         generateGradient(&info.grad, shapePath, boundingRect);
     else
-        shapePath->setFillColor(QColor::fromString(info.fillColor));
+        shapePath->setFillColor(info.fillColor);
 
     shapePath->setFillRule(fillRule);
 
@@ -179,7 +179,7 @@ void QQuickItemGenerator::generateGradient(const QGradient *grad, QQuickShapePat
     if (!shapePath)
         return;
 
-    auto setStops = [](QQuickShapeGradient *quickGrad, const QGradientStops &stops) {
+    auto setStops = [=](QQuickShapeGradient *quickGrad, const QGradientStops &stops) {
         auto stopsProp = quickGrad->stops();
         for (auto &stop : stops) {
             auto *stopObj = new QQuickGradientStop(quickGrad);
@@ -281,13 +281,13 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
         }
     }
 
-    textItem->setColor(QColor::fromString(info.color));
+    textItem->setColor(info.fillColor);
     textItem->setTextFormat(info.needsRichText ? QQuickText::RichText : QQuickText::StyledText);
     textItem->setText(info.text);
     textItem->setFont(info.font);
 
-    if (!info.strokeColor.isEmpty()) {
-        textItem->setStyleColor(QColor::fromString(info.strokeColor));
+    if (info.strokeColor != QColorConstants::Transparent) {
+        textItem->setStyleColor(info.strokeColor);
         textItem->setStyle(QQuickText::Outline);
     }
 

@@ -252,6 +252,8 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region)
     case SecondSemicolonRegion:
     case InOfTokenRegion:
     case OperatorTokenRegion:
+    case VersionRegion:
+    case EnumValueRegion:
         Q_ASSERT_X(false, "regionToString", "Using regionToString on a value or an identifier!");
         return *this;
     }

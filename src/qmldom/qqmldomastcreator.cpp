@@ -392,9 +392,18 @@ bool QQmlDomAstCreator::visit(UiPragma *el)
 
     auto fileLocation = createMap(
             DomType::Pragma, qmlFilePtr->addPragma(Pragma(el->name.toString(), valueList)), el);
+    FileLocations::addRegion(fileLocation, PragmaKeywordRegion, el->pragmaToken);
+    FileLocations::addRegion(fileLocation, IdentifierRegion, el->pragmaIdToken);
     if (el->colonToken.isValid()) {
         FileLocations::addRegion(fileLocation, ColonTokenRegion, el->colonToken);
     }
+    int i = 0;
+    for (auto t = el->values; t; t = t->next) {
+        auto subMap = createMap(fileLocation, Path().field(Fields::values).index(i), t);
+        FileLocations::addRegion(subMap, PragmaValuesRegion, t->location);
+        ++i;
+    }
+
     return true;
 }
 
@@ -409,19 +418,21 @@ bool QQmlDomAstCreator::visit(UiImport *el)
     auto envPtr = qmlFile.environment().ownerAs<DomEnvironment>();
     const bool loadDependencies =
             !envPtr->options().testFlag(DomEnvironment::Option::NoDependencies);
+    FileLocations::Tree fileLocation;
     if (el->importUri != nullptr) {
         const Import import =
                 Import::fromUriString(toString(el->importUri), v, el->importId.toString());
-        createMap(DomType::Import, qmlFilePtr->addImport(import), el);
+        fileLocation = createMap(DomType::Import, qmlFilePtr->addImport(import), el);
 
         if (loadDependencies) {
             envPtr->loadModuleDependency(import.uri.moduleUri(), import.version,
                                          DomItem::Callback());
         }
+        FileLocations::addRegion(fileLocation, ImportUriRegion, combineLocations(el->importUri));
     } else {
         const Import import =
                 Import::fromFileString(el->fileName.toString(), el->importId.toString());
-        createMap(DomType::Import, qmlFilePtr->addImport(import), el);
+        fileLocation = createMap(DomType::Import, qmlFilePtr->addImport(import), el);
 
         if (loadDependencies) {
             const QString currentFileDir =
@@ -430,11 +441,26 @@ bool QQmlDomAstCreator::visit(UiImport *el)
                                      envPtr, import.uri.absoluteLocalPath(currentFileDir)),
                              DomItem::Callback(), DomType::QmlDirectory);
         }
+        FileLocations::addRegion(fileLocation, ImportUriRegion, el->fileNameToken);
     }
     if (m_loadFileLazily && loadDependencies) {
         envPtr->loadPendingDependencies();
         envPtr->commitToBase(qmlFile.environment().item());
     }
+
+    if (el->importToken.isValid())
+        FileLocations::addRegion(fileLocation, ImportTokenRegion, el->importToken);
+
+    if (el->asToken.isValid())
+        FileLocations::addRegion(fileLocation, AsTokenRegion, el->asToken);
+
+    if (el->importIdToken.isValid())
+        FileLocations::addRegion(fileLocation, IdNameRegion, el->importIdToken);
+
+    if (el->version)
+        FileLocations::addRegion(fileLocation, VersionRegion, combineLocations(el->version));
+
+
     return true;
 }
 
@@ -468,6 +494,9 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
                                                  Path::Field(Fields::parameters).index(idx),
                                                  AttachedInfo::PathType::Relative);
             FileLocations::addRegion(argLocs, MainRegion, combineLocations(args));
+            FileLocations::addRegion(argLocs, IdentifierRegion, args->identifierToken);
+            if (args->type)
+                FileLocations::addRegion(argLocs, TypeIdentifierRegion, args->propertyTypeToken);
             args = args->next;
         }
         break;
@@ -501,6 +530,8 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
                                  el->propertyToken());
         FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion,
                                  el->identifierToken);
+        FileLocations::addRegion(nodeStack.last().fileLocations, TypeIdentifierRegion,
+                                 el->typeToken);
         FileLocations::addRegion(nodeStack.last().fileLocations, ColonTokenRegion, el->colonToken);
         if (p.name == u"id")
             qmlFile.addError(std::move(astParseErrors()
@@ -652,6 +683,8 @@ bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
     auto bodyTree = FileLocations::ensure(fLoc, Path::Field(Fields::body),
                                           AttachedInfo::PathType::Relative);
     FileLocations::addRegion(bodyTree, MainRegion, bodyLoc);
+    if (fDef->functionToken.isValid())
+        FileLocations::addRegion(fLoc, FunctionKeywordRegion, fDef->functionToken);
     if (fDef->lparenToken.length != 0)
         FileLocations::addRegion(fLoc, LeftParenthesisRegion, fDef->lparenToken);
     if (fDef->rparenToken.length != 0)
@@ -660,6 +693,8 @@ bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
         FileLocations::addRegion(fLoc, LeftBraceRegion, fDef->lbraceToken);
     if (fDef->rbraceToken.length != 0)
         FileLocations::addRegion(fLoc, RightBraceRegion, fDef->rbraceToken);
+    if (fDef->typeAnnotation)
+        FileLocations::addRegion(fLoc, TypeIdentifierRegion, combineLocations(fDef->typeAnnotation->type));
     MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
     AST::FormalParameterList *args = fDef->formals;
     while (args) {
@@ -691,6 +726,10 @@ bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
                                              Path::Field(Fields::parameters).index(idx),
                                              AttachedInfo::PathType::Relative);
         FileLocations::addRegion(argLocs, MainRegion, combineLocations(args));
+        if (args->element->identifierToken.isValid())
+            FileLocations::addRegion(argLocs, IdentifierRegion, args->element->identifierToken);
+        if (args->element->typeAnnotation)
+            FileLocations::addRegion(argLocs, TypeIdentifierRegion, combineLocations(args->element->typeAnnotation->type));
         args = args->next;
     }
     return true;
@@ -1260,6 +1299,7 @@ bool QQmlDomAstCreator::visit(AST::UiEnumDeclaration *el)
     Path enumPathFromOwner =
             current<QmlComponent>().addEnumeration(eDecl, AddOption::KeepExisting, &ePtr);
     pushEl(enumPathFromOwner, *ePtr, el);
+    FileLocations::addRegion(nodeStack.last().fileLocations, EnumKeywordRegion, el->enumToken);
     FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion, el->identifierToken);
     loadAnnotations(el);
     return true;
@@ -1282,10 +1322,10 @@ bool QQmlDomAstCreator::visit(AST::UiEnumMemberList *el)
     Path itPathFromDecl = eDecl.addValue(it);
     const auto map = createMap(DomType::EnumItem, itPathFromDecl, nullptr);
     FileLocations::addRegion(map, MainRegion, combine(el->memberToken, el->valueToken));
-    // Adding IdentifierRegion is required for finding enum members usage
-    // But qmlformat is not happy with it, thus only add this region while using qmls
-    if (m_enableScriptExpressions)
+    if (el->memberToken.isValid())
         FileLocations::addRegion(map, IdentifierRegion, el->memberToken);
+    if (el->valueToken.isValid())
+        FileLocations::addRegion(map, EnumValueRegion, el->valueToken);
     return true;
 }
 

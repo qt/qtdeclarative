@@ -14,6 +14,7 @@ QtObject {
                 push
             }] = array;
         const [a4, b4, ...[c, d]] = array;
+
         const obj = {
             _a: 1,
             _b: 2
@@ -52,6 +53,7 @@ QtObject {
                 push
             }] = array;
         [a, b, ...[c, d]] = array;
+
         const obj = {
             _a: 1,
             _b: 2
@@ -64,6 +66,7 @@ QtObject {
                 a: a1,
                 b: b1
             } = obj);
+
         const complicatedObject = {
             a: 1,
             b: {
@@ -75,6 +78,7 @@ QtObject {
             },
             g: [7, 8, 9]
         };
+
         const {
             patron,
             b: {
@@ -104,8 +108,10 @@ QtObject {
                     }
                 }
             };
+
             myLambda(myObject);
         };
+
         myFunction(({
                 a,
                 b: {

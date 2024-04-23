@@ -67,8 +67,8 @@ void QQmlDMAbstractItemModelData::setValue(const QString &role, const QVariant &
         return;
     }
 
-    QHash<QByteArray, int>::iterator it = m_type->roleNames.find(role.toUtf8());
-    if (it != m_type->roleNames.end()) {
+    const auto it = m_type->roleNames.constFind(role.toUtf8());
+    if (it != m_type->roleNames.cend()) {
         for (int i = 0; i < m_type->propertyRoles.size(); ++i) {
             if (m_type->propertyRoles.at(i) == *it) {
                 m_cachedData[i] = value;

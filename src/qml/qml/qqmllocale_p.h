@@ -171,7 +171,7 @@ public:
         return locale.standaloneDayName(index == 0 ? 7 : index, format);
     }
 
-    Q_INVOKABLE void formattedDataSize(QQmlV4Function *args) const;
+    Q_INVOKABLE void formattedDataSize(QQmlV4FunctionPtr args) const;
     Q_INVOKABLE QString formattedDataSize(
             double bytes, int precision = 2,
             QLocale::DataSizeFormats format = QLocale::DataSizeIecFormat) const
@@ -180,7 +180,7 @@ public:
                 qint64(QV4::Value::toInteger(bytes)), precision, format);
     }
 
-    Q_INVOKABLE void toString(QQmlV4Function *args) const;
+    Q_INVOKABLE void toString(QQmlV4FunctionPtr args) const;
 
     // As a special (undocumented) case, when called with no arguments,
     // just forward to QDebug. This makes it consistent with other types

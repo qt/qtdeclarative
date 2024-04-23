@@ -10,6 +10,7 @@
 #include <private/qqmljsimportvisitor_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsloadergenerator_p.h>
+#include <private/qqmljsoptimizations_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsshadowcheck_p.h>
 #include <private/qqmljsstoragegeneralizer_p.h>
@@ -774,32 +775,38 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
         return QQmlJSAotFunction();
     };
 
-    QQmlJSTypePropagator propagator(m_unitGenerator, &m_typeResolver, m_logger);
-    auto typePropagationResult = propagator.run(function, error);
-    if (error->isValid())
-        return compileError();
-
-    QQmlJSShadowCheck shadowCheck(m_unitGenerator, &m_typeResolver, m_logger);
-    shadowCheck.run(&typePropagationResult, function, error);
     if (error->isValid())
         return compileError();
 
     bool basicBlocksValidationFailed = false;
     QQmlJSBasicBlocks basicBlocks(context, m_unitGenerator, &m_typeResolver, m_logger);
-    typePropagationResult = basicBlocks.run(function, typePropagationResult, error, m_flags, basicBlocksValidationFailed);
+    auto passResult = basicBlocks.run(function, m_flags, basicBlocksValidationFailed);
+    auto &[blocks, annotations] = passResult;
+
+    QQmlJSTypePropagator propagator(m_unitGenerator, &m_typeResolver, m_logger, blocks, annotations);
+    passResult = propagator.run(function, error);
+    if (error->isValid())
+        return compileError();
+
+    QQmlJSShadowCheck shadowCheck(m_unitGenerator, &m_typeResolver, m_logger, blocks, annotations);
+    passResult = shadowCheck.run(function, error);
+    if (error->isValid())
+        return compileError();
+
+    QQmlJSOptimizations optimizer(m_unitGenerator, &m_typeResolver, m_logger, blocks, annotations,
+                                  basicBlocks.objectAndArrayDefinitions());
+    passResult = optimizer.run(function, error);
     if (error->isValid())
         return compileError();
 
     // Generalize all arguments, registers, and the return type.
-    QQmlJSStorageGeneralizer generalizer(
-                m_unitGenerator, &m_typeResolver, m_logger);
-    typePropagationResult = generalizer.run(typePropagationResult, function, error);
+    QQmlJSStorageGeneralizer generalizer(m_unitGenerator, &m_typeResolver, m_logger, blocks, annotations);
+    passResult = generalizer.run(function, error);
     if (error->isValid())
         return compileError();
 
-    QQmlJSCodeGenerator codegen(
-                context, m_unitGenerator, &m_typeResolver, m_logger);
-    QQmlJSAotFunction result = codegen.run(function, &typePropagationResult, error, basicBlocksValidationFailed);
+    QQmlJSCodeGenerator codegen(context, m_unitGenerator, &m_typeResolver, m_logger, blocks, annotations);
+    QQmlJSAotFunction result = codegen.run(function, error, basicBlocksValidationFailed);
     return error->isValid() ? compileError() : result;
 }
 

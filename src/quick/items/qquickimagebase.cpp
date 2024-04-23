@@ -165,6 +165,7 @@ void QQuickImageBase::setSourceClipRect(const QRectF &r)
         return;
 
     d->sourceClipRect = r;
+    d->providerOptions.setSourceClipRect(r);
     emit sourceClipRectChanged();
     if (isComponentComplete())
         load();

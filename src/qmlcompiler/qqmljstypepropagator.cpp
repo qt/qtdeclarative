@@ -28,13 +28,15 @@ using namespace Qt::StringLiterals;
 
 QQmlJSTypePropagator::QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                                            const QQmlJSTypeResolver *typeResolver,
-                                           QQmlJSLogger *logger,  QQmlSA::PassManager *passManager)
-    : QQmlJSCompilePass(unitGenerator, typeResolver, logger),
+                                           QQmlJSLogger *logger, BasicBlocks basicBlocks,
+                                           InstructionAnnotations annotations,
+                                           QQmlSA::PassManager *passManager)
+    : QQmlJSCompilePass(unitGenerator, typeResolver, logger, basicBlocks, annotations),
       m_passManager(passManager)
 {
 }
 
-QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
+QQmlJSCompilePass::BlocksAndAnnotations QQmlJSTypePropagator::run(
         const Function *function, QQmlJS::DiagnosticMessage *error)
 {
     m_function = function;
@@ -48,6 +50,7 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
 
         m_prevStateAnnotations = m_state.annotations;
         m_state = PassState();
+        m_state.annotations = m_annotations;
         m_state.State::operator=(initialState(m_function));
 
         reset();
@@ -58,7 +61,7 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
         // This means that we won't start over for the same reason again.
     } while (m_state.needsMorePasses);
 
-    return m_state.annotations;
+    return { std::move(m_basicBlocks), std::move(m_state.annotations) };
 }
 
 #define INSTR_PROLOGUE_NOT_IMPLEMENTED()                                              \
@@ -882,6 +885,22 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
     }
 
     if (m_state.accumulatorOut().isProperty()) {
+        const QQmlJSScope::ConstPtr mathObject
+                = m_typeResolver->jsGlobalObject()->property(u"Math"_s).type();
+        if (m_typeResolver->registerContains(m_state.accumulatorIn(), mathObject)) {
+            QQmlJSMetaProperty prop;
+            prop.setPropertyName(propertyName);
+            prop.setTypeName(u"double"_s);
+            prop.setType(m_typeResolver->realType());
+            setAccumulator(
+                QQmlJSRegisterContent::create(
+                    m_typeResolver->realType(), prop, m_state.accumulatorIn().resultLookupIndex(), lookupIndex,
+                    QQmlJSRegisterContent::GenericObjectProperty, mathObject)
+            );
+
+            return;
+        }
+
         if (m_typeResolver->registerContains(
                     m_state.accumulatorOut(), m_typeResolver->voidType())) {
             setError(u"Type %1 does not have a property %2 for reading"_s
@@ -1113,20 +1132,33 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
                 = m_typeResolver->globalType(m_typeResolver->stringType());
 
         if (argc > 0) {
-            const QQmlJSScope::ConstPtr firstArg
-                    = m_typeResolver->containedType(m_state.registers[argv].content);
-            if (firstArg->isReferenceType()) {
+            const QQmlJSRegisterContent firstContent = m_state.registers[argv].content;
+            const QQmlJSScope::ConstPtr firstArg = m_typeResolver->containedType(firstContent);
+            switch (firstArg->accessSemantics()) {
+            case QQmlJSScope::AccessSemantics::Reference:
                 // We cannot know whether this will be a logging category at run time.
                 // Therefore we always pass any object types as special last argument.
                 addReadRegister(argv, m_typeResolver->globalType(
                                     m_typeResolver->genericType(firstArg)));
-            } else {
+                break;
+            case QQmlJSScope::AccessSemantics::Sequence:
+                addReadRegister(argv, firstContent);
+                break;
+            default:
                 addReadRegister(argv, stringType);
+                break;
             }
         }
 
-        for (int i = 1; i < argc; ++i)
-            addReadRegister(argv + i, stringType);
+        for (int i = 1; i < argc; ++i) {
+            const QQmlJSRegisterContent argContent = m_state.registers[argv + i].content;
+            const QQmlJSScope::ConstPtr arg = m_typeResolver->containedType(argContent);
+            addReadRegister(
+                    argv + i,
+                    arg->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+                            ? argContent
+                            : stringType);
+        }
 
         m_state.setHasSideEffects(true);
         setAccumulator(m_typeResolver->returnType(
@@ -1561,6 +1593,7 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
     const auto valueType = m_typeResolver->globalType(valueContained);
 
     const bool canHaveSideEffects = (baseType.isProperty() && baseType.isWritable())
+            || baseContained->isListProperty()
             || baseType.isConversion();
 
     const auto setReturnType = [&](const QQmlJSScope::ConstPtr type) {

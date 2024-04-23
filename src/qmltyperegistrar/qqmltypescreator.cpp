@@ -23,7 +23,7 @@ using namespace Constants;
 using namespace Constants::DotQmltypes;
 using namespace QAnyStringViewUtils;
 
-static QString convertPrivateClassToUsableForm(const QCborValue &s)
+static QString convertPrivateClassToUsableForm(QAnyStringView s)
 {
     // typical privateClass entry in MOC looks like: ClassName::d_func(), where
     // ClassName is a non-private class name. we don't need "::d_func()" piece
@@ -158,13 +158,8 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         m_qml.writeStringBinding(S_ATTACHED_TYPE, collector.attachedType);
 }
 
-void QmlTypesCreator::writeType(const QCborMap &property, QLatin1StringView key)
+void QmlTypesCreator::writeType(QAnyStringView type)
 {
-    auto it = property.find(key);
-    if (it == property.end())
-        return;
-
-    QAnyStringView type = toStringView(it.value());
     if (type.isEmpty() || type == "void")
         return;
 
@@ -239,100 +234,87 @@ void QmlTypesCreator::writeType(const QCborMap &property, QLatin1StringView key)
         m_qml.writeBooleanBinding(S_IS_CONSTANT, true);
 }
 
-void QmlTypesCreator::writeProperties(const QCborArray &properties)
+void QmlTypesCreator::writeProperties(const Property::Container &properties)
 {
-    for (const QCborValue &property : properties) {
-        const QCborMap obj = property.toMap();
-        const QAnyStringView name = toStringView(obj, MetatypesDotJson::S_NAME);
+    for (const Property &obj : properties) {
+        const QAnyStringView name = obj.name;
         m_qml.writeStartObject(S_PROPERTY);
         m_qml.writeStringBinding(S_NAME, name);
-        const auto it = obj.find(MetatypesDotJson::S_REVISION);
-        if (it != obj.end())
-            m_qml.writeNumberBinding(S_REVISION, it.value().toInteger());
+        if (obj.revision.isValid())
+            m_qml.writeNumberBinding(S_REVISION, obj.revision.toEncodedVersion<int>());
 
-        writeType(obj, MetatypesDotJson::S_TYPE);
+        writeType(obj.type);
 
-        const auto bindable = obj.constFind(MetatypesDotJson::S_BINDABLE);
-        if (bindable != obj.constEnd())
-            m_qml.writeStringBinding(S_BINDABLE, toStringView(bindable.value()));
-        const auto read = obj.constFind(MetatypesDotJson::S_READ);
-        if (read != obj.constEnd())
-            m_qml.writeStringBinding(S_READ, toStringView(read.value()));
-        const auto write = obj.constFind(MetatypesDotJson::S_WRITE);
-        if (write != obj.constEnd())
-            m_qml.writeStringBinding(S_WRITE, toStringView(write.value()));
-        const auto reset = obj.constFind(MetatypesDotJson::S_RESET);
-        if (reset != obj.constEnd())
-            m_qml.writeStringBinding(S_RESET, toStringView(reset.value()));
-        const auto notify = obj.constFind(MetatypesDotJson::S_NOTIFY);
-        if (notify != obj.constEnd())
-            m_qml.writeStringBinding(S_NOTIFY, toStringView(notify.value()));
-        const auto index = obj.constFind(MetatypesDotJson::S_INDEX);
-        if (index != obj.constEnd()) {
-            m_qml.writeNumberBinding(S_INDEX, index.value().toInteger());
+        const auto bindable = obj.bindable;
+        if (!bindable.isEmpty())
+            m_qml.writeStringBinding(S_BINDABLE, bindable);
+        const auto read = obj.read;
+        if (!read.isEmpty())
+            m_qml.writeStringBinding(S_READ, read);
+        const auto write = obj.write;
+        if (!write.isEmpty())
+            m_qml.writeStringBinding(S_WRITE, write);
+        const auto reset = obj.reset;
+        if (!reset.isEmpty())
+            m_qml.writeStringBinding(S_RESET, reset);
+        const auto notify = obj.notify;
+        if (!notify.isEmpty())
+            m_qml.writeStringBinding(S_NOTIFY, notify);
+        const auto index = obj.index;
+        if (index != -1) {
+            m_qml.writeNumberBinding(S_INDEX, index);
         }
-        const auto privateClass = obj.constFind(MetatypesDotJson::S_PRIVATE_CLASS);
-        if (privateClass != obj.constEnd()) {
+        const auto privateClass = obj.privateClass;
+        if (!privateClass.isEmpty()) {
             m_qml.writeStringBinding(
-                    S_PRIVATE_CLASS, convertPrivateClassToUsableForm(privateClass.value()));
+                    S_PRIVATE_CLASS, convertPrivateClassToUsableForm(privateClass));
         }
 
-        if (!obj.contains(MetatypesDotJson::S_WRITE) && !obj.contains(MetatypesDotJson::S_MEMBER))
+        if (obj.write.isEmpty() && obj.member.isEmpty())
             m_qml.writeBooleanBinding(S_IS_READONLY, true);
 
-        const auto final = obj.constFind(MetatypesDotJson::S_FINAL);
-        if (final != obj.constEnd() && final->toBool())
+        if (obj.isFinal)
             m_qml.writeBooleanBinding(S_IS_FINAL, true);
 
-        const auto constant = obj.constFind(MetatypesDotJson::S_CONSTANT);
-        if (constant != obj.constEnd() && constant->toBool())
+        if (obj.isConstant)
             m_qml.writeBooleanBinding(S_IS_CONSTANT, true);
 
-        const auto required = obj.constFind(MetatypesDotJson::S_REQUIRED);
-        if (required != obj.constEnd() && required->toBool())
+        if (obj.isRequired)
             m_qml.writeBooleanBinding(S_IS_REQUIRED, true);
 
         m_qml.writeEndObject();
     }
 }
 
-void QmlTypesCreator::writeMethods(const QCborArray &methods, QLatin1StringView type)
+void QmlTypesCreator::writeMethods(const Method::Container &methods, QLatin1StringView type)
 {
-    const auto writeFlag
-            = [this](QLatin1StringView key, QLatin1StringView name, const QCborMap &obj) {
-        const auto flag = obj.find(key);
-        if (flag != obj.constEnd() && flag->toBool())
-            m_qml.writeBooleanBinding(name, true);
-    };
-
-    for (const QCborValue &method : methods) {
-        const QCborMap obj = method.toMap();
-        const QAnyStringView name = toStringView(obj, MetatypesDotJson::S_NAME);
+    for (const Method &obj : methods) {
+        const QAnyStringView name = obj.name;
         if (name.isEmpty())
             continue;
-        const QCborArray arguments = obj[MetatypesDotJson::S_ARGUMENTS].toArray();
-        const auto revision = obj.find(MetatypesDotJson::S_REVISION);
+
+        const auto revision = obj.revision;
         m_qml.writeStartObject(type);
         m_qml.writeStringBinding(S_NAME, name);
-        if (revision != obj.end())
-            m_qml.writeNumberBinding(S_REVISION, revision.value().toInteger());
-        writeType(obj, MetatypesDotJson::S_RETURN_TYPE);
+        if (revision.isValid())
+            m_qml.writeNumberBinding(S_REVISION, revision.toEncodedVersion<int>());
+        writeType(obj.returnType);
 
-        writeFlag(MetatypesDotJson::S_IS_CLONED, S_IS_CLONED, obj);
-        writeFlag(MetatypesDotJson::S_IS_CONSTRUCTOR, S_IS_CONSTRUCTOR, obj);
-        writeFlag(MetatypesDotJson::S_IS_JAVASCRIPT_FUNCTION, S_IS_JAVASCRIPT_FUNCTION, obj);
+        if (obj.isCloned)
+            m_qml.writeBooleanBinding(S_IS_CLONED, true);
+        if (obj.isConstructor)
+            m_qml.writeBooleanBinding(S_IS_CONSTRUCTOR, true);
+        if (obj.isJavaScriptFunction)
+            m_qml.writeBooleanBinding(S_IS_JAVASCRIPT_FUNCTION, true);
 
+        const Argument::Container &arguments = obj.arguments;
         for (qsizetype i = 0, end = arguments.size(); i != end; ++i) {
-            const QCborMap obj = arguments[i].toMap();
-            if (i == 0 && end == 1 && obj[MetatypesDotJson::S_TYPE] == QLatin1String("QQmlV4Function*")) {
-                m_qml.writeBooleanBinding(S_IS_JAVASCRIPT_FUNCTION, true);
-                break;
-            }
+            const Argument &obj = arguments[i];
             m_qml.writeStartObject(S_PARAMETER);
-            const QAnyStringView name = toStringView(obj, MetatypesDotJson::S_NAME);
+            const QAnyStringView name = obj.name;
             if (!name.isEmpty())
                 m_qml.writeStringBinding(S_NAME, name);
-            writeType(obj, MetatypesDotJson::S_TYPE);
+            writeType(obj.type);
             m_qml.writeEndObject();
         }
         m_qml.writeEndObject();
@@ -340,87 +322,70 @@ void QmlTypesCreator::writeMethods(const QCborArray &methods, QLatin1StringView 
 }
 
 void QmlTypesCreator::writeEnums(
-        const QCborArray &enums, QmlTypesCreator::EnumClassesMode enumClassesMode)
+        const Enum::Container &enums, QmlTypesCreator::EnumClassesMode enumClassesMode)
 {
-    for (const QCborValue &item : enums) {
-        const QCborMap obj = item.toMap();
-        const QCborArray values = obj.value(MetatypesDotJson::S_VALUES).toArray();
-        QList<QAnyStringView> valueList;
-
-        for (const QCborValue &value : values)
-            valueList.append(toStringView(value));
-
+    for (const Enum &obj : enums) {
         m_qml.writeStartObject(S_ENUM);
-        m_qml.writeStringBinding(S_NAME, toStringView(obj, MetatypesDotJson::S_NAME));
-        auto alias = obj.find(MetatypesDotJson::S_ALIAS);
-        if (alias != obj.end())
-            m_qml.writeStringBinding(S_ALIAS, toStringView(alias.value()));
-        auto isFlag = obj.find(MetatypesDotJson::S_IS_FLAG);
-        if (isFlag != obj.end() && isFlag->toBool())
+        m_qml.writeStringBinding(S_NAME, obj.name);
+        if (!obj.alias.isEmpty())
+            m_qml.writeStringBinding(S_ALIAS, obj.alias);
+        if (obj.isFlag)
             m_qml.writeBooleanBinding(S_IS_FLAG, true);
 
         if (enumClassesMode == EnumClassesMode::Scoped) {
-            const auto isClass = obj.find(MetatypesDotJson::S_IS_CLASS);
-            if (isClass != obj.end() && isClass->toBool())
+            if (obj.isClass)
                 m_qml.writeBooleanBinding(S_IS_SCOPED, true);
         }
 
-        writeType(obj, MetatypesDotJson::S_TYPE);
-        m_qml.writeStringListBinding(S_VALUES, valueList);
+        writeType(obj.type);
+        m_qml.writeStringListBinding(S_VALUES, obj.values);
         m_qml.writeEndObject();
     }
 }
 
-static bool isAllowedInMajorVersion(const QCborValue &member, QTypeRevision maxMajorVersion)
+template<typename Member>
+bool isAllowedInMajorVersion(const Member &memberObject, QTypeRevision maxMajorVersion)
 {
-    const auto memberObject = member.toMap();
-    const auto it = memberObject.find(MetatypesDotJson::S_REVISION);
-    if (it == memberObject.end())
-        return true;
-
-    const QTypeRevision memberRevision = QTypeRevision::fromEncodedVersion(it->toInteger());
+    const QTypeRevision memberRevision = memberObject.revision;
     return !memberRevision.hasMajorVersion()
             || memberRevision.majorVersion() <= maxMajorVersion.majorVersion();
 }
 
-template<typename Postprocess>
-QCborArray members(
-        const QCborMap &classDef, QLatin1StringView key, QTypeRevision maxMajorVersion,
-        Postprocess &&process)
+template<typename Members, typename Postprocess>
+Members members(const Members &candidates, QTypeRevision maxMajorVersion, Postprocess &&process)
 {
-    QCborArray classDefMembers;
+    Members classDefMembers;
 
-    const QCborArray candidates = classDef.value(key).toArray();
-    for (QCborValue member : candidates) {
+    for (const auto &member : candidates) {
         if (isAllowedInMajorVersion(member, maxMajorVersion))
-            classDefMembers.append(process(std::move(member)));
+            classDefMembers.push_back(process(member));
     }
 
     return classDefMembers;
 }
 
-static QCborArray members(
-        const QCborMap &classDef, QLatin1StringView key, QTypeRevision maxMajorVersion)
+template<typename Members>
+Members members(const Members &candidates, QTypeRevision maxMajorVersion)
 {
-    return members(classDef, key, maxMajorVersion, [](QCborValue &&member) { return member; });
+    return members(candidates, maxMajorVersion, [](const auto &member) { return member; });
 }
 
-static QCborArray constructors(
-        const QCborMap &classDef, QLatin1StringView key, QTypeRevision maxMajorVersion)
+template<typename Members>
+Members constructors(const Members &candidates, QTypeRevision maxMajorVersion)
 {
-    return members(classDef, key, maxMajorVersion, [](QCborValue &&member) {
-        QCborMap ctor = member.toMap();
-        ctor[MetatypesDotJson::S_IS_CONSTRUCTOR] = true;
+    return members(candidates, maxMajorVersion, [](const auto &member) {
+        auto ctor = member;
+        ctor.isConstructor = true;
         return ctor;
     });
 }
 
-void QmlTypesCreator::writeRootMethods(const QCborMap &classDef)
+void QmlTypesCreator::writeRootMethods(const MetaType &classDef)
 {
     // Hide destroyed() signals
-    QCborArray componentSignals = members(classDef, MetatypesDotJson::S_SIGNALS, m_version);
+    Method::Container componentSignals = members(classDef.sigs(), m_version);
     for (auto it = componentSignals.begin(); it != componentSignals.end();) {
-        if (toStringView(it->toMap(), MetatypesDotJson::S_NAME) == "destroyed"_L1)
+        if (it->name == "destroyed"_L1)
             it = componentSignals.erase(it);
         else
             ++it;
@@ -428,47 +393,44 @@ void QmlTypesCreator::writeRootMethods(const QCborMap &classDef)
     writeMethods(componentSignals, S_SIGNAL);
 
     // Hide deleteLater() methods
-    QCborArray componentMethods = members(classDef, MetatypesDotJson::S_METHODS, m_version)
-            + members(classDef, MetatypesDotJson::S_SLOTS, m_version);
+    Method::Container componentMethods = members(classDef.methods(), m_version);
     for (auto it = componentMethods.begin(); it != componentMethods.end();) {
-        if (toStringView(it->toMap(), MetatypesDotJson::S_NAME) == "deleteLater"_L1)
+        if (it->name == "deleteLater"_L1)
             it = componentMethods.erase(it);
         else
             ++it;
     }
 
     // Add toString()
-    QCborMap toStringMethod;
-    toStringMethod.insert(MetatypesDotJson::S_NAME, "toString"_L1);
-    toStringMethod.insert(MetatypesDotJson::S_ACCESS, MetatypesDotJson::S_PUBLIC);
-    toStringMethod.insert(MetatypesDotJson::S_RETURN_TYPE, "QString"_L1);
-    componentMethods.append(toStringMethod);
+    Method toStringMethod;
+    toStringMethod.name = "toString"_L1;
+    toStringMethod.access = Access::Public;
+    toStringMethod.returnType = "QString"_L1;
+    componentMethods.push_back(std::move(toStringMethod));
 
     // Add destroy(int)
-    QCborMap destroyMethodWithArgument;
-    destroyMethodWithArgument.insert(MetatypesDotJson::S_NAME, "destroy"_L1);
-    destroyMethodWithArgument.insert(MetatypesDotJson::S_ACCESS, MetatypesDotJson::S_PUBLIC);
-    QCborMap delayArgument;
-    delayArgument.insert(MetatypesDotJson::S_NAME, "delay"_L1);
-    delayArgument.insert(MetatypesDotJson::S_TYPE, "int"_L1);
-    QCborArray destroyArguments;
-    destroyArguments.append(delayArgument);
-    destroyMethodWithArgument.insert(MetatypesDotJson::S_ARGUMENTS, destroyArguments);
-    componentMethods.append(destroyMethodWithArgument);
+    Method destroyMethodWithArgument;
+    destroyMethodWithArgument.name = "destroy"_L1;
+    destroyMethodWithArgument.access = Access::Public;
+    Argument delayArgument;
+    delayArgument.name = "delay"_L1;
+    delayArgument.type = "int"_L1;
+    destroyMethodWithArgument.arguments.push_back(std::move(delayArgument));
+    componentMethods.push_back(std::move(destroyMethodWithArgument));
 
     // Add destroy()
-    QCborMap destroyMethod;
-    destroyMethod.insert(MetatypesDotJson::S_NAME, "destroy"_L1);
-    destroyMethod.insert(MetatypesDotJson::S_ACCESS, MetatypesDotJson::S_PUBLIC);
-    destroyMethod.insert(MetatypesDotJson::S_IS_CLONED, true);
-    componentMethods.append(destroyMethod);
+    Method destroyMethod;
+    destroyMethod.name = "destroy"_L1;
+    destroyMethod.access = Access::Public;
+    destroyMethod.isCloned = true;
+    componentMethods.push_back(std::move(destroyMethod));
 
     writeMethods(componentMethods, S_METHOD);
 };
 
 void QmlTypesCreator::writeComponents()
 {
-    for (const QCborMap &component : std::as_const(m_ownTypes)) {
+    for (const MetaType &component : std::as_const(m_ownTypes)) {
         QmlTypesClassDescription collector;
         collector.collect(component, m_ownTypes, m_foreignTypes,
                           QmlTypesClassDescription::TopLevel, m_version);
@@ -477,32 +439,30 @@ void QmlTypesCreator::writeComponents()
 
         writeClassProperties(collector);
 
-        if (const QCborMap &classDef = collector.resolvedClass; !classDef.isEmpty()) {
+        if (const MetaType &classDef = collector.resolvedClass; !classDef.isEmpty()) {
             writeEnums(
-                    members(classDef, MetatypesDotJson::S_ENUMS, m_version),
+                    classDef.enums(),
                     collector.registerEnumClassesScoped
                             ? EnumClassesMode::Scoped
                             : EnumClassesMode::Unscoped);
 
-            writeProperties(members(classDef, MetatypesDotJson::S_PROPERTIES, m_version));
+            writeProperties(members(classDef.properties(), m_version));
 
             if (collector.isRootClass) {
                 writeRootMethods(classDef);
             } else {
-                writeMethods(members(classDef, MetatypesDotJson::S_SIGNALS, m_version), S_SIGNAL);
-                writeMethods(members(classDef, MetatypesDotJson::S_SLOTS, m_version), S_METHOD);
-                writeMethods(members(classDef, MetatypesDotJson::S_METHODS, m_version), S_METHOD);
+                writeMethods(members(classDef.sigs(), m_version), S_SIGNAL);
+                writeMethods(members(classDef.methods(), m_version), S_METHOD);
             }
 
-            writeMethods(constructors(classDef, MetatypesDotJson::S_CONSTRUCTORS, m_version),
-                         S_METHOD);
+            writeMethods(constructors(classDef.constructors(), m_version), S_METHOD);
         }
         m_qml.writeEndObject();
 
         if (collector.resolvedClass != component
                 && std::binary_search(
                     m_referencedTypes.begin(), m_referencedTypes.end(),
-                    toStringView(component, MetatypesDotJson::S_QUALIFIED_CLASS_NAME))) {
+                    component.qualifiedClassName())) {
 
             // This type is referenced from elsewhere and has a QML_FOREIGN of its own. We need to
             // also generate a description of the local type then. All the QML_* macros are
@@ -515,18 +475,16 @@ void QmlTypesCreator::writeComponents()
 
             writeClassProperties(collector);
             writeEnums(
-                    members(component, MetatypesDotJson::S_ENUMS, m_version),
+                    component.enums(),
                     collector.registerEnumClassesScoped
                             ? EnumClassesMode::Scoped
                             : EnumClassesMode::Unscoped);
 
-            writeProperties(members(component, MetatypesDotJson::S_PROPERTIES, m_version));
+            writeProperties(members(component.properties(), m_version));
 
-            writeMethods(members(component, MetatypesDotJson::S_SIGNALS, m_version), S_SIGNAL);
-            writeMethods(members(component, MetatypesDotJson::S_SLOTS, m_version), S_METHOD);
-            writeMethods(members(component, MetatypesDotJson::S_METHODS, m_version), S_METHOD);
-            writeMethods(constructors(component, MetatypesDotJson::S_CONSTRUCTORS, m_version),
-                         S_METHOD);
+            writeMethods(members(component.sigs(), m_version), S_SIGNAL);
+            writeMethods(members(component.methods(), m_version), S_METHOD);
+            writeMethods(constructors(component.constructors(), m_version), S_METHOD);
 
             m_qml.writeEndObject();
         }

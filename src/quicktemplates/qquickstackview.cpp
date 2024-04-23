@@ -567,7 +567,7 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
 
     \sa initialItem, {Pushing Items}
 */
-void QQuickStackView::push(QQmlV4Function *args)
+void QQuickStackView::push(QQmlV4FunctionPtr args)
 {
     Q_D(QQuickStackView);
     const QString operationName = QStringLiteral("push");
@@ -681,7 +681,7 @@ void QQuickStackView::push(QQmlV4Function *args)
 
     \sa clear(), {Popping Items}, {Unwinding Items via Pop}
 */
-void QQuickStackView::pop(QQmlV4Function *args)
+void QQuickStackView::pop(QQmlV4FunctionPtr args)
 {
     Q_D(QQuickStackView);
     const QString operationName = QStringLiteral("pop");
@@ -853,7 +853,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
 
     \sa push(), {Replacing Items}
 */
-void QQuickStackView::replace(QQmlV4Function *args)
+void QQuickStackView::replace(QQmlV4FunctionPtr args)
 {
     Q_D(QQuickStackView);
     const QString operationName = QStringLiteral("replace");

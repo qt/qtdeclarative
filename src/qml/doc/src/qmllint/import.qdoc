@@ -58,7 +58,7 @@ the QML tooling will not find it until you build it.
 
 \note If building the module does not help when using \l{\QMLLS Reference}{\QMLLS}, follow the
 instructions in
-\l{Setting up the QML Language Server in Your Editor}{\QMLLS setup instructions}
+\l{Setting up the \QMLLS in Your Editor}{\QMLLS setup instructions}
 and make sure that you communicate the correct build folder to \QMLLS.
 
 \section3 Wrong Import Path

@@ -629,8 +629,7 @@ void QQmlJSImportVisitor::processDefaultProperties()
         if (!isTypeResolved(propType, handleUnresolvedDefaultProperty))
             continue;
 
-        const auto scopes = *it;
-        for (const auto &scope : scopes) {
+        for (const QQmlJSScope::Ptr &scope : std::as_const(*it)) {
             if (!isTypeResolved(scope))
                 continue;
 
@@ -1591,6 +1590,8 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         QQmlJSMetaMethod method;
         method.setMethodType(QQmlJSMetaMethodType::Signal);
         method.setMethodName(publicMember->name.toString());
+        method.setSourceLocation(combine(publicMember->firstSourceLocation(),
+                                         publicMember->lastSourceLocation()));
         while (param) {
             method.addParameter(
                     QQmlJSMetaParameter(
@@ -1726,6 +1727,7 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
     if (!name.isEmpty()) {
         QQmlJSMetaMethod method(name);
         method.setMethodType(QQmlJSMetaMethodType::Method);
+        method.setSourceLocation(combine(fexpr->firstSourceLocation(), fexpr->lastSourceLocation()));
 
         if (!m_pendingMethodAnnotations.isEmpty()) {
             method.setAnnotations(m_pendingMethodAnnotations);
@@ -1898,7 +1900,10 @@ QQmlJSImportVisitor::parseBindingExpression(const QString &name,
         QQmlJSMetaPropertyBinding binding(location, name);
         binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
                                  QQmlSA::ScriptBindingKind::PropertyBinding);
-        m_bindings.append(UnfinishedBinding { m_currentScope, [=]() { return binding; } });
+        m_bindings.append(UnfinishedBinding {
+            m_currentScope,
+            [binding = std::move(binding)]() { return binding; }
+        });
         return BindingExpressionParseResult::Script;
     }
 
@@ -2245,8 +2250,11 @@ void QQmlJSImportVisitor::endVisit(UiArrayBinding *arrayBinding)
         QQmlJSMetaPropertyBinding binding(element->firstSourceLocation(), propertyName);
         binding.setObject(getScopeName(type, QQmlSA::ScopeType::QMLScope),
                           QQmlJSScope::ConstPtr(type));
-        m_bindings.append(UnfinishedBinding { m_currentScope, [=]() { return binding; },
-                                              QQmlJSScope::ListPropertyTarget });
+        m_bindings.append(UnfinishedBinding {
+            m_currentScope,
+            [binding = std::move(binding)]() { return binding; },
+            QQmlJSScope::ListPropertyTarget
+        });
     }
 }
 
@@ -2342,7 +2350,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
         }
     }
 
-    auto filename = import->fileName.toString();
+    const QString filename = import->fileName.toString();
     if (!filename.isEmpty()) {
         const QUrl url(filename);
         const QString scheme = url.scheme();
