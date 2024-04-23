@@ -30,6 +30,8 @@ public:
     bool visible = false;
     bool visibleExplicitlySet = false;
     QQuickWindow::Visibility visibility = QQuickWindow::AutomaticVisibility;
+    bool visibilityExplicitlySet = false;
+
     QV4::PersistentValue rootItemMarker;
 
     QMetaObject::Connection itemParentWindowChangeListener;

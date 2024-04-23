@@ -549,6 +549,8 @@ private slots:
     void visibleVsVisibility_data();
     void visibleVsVisibility();
 
+    void visibilityDoesntClobberWindowState();
+
     void eventTypes();
 
 private:
@@ -4137,6 +4139,40 @@ void tst_qquickwindow::visibleVsVisibility()
     QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
     QCOMPARE(window->isVisible(), expectVisible);
+}
+
+void tst_qquickwindow::visibilityDoesntClobberWindowState()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("visibilityDoesntClobberWindowState.qml"));
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
+
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
+    QVERIFY(window);
+
+    window->showMaximized();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QCOMPARE(window->windowState(), Qt::WindowMaximized);
+
+    window->setProperty("visible", false);
+    window->setProperty("visible", true);
+
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QCOMPARE(window->windowState(), Qt::WindowMaximized);
+
+    EventFilter eventFilter;
+    window->installEventFilter(&eventFilter);
+    window->setProperty("visibility", QWindow::FullScreen);
+    QTRY_VERIFY(eventFilter.events.contains(QEvent::WindowStateChange));
+    QCOMPARE(window->windowState(), Qt::WindowFullScreen);
+
+    eventFilter.events.clear();
+    window->setWindowState(Qt::WindowMaximized);
+    QTRY_VERIFY(eventFilter.events.contains(QEvent::WindowStateChange));
+    QTRY_COMPARE(window->windowState(), Qt::WindowMaximized);
 }
 
 void tst_qquickwindow::eventTypes()
