@@ -154,10 +154,14 @@ void tst_qmlls_highlighting::highlights_data()
         if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
             return file;
         QString code = f.readAll();
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+
         auto envPtr = DomEnvironment::create(
                 QStringList(),
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies, options);
         envPtr->loadFile(FileToLoad::fromMemory(envPtr, filePath, code),
                          [&file](Path, const DomItem &, const DomItem &newIt) {
                              file = newIt.fileObject();
@@ -358,6 +362,29 @@ void tst_qmlls_highlighting::highlights_data()
         QTest::addRow("function-rtn-type")
                 << fileItem
                 << Token(QQmlJS::SourceLocation(216, 3, 10, 26), int(SemanticTokenTypes::Type), 0);
+    }
+    { // literals
+        const auto filePath = m_highlightingDataDir + "/literals.qml";
+        const auto fileItem = fileObject(filePath);
+
+        QTest::addRow("number") << fileItem
+                                << Token(QQmlJS::SourceLocation(155, 3, 7, 21),
+                                         int(SemanticTokenTypes::Number), 0);
+        QTest::addRow("singleline-string")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(182, 8, 8, 24), int(SemanticTokenTypes::String), 0);
+        QTest::addRow("multiline-string-first")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(214, 6, 9, 24), int(SemanticTokenTypes::String), 0);
+        QTest::addRow("multiline-string-second") << fileItem
+                                                 << Token(QQmlJS::SourceLocation(221, 16, 10, 1),
+                                                          int(SemanticTokenTypes::String), 0);
+        QTest::addRow("boolean") << fileItem
+                                 << Token(QQmlJS::SourceLocation(260, 4, 11, 22),
+                                          int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("null") << fileItem
+                              << Token(QQmlJS::SourceLocation(285, 4, 12, 21),
+                                       int(SemanticTokenTypes::Keyword), 0);
     }
 }
 

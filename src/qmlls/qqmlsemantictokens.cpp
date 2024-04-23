@@ -128,6 +128,10 @@ bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
         highlightMethod(item);
         return true;
     }
+    case DomType::ScriptLiteral: {
+        highlightScriptLiteral(item);
+        return true;
+    }
     default:
         return true;
     }
@@ -326,6 +330,30 @@ void HighlightingVisitor::highlightMethod(const DomItem &item)
         m_highlights.addHighlight(paramRegions[TypeIdentifierRegion], int(SemanticTokenTypes::Type));
     }
     return;
+}
+
+void HighlightingVisitor::highlightScriptLiteral(const DomItem &item)
+{
+    const auto literal = item.as<ScriptElements::Literal>();
+    Q_ASSERT(literal);
+    const auto fLocs = FileLocations::treeOf(item);
+    if (!fLocs)
+        return;
+    const auto regions = fLocs->info().regions;
+    if (std::holds_alternative<QString>(literal->literalValue())) {
+        const QString value = '\"' + std::get<QString>(literal->literalValue()) + '\"';
+        const auto &locs = HighlightingUtils::sourceLocationsFromMultiLineToken(
+                value, regions[MainRegion]);
+        for (const auto &loc : locs)
+            m_highlights.addHighlight(loc, int(SemanticTokenTypes::String));
+    } else if (std::holds_alternative<double>(literal->literalValue()))
+        m_highlights.addHighlight(regions[MainRegion], int(SemanticTokenTypes::Number));
+    else if (std::holds_alternative<bool>(literal->literalValue()))
+        m_highlights.addHighlight(regions[MainRegion], int(SemanticTokenTypes::Keyword));
+    else if (std::holds_alternative<std::nullptr_t>(literal->literalValue()))
+        m_highlights.addHighlight(regions[MainRegion], int(SemanticTokenTypes::Keyword));
+    else
+        qCWarning(semanticTokens) << "Invalid literal variant";
 }
 
 /*! \internal
