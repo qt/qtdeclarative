@@ -3,6 +3,7 @@
 
 #include "tst_qmlls_modules.h"
 #include "QtQmlLS/private/qqmllsutils_p.h"
+#include "QtQmlLS/private/qqmlsemantictokens_p.h"
 #include <algorithm>
 #include <memory>
 #include <optional>
@@ -1492,6 +1493,70 @@ void tst_qmlls_modules::quickFixes()
     });
 
     QTRY_VERIFY_WITH_TIMEOUT(codeActionOk, 5000);
+}
+
+void tst_qmlls_modules::semanticHighlightingFull_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addRow("bigfile") << u"highlighting/bigFile.qml"_s;
+}
+
+void tst_qmlls_modules::semanticHighlightingFull()
+{
+    QFETCH(QString, filePath);
+
+    const auto fileObject = [](const QString &filePath){
+        QFile f(filePath);
+        DomItem file;
+        if (!f.open(QIODevice::ReadOnly))
+            return file;
+        QString code = f.readAll();
+        QQmlJS::Dom::DomCreationOptions options;
+        options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+        options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+        options.setFlag(QQmlJS::Dom::DomCreationOption::WithRecovery);
+
+        QStringList dirs = {QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath)};
+        auto envPtr = QQmlJS::Dom::DomEnvironment::create(dirs,
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies, options);
+        envPtr->loadBuiltins();
+        envPtr->loadFile(QQmlJS::Dom::FileToLoad::fromMemory(envPtr, filePath, code),
+                         [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &, const QQmlJS::Dom::DomItem &newIt) {
+                             file = newIt.fileObject();
+                         });
+        envPtr->loadPendingDependencies();
+        return file;
+    };
+
+    const auto item = fileObject(testFile(filePath));
+    Highlights highlights;
+    const auto expectedData = highlights.collectTokens(item);
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    QLspSpecification::SemanticTokensParams params;
+    params.textDocument.uri = *uri;
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    const auto cleanup = [didFinish]() { *didFinish = true; };
+
+    auto &&responseHandler = [&](auto res) {
+        QScopeGuard callAtExit(cleanup);
+        const auto *const result = std::get_if<QLspSpecification::SemanticTokens>(&res);
+        QVERIFY(result);
+        QList<int> data = result->data;
+        QCOMPARE(data.size(), expectedData.size());
+        QCOMPARE(data, expectedData);
+    };
+
+    auto &&errorHandler = [&](auto &error) {
+        QScopeGuard callAtExit(cleanup);
+        ProtocolBase::defaultResponseErrorHandler(error);
+        QVERIFY2(false, "error occurred on full semantic tokens");
+    };
+
+    m_protocol->requestSemanticTokens(params, std::move(responseHandler), std::move(errorHandler));
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
 }
 
 QTEST_MAIN(tst_qmlls_modules)

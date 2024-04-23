@@ -69,6 +69,8 @@ private slots:
     void hover_data();
     void hover();
     void checkQuickSnippets();
+    void semanticHighlightingFull_data();
+    void semanticHighlightingFull();
 
 private:
     QProcess m_server;
