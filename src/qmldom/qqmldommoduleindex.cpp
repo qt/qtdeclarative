@@ -297,8 +297,8 @@ ModuleScope *ModuleIndex::ensureMinorVersion(int minorVersion)
         minorVersion = Version::Latest;
     {
         QMutexLocker l(mutex());
-        auto it = m_moduleScope.find(minorVersion);
-        if (it != m_moduleScope.end())
+        auto it = m_moduleScope.constFind(minorVersion);
+        if (it != m_moduleScope.cend())
             return *it;
     }
     ModuleScope *res = nullptr;
@@ -306,8 +306,8 @@ ModuleScope *ModuleIndex::ensureMinorVersion(int minorVersion)
     auto cleanup = qScopeGuard([&newScope] { delete newScope; });
     {
         QMutexLocker l(mutex());
-        auto it = m_moduleScope.find(minorVersion);
-        if (it != m_moduleScope.end()) {
+        auto it = m_moduleScope.constFind(minorVersion);
+        if (it != m_moduleScope.cend()) {
             res = *it;
         } else {
             res = newScope;

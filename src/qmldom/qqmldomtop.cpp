@@ -1547,7 +1547,7 @@ std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(
         auto &modsNow = m_moduleIndexWithUri[uri];
         // As we do not hold the lock for the whole operation, some other thread
         // might have created the module already
-        if (auto it = modsNow.find(majorVersion); it != modsNow.end())
+        if (auto it = modsNow.constFind(majorVersion); it != modsNow.cend())
             return *it;
         modsNow.insert(majorVersion, newModulePtr);
     }
