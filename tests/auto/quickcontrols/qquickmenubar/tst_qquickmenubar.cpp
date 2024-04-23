@@ -65,6 +65,7 @@ private slots:
     void applicationWindow();
     void menubarAsHeader_data();
     void menubarAsHeader();
+    void menuPosition();
     void changeDelegate_data();
     void changeDelegate();
     void invalidDelegate_data();
@@ -1466,6 +1467,45 @@ void tst_qquickmenubar::menubarAsHeader()
         // Not using native menubar
         QCOMPARE(contents->height(), window->height() - menuBar->height());
     }
+}
+
+void tst_qquickmenubar::menuPosition()
+{
+    // A Menu.qml will typically have a background with a drop-shadow. And to make
+    // room for this shadow, the Menu itself is made bigger by using Control.insets.
+    // This will make room for both the background and its shadow.
+    // To make sure that the corner of the background (rather than the shadow) ends up
+    // at the requested menu position, the effective position of the menu will be
+    // shifted a bit up and left. This test will therefore check that the corner of the
+    // background ends up that the requested position.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, true);
+    // Use in-scene popups for this test, since we have no guarantee where a window
+    // manager might end up placing a menu.
+    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, true);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    QPointF requestedPos{50, 50};
+
+    QQuickMenu *editMenu = menuBar->menuAt(1);
+    QVERIFY(editMenu);
+    editMenu->setX(requestedPos.x());
+    editMenu->setY(requestedPos.y());
+    editMenu->setVisible(true);
+    QTRY_VERIFY(editMenu->isOpened());
+    QCOMPARE(editMenu->x(), requestedPos.x());
+    QCOMPARE(editMenu->y(), requestedPos.y());
+
+    QQuickItem *background = editMenu->background();
+    QVERIFY(background);
+
+    QPointF bgPos = background->mapToItem(editMenu->parentItem(), {0, 0});
+    QCOMPARE(bgPos, requestedPos);
 }
 
 void tst_qquickmenubar::changeDelegate_data()

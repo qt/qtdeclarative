@@ -73,16 +73,30 @@ void QQuickPopupPositioner::setParentItem(QQuickItem *parent)
 
 void QQuickPopupPositioner::reposition()
 {
-    if (auto p = QQuickPopupPrivate::get(popup()); p->usePopupWindow()) {
+    auto p = QQuickPopupPrivate::get(popup());
+    QQuickPopupItem *popupItem = static_cast<QQuickPopupItem *>(m_popup->popupItem());
+
+    if (p->usePopupWindow()) {
+        // If the popup has insets, it means that it could have a drop shadow. At least
+        // that's the use case insets are documented to solve. And then we align the
+        // window so that the corner of the background, rather than the drop shadow,
+        // ends up at the requested position. We only do that for positive insets, since
+        // negative insets means that the background is already at the correct position.
+        // Note that this might move the popup out of the window again, but only the shadow.
+        QPoint pos(p->x, p->y);
+        if (popupItem->leftInset() > 0)
+            pos.rx() -= popupItem->leftInset();
+        if (popupItem->topInset() > 0)
+            pos.ry() -= popupItem->topInset();
+
         if (!p->popupWindow || !p->parentItem) {
-            p->effectiveX = p->x;
-            p->effectiveY = p->y;
+            p->effectiveX = pos.x();
+            p->effectiveY = pos.y();
             return;
         }
 
         const QQuickItem *centerInParent = p->anchors ? p->getAnchors()->centerIn() : nullptr;
         const QQuickOverlay *centerInOverlay = qobject_cast<const QQuickOverlay *>(centerInParent);
-        QPoint pos(p->x, p->y);
 
         if (centerInParent == p->parentItem || centerInOverlay) {
             pos = centerInOverlay ? QPoint(qRound(centerInOverlay->width() / 2.0), qRound(centerInOverlay->height() / 2.0))
@@ -96,8 +110,6 @@ void QQuickPopupPositioner::reposition()
         p->popupWindow->setPosition(globalCoords.x(), globalCoords.y());
         return;
     }
-
-    QQuickItem *popupItem = m_popup->popupItem();
 
     if (!popupItem->isVisible())
         return;
@@ -116,7 +128,6 @@ void QQuickPopupPositioner::reposition()
 
     bool widthAdjusted = false;
     bool heightAdjusted = false;
-    QQuickPopupPrivate *p = QQuickPopupPrivate::get(m_popup);
 
     const QQuickItem *centerInParent = p->anchors ? p->getAnchors()->centerIn() : nullptr;
     const QQuickOverlay *centerInOverlay = qobject_cast<const QQuickOverlay*>(centerInParent);
@@ -254,6 +265,14 @@ void QQuickPopupPositioner::reposition()
     }
 
     m_positioning = true;
+
+    // Ensure that the corner of the background item is placed at the
+    // designated location, even if this means that visual effects like
+    // drop shadows end up outside the window.
+    if (popupItem->leftInset() > 0)
+        rect.translate(-popupItem->leftInset(), 0);
+    if (popupItem->topInset() > 0)
+        rect.translate(0, -popupItem->topInset());
 
     popupItem->setPosition(rect.topLeft());
 

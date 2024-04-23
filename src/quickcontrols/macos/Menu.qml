@@ -15,10 +15,19 @@ T.Menu {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
-    leftPadding: 5
-    rightPadding: 5
-    topPadding: 5
-    bottomPadding: 5
+    // The insets are found by examining the MultiEffect.itemRect, which
+    // contains the drop shadow offsets. QQuickPopup will subract these insets when
+    // it opens up the menu so that the top left corner of the background ends up at
+    // the requested popup position.
+    // Note: the insets are hard-coded to avoid a binding loop to implicit size.
+    leftInset: 32
+    topInset: 32
+    rightInset: 32
+    bottomInset: 32
+    leftPadding: leftInset + 5
+    rightPadding: rightInset + 5
+    topPadding: topInset + 5
+    bottomPadding: bottomInset + 5
     margins: 0
     overlap: 4
 
