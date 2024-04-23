@@ -326,6 +326,39 @@ void tst_qmlls_highlighting::highlights_data()
                 << Token(QQmlJS::SourceLocation(265, 4, 11, 30), int(SemanticTokenTypes::Property),
                          defaultModifier);
     }
+    {
+        // methods and signals
+        const auto filePath = m_highlightingDataDir + "/methodAndSignal.qml";
+        const auto fileItem = fileObject(filePath);
+
+        QTest::addRow("signal-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(139, 6, 7, 5), int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("signal-name")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(146, 1, 7, 12), int(SemanticTokenTypes::Method), 0);
+        QTest::addRow("signal-type")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(163, 3, 8, 14), int(SemanticTokenTypes::Type), 0);
+        QTest::addRow("signal-type-2")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(186, 3, 9, 17), int(SemanticTokenTypes::Type), 0);
+        QTest::addRow("function-keyword") << fileItem
+                                          << Token(QQmlJS::SourceLocation(195, 9, 10, 5),
+                                                   int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("function-name") << fileItem
+                                       << Token(QQmlJS::SourceLocation(204, 1, 10, 14),
+                                                int(SemanticTokenTypes::Method), 0);
+        QTest::addRow("function-prm-type")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(209, 3, 10, 19), int(SemanticTokenTypes::Type), 0);
+        QTest::addRow("function-prm-name") << fileItem
+                                           << Token(QQmlJS::SourceLocation(206, 1, 10, 16),
+                                                    int(SemanticTokenTypes::Parameter), 0);
+        QTest::addRow("function-rtn-type")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(216, 3, 10, 26), int(SemanticTokenTypes::Type), 0);
+    }
 }
 
 void tst_qmlls_highlighting::highlights()

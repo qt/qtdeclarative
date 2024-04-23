@@ -124,6 +124,10 @@ bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
         highlightPropertyDefinition(item);
         return true;
     }
+    case DomType::MethodInfo: {
+        highlightMethod(item);
+        return true;
+    }
     default:
         return true;
     }
@@ -288,6 +292,40 @@ void HighlightingVisitor::highlightPropertyDefinition(const DomItem &item)
         m_highlights.addHighlight(regions, TypeIdentifierRegion);
     m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Property),
                                 modifier);
+}
+
+void HighlightingVisitor::highlightMethod(const DomItem &item)
+{
+    const auto method = item.as<MethodInfo>();
+    Q_ASSERT(method);
+    const auto fLocs = FileLocations::treeOf(item);
+    if (!fLocs)
+        return;
+    const auto regions = fLocs->info().regions;
+    switch (method->methodType) {
+    case MethodInfo::Signal: {
+        m_highlights.addHighlight(regions, SignalKeywordRegion);
+        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Method));
+        break;
+    }
+    case MethodInfo::Method: {
+        m_highlights.addHighlight(regions, FunctionKeywordRegion);
+        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Method));
+        m_highlights.addHighlight(regions[TypeIdentifierRegion], int(SemanticTokenTypes::Type));
+        break;
+    }
+    default:
+        Q_UNREACHABLE();
+    }
+
+    for (auto i = 0; i < method->parameters.size(); ++i) {
+        DomItem parameter = item.field(Fields::parameters).index(i);
+        const auto paramRegions = FileLocations::treeOf(parameter)->info().regions;
+        m_highlights.addHighlight(paramRegions[IdentifierRegion],
+                                    int(SemanticTokenTypes::Parameter));
+        m_highlights.addHighlight(paramRegions[TypeIdentifierRegion], int(SemanticTokenTypes::Type));
+    }
+    return;
 }
 
 /*! \internal

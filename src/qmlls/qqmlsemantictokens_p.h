@@ -100,6 +100,7 @@ private:
     void highlightQmlObject(const QQmlJS::Dom::DomItem &item);
     void highlightComponent(const QQmlJS::Dom::DomItem &item);
     void highlightPropertyDefinition(const QQmlJS::Dom::DomItem &item);
+    void highlightMethod(const QQmlJS::Dom::DomItem &item);
 
 private:
     Highlights &m_highlights;
