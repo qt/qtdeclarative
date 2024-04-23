@@ -9,7 +9,7 @@
 #include <QtQmlDom/private/qqmldomitem_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtQmlLS/private/qqmlsemantictokens_p.h>
-
+#include <QtCore/qlibraryinfo.h>
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 
 #include <qlist.h>
@@ -157,11 +157,13 @@ void tst_qmlls_highlighting::highlights_data()
         DomCreationOptions options;
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
+        options.setFlag(DomCreationOption::WithRecovery);
 
-        auto envPtr = DomEnvironment::create(
-                QStringList(),
+        QStringList dirs = {QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath)};
+        auto envPtr = DomEnvironment::create(dirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies, options);
+        envPtr->loadBuiltins();
         envPtr->loadFile(FileToLoad::fromMemory(envPtr, filePath, code),
                          [&file](Path, const DomItem &, const DomItem &newIt) {
                              file = newIt.fileObject();
@@ -385,6 +387,39 @@ void tst_qmlls_highlighting::highlights_data()
         QTest::addRow("null") << fileItem
                               << Token(QQmlJS::SourceLocation(285, 4, 12, 21),
                                        int(SemanticTokenTypes::Keyword), 0);
+    }
+    { // identifiers
+        const auto filePath = m_highlightingDataDir + "/Identifiers.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("js-property") << fileItem
+                                     << Token(QQmlJS::SourceLocation(222, 3, 10, 13),
+                                              int(SemanticTokenTypes::Variable), 0);
+        QTest::addRow("property-id")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(302, 4, 12, 19), int(SemanticTokenTypes::Property),
+                         (1 << int(SemanticTokenModifiers::Readonly)));
+        QTest::addRow("property-changed") << fileItem
+                                          << Token(QQmlJS::SourceLocation(451, 11, 18, 9),
+                                                   int(SemanticTokenTypes::Method), 0);
+        QTest::addRow("signal") << fileItem
+                                << Token(QQmlJS::SourceLocation(474, 7, 19, 9),
+                                         int(SemanticTokenTypes::Method), 0);
+
+        QTest::addRow("attached-id")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(512, 4, 23, 5), int(SemanticTokenTypes::Type), 0);
+        QTest::addRow("attached-signalhandler") << fileItem
+                                                << Token(QQmlJS::SourceLocation(517, 9, 23, 10),
+                                                         int(SemanticTokenTypes::Method), 0);
+        QTest::addRow("propchanged-handler") << fileItem
+                                             << Token(QQmlJS::SourceLocation(572, 13, 27, 5),
+                                                      int(SemanticTokenTypes::Method), 0);
+        QTest::addRow("method-id")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(597, 1, 28, 9), int(SemanticTokenTypes::Method), 0);
+        QTest::addRow("signal-handler")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(656, 9, 32, 5), int(SemanticTokenTypes::Method), 0);
     }
 }
 

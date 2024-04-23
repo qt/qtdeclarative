@@ -132,6 +132,10 @@ bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
         highlightScriptLiteral(item);
         return true;
     }
+    case DomType::ScriptIdentifierExpression: {
+        highlightIdentifier(item);
+        return true;
+    }
     default:
         return true;
     }
@@ -183,15 +187,13 @@ void HighlightingVisitor::highlightBinding(const DomItem &item)
     if (binding->name().contains("."_L1))
         return;
 
-    if (binding->bindingType() == BindingType::Normal) {
-        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Property));
-        // TODO: Binding property could have been marked as Required, Readonly or Const
-        // Should also add modifier depending on the declaration of the property
-        // Should go to defined scope and check readonly, required and const flags.
-    } else {
+    if (binding->bindingType() != BindingType::Normal) {
         m_highlights.addHighlight(regions, OnTokenRegion);
         m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Property));
+        return;
     }
+
+    return highlightBySemanticAnalysis(item, regions[IdentifierRegion]);
 }
 
 void HighlightingVisitor::highlightPragma(const DomItem &item)
@@ -354,6 +356,113 @@ void HighlightingVisitor::highlightScriptLiteral(const DomItem &item)
         m_highlights.addHighlight(regions[MainRegion], int(SemanticTokenTypes::Keyword));
     else
         qCWarning(semanticTokens) << "Invalid literal variant";
+}
+
+void HighlightingVisitor::highlightIdentifier(const DomItem &item)
+{
+    using namespace QLspSpecification;
+    const auto id = item.as<ScriptElements::IdentifierExpression>();
+    Q_ASSERT(id);
+    const auto loc = id->mainRegionLocation();
+    // Many of the scriptIdentifiers expressions are already handled by
+    // other cases. In those cases, if the location offset is already in the list
+    // we don't need to perform expensive resolveExpressionType operation.
+    if (m_highlights.highlights().contains(loc.offset))
+        return;
+
+    highlightBySemanticAnalysis(item, loc);
+}
+
+void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJS::SourceLocation loc)
+{
+    const auto expression = QQmlLSUtils::resolveExpressionType(
+            item, QQmlLSUtilsResolveOptions::ResolveOwnerType);
+
+    if (!expression) {
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Variable));
+        return;
+    }
+    switch (expression->type) {
+    case QmlComponentIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Type));
+        return;
+    case JavaScriptIdentifier: {
+        const auto name = expression->name;
+        const auto scope = expression->semanticScope;
+        SemanticTokenTypes tokenType = SemanticTokenTypes::Variable;
+        int modifier = 0;
+        if (const auto jsIdentifier = scope->jsIdentifier(name.value())) {
+            switch (jsIdentifier.value().kind) {
+            case QQmlJSScope::JavaScriptIdentifier::Parameter:
+                tokenType = SemanticTokenTypes::Parameter;
+                break;
+            case QQmlJSScope::JavaScriptIdentifier::LexicalScoped: // let or const
+            case QQmlJSScope::JavaScriptIdentifier::FunctionScoped: // var
+            case QQmlJSScope::JavaScriptIdentifier::Injected:
+            default:
+                tokenType = SemanticTokenTypes::Variable;
+                break;
+            }
+            if (jsIdentifier.value().isConst) {
+                HighlightingUtils::modifierFromValue(int(SemanticTokenModifiers::Readonly),
+                                                        &modifier);
+            }
+        }
+        m_highlights.addHighlight(loc, int(tokenType), modifier);
+        return;
+    }
+    case PropertyIdentifier: {
+        if (const auto scope = expression->semanticScope) {
+            const auto name = expression->name;
+            const auto property = scope->property(name.value());
+            int modifier = 0;
+            if (!property.isWritable()) {
+                HighlightingUtils::modifierFromValue(int(SemanticTokenModifiers::Readonly),
+                                                    &modifier);
+            }
+            m_highlights.addHighlight(loc, int(SemanticTokenTypes::Property), modifier);
+        }
+        return;
+    }
+    case PropertyChangedSignalIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
+        return;
+    case PropertyChangedHandlerIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
+        return;
+    case SignalIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
+        return;
+    case SignalHandlerIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
+        return;
+    case MethodIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
+        return;
+    case QmlObjectIdIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Variable));
+        return;
+    case SingletonIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Type));
+        return;
+    case EnumeratorIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Enum));
+        return;
+    case EnumeratorValueIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::EnumMember));
+        return;
+    case AttachedTypeIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Type));
+        return;
+    case GroupedPropertyIdentifier:
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Property));
+        return;
+    default:
+        qCWarning(semanticTokens)
+                << QString::fromLatin1("Semantic token for %1 has not been implemented yet")
+                            .arg(int(expression->type));
+    }
+    Q_UNREACHABLE_RETURN();
 }
 
 /*! \internal
