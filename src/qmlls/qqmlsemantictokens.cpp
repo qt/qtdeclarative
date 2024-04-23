@@ -88,9 +88,14 @@ static FieldFilter highlightingFilter()
 bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
 {
     switch (item.internalKind()) {
-    case DomType::Comment:
+    case DomType::Comment:{
         highlightComment(item);
         return true;
+    }
+    case DomType::Import: {
+        highlightImport(item);
+        return true;
+    }
     default:
         return true;
     }
@@ -105,6 +110,27 @@ void HighlightingVisitor::highlightComment(const DomItem &item)
             comment->info().comment(), comment->info().sourceLocation());
     for (const auto &loc : locs)
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Comment));
+}
+
+void HighlightingVisitor::highlightImport(const DomItem &item)
+{
+    const auto fLocs = FileLocations::treeOf(item);
+    if (!fLocs)
+        return;
+    const auto regions = fLocs->info().regions;
+    const auto import = item.as<Import>();
+    Q_ASSERT(import);
+    m_highlights.addHighlight(regions, ImportTokenRegion);
+    if (import->uri.isModule())
+        m_highlights.addHighlight(regions[ImportUriRegion], int(SemanticTokenTypes::Namespace));
+    else
+        m_highlights.addHighlight(regions[ImportUriRegion], int(SemanticTokenTypes::String));
+    if (regions.contains(VersionRegion))
+        m_highlights.addHighlight(regions, VersionRegion);
+    if (regions.contains(AsTokenRegion)) {
+        m_highlights.addHighlight(regions, AsTokenRegion);
+        m_highlights.addHighlight(regions[IdNameRegion], int(SemanticTokenTypes::Namespace));
+    }
 }
 
 /*! \internal

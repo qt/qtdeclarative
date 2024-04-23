@@ -195,6 +195,28 @@ void tst_qmlls_highlighting::highlights_data()
                                    << Token(QQmlJS::SourceLocation(232, 5, 13, 9),
                                             int(SemanticTokenTypes::Comment), 0);
     }
+    { // Imports
+        const auto filePath = m_highlightingDataDir + "/imports.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("import-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(112, 6, 4, 1), int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("module-uri") << fileItem
+                                    << Token(QQmlJS::SourceLocation(119, 7, 4, 8),
+                                             int(SemanticTokenTypes::Namespace), 0);
+        QTest::addRow("directory-uri")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(152, 3, 6, 8), int(SemanticTokenTypes::String), 0);
+        QTest::addRow("as-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(156, 2, 6, 12),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("version-number")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(140, 4, 5, 14), int(SemanticTokenTypes::Number), 0);
+        QTest::addRow("qualified-namespace") << fileItem
+                                             << Token(QQmlJS::SourceLocation(159, 6, 6, 15),
+                                                      int(SemanticTokenTypes::Namespace), 0);
+    }
 }
 
 void tst_qmlls_highlighting::highlights()
