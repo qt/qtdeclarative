@@ -138,6 +138,15 @@ void QQuickShapeSoftwareRenderer::setFillGradient(int index, QQuickShapeGradient
     m_accDirty |= DirtyBrush;
 }
 
+void QQuickShapeSoftwareRenderer::setFillTransform(int index, const QSGTransform &transform)
+{
+    ShapePathGuiData &d(m_sp[index]);
+    if (!(transform.isIdentity() && d.brush.transform().isIdentity())) // No need to copy if both==I
+        d.brush.setTransform(transform.matrix().toTransform());
+    d.dirty |= DirtyBrush;
+    m_accDirty |= DirtyBrush;
+}
+
 void QQuickShapeSoftwareRenderer::endSync(bool)
 {
 }

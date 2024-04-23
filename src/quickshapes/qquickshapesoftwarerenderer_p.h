@@ -47,6 +47,7 @@ public:
     void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
+    void setFillTransform(int index, const QSGTransform &transform) override;
     void endSync(bool async) override;
 
     void updateNode() override;

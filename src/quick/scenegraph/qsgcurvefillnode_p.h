@@ -8,6 +8,7 @@
 
 #include <QtQuick/qtquickexports.h>
 #include <QtQuick/private/qsggradientcache_p.h>
+#include <QtQuick/private/qsgtransform_p.h>
 #include <QtQuick/qsgnode.h>
 
 #include "qsgcurveabstractnode_p.h"
@@ -64,6 +65,16 @@ public:
     QGradient::Type gradientType() const
     {
         return m_gradientType;
+    }
+
+    void setFillTransform(const QSGTransform &transform)
+    {
+        m_fillTransform = transform;
+    }
+
+    const QSGTransform *fillTransform() const
+    {
+        return &m_fillTransform;
     }
 
     float debug() const
@@ -186,6 +197,7 @@ private:
     float m_debug = 0.0f;
     QSGGradientCache::GradientDesc m_fillGradient;
     QGradient::Type m_gradientType = QGradient::NoGradient;
+    QSGTransform m_fillTransform;
 
     QScopedPointer<QSGMaterial> m_material;
 

@@ -181,6 +181,7 @@ qt_internal_add_qml_module(Quick
         scenegraph/util/qsgvertexcolormaterial.cpp scenegraph/util/qsgvertexcolormaterial.h
         scenegraph/util/qquadpath.cpp scenegraph/util/qquadpath_p.h
         scenegraph/util/qsggradientcache.cpp scenegraph/util/qsggradientcache_p.h
+        scenegraph/util/qsgtransform.cpp scenegraph/util/qsgtransform_p.h
         util/qminimalflatset_p.h
         util/qquickanimation.cpp util/qquickanimation_p.h
         util/qquickanimation_p_p.h

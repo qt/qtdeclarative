@@ -25,6 +25,9 @@ layout(std140, binding = 0) uniform buf {
     float debug;
     float reserved3;
 
+#if defined(LINEARGRADIENT) || defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
+    mat4 gradientMatrix;
+#endif
 #if defined(LINEARGRADIENT)
     vec2 gradientStart;
     vec2 gradientEnd;
@@ -64,11 +67,14 @@ void main()
 
     gradient = vertexGradient / ubuf.matrixScale;
 
+#if defined(LINEARGRADIENT) || defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
+    vec2 gradVertexCoord = (ubuf.gradientMatrix * vertexCoord).xy;
+#endif
 #if defined(LINEARGRADIENT)
     vec2 gradVec = ubuf.gradientEnd - ubuf.gradientStart;
-    gradTabIndex = dot(gradVec, vertexCoord.xy - ubuf.gradientStart.xy) / dot(gradVec, gradVec);
+    gradTabIndex = dot(gradVec, gradVertexCoord - ubuf.gradientStart) / dot(gradVec, gradVec);
 #elif defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
-    coord = vertexCoord.xy - ubuf.translationPoint;
+    coord = gradVertexCoord - ubuf.translationPoint;
 #endif
 
 #if QSHADER_VIEW_COUNT >= 2

@@ -24,5 +24,6 @@
         <file>tigerLoader.qml</file>
         <file>text.qml</file>
         <file>zoomtiger.qml</file>
+        <file>fillTransform.qml</file>
     </qresource>
 </RCC>

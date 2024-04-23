@@ -26,6 +26,9 @@ layout(std140, binding = 0) uniform buf {
     float debug;
     float reserved3;
 
+#if defined(LINEARGRADIENT) || defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
+    mat4 gradientMatrix;
+#endif
 #if defined(LINEARGRADIENT)
     vec2 gradientStart;
     vec2 gradientEnd;

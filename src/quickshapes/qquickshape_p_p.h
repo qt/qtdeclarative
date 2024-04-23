@@ -18,6 +18,7 @@
 #include <QtQuickShapes/private/qquickshapesglobal_p.h>
 #include <QtQuickShapes/private/qquickshape_p.h>
 #include <private/qquickitem_p.h>
+#include <private/qsgtransform_p.h>
 #include <QPainterPath>
 #include <QColor>
 #include <QBrush>
@@ -56,6 +57,7 @@ public:
     virtual void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
                                 qreal dashOffset, const QVector<qreal> &dashPattern) = 0;
     virtual void setFillGradient(int index, QQuickShapeGradient *gradient) = 0;
+    virtual void setFillTransform(int index, const QSGTransform &transform) = 0;
     virtual void setTriangulationScale(qreal) { }
 
     // Render thread, with gui blocked
@@ -79,6 +81,7 @@ struct QQuickShapeStrokeFillParams
     qreal dashOffset;
     QVector<qreal> dashPattern;
     QQuickShapeGradient *fillGradient;
+    QSGTransform fillTransform;
 };
 
 class Q_QUICKSHAPES_EXPORT QQuickShapePathPrivate : public QQuickPathPrivate
@@ -95,8 +98,9 @@ public:
         DirtyStyle = 0x20,
         DirtyDash = 0x40,
         DirtyFillGradient = 0x80,
+        DirtyFillTransform = 0x100,
 
-        DirtyAll = 0xFF
+        DirtyAll = 0x1FF
     };
 
     QQuickShapePathPrivate();

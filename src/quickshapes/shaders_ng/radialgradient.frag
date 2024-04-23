@@ -14,6 +14,7 @@ layout(std140, binding = 0) uniform buf {
 #else
     mat4 matrix;
 #endif
+    mat4 gradientMatrix;
     vec2 translationPoint;
     vec2 focalToCenter;
     float centerRadius;
