@@ -65,6 +65,7 @@ static int tokenTypeFromRegion(QQmlJS::Dom::FileLocationRegion region)
     case OnTargetRegion:
         return int(SemanticTokenTypes::Property);
     case VersionRegion:
+    case EnumValueRegion:
         return int(SemanticTokenTypes::Number);
     default:
         return int(SemanticTokenTypes::Variable);
@@ -98,6 +99,18 @@ bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
     }
     case DomType::Binding: {
         highlightBinding(item);
+        return true;
+    }
+    case DomType::Pragma: {
+        highlightPragma(item);
+        return true;
+    }
+    case DomType::EnumDecl: {
+        highlightEnumDecl(item);
+        return true;
+    }
+    case DomType::EnumItem: {
+        highlightEnumItem(item);
         return true;
     }
     default:
@@ -160,6 +173,44 @@ void HighlightingVisitor::highlightBinding(const DomItem &item)
         m_highlights.addHighlight(regions, OnTokenRegion);
         m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Property));
     }
+}
+
+void HighlightingVisitor::highlightPragma(const DomItem &item)
+{
+    const auto fLocs = FileLocations::treeOf(item);
+    if (!fLocs)
+        return;
+    const auto regions = fLocs->info().regions;
+    m_highlights.addHighlight(regions, PragmaKeywordRegion);
+    m_highlights.addHighlight(regions, IdentifierRegion);
+    const auto pragma = item.as<Pragma>();
+    for (auto i = 0; i < pragma->values.size(); ++i) {
+        DomItem value = item.field(Fields::values).index(i);
+        const auto valueRegions = FileLocations::treeOf(value)->info().regions;
+        m_highlights.addHighlight(valueRegions, PragmaValuesRegion);
+    }
+    return;
+}
+
+void HighlightingVisitor::highlightEnumDecl(const DomItem &item)
+{
+    const auto fLocs = FileLocations::treeOf(item);
+    if (!fLocs)
+        return;
+    const auto regions = fLocs->info().regions;
+    m_highlights.addHighlight(regions, EnumKeywordRegion);
+    m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Enum));
+}
+
+void HighlightingVisitor::highlightEnumItem(const DomItem &item)
+{
+    const auto fLocs = FileLocations::treeOf(item);
+    if (!fLocs)
+        return;
+    const auto regions = fLocs->info().regions;
+    m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::EnumMember));
+    if (regions.contains(EnumValueRegion))
+        m_highlights.addHighlight(regions, EnumValueRegion);
 }
 
 /*! \internal

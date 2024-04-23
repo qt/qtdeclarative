@@ -233,6 +233,35 @@ void tst_qmlls_highlighting::highlights_data()
                                     << Token(QQmlJS::SourceLocation(172, 2, 9, 14),
                                              int(SemanticTokenTypes::Keyword), 0);
     }
+    { // Pragmas
+        const auto filePath = m_highlightingDataDir + "/pragmas.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("pragma-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(112, 6, 4, 1), int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("pragma-name") << fileItem
+                                     << Token(QQmlJS::SourceLocation(136, 25, 5, 8),
+                                              int(SemanticTokenTypes::Variable), 0);
+        QTest::addRow("pragma-value") << fileItem
+                                      << Token(QQmlJS::SourceLocation(198, 4, 6, 27),
+                                               int(SemanticTokenTypes::Variable), 0);
+    }
+    { // Enums
+        const auto filePath = m_highlightingDataDir + "/enums.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("enum-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(141, 4, 7, 5), int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("enum-name")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(146, 3, 7, 10), int(SemanticTokenTypes::Enum), 0);
+        QTest::addRow("enum-item") << fileItem
+                                   << Token(QQmlJS::SourceLocation(160, 3, 8, 9),
+                                            int(SemanticTokenTypes::EnumMember), 0);
+        QTest::addRow("enum-value")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(179, 1, 9, 15), int(SemanticTokenTypes::Number), 0);
+    }
 }
 
 void tst_qmlls_highlighting::highlights()
