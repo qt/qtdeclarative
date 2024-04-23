@@ -113,6 +113,14 @@ bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
         highlightEnumItem(item);
         return true;
     }
+    case DomType::QmlObject: {
+        highlightQmlObject(item);
+        return true;
+    }
+    case DomType::QmlComponent: {
+        highlightComponent(item);
+        return true;
+    }
     default:
         return true;
     }
@@ -211,6 +219,36 @@ void HighlightingVisitor::highlightEnumItem(const DomItem &item)
     m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::EnumMember));
     if (regions.contains(EnumValueRegion))
         m_highlights.addHighlight(regions, EnumValueRegion);
+}
+
+void HighlightingVisitor::highlightQmlObject(const DomItem &item)
+{
+    const auto qmlObject = item.as<QmlObject>();
+    Q_ASSERT(qmlObject);
+    const auto fLocs = FileLocations::treeOf(item);
+    if (!fLocs)
+        return;
+    const auto regions = fLocs->info().regions;
+    // Handle ids here
+    if (!qmlObject->idStr().isEmpty()) {
+        m_highlights.addHighlight(regions, IdTokenRegion);
+        m_highlights.addHighlight(regions, IdNameRegion);
+    }
+    // If dotted name, then defer it to be handled in ScriptIdentifierExpression
+    if (qmlObject->name().contains("."_L1))
+        return;
+
+    m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Type));
+}
+
+void HighlightingVisitor::highlightComponent(const DomItem &item)
+{
+    const auto fLocs = FileLocations::treeOf(item);
+    if (!fLocs)
+        return;
+    const auto regions = fLocs->info().regions;
+    m_highlights.addHighlight(regions, ComponentKeywordRegion);
+    m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Type));
 }
 
 /*! \internal

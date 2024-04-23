@@ -262,6 +262,29 @@ void tst_qmlls_highlighting::highlights_data()
                 << fileItem
                 << Token(QQmlJS::SourceLocation(179, 1, 9, 15), int(SemanticTokenTypes::Number), 0);
     }
+    { // objects and inline components
+        const auto filePath = m_highlightingDataDir + "/objectAndComponent.qml";
+        const auto fileItem = fileObject(filePath);
+
+        // object
+        QTest::addRow("object-identifier")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(169, 4, 8, 5), int(SemanticTokenTypes::Type), 0);
+        QTest::addRow("object-id-property") << fileItem
+                                            << Token(QQmlJS::SourceLocation(184, 2, 9, 9),
+                                                     int(SemanticTokenTypes::Property), 0);
+        QTest::addRow("object-id-name") << fileItem
+                                        << Token(QQmlJS::SourceLocation(188, 5, 9, 13),
+                                                 int(SemanticTokenTypes::Variable), 0);
+
+        // component
+        QTest::addRow("component-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(139, 9, 7, 5), int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("component-name")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(149, 6, 7, 15), int(SemanticTokenTypes::Type), 0);
+    }
 }
 
 void tst_qmlls_highlighting::highlights()

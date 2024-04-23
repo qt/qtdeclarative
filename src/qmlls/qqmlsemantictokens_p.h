@@ -96,6 +96,8 @@ private:
     void highlightPragma(const QQmlJS::Dom::DomItem &item);
     void highlightEnumItem(const QQmlJS::Dom::DomItem &item);
     void highlightEnumDecl(const QQmlJS::Dom::DomItem &item);
+    void highlightQmlObject(const QQmlJS::Dom::DomItem &item);
+    void highlightComponent(const QQmlJS::Dom::DomItem &item);
 
 private:
     Highlights &m_highlights;
