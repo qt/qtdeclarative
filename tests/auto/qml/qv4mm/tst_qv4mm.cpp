@@ -12,6 +12,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qv4identifiertable_p.h>
 #include <private/qv4arraydata_p.h>
+#include <private/qqmlcomponentattached_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -34,6 +35,7 @@ private slots:
     void cleanInternalClasses();
     void createObjectsOnDestruction();
     void sharedInternalClassDataMarking();
+    void gcTriggeredInOnDestroyed();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -385,6 +387,75 @@ void tst_qv4mm::sharedInternalClassDataMarking()
     QV4::ScopedString s2(scope, engine.newString(QString::fromLatin1("test")));
     auto val = QV4::Value::fromReturnedValue(object->get(s2->toPropertyKey()));
     QCOMPARE(val.toUInt32(), 42u);
+}
+
+void tst_qv4mm::gcTriggeredInOnDestroyed()
+{
+    QQmlEngine engine;
+    QV4::ExecutionEngine &v4 = *engine.handle();
+
+    QPointer<QObject> testObject = new QObject; // unparented, will be deleted
+    auto cleanup = qScopeGuard([&]() {
+        if (testObject)
+            testObject->deleteLater();
+    });
+
+    QQmlComponent component(&engine, testFileUrl("simpleObject.qml"));
+    auto toBeCollected = component.create();
+    QVERIFY(toBeCollected);
+    QJSEngine::setObjectOwnership(toBeCollected, QJSEngine::JavaScriptOwnership);
+    QV4::QObjectWrapper::ensureWrapper(&v4, toBeCollected);
+    QVERIFY(qmlEngine(toBeCollected));
+    QQmlComponentAttached *attached = QQmlComponent::qmlAttachedProperties(toBeCollected);
+    QVERIFY(attached);
+
+
+    QV4::Scope scope(v4.rootContext());
+    QCOMPARE(v4.memoryManager->gcBlocked, QV4::MemoryManager::Unblocked);
+
+
+
+    // let the gc run up to CallDestroyObjects
+    auto sm = v4.memoryManager->gcStateMachine.get();
+    sm->reset();
+    v4.memoryManager->gcBlocked = QV4::MemoryManager::NormalBlocked;
+    while (sm->state != QV4::GCState::CallDestroyObjects && sm->state != QV4::GCState::Invalid) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+    QCOMPARE(sm->state, QV4::GCState::CallDestroyObjects);
+
+    QV4::ScopedValue val(scope);
+    bool calledOnDestroyed = false;
+    auto con = connect(attached, &QQmlComponentAttached::destruction, this, [&]() {
+        calledOnDestroyed = true;
+        // we trigger uncommon code paths:
+        // create ObjectWrapper in destroyed hadnler
+        auto ddata = QQmlData::get(testObject.get(), false);
+        QVERIFY(!ddata); // we don't have ddata yet (otherwise we'd already have an object wrapper)
+        val = QV4::QObjectWrapper::wrap(&v4, testObject.get());
+        QJSEngine::setObjectOwnership(testObject, QJSEngine::JavaScriptOwnership);
+
+        // and also try to trigger a force gc completion
+        bool gcComplete = v4.memoryManager->tryForceGCCompletion();
+        QVERIFY(!gcComplete);
+    });
+    while (!calledOnDestroyed && sm->state != QV4::GCState::Invalid) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+    QVERIFY(!QTest::currentTestFailed());
+    QObject::disconnect(con);
+    QVERIFY(calledOnDestroyed);
+
+    bool gcComplete = v4.memoryManager->tryForceGCCompletion();
+    QVERIFY(gcComplete);
+    val = QV4::Value::undefinedValue(); // no longer keep a reference on the stack
+    QCOMPARE(sm->state, QV4::GCState::Invalid);
+    QVERIFY(testObject); // must not have be deleted, referenced by val
+
+    gc(v4); // run another gc cycle
+    QVERIFY(!testObject); // now collcted by gc
 }
 
 QTEST_MAIN(tst_qv4mm)
