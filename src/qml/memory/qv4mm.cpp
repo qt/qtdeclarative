@@ -707,7 +707,7 @@ static constexpr int markLoopIterationCount = 1024;
 
 bool wasDrainNecessary(MarkStack *ms, QDeadlineTimer deadline)
 {
-    if (ms->remainingBeforeSoftLimit() < markLoopIterationCount)
+    if (ms->remainingBeforeSoftLimit() > markLoopIterationCount)
         return false;
     // drain
     ms->drain(deadline);
