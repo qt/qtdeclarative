@@ -104,6 +104,7 @@ private:
     void highlightScriptLiteral(const QQmlJS::Dom::DomItem &item);
     void highlightIdentifier(const QQmlJS::Dom::DomItem &item);
     void highlightBySemanticAnalysis(const QQmlJS::Dom::DomItem &item, QQmlJS::SourceLocation loc);
+    void highlightScriptExpressions(const QQmlJS::Dom::DomItem &item);
 
 private:
     Highlights &m_highlights;

@@ -421,6 +421,77 @@ void tst_qmlls_highlighting::highlights_data()
                 << fileItem
                 << Token(QQmlJS::SourceLocation(656, 9, 32, 5), int(SemanticTokenTypes::Method), 0);
     }
+    { // script expressions
+        const auto filePath = m_highlightingDataDir + "/scriptExpressions.qml";
+        const auto fileItem = fileObject(filePath);
+
+        QTest::addRow("var-keyword") << fileItem
+                                     << Token(QQmlJS::SourceLocation(192, 3, 11, 9),
+                                              int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("const-keyword") << fileItem
+                                       << Token(QQmlJS::SourceLocation(217, 5, 12, 9),
+                                                int(SemanticTokenTypes::Keyword), 0);
+        const auto modifier = (1 << int(SemanticTokenModifiers::Readonly));
+        QTest::addRow("const-name") << fileItem
+                                    << Token(QQmlJS::SourceLocation(223, 10, 12, 15),
+                                             int(SemanticTokenTypes::Variable), modifier);
+        QTest::addRow("do-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(248, 2, 13, 9),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("if-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(287, 2, 15, 13),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("continue-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(319, 8, 16, 17),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("else-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(341, 4, 17, 13),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("while-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(382, 5, 19, 11),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("switch-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(418, 6, 20, 9),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("case-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(444, 4, 21, 9),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("return-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(464, 6, 22, 13),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("default-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(483, 7, 23, 9),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("break-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(504, 5, 24, 13),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("try-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(529, 3, 26, 9),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("catch-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(560, 5, 28, 11),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("finally-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(601, 7, 30, 11),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("for-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(620, 3, 31, 9),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("throw-keyword") << fileItem
+                                    << Token(QQmlJS::SourceLocation(661, 5, 32, 13),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("for-declaration") << fileItem
+                                    << Token(QQmlJS::SourceLocation(625, 5, 31, 14),
+                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("destructuring")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(1511, 2, 73, 16), int(SemanticTokenTypes::Variable),
+                         (1 << int(SemanticTokenModifiers::Readonly)));
+        QTest::addRow("obj-destructuring")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(1589, 2, 76, 17), int(SemanticTokenTypes::Variable),
+                         (1 << int(SemanticTokenModifiers::Readonly)));
+    }
 }
 
 void tst_qmlls_highlighting::highlights()
@@ -436,6 +507,8 @@ void tst_qmlls_highlighting::highlights()
                    emptyChildrenVisitor);
 
     const auto highlights = h.highlights();
+    QEXPECT_FAIL("for-declaration",
+                 "For declaration highlighting should be implemented by QTBUG-124677", Abort);
     QVERIFY(highlights.contains(expectedHighlightedToken.offset));
     QCOMPARE(highlights.value(expectedHighlightedToken.offset), expectedHighlightedToken);
 }

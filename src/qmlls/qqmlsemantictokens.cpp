@@ -137,6 +137,8 @@ bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
         return true;
     }
     default:
+        if (item.ownerAs<ScriptExpression>())
+            highlightScriptExpressions(item);
         return true;
     }
     Q_UNREACHABLE_RETURN(false);
@@ -404,7 +406,7 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
                 break;
             }
             if (jsIdentifier.value().isConst) {
-                HighlightingUtils::modifierFromValue(int(SemanticTokenModifiers::Readonly),
+                HighlightingUtils::addModifier(SemanticTokenModifiers::Readonly,
                                                         &modifier);
             }
         }
@@ -417,7 +419,7 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
             const auto property = scope->property(name.value());
             int modifier = 0;
             if (!property.isWritable()) {
-                HighlightingUtils::modifierFromValue(int(SemanticTokenModifiers::Readonly),
+                HighlightingUtils::addModifier(SemanticTokenModifiers::Readonly,
                                                     &modifier);
             }
             m_highlights.addHighlight(loc, int(SemanticTokenTypes::Property), modifier);
@@ -461,6 +463,93 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
         qCWarning(semanticTokens)
                 << QString::fromLatin1("Semantic token for %1 has not been implemented yet")
                             .arg(int(expression->type));
+    }
+    Q_UNREACHABLE_RETURN();
+}
+
+void HighlightingVisitor::highlightScriptExpressions(const DomItem &item)
+{
+    const auto fLocs = FileLocations::treeOf(item);
+    if (!fLocs)
+        return;
+    const auto regions = fLocs->info().regions;
+    switch (item.internalKind()) {
+    case DomType::ScriptLiteral:
+        highlightScriptLiteral(item);
+        return;
+    case DomType::ScriptForStatement:
+        m_highlights.addHighlight(regions, ForKeywordRegion);
+        m_highlights.addHighlight(regions[TypeIdentifierRegion],
+                                    int(SemanticTokenTypes::Keyword));
+        return;
+
+    case DomType::ScriptVariableDeclaration: {
+        m_highlights.addHighlight(regions[TypeIdentifierRegion],
+                                    int(SemanticTokenTypes::Keyword));
+        return;
+    }
+    case DomType::ScriptReturnStatement:
+        m_highlights.addHighlight(regions, ReturnKeywordRegion);
+        return;
+    case DomType::ScriptCaseClause:
+        m_highlights.addHighlight(regions, CaseKeywordRegion);
+        return;
+    case DomType::ScriptDefaultClause:
+        m_highlights.addHighlight(regions, DefaultKeywordRegion);
+        return;
+    case DomType::ScriptSwitchStatement:
+        m_highlights.addHighlight(regions, SwitchKeywordRegion);
+        return;
+    case DomType::ScriptWhileStatement:
+        m_highlights.addHighlight(regions, WhileKeywordRegion);
+        return;
+    case DomType::ScriptDoWhileStatement:
+        m_highlights.addHighlight(regions, DoKeywordRegion);
+        m_highlights.addHighlight(regions, WhileKeywordRegion);
+        return;
+    case DomType::ScriptTryCatchStatement:
+        m_highlights.addHighlight(regions, TryKeywordRegion);
+        m_highlights.addHighlight(regions, CatchKeywordRegion);
+        m_highlights.addHighlight(regions, FinallyKeywordRegion);
+        return;
+    case DomType::ScriptForEachStatement:
+        m_highlights.addHighlight(regions[TypeIdentifierRegion],
+                                    int(SemanticTokenTypes::Keyword));
+        m_highlights.addHighlight(regions, ForKeywordRegion);
+        m_highlights.addHighlight(regions, InOfTokenRegion);
+        return;
+    case DomType::ScriptThrowStatement:
+        m_highlights.addHighlight(regions, ThrowKeywordRegion);
+        return;
+    case DomType::ScriptBreakStatement:
+        m_highlights.addHighlight(regions, BreakKeywordRegion);
+        return;
+    case DomType::ScriptContinueStatement:
+        m_highlights.addHighlight(regions, ContinueKeywordRegion);
+        return;
+    case DomType::ScriptIfStatement:
+        m_highlights.addHighlight(regions, IfKeywordRegion);
+        m_highlights.addHighlight(regions, ElseKeywordRegion);
+        return;
+    case DomType::ScriptLabelledStatement:
+        m_highlights.addHighlight(regions, IdentifierRegion);
+        return;
+    case DomType::ScriptConditionalExpression:
+        m_highlights.addHighlight(regions, QuestionMarkTokenRegion);
+        m_highlights.addHighlight(regions, ColonTokenRegion);
+        return;
+    case DomType::ScriptUnaryExpression:
+    case DomType::ScriptPostExpression:
+        m_highlights.addHighlight(regions, OperatorTokenRegion);
+        return;
+    case DomType::ScriptType:
+        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Type));
+        m_highlights.addHighlight(regions[TypeIdentifierRegion], int(SemanticTokenTypes::Type));
+        return;
+    default:
+        qCDebug(semanticTokens)
+                << "Script Expressions with kind" << item.internalKind() << "not implemented";
+        return;
     }
     Q_UNREACHABLE_RETURN();
 }
