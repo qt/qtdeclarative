@@ -3,6 +3,7 @@
 
 #include "qqmljsoptimizations_p.h"
 #include "qqmljsbasicblocks_p.h"
+#include "qqmljsutils_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -27,14 +28,6 @@ struct PendingBlock
     int start = -1;
     bool registerActive = false;
 };
-
-template <typename Container>
-void deduplicate(Container &container)
-{
-    std::sort(container.begin(), container.end());
-    auto erase = std::unique(container.begin(), container.end());
-    container.erase(erase, container.end());
-}
 
 template<typename ContainerA, typename ContainerB>
 static bool containsAny(const ContainerA &container, const ContainerB &elements)
@@ -529,8 +522,8 @@ void QQmlJSOptimizations::populateBasicBlocks()
             }
         }
 
-        deduplicate(block.readTypes);
-        deduplicate(block.readRegisters);
+        QQmlJSUtils::deduplicate(block.readTypes);
+        QQmlJSUtils::deduplicate(block.readRegisters);
     }
 }
 

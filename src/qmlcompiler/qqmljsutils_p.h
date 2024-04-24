@@ -364,6 +364,14 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSUtils
 
     static std::variant<QString, QQmlJS::DiagnosticMessage>
     sourceDirectoryPath(const QQmlJSImporter *importer, const QString &buildDirectoryPath);
+
+    template <typename Container>
+    static void deduplicate(Container &container)
+    {
+        std::sort(container.begin(), container.end());
+        auto erase = std::unique(container.begin(), container.end());
+        container.erase(erase, container.end());
+    }
 };
 
 bool Q_QMLCOMPILER_EXPORT canStrictlyCompareWithVar(
