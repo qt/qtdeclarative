@@ -2138,7 +2138,7 @@ ReturnedValue GlobalExtensions::method_qsTranslate(const FunctionObject *b, cons
 }
 
 /*!
-    \qmlmethod string Qt::qsTranslateNoOp(string context, string sourceText, string disambiguation)
+    \qmlmethod string Qt::QT_TRANSLATE_NOOP(string context, string sourceText, string disambiguation)
 
     Marks \a sourceText for dynamic translation in the given \a context; i.e, the stored \a sourceText
     will not be altered.
@@ -2253,7 +2253,7 @@ ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value
 }
 
 /*!
-    \qmlmethod string Qt::qsTrNoOp(string sourceText, string disambiguation)
+    \qmlmethod string Qt::QT_TR_NOOP(string sourceText, string disambiguation)
 
     Marks \a sourceText for dynamic translation; i.e, the stored \a sourceText
     will not be altered.
@@ -2334,7 +2334,7 @@ ReturnedValue GlobalExtensions::method_qsTrId(const FunctionObject *b, const Val
 }
 
 /*!
-    \qmlmethod string Qt::qsTrIdNoOp(string id)
+    \qmlmethod string Qt::QT_TRID_NOOP(string id)
 
     Marks \a id for dynamic translation.
 
