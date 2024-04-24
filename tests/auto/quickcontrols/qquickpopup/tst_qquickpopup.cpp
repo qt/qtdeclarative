@@ -68,12 +68,16 @@ private slots:
     void activeFocusItemAfterWindowInactive();
     void hover_data();
     void hover();
+#if QT_CONFIG(wheelevent)
     void wheel_data();
     void wheel();
+#endif
     void parentDestroyed();
     void nested();
+#if QT_CONFIG(wheelevent)
     void nestedWheel();
     void nestedWheelWithOverlayParent();
+#endif
     void modelessOnModalOnModeless();
     void grabber();
     void cursorShape();
@@ -1068,6 +1072,7 @@ void tst_QQuickPopup::hover()
     QVERIFY(parentButton->isHovered());
 }
 
+#if QT_CONFIG(wheelevent)
 void tst_QQuickPopup::wheel_data()
 {
     QTest::addColumn<QString>("source");
@@ -1181,6 +1186,7 @@ void tst_QQuickPopup::wheel()
         QVERIFY(qFuzzyCompare(popupSlider->value(), oldPopupValue)); // must not have moved
     }
 }
+#endif
 
 void tst_QQuickPopup::parentDestroyed()
 {
@@ -1219,6 +1225,7 @@ void tst_QQuickPopup::nested()
     QCOMPARE(modalPopup->isVisible(), true);
 }
 
+#if QT_CONFIG(wheelevent)
 void tst_QQuickPopup::nestedWheel()
 {
     QQuickControlsApplicationHelper helper(this, QStringLiteral("nested-wheel.qml"));
@@ -1283,6 +1290,7 @@ void tst_QQuickPopup::nestedWheelWithOverlayParent()
     // Wheel over the list view, verify that it scrolls
     QTRY_COMPARE(listView->contentY(), 72.);
 }
+#endif
 
 void tst_QQuickPopup::modelessOnModalOnModeless()
 {

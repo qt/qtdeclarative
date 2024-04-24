@@ -3,4 +3,6 @@
 
 add_subdirectory(qqmlstandardpaths)
 add_subdirectory(qqmlsysteminformation)
-add_subdirectory(qqmlsettings)
+if(QT_FEATURE_settings)
+    add_subdirectory(qqmlsettings)
+endif()

@@ -376,7 +376,9 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     bool needsRichText = false;
     bool preserveWhiteSpace = node->whitespaceMode() == QSvgText::Preserve;
     const QGradient *mainGradient = styleResolver->currentFillGradient();
+#if QT_CONFIG(texthtmlparser)
     bool needsPathNode = mainGradient != nullptr;
+#endif
     for (const auto *tspan : node->tspans()) {
         if (!tspan) {
             text += QStringLiteral("<br>");
@@ -415,14 +417,18 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
             && styleResolver->currentFillGradient() != mainGradient) {
             const QGradient grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
             styleTagContent += gradientCssDescription(&grad) + u';';
+#if QT_CONFIG(texthtmlparser)
             needsPathNode = true;
+#endif
         }
 
         QString strokeColor = colorCssDescription(styleResolver->currentStrokeColor());
         if (!strokeColor.isEmpty()) {
             styleTagContent += QStringLiteral("-qt-stroke-color:%1;").arg(strokeColor);
             styleTagContent += QStringLiteral("-qt-stroke-width:%1;").arg(styleResolver->currentStrokeWidth());
+#if QT_CONFIG(texthtmlparser)
             needsPathNode = true;
+#endif
         }
 
         if (tspan->whitespaceMode() == QSvgText::Preserve && !preserveWhiteSpace)
@@ -502,7 +508,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     if (font.pixelSize() <= 0 && font.pointSize() > 0)
         font.setPixelSize(font.pointSize()); // Pixel size stored as point size by SVG parser
 
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
     if (needsPathNode) {
         QTextDocument document;
         document.setHtml(text);

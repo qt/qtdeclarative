@@ -1602,6 +1602,8 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormat(uint nativeFormat, QRhiTex
     default:
         return QRhiTexture::UnknownFormat;
     }
+    Q_UNUSED(nativeFormat)
+    Q_UNUSED(flags)
 }
 
 bool QSGRhiSupport::attemptReinitWithSwRastUponFail() const

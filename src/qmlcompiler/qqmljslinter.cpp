@@ -244,7 +244,7 @@ std::vector<QQmlJSLinter::Plugin> QQmlJSLinter::loadPlugins(QStringList paths)
         }
     }
 #endif
-
+    Q_UNUSED(paths)
     return plugins;
 }
 

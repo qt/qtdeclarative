@@ -1284,6 +1284,7 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p, Qt::MouseEventS
 
         return me.isAccepted();
     }
+    Q_UNUSED(source)
     return false;
 }
 

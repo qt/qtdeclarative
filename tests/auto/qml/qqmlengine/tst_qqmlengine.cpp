@@ -36,8 +36,10 @@ public:
 private slots:
     void initTestCase() override;
     void rootContext();
+#if QT_CONFIG(qml_network)
     void networkAccessManager();
     void synchronousNetworkAccessManager();
+#endif
     void baseUrl();
     void contextForObject();
     void offlineStoragePath();
@@ -153,6 +155,7 @@ void tst_qqmlengine::rootContext()
     QVERIFY(!engine.rootContext()->parentContext());
 }
 
+#if QT_CONFIG(qml_network)
 class NetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 {
 public:
@@ -228,7 +231,7 @@ void tst_qqmlengine::synchronousNetworkAccessManager()
     // reply is finished, so should not be in loading state.
     QVERIFY(!c.isLoading());
 }
-
+#endif
 
 void tst_qqmlengine::baseUrl()
 {
