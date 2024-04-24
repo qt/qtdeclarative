@@ -36,6 +36,7 @@ private slots:
     void createObjectsOnDestruction();
     void sharedInternalClassDataMarking();
     void gcTriggeredInOnDestroyed();
+    void weakValuesAssignedAfterThePhaseThatShouldHandleWeakValues();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -456,6 +457,49 @@ void tst_qv4mm::gcTriggeredInOnDestroyed()
 
     gc(v4); // run another gc cycle
     QVERIFY(!testObject); // now collcted by gc
+}
+void tst_qv4mm::weakValuesAssignedAfterThePhaseThatShouldHandleWeakValues()
+{
+    QObject testObject;
+    QV4::ExecutionEngine v4;
+
+    QCOMPARE(v4.memoryManager->gcBlocked, QV4::MemoryManager::Unblocked);
+
+
+
+    // let the gc run up to CallDestroyObjects
+    auto sm = v4.memoryManager->gcStateMachine.get();
+    sm->reset();
+    v4.memoryManager->gcBlocked = QV4::MemoryManager::NormalBlocked;
+
+
+    // run just before the sweeping face
+    while (sm->state != QV4::GCState::DoSweep && sm->state != QV4::GCState::Invalid) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+    QCOMPARE(sm->state, QV4::GCState::DoSweep);
+
+    {
+        // simulate code accessing the object wrapper for an object
+        QV4::Scope scope(v4.rootContext());
+        QV4::ScopedValue value(scope);
+        value = QV4::QObjectWrapper::wrap(&v4, &testObject);
+        // let it go out of scope before any stack re-scanning could happen
+    }
+
+    bool gcComplete = v4.memoryManager->tryForceGCCompletion();
+    QVERIFY(gcComplete);
+
+    auto ddata = QQmlData::get(&testObject);
+    QVERIFY(ddata);
+    if (ddata->jsWrapper.isUndefined()) {
+        // it's in principle valid for the wrapper to be reset, though the current
+        // implementation doesn't do it, and it requires some care
+        qWarning("Double-check the handling of weak values and object wrappers in the gc");
+        return;
+    }
+    QVERIFY(ddata->jsWrapper.valueRef()->heapObject()->inUse());
 }
 
 QTEST_MAIN(tst_qv4mm)

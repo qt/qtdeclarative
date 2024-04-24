@@ -383,6 +383,56 @@ WeakValue::~WeakValue()
     free();
 }
 
+/*
+   WeakValue::set shold normally not mark objects, after all a weak value
+   is not supposed to keep an object alive.
+   However, if we are past GCState::HandleQObjectWrappers, nothing will
+   reset weak values referencing unmarked values, but those values will
+   still be swept.
+   That lead to stale pointers, and potentially to crashes. To avoid this,
+   we mark the objects here (they might still get collected in the next gc
+   run).
+   This is especially important due to the way we handle QObjectWrappers.
+ */
+void WeakValue::set(ExecutionEngine *engine, const Value &value)
+{
+    if (!val)
+        allocVal(engine);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *ms) {
+        if (engine->memoryManager->gcStateMachine->state <= GCState::HandleQObjectWrappers)
+            return;
+        if (auto *h = value.heapObject())
+            h->mark(ms);
+    });
+    *val = value;
+}
+
+void WeakValue::set(ExecutionEngine *engine, ReturnedValue value)
+{
+    if (!val)
+        allocVal(engine);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *ms) {
+        if (engine->memoryManager->gcStateMachine->state <= GCState::HandleQObjectWrappers)
+            return;
+        if (auto *h = QV4::Value::fromReturnedValue(value).heapObject())
+            h->mark(ms);
+    });
+
+    *val = value;
+}
+
+void WeakValue::set(ExecutionEngine *engine, Heap::Base *obj)
+{
+    if (!val)
+        allocVal(engine);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *ms) {
+        if (engine->memoryManager->gcStateMachine->state <= GCState::HandleQObjectWrappers)
+            return;
+        obj->mark(ms);
+    });
+    *val = obj;
+}
+
 void WeakValue::allocVal(ExecutionEngine *engine)
 {
     val = engine->memoryManager->m_weakValues->allocate();
