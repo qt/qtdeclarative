@@ -13,8 +13,8 @@ additional imports:
 \list
 \li The \l{QmlGlobalQtObject}{Qt object}: A QML object that offers helper methods
     and properties specific to the QML environment.
-\li \l {Qt::}{qsTr()}, \l {Qt::}{qsTranslate()}, \l {Qt::}{qsTrId()}, \l {Qt::}{qsTrNoOp()},
-    \l {Qt::}{qsTranslateNoOp()}, \l {Qt::}{qsTrIdNoOp()} functions:
+\li \l {Qt::}{qsTr()}, \l {Qt::}{qsTranslate()}, \l {Qt::}{qsTrId()}, \l {Qt::}{QT_TR_NOOP()()},
+    \l {Qt::}{QT_TRANSLATE_NOOP()}, \l {Qt::}{QT_TRID_NOOP()} functions:
     QML functions that let you translate \l{Mark Strings for Translation}
     {strings} and \l{Mark Translatable Data Text Strings}{string literals} in the
     QML environment.
