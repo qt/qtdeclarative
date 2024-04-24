@@ -118,14 +118,26 @@ bool QQuickMenuBarPrivate::isCurrentMenuOpen()
 
 void QQuickMenuBarPrivate::openCurrentMenu()
 {
-    Q_Q(QQuickMenuBar);
     if (!currentItem || isCurrentMenuOpen())
         return;
     QQuickMenu *menu = currentItem->menu();
     if (!menu || menu->isOpened())
         return;
+
+#ifdef Q_OS_MACOS
+    // On macOS, the menu should open underneath the MenuBar
+    Q_Q(QQuickMenuBar);
+    const QPointF posInParentItem = q->mapToItem(currentItem, {currentItem->x(), q->height()});
+#else
+    // On other platforms, it should open underneath the MenuBarItem
+    const QPointF posInParentItem{0, currentItem->y() + currentItem->height()};
+#endif
+
+    // The position should be the coordinate system of the parent item. Note that
+    // the parentItem() of a menu will be the MenuBarItem (currentItem), and not the
+    // MenuBar (even if parent() usually points to the MenuBar).
     QScopedValueRollback triggerRollback(triggering, true);
-    menu->popup({0, q->height()});
+    menu->popup(posInParentItem);
 }
 
 void QQuickMenuBarPrivate::closeCurrentMenu()
