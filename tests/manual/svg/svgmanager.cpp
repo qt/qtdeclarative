@@ -64,8 +64,6 @@ void SvgManager::setCurrentDirectory(const QString &newCurrentDirectory)
 QString SvgManager::qmlSource() const
 {
     QTemporaryFile tempFile;
-    tempFile.setAutoRemove(false);
-
     if (tempFile.open()) {
         QString name = tempFile.fileName();
         {
