@@ -19,6 +19,7 @@
 #include <QtCore/qstring.h>
 #include <QtGui/qicon.h>
 #include <QtQuick/private/qquickpixmap_p.h>
+#include <QtQuickTemplates2/private/qquickicon_p.h>
 
 #include "qquicknativeicon_p.h"
 
@@ -36,9 +37,8 @@ public:
 
     QIcon toQIcon() const;
 
-    // TODO: this should probably be QQuickIcon or we should have a pointer to the action
-    QQuickNativeIcon icon() const;
-    void setIcon(const QQuickNativeIcon &icon);
+    QQuickIcon icon() const;
+    void setIcon(const QQuickIcon &icon);
 
 private:
     void loadIcon();
@@ -46,7 +46,7 @@ private:
     QObject *m_parent;
     int m_slot;
     bool m_enabled;
-    QQuickNativeIcon m_icon;
+    QQuickIcon m_icon;
 };
 
 QT_END_NAMESPACE

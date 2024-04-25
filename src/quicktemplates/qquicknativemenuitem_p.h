@@ -17,6 +17,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
+#include <QtQuickTemplates2/private/qquickicon_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -41,7 +42,9 @@ public:
     QPlatformMenuItem *handle() const;
     void sync();
 
+    QQuickIcon effectiveIcon() const;
     QQuickNativeIconLoader *iconLoader() const;
+    void reloadIcon();
 
     QString debugText() const;
 
@@ -70,6 +73,7 @@ private:
     mutable QQuickNativeIconLoader *m_iconLoader = nullptr;
     std::unique_ptr<QPlatformMenuItem> m_handle = nullptr;
     int m_shortcutId = -1;
+    bool m_syncing = false;
 };
 
 QT_END_NAMESPACE

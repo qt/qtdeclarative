@@ -160,6 +160,11 @@ void QQuickNativeMenuItem::sync()
     if (m_type == Type::Unknown)
         return;
 
+    if (m_syncing)
+        return;
+
+    QScopedValueRollback recursionGuard(m_syncing);
+
     const auto *action = this->action();
     const auto *separator = this->separator();
     auto *subMenu = this->subMenu();
@@ -192,8 +197,19 @@ void QQuickNativeMenuItem::sync()
 //    m_handle->setHasExclusiveGroup(m_group && m_group->isExclusive());
     m_handle->setHasExclusiveGroup(false);
 
-    if (m_iconLoader)
-        m_handle->setIcon(m_iconLoader->toQIcon());
+    const QQuickIcon icon = effectiveIcon();
+    const auto *menuPrivate = QQuickMenuPrivate::get(m_parentMenu);
+    const auto *window = qGuiApp->topLevelWindows().first();
+    // We should reload the icon if the window's DPR has changed, regardless if its properties have changed.
+    // We can't check for ItemDevicePixelRatioHasChanged in QQuickMenu::itemChange,
+    // because that isn't sent when the menu isn't visible, and will never
+    // be sent for native menus. We instead store lastDevicePixelRatio in QQuickMenu
+    // (to avoid storing it for each menu item) and set it whenever it's opened.
+    const bool dprChanged = !qFuzzyCompare(window->devicePixelRatio(), menuPrivate->lastDevicePixelRatio);
+    if (!icon.isEmpty() && (icon != iconLoader()->icon() || dprChanged)) {
+        // This will load the icon, which will call sync() recursively, hence the m_syncing check.
+        reloadIcon();
+    }
 
     if (subMenu) {
         // Sync first as dynamically created menus may need to get the handle recreated.
@@ -219,15 +235,35 @@ void QQuickNativeMenuItem::sync()
         << "checked" << checked << "text" << text;
 }
 
+QQuickIcon QQuickNativeMenuItem::effectiveIcon() const
+{
+    if (const auto *action = this->action())
+        return action->icon();
+    if (const auto *subMenu = this->subMenu())
+        return subMenu->icon();
+    if (const auto *menuItem = qobject_cast<QQuickMenuItem *>(m_nonNativeItem))
+        return menuItem->icon();
+    return {};
+}
+
 QQuickNativeIconLoader *QQuickNativeMenuItem::iconLoader() const
 {
     if (!m_iconLoader) {
         QQuickNativeMenuItem *that = const_cast<QQuickNativeMenuItem *>(this);
         static int slot = staticMetaObject.indexOfSlot("updateIcon()");
         m_iconLoader = new QQuickNativeIconLoader(slot, that);
-//        m_iconLoader->setEnabled(m_complete);
+        // Qt Labs Platform's QQuickMenuItem would call m_iconLoader->setEnabled(m_complete) here,
+        // but since QQuickMenuPrivate::maybeCreateAndInsertNativeItem asserts that the menu's
+        // completed loading, we can just set it to true.
+       m_iconLoader->setEnabled(true);
     }
     return m_iconLoader;
+}
+
+void QQuickNativeMenuItem::reloadIcon()
+{
+    iconLoader()->setIcon(effectiveIcon());
+    m_handle->setIcon(iconLoader()->toQIcon());
 }
 
 void QQuickNativeMenuItem::updateIcon()

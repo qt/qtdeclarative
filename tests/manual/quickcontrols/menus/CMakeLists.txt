@@ -24,6 +24,9 @@ qt_add_qml_module(appmenus
         cppsettings.cpp
         cppsettings.h
         main.cpp
+    RESOURCES
+        icons/warning.png
+        icons/warning@2x.png
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

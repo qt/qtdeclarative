@@ -138,6 +138,7 @@ public:
     std::unique_ptr<QPlatformMenu> handle = nullptr;
     QList<QQuickNativeMenuItem *> nativeItems;
     QPointer<QQuickMenuBar> menuBar;
+    qreal lastDevicePixelRatio = 0;
 };
 
 QT_END_NAMESPACE

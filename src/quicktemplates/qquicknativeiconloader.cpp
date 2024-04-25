@@ -31,18 +31,16 @@ void QQuickNativeIconLoader::setEnabled(bool enabled)
 
 QIcon QQuickNativeIconLoader::toQIcon() const
 {
-    QIcon fallback = QPixmap::fromImage(image());
-    QIcon icon = QIcon::fromTheme(m_icon.name(), fallback);
-    icon.setIsMask(m_icon.isMask());
-    return icon;
+    const QIcon fallback = QPixmap::fromImage(image());
+    return QIcon::fromTheme(m_icon.name(), fallback);
 }
 
-QQuickNativeIcon QQuickNativeIconLoader::icon() const
+QQuickIcon QQuickNativeIconLoader::icon() const
 {
     return m_icon;
 }
 
-void QQuickNativeIconLoader::setIcon(const QQuickNativeIcon &icon)
+void QQuickNativeIconLoader::setIcon(const QQuickIcon &icon)
 {
     m_icon = icon;
     if (m_enabled)

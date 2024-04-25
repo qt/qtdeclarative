@@ -300,6 +300,24 @@ ApplicationWindow {
 
         MenuSeparator {}
 
+        ContextAction {
+            text: qsTr("Context menu item with icon (name)")
+            icon.name: "mail-send"
+        }
+
+        ContextAction {
+            text: qsTr("Context menu item with icon (source)")
+            icon.source: "qrc:/qt/qml/Menus/icons/warning.png"
+        }
+
+        ContextAction {
+            text: qsTr("Context menu item with disabled icon (source)")
+            icon.source: "qrc:/qt/qml/Menus/icons/warning.png"
+            enabled: false
+        }
+
+        MenuSeparator {}
+
         Menu {
             id: subMenu
             title: qsTr("Sub-menu")

@@ -535,6 +535,8 @@ void QQuickMenuPrivate::setNativeMenuVisible(bool visible)
     QWindow *window = effectiveWindow(qGuiApp->topLevelWindows().first(), &offset);
 
     if (visible) {
+        lastDevicePixelRatio = window->devicePixelRatio();
+
         const QPointF globalPos = parentItem->mapToGlobal(x, y);
         const QPoint windowPos = window->mapFromGlobal(globalPos.toPoint());
         QRect targetRect(windowPos, QSize(0, 0));
@@ -1995,12 +1997,16 @@ void QQuickMenu::itemChange(QQuickItem::ItemChange change, const QQuickItem::Ite
     Q_D(QQuickMenu);
     QQuickPopup::itemChange(change, data);
 
-    if (change == QQuickItem::ItemVisibleHasChanged) {
+    switch (change) {
+    case QQuickItem::ItemVisibleHasChanged:
         if (!data.boolValue && d->cascade) {
             // Ensure that when the menu isn't visible, there's no current item
             // the next time it's opened.
             d->setCurrentIndex(-1, Qt::OtherFocusReason);
         }
+        break;
+    default:
+        break;
     }
 }
 
