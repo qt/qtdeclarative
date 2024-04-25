@@ -1697,11 +1697,12 @@ void QQuickMultiEffectPrivate::updateBlurItemsAmount(int blurLevel)
     }
 
     // Set the blur items source components
-    static const auto dummyShaderSource = new QQuickShaderEffectSource(q);
+    if (!m_dummyShaderSource)
+        m_dummyShaderSource = new QQuickShaderEffectSource(q);
     for (int i = 0; i < m_blurEffects.size(); i++) {
         auto *blurEffect = m_blurEffects[i];
         auto sourceItem = (i >= itemsAmount) ?
-                    static_cast<QQuickItem *>(dummyShaderSource) : (i == 0) ?
+                    static_cast<QQuickItem *>(m_dummyShaderSource) : (i == 0) ?
                         static_cast<QQuickItem *>(m_shaderSource->output()) :
                         static_cast<QQuickItem *>(m_blurEffects[i - 1]);
         auto sourceVariant = QVariant::fromValue<QQuickItem*>(sourceItem);
