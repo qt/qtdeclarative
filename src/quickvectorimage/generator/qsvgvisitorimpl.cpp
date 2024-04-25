@@ -124,7 +124,6 @@ protected:
     QPainter m_dummyPainter;
     QImage m_dummyImage;
     QSvgExtraStates m_svgState;
-
 };
 
 Q_GLOBAL_STATIC(QSvgStyleResolver, styleResolver)
@@ -194,7 +193,6 @@ QSvgVisitorImpl::QSvgVisitorImpl(const QString svgFileName, QQuickGenerator *gen
     : m_svgFileName(svgFileName)
     , m_generator(generator)
 {
-
 }
 
 void QSvgVisitorImpl::traverse()
@@ -217,7 +215,7 @@ void QSvgVisitorImpl::visitNode(const QSvgNode *node)
 {
     handleBaseNodeSetup(node);
 
-    ImageNodeInfo info;
+    NodeInfo info;
     fillCommonNodeInfo(node, info);
 
     m_generator->generateNode(info);
@@ -269,10 +267,7 @@ void QSvgVisitorImpl::visitRectNode(const QSvgRect *node)
     p.lineTo(x1, y1 + ry);
     p.arcTo(x1, y1, rx * 2, ry * 2, 180, -90); // ARC to x1 + rx, y1
 
-
     handlePathNode(node, p);
-
-    return;
 }
 
 void QSvgVisitorImpl::visitEllipseNode(const QSvgEllipse *node)
@@ -455,7 +450,6 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                 }
             }
         }
-
 
         needsRichText = needsRichText || !styleTagContent.isEmpty();
         if (!styleTagContent.isEmpty())
@@ -749,7 +743,6 @@ void QSvgVisitorImpl::handleBaseNodeEnd(const QSvgNode *node)
     qCDebug(lcQuickVectorImage) << "After END" << node << "fill" << styleResolver->currentFillColor()
                                    << "stroke" << styleResolver->currentStrokeColor() << styleResolver->currentStrokeWidth()
                                    << node->nodeId();
-
 }
 
 void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &path)

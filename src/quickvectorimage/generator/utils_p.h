@@ -242,8 +242,8 @@ inline QString listString(QList<T> list)
     if (list.isEmpty())
         return QStringLiteral("[]");
 
-    QString l;
-    QTextStream stream(&l);
+    QString listString;
+    QTextStream stream(&listString);
     stream << "[";
 
     if (list.length() > 1) {
@@ -254,7 +254,7 @@ inline QString listString(QList<T> list)
     }
 
     stream << list.last() << "]";
-    return l;
+    return listString;
 }
 
 }

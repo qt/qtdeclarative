@@ -466,11 +466,12 @@ bool QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
     const QStringList comments = m_commentString.split(u'\n');
 
     if (!isNodeVisible(info)) {
-        if (comments.isEmpty())
+        if (comments.isEmpty()) {
             stream() << "// Generated from SVG";
-        else
+        } else {
             for (const auto &comment : comments)
                 stream() << "// " << comment;
+        }
 
         stream() << "import QtQuick";
         stream() << "import QtQuick.Shapes" << Qt::endl;
