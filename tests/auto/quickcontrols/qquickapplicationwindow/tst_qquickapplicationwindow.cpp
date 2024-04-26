@@ -12,6 +12,7 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
@@ -53,6 +54,7 @@ private slots:
     void componentComplete();
     void opacity();
     void backgroundSize();
+    void explicitBackgroundSizeBinding();
 };
 
 tst_QQuickApplicationWindow::tst_QQuickApplicationWindow()
@@ -980,6 +982,23 @@ void tst_QQuickApplicationWindow::backgroundSize()
 
     window->setHeight(410);
     QCOMPARE(background->height(), 678);
+}
+
+void tst_QQuickApplicationWindow::explicitBackgroundSizeBinding()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("explicitBackgroundSizeBinding.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *background = window->background();
+    QCOMPARE(background->width(), window->width());
+    QCOMPARE(background->height(), window->height());
+
+    window->setProperty("scaleFactor", 0.5);
+    QCOMPARE(background->width(), window->width() / 2);
+    QCOMPARE(background->height(), window->height() / 2);
 }
 
 QTEST_MAIN(tst_QQuickApplicationWindow)
