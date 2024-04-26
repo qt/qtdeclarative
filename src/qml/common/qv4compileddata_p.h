@@ -1227,6 +1227,7 @@ struct Unit
         NativeMethodsAcceptThisObject = 0x800,
         ValueTypesCopied = 0x1000,
         ValueTypesAddressable = 0x2000,
+        ValueTypesAssertable = 0x4000,
     };
     quint32_le flags;
     quint32_le stringTableSize;
@@ -1704,6 +1705,11 @@ public:
     bool valueTypesAreAddressable() const
     {
         return unitData()->flags & CompiledData::Unit::ValueTypesAddressable;
+    }
+
+    bool valueTypesAreAssertable() const
+    {
+        return unitData()->flags & CompiledData::Unit::ValueTypesAssertable;
     }
 
     bool componentsAreBound() const

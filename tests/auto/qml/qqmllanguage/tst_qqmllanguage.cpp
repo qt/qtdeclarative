@@ -410,7 +410,9 @@ private slots:
 
     void objectAndGadgetMethodCallsRejectThisObject();
     void objectAndGadgetMethodCallsAcceptThisObject();
+
     void asValueType();
+    void asValueTypeGood();
 
     void longConversion();
 
@@ -8068,7 +8070,25 @@ void tst_qqmllanguage::asValueType()
 
     QTest::ignoreMessage(
             QtWarningMsg,
+            "Could not find any constructor for value type QQmlRectFValueType "
+            "to call with value undefined");
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
             qPrintable(url.toString() + ":7:5: Unable to assign [undefined] to QRectF"_L1));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + ":10: Coercing a value to QtQml.Base/point using a type "
+                                        "assertion. This behavior is deprecated. Add 'pragma "
+                                        "ValueTypeBehavior: Assertable' to prevent it."_L1));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + ":11: Coercing a value to StaticTest/withString using a "
+                                        "type assertion. This behavior is deprecated. Add 'pragma "
+                                        "ValueTypeBehavior: Assertable' to prevent it."_L1));
+
     QScopedPointer<QObject> o(c.create());
 
     QCOMPARE(o->property("a"), QVariant());
@@ -8091,6 +8111,57 @@ void tst_qqmllanguage::asValueType()
     const QVariant string = o->property("g");
     QCOMPARE(string.metaType(), QMetaType::fromType<QString>());
     QCOMPARE(string.toString(), u"green");
+}
+
+void tst_qqmllanguage::asValueTypeGood()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("asValueTypeGood.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + ":7:5: Unable to assign [undefined] to QRectF"_L1));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("a"), QVariant());
+    QCOMPARE(o->property("b").value<QRectF>(), QRectF());
+    QVERIFY(!o->property("c").toBool());
+
+    const QRectF rect(1, 2, 3, 4);
+    o->setProperty("a", QVariant(rect));
+    QCOMPARE(o->property("b").value<QRectF>(), rect);
+    QVERIFY(o->property("c").toBool());
+
+    QVERIFY(!o->property("d").toBool());
+    QVERIFY(!o->property("e").isValid());
+    QVERIFY(!o->property("f").isValid());
+
+    const QVariant string = o->property("g");
+    QCOMPARE(string.metaType(), QMetaType::fromType<QString>());
+    QCOMPARE(string.toString(), u"green");
+
+    const ValueTypeWithString withString = o->property("h").value<ValueTypeWithString>();
+    QCOMPARE(withString.toString(), u"red");
+
+    const QPointF point = o->property("i").value<QPointF>();
+    QCOMPARE(point.x(), 10.0);
+    QCOMPARE(point.y(), 20.0);
+
+    const QVariant j = o->property("j");
+    QCOMPARE(j.metaType(), QMetaType::fromType<int>());
+    QCOMPARE(j.toInt(), 4);
+
+    QVERIFY(!o->property("k").isValid());
+    QVERIFY(!o->property("l").isValid());
+
+    const QVariant m = o->property("m");
+    QCOMPARE(m.metaType(), QMetaType::fromType<QString>());
+    QCOMPARE(m.toString(), u"something");
+
+    QVERIFY(!o->property("n").isValid());
+    QVERIFY(!o->property("o").isValid());
 }
 
 void tst_qqmllanguage::typedEnums_data()

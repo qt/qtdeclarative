@@ -535,18 +535,37 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
         return instanceOfQObject(typeWrapper, objectWrapper);
 
     const QQmlType type = typeWrapper->d()->type();
-    if (type.isValueType()) {
-        if (const QQmlValueTypeWrapper *valueWrapper = var.as<QQmlValueTypeWrapper>()) {
-            return QV4::Encode(QQmlMetaObject::canConvert(valueWrapper->metaObject(),
-                                                          type.metaObjectForValueType()));
-        }
-
-        // We want "foo as valuetype" to return undefined if it doesn't match.
-        return Encode::undefined();
-    }
 
     // If the target type is an object type  we want null.
-    return Encode(false);
+    if (!type.isValueType())
+        return Encode(false);
+
+    const auto canCastValueType = [&]() -> bool {
+        if (const QQmlValueTypeWrapper *valueWrapper = var.as<QQmlValueTypeWrapper>()) {
+            return QQmlMetaObject::canConvert(
+                    valueWrapper->metaObject(), type.metaObjectForValueType());
+        }
+
+        switch (type.typeId().id()) {
+        case QMetaType::Void:
+            return var.isUndefined();
+        case QMetaType::QVariant:
+            return true; // Everything is a var
+        case QMetaType::Int:
+            return var.isInteger();
+        case QMetaType::Double:
+            return var.isDouble(); // Integers are also doubles
+        case QMetaType::QString:
+            return var.isString();
+        case QMetaType::Bool:
+            return var.isBoolean();
+        }
+
+        return false;
+    };
+
+    // We want "foo as valuetype" to return undefined if it doesn't match.
+    return canCastValueType() ? Encode(true) : Encode::undefined();
 }
 
 ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup)

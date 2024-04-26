@@ -41,6 +41,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcCoercingTypeAssertion, "qt.qml.coercingTypeAssertion");
+
 namespace QV4 {
 
 #ifdef QV4_COUNT_RUNTIME_FUNCTIONS
@@ -380,11 +382,25 @@ QV4::ReturnedValue Runtime::As::call(ExecutionEngine *engine, const Value &lval,
     else if (result->isBoolean())
         return Encode::null();
 
-    // Try to convert the value type
-    if (Scoped<QQmlTypeWrapper> typeWrapper(scope, rval); typeWrapper)
-        return coerce(engine, lval, typeWrapper->d()->type(), false);
+    if (engine->callingQmlContext()->valueTypesAreAssertable())
+        return Encode::undefined();
 
-    return Encode::undefined();
+    // Try to convert the value type
+    Scoped<QQmlTypeWrapper> typeWrapper(scope, rval);
+    if (!typeWrapper)
+        return Encode::undefined();
+
+    result = coerce(engine, lval, typeWrapper->d()->type(), false);
+    if (result->isUndefined())
+        return Encode::undefined();
+
+    const auto *stackFrame = engine->currentStackFrame;
+    qCWarning(lcCoercingTypeAssertion).nospace().noquote()
+            << stackFrame->source() << ':' << stackFrame->lineNumber() << ':'
+            << " Coercing a value to " << typeWrapper->toQStringNoThrow()
+            << " using a type assertion. This behavior is deprecated."
+            << " Add 'pragma ValueTypeBehavior: Assertable' to prevent it.";
+    return result->asReturnedValue();
 }
 
 QV4::ReturnedValue Runtime::In::call(ExecutionEngine *engine, const Value &left, const Value &right)

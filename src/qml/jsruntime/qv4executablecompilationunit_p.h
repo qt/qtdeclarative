@@ -134,6 +134,7 @@ public:
     bool ignoresFunctionSignature() const { return m_compilationUnit->ignoresFunctionSignature(); }
     bool valueTypesAreCopied() const { return m_compilationUnit->valueTypesAreCopied(); }
     bool valueTypesAreAddressable() const { return m_compilationUnit->valueTypesAreAddressable(); }
+    bool valueTypesAreAssertable() const { return m_compilationUnit->valueTypesAreAssertable(); }
     bool componentsAreBound() const { return m_compilationUnit->componentsAreBound(); }
     bool isESModule() const { return m_compilationUnit->isESModule(); }
 

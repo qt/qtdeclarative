@@ -215,12 +215,6 @@ QtObject {
 }
 \endqml
 
-If the type does not match, casting returns \c undefined. \c instanceof
-only checks for inheritance, not for all possible type coercions. So, for
-example, a \l{QRect} is not a \c rect value type since \c rect is \l{QRectF}
-in C++, and therefore not related by inheritance. With \c as you can cast
-to any type compatible via coercion.
-
 Since \c rect in the above example is now a type name, it will shadow any
 properties called \c{rect}.
 
@@ -230,6 +224,25 @@ able to. You can use \l{qmllint Reference}{qmllint} to find such occurrences.
 
 There is also a \c{Inaddressable} value you can use to explicitly specify the
 default behavior.
+
+Another attribute to the \c{ValueTypeBehavior} pragma is \c{Assertable},
+introduced in Qt 6.8. Due to a mistake in Qt 6.6 and 6.7 the \c{a as rect} above
+not only checks whether \c{a} is a \c{rect} but also constructs a \c{rect} if
+\c{a} is of a compatible type. This is obviously not what a type assertion
+should do. Specifying \c{Assertable} prevents this behavior and restricts type
+assertions for value types to only check for the type. You should always specify
+it if you are going to use value types with \c{as}. In any case, if the
+type assertion for a value type fails, the result is \c{undefined}.
+
+\c{instanceof} does not have this problem since it only checks for inheritance,
+not for all possible type coercions.
+
+\note Using \c{as} with the \c{int} and \c{double} types is not advisable since by
+JavaScript rules, the result of any calculation is a floating point number, even
+if it happens to hold the same value as its integer equivalent. Conversely, any
+integer constant you declare in JavaScript is not a double by QML's type mapping
+rules. Furthermore, \c{int} and \c{double} are reserved words. You can only
+address these types via type namespaces.
 
 Value types and sequences are generally treated as references. This means, if
 you retrieve a value type instance from a property into a local value, and then
