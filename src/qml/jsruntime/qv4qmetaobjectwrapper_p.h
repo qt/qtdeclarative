@@ -27,14 +27,57 @@ class QQmlPropertyData;
 namespace QV4 {
 namespace Heap {
 
-struct QMetaObjectWrapper : FunctionObject {
-    const QMetaObject* metaObject;
-    QQmlPropertyData *constructors;
-    int constructorCount;
-
-    void init(const QMetaObject* metaObject);
+struct QMetaObjectWrapper : FunctionObject
+{
+    void init(const QMetaObject *metaObject);
     void destroy();
-    void ensureConstructorsCache();
+
+    const QMetaObject *metaObject() const { return m_metaObject; }
+    QMetaType metaType() const
+    {
+        const QMetaType type = m_metaObject->metaType();
+        if (type.flags() & QMetaType::IsGadget)
+            return type;
+
+        // QObject* is our best guess because we can't get from a metatype to
+        // the metatype of its pointer.
+        return QMetaType::fromType<QObject *>();
+    }
+
+    const QQmlPropertyData *ensureConstructorsCache(
+            const QMetaObject *metaObject, QMetaType metaType)
+    {
+        Q_ASSERT(metaObject);
+        if (!m_constructors)
+            m_constructors = createConstructors(metaObject, metaType);
+        return m_constructors;
+    }
+
+
+    static const QQmlPropertyData *createConstructors(
+            const QMetaObject *metaObject, QMetaType metaType)
+    {
+        Q_ASSERT(metaObject);
+        const int count = metaObject->constructorCount();
+        if (count == 0)
+            return nullptr;
+
+        QQmlPropertyData *constructors = new QQmlPropertyData[count];
+
+        for (int i = 0; i < count; ++i) {
+            QMetaMethod method = metaObject->constructor(i);
+            QQmlPropertyData &d = constructors[i];
+            d.load(method);
+            d.setPropType(metaType);
+            d.setCoreIndex(i);
+        }
+
+        return constructors;
+    }
+
+private:
+    const QMetaObject *m_metaObject;
+    const QQmlPropertyData *m_constructors;
 };
 
 } // namespace Heap
@@ -45,7 +88,15 @@ struct Q_QML_EXPORT QMetaObjectWrapper : public FunctionObject
     V4_NEEDS_DESTROY
 
     static ReturnedValue create(ExecutionEngine *engine, const QMetaObject* metaObject);
-    const QMetaObject *metaObject() const { return d()->metaObject; }
+    const QMetaObject *metaObject() const { return d()->metaObject(); }
+
+    template<typename HeapObject>
+    ReturnedValue static construct(HeapObject *d, const Value *argv, int argc)
+    {
+        const QMetaObject *mo = d->metaObject();
+        return constructInternal(
+                mo, d->ensureConstructorsCache(mo, d->metaType()), d, argv, argc);
+    }
 
 protected:
     static ReturnedValue virtualCallAsConstructor(
@@ -54,7 +105,10 @@ protected:
 
 private:
     void init(ExecutionEngine *engine);
-    ReturnedValue constructInternal(const Value *argv, int argc) const;
+
+    static ReturnedValue constructInternal(
+            const QMetaObject *mo, const QQmlPropertyData *constructors, Heap::FunctionObject *d,
+            const Value *argv, int argc);
 };
 
 } // namespace QV4

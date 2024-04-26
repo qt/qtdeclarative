@@ -95,7 +95,6 @@ void QQmlPropertyData::load(const QMetaMethod &m)
     case QMetaMethod::Constructor:
         m_flags.setIsSignal(false);
         m_flags.setIsConstructor(true);
-        setPropType(QMetaType::fromType<QObject *>());
         break;
     default:
         m_flags.setIsSignal(false);

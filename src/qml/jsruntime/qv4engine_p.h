@@ -217,6 +217,7 @@ public:
         MapProto,
         IntrinsicTypedArrayProto,
         ValueTypeProto,
+        TypeWrapperProto,
         SignalHandlerProto,
         IteratorProto,
         ForInIteratorProto,
@@ -342,6 +343,7 @@ public:
 
     Object *valueTypeWrapperPrototype() const { return reinterpret_cast<Object *>(jsObjects + ValueTypeProto); }
     Object *signalHandlerPrototype() const { return reinterpret_cast<Object *>(jsObjects + SignalHandlerProto); }
+    Object *typeWrapperPrototype() const { return reinterpret_cast<Object *>(jsObjects + TypeWrapperProto); }
     Object *iteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + IteratorProto); }
     Object *forInIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + ForInIteratorProto); }
     Object *setIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + SetIteratorProto); }

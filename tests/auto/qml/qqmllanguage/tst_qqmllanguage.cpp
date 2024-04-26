@@ -453,6 +453,7 @@ private slots:
     void enumScopes();
 
     void typedObjectList();
+    void invokableCtors();
 
     void jsonArrayPropertyBehavesLikeAnArray();
 
@@ -5413,24 +5414,30 @@ void tst_qqmllanguage::namespacedPropertyTypes()
 void tst_qqmllanguage::qmlTypeCanBeResolvedByName_data()
 {
     QTest::addColumn<QUrl>("componentUrl");
+    QTest::addColumn<QString>("name");
 
     // Built-in C++ types
-    QTest::newRow("C++ - Anonymous") << testFileUrl("quickTypeByName_anon.qml");
-    QTest::newRow("C++ - Named") << testFileUrl("quickTypeByName_named.qml");
+    QTest::newRow("C++ - Anonymous") << testFileUrl("quickTypeByName_anon.qml")
+                                     << QStringLiteral("QtQuick/Item");
+    QTest::newRow("C++ - Named") << testFileUrl("quickTypeByName_named.qml")
+                                 << QStringLiteral("QtQuick/Item");
 
     // Composite types with a qmldir
-    QTest::newRow("QML - Anonymous - qmldir") << testFileUrl("compositeTypeByName_anon_qmldir.qml");
-    QTest::newRow("QML - Named - qmldir") << testFileUrl("compositeTypeByName_named_qmldir.qml");
+    QTest::newRow("QML - Anonymous - qmldir") << testFileUrl("compositeTypeByName_anon_qmldir.qml")
+                                              << QStringLiteral("SimpleType");
+    QTest::newRow("QML - Named - qmldir") << testFileUrl("compositeTypeByName_named_qmldir.qml")
+                                          << QStringLiteral("SimpleType");
 }
 
 void tst_qqmllanguage::qmlTypeCanBeResolvedByName()
 {
     QFETCH(QUrl, componentUrl);
+    QFETCH(QString, name);
 
     QQmlEngine engine;
     QQmlComponent component(&engine, componentUrl);
     VERIFY_ERRORS(0);
-    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "[object Object]"); // a bit crude, but it will do
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, qPrintable(name));
 
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
@@ -8661,7 +8668,6 @@ void tst_qqmllanguage::typedObjectList()
     QVERIFY(list.at(&list, 0) != nullptr);
 }
 
-
 void tst_qqmllanguage::jsonArrayPropertyBehavesLikeAnArray() {
     QQmlEngine e;
     QQmlComponent c(&e, testFileUrl("jsonArrayProperty.qml"));
@@ -8704,6 +8710,54 @@ void tst_qqmllanguage::jsonArrayPropertyBehavesLikeAnArray() {
         Continue
     );
     QVERIFY(o->property("jsonArrayWasSorted").toBool());
+}
+
+void tst_qqmllanguage::invokableCtors()
+{
+    QQmlEngine e;
+
+    const QUrl url = testFileUrl("invokableCtors.qml");
+
+    QQmlComponent c(&e, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    const QString urlString = url.toString();
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(
+                             urlString + ":9: You are calling a Q_INVOKABLE constructor of "
+                                         "InvokableSingleton which is a singleton in QML."));
+
+    // Extended types look like types without any constructors.
+    // Therefore they aren't even FunctionObjects.
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(
+                             urlString + ":10: TypeError: Type error"));
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(
+                             urlString + ":11: You are calling a Q_INVOKABLE constructor of "
+                                         "InvokableUncreatable which is uncreatable in QML."));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QObject *oo = qvariant_cast<QObject *>(o->property("oo"));
+    QVERIFY(oo);
+    QObject *pp = qvariant_cast<QObject *>(o->property("pp"));
+    QVERIFY(pp);
+    QCOMPARE(pp->parent(), oo);
+
+    InvokableValueType vv = qvariant_cast<InvokableValueType>(o->property("v"));
+    QCOMPARE(vv.m_s, "green");
+
+    InvokableSingleton *i = qvariant_cast<InvokableSingleton *>(o->property("i"));
+    QVERIFY(i);
+    QCOMPARE(i->m_a, 5);
+    QCOMPARE(i->parent(), oo);
+
+    QVariant k = o->property("k");
+    QCOMPARE(k.metaType(), QMetaType::fromType<InvokableExtended *>());
+    QCOMPARE(k.value<InvokableExtended *>(), nullptr);
+
+    InvokableUncreatable *l = qvariant_cast<InvokableUncreatable *>(o->property("l"));
+    QVERIFY(l);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

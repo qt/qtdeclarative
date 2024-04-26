@@ -2962,4 +2962,53 @@ private:
     QJsonArray m_jsonArray;
 };
 
+class InvokableSingleton : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+public:
+    InvokableSingleton() = default;
+    Q_INVOKABLE InvokableSingleton(int a, QObject *parent) : QObject(parent), m_a(a) {}
+
+    int m_a = 0;
+};
+
+class InvokableExtension : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE InvokableExtension(QObject *parent = nullptr) : QObject(parent) {}
+};
+
+class InvokableExtended : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED(InvokableExtension)
+
+public:
+    Q_INVOKABLE InvokableExtended() = default;
+};
+
+class InvokableUncreatable : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_UNCREATABLE("no")
+
+public:
+    Q_INVOKABLE InvokableUncreatable() = default;
+};
+
+class InvokableValueType
+{
+    Q_GADGET
+    QML_VALUE_TYPE(vv)
+public:
+    Q_INVOKABLE InvokableValueType() = default;
+    Q_INVOKABLE InvokableValueType(const QString &s) : m_s(s) {}
+    QString m_s;
+};
+
 #endif // TESTTYPES_H

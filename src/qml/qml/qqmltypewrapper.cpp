@@ -3,31 +3,33 @@
 
 #include "qqmltypewrapper_p.h"
 
-#include <private/qqmlengine_p.h>
+#include <private/qjsvalue_p.h>
+
 #include <private/qqmlcontext_p.h>
+#include <private/qqmlengine_p.h>
 #include <private/qqmlmetaobject_p.h>
 #include <private/qqmltypedata_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
 
-#include <private/qjsvalue_p.h>
-#include <private/qv4functionobject_p.h>
-#include <private/qv4objectproto_p.h>
-#include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4identifiertable_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4objectproto_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4symbol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QQmlTypeWrapper);
+DEFINE_OBJECT_VTABLE(QQmlTypeConstructor);
 DEFINE_OBJECT_VTABLE(QQmlScopedEnumWrapper);
 
 
 void Heap::QQmlTypeWrapper::init(TypeNameMode m, QObject *o, const QQmlTypePrivate *type)
 {
     Q_ASSERT(type);
-    Object::init();
+    FunctionObject::init();
     flags = quint8(m) | quint8(Type);
     object.init(o);
     QQmlType::refHandle(type);
@@ -38,7 +40,7 @@ void Heap::QQmlTypeWrapper::init(
         TypeNameMode m, QObject *o, QQmlTypeNameCache *type, const QQmlImportRef *import)
 {
     Q_ASSERT(type);
-    Object::init();
+    FunctionObject::init();
     flags = quint8(m) | quint8(Namespace);
     object.init(o);
     n.typeNamespace = type;
@@ -52,6 +54,7 @@ void Heap::QQmlTypeWrapper::destroy()
     case Type:
         Q_ASSERT(t.typePrivate);
         QQmlType::derefHandle(t.typePrivate);
+        delete[] t.constructors;
         break;
     case Namespace:
         Q_ASSERT(n.typeNamespace);
@@ -60,7 +63,7 @@ void Heap::QQmlTypeWrapper::destroy()
     }
 
     object.destroy();
-    Object::destroy();
+    FunctionObject::destroy();
 }
 
 QQmlType Heap::QQmlTypeWrapper::type() const
@@ -83,6 +86,39 @@ QQmlTypeNameCache::Result Heap::QQmlTypeWrapper::queryNamespace(
     Q_ASSERT(n.importNamespace);
     return n.typeNamespace->query(name, n.importNamespace, QQmlTypeLoader::get(enginePrivate));
 
+}
+
+template<typename Callback>
+void warnWithLocation(const Heap::QQmlTypeWrapper *wrapper, Callback &&callback)
+{
+    auto log = qWarning().noquote().nospace();
+    if (const CppStackFrame *frame = wrapper->internalClass->engine->currentStackFrame)
+        log << frame->source() << ':' << frame->lineNumber() << ':';
+    callback(log.space());
+}
+
+void Heap::QQmlTypeWrapper::warnIfUncreatable() const
+{
+    const QQmlType t = type();
+    Q_ASSERT(t.isValid());
+
+    if (t.isValueType())
+        return;
+
+    if (t.isSingleton()) {
+        warnWithLocation(this, [&](QDebug &log) {
+            log << "You are calling a Q_INVOKABLE constructor of" << t.typeName()
+                << "which is a singleton in QML.";
+        });
+        return;
+    }
+
+    if (!t.isCreatable()) {
+        warnWithLocation(this, [&](QDebug &log) {
+            log << "You are calling a Q_INVOKABLE constructor of" << t.typeName()
+                << "which is uncreatable in QML.";
+        });
+    }
 }
 
 bool QQmlTypeWrapper::isSingleton() const
@@ -159,17 +195,59 @@ QVariant QQmlTypeWrapper::toVariant() const
     return QVariant::fromValue<QObject*>(e->singletonInstance<QObject*>(type));
 }
 
+ReturnedValue QQmlTypeWrapper::method_hasInstance(
+        const FunctionObject *, const Value *thisObject, const Value *argv, int argc)
+{
+    // we want to immediately call instanceOf rather than going through Function
+
+    if (!argc)
+        return Encode(false);
+    if (const Object *o = thisObject->as<Object>())
+        return o->instanceOf(argv[0]);
+    return Encode(false);
+}
+
+ReturnedValue QQmlTypeWrapper::method_toString(
+        const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    const QQmlTypeWrapper *typeWrapper = thisObject->as<QQmlTypeWrapper>();
+    if (!typeWrapper)
+        RETURN_UNDEFINED();
+
+    const QString name = typeWrapper->d()->type().qmlTypeName();
+    return Encode(b->engine()->newString(name.isEmpty()
+            ? QLatin1String("Unknown Type")
+            : name));
+}
+
+void QQmlTypeWrapper::initProto(ExecutionEngine *v4)
+{
+    if (v4->typeWrapperPrototype()->d_unchecked())
+        return;
+
+    Scope scope(v4);
+    ScopedObject o(scope, v4->newObject());
+
+    o->defineDefaultProperty(v4->symbol_hasInstance(), method_hasInstance, 1, Attr_ReadOnly);
+    o->defineDefaultProperty(v4->id_toString(), method_toString, 0);
+    o->setPrototypeOf(v4->functionPrototype());
+
+    v4->jsObjects[QV4::ExecutionEngine::TypeWrapperProto] = o->d();
+}
 
 // Returns a type wrapper for type t on o.  This allows access of enums, and attached properties.
 ReturnedValue QQmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, const QQmlType &t,
                                      Heap::QQmlTypeWrapper::TypeNameMode mode)
 {
     Q_ASSERT(t.isValid());
-    Scope scope(engine);
+    initProto(engine);
 
-    Scoped<QQmlTypeWrapper> w(scope, engine->memoryManager->allocate<QQmlTypeWrapper>(
-                                             mode, o, t.priv()));
-    return w.asReturnedValue();
+    QV4::MemoryManager *mm = engine->memoryManager;
+
+    if (const QMetaObject *mo = t.metaObject(); !mo || mo->constructorCount() == 0)
+        return mm->allocate<QQmlTypeWrapper>(mode, o, t.priv())->asReturnedValue();
+
+    return mm->allocate<QQmlTypeConstructor>(mode, o, t.priv())->asReturnedValue();
 }
 
 // Returns a type wrapper for importNamespace (of t) on o.  This allows nested resolution of a type in a
@@ -180,6 +258,8 @@ ReturnedValue QQmlTypeWrapper::create(
 {
     Q_ASSERT(t);
     Q_ASSERT(importNamespace);
+    initProto(engine);
+
     Scope scope(engine);
 
     Scoped<QQmlTypeWrapper> w(scope, engine->memoryManager->allocate<QQmlTypeWrapper>(

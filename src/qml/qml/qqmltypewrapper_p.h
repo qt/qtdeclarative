@@ -19,7 +19,8 @@
 #include <QtCore/qpointer.h>
 
 #include <private/qv4value_p.h>
-#include <private/qv4object_p.h>
+#include <private/qv4functionobject_p.h>
+#include <private/qv4qmetaobjectwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -32,7 +33,7 @@ namespace QV4 {
 
 namespace Heap {
 
-struct QQmlTypeWrapper : Object {
+struct QQmlTypeWrapper : FunctionObject {
 
     enum TypeNameMode : quint8  {
         ExcludeEnums     = 0x0,
@@ -50,9 +51,25 @@ struct QQmlTypeWrapper : Object {
     void init(TypeNameMode m, QObject *o, QQmlTypeNameCache *type, const QQmlImportRef *import);
 
     void destroy();
+
+    const QMetaObject *metaObject() const { return type().metaObject(); }
+    QMetaType metaType() const { return type().typeId(); }
+
     QQmlType type() const;
     TypeNameMode typeNameMode() const { return TypeNameMode(flags & TypeNameModeMask); }
     Kind kind() const { return Kind(flags & KindMask); }
+
+    const QQmlPropertyData *ensureConstructorsCache(
+            const QMetaObject *metaObject, QMetaType metaType)
+    {
+        Q_ASSERT(kind() == Type);
+        if (!t.constructors && metaObject) {
+            t.constructors = QMetaObjectWrapper::createConstructors(metaObject, metaType);
+            warnIfUncreatable();
+        }
+        return t.constructors;
+    }
+    void warnIfUncreatable() const;
 
     QQmlTypeNameCache::Result queryNamespace(
             const QV4::String *name, QQmlEnginePrivate *enginePrivate) const;
@@ -62,7 +79,7 @@ struct QQmlTypeWrapper : Object {
     union {
         struct {
             const QQmlTypePrivate *typePrivate;
-            const void *reserved;
+            const QQmlPropertyData *constructors;
         } t;
         struct {
             QQmlTypeNameCache *typeNamespace;
@@ -72,6 +89,8 @@ struct QQmlTypeWrapper : Object {
 
     quint8 flags;
 };
+
+using QQmlTypeConstructor = QQmlTypeWrapper;
 
 struct QQmlScopedEnumWrapper : Object {
     void init() { Object::init(); }
@@ -83,9 +102,10 @@ struct QQmlScopedEnumWrapper : Object {
 
 }
 
-struct Q_QML_EXPORT QQmlTypeWrapper : Object
+struct Q_QML_EXPORT QQmlTypeWrapper : FunctionObject
 {
-    V4_OBJECT2(QQmlTypeWrapper, Object)
+    V4_OBJECT2(QQmlTypeWrapper, FunctionObject)
+    V4_PROTOTYPE(typeWrapperPrototype)
     V4_NEEDS_DESTROY
 
     bool isSingleton() const;
@@ -94,6 +114,8 @@ struct Q_QML_EXPORT QQmlTypeWrapper : Object
     QObject *singletonObject() const;
 
     QVariant toVariant() const;
+
+    static void initProto(ExecutionEngine *v4);
 
     static ReturnedValue create(ExecutionEngine *, QObject *, const QQmlType &,
                                 Heap::QQmlTypeWrapper::TypeNameMode = Heap::QQmlTypeWrapper::IncludeEnums);
@@ -116,6 +138,25 @@ protected:
     static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
     static bool virtualIsEqualTo(Managed *that, Managed *o);
     static ReturnedValue virtualInstanceOf(const Object *typeObject, const Value &var);
+
+private:
+    static ReturnedValue method_hasInstance(
+            const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toString(
+            const FunctionObject *b, const Value *thisObject, const Value *, int);
+};
+
+struct QQmlTypeConstructor : QQmlTypeWrapper
+{
+    V4_OBJECT2(QQmlTypeConstructor, QQmlTypeWrapper)
+
+    static ReturnedValue virtualCallAsConstructor(
+            const FunctionObject *f, const Value *argv, int argc, const Value *)
+    {
+        Q_ASSERT(f->as<QQmlTypeWrapper>());
+        return QMetaObjectWrapper::construct(
+                static_cast<const QQmlTypeWrapper *>(f)->d(), argv, argc);
+    }
 };
 
 struct Q_QML_EXPORT QQmlScopedEnumWrapper : Object

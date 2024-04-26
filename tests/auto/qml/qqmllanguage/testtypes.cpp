@@ -175,6 +175,12 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<EnumProviderSingletonQml>("EnumScopeTest", 1);
 
     qmlRegisterTypesAndRevisions<TypeWithQJsonArrayProperty>("TypeWithQJsonArrayProperty", 1);
+    qmlRegisterTypesAndRevisions<
+            InvokableSingleton,
+            InvokableExtended,
+            InvokableUncreatable,
+            InvokableValueType
+    >("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

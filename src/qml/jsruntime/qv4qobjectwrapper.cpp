@@ -599,7 +599,9 @@ void QObjectWrapper::setProperty(
 
     Scope scope(engine);
     if (ScopedFunctionObject f(scope, value); f) {
-        if (!f->isBinding()) {
+        if (f->as<QQmlTypeWrapper>()) {
+            // Ignore. It's probably a singleton or an attached type.
+        } else if (!f->isBinding()) {
             const bool isAliasToAllowed = [&]() {
                 if (property->isAlias()) {
                     const QQmlPropertyIndex originalIndex(property->coreIndex(), -1);
@@ -713,7 +715,9 @@ void QObjectWrapper::setProperty(
 
     const QMetaType propType = property->propType();
     // functions are already handled, except for the QJSValue case
-    Q_ASSERT(!value.as<FunctionObject>() || propType == QMetaType::fromType<QJSValue>());
+    Q_ASSERT(!value.as<FunctionObject>()
+             || value.as<QV4::QQmlTypeWrapper>()
+             || propType == QMetaType::fromType<QJSValue>());
 
     if (value.isNull() && property->isQObject()) {
         PROPERTY_STORE(QObject*, nullptr);

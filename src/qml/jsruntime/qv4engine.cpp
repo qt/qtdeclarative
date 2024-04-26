@@ -740,6 +740,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     static_cast<DataViewPrototype *>(dataViewPrototype())->init(this, dataViewCtor());
     jsObjects[ValueTypeProto] = (Heap::Base *) nullptr;
     jsObjects[SignalHandlerProto] = (Heap::Base *) nullptr;
+    jsObjects[TypeWrapperProto] = (Heap::Base *) nullptr;
 
     jsObjects[IntrinsicTypedArray_Ctor] = memoryManager->allocate<IntrinsicTypedArrayCtor>(this);
     jsObjects[IntrinsicTypedArrayProto] = memoryManager->allocate<IntrinsicTypedArrayPrototype>();
