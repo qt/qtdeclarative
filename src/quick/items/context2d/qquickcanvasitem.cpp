@@ -1206,7 +1206,7 @@ QRect QQuickCanvasItem::tiledRect(const QRectF &window, const QSize &tileSize)
     This signal is emitted when the \a region needs to be rendered. If a context
     is active it can be referenced from the context property.
 
-    This signal can be triggered by markdirty(), requestPaint() or by changing
+    This signal can be triggered by markDirty(), requestPaint() or by changing
     the current canvas window.
 */
 
