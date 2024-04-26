@@ -33,6 +33,7 @@ class QObject;
 class QQmlData;
 class QQmlPropertyCache;
 class QQmlPropertyData;
+class QQmlObjectOrGadget;
 
 namespace QV4 {
 struct QObjectSlotDispatcher;
@@ -95,16 +96,6 @@ DECLARE_EXPORTED_HEAP_OBJECT(QObjectMethod, FunctionObject) {
     };
 
     QV4::Heap::QObjectMethod::ThisObjectMode checkThisObject(const QMetaObject *thisMeta) const;
-};
-
-struct QMetaObjectWrapper : FunctionObject {
-    const QMetaObject* metaObject;
-    QQmlPropertyData *constructors;
-    int constructorCount;
-
-    void init(const QMetaObject* metaObject);
-    void destroy();
-    void ensureConstructorsCache();
 };
 
 struct QmlSignalHandler : Object {
@@ -385,24 +376,22 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
             QObject *thisObject, void **argv, const QMetaType *types, int argc) const;
 
     static QPair<QObject *, int> extractQtMethod(const QV4::FunctionObject *function);
-};
-
-
-struct Q_QML_EXPORT QMetaObjectWrapper : public QV4::FunctionObject
-{
-    V4_OBJECT2(QMetaObjectWrapper, QV4::FunctionObject)
-    V4_NEEDS_DESTROY
-
-    static ReturnedValue create(ExecutionEngine *engine, const QMetaObject* metaObject);
-    const QMetaObject *metaObject() const { return d()->metaObject; }
-
-protected:
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
-    static bool virtualIsEqualTo(Managed *a, Managed *b);
 
 private:
-    void init(ExecutionEngine *engine);
-    ReturnedValue constructInternal(const Value *argv, int argc) const;
+    friend struct QMetaObjectWrapper;
+
+    static const QQmlPropertyData *resolveOverloaded(
+            const QQmlObjectOrGadget &object, const QQmlPropertyData *methods, int methodCount,
+            ExecutionEngine *engine, CallData *callArgs);
+
+    static const QQmlPropertyData *resolveOverloaded(
+            const QQmlPropertyData *methods, int methodCount,
+            void **argv, int argc, const QMetaType *types);
+
+    static ReturnedValue callPrecise(
+            const QQmlObjectOrGadget &object, const QQmlPropertyData &data,
+            ExecutionEngine *engine, CallData *callArgs,
+            QMetaObject::Call callType = QMetaObject::InvokeMetaMethod);
 };
 
 struct Q_QML_EXPORT QmlSignalHandler : public QV4::Object

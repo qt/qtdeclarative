@@ -19,6 +19,7 @@
 #include <private/qv4mm_p.h>
 #include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4qmetaobjectwrapper_p.h>
 #include <private/qv4urlobject_p.h>
 #include <private/qqmlbuiltins_p.h>
 
