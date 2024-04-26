@@ -5,12 +5,17 @@ import QtQuick
 import QtQuick.Controls
 
 ApplicationWindow {
+    id: window
     width: 600
     height: 400
 
-    background: Item {
+    property real scaleFactor: 1
+
+    background: Rectangle {
         objectName: "background"
-        implicitWidth: 123
-        implicitHeight: 456
+        color: "green"
+        width: window.width * window.scaleFactor
+        height: window.height * window.scaleFactor
+        anchors.centerIn: parent
     }
 }
