@@ -2929,7 +2929,8 @@ void QQuickPopup::setPopupType(PopupType popupType)
     }
     \endcode
 
-    \sa Item::palette, Window::palette, ColorGroup, Palette
+    \b {See also}: \l Item::palette, \l Window::palette, \l ColorGroup,
+       \l [QML] {Palette}
 */
 
 bool QQuickPopup::filtersChildMouseEvents() const
