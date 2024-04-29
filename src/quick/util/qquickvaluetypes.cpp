@@ -763,6 +763,122 @@ bool QQuickMatrix4x4ValueType::fuzzyEquals(const QMatrix4x4 &m) const
     return qFuzzyCompare(v, m);
 }
 
+/*!
+    \qmltype PlanarTransform
+    \inqmlmodule QtQuick
+    \since 6.8
+
+    \brief Provides utility functions for matrix4x4 when used for 2D transforms.
+
+    The \c PlanarTransform is a global object with utility functions.
+
+    It is not instantiable; to use it, call the members of the global \c PlanarTransform object
+    directly. For example:
+
+    \qml
+    Item {
+        transform: Matrix4x4 { matrix: PlanarTransform.fromAffineMatrix(1, 0, 0.36, 1, -36, 0) }
+    }
+    \endqml
+*/
+
+QQuickPlanarTransform::QQuickPlanarTransform(QObject *parent)
+    : QObject(parent)
+{
+}
+
+/*!
+    \qmlmethod matrix4x4 PlanarTransform::fromAffineMatrix(real scaleX, real shearY,
+                                                           real shearX, real scaleY,
+                                                           real translateX, real translateY)
+
+    Returns a matrix4x4 for an affine (non-projecting) 2D transform with the specified values.
+
+    This method and its argument order correspond to SVG's \c matrix() function and the
+    six-argument QTransform constructor. The result is this 4x4 matrix:
+
+    \table
+    \row \li \a scaleX \li \a shearX \li 0 \li \a translateX
+    \row \li \a shearY \li \a scaleY \li 0 \li \a translateY
+    \row \li 0 \li 0 \li 1 \li 0
+    \row \li 0 \li 0 \li 0 \li 1
+    \endtable
+*/
+
+QMatrix4x4 QQuickPlanarTransform::fromAffineMatrix(float scaleX, float shearY,
+                                                   float shearX, float scaleY,
+                                                   float translateX, float translateY)
+{
+    return QMatrix4x4(scaleX, shearX, 0, translateX,
+                      shearY, scaleY, 0, translateY,
+                      0, 0, 1, 0,
+                      0, 0, 0, 1);
+}
+
+/*!
+    \qmlmethod matrix4x4 PlanarTransform::fromTranslate(real translateX, real translateY)
+
+    Returns a matrix4x4 for a 2D transform that translates by \a translateX horizontally and
+    \a translateY vertically.
+*/
+QMatrix4x4 QQuickPlanarTransform::fromTranslate(float translateX, float translateY)
+{
+    QMatrix4x4 xf;
+    xf.translate(translateX, translateY);
+    return xf;
+}
+
+/*!
+    \qmlmethod matrix4x4 PlanarTransform::fromScale(real scaleX, real scaleY, real originX, real originY)
+
+    Returns a matrix4x4 for a 2D transform that scales by \a scaleX horizontally and \a scaleY
+    vertically, centered at the point (\a originX, \a originY).
+
+    \a originX and \a originY are optional and default to (0, 0).
+*/
+QMatrix4x4 QQuickPlanarTransform::fromScale(float scaleX, float scaleY, float originX, float originY)
+{
+    QMatrix4x4 xf;
+    xf.translate(originX, originY);
+    xf.scale(scaleX, scaleY);
+    xf.translate(-originX, -originY);
+    return xf;
+}
+
+/*!
+    \qmlmethod matrix4x4 PlanarTransform::fromRotate(real angle, real originX, real originY)
+
+    Returns a matrix4x4 for a 2D transform that rotates by \a angle degrees around the point (\a
+    originX, \a originY).
+
+    \a originX and \a originY are optional and default to (0, 0).
+*/
+QMatrix4x4 QQuickPlanarTransform::fromRotate(float angle, float originX, float originY)
+{
+    QMatrix4x4 xf;
+    xf.translate(originX, originY);
+    xf.rotate(angle, 0, 0, 1);
+    xf.translate(-originX, -originY);
+    return xf;
+}
+
+/*!
+    \qmlmethod matrix4x4 PlanarTransform::fromShear(float shearX, float shearY, float originX, float originY)
+
+    Returns a matrix4x4 for a 2D transform that shears by \a shearX horizontally and \a shearY
+    vertically, centered at the point (\a originX, \a originY).
+
+    \a originX and \a originY are optional and default to (0, 0).
+*/
+QMatrix4x4 QQuickPlanarTransform::fromShear(float shearX, float shearY, float originX, float originY)
+{
+    QMatrix4x4 xf;
+    xf.translate(originX, originY);
+    xf *= QMatrix4x4(1, shearX, 0, 0, shearY, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+    xf.translate(-originX, -originY);
+    return xf;
+}
+
 template<typename T>
 void setFontProperty(QFont &font, void (QFont::*setter)(T value), QString name,
                      const QJSValue &params, bool *ok)

@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick
 
 Item {
     property bool success: false
@@ -6,6 +6,7 @@ Item {
     property variant m1: Qt.matrix4x4(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4)
     property variant m2: Qt.matrix4x4(5,5,5,5,6,6,6,6,7,7,7,7,8,8,8,8)
     property variant m3: Qt.matrix4x4(123,22,6,42,55,54,67,77,777,1,112,22,55,6696,77,777)
+    property matrix4x4 m4: PlanarTransform.fromAffineMatrix(1, 2, 3, 4, 5, 6)
     property variant v1: Qt.vector4d(1,2,3,4)
     property variant v2: Qt.vector3d(1,2,3)
     property real factor: 2.23
@@ -101,6 +102,7 @@ Item {
         if (m1.transposed() != Qt.matrix4x4(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4)) success = false;
         if (m1.fuzzyEquals(m2)) success = false;
         if (!m1.fuzzyEquals(m2, 10)) success = false;
+        if (m4 != Qt.matrix4x4(1, 3, 0, 5,  2, 4, 0, 6,  0, 0, 1, 0,  0, 0, 0, 1)) success = false;
         if (!testTransformation()) success = false;
         if (!testMatrixMapping()) success = false;
     }

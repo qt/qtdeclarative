@@ -353,6 +353,27 @@ public:
     operator QMatrix4x4() const { return v; }
 };
 
+class Q_QUICK_EXPORT QQuickPlanarTransform : public QObject
+{
+    Q_OBJECT
+    QML_SINGLETON
+    QML_NAMED_ELEMENT(PlanarTransform)
+    QML_ADDED_IN_VERSION(6, 8)
+
+public:
+    explicit QQuickPlanarTransform(QObject *parent = nullptr);
+
+    Q_INVOKABLE static QMatrix4x4 fromAffineMatrix(float scaleX, float shearY,
+                                                   float shearX, float scaleY,
+                                                   float translateX, float translateY);
+    Q_INVOKABLE static QMatrix4x4 fromTranslate(float translateX, float translateY);
+    Q_INVOKABLE static QMatrix4x4 fromScale(float scaleX, float scaleY,
+                                            float originX = 0, float originY = 0);
+    Q_INVOKABLE static QMatrix4x4 fromRotate(float angle,float originX = 0, float originY = 0);
+    Q_INVOKABLE static QMatrix4x4 fromShear(float shearX, float shearY,
+                                            float originX = 0, float originY = 0);
+};
+
 namespace QQuickFontEnums
 {
 Q_NAMESPACE_EXPORT(Q_QUICK_EXPORT)
