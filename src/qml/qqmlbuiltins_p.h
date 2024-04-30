@@ -35,6 +35,7 @@
 #include <QtCore/qvariantmap.h>
 #include <QtCore/qtypes.h>
 #include <QtCore/qchar.h>
+#include <QtCore/qjsonobject.h>
 
 #include <climits>
 
@@ -391,6 +392,14 @@ struct QQmlV4FunctionPtrForeign
     QML_ANONYMOUS
     QML_FOREIGN(QQmlV4FunctionPtr)
     QML_EXTENDED(QQmlV4FunctionPtrForeign)
+};
+
+struct QQmlQJsonObjectForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QJsonObject)
+    QML_EXTENDED_JAVASCRIPT(Object)
 };
 
 QT_END_NAMESPACE

@@ -1345,6 +1345,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("locale") << QStringLiteral("locale.qml");
     QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
     QTest::newRow("dontCheckJSTypes") << QStringLiteral("dontCheckJSTypes.qml");
+    QTest::newRow("jsonObjectIsRecognized") << QStringLiteral("jsonObjectIsRecognized.qml");
 }
 
 void TestQmllint::cleanQmlCode()
