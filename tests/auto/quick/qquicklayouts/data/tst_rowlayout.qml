@@ -1567,6 +1567,49 @@ Item {
             compare(rootRect.item1.width, 100)
         }
 
+        //---------------------------
+        // Layout with negative size
+        Component {
+            id: negativeSize_Component
+            Item {
+                id: rootItem
+                width: 0
+                height: 0
+                // default width x height: (0 x 0)
+                RowLayout {
+                    spacing: 0
+                    anchors.fill: parent
+                    anchors.leftMargin: 1   // since parent size == (0 x 0), it causes layout size
+                    anchors.bottomMargin: 1 // to become (-1, -1)
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                }
+            }
+        }
+
+        function test_negativeSize() {
+            let rootItem = createTemporaryObject(negativeSize_Component, container)
+            let rowLayout = rootItem.children[0]
+            let item = rowLayout.children[0]
+
+            const arr = [7, 1, 7, 0]
+            arr.forEach((n) => {
+                                rootItem.width = n
+                                rootItem.height = n
+
+                                // n === 0 is special: It will cause the layout to have a
+                                // negative size. In this case it will simply not rearrange its
+                                // child (and leave it at its previous size, 6)
+                                const expectedItemExtent = n === 0 ? 6 : n - 1
+
+                                compare(item.width, expectedItemExtent)
+                                compare(item.height, expectedItemExtent)
+                               });
+        }
+
+
 //---------------------------
         Component {
             id: rowlayoutWithTextItems_Component
