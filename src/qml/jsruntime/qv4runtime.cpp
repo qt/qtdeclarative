@@ -1029,7 +1029,7 @@ ReturnedValue Runtime::LoadName::call(ExecutionEngine *engine, int nameIndex)
 
 static Object *getSuperBase(Scope &scope)
 {
-    ScopedFunctionObject f(scope);
+    Scoped<JavaScriptFunctionObject> f(scope);
     ScopedObject homeObject(scope);
     if (scope.engine->currentStackFrame->isJSTypesFrame()) {
         JSTypesStackFrame *frame = static_cast<JSTypesStackFrame *>(
@@ -1188,7 +1188,7 @@ ReturnedValue Runtime::LoadSuperConstructor::call(ExecutionEngine *engine, const
     if (!f)
         return engine->throwTypeError();
     Heap::Object *c = static_cast<const Object &>(t).getPrototypeOf();
-    if (!c->vtable()->isFunctionObject || !static_cast<Heap::FunctionObject *>(c)->isConstructor())
+    if (!c->vtable()->isFunctionObject || !static_cast<Heap::FunctionObject *>(c)->isConstructor)
         return engine->throwTypeError();
     return c->asReturnedValue();
 }
@@ -1627,20 +1627,23 @@ ReturnedValue Runtime::TailCall::call(JSTypesStackFrame *frame, ExecutionEngine 
     int argc = tos[StackOffsets::tailCall_argc].int_32();
     Q_ASSERT(argc >= 0);
 
-    if (!function.isFunctionObject())
+    const JavaScriptFunctionObject *jsfo = function.as<JavaScriptFunctionObject>();
+    if (!jsfo) {
+        if (const FunctionObject *fo = function.as<FunctionObject>())
+            return checkedResult(engine, fo->call(&thisObject, argv, argc));
         return engine->throwTypeError();
+    }
 
-    const FunctionObject &fo = static_cast<const FunctionObject &>(function);
-    if (!frame->callerCanHandleTailCall() || !fo.canBeTailCalled() || engine->debugger()
-            || unsigned(argc) > fo.formalParameterCount()) {
+    if (!frame->callerCanHandleTailCall() || !jsfo->canBeTailCalled() || engine->debugger()
+            || unsigned(argc) > jsfo->formalParameterCount()) {
         // Cannot tailcall, do a normal call:
-        return checkedResult(engine, fo.call(&thisObject, argv, argc));
+        return checkedResult(engine, jsfo->call(&thisObject, argv, argc));
     }
 
     memmove(frame->jsFrame->args, argv, argc * sizeof(Value));
-    frame->init(fo.function(), frame->jsFrame->argValues<Value>(), argc,
+    frame->init(jsfo->function(), frame->jsFrame->argValues<Value>(), argc,
                 frame->callerCanHandleTailCall());
-    frame->setupJSFrame(frame->framePointer(), fo, fo.scope(), thisObject,
+    frame->setupJSFrame(frame->framePointer(), *jsfo, jsfo->scope(), thisObject,
                         Primitive::undefinedValue());
     engine->jsStackTop = frame->framePointer() + frame->requiredJSStackFrameSize();
     frame->setPendingTailCall(true);

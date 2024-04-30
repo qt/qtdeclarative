@@ -189,7 +189,7 @@ private:
 
 
 struct DateCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionEngine *engine);
 };
 
 }

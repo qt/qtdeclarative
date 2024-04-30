@@ -314,9 +314,9 @@ void Heap::PromiseReaction::triggerWithValue(ExecutionEngine *e, const Value *va
     handler->addReaction(e, reaction, value);
 }
 
-void Heap::PromiseCtor::init(QV4::ExecutionContext *scope)
+void Heap::PromiseCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("Promise"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Promise"));
 }
 
 void Heap::PromiseObject::init(ExecutionEngine *e)

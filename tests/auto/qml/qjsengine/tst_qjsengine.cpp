@@ -5948,7 +5948,7 @@ void tst_QJSEngine::functionCtorGeneratedCUIsNotCollectedByGc()
     const QString program = "new Function('a', 'b', 'let x = \"Hello\"; return a + b');";
     auto sumFunc = engine.evaluate(program);
     QVERIFY(sumFunc.isCallable());
-    auto *function = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&sumFunc);
+    auto *function = QJSValuePrivate::asManagedType<QV4::JavaScriptFunctionObject>(&sumFunc);
     auto *cu = function->d()->function->executableCompilationUnit();
     QVERIFY(cu->runtimeStrings); // should exist for "Hello"
     QVERIFY(cu->runtimeStrings[0]->isMarked());

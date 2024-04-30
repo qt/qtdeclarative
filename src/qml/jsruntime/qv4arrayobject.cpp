@@ -14,9 +14,9 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ArrayCtor);
 
-void Heap::ArrayCtor::init(QV4::ExecutionContext *scope)
+void Heap::ArrayCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("Array"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Array"));
 }
 
 ReturnedValue ArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)

@@ -199,10 +199,10 @@ struct ConsoleObject : Object {
 };
 
 #define QQmlBindingFunctionMembers(class, Member) \
-    Member(class, Pointer, FunctionObject *, bindingFunction)
-DECLARE_HEAP_OBJECT(QQmlBindingFunction, FunctionObject) {
+    Member(class, Pointer, JavaScriptFunctionObject *, bindingFunction)
+DECLARE_HEAP_OBJECT(QQmlBindingFunction, JavaScriptFunctionObject) {
     DECLARE_MARKOBJECTS(QQmlBindingFunction)
-    void init(const QV4::FunctionObject *bindingFunction);
+    void init(const QV4::JavaScriptFunctionObject *bindingFunction);
 };
 
 }
@@ -245,11 +245,11 @@ struct Q_QML_EXPORT GlobalExtensions {
 
 };
 
-struct QQmlBindingFunction : public QV4::FunctionObject
+struct QQmlBindingFunction : public QV4::JavaScriptFunctionObject
 {
-    V4_OBJECT2(QQmlBindingFunction, FunctionObject)
+    V4_OBJECT2(QQmlBindingFunction, JavaScriptFunctionObject)
 
-    Heap::FunctionObject *bindingFunction() const { return d()->bindingFunction; }
+    Heap::JavaScriptFunctionObject *bindingFunction() const { return d()->bindingFunction; }
     QQmlSourceLocation currentLocation() const; // from caller stack trace
 };
 

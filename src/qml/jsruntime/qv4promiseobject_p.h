@@ -50,7 +50,7 @@ protected:
 namespace Heap {
 
 struct PromiseCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 #define PromiseObjectMembers(class, Member) \

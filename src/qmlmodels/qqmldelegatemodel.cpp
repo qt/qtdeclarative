@@ -31,7 +31,7 @@ namespace QV4 {
 namespace Heap {
 
 struct DelegateModelGroupFunction : FunctionObject {
-    void init(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg));
+    void init(ExecutionEngine *engine, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg));
 
     QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg);
     uint flag;
@@ -60,9 +60,11 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
 {
     V4_OBJECT2(DelegateModelGroupFunction, FunctionObject)
 
-    static Heap::DelegateModelGroupFunction *create(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
+    static Heap::DelegateModelGroupFunction *create(
+            QV4::ExecutionEngine *engine, uint flag,
+            QV4::ReturnedValue (*code)(QQmlDelegateModelItem *, uint, const QV4::Value &))
     {
-        return scope->engine()->memoryManager->allocate<DelegateModelGroupFunction>(scope, flag, code);
+        return engine->memoryManager->allocate<DelegateModelGroupFunction>(engine, flag, code);
     }
 
     static ReturnedValue virtualCall(const QV4::FunctionObject *that, const Value *thisObject, const Value *argv, int argc)
@@ -78,9 +80,11 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
     }
 };
 
-void Heap::DelegateModelGroupFunction::init(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
+void Heap::DelegateModelGroupFunction::init(
+        QV4::ExecutionEngine *engine, uint flag,
+        QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
 {
-    QV4::Heap::FunctionObject::init(scope, QStringLiteral("DelegateModelGroupFunction"));
+    QV4::Heap::FunctionObject::init(engine, QStringLiteral("DelegateModelGroupFunction"));
     this->flag = flag;
     this->code = code;
 }
@@ -2187,27 +2191,27 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
 
     s = v4Engine->newString(QStringLiteral("isUnresolved"));
     QV4::ScopedFunctionObject f(scope);
-    QV4::ExecutionContext *global = scope.engine->rootContext();
-    p->setGetter((f = QV4::DelegateModelGroupFunction::create(global, 30, QQmlDelegateModelItem::get_member)));
+    QV4::ExecutionEngine *engine = scope.engine;
+    p->setGetter((f = QV4::DelegateModelGroupFunction::create(engine, 30, QQmlDelegateModelItem::get_member)));
     p->setSetter(nullptr);
     proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 
     s = v4Engine->newString(QStringLiteral("inItems"));
-    p->setGetter((f = QV4::DelegateModelGroupFunction::create(global, QQmlListCompositor::Default, QQmlDelegateModelItem::get_member)));
-    p->setSetter((f = QV4::DelegateModelGroupFunction::create(global, QQmlListCompositor::Default, QQmlDelegateModelItem::set_member)));
+    p->setGetter((f = QV4::DelegateModelGroupFunction::create(engine, QQmlListCompositor::Default, QQmlDelegateModelItem::get_member)));
+    p->setSetter((f = QV4::DelegateModelGroupFunction::create(engine, QQmlListCompositor::Default, QQmlDelegateModelItem::set_member)));
     proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 
     s = v4Engine->newString(QStringLiteral("inPersistedItems"));
-    p->setGetter((f = QV4::DelegateModelGroupFunction::create(global, QQmlListCompositor::Persisted, QQmlDelegateModelItem::get_member)));
-    p->setSetter((f = QV4::DelegateModelGroupFunction::create(global, QQmlListCompositor::Persisted, QQmlDelegateModelItem::set_member)));
+    p->setGetter((f = QV4::DelegateModelGroupFunction::create(engine, QQmlListCompositor::Persisted, QQmlDelegateModelItem::get_member)));
+    p->setSetter((f = QV4::DelegateModelGroupFunction::create(engine, QQmlListCompositor::Persisted, QQmlDelegateModelItem::set_member)));
     proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 
     s = v4Engine->newString(QStringLiteral("itemsIndex"));
-    p->setGetter((f = QV4::DelegateModelGroupFunction::create(global, QQmlListCompositor::Default, QQmlDelegateModelItem::get_index)));
+    p->setGetter((f = QV4::DelegateModelGroupFunction::create(engine, QQmlListCompositor::Default, QQmlDelegateModelItem::get_index)));
     proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 
     s = v4Engine->newString(QStringLiteral("persistedItemsIndex"));
-    p->setGetter((f = QV4::DelegateModelGroupFunction::create(global, QQmlListCompositor::Persisted, QQmlDelegateModelItem::get_index)));
+    p->setGetter((f = QV4::DelegateModelGroupFunction::create(engine, QQmlListCompositor::Persisted, QQmlDelegateModelItem::get_index)));
     p->setSetter(nullptr);
     proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 
@@ -2215,14 +2219,14 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
         QString propertyName = QLatin1String("in") + groupNames.at(i);
         propertyName.replace(2, 1, propertyName.at(2).toUpper());
         s = v4Engine->newString(propertyName);
-        p->setGetter((f = QV4::DelegateModelGroupFunction::create(global, i + 1, QQmlDelegateModelItem::get_member)));
-        p->setSetter((f = QV4::DelegateModelGroupFunction::create(global, i + 1, QQmlDelegateModelItem::set_member)));
+        p->setGetter((f = QV4::DelegateModelGroupFunction::create(engine, i + 1, QQmlDelegateModelItem::get_member)));
+        p->setSetter((f = QV4::DelegateModelGroupFunction::create(engine, i + 1, QQmlDelegateModelItem::set_member)));
         proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     }
     for (int i = 2; i < groupNames.size(); ++i) {
         const QString propertyName = groupNames.at(i) + QLatin1String("Index");
         s = v4Engine->newString(propertyName);
-        p->setGetter((f = QV4::DelegateModelGroupFunction::create(global, i + 1, QQmlDelegateModelItem::get_index)));
+        p->setGetter((f = QV4::DelegateModelGroupFunction::create(engine, i + 1, QQmlDelegateModelItem::get_index)));
         p->setSetter(nullptr);
         proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     }

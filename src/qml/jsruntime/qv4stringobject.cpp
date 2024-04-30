@@ -131,9 +131,9 @@ PropertyAttributes StringObject::virtualGetOwnProperty(const Managed *m, Propert
 
 DEFINE_OBJECT_VTABLE(StringCtor);
 
-void Heap::StringCtor::init(QV4::ExecutionContext *scope)
+void Heap::StringCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("String"));
+    Heap::FunctionObject::init(engine, QStringLiteral("String"));
 }
 
 ReturnedValue StringCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)

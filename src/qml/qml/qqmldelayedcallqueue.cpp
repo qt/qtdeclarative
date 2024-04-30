@@ -126,8 +126,9 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::Executi
             // if it's a qobject function wrapper, guard against qobject deletion
             dfc.m_objectGuard = QQmlGuard<QObject>(functionData.first);
             dfc.m_guarded = true;
-        } else if (func->scope()->type == QV4::Heap::ExecutionContext::Type_QmlContext) {
-            QV4::QmlContext::Data *g = static_cast<QV4::QmlContext::Data *>(func->scope());
+        } else if (const auto *js = func->as<QV4::JavaScriptFunctionObject>();
+                   js && js->scope()->type == QV4::Heap::ExecutionContext::Type_QmlContext) {
+            QV4::QmlContext::Data *g = static_cast<QV4::QmlContext::Data *>(js->scope());
             Q_ASSERT(g->qml()->scopeObject);
             dfc.m_objectGuard = QQmlGuard<QObject>(g->qml()->scopeObject);
             dfc.m_guarded = true;

@@ -304,7 +304,7 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
 {
     if (isFunction) {
         // calling a Q_INVOKABLE function of a value type
-        return QV4::QObjectMethod::create(engine->rootContext(), valueTypeWrapper, coreIndex);
+        return QV4::QObjectMethod::create(engine, valueTypeWrapper, coreIndex);
     }
 
     const QMetaObject *metaObject = valueTypeWrapper->metaObject();
@@ -785,7 +785,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
 
             QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
 
-            QV4::ScopedFunctionObject f(scope, bindingFunction->bindingFunction());
+            QV4::Scoped<JavaScriptFunctionObject> f(scope, bindingFunction->bindingFunction());
             QV4::ScopedContext ctx(scope, f->scope());
             QQmlBinding *newBinding = QQmlBinding::create(&cacheData, f->function(), referenceObject, context, ctx);
             newBinding->setSourceLocation(bindingFunction->currentLocation());

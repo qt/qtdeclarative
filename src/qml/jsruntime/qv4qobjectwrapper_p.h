@@ -72,7 +72,7 @@ DECLARE_EXPORTED_HEAP_OBJECT(QObjectMethod, FunctionObject) {
     int methodCount;
     int index;
 
-    void init(QV4::ExecutionContext *scope, Object *wrapper, int index);
+    void init(QV4::ExecutionEngine *engine, Object *wrapper, int index);
     void destroy()
     {
         if (methods != reinterpret_cast<const QQmlPropertyData *>(&_singleMethod))
@@ -348,10 +348,11 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
-    static ReturnedValue create(QV4::ExecutionContext *scope, Heap::Object *wrapper, int index);
+    static ReturnedValue create(ExecutionEngine *engine, Heap::Object *wrapper, int index);
     static ReturnedValue create(
-            QV4::ExecutionContext *scope, Heap::QQmlValueTypeWrapper *valueType, int index);
-    static ReturnedValue create(QV4::ExecutionEngine *engine, Heap::QObjectMethod *cloneFrom,
+            ExecutionEngine *engine, Heap::QQmlValueTypeWrapper *valueType, int index);
+    static ReturnedValue create(
+            ExecutionEngine *engine, Heap::QObjectMethod *cloneFrom,
             Heap::Object *wrapper, Heap::Object *object);
 
     int methodIndex() const { return d()->index; }

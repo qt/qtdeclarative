@@ -1141,7 +1141,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 QV4::Scope scope(v4);
 
 
-                QV4::ScopedFunctionObject function(scope, method(id));
+                QV4::Scoped<QV4::JavaScriptFunctionObject> function(scope, method(id));
                 if (!function) {
                     // The function was not compiled.  There are some exceptional cases which the
                     // expression rewriter does not rewrite properly (e.g., \r-terminated lines

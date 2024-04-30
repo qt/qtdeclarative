@@ -1708,7 +1708,7 @@ DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestWrapper);
 
 void Heap::QQmlXMLHttpRequestCtor::init(ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(engine->rootContext(), QStringLiteral("XMLHttpRequest"));
+    Heap::FunctionObject::init(engine, QStringLiteral("XMLHttpRequest"));
     Scope scope(engine);
     Scoped<QV4::QQmlXMLHttpRequestCtor> ctor(scope, this);
 

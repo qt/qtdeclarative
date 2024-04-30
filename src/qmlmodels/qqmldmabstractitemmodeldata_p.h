@@ -188,9 +188,14 @@ public:
             const QByteArray &propertyName = it.key();
 
             QV4::ScopedString name(scope, v4->newString(QString::fromUtf8(propertyName)));
-            QV4::ExecutionContext *global = v4->rootContext();
-            QV4::ScopedFunctionObject g(scope, v4->memoryManager->allocate<QV4::IndexedBuiltinFunction>(global, propertyId, QQmlDMAbstractItemModelData::get_property));
-            QV4::ScopedFunctionObject s(scope, v4->memoryManager->allocate<QV4::IndexedBuiltinFunction>(global, propertyId, QQmlDMAbstractItemModelData::set_property));
+            QV4::ScopedFunctionObject g(
+                    scope,
+                    v4->memoryManager->allocate<QV4::IndexedBuiltinFunction>(
+                            v4, propertyId, QQmlDMAbstractItemModelData::get_property));
+            QV4::ScopedFunctionObject s(
+                    scope,
+                    v4->memoryManager->allocate<QV4::IndexedBuiltinFunction>(
+                            v4, propertyId, QQmlDMAbstractItemModelData::set_property));
             p->setGetter(g);
             p->setSetter(s);
             proto->insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);

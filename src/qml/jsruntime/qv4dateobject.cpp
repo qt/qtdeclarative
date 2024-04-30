@@ -766,9 +766,9 @@ QDate DateObject::dateTimeToDate(const QDateTime &dateTime)
 
 DEFINE_OBJECT_VTABLE(DateCtor);
 
-void Heap::DateCtor::init(QV4::ExecutionContext *scope)
+void Heap::DateCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("Date"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Date"));
 }
 
 ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, const Value *argv, int argc, const Value *newTarget)

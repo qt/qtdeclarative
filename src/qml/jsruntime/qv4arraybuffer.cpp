@@ -12,14 +12,14 @@ DEFINE_OBJECT_VTABLE(ArrayBufferCtor);
 DEFINE_OBJECT_VTABLE(SharedArrayBuffer);
 DEFINE_OBJECT_VTABLE(ArrayBuffer);
 
-void Heap::SharedArrayBufferCtor::init(QV4::ExecutionContext *scope)
+void Heap::SharedArrayBufferCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("SharedArrayBuffer"));
+    Heap::FunctionObject::init(engine, QStringLiteral("SharedArrayBuffer"));
 }
 
-void Heap::ArrayBufferCtor::init(QV4::ExecutionContext *scope)
+void Heap::ArrayBufferCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("ArrayBuffer"));
+    Heap::FunctionObject::init(engine, QStringLiteral("ArrayBuffer"));
 }
 
 ReturnedValue SharedArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)

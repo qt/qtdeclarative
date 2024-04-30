@@ -236,9 +236,9 @@ const TypedArrayOperations operations[NTypedArrayTypes] = {
 };
 
 
-void Heap::TypedArrayCtor::init(QV4::ExecutionContext *scope, TypedArray::Type t)
+void Heap::TypedArrayCtor::init(QV4::ExecutionEngine *engine, TypedArray::Type t)
 {
-    Heap::FunctionObject::init(scope, QLatin1String(operations[t].name));
+    Heap::FunctionObject::init(engine, QLatin1String(operations[t].name));
     type = t;
 }
 

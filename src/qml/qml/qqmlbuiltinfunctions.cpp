@@ -1616,11 +1616,11 @@ QLocale QtObject::locale(const QString &name) const
 }
 #endif
 
-void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *bindingFunction)
+void Heap::QQmlBindingFunction::init(const QV4::JavaScriptFunctionObject *bindingFunction)
 {
     Scope scope(bindingFunction->engine());
     ScopedContext context(scope, bindingFunction->scope());
-    FunctionObject::init(context, bindingFunction->function());
+    JavaScriptFunctionObject::init(context, bindingFunction->function());
     this->bindingFunction.set(internalClass->engine, bindingFunction->d());
 }
 
@@ -1678,7 +1678,8 @@ DEFINE_OBJECT_VTABLE(QQmlBindingFunction);
 */
 QJSValue QtObject::binding(const QJSValue &function) const
 {
-    const QV4::FunctionObject *f = QJSValuePrivate::asManagedType<FunctionObject>(&function);
+    const QV4::JavaScriptFunctionObject *f
+            = QJSValuePrivate::asManagedType<JavaScriptFunctionObject>(&function);
     QV4::ExecutionEngine *e = v4Engine();
     if (!f) {
         return QJSValuePrivate::fromReturnedValue(

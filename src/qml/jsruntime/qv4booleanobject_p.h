@@ -25,7 +25,7 @@ namespace QV4 {
 namespace Heap {
 
 struct BooleanCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 }

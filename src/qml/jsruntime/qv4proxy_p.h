@@ -43,7 +43,7 @@ struct ProxyFunctionObject : ProxyObject {
 DECLARE_HEAP_OBJECT(Proxy, FunctionObject) {
     DECLARE_MARKOBJECTS(Proxy)
 
-    void init(QV4::ExecutionContext *ctx);
+    void init(ExecutionEngine *engine);
 };
 
 }

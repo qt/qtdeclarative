@@ -360,20 +360,15 @@ ReturnedValue QObjectWrapper::getProperty(
             Q_ASSERT(vmemo);
             return vmemo->vmeMethod(property->coreIndex());
         } else if (property->isV4Function()) {
-            Scope scope(engine);
-            ScopedContext global(scope, engine->qmlContext());
-            if (!global)
-                global = engine->rootContext();
             return QObjectMethod::create(
-                        global, (flags & AttachMethods) ? wrapper : nullptr, property->coreIndex());
+                        engine, (flags & AttachMethods) ? wrapper : nullptr, property->coreIndex());
         } else if (property->isSignalHandler()) {
             QmlSignalHandler::initProto(engine);
             return engine->memoryManager->allocate<QmlSignalHandler>(
                         object, property->coreIndex())->asReturnedValue();
         } else {
-            ExecutionContext *global = engine->rootContext();
             return QObjectMethod::create(
-                        global, (flags & AttachMethods) ? wrapper : nullptr, property->coreIndex());
+                        engine, (flags & AttachMethods) ? wrapper : nullptr, property->coreIndex());
         }
     }
 
@@ -405,8 +400,7 @@ static OptionalReturnedValue getDestroyOrToStringMethod(
 
     if (hasProperty)
         *hasProperty = true;
-    ExecutionContext *global = v4->rootContext();
-    return OptionalReturnedValue(QObjectMethod::create(global, qobj, index));
+    return OptionalReturnedValue(QObjectMethod::create(v4, qobj, index));
 }
 
 static OptionalReturnedValue getPropertyFromImports(
@@ -641,7 +635,7 @@ void QObjectWrapper::setProperty(
 
             QQmlRefPointer<QQmlContextData> callingQmlContext = scope.engine->callingQmlContext();
             Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
-            ScopedFunctionObject f(scope, bindingFunction->bindingFunction());
+            Scoped<JavaScriptFunctionObject> f(scope, bindingFunction->bindingFunction());
             ScopedContext ctx(scope, f->scope());
 
             // binding assignment.
@@ -2559,21 +2553,22 @@ ReturnedValue CallArgument::toValue(ExecutionEngine *engine)
     return Encode::undefined();
 }
 
-ReturnedValue QObjectMethod::create(ExecutionContext *scope, Heap::Object *wrapper, int index)
+ReturnedValue QObjectMethod::create(ExecutionEngine *engine, Heap::Object *wrapper, int index)
 {
-    Scope valueScope(scope);
+    Scope valueScope(engine);
     Scoped<QObjectMethod> method(
             valueScope,
-            valueScope.engine->memoryManager->allocate<QObjectMethod>(scope, wrapper, index));
+            engine->memoryManager->allocate<QObjectMethod>(engine, wrapper, index));
     return method.asReturnedValue();
 }
 
-ReturnedValue QObjectMethod::create(ExecutionContext *scope, Heap::QQmlValueTypeWrapper *valueType, int index)
+ReturnedValue QObjectMethod::create(
+        ExecutionEngine *engine, Heap::QQmlValueTypeWrapper *valueType, int index)
 {
-    Scope valueScope(scope);
+    Scope valueScope(engine);
     Scoped<QObjectMethod> method(
             valueScope,
-            valueScope.engine->memoryManager->allocate<QObjectMethod>(scope, valueType, index));
+            engine->memoryManager->allocate<QObjectMethod>(engine, valueType, index));
     return method.asReturnedValue();
 }
 
@@ -2596,11 +2591,10 @@ ReturnedValue QObjectMethod::create(
         }
     }
 
-    Scoped<ExecutionContext> context(valueScope, cloneFrom->scope.get());
     Scoped<QObjectMethod> method(
             valueScope,
             engine->memoryManager->allocate<QV4::QObjectMethod>(
-                    context, valueTypeWrapper ? valueTypeWrapper->d() : object, cloneFrom->index));
+                    engine, valueTypeWrapper ? valueTypeWrapper->d() : object, cloneFrom->index));
 
     method->d()->methodCount = cloneFrom->methodCount;
 
@@ -2626,10 +2620,10 @@ ReturnedValue QObjectMethod::create(
     return method.asReturnedValue();
 }
 
-void Heap::QObjectMethod::init(QV4::ExecutionContext *scope, Object *object, int methodIndex)
+void Heap::QObjectMethod::init(QV4::ExecutionEngine *engine, Object *object, int methodIndex)
 {
-    Heap::FunctionObject::init(scope);
-    wrapper.set(internalClass->engine, object);
+    Heap::FunctionObject::init(engine);
+    wrapper.set(engine, object);
     index = methodIndex;
 }
 
@@ -3106,7 +3100,7 @@ ReturnedValue QmlSignalHandler::call(const Value *thisObject, const Value *argv,
     Scope scope(engine());
     Scoped<QObjectMethod> method(
             scope, QObjectMethod::create(
-                           scope.engine->rootContext(),
+                           scope.engine,
                            static_cast<Heap::QObjectWrapper *>(nullptr),
                            signalIndex()));
 

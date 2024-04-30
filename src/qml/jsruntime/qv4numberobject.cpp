@@ -36,9 +36,9 @@ const NumberLocale *NumberLocale::instance()
     return numberLocaleHolder();
 }
 
-void Heap::NumberCtor::init(QV4::ExecutionContext *scope)
+void Heap::NumberCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("Number"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Number"));
 }
 
 ReturnedValue NumberCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)

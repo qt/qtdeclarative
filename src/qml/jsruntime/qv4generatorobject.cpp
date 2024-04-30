@@ -13,9 +13,9 @@ DEFINE_OBJECT_VTABLE(GeneratorFunctionCtor);
 DEFINE_OBJECT_VTABLE(GeneratorFunction);
 DEFINE_OBJECT_VTABLE(GeneratorObject);
 
-void Heap::GeneratorFunctionCtor::init(QV4::ExecutionContext *scope)
+void Heap::GeneratorFunctionCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("GeneratorFunction"));
+    Heap::FunctionObject::init(engine, QStringLiteral("GeneratorFunction"));
 }
 
 ReturnedValue GeneratorFunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)

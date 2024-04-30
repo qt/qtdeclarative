@@ -25,12 +25,12 @@ void Heap::ProxyObject::init(const QV4::Object *target, const QV4::Object *handl
 void Heap::ProxyFunctionObject::init(const QV4::FunctionObject *target, const QV4::Object *handler)
 {
     ExecutionEngine *e = internalClass->engine;
-    FunctionObject::init(e->rootContext());
+    FunctionObject::init(e);
     this->target.set(e, target->d());
     this->handler.set(e, handler->d());
 
     if (!target->isConstructor())
-        jsConstruct = nullptr;
+        isConstructor = false;
 }
 
 
@@ -658,10 +658,8 @@ ReturnedValue ProxyFunctionObject::virtualCallAsConstructor(const FunctionObject
 
     if (scope.hasException())
         return Encode::undefined();
-    if (trap->isNullOrUndefined()) {
-        Q_ASSERT(target->isConstructor());
+    if (trap->isNullOrUndefined())
         return target->callAsConstructor(argv, argc, newTarget);
-    }
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
 
@@ -708,11 +706,11 @@ ReturnedValue ProxyFunctionObject::virtualCall(const FunctionObject *f, const Va
 
 DEFINE_OBJECT_VTABLE(Proxy);
 
-void Heap::Proxy::init(QV4::ExecutionContext *ctx)
+void Heap::Proxy::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(ctx, QStringLiteral("Proxy"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Proxy"));
 
-    Scope scope(ctx);
+    Scope scope(engine);
     Scoped<QV4::Proxy> ctor(scope, this);
     ctor->defineDefaultProperty(QStringLiteral("revocable"), QV4::Proxy::method_revocable, 2);
     ctor->defineReadonlyConfigurableProperty(scope.engine->id_length(), Value::fromInt32(2));
@@ -753,7 +751,10 @@ ReturnedValue Proxy::method_revocable(const FunctionObject *f, const Value *, co
     Q_ASSERT(proxy);
 
     ScopedString revoke(scope, scope.engine->newString(QStringLiteral("revoke")));
-    ScopedFunctionObject revoker(scope, scope.engine->memoryManager->allocate<FunctionObject>(scope.engine->rootContext(), nullptr, method_revoke));
+    ScopedFunctionObject revoker(
+            scope,
+            scope.engine->memoryManager->allocate<DynamicFunctionObject>(
+                    scope.engine, nullptr, method_revoke));
     revoker->defineReadonlyConfigurableProperty(scope.engine->id_length(), Value::fromInt32(0));
     revoker->defineDefaultProperty(scope.engine->symbol_revokableProxy(), proxy);
 

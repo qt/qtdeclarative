@@ -27,11 +27,11 @@ class ESTable;
 namespace Heap {
 
 struct WeakMapCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct MapCtor : WeakMapCtor {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct MapObject : Object {
