@@ -569,15 +569,14 @@ void HighlightingVisitor::highlightScriptExpressions(const DomItem &item)
     Q_UNREACHABLE_RETURN();
 }
 
-/*! \internal
-    \brief Returns multiple source locations for a given raw comment
+/*!
+\internal
+\brief Returns multiple source locations for a given raw comment
 
-    Needed by semantic highlighting of comments. LSP clients usually don't support multiline
-    tokens. In QML, we can have multiline tokens like string literals and comments.
-    This method generates multiple source locations of sub-elements of token split by a newline
-   delimiter.
-
-
+Needed by semantic highlighting of comments. LSP clients usually don't support multiline
+tokens. In QML, we can have multiline tokens like string literals and comments.
+This method generates multiple source locations of sub-elements of token split by a newline
+delimiter.
 */
 QList<QQmlJS::SourceLocation>
 HighlightingUtils::sourceLocationsFromMultiLineToken(QStringView stringLiteral,
@@ -682,6 +681,58 @@ bool HighlightingUtils::rangeOverlapsWithSourceLocation(const QQmlJS::SourceLoca
     int endOffsetItem = startOffsetItem + int(loc.length);
     return (startOffsetItem <= r.endOffset) && (r.startOffset <= endOffsetItem);
 }
+
+/*
+\internal
+Increments the resultID by one.
+*/
+void HighlightingUtils::updateResultID(QByteArray &resultID)
+{
+    int length = resultID.length();
+    for (int i = length - 1; i >= 0; --i) {
+        if (resultID[i] == '9') {
+            resultID[i] = '0';
+        } else {
+            resultID[i] = resultID[i] + 1;
+            return;
+        }
+    }
+    resultID.prepend('1');
+}
+
+/*
+\internal
+A utility method that computes the difference of two list. The first argument is the encoded token data
+of the file before edited. The second argument is the encoded token data after the file is edited. Returns
+a list of SemanticTokensEdit as expected by the protocol.
+*/
+QList<SemanticTokensEdit> HighlightingUtils::computeDiff(const QList<int> &oldData, const QList<int> &newData)
+{
+    // Find the iterators pointing the first mismatch, from the start
+    const auto [oldStart, newStart] =
+            std::mismatch(oldData.cbegin(), oldData.cend(), newData.cbegin(), newData.cend());
+
+    // Find the iterators pointing the first mismatch, from the end
+    // but the iterators shouldn't pass over the start iterators found above.
+    const auto [r1, r2] = std::mismatch(oldData.crbegin(), std::make_reverse_iterator(oldStart),
+                                        newData.crbegin(), std::make_reverse_iterator(newStart));
+    const auto oldEnd = r1.base();
+    const auto newEnd = r2.base();
+
+    // no change
+    if (oldStart == oldEnd && newStart == newEnd)
+        return {};
+
+    SemanticTokensEdit edit;
+    edit.start = int(std::distance(newData.cbegin(), newStart));
+    edit.deleteCount = int(std::distance(oldStart, oldEnd));
+
+    if (newStart >= newData.cbegin() && newEnd <= newData.cend() && newStart < newEnd)
+        edit.data.emplace(newStart, newEnd);
+
+    return { edit };
+}
+
 
 void Highlights::addHighlight(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier)
 {

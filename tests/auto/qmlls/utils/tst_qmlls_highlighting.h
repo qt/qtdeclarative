@@ -25,6 +25,11 @@ private slots:
     void rangeOverlapsWithSourceLocation_data();
     void rangeOverlapsWithSourceLocation();
 
+    void updateResultID_data();
+    void updateResultID();
+
+    void computeDiff_data();
+    void computeDiff();
 private:
     QString m_highlightingDataDir;
 };

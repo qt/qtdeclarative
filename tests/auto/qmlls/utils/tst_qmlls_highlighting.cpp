@@ -537,4 +537,114 @@ void tst_qmlls_highlighting::rangeOverlapsWithSourceLocation()
     QVERIFY(overlaps == HighlightingUtils::rangeOverlapsWithSourceLocation(sourceLocation, range));
 }
 
+void tst_qmlls_highlighting::updateResultID_data()
+{
+    QTest::addColumn<QByteArray>("currentId");
+    QTest::addColumn<QByteArray>("expectedNextId");
+
+    QTest::addRow("zero-to-one") << QByteArray("0") << QByteArray("1");
+    QTest::addRow("nine-to-ten") << QByteArray("9") << QByteArray("10");
+    QTest::addRow("nineteen-to-twenty") << QByteArray("19") << QByteArray("20");
+    QTest::addRow("twodigit-to-threedigit") << QByteArray("99") << QByteArray("100");
+}
+
+void tst_qmlls_highlighting::updateResultID()
+{
+    QFETCH(QByteArray, currentId);
+    QFETCH(QByteArray, expectedNextId);
+
+    HighlightingUtils::updateResultID(currentId);
+    QCOMPARE(currentId, expectedNextId);
+}
+
+void tst_qmlls_highlighting::computeDiff_data()
+{
+    QTest::addColumn<QList<int>>("oldData");
+    QTest::addColumn<QList<int>>("newData");
+    QTest::addColumn<QList<SemanticTokensEdit>>("expected");
+
+    {
+        QList<int> oldData { 2,5,3,0,3, 0,5,4,1,0, 3,2,7,2,0};
+        QList<int> newData {  3,5,3,0,3, 0,5,4,1,0, 3,2,7,2,0};
+        SemanticTokensEdit expected;
+        expected.start = 0;
+        expected.deleteCount = 1;
+        expected.data = QList{3};
+        QTest::addRow("simple") << oldData << newData << QList{expected};
+    }
+    {
+        QList<int> oldData { 0, 0, 5, 5, 0};
+        QList<int> newData { 3, 3, 3, 3, 3, 0, 0, 5, 5, 0};
+        SemanticTokensEdit expected;
+        expected.start = 0;
+        expected.deleteCount = 0;
+        expected.data = QList{3, 3, 3, 3, 3};
+        QTest::addRow("prepend") << oldData << newData << QList{expected};
+    }
+    {
+        QList<int> oldData { 3, 3, 3, 3, 3, 0, 0, 5, 5, 0};
+        QList<int> newData { 0, 0, 5, 5, 0};
+        SemanticTokensEdit expected;
+        expected.start = 0;
+        expected.deleteCount = 5;
+        expected.data = {};
+        QTest::addRow("remove-front") << oldData << newData << QList{expected};
+    }
+    {
+        QList<int> oldData { 0, 0, 5, 5, 0};
+        QList<int> newData {  0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
+        SemanticTokensEdit expected;
+        expected.start = 5;
+        expected.deleteCount = 0;
+        expected.data = QList{1, 0, 23, 5, 0};
+        QTest::addRow("append") << oldData << newData << QList{expected};
+    }
+    {
+        QList<int> oldData { 0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
+        QList<int> newData { 0, 0, 5, 5, 0};
+        SemanticTokensEdit expected;
+        expected.start = 5;
+        expected.deleteCount = 5;
+        expected.data = {};
+        QTest::addRow("remove-back") << oldData << newData << QList{expected};
+    }
+    {
+        QList<int> oldData { 0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
+        QList<int> newData { 0, 0, 5, 5, 0, 3, 3, 3, 3, 3, 1, 0, 23, 5, 0};
+        SemanticTokensEdit expected;
+        expected.start = 5;
+        expected.deleteCount = 0;
+        expected.data = QList{3, 3, 3, 3, 3};
+        QTest::addRow("insert-middle") << oldData << newData << QList{expected};
+    }
+    {
+        QList<int> oldData { 0, 0, 5, 5, 0, 3, 3, 3, 3, 3, 1, 0, 23, 5, 0};
+        QList<int> newData { 0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
+        SemanticTokensEdit expected;
+        expected.start = 5;
+        expected.deleteCount = 5;
+        expected.data = {};
+        QTest::addRow("remove-middle") << oldData << newData << QList{expected};
+    }
+}
+
+void tst_qmlls_highlighting::computeDiff()
+{
+    QFETCH(QList<int>, oldData);
+    QFETCH(QList<int>, newData);
+    QFETCH(QList<SemanticTokensEdit>, expected);
+
+    const auto edits = HighlightingUtils::computeDiff(oldData, newData);
+    QCOMPARE(edits.size(), expected.size());
+
+    qsizetype i = 0;
+    for (const auto &edit : edits) {
+        QCOMPARE(edit.start, expected.at(i).start);
+        QCOMPARE(edit.deleteCount, expected.at(i).deleteCount);
+        QCOMPARE(edit.data, expected.at(i).data);
+        ++i;
+    }
+}
+
+
 QTEST_MAIN(tst_qmlls_highlighting)

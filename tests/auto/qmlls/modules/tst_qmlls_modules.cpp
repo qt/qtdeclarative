@@ -373,7 +373,7 @@ void tst_qmlls_modules::buildDir()
     didChange.textDocument.uri = *uri;
     didChange.textDocument.version = 2;
 
-    // change the file content to force qqmlcodemodel to recreate a new DomItem
+    // change the file content to force qqml— to recreate a new DomItem
     // if it reuses the old DomItem then it will not know about the added build directory
     TextDocumentContentChangeEvent change;
     change.range = Range{ Position{ 4, 0 }, Position{ 4, 0 } };
@@ -1607,6 +1607,90 @@ void tst_qmlls_modules::semanticHighlightingRange()
     m_protocol->requestSemanticTokensRange(params, std::move(responseHandler),
                                            std::move(errorHandler));
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+}
+
+void tst_qmlls_modules::semanticHighlightingDelta_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addRow("basicDelta") << u"highlighting/basic.qml"_s;
+}
+
+void tst_qmlls_modules::semanticHighlightingDelta()
+{
+    QSKIP("This test should be skipped until QTBUG-124870 is fixed");
+    QFETCH(QString, filePath);
+    QFETCH(QString, deltaFilePath);
+
+    const auto fileItem = fileObject(testFile(filePath));
+    const auto deltaFileItem = fileObject(testFile(deltaFilePath));
+    Highlights highlights;
+    auto fullDocumentSemanticTokensData = highlights.collectTokens(fileItem, std::nullopt);
+    auto editedDocumentSemanticTokensData = highlights.collectTokens(deltaFileItem, std::nullopt);
+    const auto expectedEdits = HighlightingUtils::computeDiff(fullDocumentSemanticTokensData, editedDocumentSemanticTokensData);
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    const auto deltaUri = openFile(deltaFilePath);
+    QVERIFY(deltaUri);
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    const auto cleanup = [didFinish]() { *didFinish = true; };
+
+    QLspSpecification::SemanticTokensDeltaParams params;
+    QLspSpecification::Responses::SemanticTokensDeltaResultType result;
+
+    auto &&errorHandler = [&](auto &error) {
+        QScopeGuard callAtExit(cleanup);
+        ProtocolBase::defaultResponseErrorHandler(error);
+        QVERIFY2(false, "error occurred on semantic tokens/delta");
+    };
+
+    QLspSpecification::SemanticTokensParams fullParams;
+    fullParams.textDocument.uri = *uri;
+    m_protocol->requestSemanticTokens(fullParams,
+    [&](auto res) {
+        QScopeGuard callAtExit(cleanup);
+        if (auto r = std::get_if<QLspSpecification::SemanticTokens>(&res)) {
+            params.previousResultId = r->resultId.value();
+            fullDocumentSemanticTokensData = r->data;
+        }
+    }, errorHandler);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+
+    // Change the file
+    DidChangeTextDocumentParams didChange;
+    didChange.textDocument.uri = *uri;
+    didChange.textDocument.version = 2;
+
+    TextDocumentContentChangeEvent change;
+    change.range = Range{ Position{ 8, 4 }, Position{ 8, 4 } };
+    change.text = "const Patron = 42";
+
+    didChange.contentChanges.append(change);
+    m_protocol->notifyDidChangeTextDocument(didChange);
+
+    *didFinish = false;
+    params.textDocument.uri = *uri;
+    m_protocol->requestSemanticTokensDelta(params,
+    [&](auto res) {
+        QScopeGuard callAtExit(cleanup);
+        result = res;
+    }, std::move(errorHandler));
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+
+    if (const auto *const delta = std::get_if<QLspSpecification::SemanticTokensDelta>(&result)) {
+        QVERIFY(delta);
+        const auto data = delta->edits.front().data;
+        const auto start = delta->edits.front().start;
+        const auto deleteCount = delta->edits.front().deleteCount;
+        QCOMPARE(start, expectedEdits.front().start);
+        QCOMPARE(deleteCount, expectedEdits.front().deleteCount);
+        QCOMPARE(data, expectedEdits.front().data);
+    } else {
+        const auto *const full = std::get_if<QLspSpecification::SemanticTokens>(&result);
+        QVERIFY(full);
+        QCOMPARE(full->data, expectedEdits.front().data);
+    }
 }
 
 QTEST_MAIN(tst_qmlls_modules)

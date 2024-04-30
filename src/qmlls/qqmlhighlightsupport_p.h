@@ -83,7 +83,6 @@ public:
     void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) override;
     void setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
                            QLspSpecification::InitializeResult &) override;
-
 private:
     SemanticTokenFullHandler m_full;
     SemanticTokenDeltaHandler m_delta;

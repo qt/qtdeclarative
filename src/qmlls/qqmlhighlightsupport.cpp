@@ -61,14 +61,20 @@ void SemanticTokenFullHandler::process(
         qCWarning(semanticTokens) << "No semantic token request is available!";
         return;
     }
+
     const auto doc = m_codeModel->openDocumentByUrl(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
     DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
-    const auto code = file.as<QmlFile>()->code();
     Highlights highlights;
-    result = QLspSpecification::SemanticTokens{ std::nullopt, highlights.collectTokens(file, std::nullopt) };
-    qCDebug(semanticTokens) << "Encoded semantic tokens "
-                            << std::get<QLspSpecification::SemanticTokens>(result).data;
+    auto &&encoded = highlights.collectTokens(file, std::nullopt);
+    auto &registeredTokens = m_codeModel->registeredTokens();
+    if (!encoded.isEmpty()) {
+        HighlightingUtils::updateResultID(registeredTokens.resultId);
+        result = SemanticTokens{ registeredTokens.resultId, encoded };
+        registeredTokens.lastTokens = std::move(encoded);
+    } else {
+        result = nullptr;
+    }
 }
 
 void SemanticTokenFullHandler::registerHandlers(QLanguageServer *, QLanguageServerProtocol *protocol)
@@ -98,6 +104,27 @@ void SemanticTokenDeltaHandler::process(
         qCWarning(semanticTokens) << "No semantic token request is available!";
         return;
     }
+    const auto doc = m_codeModel->openDocumentByUrl(
+            QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
+    DomItem file = doc.snapshot.validDoc.fileObject(GoTo::MostLikely);
+    Highlights highlights;
+    auto newEncoded = highlights.collectTokens(file, std::nullopt);
+    auto &registeredTokens = m_codeModel->registeredTokens();
+    const auto lastResultId = registeredTokens.resultId;
+    HighlightingUtils::updateResultID(registeredTokens.resultId);
+
+    // Return full token list if result ids not align
+    // otherwise compute the delta.
+    if (lastResultId == request->m_parameters.previousResultId) {
+        auto &&oldEncoded = registeredTokens.lastTokens;
+        QList<SemanticTokensEdit> edits = HighlightingUtils::computeDiff(oldEncoded, newEncoded);
+        result = QLspSpecification::SemanticTokensDelta{ registeredTokens.resultId, edits };
+    } else if (!newEncoded.isEmpty()){
+        result = QLspSpecification::SemanticTokens{ registeredTokens.resultId, newEncoded };
+    } else {
+        result = nullptr;
+    }
+    registeredTokens.lastTokens = newEncoded;
 }
 
 void SemanticTokenDeltaHandler::registerHandlers(QLanguageServer *, QLanguageServerProtocol *protocol)
@@ -137,12 +164,14 @@ void SemanticTokenRangeHandler::process(
     int startOffset = int(QQmlLSUtils::textOffsetFrom(code, range.start.line, range.end.character));
     int endOffset = int(QQmlLSUtils::textOffsetFrom(code, range.end.line, range.end.character));
     Highlights highlights;
-    HighlightsRange highlightRange{startOffset, endOffset};
-    result =
-            QLspSpecification::SemanticTokens{ std::nullopt,
-                                               highlights.collectTokens(file, highlightRange) };
-    qCDebug(semanticTokens) << "Encoded semantic tokens "
-                            << std::get<QLspSpecification::SemanticTokens>(result).data;
+    auto &&encoded = highlights.collectTokens(file, HighlightsRange{startOffset, endOffset});
+    auto &registeredTokens = m_codeModel->registeredTokens();
+    if (!encoded.isEmpty()) {
+        HighlightingUtils::updateResultID(registeredTokens.resultId);
+        result = SemanticTokens{ registeredTokens.resultId, encoded };
+    } else {
+        result = nullptr;
+    }
 }
 
 void SemanticTokenRangeHandler::registerHandlers(QLanguageServer *, QLanguageServerProtocol *protocol)
@@ -173,9 +202,10 @@ void QQmlHighlightSupport::setupCapabilities(
 {
     QLspSpecification::SemanticTokensOptions options;
     options.range = true;
-    options.full = QJsonObject({ { u"delta"_s, false } });
+    options.full = QJsonObject({ { u"delta"_s, true } });
     options.legend.tokenTypes = tokenTypesList();
     options.legend.tokenModifiers = tokenModifiersList();
+
     serverCapabilities.capabilities.semanticTokensProvider = options;
 }
 

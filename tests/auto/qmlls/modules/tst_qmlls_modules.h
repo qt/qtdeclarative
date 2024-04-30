@@ -73,7 +73,8 @@ private slots:
     void semanticHighlightingFull();
     void semanticHighlightingRange_data();
     void semanticHighlightingRange();
-
+    void semanticHighlightingDelta_data();
+    void semanticHighlightingDelta();
 private:
     QProcess m_server;
     std::unique_ptr<QLanguageServerProtocol> m_protocol;

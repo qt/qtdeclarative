@@ -96,6 +96,8 @@ struct HighlightingUtils
                                       const QQmlJS::SourceLocation &tokenLocation);
     static void addModifier(QLspSpecification::SemanticTokenModifiers modifier, int *baseModifier);
     static bool rangeOverlapsWithSourceLocation(const QQmlJS::SourceLocation &loc, const HighlightsRange &r);
+    static QList<QLspSpecification::SemanticTokensEdit> computeDiff(const QList<int> &, const QList<int> &);
+    static void updateResultID(QByteArray &resultID);
 };
 
 class HighlightingVisitor
