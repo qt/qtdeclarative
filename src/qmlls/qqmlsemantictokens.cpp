@@ -7,7 +7,6 @@
 #include <QtQmlDom/private/qqmldomscriptelements_p.h>
 #include <QtQmlDom/private/qqmldomfieldfilter_p.h>
 
-#include <QtLanguageServer/private/qlanguageserverspec_p.h>
 #include <QtLanguageServer/private/qlanguageserverprotocol_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -119,6 +118,10 @@ bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
     }
     case DomType::QmlComponent: {
         highlightComponent(item);
+        return true;
+    }
+    case DomType::PropertyDefinition: {
+        highlightPropertyDefinition(item);
         return true;
     }
     default:
@@ -251,6 +254,42 @@ void HighlightingVisitor::highlightComponent(const DomItem &item)
     m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Type));
 }
 
+void HighlightingVisitor::highlightPropertyDefinition(const DomItem &item)
+{
+    const auto propertyDef = item.as<PropertyDefinition>();
+    Q_ASSERT(propertyDef);
+    const auto fLocs = FileLocations::treeOf(item);
+    if (!fLocs)
+        return;
+    const auto regions = fLocs->info().regions;
+    int modifier = 0;
+    HighlightingUtils::addModifier(SemanticTokenModifiers::Definition, &modifier);
+    if (propertyDef->isDefaultMember) {
+        HighlightingUtils::addModifier(SemanticTokenModifiers::DefaultLibrary,
+                                                &modifier);
+        m_highlights.addHighlight(regions[DefaultKeywordRegion],
+                                    int(SemanticTokenTypes::Keyword));
+    }
+    if (propertyDef->isRequired) {
+        HighlightingUtils::addModifier(SemanticTokenModifiers::Abstract, &modifier);
+        m_highlights.addHighlight(regions[RequiredKeywordRegion],
+                                    int(SemanticTokenTypes::Keyword));
+    }
+    if (propertyDef->isReadonly) {
+        HighlightingUtils::addModifier(SemanticTokenModifiers::Readonly, &modifier);
+        m_highlights.addHighlight(regions[ReadonlyKeywordRegion],
+                                    int(SemanticTokenTypes::Keyword));
+    }
+    m_highlights.addHighlight(regions, PropertyKeywordRegion);
+    if (propertyDef->isAlias())
+        m_highlights.addHighlight(regions[TypeIdentifierRegion],
+                                    int(SemanticTokenTypes::Keyword));
+    else
+        m_highlights.addHighlight(regions, TypeIdentifierRegion);
+    m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Property),
+                                modifier);
+}
+
 /*! \internal
     \brief Returns multiple source locations for a given raw comment
 
@@ -334,6 +373,23 @@ QList<int> HighlightingUtils::encodeSemanticTokens(Highlights &highlights)
     });
 
     return result;
+}
+
+/*!
+\internal
+Computes the modifier value. Modifier is read as binary value in the protocol. The location
+of the bits set are interpreted as the indices of the tokenModifiers list registered by the
+server. Then, the client modifies the highlighting of the token.
+
+tokenModifiersList: ["declaration", definition, readonly, static ,,,]
+
+To set "definition" and "readonly", we need to send 0b00000110
+*/
+void HighlightingUtils::addModifier(SemanticTokenModifiers modifier, int *baseModifier)
+{
+   if (!baseModifier)
+        return;
+    *baseModifier |= (1 << int(modifier));
 }
 
 void Highlights::addHighlight(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier)

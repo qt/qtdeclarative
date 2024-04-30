@@ -285,6 +285,47 @@ void tst_qmlls_highlighting::highlights_data()
                 << fileItem
                 << Token(QQmlJS::SourceLocation(149, 6, 7, 15), int(SemanticTokenTypes::Type), 0);
     }
+    { // property definition
+        const auto filePath = m_highlightingDataDir + "/properties.qml";
+        const auto fileItem = fileObject(filePath);
+
+        int definitionModifier = 1 << int(SemanticTokenModifiers::Definition);
+        QTest::addRow("property-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(154, 8, 8, 9), int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("property-type")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(163, 3, 8, 18), int(SemanticTokenTypes::Type), 0);
+        QTest::addRow("property-name")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(167, 1, 8, 22), int(SemanticTokenTypes::Property),
+                         definitionModifier);
+        int readOnlyModifier = definitionModifier | (1 << int(SemanticTokenModifiers::Readonly));
+        QTest::addRow("readonly-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(177, 8, 9, 9), int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("readonly-modifier")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(199, 2, 9, 31), int(SemanticTokenTypes::Property),
+                         readOnlyModifier);
+        int requiredModifier = definitionModifier | (1 << int(SemanticTokenModifiers::Abstract));
+        QTest::addRow("required-keyword") << fileItem
+                                          << Token(QQmlJS::SourceLocation(210, 8, 10, 9),
+                                                   int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("required-modifier")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(232, 3, 10, 31), int(SemanticTokenTypes::Property),
+                         requiredModifier);
+        int defaultModifier =
+                definitionModifier | (1 << int(SemanticTokenModifiers::DefaultLibrary));
+        QTest::addRow("default-keyword") << fileItem
+                                         << Token(QQmlJS::SourceLocation(244, 7, 11, 9),
+                                                  int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("default-modifier")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(265, 4, 11, 30), int(SemanticTokenTypes::Property),
+                         defaultModifier);
+    }
 }
 
 void tst_qmlls_highlighting::highlights()

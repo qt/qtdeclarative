@@ -15,8 +15,8 @@
 // We mean it.
 //
 
+#include <QtLanguageServer/private/qlanguageserverspec_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
-
 #include <QtCore/qlist.h>
 #include <QtCore/qmap.h>
 
@@ -80,6 +80,7 @@ struct HighlightingUtils
     static QList<QQmlJS::SourceLocation>
     sourceLocationsFromMultiLineToken(QStringView code,
                                       const QQmlJS::SourceLocation &tokenLocation);
+    static void addModifier(QLspSpecification::SemanticTokenModifiers modifier, int *baseModifier);
 };
 
 class HighlightingVisitor
@@ -98,6 +99,7 @@ private:
     void highlightEnumDecl(const QQmlJS::Dom::DomItem &item);
     void highlightQmlObject(const QQmlJS::Dom::DomItem &item);
     void highlightComponent(const QQmlJS::Dom::DomItem &item);
+    void highlightPropertyDefinition(const QQmlJS::Dom::DomItem &item);
 
 private:
     Highlights &m_highlights;
