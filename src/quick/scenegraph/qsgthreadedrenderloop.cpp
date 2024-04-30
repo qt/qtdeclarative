@@ -18,6 +18,7 @@
 #include <QtQuick/QQuickWindow>
 #include <private/qquickwindow_p.h>
 #include <private/qquickitem_p.h>
+#include <QtGui/qpa/qplatformwindow_p.h>
 
 #include <QtQuick/private/qsgrenderer_p.h>
 
@@ -1461,10 +1462,29 @@ void QSGThreadedRenderLoop::update(QQuickWindow *window)
     if (!w)
         return;
 
-    if (w->thread == QThread::currentThread()) {
-        qCDebug(QSG_LOG_RENDERLOOP) << "update on window - on render thread" << w->window;
-        w->thread->requestRepaint();
-        return;
+    const bool isRenderThread = QThread::currentThread() == w->thread;
+
+#if defined(Q_OS_MACOS)
+    using namespace QNativeInterface::Private;
+    if (auto *cocoaWindow = dynamic_cast<QCocoaWindow*>(window->handle())) {
+        // If the window is being resized we don't want to schedule unthrottled
+        // updates on the render thread, as this will starve the main thread
+        // from getting drawables for displaying the updated window size.
+        if (isRenderThread && cocoaWindow->inLiveResize()) {
+            // In most cases the window will already have update requested
+            // due to the animator triggering a sync, but just in case we
+            // schedule an update request on the main thread explicitly.
+            qCDebug(QSG_LOG_RENDERLOOP) << "window is resizing. update on window" << w->window;
+            QTimer::singleShot(0, window, [=]{ window->requestUpdate(); });
+            return;
+        }
+    }
+#endif
+
+    if (isRenderThread) {
+       qCDebug(QSG_LOG_RENDERLOOP) << "update on window - on render thread" << w->window;
+       w->thread->requestRepaint();
+       return;
     }
 
     qCDebug(QSG_LOG_RENDERLOOP) << "update on window" << w->window;
