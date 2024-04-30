@@ -85,10 +85,25 @@ static FieldFilter highlightingFilter()
     return FieldFilter{ fieldFilterAdd, fieldFilterRemove };
 }
 
+HighlightingVisitor::HighlightingVisitor(Highlights &highlights,
+                                         const std::optional<HighlightsRange> &range)
+    : m_highlights(highlights), m_range(range)
+{
+}
+
 bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
 {
+    if (m_range.has_value()) {
+        const auto fLocs = FileLocations::treeOf(item);
+        if (!fLocs)
+            return true;
+        const auto regions = fLocs->info().regions;
+        if (!HighlightingUtils::rangeOverlapsWithSourceLocation(regions[MainRegion],
+                                                                m_range.value()))
+            return true;
+    }
     switch (item.internalKind()) {
-    case DomType::Comment:{
+    case DomType::Comment: {
         highlightComment(item);
         return true;
     }
@@ -651,9 +666,21 @@ To set "definition" and "readonly", we need to send 0b00000110
 */
 void HighlightingUtils::addModifier(SemanticTokenModifiers modifier, int *baseModifier)
 {
-   if (!baseModifier)
+    if (!baseModifier)
         return;
     *baseModifier |= (1 << int(modifier));
+}
+
+/*!
+\internal
+Check if the ranges overlap by ensuring that one range starts before the other ends
+*/
+bool HighlightingUtils::rangeOverlapsWithSourceLocation(const QQmlJS::SourceLocation &loc,
+                                                        const HighlightsRange &r)
+{
+    int startOffsetItem = int(loc.offset);
+    int endOffsetItem = startOffsetItem + int(loc.length);
+    return (startOffsetItem <= r.endOffset) && (r.startOffset <= endOffsetItem);
 }
 
 void Highlights::addHighlight(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier)
@@ -679,10 +706,11 @@ void Highlights::addHighlight(const QMap<FileLocationRegion, QQmlJS::SourceLocat
     return addHighlight(loc, tokenTypeFromRegion(region), modifier);
 }
 
-QList<int> Highlights::collectTokens(const QQmlJS::Dom::DomItem &item)
+QList<int> Highlights::collectTokens(const QQmlJS::Dom::DomItem &item,
+                                     const std::optional<HighlightsRange> &range)
 {
     using namespace QQmlJS::Dom;
-    HighlightingVisitor highlightDomElements(*this);
+    HighlightingVisitor highlightDomElements(*this, range);
     // In QmlFile level, visitTree visits even FileLocations tree which takes quite a time to
     // finish. HighlightingFilter is added to prevent unnecessary visits.
     item.visitTree(Path(), highlightDomElements, VisitOption::Default, emptyChildrenVisitor,

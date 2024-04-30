@@ -61,13 +61,12 @@ void SemanticTokenFullHandler::process(
         qCWarning(semanticTokens) << "No semantic token request is available!";
         return;
     }
-
     const auto doc = m_codeModel->openDocumentByUrl(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
     DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
-
+    const auto code = file.as<QmlFile>()->code();
     Highlights highlights;
-    result = QLspSpecification::SemanticTokens{ std::nullopt, highlights.collectTokens(file) };
+    result = QLspSpecification::SemanticTokens{ std::nullopt, highlights.collectTokens(file, std::nullopt) };
     qCDebug(semanticTokens) << "Encoded semantic tokens "
                             << std::get<QLspSpecification::SemanticTokens>(result).data;
 }
@@ -127,6 +126,23 @@ void SemanticTokenRangeHandler::process(
         qCWarning(semanticTokens) << "No semantic token request is available!";
         return;
     }
+    const auto doc = m_codeModel->openDocumentByUrl(
+            QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
+    DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
+    const auto qmlFile = file.as<QmlFile>();
+    if (!qmlFile)
+        return;
+    const auto code = qmlFile->code();
+    const auto range = request->m_parameters.range;
+    int startOffset = int(QQmlLSUtils::textOffsetFrom(code, range.start.line, range.end.character));
+    int endOffset = int(QQmlLSUtils::textOffsetFrom(code, range.end.line, range.end.character));
+    Highlights highlights;
+    HighlightsRange highlightRange{startOffset, endOffset};
+    result =
+            QLspSpecification::SemanticTokens{ std::nullopt,
+                                               highlights.collectTokens(file, highlightRange) };
+    qCDebug(semanticTokens) << "Encoded semantic tokens "
+                            << std::get<QLspSpecification::SemanticTokens>(result).data;
 }
 
 void SemanticTokenRangeHandler::registerHandlers(QLanguageServer *, QLanguageServerProtocol *protocol)
@@ -156,7 +172,7 @@ void QQmlHighlightSupport::setupCapabilities(
         QLspSpecification::InitializeResult &serverCapabilities)
 {
     QLspSpecification::SemanticTokensOptions options;
-    options.range = false;
+    options.range = true;
     options.full = QJsonObject({ { u"delta"_s, false } });
     options.legend.tokenTypes = tokenTypesList();
     options.legend.tokenModifiers = tokenModifiersList();

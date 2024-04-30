@@ -501,7 +501,7 @@ void tst_qmlls_highlighting::highlights()
     QFETCH(Token, expectedHighlightedToken);
 
     Highlights h;
-    HighlightingVisitor hv(h);
+    HighlightingVisitor hv(h, std::nullopt);
 
     fileItem.visitTree(QQmlJS::Dom::Path(), hv, VisitOption::Default, emptyChildrenVisitor,
                    emptyChildrenVisitor);
@@ -511,6 +511,32 @@ void tst_qmlls_highlighting::highlights()
                  "For declaration highlighting should be implemented by QTBUG-124677", Abort);
     QVERIFY(highlights.contains(expectedHighlightedToken.offset));
     QCOMPARE(highlights.value(expectedHighlightedToken.offset), expectedHighlightedToken);
+}
+
+void tst_qmlls_highlighting::rangeOverlapsWithSourceLocation_data()
+{
+    QTest::addColumn<QQmlJS::SourceLocation>("sourceLocation");
+    QTest::addColumn<HighlightsRange>("range");
+    QTest::addColumn<bool>("overlaps");
+
+    QTest::addRow("sl-inside-range")
+            << QQmlJS::SourceLocation(5, 1, 1, 1) << HighlightsRange{ 0, 100 } << true;
+    QTest::addRow("sl-exceeds-rightBoundRange")
+            << QQmlJS::SourceLocation(5, 1000, 1, 1) << HighlightsRange{ 0, 100 } << true;
+    QTest::addRow("sl-exceeds-leftRightBoundRange")
+            << QQmlJS::SourceLocation(5, 1000, 1, 1) << HighlightsRange{ 8, 100 } << true;
+    QTest::addRow("sl-exceeds-leftBoundRange")
+            << QQmlJS::SourceLocation(5, 100, 1, 1) << HighlightsRange{ 8, 1000 } << true;
+    QTest::addRow("no-overlaps") << QQmlJS::SourceLocation(5, 100, 1, 1)
+                                 << HighlightsRange{ 8000, 100000 } << false;
+}
+
+void tst_qmlls_highlighting::rangeOverlapsWithSourceLocation()
+{
+    QFETCH(QQmlJS::SourceLocation, sourceLocation);
+    QFETCH(HighlightsRange, range);
+    QFETCH(bool, overlaps);
+    QVERIFY(overlaps == HighlightingUtils::rangeOverlapsWithSourceLocation(sourceLocation, range));
 }
 
 QTEST_MAIN(tst_qmlls_highlighting)

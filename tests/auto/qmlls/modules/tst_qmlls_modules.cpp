@@ -1495,6 +1495,31 @@ void tst_qmlls_modules::quickFixes()
     QTRY_VERIFY_WITH_TIMEOUT(codeActionOk, 5000);
 }
 
+static QQmlJS::Dom::DomItem fileObject(const QString &filePath)
+{
+    QFile f(filePath);
+    DomItem file;
+    if (!f.open(QIODevice::ReadOnly))
+        return file;
+    QString code = f.readAll();
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithRecovery);
+
+    QStringList dirs = {QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath)};
+    auto envPtr = QQmlJS::Dom::DomEnvironment::create(dirs,
+            QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                    | QQmlJS::Dom::DomEnvironment::Option::NoDependencies, options);
+    envPtr->loadBuiltins();
+    envPtr->loadFile(QQmlJS::Dom::FileToLoad::fromMemory(envPtr, filePath, code),
+                        [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &, const QQmlJS::Dom::DomItem &newIt) {
+                            file = newIt.fileObject();
+                        });
+    envPtr->loadPendingDependencies();
+    return file;
+};
+
 void tst_qmlls_modules::semanticHighlightingFull_data()
 {
     QTest::addColumn<QString>("filePath");
@@ -1504,34 +1529,9 @@ void tst_qmlls_modules::semanticHighlightingFull_data()
 void tst_qmlls_modules::semanticHighlightingFull()
 {
     QFETCH(QString, filePath);
-
-    const auto fileObject = [](const QString &filePath){
-        QFile f(filePath);
-        DomItem file;
-        if (!f.open(QIODevice::ReadOnly))
-            return file;
-        QString code = f.readAll();
-        QQmlJS::Dom::DomCreationOptions options;
-        options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
-        options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
-        options.setFlag(QQmlJS::Dom::DomCreationOption::WithRecovery);
-
-        QStringList dirs = {QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath)};
-        auto envPtr = QQmlJS::Dom::DomEnvironment::create(dirs,
-                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies, options);
-        envPtr->loadBuiltins();
-        envPtr->loadFile(QQmlJS::Dom::FileToLoad::fromMemory(envPtr, filePath, code),
-                         [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &, const QQmlJS::Dom::DomItem &newIt) {
-                             file = newIt.fileObject();
-                         });
-        envPtr->loadPendingDependencies();
-        return file;
-    };
-
     const auto item = fileObject(testFile(filePath));
     Highlights highlights;
-    const auto expectedData = highlights.collectTokens(item);
+    const auto expectedData = highlights.collectTokens(item, std::nullopt);
 
     const auto uri = openFile(filePath);
     QVERIFY(uri);
@@ -1556,6 +1556,56 @@ void tst_qmlls_modules::semanticHighlightingFull()
     };
 
     m_protocol->requestSemanticTokens(params, std::move(responseHandler), std::move(errorHandler));
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+}
+
+void tst_qmlls_modules::semanticHighlightingRange_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<QLspSpecification::Range>("range");
+    QTest::addRow("bigfile") << u"highlighting/bigFile.qml"_s
+                             << QLspSpecification::Range{ { 6, 0 }, { 15, 0 } };
+}
+
+void tst_qmlls_modules::semanticHighlightingRange()
+{
+    QFETCH(QString, filePath);
+    QFETCH(QLspSpecification::Range, range);
+
+    const auto item = fileObject(testFile(filePath));
+    Highlights highlights;
+    const auto qmlFile = item.as<QQmlJS::Dom::QmlFile>();
+    const auto code = qmlFile->code();
+    const int startOffset = int(QQmlLSUtils::textOffsetFrom(code, range.start.line, range.end.character));
+    const int endOffset = int(QQmlLSUtils::textOffsetFrom(code, range.end.line, range.end.character));
+    const auto expectedData = highlights.collectTokens(item, HighlightsRange{startOffset, endOffset});
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    QLspSpecification::SemanticTokensRangeParams params;
+    params.textDocument.uri = *uri;
+    params.range = range;
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    const auto cleanup = [didFinish]() { *didFinish = true; };
+
+    auto &&responseHandler = [&](auto res) {
+        QScopeGuard callAtExit(cleanup);
+        const auto *const result = std::get_if<QLspSpecification::SemanticTokens>(&res);
+        QVERIFY(result);
+        QList<int> data = result->data;
+        QCOMPARE(data.size(), expectedData.size());
+        QCOMPARE(data, expectedData);
+    };
+
+    auto &&errorHandler = [&](auto &error) {
+        QScopeGuard callAtExit(cleanup);
+        ProtocolBase::defaultResponseErrorHandler(error);
+        QVERIFY2(false, "error occurred on full semantic tokens");
+    };
+
+    m_protocol->requestSemanticTokensRange(params, std::move(responseHandler),
+                                           std::move(errorHandler));
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
 }
 

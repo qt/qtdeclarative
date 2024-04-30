@@ -22,6 +22,9 @@ private slots:
     void highlights_data();
     void highlights();
 
+    void rangeOverlapsWithSourceLocation_data();
+    void rangeOverlapsWithSourceLocation();
+
 private:
     QString m_highlightingDataDir;
 };

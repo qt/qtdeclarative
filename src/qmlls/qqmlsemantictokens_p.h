@@ -59,6 +59,18 @@ struct Token
     int tokenModifier;
 };
 
+using HighlightsContainer = QMap<int, Token>;
+
+/*!
+\internal
+Offsets start from zero.
+*/
+struct HighlightsRange
+{
+    int startOffset;
+    int endOffset;
+};
+
 class Highlights
 {
 public:
@@ -66,7 +78,9 @@ public:
     void addHighlight(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier = 0);
     void addHighlight(const QMap<QQmlJS::Dom::FileLocationRegion, QQmlJS::SourceLocation> &regions,
                       QQmlJS::Dom::FileLocationRegion region, int tokenModifier = 0);
-    QList<int> collectTokens(const QQmlJS::Dom::DomItem &item);
+    QList<int> collectTokens(const QQmlJS::Dom::DomItem &item,
+                             const std::optional<HighlightsRange> &range);
+
     HighlightsContainer &highlights() { return m_highlights; }
     const HighlightsContainer &highlights() const { return m_highlights; }
 
@@ -81,13 +95,13 @@ struct HighlightingUtils
     sourceLocationsFromMultiLineToken(QStringView code,
                                       const QQmlJS::SourceLocation &tokenLocation);
     static void addModifier(QLspSpecification::SemanticTokenModifiers modifier, int *baseModifier);
+    static bool rangeOverlapsWithSourceLocation(const QQmlJS::SourceLocation &loc, const HighlightsRange &r);
 };
 
 class HighlightingVisitor
 {
 public:
-    using HighlightsContainer = QMap<int, Token>;
-    HighlightingVisitor(Highlights &highlights) : m_highlights(highlights) { }
+    HighlightingVisitor(Highlights &highlights, const std::optional<HighlightsRange> &range);
     bool operator()(QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &item, bool);
 
 private:
@@ -108,6 +122,7 @@ private:
 
 private:
     Highlights &m_highlights;
+    std::optional<HighlightsRange> m_range;
 };
 
 QT_END_NAMESPACE

@@ -71,6 +71,8 @@ private slots:
     void checkQuickSnippets();
     void semanticHighlightingFull_data();
     void semanticHighlightingFull();
+    void semanticHighlightingRange_data();
+    void semanticHighlightingRange();
 
 private:
     QProcess m_server;
