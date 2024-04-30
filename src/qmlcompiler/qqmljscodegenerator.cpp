@@ -84,9 +84,9 @@ QString QQmlJSCodeGenerator::compositeListMetaType(const QString &elementName) c
 QString QQmlJSCodeGenerator::compositeMetaType(const QString &elementName) const
 {
     return u"[](auto *aotContext) { static const auto t = QQmlPrivate::compositeMetaType("
-           "aotContext->compilationUnit, \""_s
+           "aotContext->compilationUnit, QStringLiteral(\""_s
             + elementName
-            + u"\"); return t; }(aotContext)"_s;
+            + u"\")); return t; }(aotContext)"_s;
 }
 
 QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)
