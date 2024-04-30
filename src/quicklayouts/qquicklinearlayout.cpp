@@ -441,7 +441,7 @@ void QQuickGridLayoutBase::itemVisibilityChanged(QQuickItem *item)
 void QQuickGridLayoutBase::rearrange(const QSizeF &size)
 {
     Q_D(QQuickGridLayoutBase);
-    if (!isReady())
+    if (!isReady() || !size.isValid())
         return;
 
     qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::rearrange" << d->m_recurRearrangeCounter << this;
