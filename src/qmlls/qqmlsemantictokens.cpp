@@ -87,8 +87,83 @@ static FieldFilter highlightingFilter()
 
 bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
 {
-    Q_UNUSED(item);
-    return false;
+    switch (item.internalKind()) {
+    case DomType::Comment:
+        highlightComment(item);
+        return true;
+    default:
+        return true;
+    }
+    Q_UNREACHABLE_RETURN(false);
+}
+
+void HighlightingVisitor::highlightComment(const DomItem &item)
+{
+    const auto comment = item.as<Comment>();
+    Q_ASSERT(comment);
+    const auto locs = HighlightingUtils::sourceLocationsFromMultiLineToken(
+            comment->info().comment(), comment->info().sourceLocation());
+    for (const auto &loc : locs)
+        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Comment));
+}
+
+/*! \internal
+    \brief Returns multiple source locations for a given raw comment
+
+    Needed by semantic highlighting of comments. LSP clients usually don't support multiline
+    tokens. In QML, we can have multiline tokens like string literals and comments.
+    This method generates multiple source locations of sub-elements of token split by a newline
+   delimiter.
+
+
+*/
+QList<QQmlJS::SourceLocation>
+HighlightingUtils::sourceLocationsFromMultiLineToken(QStringView stringLiteral,
+                                                     const QQmlJS::SourceLocation &locationInDocument)
+{
+    auto lineBreakLength = qsizetype(std::char_traits<char>::length("\n"));
+    const auto lineLengths = [&lineBreakLength](QStringView literal) {
+        std::vector<qsizetype> lineLengths;
+        qsizetype startIndex = 0;
+        qsizetype pos = literal.indexOf(u'\n');
+        while (pos != -1) {
+            // TODO: QTBUG-106813
+            // Since a document could be opened in normalized form
+            // we can't use platform dependent newline handling here.
+            // Thus, we check manually if the literal contains \r so that we split
+            // the literal at the correct offset.
+            if (pos - 1 > 0 && literal[pos - 1] == u'\r') {
+                // Handle Windows line endings
+                lineBreakLength = qsizetype(std::char_traits<char>::length("\r\n"));
+                // Move pos to the index of '\r'
+                pos = pos - 1;
+            }
+            lineLengths.push_back(pos - startIndex);
+            // Advance the lookup index, so it won't find the same index.
+            startIndex = pos + lineBreakLength;
+            pos = literal.indexOf('\n'_L1, startIndex);
+        }
+        // Push the last line
+        if (startIndex < literal.length()) {
+            lineLengths.push_back(literal.length() - startIndex);
+        }
+        return lineLengths;
+    };
+
+    QList<QQmlJS::SourceLocation> result;
+    // First token location should start from the "stringLiteral"'s
+    // location in the qml document.
+    QQmlJS::SourceLocation lineLoc = locationInDocument;
+    for (const auto lineLength : lineLengths(stringLiteral)) {
+        lineLoc.length = lineLength;
+        result.push_back(lineLoc);
+
+        // update for the next line
+        lineLoc.offset += lineLoc.length + lineBreakLength;
+        ++lineLoc.startLine;
+        lineLoc.startColumn = 1;
+    }
+    return result;
 }
 
 QList<int> HighlightingUtils::encodeSemanticTokens(Highlights &highlights)

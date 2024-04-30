@@ -16,6 +16,11 @@ public:
 private slots:
     void encodeSemanticTokens_data();
     void encodeSemanticTokens();
+    void sourceLocationsFromMultiLineToken_data();
+    void sourceLocationsFromMultiLineToken();
+
+    void highlights_data();
+    void highlights();
 
 private:
     QString m_highlightingDataDir;

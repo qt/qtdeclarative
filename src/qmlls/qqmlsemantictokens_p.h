@@ -59,7 +59,6 @@ struct Token
     int tokenModifier;
 };
 
-
 class Highlights
 {
 public:
@@ -78,6 +77,9 @@ private:
 struct HighlightingUtils
 {
     static QList<int> encodeSemanticTokens(Highlights &highlights);
+    static QList<QQmlJS::SourceLocation>
+    sourceLocationsFromMultiLineToken(QStringView code,
+                                      const QQmlJS::SourceLocation &tokenLocation);
 };
 
 class HighlightingVisitor
@@ -86,8 +88,11 @@ public:
     using HighlightsContainer = QMap<int, Token>;
     HighlightingVisitor(Highlights &highlights) : m_highlights(highlights) { }
     bool operator()(QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &item, bool);
+
 private:
-    [[maybe_unused]]Highlights &m_highlights;
+    void highlightComment(const QQmlJS::Dom::DomItem &item);
+private:
+    Highlights &m_highlights;
 };
 
 QT_END_NAMESPACE
