@@ -995,6 +995,7 @@ public:
     Type type = Literal;
     TypeAnnotation *typeAnnotation = nullptr;
     // when used in a VariableDeclarationList
+    SourceLocation declarationKindToken;
     VariableScope scope = VariableScope::NoScope;
     bool isForDeclaration = false;
     bool isInjectedSignalParameter = false;

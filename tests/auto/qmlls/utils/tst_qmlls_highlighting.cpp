@@ -507,8 +507,6 @@ void tst_qmlls_highlighting::highlights()
                    emptyChildrenVisitor);
 
     const auto highlights = h.highlights();
-    QEXPECT_FAIL("for-declaration",
-                 "For declaration highlighting should be implemented by QTBUG-124677", Abort);
     QVERIFY(highlights.contains(expectedHighlightedToken.offset));
     QCOMPARE(highlights.value(expectedHighlightedToken.offset), expectedHighlightedToken);
 }

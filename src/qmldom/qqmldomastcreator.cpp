@@ -1584,6 +1584,12 @@ void QQmlDomAstCreator::endVisit(AST::ForStatement *forStatement)
         removeCurrentScriptNode({});
 
         current->setDeclarations(ScriptElementVariant::fromElement(variableDeclaration));
+
+        if (auto pe = forStatement->declarations->declaration;
+            pe && pe->declarationKindToken.isValid()) {
+            current->addLocation(FileLocationRegion::TypeIdentifierRegion,
+                                 pe->declarationKindToken);
+        }
     }
 
     if (forStatement->initialiser) {
@@ -2373,6 +2379,12 @@ void QQmlDomAstCreator::endVisit(AST::ForEachStatement *exp)
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::bindingElement, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
+
+        if (auto pe = AST::cast<PatternElement *>(exp->lhs);
+            pe && pe->declarationKindToken.isValid()) {
+            current->addLocation(FileLocationRegion::TypeIdentifierRegion,
+                                 pe->declarationKindToken);
+        }
     }
 
     pushScriptElement(current);

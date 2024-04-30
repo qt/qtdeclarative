@@ -60,23 +60,6 @@ bool ScriptFormatter::acceptBlockOrIndented(Node *ast, bool finishWithSpaceOrNew
     }
 }
 
-void ScriptFormatter::outputScope(VariableScope scope)
-{
-    switch (scope) {
-    case VariableScope::Const:
-        out("const ");
-        break;
-    case VariableScope::Let:
-        out("let ");
-        break;
-    case VariableScope::Var:
-        out("var ");
-        break;
-    default:
-        break;
-    }
-}
-
 bool ScriptFormatter::visit(ThisExpression *ast)
 {
     out(ast->thisToken);
@@ -476,9 +459,6 @@ bool ScriptFormatter::visit(VariableStatement *ast)
 
 bool ScriptFormatter::visit(PatternElement *ast)
 {
-    if (ast->isForDeclaration) {
-        outputScope(ast->scope);
-    }
     switch (ast->type) {
     case PatternElement::Literal:
     case PatternElement::Method:
@@ -565,8 +545,13 @@ bool ScriptFormatter::visit(ForStatement *ast)
     if (ast->initialiser) {
         accept(ast->initialiser);
     } else if (ast->declarations) {
-        outputScope(ast->declarations->declaration->scope);
-        accept(ast->declarations);
+        if (auto pe = ast->declarations->declaration) {
+            out(pe->declarationKindToken);
+            out(" ");
+        }
+        for (VariableDeclarationList *it = ast->declarations; it; it = it->next) {
+            accept(it->declaration);
+        }
     }
     out("; "); // ast->firstSemicolonToken
     accept(ast->condition);
@@ -582,6 +567,10 @@ bool ScriptFormatter::visit(ForEachStatement *ast)
     out(ast->forToken);
     out(" ");
     out(ast->lparenToken);
+    if (auto pe = AST::cast<PatternElement *>(ast->lhs)) {
+        out(pe->declarationKindToken);
+        out(" ");
+    }
     accept(ast->lhs);
     out(" ");
     out(ast->inOfToken);
