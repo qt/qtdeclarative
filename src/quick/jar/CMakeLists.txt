@@ -10,6 +10,7 @@ qt_internal_add_jar(Qt${QtDeclarative_VERSION_MAJOR}AndroidQuick
         org/qtproject/qt/android/QtModelIndex.java
         org/qtproject/qt/android/QtAbstractItemModel.java
         org/qtproject/qt/android/QtAbstractItemModelProxy.java
+        org/qtproject/qt/android/QtQmlComponent.java
     OUTPUT_DIR "${QT_BUILD_DIR}/jar")
 
 qt_path_join(destination ${INSTALL_DATADIR} "jar")
