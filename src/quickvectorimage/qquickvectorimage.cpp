@@ -26,6 +26,9 @@ QT_BEGIN_NAMESPACE
 
     It currently supports the \c SVG file format.
 
+    Qt supports multiple options for displaying SVG files. For an overview and comparison of the
+    different ones, see the documentation of the \l{svgtoqml} tool.
+
     \section1 QML Types
 */
 

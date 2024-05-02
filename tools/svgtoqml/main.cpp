@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     parser.addOption(copyrightOption);
 
     QCommandLineOption outlineModeOption("outline-stroke-mode",
-                                         QCoreApplication::translate("main", "Stroke the outside of the filled shape instead of "
+                                         QCoreApplication::translate("main", "Stroke the outline (contour) of the filled shape instead of "
                                                                              "the original path. Also sets optimize-paths."));
     parser.addOption(outlineModeOption);
 
