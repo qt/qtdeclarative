@@ -5,6 +5,8 @@
 #include <QtQuick/private/qandroidtypes_p.h>
 #include <QtQuick/private/qandroidtypeconverter_p.h>
 #include <QtQuick/private/qandroidviewsignalmanager_p.h>
+#include <QtQuick/private/qandroiditemmodelproxy_p.h>
+#include <QtQuick/private/qandroidmodelindexproxy_p.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qjnienvironment.h>
@@ -317,6 +319,12 @@ Q_DECL_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
     if (!env.isValid())
         return JNI_ERR;
     if (!QtAndroidQuickViewEmbedding::registerNatives(env))
+        return JNI_ERR;
+    if (!QAndroidItemModelProxy::registerAbstractNatives(env))
+        return JNI_ERR;
+    if (!QAndroidItemModelProxy::registerProxyNatives(env))
+        return JNI_ERR;
+    if (!QAndroidModelIndexProxy::registerNatives(env))
         return JNI_ERR;
     return JNI_VERSION_1_6;
 }

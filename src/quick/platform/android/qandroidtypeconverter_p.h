@@ -15,6 +15,7 @@
 // We mean it.
 
 #include <QtQuick/private/qandroidtypes_p.h>
+#include <QtQuick/private/qandroiditemmodelproxy_p.h>
 
 #include <QtCore/qjniobject.h>
 #include <QtCore/qjnienvironment.h>
@@ -26,22 +27,29 @@ namespace QAndroidTypeConverter
 {
     [[maybe_unused]] static QVariant toQVariant(const QJniObject &object)
     {
+        using namespace QtJniTypes;
         if (!object.isValid())
             return QVariant{};
         const QByteArray classname(object.className());
 
-        if (classname == QtJniTypes::Traits<QtJniTypes::String>::className())
+        if (classname == Traits<String>::className())
             return object.toString();
-        else if (classname == QtJniTypes::Traits<QtJniTypes::Integer>::className())
+        else if (classname == Traits<Integer>::className())
             return object.callMethod<jint>("intValue");
-        else if (classname == QtJniTypes::Traits<QtJniTypes::Long>::className())
+        else if (classname == Traits<Long>::className())
             return QVariant::fromValue<long>(object.callMethod<jlong>("longValue"));
-        else if (classname == QtJniTypes::Traits<QtJniTypes::Double>::className())
+        else if (classname == Traits<Double>::className())
             return object.callMethod<jdouble>("doubleValue");
-        else if (classname == QtJniTypes::Traits<QtJniTypes::Float>::className())
+        else if (classname == Traits<Float>::className())
             return object.callMethod<jfloat>("floatValue");
-        else if (classname == QtJniTypes::Traits<QtJniTypes::Boolean>::className())
+        else if (classname == Traits<Boolean>::className())
             return QVariant::fromValue<bool>(object.callMethod<jboolean>("booleanValue"));
+        else {
+            QJniEnvironment env;
+            const jclass className = env.findClass(Traits<JQtAbstractItemModel>::className());
+            if (env->IsInstanceOf(object.object(), className))
+                return QVariant::fromValue(QAndroidItemModelProxy::createNativeProxy(object));
+        }
 
         return QVariant{};
     }
@@ -74,6 +82,13 @@ namespace QAndroidTypeConverter
         case QMetaType::Type::QString:
             return env->NewLocalRef(
                     QJniObject::fromString(get<QString>(var)).object());
+        default:
+            if (var.canConvert<QAbstractItemModel *>()) {
+                return env->NewLocalRef(
+                        QAndroidItemModelProxy::createProxy(var.value<QAbstractItemModel *>())
+                                .object());
+            } else
+                return nullptr;
         }
         return nullptr;
     }
