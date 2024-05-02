@@ -67,7 +67,7 @@ public:
     QPlatformTextureList::Flags textureListFlags() override;
     QImage grabFramebuffer() override;
 
-    void init(QQmlEngine* e = 0);
+    void init(QQmlEngine* e = nullptr);
     void ensureBackingScene();
     void initOffscreenWindow();
     void ensureEngine() const;
