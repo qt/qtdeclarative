@@ -185,6 +185,12 @@ function(_qt_internal_deploy_qml_imports_for_target)
 
             file(INSTALL "${entry_PATH}/qmldir" DESTINATION "${install_qmldir}")
 
+            if(DEFINED __QT_DEPLOY_TARGET_${entry_LINKTARGET}_FILE AND
+                __QT_DEPLOY_TARGET_${entry_LINKTARGET}_TYPE STREQUAL "STATIC_LIBRARY")
+                # If the QML plugin is built statically, skip further deployment.
+                continue()
+            endif()
+
             if(__QT_DEPLOY_POST_BUILD)
                 # We are being invoked as a post-build step. The plugin might
                 # not exist yet, so we can't even glob for it, let alone copy
