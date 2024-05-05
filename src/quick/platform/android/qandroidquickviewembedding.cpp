@@ -27,8 +27,9 @@ namespace QtAndroidQuickViewEmbedding
 {
     constexpr const char *uninitializedViewMessage = "because QtQuickView is not loaded or ready yet.";
 
-    void createQuickView(JNIEnv*, jobject nativeWindow, jstring qmlUri, jint width, jint height,
-                         jlong parentWindowReference, QtJniTypes::StringArray qmlImportPaths)
+    void createQuickView(JNIEnv *, jobject nativeWindow, jstring qmlUri, jint width, jint height,
+                         jlong parentWindowReference, jlong viewReference,
+                         QtJniTypes::StringArray qmlImportPaths)
     {
         static_assert (sizeof(jlong) >= sizeof(void*),
                       "Insufficient size of Java type to hold the c++ pointer");
@@ -44,29 +45,35 @@ namespace QtAndroidQuickViewEmbedding
 
         QMetaObject::invokeMethod(qApp, [qtViewObject = QJniObject(nativeWindow),
                                         parentWindowReference,
+                                        viewReference,
                                         width,
                                         height,
                                         qmlUrl,
                                         importPaths] {
-            QWindow *parentWindow = reinterpret_cast<QWindow *>(parentWindowReference);
-            QAndroidQuickView *view = new QAndroidQuickView(parentWindow);
-            QQmlEngine *engine = view->engine();
-            QObject::connect(view, &QAndroidQuickView::statusChanged,
-                             [qtViewObject](QAndroidQuickView::Status status) {
-                                 qtViewObject.callMethod<void>("handleStatusChange", status);
-                             });
-            view->setResizeMode(QAndroidQuickView::SizeRootObjectToView);
-            view->setColor(QColor(Qt::transparent));
-            view->setWidth(width);
-            view->setHeight(height);
-            for (const QString &path : importPaths)
-                engine->addImportPath(path);
+            // If the view does not exists (viewReference==0) we should create and set it up.
+            // Else we only reset the source of the view.
+            QAndroidQuickView *view = reinterpret_cast<QAndroidQuickView *>(viewReference);
+            if (!view) {
+                QWindow *parentWindow = reinterpret_cast<QWindow *>(parentWindowReference);
+                view = new QAndroidQuickView(parentWindow);
+                QObject::connect(view, &QAndroidQuickView::statusChanged, view,
+                                 [qtViewObject](QAndroidQuickView::Status status) {
+                                     qtViewObject.callMethod<void>("handleStatusChange", status);
+                                 });
+                view->setResizeMode(QAndroidQuickView::SizeRootObjectToView);
+                view->setColor(QColor(Qt::transparent));
+                view->setWidth(width);
+                view->setHeight(height);
+                QQmlEngine *engine = view->engine();
+                for (const QString &path : importPaths)
+                    engine->addImportPath(path);
 
-            const QtJniTypes::QtWindow window = reinterpret_cast<jobject>(view->winId());
-            qtViewObject.callMethod<void>("addQtWindow",
-                                          window,
-                                          reinterpret_cast<jlong>(view),
-                                          parentWindowReference);
+                const QtJniTypes::QtWindow window = reinterpret_cast<jobject>(view->winId());
+                qtViewObject.callMethod<void>("addQtWindow",
+                                              window,
+                                              reinterpret_cast<jlong>(view),
+                                              parentWindowReference);
+            }
             view->setSource(qmlUrl);
         });
     }

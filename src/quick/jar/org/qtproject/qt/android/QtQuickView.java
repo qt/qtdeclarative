@@ -39,9 +39,10 @@ public class QtQuickView extends QtView {
     private QtQmlStatusChangeListener m_statusChangeListener = null;
     private QtQmlStatus m_lastStatus = QtQmlStatus.NULL;
     private boolean m_hasQueuedStatus = false;
+    private WeakReference<QtQmlComponent> m_loadedComponent;
 
     native void createQuickView(String qmlUri, int width, int height, long parentWindowReference,
-                                String[] qmlImportPaths);
+                                long viewReference, String[] qmlImportPaths);
     native void setRootObjectProperty(long windowReference, String propertyName, Object value);
     native Object getRootObjectProperty(long windowReference, String propertyName);
     native int addRootObjectSignalListener(long windowReference, String signalName, Class argType,
@@ -92,9 +93,85 @@ public class QtQuickView extends QtView {
         m_qmlImportPaths = qmlImportPaths;
     }
 
+    /**
+     * Creates a QtQuickView that can later load and view a QML component by calling
+     * {@link QtQuickView#loadComponent() loadComponent}
+     * <p>
+     * @param context the parent Context
+     **/
+    public QtQuickView(Context context)
+    {
+        super(context);
+    }
+
+    /**
+     * Loads a QML component represented by a QtQmlComponent. The library name and the qrc path of
+     * the QML component will be extracted from the QtQmlComponent to load the QML component.
+     * This overload accepts an array of strings in the case where the QML component should load
+     * QML modules from custom paths.
+     * <p>
+     * @param qmlComponent   an instance of an object that extends QtQmlComponent
+     * @param qmlImportPaths an array of strings for additional import paths to be passed to
+     *                       QQmlEngine, or null if additional import paths are not required
+     * @throws InvalidParameterException if QtQmlComponent does not contain valid information
+     * about the module name, and the qrc path.
+     */
+    // TODO: QTBUG-125620 -- Refresh/reset import paths when loading a new component
+    public <T extends QtQmlComponent> void loadComponent(T qmlComponent, String[] qmlImportPaths)
+            throws InvalidParameterException
+    {
+        String libName = qmlComponent.getLibraryName();
+        String qmlUri = qmlComponent.getFilePath();
+
+        if (libName == null || libName.isEmpty()) {
+            throw new InvalidParameterException(
+                    "QtQmlComponent: return value of getLibraryName() may not be empty or null");
+        }
+
+        if (qmlUri == null || qmlUri.isEmpty()) {
+            throw new InvalidParameterException(
+                    "QtQmlComponent: return value of getFilePath() may not be empty or null");
+        }
+
+        m_qmlUri = qmlUri;
+        m_qmlImportPaths = qmlImportPaths;
+
+        if (m_loadedComponent != null)
+            m_loadedComponent.clear();
+
+        m_loadedComponent = new WeakReference<>(qmlComponent);
+        qmlComponent.detachView();
+        qmlComponent.attachView(this);
+        // The first QQuickView creation happen after first libs loading
+        // and windowReference() returns a reference to native QQuickView
+        // instance, after that. We don't load library again if the view
+        // exists.
+        if (windowReference() == 0) {
+            loadQtLibraries(libName);
+        } else {
+            createQuickView(m_qmlUri, getWidth(), getHeight(), 0, windowReference(),
+                            m_qmlImportPaths);
+        }
+    }
+
+    /**
+     * Loads a QML component represented by a QtQmlComponent. The library name and the qrc path of
+     * the QML component will be extracted from the QtQmlComponent to load the QML component.
+     * <p>
+     * @param qmlComponent an instance of a class that extends QtQmlComponent
+     * @throws InvalidParameterException if QtQmlComponent does not contain valid information
+     * about the module name, and the qrc path.
+     */
+    public <T extends QtQmlComponent> void loadComponent(T qmlComponent)
+            throws InvalidParameterException
+    {
+        loadComponent(qmlComponent, null);
+    }
+
     @Override
     protected void createWindow(long parentWindowReference) {
-        createQuickView(m_qmlUri, getWidth(), getHeight(), parentWindowReference, m_qmlImportPaths);
+        createQuickView(m_qmlUri, getWidth(), getHeight(), parentWindowReference, windowReference(),
+                        m_qmlImportPaths);
     }
 
     /**
