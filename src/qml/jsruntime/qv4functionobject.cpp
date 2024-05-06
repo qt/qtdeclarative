@@ -37,8 +37,6 @@ void Heap::FunctionObject::init(QV4::ExecutionEngine *engine, QV4::String *name)
     ScopedFunctionObject f(s, this);
     if (name)
         f->setName(name);
-
-    isConstructor = (vtable()->callAsConstructor != QV4::FunctionObject::virtualCallAsConstructor);
 }
 
 void Heap::FunctionObject::init(QV4::ExecutionEngine *engine, const QString &name)
@@ -100,22 +98,14 @@ ReturnedValue FunctionObject::name() const
     return get(engine()->id_name());
 }
 
-ReturnedValue FunctionObject::virtualCall(
-        const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue FunctionObject::failCall() const
 {
-    return f->engine()->throwTypeError(QStringLiteral("Function can only be called with |new|."));
+    return engine()->throwTypeError(QStringLiteral("Function can only be called with |new|."));
 }
 
-void FunctionObject::virtualCallWithMetaTypes(
-        const FunctionObject *f, QObject *, void **, const QMetaType *, int)
+ReturnedValue FunctionObject::failCallAsConstructor() const
 {
-    f->engine()->throwTypeError(QStringLiteral("Function can only be called with |new|."));
-}
-
-ReturnedValue FunctionObject::virtualCallAsConstructor(
-        const FunctionObject *f, const Value *, int, const Value *)
-{
-    return f->engine()->throwTypeError(QStringLiteral("Function is not a constructor."));
+    return engine()->throwTypeError(QStringLiteral("Function is not a constructor."));
 }
 
 void FunctionObject::virtualConvertAndCall(
@@ -431,7 +421,13 @@ ReturnedValue FunctionPrototype::method_bind(const FunctionObject *b, const Valu
             boundArgs->set(scope.engine, i, argv[i + 1]);
     }
 
-    return BoundFunction::create(target, boundThis, boundArgs)->asReturnedValue();
+    if (target->isConstructor()) {
+        return scope.engine->memoryManager->allocate<BoundConstructor>(target, boundThis, boundArgs)
+                ->asReturnedValue();
+    }
+
+    return scope.engine->memoryManager->allocate<BoundFunction>(target, boundThis, boundArgs)
+            ->asReturnedValue();
 }
 
 ReturnedValue FunctionPrototype::method_hasInstance(const FunctionObject *, const Value *thisObject, const Value *argv, int argc)
@@ -569,7 +565,6 @@ void Heap::ArrowFunction::init(QV4::ExecutionContext *scope, Function *function,
     Scope s(scope);
     Q_ASSERT(internalClass && internalClass->verifyIndex(s.engine->id_length()->propertyKey(), Index_Length));
     setProperty(s.engine, Index_Length, Value::fromInt32(int(function->compiledFunction->length)));
-    canBeTailCalled = true;
 }
 
 void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
@@ -725,9 +720,6 @@ void Heap::BoundFunction::init(
     this->boundArgs.set(s.engine, boundArgs ? boundArgs->d() : nullptr);
     this->boundThis.set(s.engine, boundThis);
 
-    if (!target->isConstructor())
-        isConstructor = false;
-
     ScopedObject f(s, this);
 
     ScopedValue l(s, target->get(engine->id_length()));
@@ -766,7 +758,10 @@ ReturnedValue BoundFunction::virtualCall(const FunctionObject *fo, const Value *
     return checkedResult(v4, target->call(jsCallData));
 }
 
-ReturnedValue BoundFunction::virtualCallAsConstructor(const FunctionObject *fo, const Value *argv, int argc, const Value *)
+DEFINE_OBJECT_VTABLE(BoundConstructor);
+
+ReturnedValue BoundConstructor::virtualCallAsConstructor(
+        const FunctionObject *fo, const Value *argv, int argc, const Value *)
 {
     const BoundFunction *f = static_cast<const BoundFunction *>(fo);
     Scope scope(f->engine());

@@ -1624,6 +1624,13 @@ void Heap::QQmlBindingFunction::init(const QV4::JavaScriptFunctionObject *bindin
     this->bindingFunction.set(internalClass->engine, bindingFunction->d());
 }
 
+ReturnedValue QQmlBindingFunction::virtualCall(
+        const FunctionObject *f, const Value *, const Value *, int)
+{
+    // Mark this as a callable object, so that we can perform the binding magic on it.
+    return f->engine()->throwTypeError(QStringLiteral("Bindings must not be called directly."));
+}
+
 QQmlSourceLocation QQmlBindingFunction::currentLocation() const
 {
     QV4::CppStackFrame *frame = engine()->currentStackFrame;

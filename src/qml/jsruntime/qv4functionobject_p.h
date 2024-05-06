@@ -42,10 +42,7 @@ struct JSCallData;
 
 namespace Heap {
 
-#define FunctionObjectMembers(class, Member) \
-    Member(class, NoMark, bool, isConstructor) \
-    Member(class, NoMark, bool, canBeTailCalled)
-
+#define FunctionObjectMembers(class, Member)
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     enum {
         Index_ProtoConstructor = 0,
@@ -156,19 +153,18 @@ DECLARE_HEAP_OBJECT(BoundFunction, JavaScriptFunctionObject) {
     void init(QV4::FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs);
 };
 
+struct BoundConstructor : BoundFunction {};
+
 }
 
 struct Q_QML_EXPORT FunctionObject: Object {
-    enum {
-        IsFunctionObject = true
-    };
     V4_OBJECT2(FunctionObject, Object)
     Q_MANAGED_TYPE(FunctionObject)
     V4_INTERNALCLASS(FunctionObject)
     V4_PROTOTYPE(functionPrototype)
     enum { NInlineProperties = 1 };
 
-    bool canBeTailCalled() const { return d()->canBeTailCalled; }
+    bool canBeTailCalled() const { return vtable()->isTailCallable; }
 
     ReturnedValue name() const;
 
@@ -180,29 +176,31 @@ struct Q_QML_EXPORT FunctionObject: Object {
     ReturnedValue callAsConstructor(
             const Value *argv, int argc, const Value *newTarget = nullptr) const
     {
-        return vtable()->callAsConstructor(this, argv, argc, newTarget ? newTarget : this);
+        if (const auto callAsConstructor = vtable()->callAsConstructor)
+            return callAsConstructor(this, argv, argc, newTarget ? newTarget : this);
+        return failCallAsConstructor();
     }
 
     ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const
     {
-        return vtable()->call(this, thisObject, argv, argc);
+        if (const auto call = vtable()->call)
+            return call(this, thisObject, argv, argc);
+        return failCall();
     }
 
     void call(QObject *thisObject, void **argv, const QMetaType *types, int argc) const
     {
-        vtable()->callWithMetaTypes(this, thisObject, argv, types, argc);
+        if (const auto callWithMetaTypes = vtable()->callWithMetaTypes)
+            callWithMetaTypes(this, thisObject, argv, types, argc);
+        else
+            failCall();
     }
 
     inline ReturnedValue callAsConstructor(const JSCallData &data) const;
     inline ReturnedValue call(const JSCallData &data) const;
 
-    static ReturnedValue virtualCall(
-            const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
-    static void virtualCallWithMetaTypes(
-            const FunctionObject *f, QObject *thisObject,
-            void **argv, const QMetaType *types, int argc);
-    static ReturnedValue virtualCallAsConstructor(
-            const FunctionObject *f, const Value *argv, int argc, const Value *newTarget);
+    ReturnedValue failCall() const;
+    ReturnedValue failCallAsConstructor() const;
     static void virtualConvertAndCall(
             const FunctionObject *f, QObject *thisObject,
             void **argv, const QMetaType *types, int argc);
@@ -214,7 +212,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     bool isBinding() const;
     bool isBoundFunction() const;
-    bool isConstructor() const { return d()->isConstructor; }
+    bool isConstructor() const { return vtable()->callAsConstructor; }
 
     ReturnedValue getHomeObject() const;
 
@@ -228,7 +226,13 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
 template<>
 inline const FunctionObject *Value::as() const {
-    return isManaged() && m()->internalClass->vtable->isFunctionObject ? reinterpret_cast<const FunctionObject *>(this) : nullptr;
+    if (!isManaged())
+        return nullptr;
+
+    const VTable *vtable = m()->internalClass->vtable;
+    return (vtable->call || vtable->callAsConstructor)
+            ? reinterpret_cast<const FunctionObject *>(this)
+            : nullptr;
 }
 
 struct Q_QML_EXPORT JavaScriptFunctionObject: FunctionObject
@@ -299,7 +303,10 @@ void Heap::IndexedBuiltinFunction::init(
 struct ArrowFunction : JavaScriptFunctionObject {
     V4_OBJECT2(ArrowFunction, JavaScriptFunctionObject)
     V4_INTERNALCLASS(ArrowFunction)
-    enum { NInlineProperties = 3 };
+    enum {
+        NInlineProperties = 3,
+        IsTailCallable = true,
+    };
 
     static void virtualCallWithMetaTypes(const FunctionObject *f, QObject *thisObject,
                                          void **a, const QMetaType *types, int argc);
@@ -339,24 +346,24 @@ struct DefaultClassConstructorFunction : FunctionObject {
 struct BoundFunction: JavaScriptFunctionObject {
     V4_OBJECT2(BoundFunction, JavaScriptFunctionObject)
 
-    static Heap::BoundFunction *create(
-            FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs)
-    {
-        return target->engine()->memoryManager->allocate<BoundFunction>(
-                target, boundThis, boundArgs);
-    }
-
     Heap::FunctionObject *target() const { return d()->target; }
     Value boundThis() const { return d()->boundThis; }
     Heap::MemberData *boundArgs() const { return d()->boundArgs; }
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct BoundConstructor: BoundFunction {
+    V4_OBJECT2(BoundConstructor, BoundFunction)
+
+    static ReturnedValue virtualCallAsConstructor(
+            const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 inline bool FunctionObject::isBoundFunction() const
 {
-    return d()->vtable() == BoundFunction::staticVTable();
+    const VTable *vtable = d()->vtable();
+    return vtable == BoundFunction::staticVTable() || vtable == BoundConstructor::staticVTable();
 }
 
 inline ReturnedValue checkedResult(QV4::ExecutionEngine *v4, ReturnedValue result)

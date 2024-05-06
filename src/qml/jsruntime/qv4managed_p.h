@@ -77,7 +77,7 @@ struct Q_QML_EXPORT Managed : Value, VTableBase
         IsString = false,
         IsStringOrSymbol = false,
         IsObject = false,
-        IsFunctionObject = false,
+        IsTailCallable = false,
         IsErrorObject = false,
         IsArrayData = false
     };

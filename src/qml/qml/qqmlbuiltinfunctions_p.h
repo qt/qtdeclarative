@@ -249,6 +249,9 @@ struct QQmlBindingFunction : public QV4::JavaScriptFunctionObject
 {
     V4_OBJECT2(QQmlBindingFunction, JavaScriptFunctionObject)
 
+    static ReturnedValue virtualCall(
+            const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+
     Heap::JavaScriptFunctionObject *bindingFunction() const { return d()->bindingFunction; }
     QQmlSourceLocation currentLocation() const; // from caller stack trace
 };

@@ -64,7 +64,7 @@ struct VTable
     quint8 isExecutionContext;
     quint8 isString;
     quint8 isObject;
-    quint8 isFunctionObject;
+    quint8 isTailCallable;
     quint8 isErrorObject;
     quint8 isArrayData;
     quint8 isStringOrSymbol;
@@ -221,7 +221,7 @@ protected:
     classname::IsExecutionContext,          \
     classname::IsString,                    \
     classname::IsObject,                    \
-    classname::IsFunctionObject,            \
+    classname::IsTailCallable,              \
     classname::IsErrorObject,               \
     classname::IsArrayData,                 \
     classname::IsStringOrSymbol,            \

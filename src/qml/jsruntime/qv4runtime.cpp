@@ -1188,7 +1188,7 @@ ReturnedValue Runtime::LoadSuperConstructor::call(ExecutionEngine *engine, const
     if (!f)
         return engine->throwTypeError();
     Heap::Object *c = static_cast<const Object &>(t).getPrototypeOf();
-    if (!c->vtable()->isFunctionObject || !static_cast<Heap::FunctionObject *>(c)->isConstructor)
+    if (!c->vtable()->callAsConstructor)
         return engine->throwTypeError();
     return c->asReturnedValue();
 }

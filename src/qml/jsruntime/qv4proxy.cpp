@@ -13,6 +13,7 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ProxyObject);
 DEFINE_OBJECT_VTABLE(ProxyFunctionObject);
+DEFINE_OBJECT_VTABLE(ProxyConstructorObject);
 
 void Heap::ProxyObject::init(const QV4::Object *target, const QV4::Object *handler)
 {
@@ -28,9 +29,6 @@ void Heap::ProxyFunctionObject::init(const QV4::FunctionObject *target, const QV
     FunctionObject::init(e);
     this->target.set(e, target->d());
     this->handler.set(e, handler->d());
-
-    if (!target->isConstructor())
-        isConstructor = false;
 }
 
 
@@ -643,7 +641,8 @@ OwnPropertyKeyIterator *ProxyObject::virtualOwnPropertyKeys(const Object *m, Val
 }
 
 
-ReturnedValue ProxyFunctionObject::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
+ReturnedValue ProxyConstructorObject::virtualCallAsConstructor(
+        const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     Scope scope(f);
     const ProxyObject *o = static_cast<const ProxyObject *>(f);
@@ -732,9 +731,18 @@ ReturnedValue Proxy::virtualCallAsConstructor(const FunctionObject *f, const Val
             return scope.engine->throwTypeError();
 
     const FunctionObject *targetFunction = target->as<FunctionObject>();
-    if (targetFunction)
-        return scope.engine->memoryManager->allocate<ProxyFunctionObject>(targetFunction, handler)->asReturnedValue();
-    return scope.engine->memoryManager->allocate<ProxyObject>(target, handler)->asReturnedValue();
+    if (!targetFunction) {
+        return scope.engine->memoryManager->allocate<ProxyObject>(target, handler)
+                ->asReturnedValue();
+    }
+
+    if (targetFunction->isConstructor()) {
+        return scope.engine->memoryManager->allocate<ProxyConstructorObject>(
+                                                  targetFunction, handler)->asReturnedValue();
+    }
+
+    return scope.engine->memoryManager->allocate<ProxyFunctionObject>(targetFunction, handler)
+            ->asReturnedValue();
 }
 
 ReturnedValue Proxy::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
