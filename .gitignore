@@ -372,3 +372,7 @@ CMakeLists.txt.user
 
 # QML Language Server ini-files
 .qmlls.ini
+
+# Clangd related
+.cache/*
+compile_commands.json
