@@ -40,6 +40,7 @@ public:
 
     QUrl sourceFile;
     QQuickItem *svgItem = nullptr;
+    QQuickVectorImage::FillMode fillMode = QQuickVectorImage::Stretch;
 };
 
 QT_END_NAMESPACE
