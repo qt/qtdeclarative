@@ -359,7 +359,8 @@ void QQmlJSCodeGenerator::generate_Ret()
         m_body += u"    *static_cast<"_s
                 + stored->augmentedInternalName()
                 + u" *>(argv[0]) = "_s
-                + conversion(m_state.accumulatorIn(), m_function->returnType, in)
+                + conversion(m_state.accumulatorIn(), m_function->returnType,
+                             consumedAccumulatorVariableIn())
                 + u";\n"_s;
     } else if (m_typeResolver->registerContains(m_state.accumulatorIn(), contained)) {
         m_body += u"    const QMetaType returnType = "_s + contentType(m_state.accumulatorIn(), in)
@@ -369,7 +370,8 @@ void QQmlJSCodeGenerator::generate_Ret()
                 + contentPointer(m_state.accumulatorIn(), in) + u");\n"_s;
     } else {
         m_body += u"    const auto converted = "_s
-                + conversion(m_state.accumulatorIn(), m_function->returnType, in) + u";\n"_s;
+                + conversion(m_state.accumulatorIn(), m_function->returnType,
+                             consumedAccumulatorVariableIn()) + u";\n"_s;
         m_body += u"    const QMetaType returnType = "_s
                 + contentType(m_function->returnType, u"converted"_s)
                 + u";\n"_s;
