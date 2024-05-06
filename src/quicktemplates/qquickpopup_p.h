@@ -451,6 +451,7 @@ private:
 
     Q_DISABLE_COPY(QQuickPopup)
     Q_DECLARE_PRIVATE(QQuickPopup)
+    friend class QQuickPopupWindow;
     friend class QQuickPopupItem;
     friend class QQuickOverlay;
     friend class QQuickOverlayPrivate;

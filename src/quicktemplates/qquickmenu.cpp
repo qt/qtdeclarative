@@ -952,6 +952,9 @@ bool QQuickMenuPrivate::blockInput(QQuickItem *item, const QPointF &point) const
  */
 bool QQuickMenuPrivate::handleReleaseWithoutGrab(const QEventPoint &eventPoint)
 {
+    if (!contains(eventPoint.scenePosition()))
+        return false;
+
     QQuickMenuItem *menuItem = nullptr;
     // Usually, hover events have occurred, and currentIndex is set.
     // If not, use eventPoint.position() for picking.
