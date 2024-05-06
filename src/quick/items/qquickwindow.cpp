@@ -1857,7 +1857,7 @@ void QQuickWindowPrivate::clearFocusObject()
         da->clearFocusObject();
 }
 
-void QQuickWindowPrivate::setFocusToTarget(FocusTarget target)
+void QQuickWindowPrivate::setFocusToTarget(FocusTarget target, Qt::FocusReason reason)
 {
     QQuickItem *newFocusItem = nullptr;
     if (contentItem) {
@@ -1883,7 +1883,7 @@ void QQuickWindowPrivate::setFocusToTarget(FocusTarget target)
     }
 
     if (newFocusItem)
-        newFocusItem->setFocus(true, Qt::ActiveWindowFocusReason);
+        newFocusItem->setFocus(true, reason);
 }
 
 /*!

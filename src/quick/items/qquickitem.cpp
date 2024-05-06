@@ -2478,20 +2478,24 @@ bool QQuickItemPrivate::focusNextPrev(QQuickItem *item, bool forward)
     if (next == item)
         return false;
 
+    const auto reason = forward ? Qt::TabFocusReason : Qt::BacktabFocusReason;
+
     if (!wrap && !next) {
         // Focus chain wrapped and we are not top-level window
         // Give focus to parent window
         Q_ASSERT(window);
         Q_ASSERT(window->parent());
 
+
         qt_window_private(window->parent())->setFocusToTarget(
             forward ? QWindowPrivate::FocusTarget::Next
-                    : QWindowPrivate::FocusTarget::Prev);
+                    : QWindowPrivate::FocusTarget::Prev,
+            reason);
         window->parent()->requestActivate();
         return true;
     }
 
-    next->forceActiveFocus(forward ? Qt::TabFocusReason : Qt::BacktabFocusReason);
+    next->forceActiveFocus(reason);
 
     return true;
 }

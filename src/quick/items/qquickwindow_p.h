@@ -146,7 +146,7 @@ public:
 #endif
 
     void clearFocusObject() override;
-    void setFocusToTarget(QWindowPrivate::FocusTarget) override;
+    void setFocusToTarget(FocusTarget, Qt::FocusReason) override;
 
     void dirtyItem(QQuickItem *);
     void cleanup(QSGNode *);
