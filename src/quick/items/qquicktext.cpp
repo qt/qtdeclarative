@@ -1853,6 +1853,27 @@ QQuickText::~QQuickText()
     \sa QFont::setFeature()
 //! [qml-font-features]
 */
+
+/*!
+    \qmlproperty object QtQuick::Text::font.contextFontMerging
+    \since 6.8
+
+//! [qml-font-context-font-merging]
+    If the selected font does not contain a certain character, Qt automatically chooses a
+    similar-looking fallback font that contains the character. By default this is done on a
+    character-by-character basis.
+
+    This means that in certain uncommon cases, many different fonts may be used to represent one
+    string of text even if it's in the same script. Setting \c contextFontMerging to true will try
+    finding the fallback font that matches the largest subset of the input string instead. This
+    will be more expensive for strings where missing glyphs occur, but may give more consistent
+    results. By default, \c contextFontMerging is \c{false}.
+
+    \sa QFont::StyleStrategy
+//! [qml-font-context-font-merging]
+*/
+
+
 QFont QQuickText::font() const
 {
     Q_D(const QQuickText);

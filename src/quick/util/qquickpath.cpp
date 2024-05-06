@@ -2809,6 +2809,13 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 
     \include qquicktext.cpp qml-font-features
 */
+
+/*!
+    \qmlproperty object QtQuick::PathText::font.contextFontMerging
+    \since 6.8
+
+    \include qquicktext.cpp qml-font-context-font-merging
+*/
 void QQuickPathText::updatePath() const
 {
     if (!_path.isEmpty())
