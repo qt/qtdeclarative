@@ -7,9 +7,11 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
@@ -19,6 +21,7 @@
 #include <QtQuickControls2/qquickstyle.h>
 #include <QSignalSpy>
 
+using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
 
 class tst_palette : public QQmlDataTest
@@ -52,6 +55,9 @@ private slots:
 
     void resetColor();
     void updateBindingPalette();
+
+    void comboBoxPopup_data();
+    void comboBoxPopup();
 };
 
 tst_palette::tst_palette()
@@ -549,6 +555,61 @@ void tst_palette::updateBindingPalette()
     customPalette->setButtonText(buttonTextColor);
     QCOMPARE(customPalette->buttonText(), buttonTextColor);
     QCOMPARE(windowPalette->buttonText(), customPalette->buttonText());
+}
+
+void tst_palette::comboBoxPopup_data()
+{
+    QTest::addColumn<QString>("style");
+    QTest::addColumn<QString>("qmlFilePath");
+
+    QTest::newRow("Window, Basic") << "Basic" << "comboBoxPopupWithWindow.qml";
+    QTest::newRow("ApplicationWindow, Basic") << "Basic" << "comboBoxPopupWithApplicationWindow.qml";
+    QTest::newRow("Window, Fusion") << "Fusion" << "comboBoxPopupWithWindow.qml";
+    QTest::newRow("ApplicationWindow, Fusion") << "Fusion" << "comboBoxPopupWithApplicationWindow.qml";
+}
+
+// Unlike regular popups, which should inherit their palette from the window and not the parent popup,
+// combo box popups should inherit their palette from the combo box itself.
+void tst_palette::comboBoxPopup()
+{
+    QFETCH(QString, style);
+    QFETCH(QString, qmlFilePath);
+
+    qmlClearTypeRegistrations();
+    QQuickStyle::setStyle(style);
+
+    QQuickApplicationHelper helper(this, qmlFilePath);
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    const auto *windowPalette = window->property("palette").value<QQuickPalette *>();
+    QVERIFY(windowPalette);
+
+    const auto *popup = window->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup);
+    const auto *popupBackground = popup->background();
+    QCOMPARE(popupBackground->property("color"), QColorConstants::Red);
+    QCOMPARE(popupBackground->property("palette").value<QQuickPalette*>()->toQPalette().window().color(),
+        QColorConstants::Red);
+
+    // This has the default palette.
+    const auto *topLevelComboBox = window->property("topLevelComboBox").value<QQuickComboBox *>();
+    QVERIFY(topLevelComboBox);
+    const auto *topLevelComboBoxBackground = topLevelComboBox->popup()->background();
+    QCOMPARE_NE(topLevelComboBoxBackground->property("color"), QColorConstants::Red);
+    QCOMPARE_NE(topLevelComboBoxBackground->property("palette").value<QQuickPalette*>()->toQPalette().window().color(),
+        QColorConstants::Red);
+
+    // The popup that this combo box is in has its window role set to red,
+    // so the combo box's popup background should be red too.
+    const auto *comboBoxInPopup = window->property("comboBoxInPopup").value<QQuickComboBox *>();
+    QVERIFY(comboBoxInPopup);
+    const auto *comboBoxInPopupBackground = comboBoxInPopup->popup()->background();
+    QCOMPARE(comboBoxInPopupBackground->property("color"), QColorConstants::Red);
+    QCOMPARE(comboBoxInPopupBackground->property("palette").value<QQuickPalette*>()->toQPalette().window().color(),
+        QColorConstants::Red);
 }
 
 QTEST_MAIN(tst_palette)

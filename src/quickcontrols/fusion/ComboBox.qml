@@ -116,6 +116,7 @@ T.ComboBox {
         topMargin: 6
         bottomMargin: 6
         padding: 1
+        palette: control.palette
 
         contentItem: ListView {
             clip: true
@@ -129,15 +130,15 @@ T.ComboBox {
         }
 
         background: Rectangle {
-            color: control.popup.palette.window
-            border.color: Fusion.outline(control.palette)
+            color: palette.window
+            border.color: Fusion.outline(palette)
 
             Rectangle {
                 z: -1
                 x: 1; y: 1
                 width: parent.width
                 height: parent.height
-                color: control.palette.shadow
+                color: palette.shadow
                 opacity: 0.2
             }
         }
