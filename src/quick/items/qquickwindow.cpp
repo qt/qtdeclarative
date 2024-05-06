@@ -1859,31 +1859,37 @@ void QQuickWindowPrivate::clearFocusObject()
 
 void QQuickWindowPrivate::setFocusToTarget(FocusTarget target, Qt::FocusReason reason)
 {
+    if (!contentItem)
+        return;
+
     QQuickItem *newFocusItem = nullptr;
-    if (contentItem) {
-        switch (target) {
-        case FocusTarget::First:
-            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(contentItem, true);
-            break;
-        case FocusTarget::Last:
-            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(contentItem, false);
-            break;
-        case FocusTarget::Next:
-        case FocusTarget::Prev: {
-            auto da = deliveryAgentPrivate();
-            Q_ASSERT(da);
-            QQuickItem *focusItem = da->focusTargetItem() ? da->focusTargetItem() : contentItem;
-            bool forward = (target == FocusTarget::Next);
-            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(focusItem, forward);
-            break;
+    switch (target) {
+    case FocusTarget::First:
+    case FocusTarget::Last: {
+        const bool forward = (target == FocusTarget::First);
+        newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(contentItem, forward);
+        if (newFocusItem) {
+            const auto *itemPriv = QQuickItemPrivate::get(newFocusItem);
+            if (itemPriv->subFocusItem && itemPriv->flags & QQuickItem::ItemIsFocusScope)
+                clearFocusInScope(newFocusItem, itemPriv->subFocusItem, reason);
         }
-        default:
-            break;
-        }
+        break;
+    }
+    case FocusTarget::Next:
+    case FocusTarget::Prev: {
+        const auto da = deliveryAgentPrivate();
+        Q_ASSERT(da);
+        QQuickItem *focusItem = da->focusTargetItem() ? da->focusTargetItem() : contentItem;
+        bool forward = (target == FocusTarget::Next);
+        newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(focusItem, forward);
+        break;
+    }
+    default:
+        break;
     }
 
     if (newFocusItem)
-        newFocusItem->setFocus(true, reason);
+        newFocusItem->forceActiveFocus(reason);
 }
 
 /*!
