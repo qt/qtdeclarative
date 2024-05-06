@@ -33,6 +33,7 @@ qt_internal_add_module(QmlLSPrivate
         qdochtmlparser_p.h qdochtmlparser.cpp
         qqmlhighlightsupport_p.h qqmlhighlightsupport.cpp
         qqmlsemantictokens_p.h qqmlsemantictokens.cpp
+        qqmllshelpplugininterface_p.h qqmllshelpplugininterface.cpp
 
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate
