@@ -1287,7 +1287,7 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
                 if (!image->pix) {
                     const QQmlContext *context = qmlContext(q);
                     const QUrl url = context->resolvedUrl(q->baseUrl()).resolved(image->url);
-                    image->pix = new QQuickPixmap(context->engine(), url, QRect(), image->size * devicePixelRatio());
+                    image->pix.reset(new QQuickPixmap(context->engine(), url, QRect(), image->size * devicePixelRatio()));
 
                     if (image->pix->isLoading()) {
                         image->pix->connectFinished(q, SLOT(imageDownloadFinished()));
@@ -1939,9 +1939,7 @@ void QQuickText::itemChange(ItemChange change, const ItemChangeData &value)
                 // check if we have scalable inline images with explicit size set, which should be reloaded
                 for (QQuickStyledTextImgTag *image : std::as_const(d->extra->visibleImgTags)) {
                     if (image->size.isValid() && QQuickPixmap::isScalableImageFormat(image->url)) {
-                        delete image->pix;
-                        image->pix = nullptr;
-
+                        image->pix.reset();
                         needUpdateLayout = true;
                     }
                 }
@@ -2793,9 +2791,8 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
         if (d->extra.isAllocated()) {
             for (QQuickStyledTextImgTag *img : std::as_const(d->extra->visibleImgTags)) {
-                QQuickPixmap *pix = img->pix;
-                if (pix && pix->isReady())
-                    node->addImage(QRectF(img->pos.x() + dx, img->pos.y() + dy, img->size.width(), img->size.height()), pix->image());
+                if (img->pix && img->pix->isReady())
+                    node->addImage(QRectF(img->pos.x() + dx, img->pos.y() + dy, img->size.width(), img->size.height()), img->pix->image());
             }
         }
     }
