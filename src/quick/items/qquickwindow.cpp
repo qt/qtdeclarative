@@ -928,6 +928,10 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     // The confirmExitPopup allows user to save or discard the document,
     // or to cancel the closing.
     \endcode
+
+    \note If using \l {Qt Quick Controls}, it's recommended to use
+        \l ApplicationWindow instead of Window, as it has better styling
+        support.
 */
 
 /*!
