@@ -33,6 +33,7 @@ class Q_QUICK_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
     Q_PROPERTY(bool cache READ cache WRITE setCache NOTIFY cacheChanged)
     Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged)
     Q_PROPERTY(bool mirrorVertically READ mirrorVertically WRITE setMirrorVertically NOTIFY mirrorVerticallyChanged REVISION(6, 2))
+    Q_PROPERTY(bool retainWhileLoading READ retainWhileLoading WRITE setRetainWhileLoading NOTIFY retainWhileLoadingChanged REVISION(6, 8))
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged REVISION(2, 14))
     Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged REVISION(2, 14))
     Q_PROPERTY(QColorSpace colorSpace READ colorSpace WRITE setColorSpace NOTIFY colorSpaceChanged REVISION(2, 15))
@@ -94,6 +95,9 @@ public:
     QColorSpace colorSpace() const;
     virtual void setColorSpace(const QColorSpace &colorSpace);
 
+    bool retainWhileLoading() const;
+    void setRetainWhileLoading(bool retain);
+
     static void resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio);
 
     // Use a virtual rather than a signal->signal to avoid the huge
@@ -113,6 +117,7 @@ Q_SIGNALS:
     Q_REVISION(2, 15) void sourceClipRectChanged();
     Q_REVISION(2, 15) void colorSpaceChanged();
     Q_REVISION(6, 2) void mirrorVerticallyChanged();
+    Q_REVISION(6, 8) void retainWhileLoadingChanged();
 
 protected:
     void loadEmptyUrl();

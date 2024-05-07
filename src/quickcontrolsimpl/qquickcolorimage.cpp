@@ -57,12 +57,12 @@ void QQuickColorImage::pixmapChange()
     QQuickImage::pixmapChange();
     if (m_color.alpha() > 0 && m_color != m_defaultColor) {
         QQuickImageBasePrivate *d = static_cast<QQuickImageBasePrivate *>(QQuickItemPrivate::get(this));
-        QImage image = d->pix.image();
+        QImage image = d->currentPix->image();
         if (!image.isNull()) {
             QPainter painter(&image);
             painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
             painter.fillRect(image.rect(), m_color);
-            d->pix.setImage(image);
+            d->currentPix->setImage(image);
         }
     }
 }

@@ -135,7 +135,7 @@ QSize QQuickImageBase::sourceSize() const
 
     int width = d->sourcesize.width();
     int height = d->sourcesize.height();
-    return QSize(width != -1 ? width : d->pix.width(), height != -1 ? height : d->pix.height());
+    return QSize(width != -1 ? width : d->currentPix->width(), height != -1 ? height : d->currentPix->height());
 }
 
 void QQuickImageBase::resetSourceSize()
@@ -188,7 +188,7 @@ void QQuickImageBase::setCache(bool cache)
 QImage QQuickImageBase::image() const
 {
     Q_D(const QQuickImageBase);
-    return d->pix.image();
+    return d->currentPix->image();
 }
 
 void QQuickImageBase::setMirror(bool mirror)
@@ -234,7 +234,7 @@ bool QQuickImageBase::mirrorVertically() const
 void QQuickImageBase::setCurrentFrame(int frame)
 {
     Q_D(QQuickImageBase);
-    if (frame == d->currentFrame || frame < 0 || (isComponentComplete() && frame >= d->pix.frameCount()))
+    if (frame == d->currentFrame || frame < 0 || (isComponentComplete() && frame >= d->currentPix->frameCount()))
         return;
 
     d->currentFrame = frame;
@@ -264,7 +264,8 @@ int QQuickImageBase::frameCount() const
 void QQuickImageBase::loadEmptyUrl()
 {
     Q_D(QQuickImageBase);
-    d->pix.clear(this);
+    d->currentPix->clear(this);
+    d->pendingPix->clear(this);
     d->setProgress(0);
     d->status = Null; // do not emit statusChanged until after setImplicitSize
     setImplicitSize(0, 0); // also called in QQuickImageBase::pixmapChange, but not QQuickImage/QQuickBorderImage overrides
@@ -290,7 +291,7 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
         options |= QQuickPixmap::Asynchronous;
     if (d->cache)
         options |= QQuickPixmap::Cache;
-    d->pix.clear(this);
+    d->pendingPix->clear(this);
     QUrl loadUrl = url;
     const QQmlContext *context = qmlContext(this);
     if (context)
@@ -315,16 +316,16 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
 
     d->status = Null; // reset status, no emit
 
-    d->pix.load(qmlEngine(this),
-                loadUrl,
-                d->sourceClipRect.toRect(),
-                (loadOptions & HandleDPR) ? d->sourcesize * d->devicePixelRatio : QSize(),
-                options,
-                (loadOptions & UseProviderOptions) ? d->providerOptions : QQuickImageProviderOptions(),
-                d->currentFrame, d->frameCount,
-                d->devicePixelRatio);
+    d->pendingPix->load(qmlEngine(this),
+                        loadUrl,
+                        d->sourceClipRect.toRect(),
+                        (loadOptions & HandleDPR) ? d->sourcesize * d->devicePixelRatio : QSize(),
+                        options,
+                        (loadOptions & UseProviderOptions) ? d->providerOptions : QQuickImageProviderOptions(),
+                        d->currentFrame, d->frameCount,
+                        d->devicePixelRatio);
 
-    if (d->pix.isLoading()) {
+    if (d->pendingPix->isLoading()) {
         d->setProgress(0);
         d->setStatus(Loading);
 
@@ -337,9 +338,10 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
                 QQuickImageBase::staticMetaObject.indexOfSlot("requestFinished()");
         }
 
-        d->pix.connectFinished(this, thisRequestFinished);
-        d->pix.connectDownloadProgress(this, thisRequestProgress);
-        update(); //pixmap may have invalidated texture, updatePaintNode needs to be called before the next repaint
+        d->pendingPix->connectFinished(this, thisRequestFinished);
+        d->pendingPix->connectDownloadProgress(this, thisRequestProgress);
+        if (!d->retainWhileLoading)
+            update(); //pixmap may have invalidated texture, updatePaintNode needs to be called before the next repaint
     } else {
         requestFinished();
     }
@@ -361,9 +363,13 @@ void QQuickImageBase::requestFinished()
 {
     Q_D(QQuickImageBase);
 
-    if (d->pix.isError()) {
-        qmlWarning(this) << d->pix.error();
-        d->pix.clear(this);
+    if (d->pendingPix != d->currentPix) {
+        std::swap(d->pendingPix, d->currentPix);
+        d->pendingPix->clear(this); // Clear the old image
+    }
+
+    if (d->currentPix->isError()) {
+        qmlWarning(this) << d->currentPix->error();
         d->status = Error;
         d->setProgress(0);
     } else {
@@ -382,12 +388,12 @@ void QQuickImageBase::requestFinished()
         d->oldAutoTransform = autoTransform();
         emitAutoTransformBaseChanged();
     }
-    if (d->frameCount != d->pix.frameCount()) {
-        d->frameCount = d->pix.frameCount();
+    if (d->frameCount != d->currentPix->frameCount()) {
+        d->frameCount = d->currentPix->frameCount();
         emit frameCountChanged();
     }
-    if (d->colorSpace != d->pix.colorSpace()) {
-        d->colorSpace = d->pix.colorSpace();
+    if (d->colorSpace != d->currentPix->colorSpace()) {
+        d->colorSpace = d->currentPix->colorSpace();
         emit colorSpaceChanged();
     }
 
@@ -430,7 +436,7 @@ void QQuickImageBase::componentComplete()
 void QQuickImageBase::pixmapChange()
 {
     Q_D(QQuickImageBase);
-    setImplicitSize(d->pix.width() / d->devicePixelRatio, d->pix.height() / d->devicePixelRatio);
+    setImplicitSize(d->currentPix->width() / d->devicePixelRatio, d->currentPix->height() / d->devicePixelRatio);
 }
 
 void QQuickImageBase::resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio)
@@ -470,7 +476,7 @@ bool QQuickImageBase::autoTransform() const
 {
     Q_D(const QQuickImageBase);
     if (d->providerOptions.autoTransform() == QQuickImageProviderOptions::UsePluginDefaultTransform)
-        return d->pix.autoTransform() == QQuickImageProviderOptions::ApplyTransform;
+        return d->currentPix->autoTransform() == QQuickImageProviderOptions::ApplyTransform;
     return d->providerOptions.autoTransform() == QQuickImageProviderOptions::ApplyTransform;
 }
 
@@ -498,6 +504,30 @@ void QQuickImageBase::setColorSpace(const QColorSpace &colorSpace)
     d->colorSpace = colorSpace;
     d->providerOptions.setTargetColorSpace(colorSpace);
     emit colorSpaceChanged();
+}
+
+bool QQuickImageBase::retainWhileLoading() const
+{
+    Q_D(const QQuickImageBase);
+    return d->retainWhileLoading;
+}
+
+void QQuickImageBase::setRetainWhileLoading(bool retainWhileLoading)
+{
+    Q_D(QQuickImageBase);
+    if (d->retainWhileLoading == retainWhileLoading)
+        return;
+
+    d->retainWhileLoading = retainWhileLoading;
+    if (d->retainWhileLoading) {
+        if (d->currentPix == &d->pix1)
+            d->pendingPix = &d->pix2;
+        else
+            d->pendingPix = &d->pix1;
+    } else {
+        d->pendingPix->clear();
+        d->pendingPix = d->currentPix;
+    }
 }
 
 QT_END_NAMESPACE
