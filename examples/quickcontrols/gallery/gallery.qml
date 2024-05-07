@@ -272,6 +272,45 @@ ApplicationWindow {
                 }
             }
 
+            RowLayout {
+                id: colorSchemes
+                // Some Qt Quick styles prioritize the respective design system guidelines
+                // over the system palette.
+                enabled: ["FluentWinUI3", "Fusion", "iOS"].includes(styleBox.currentText)
+                CheckBox {
+                    id: autoColorScheme
+                    checked: true
+                    text: qsTr("Auto")
+                }
+                CheckBox {
+                    id: darkColorScheme
+                    text: qsTr("Dark Mode")
+                }
+                CheckBox {
+                    id: lightColorScheme
+                    text: qsTr("Light Mode")
+                }
+                ButtonGroup {
+                    exclusive: true
+                    buttons: colorSchemes.children
+                    onCheckedButtonChanged: {
+                        let scheme;
+                        switch (checkedButton) {
+                            case autoColorScheme:
+                                scheme = Qt.Unknown
+                                break;
+                            case darkColorScheme:
+                                scheme = Qt.Dark
+                                break;
+                            case lightColorScheme:
+                                scheme = Qt.Light
+                                break;
+                        }
+                        Qt.styleHints.colorScheme = scheme
+                    }
+                }
+            }
+
             CheckBox {
                 id: orientationCheckBox
                 text: qsTr("Enable Landscape")
