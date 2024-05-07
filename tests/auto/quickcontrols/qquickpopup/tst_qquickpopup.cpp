@@ -120,6 +120,7 @@ private slots:
     void popupWindowModality();
     void popupWindowClosesOnParentWindowClosing();
     void popupWindowChangingParent();
+    void popupWindowFocus();
 
 private:
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -2637,6 +2638,45 @@ void tst_QQuickPopup::popupWindowChangingParent()
 
     VERIFY_GLOBAL_POS(item3, popupWindow, initialPos);
     VERIFY_LOCAL_POS(popup, initialPos);
+}
+
+void tst_QQuickPopup::popupWindowFocus()
+{
+    QSKIP("Enable this test once the PopupType property has been merged");
+    QQuickApplicationHelper helper(this, "popupWindowFocusHandling.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    QVERIFY(window);
+    auto *popup = window->contentItem()->findChild<QQuickPopup *>();
+    QVERIFY(popup);
+    auto *popupPrivate = QQuickPopupPrivate::get(popup);
+    QVERIFY(popupPrivate);
+    QQuickTextInput *textField1 = window->property("textField1").value<QQuickTextInput *>();
+    QVERIFY(textField1);
+    QQuickTextInput *textField2 = window->property("textField2").value<QQuickTextInput *>();
+    QVERIFY(textField2);
+    if (!popupPrivate->usePopupWindow())
+        QSKIP("The platform doesn't support native popup windows. Skipping test.");
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowFocused(window));
+    QVERIFY(QGuiApplication::focusObject() == textField1);
+    QTest::keyClick(helper.window, Qt::Key_Q);
+    QTRY_COMPARE(textField1->text(), "q");
+    popup->open();
+    QTRY_VERIFY(popup->isVisible());
+    auto *popupWindow = popupPrivate->popupWindow;
+    QVERIFY(popupWindow);
+    QVERIFY(popupWindow->isVisible());
+    // The focusWindow should still be the main window,
+    // the popup window should get its event forwarded via the delivery agent
+    QVERIFY(QGuiApplication::focusWindow() == helper.window);
+    QVERIFY(popupWindow->focusObject() == textField2);
+    QTest::keyClick(popupWindow, Qt::Key_T);
+    QTRY_COMPARE(textField2->text(), "t");
+    popup->close();
+    QTRY_VERIFY(!popup->isVisible());
+    QVERIFY(QGuiApplication::focusObject() == textField1);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
