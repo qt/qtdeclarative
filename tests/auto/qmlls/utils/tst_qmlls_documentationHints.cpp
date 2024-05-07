@@ -99,6 +99,15 @@ It can also be useful for C++ integration, as it is just a plain QObject. See th
             << HtmlExtractor::ExtractionMode::Simplified
             << "This signal is emitted when there is a long press (currently 800ms). The mouse parameter provides information about the press, "
             "including the x and y position of the press, and which button is pressed.";
+
+    // Some properties and methods can be shown as in groups in qt-docs, like width and height of Item.
+    QTest::addRow("multiple-entries")
+            << testFile("qdochtmlparser/qml-qtquick-mousearea.html")
+            << "pressAndHold"
+            << DomType::MethodInfo
+            << HtmlExtractor::ExtractionMode::Simplified
+            << "This signal is emitted when there is a long press (currently 800ms). The mouse parameter provides information about the press, "
+            "including the x and y position of the press, and which button is pressed.";
 }
 
 void tst_qmlls_documentationHints::qdochtmlparser()

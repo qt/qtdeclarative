@@ -206,6 +206,7 @@ ExtractDocumentation::ExtractDocumentation(QQmlJS::Dom::DomType domType)
     case DomType::QmlObject:
         m_extractor = std::make_unique<ExtractQmlType>();
         break;
+    case DomType::Binding:
     case DomType::PropertyDefinition:
         m_extractor = std::make_unique<ExtractQmlProperty>();
         break;
