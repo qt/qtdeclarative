@@ -11,7 +11,6 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include "qsginternaltextnode_p.h"
-#include "qquickimage_p_p.h"
 #include "qquicktextutil_p.h"
 
 #include <QtQuick/private/qsgtexture_p.h>
@@ -49,7 +48,7 @@ const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 const int QQuickTextPrivate::largeTextSizeThreshold = QQUICKTEXT_LARGETEXT_THRESHOLD;
 
 QQuickTextPrivate::QQuickTextPrivate()
-    : fontInfo(font), elideLayout(nullptr), textLine(nullptr), lineWidth(0)
+    : fontInfo(font), lineWidth(0)
     , color(0xFF000000), linkColor(0xFF0000FF), styleColor(0xFF000000)
     , lineCount(1), multilengthEos(-1)
     , elideMode(QQuickText::ElideNone), hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop)
@@ -100,9 +99,6 @@ void QQuickTextPrivate::init()
 
 QQuickTextPrivate::~QQuickTextPrivate()
 {
-    delete elideLayout;
-    delete textLine; textLine = nullptr;
-
     if (extra.isAllocated()) {
         qDeleteAll(extra->imgTags);
         extra->imgTags.clear();
@@ -680,7 +676,7 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
     Q_Q(QQuickText);
 
     if (!textLine)
-        textLine = new QQuickTextLine;
+        textLine.reset(new QQuickTextLine);
     textLine->setFullLayoutTextLength(fullLayoutTextLength);
     textLine->setLine(&line);
     textLine->setY(height);
@@ -696,7 +692,7 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
     if (lineHeight() != 1.0)
         textLine->setHeight((lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : line.height() * lineHeight());
 
-    emit q->lineLaidOut(textLine);
+    emit q->lineLaidOut(textLine.get());
 
     height += textLine->height();
 }
@@ -1192,7 +1188,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
     if (elide) {
         if (!elideLayout) {
-            elideLayout = new QTextLayout;
+            elideLayout.reset(new QTextLayout);
             elideLayout->setCacheEnabled(true);
         }
         QTextEngine *engine = layout.engine();
@@ -1242,8 +1238,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         if (visibleCount == 1)
             layout.clearLayout();
     } else {
-        delete elideLayout;
-        elideLayout = nullptr;
+        elideLayout.reset();
     }
 
     QTextLine firstLine = visibleCount == 1 && elideLayout
@@ -2794,7 +2789,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
             node->addTextLayout(QPointF(dx, dy), &d->layout, -1, -1,0, unelidedLineCount);
 
         if (d->elideLayout)
-            node->addTextLayout(QPointF(dx, dy), d->elideLayout);
+            node->addTextLayout(QPointF(dx, dy), d->elideLayout.get());
 
         if (d->extra.isAllocated()) {
             for (QQuickStyledTextImgTag *img : std::as_const(d->extra->visibleImgTags)) {
@@ -3087,7 +3082,7 @@ QString QQuickTextPrivate::anchorAt(const QPointF &mousePos) const
     if (styledText) {
         QString link = anchorAt(&layout, translatedMousePos);
         if (link.isEmpty() && elideLayout)
-            link = anchorAt(elideLayout, translatedMousePos);
+            link = anchorAt(elideLayout.get(), translatedMousePos);
         return link;
     } else if (richText && extra.isAllocated() && extra->doc) {
         translatedMousePos.rx() -= QQuickTextUtil::alignedX(layedOutTextRect.width(), availableWidth(), q->effectiveHAlign());

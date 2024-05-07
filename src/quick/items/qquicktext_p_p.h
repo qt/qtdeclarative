@@ -95,8 +95,8 @@ public:
     QFontInfo fontInfo;
 
     QTextLayout layout;
-    QTextLayout *elideLayout;
-    QQuickTextLine *textLine;
+    QScopedPointer<QTextLayout> elideLayout;
+    QScopedPointer<QQuickTextLine> textLine;
 
     qreal lineWidth;
 
