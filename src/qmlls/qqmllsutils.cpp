@@ -2152,19 +2152,6 @@ QPair<QString, QStringList> cmakeBuildCommand(const QString &path)
     return result;
 }
 
-QByteArray getDocumentationFromLocation(const DomItem &file, const TextPosition &position)
-{
-    QByteArray result;
-    const auto [line, character] = position;
-    const auto itemLocation = itemsFromTextLocation(file,  line, character);
-
-    // TODO:
-    // Process found item's internalKind and fetch its documentation.
-    Q_UNUSED(itemLocation);
-
-    return result;
-}
-
 void Usages::sort()
 {
     std::sort(m_usagesInFile.begin(), m_usagesInFile.end());

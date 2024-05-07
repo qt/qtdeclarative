@@ -251,9 +251,6 @@ bool isValidEcmaScriptIdentifier(QStringView view);
 
 QPair<QString, QStringList> cmakeBuildCommand(const QString &path);
 
-// Documentation Hints
-QByteArray getDocumentationFromLocation(const DomItem &file, const TextPosition &position);
-
 bool isFieldMemberExpression(const DomItem &item);
 bool isFieldMemberAccess(const DomItem &item);
 QStringList fieldMemberExpressionBits(const DomItem &item, const DomItem &stopAtChild = {});

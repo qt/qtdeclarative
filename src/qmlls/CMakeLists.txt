@@ -34,6 +34,7 @@ qt_internal_add_module(QmlLSPrivate
         qqmlhighlightsupport_p.h qqmlhighlightsupport.cpp
         qqmlsemantictokens_p.h qqmlsemantictokens.cpp
         qqmllshelpplugininterface_p.h qqmllshelpplugininterface.cpp
+        qqmllshelputils_p.h qqmllshelputils.cpp
 
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate

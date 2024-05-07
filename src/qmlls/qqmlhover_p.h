@@ -26,17 +26,21 @@ struct HoverRequest
                          QLspSpecification::Responses::HoverResponseType>
 {
 };
-
+class HelpManager;
 class QQmlHover : public QQmlBaseModule<HoverRequest>
 {
     Q_OBJECT
 public:
     QQmlHover(QmlLsp::QQmlCodeModel *codeModel);
+    ~QQmlHover() override;
     QString name() const override;
     void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) override;
     void setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
                            QLspSpecification::InitializeResult &) override;
     void process(RequestPointerArgument req) override;
+
+private:
+    std::unique_ptr<HelpManager> m_helpManager;
 };
 
 QT_END_NAMESPACE
