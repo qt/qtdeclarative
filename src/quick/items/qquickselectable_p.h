@@ -37,7 +37,7 @@ public:
     virtual void normalizeSelection() = 0;
 
     virtual QRectF selectionRectangle() const = 0;
-    virtual QSizeF scrollTowardsSelectionPoint(const QPointF &pos, const QSizeF &step) = 0;
+    virtual QSizeF scrollTowardsPoint(const QPointF &pos, const QSizeF &step) = 0;
 
     virtual void setCallback(std::function<void(CallBackFlag)> func) = 0;
 };

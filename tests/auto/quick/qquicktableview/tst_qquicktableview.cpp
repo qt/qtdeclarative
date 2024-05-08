@@ -4875,23 +4875,23 @@ void tst_QQuickTableView::testSelectableScrollTowardsPos()
     const QPointF bottomLeft(-100, tableView->height() + 100);
     const QPointF bottomRight(tableView->width() + 100, tableView->height() + 100);
 
-    tableViewPrivate->scrollTowardsSelectionPoint(topRight, step);
+    tableViewPrivate->scrollTowardsPoint(topRight, step);
     QCOMPARE(tableView->contentX(), step.width());
     QCOMPARE(tableView->contentY(), 0);
 
-    tableViewPrivate->scrollTowardsSelectionPoint(bottomRight, step);
+    tableViewPrivate->scrollTowardsPoint(bottomRight, step);
     QCOMPARE(tableView->contentX(), step.width() * 2);
     QCOMPARE(tableView->contentY(), step.height());
 
-    tableViewPrivate->scrollTowardsSelectionPoint(bottomLeft, step);
+    tableViewPrivate->scrollTowardsPoint(bottomLeft, step);
     QCOMPARE(tableView->contentX(), step.width());
     QCOMPARE(tableView->contentY(), step.height() * 2);
 
-    tableViewPrivate->scrollTowardsSelectionPoint(topLeft, step);
+    tableViewPrivate->scrollTowardsPoint(topLeft, step);
     QCOMPARE(tableView->contentX(), 0);
     QCOMPARE(tableView->contentY(), step.height());
 
-    tableViewPrivate->scrollTowardsSelectionPoint(topLeft, step);
+    tableViewPrivate->scrollTowardsPoint(topLeft, step);
     QCOMPARE(tableView->contentX(), 0);
     QCOMPARE(tableView->contentY(), 0);
 }

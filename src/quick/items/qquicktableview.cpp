@@ -6,11 +6,13 @@
 
 #include <QtCore/qtimer.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qmimedata.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p_p.h>
 #include <QtQml/private/qqmlincubator_p.h>
 #include <QtQmlModels/private/qqmlchangeset_p.h>
 #include <QtQml/qqmlinfo.h>
+#include <QtQuick/qquickitemgrabresult.h>
 
 #include <QtQuick/private/qquickflickable_p_p.h>
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
@@ -467,6 +469,9 @@
     \li required property bool current - \c true if the delegate is \l {Keyboard navigation}{current.}
     \li required property bool selected - \c true if the delegate is \l {Selecting items}{selected.}
     \li required property bool editing - \c true if the delegate is being \l {Editing cells}{edited.}
+    \li required property bool containsDrag - \c true if a column or row is currently being dragged
+    over this delegate. This property is only supported for HorizontalHeaderView and
+    VerticalHeaderView. (since Qt 6.8)
     \endlist
 
     The following example shows how to use these properties:
@@ -1519,6 +1524,7 @@ static const char* kRequiredProperties = "_qt_tableview_requiredpropertymask";
 static const char* kRequiredProperty_selected = "selected";
 static const char* kRequiredProperty_current = "current";
 static const char* kRequiredProperty_editing = "editing";
+static const char* kRequiredProperty_containsDrag = "containsDrag";
 
 QDebug operator<<(QDebug dbg, QQuickTableViewPrivate::RebuildState state)
 {
@@ -2051,7 +2057,7 @@ QRect QQuickTableViewPrivate::selection() const
     return QRect(selectionStartCell.x(), selectionStartCell.y(), w, h);
 }
 
-QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, const QSizeF &step)
+QSizeF QQuickTableViewPrivate::scrollTowardsPoint(const QPointF &pos, const QSizeF &step)
 {
     Q_Q(QQuickTableView);
 
@@ -4371,6 +4377,7 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
     setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, true);
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, true);
     setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(false), modelIndex, item, true);
+    setRequiredProperty(kRequiredProperty_containsDrag, QVariant::fromValue(false), modelIndex, item, true);
 
     if (auto attached = getAttachedObject(object))
         attached->setView(q);
@@ -4393,6 +4400,7 @@ void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
     setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, false);
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, false);
     // Note: the edit item will never be reused, so no reason to set kRequiredProperty_editing
+    setRequiredProperty(kRequiredProperty_containsDrag, QVariant::fromValue(false), modelIndex, object, false);
 
     if (auto item = qobject_cast<QQuickItem*>(object))
         QQuickItemPrivate::get(item)->setCulled(false);
@@ -4975,6 +4983,7 @@ void QQuickTableViewPrivate::init()
 
     hoverHandler = new QQuickTableViewHoverHandler(q);
     resizeHandler = new QQuickTableViewResizeHandler(q);
+
     hoverHandler->setEnabled(resizableRows || resizableColumns);
     resizeHandler->setEnabled(resizableRows || resizableColumns);
 
@@ -6245,6 +6254,19 @@ void QQuickTableViewPrivate::clearSection(Qt::Orientations orientation)
     }
 }
 
+void QQuickTableViewPrivate::setContainsDragOnDelegateItem(const QModelIndex &modelIndex, bool overlay)
+{
+    if (!modelIndex.isValid())
+        return;
+
+    const int cellIndex = modelIndexToCellIndex(modelIndex);
+    if (!loadedItems.contains(cellIndex))
+        return;
+    const QPoint cell = cellAtModelIndex(cellIndex);
+    QQuickItem *item = loadedTableItem(cell)->item;
+    setRequiredProperty(kRequiredProperty_containsDrag, QVariant::fromValue(overlay), cellIndex, item, false);
+}
+
 QQuickItem *QQuickTableView::itemAtCell(const QPoint &cell) const
 {
     Q_D(const QQuickTableView);
@@ -6954,13 +6976,35 @@ void QQuickTableViewHoverHandler::handleEventPoint(QPointerEvent *event, QEventP
 
 // ----------------------------------------------
 
-QQuickTableViewResizeHandler::QQuickTableViewResizeHandler(QQuickTableView *view)
+QQuickTableViewPointerHandler::QQuickTableViewPointerHandler(QQuickTableView *view)
     : QQuickSinglePointHandler(view->contentItem())
 {
-    setMargin(5);
     // Set a grab permission that stops the flickable, as well as
     // any drag handler inside the delegate, from stealing the drag.
     setGrabPermissions(QQuickPointerHandler::CanTakeOverFromAnything);
+}
+
+bool QQuickTableViewPointerHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
+{
+    if (!QQuickSinglePointHandler::wantsEventPoint(event, point))
+        return false;
+
+    // If we have a mouse wheel event then we do not want to do anything related to resizing.
+    if (event->type() == QEvent::Type::Wheel)
+        return false;
+
+    // When the user is flicking, we disable resizing, so that
+    // he doesn't start to resize by accident.
+    const auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    return !tableView->isMoving();
+}
+
+// ----------------------------------------------
+
+QQuickTableViewResizeHandler::QQuickTableViewResizeHandler(QQuickTableView *view)
+    : QQuickTableViewPointerHandler(view)
+{
+    setMargin(5);
     setObjectName("tableViewResizeHandler");
 }
 
@@ -6988,23 +7032,14 @@ void QQuickTableViewResizeHandler::onGrabChanged(QQuickPointerHandler *grabber
     }
 }
 
-bool QQuickTableViewResizeHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
-{
-    if (!QQuickSinglePointHandler::wantsEventPoint(event, point))
-        return false;
-
-    // If we have a mouse wheel event then we do not want to do anything related to resizing.
-    if (event->type() == QEvent::Type::Wheel)
-        return false;
-
-    // When the user is flicking, we disable resizing, so that
-    // he doesn't start to resize by accident.
-    auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
-    return !tableView->isMoving();
-}
-
 void QQuickTableViewResizeHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
 {
+    auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+    const auto *activeHandler = tableViewPrivate->activePointerHandler();
+    if (activeHandler && !qobject_cast<const QQuickTableViewResizeHandler *>(activeHandler))
+        return;
+
     // Resolve which state we're in first...
     updateState(point);
     // ...and act on it next
@@ -7069,6 +7104,7 @@ void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint 
         // pointer handlers to do flicking, so setting an exclusive grab (together
         // with grab permissions) doens't work ATM.
         tableView->setFiltersChildMouseEvents(false);
+        tableViewPrivate->setActivePointerHandler(this);
         break;
     case DraggingStarted:
         setExclusiveGrab(event, point, true);
@@ -7090,11 +7126,251 @@ void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint 
         break; }
     case DraggingFinished: {
         tableView->setFiltersChildMouseEvents(true);
+        tableViewPrivate->setActivePointerHandler(nullptr);
 #if QT_CONFIG(cursor)
         tableViewPrivate->updateCursor();
 #endif
         break; }
     }
+}
+
+// ----------------------------------------------
+QQuickTableViewSectionDragHandler::QQuickTableViewSectionDragHandler(QQuickTableView *view)
+    : QQuickTableViewPointerHandler(view)
+{
+    setObjectName("tableViewDragHandler");
+}
+
+QQuickTableViewSectionDragHandler::~QQuickTableViewSectionDragHandler()
+{
+    resetDragData();
+}
+
+void QQuickTableViewSectionDragHandler::resetDragData()
+{
+    if (m_state != Listening) {
+        m_state = Listening;
+        resetSectionOverlay();
+        m_source = -1;
+        m_destination = -1;
+        if (m_grabResult.data())
+            m_grabResult.data()->disconnect();
+        if (!m_drag.isNull()) {
+            m_drag->disconnect();
+            delete m_drag;
+        }
+        if (!m_dropArea.isNull()) {
+            m_dropArea->disconnect();
+            delete m_dropArea;
+        }
+        auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+        tableView->setFiltersChildMouseEvents(true);
+    }
+}
+
+void QQuickTableViewSectionDragHandler::resetSectionOverlay()
+{
+    if (m_destination != -1) {
+        auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+        auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+        const int row = (m_sectionOrientation == Qt::Horizontal) ? 0 : m_destination;
+        const int column = (m_sectionOrientation == Qt::Horizontal) ? m_destination : 0;
+        tableViewPrivate->setContainsDragOnDelegateItem(tableView->index(row, column), false);
+        m_destination = -1;
+    }
+}
+
+void QQuickTableViewSectionDragHandler::grabSection()
+{
+    // Generate the transparent section image in pixmap
+    QPixmap pixmap(m_grabResult->image().size());
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setOpacity(0.6);
+    painter.drawImage(0, 0, m_grabResult->image());
+    painter.end();
+
+    // Specify the pixmap and mime data to be as drag object
+    auto *mimeData = new QMimeData();
+    mimeData->setImageData(pixmap);
+    m_drag->setMimeData(mimeData);
+    m_drag->setPixmap(pixmap);
+}
+
+void QQuickTableViewSectionDragHandler::handleDrop(QQuickDragEvent *event)
+{
+    Q_UNUSED(event);
+
+    if (m_state == Dragging) {
+        event->setAccepted(true);
+        auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+        auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+        tableViewPrivate->moveSection(m_source, m_destination, m_sectionOrientation);
+        m_state = DraggingFinished;
+        resetSectionOverlay();
+        if (m_scrollTimer.isActive())
+            m_scrollTimer.stop();
+    }
+}
+
+void QQuickTableViewSectionDragHandler::handleDrag(QQuickDragEvent *event)
+{
+    Q_UNUSED(event);
+
+    if (m_state == Dragging) {
+        auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+        const QPoint dragItemPosition(tableView->contentX() + event->x(), tableView->contentY() + event->y());
+        const auto *sourceItem = qobject_cast<QQuickItem *>(m_drag->source());
+        const QPoint targetCell = tableView->cellAtPosition(dragItemPosition, true);
+
+        auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+        const int newDestination = (m_sectionOrientation == Qt::Horizontal) ? targetCell.x() : targetCell.y();
+        if (newDestination != m_destination) {
+            // Reset the overlay property in the existing model delegate item
+            resetSectionOverlay();
+            // Set the overlay property in the new model delegate item
+            const int row = (m_sectionOrientation == Qt::Horizontal) ? 0 : newDestination;
+            const int column = (m_sectionOrientation == Qt::Horizontal) ? newDestination : 0;
+            tableViewPrivate->setContainsDragOnDelegateItem(tableView->index(row, column), true);
+            m_destination = newDestination;
+        }
+
+        // Scroll header view while section item moves out of the table boundary
+        const QPoint dragItemStartPos = (m_sectionOrientation == Qt::Horizontal) ? QPoint(dragItemPosition.x() - sourceItem->width() / 2, dragItemPosition.y()) :
+                QPoint(dragItemPosition.x(), dragItemPosition.y() - sourceItem->height() / 2);
+        const QPoint dragItemEndPos = (m_sectionOrientation == Qt::Horizontal) ? QPoint(dragItemPosition.x() + sourceItem->width() / 2, dragItemPosition.y()) :
+                QPoint(dragItemPosition.x(), dragItemPosition.y() + sourceItem->height() / 2);
+        const bool useStartPos = (m_sectionOrientation == Qt::Horizontal) ? (dragItemStartPos.x() <= tableView->contentX()) : (dragItemStartPos.y() <= tableView->contentY());
+        const bool useEndPos = (m_sectionOrientation == Qt::Horizontal) ? (dragItemEndPos.x() >= tableView->width()) : (dragItemEndPos.y() >= tableView->height());
+        if (useStartPos || useEndPos) {
+            if (!m_scrollTimer.isActive()) {
+                m_dragPoint = (m_sectionOrientation == Qt::Horizontal) ? QPoint(useStartPos ? dragItemStartPos.x() : dragItemEndPos.x(), 0) :
+                        QPoint(0, useStartPos ? dragItemStartPos.y() : dragItemEndPos.y());
+                m_scrollTimer.start(1);
+            }
+        } else {
+            if (m_scrollTimer.isActive())
+                m_scrollTimer.stop();
+        }
+    }
+}
+
+void QQuickTableViewSectionDragHandler::handleDragDropAction(Qt::DropAction action)
+{
+    // Reset the overlay property in the model delegate item when drag or drop
+    // happens outside specified drop area (i.e. during ignore action)
+    if (action == Qt::IgnoreAction) {
+        resetSectionOverlay();
+        if (m_scrollTimer.isActive())
+            m_scrollTimer.stop();
+    }
+}
+
+void QQuickTableViewSectionDragHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
+{
+    auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+    const auto *activeHandler = tableViewPrivate->activePointerHandler();
+    if (activeHandler && !qobject_cast<const QQuickTableViewSectionDragHandler *>(activeHandler))
+        return;
+
+    if (m_state == DraggingFinished)
+        resetDragData();
+
+    if (point.state() == QEventPoint::Pressed) {
+        // Reset the information in the drag handler
+        resetDragData();
+        // Activate the passive grab to get further move updates
+        setPassiveGrab(event, point, true);
+        // Disable flicking while dragging. TableView uses filtering instead of
+        // pointer handlers to do flicking, so setting an exclusive grab (together
+        // with grab permissions) doens't work ATM.
+        auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+        tableView->setFiltersChildMouseEvents(false);
+        m_state = Tracking;
+    } else if (point.state() == QEventPoint::Released) {
+        // Reset the information in the drag handler
+        resetDragData();
+    } else if (point.state() == QEventPoint::Updated) {
+        // Check to see that the movement can be considered as dragging
+        const qreal distX = point.position().x() - point.pressPosition().x();
+        const qreal distY = point.position().y() - point.pressPosition().y();
+        const qreal dragDist = qSqrt(distX * distX + distY * distY);
+        if (dragDist > qApp->styleHints()->startDragDistance()) {
+            switch (m_state) {
+                case Tracking: {
+                    // Grab the image for dragging header
+                    const QPoint cell = tableView->cellAtPosition(point.position(), true);
+                    auto *item = tableView->itemAtCell(cell);
+                    if (m_drag.isNull()) {
+                        m_drag = new QDrag(item);
+                        connect(m_drag.data(), &QDrag::actionChanged, this,
+                                &QQuickTableViewSectionDragHandler::handleDragDropAction);
+                    }
+                    // Connect the timer for scroling
+                    QObject::connect(&m_scrollTimer, &QTimer::timeout, [&]{
+                        const QSizeF dist = tableViewPrivate->scrollTowardsPoint(m_dragPoint, m_step);
+                        m_dragPoint.rx() += dist.width() > 0 ? m_step.width() : -m_step.width();
+                        m_dragPoint.ry() += dist.height() > 0 ? m_step.height() : -m_step.height();
+                        m_step = QSizeF(qAbs(dist.width() * 0.010), qAbs(dist.height() * 0.010));
+                    });
+                    // Set the drop area
+                    if (m_dropArea.isNull()) {
+                        m_dropArea = new QQuickDropArea(tableView);
+                        m_dropArea->setSize(tableView->size());
+                        connect(m_dropArea, &QQuickDropArea::positionChanged, this,
+                                &QQuickTableViewSectionDragHandler::handleDrag);
+                        connect(m_dropArea, &QQuickDropArea::dropped, this,
+                                &QQuickTableViewSectionDragHandler::handleDrop);
+                    }
+                    // Grab the image of the section
+                    m_grabResult = item->grabToImage();
+                    connect(m_grabResult.data(), &QQuickItemGrabResult::ready, this,
+                            &QQuickTableViewSectionDragHandler::grabSection);
+                    // Update source depending on the type of orientation
+                    m_source = (m_sectionOrientation == Qt::Horizontal) ? cell.x() : cell.y();
+                    m_state = DraggingStarted;
+                    // Set drag handler as active and it further handles section pointer events
+                    tableViewPrivate->setActivePointerHandler(this);
+                }
+                break;
+
+                case DraggingStarted: {
+                    if (m_drag && m_drag->mimeData()) {
+                        if (auto *item = qobject_cast<QQuickItem *>(m_drag->source())) {
+                            m_state = Dragging;
+                            const QPointF itemPos = item->mapFromItem(tableView->contentItem(), point.position());
+                            Q_UNUSED(itemPos);
+                            m_drag->setHotSpot(m_sectionOrientation == Qt::Horizontal ? QPoint(item->width()/2, itemPos.y()) : QPoint(itemPos.x(), item->height()/2));
+                            m_drag->exec();
+                            // Reset the active handler
+                            tableViewPrivate->setActivePointerHandler(nullptr);
+                        }
+                    }
+                }
+                break;
+
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+// ----------------------------------------------
+void QQuickTableViewPrivate::initSectionDragHandler(Qt::Orientation orientation)
+{
+    if (!sectionDragHandler) {
+        Q_Q(QQuickTableView);
+        sectionDragHandler = new QQuickTableViewSectionDragHandler(q);
+        sectionDragHandler->setSectionOrientation(orientation);
+    }
+}
+
+void QQuickTableViewPrivate::destroySectionDragHandler()
+{
+    if (sectionDragHandler)
+        delete sectionDragHandler;
 }
 
 void QQuickTableViewPrivate::initializeIndexMapping()

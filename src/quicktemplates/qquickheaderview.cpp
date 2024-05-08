@@ -449,6 +449,8 @@ QQuickHorizontalHeaderView::QQuickHorizontalHeaderView(QQuickItem *parent)
 
 QQuickHorizontalHeaderView::~QQuickHorizontalHeaderView()
 {
+    Q_D(QQuickHorizontalHeaderView);
+    d->destroySectionDragHandler();
 }
 
 bool QQuickHorizontalHeaderView::movableColumns() const
@@ -464,6 +466,12 @@ void QQuickHorizontalHeaderView::setMovableColumns(bool movableColumns)
         return;
 
     d->m_movableColumns = movableColumns;
+
+    if (d->m_movableColumns)
+        d->initSectionDragHandler(Qt::Horizontal);
+    else
+        d->destroySectionDragHandler();
+
     emit movableColumnsChanged();
 }
 
@@ -476,6 +484,8 @@ QQuickVerticalHeaderView::QQuickVerticalHeaderView(QQuickItem *parent)
 
 QQuickVerticalHeaderView::~QQuickVerticalHeaderView()
 {
+    Q_D(QQuickVerticalHeaderView);
+    d->destroySectionDragHandler();
 }
 
 bool QQuickVerticalHeaderView::movableRows() const
@@ -491,6 +501,12 @@ void QQuickVerticalHeaderView::setMovableRows(bool movableRows)
         return;
 
     d->m_movableRows = movableRows;
+
+    if (d->m_movableRows)
+        d->initSectionDragHandler(Qt::Vertical);
+    else
+        d->destroySectionDragHandler();
+
     emit movableRowsChanged();
 }
 
