@@ -3,3 +3,4 @@ opensuse-42.3
 opensuse-leap
 [enterLeave]
 macos
+sles-15.4 # QTBUG-64397

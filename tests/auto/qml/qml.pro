@@ -43,6 +43,7 @@ PRIVATETESTS += \
     animation \
     qqmlecmascript \
     qqmlcontext \
+    qqmldelegatemodel \
     qqmlexpression \
     qqmlglobal \
     qqmllanguage \
