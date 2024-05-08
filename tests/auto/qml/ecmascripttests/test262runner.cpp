@@ -223,8 +223,8 @@ void Test262Runner::createProcesses()
         });
 
         QObject::connect(&p, &QProcess::finished, this,
-                         [this, processCount, i](int, QProcess::ExitStatus status) {
-            if (status != QProcess::NormalExit) {
+                         [this, processCount, i](int exitCode, QProcess::ExitStatus status) {
+            if (status != QProcess::NormalExit || exitCode != 0) {
                 TestData &testData(currentTasks[i]);
 
                 auto &result = testData.stillNeedStrictRun
