@@ -62,6 +62,43 @@
 
     For a more detailed example, see \l {QML in Android Studio Projects}.
 
+    \section1 QtQuickView in an Android Service
+
+    It is also possible to add a QtQuickView from a Service context by using
+    the Android WindowManager interface:
+
+    \code
+    @Override
+    public void onCreate() {
+        m_windowManager = getSystemService(WindowManager.class);
+        m_qtView = new QtQuickView(this, "qrc:/qt/qml/target/main.qml", "target");
+        WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
+                640, 320,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                PixelFormat.TRANSLUCENT);
+        m_windowManager.addView(m_qtView, layoutParams);
+    }
+    \endcode
+
+    To clean up the QtQuickView and Qt libraries, the onDestroy() lifecycle
+    function can be used:
+
+    \code
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        m_windowManager.removeView(m_qtView);
+        m_qtView = null;
+    }
+    \endcode
+
+    \note \b {Adding a QtQuickView from a Service context requires your application
+    to be signed with the platform key.}
+
+    \note QML views embedded within a Service context do not
+    support keyboard input or accessibility features.
+
     \section1 Constructors
 
     \section2 public QtQuickView(Context parent, String qmlUri, String appName)
