@@ -329,11 +329,14 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
                 // The handle shouldn't cross other handles, so use the right edge of
                 // the first handle to the left as the left edge.
                 qreal leftEdge = 0;
-                if (m_pressedHandleIndex - 1 >= 0) {
-                    const QQuickItem *leftHandle = m_handleItems.at(m_pressedHandleIndex - 1);
-                    leftEdge = horizontal
-                        ? leftHandle->x() + leftHandle->width()
-                        : leftHandle->y() + leftHandle->height();
+                for (int i = m_pressedHandleIndex - 1; i >= 0; --i) {
+                    const QQuickItem *nextHandleToTheLeft = m_handleItems.at(i);
+                    if (nextHandleToTheLeft->isVisible()) {
+                        leftEdge = horizontal
+                            ? nextHandleToTheLeft->x() + nextHandleToTheLeft->width()
+                            : nextHandleToTheLeft->y() + nextHandleToTheLeft->height();
+                        break;
+                    }
                 }
 
                 // The mouse can be clicked anywhere in the handle, and if we don't account for
@@ -428,14 +431,15 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
 
             m_layoutData.insert(item, layoutData);
 
-            qCDebug(qlcQQuickSplitView).nospace() << "  - " << index << ": resized split item " << item
-                << " (effective"
-                << " minW=" << sizeData.effectiveMinimumWidth
-                << ", minH=" << sizeData.effectiveMinimumHeight
-                << ", prfW=" << sizeData.effectivePreferredWidth
-                << ", prfH=" << sizeData.effectivePreferredHeight
-                << ", maxW=" << sizeData.effectiveMaximumWidth
-                << ", maxH=" << sizeData.effectiveMaximumHeight << ")";
+            qCDebug(qlcQQuickSplitView).nospace() << "  - " << index << ": calculated the following size data for split item " << item
+                << ": eminW=" << sizeData.effectiveMinimumWidth
+                << ", eminH=" << sizeData.effectiveMinimumHeight
+                << ", eprfW=" << sizeData.effectivePreferredWidth
+                << ", eprfH=" << sizeData.effectivePreferredHeight
+                << ", emaxW=" << sizeData.effectiveMaximumWidth
+                << ", emaxH=" << sizeData.effectiveMaximumHeight
+                << ", w=" << layoutData.width
+                << ", h=" << layoutData.height << "";
 
             // Keep track of how much space has been used so far.
             if (horizontal)
@@ -536,6 +540,9 @@ void QQuickSplitViewPrivate::limitAndApplySizes(qreal usedWidth, qreal usedHeigh
     const qreal maxSize = horizontal ? width : height;
     const qreal usedSize = horizontal ? usedWidth : usedHeight;
     if (usedSize > maxSize) {
+        qCDebug(qlcQQuickSplitView).nospace() << "usedSize " << usedSize << " is greater than maxSize "
+            << maxSize << "; reducing size of non-filled items from right to left / bottom to top";
+
         // If items don't fit, reduce the size of non-filled items from
         // right to left / bottom to top. At this point filled item is
         // already at its minimum size or usedSize wouldn't be > maxSize.
@@ -568,6 +575,8 @@ void QQuickSplitViewPrivate::limitAndApplySizes(qreal usedWidth, qreal usedHeigh
             }
         }
     }
+
+    qCDebug(qlcQQuickSplitView).nospace() << "  applying new sizes to " << count << " items (excluding hidden items)";
 
     // Apply the new sizes into items
     for (int index = 0; index < count; ++index) {
@@ -604,6 +613,10 @@ void QQuickSplitViewPrivate::limitAndApplySizes(qreal usedWidth, qreal usedHeigh
             else
                 attached->setPreferredHeight(layoutData.height);
         }
+
+        qCDebug(qlcQQuickSplitView).nospace() << "  - " << index << ": resized item " << item << " from "
+            << item->width() << "x" << item->height() << " to "
+            << layoutData.width << "x" << layoutData.height;
 
         item->setWidth(layoutData.width);
         item->setHeight(layoutData.height);
