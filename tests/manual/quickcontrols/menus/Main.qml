@@ -45,7 +45,11 @@ ApplicationWindow {
                 ContextAction { text: qsTr("Sub action 2") }
             }
             MenuSeparator { }
-            ContextAction { text: qsTr("&Quit") }
+            ContextAction {
+                text: qsTr("&Quit")
+                // This is needed for macOS since it takes priority over the Shortcut.
+                onTriggered: Qt.quit()
+            }
             Action {
                 text: qsTr("Remove menu")
                 onTriggered: menuBar.removeMenu(fileMenu)
