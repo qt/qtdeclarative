@@ -163,7 +163,7 @@ void QQuickNativeMenuItem::sync()
     if (m_syncing)
         return;
 
-    QScopedValueRollback recursionGuard(m_syncing);
+    QScopedValueRollback recursionGuard(m_syncing, true);
 
     const auto *action = this->action();
     const auto *separator = this->separator();
