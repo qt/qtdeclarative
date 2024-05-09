@@ -325,11 +325,14 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
                 // The handle shouldn't cross other handles, so use the right edge of
                 // the first handle to the left as the left edge.
                 qreal leftEdge = 0;
-                if (m_pressedHandleIndex - 1 >= 0) {
-                    const QQuickItem *leftHandle = m_handleItems.at(m_pressedHandleIndex - 1);
-                    leftEdge = horizontal
-                        ? leftHandle->x() + leftHandle->width()
-                        : leftHandle->y() + leftHandle->height();
+                for (int i = m_pressedHandleIndex - 1; i >= 0; --i) {
+                    const QQuickItem *nextHandleToTheLeft = m_handleItems.at(i);
+                    if (nextHandleToTheLeft->isVisible()) {
+                        leftEdge = horizontal
+                            ? nextHandleToTheLeft->x() + nextHandleToTheLeft->width()
+                            : nextHandleToTheLeft->y() + nextHandleToTheLeft->height();
+                        break;
+                    }
                 }
 
                 // The mouse can be clicked anywhere in the handle, and if we don't account for
