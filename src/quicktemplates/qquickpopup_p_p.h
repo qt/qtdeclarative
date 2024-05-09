@@ -85,6 +85,7 @@ public:
     virtual bool handlePress(QQuickItem* item, const QPointF &point, ulong timestamp);
     virtual bool handleMove(QQuickItem* item, const QPointF &point, ulong timestamp);
     virtual bool handleRelease(QQuickItem* item, const QPointF &point, ulong timestamp);
+    virtual bool handleReleaseWithoutGrab(const QEventPoint &) { return false; }
     virtual void handleUngrab();
 
     bool handleMouseEvent(QQuickItem *item, QMouseEvent *event);

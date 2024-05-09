@@ -35,6 +35,7 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquickrendercontrol_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
@@ -940,6 +941,33 @@ bool QQuickMenuPrivate::blockInput(QQuickItem *item, const QPointF &point) const
 {
     // keep the parent menu open when a cascading sub-menu (this menu) is interacted with
     return (cascade && parentMenu && contains(point)) || QQuickPopupPrivate::blockInput(item, point);
+}
+
+/*! \internal
+    QQuickPopupWindow::event() calls this to handle the release event of a
+    menu drag-press-release gesture, because the \a eventPoint does not have
+    a grabber within the popup window. This override finds and activates the
+    appropriate menu item, as if it had been pressed and released.
+    Returns true on success, to indicate that handling \a eventPoint is done.
+ */
+bool QQuickMenuPrivate::handleReleaseWithoutGrab(const QEventPoint &eventPoint)
+{
+    QQuickMenuItem *menuItem = nullptr;
+    // Usually, hover events have occurred, and currentIndex is set.
+    // If not, use eventPoint.position() for picking.
+    if (currentIndex < 0) {
+        auto *list = qobject_cast<QQuickListView *>(contentItem);
+        if (!list)
+            return false;
+        menuItem = qobject_cast<QQuickMenuItem *>(list->itemAt(eventPoint.position().x(), eventPoint.position().y()));
+    } else {
+        menuItem = qobject_cast<QQuickMenuItem *>(itemAt(currentIndex));
+    }
+    if (Q_LIKELY(menuItem)) {
+        menuItem->animateClick();
+        return true;
+    }
+    return false;
 }
 
 void QQuickMenuPrivate::onItemHovered()

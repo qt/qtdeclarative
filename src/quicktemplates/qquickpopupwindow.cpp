@@ -99,6 +99,22 @@ void QQuickPopupWindow::resizeEvent(QResizeEvent *e)
     d->m_popupItem->setHeight(e->size().height());
 }
 
+bool QQuickPopupWindow::event(QEvent *e)
+{
+    Q_D(QQuickPopupWindow);
+    if (e->isPointerEvent()) {
+        auto *pe = static_cast<QPointerEvent *>(e);
+        const auto &eventPoint = pe->points().first();
+        const auto *grabber = qmlobject_cast<QQuickItem *>(pe->exclusiveGrabber(eventPoint));
+        if (pe->isEndEvent() && (!grabber || grabber->window() != this))
+            QQuickPopupPrivate::get(d->m_popup)->handleReleaseWithoutGrab(eventPoint);
+        // handleReleaseWithoutGrab() returns true if the popup handled eventPoint.
+        // Nevertheless, the component that opened the menu needs to see the release too,
+        // to avoid getting stuck in "pressed" state; so we don't return early.
+    }
+    return QQuickWindowQmlImpl::event(e);
+}
+
 void QQuickPopupWindow::windowChanged(QWindow *window)
 {
     if (window) {

@@ -37,6 +37,7 @@ protected:
     void hideEvent(QHideEvent *e) override;
     void moveEvent(QMoveEvent *e) override;
     void resizeEvent(QResizeEvent *e) override;
+    bool event(QEvent *e) override;
 
 private:
     void windowChanged(QWindow *window);
