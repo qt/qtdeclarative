@@ -132,7 +132,6 @@ void QQuickMenuBarPrivate::openCurrentMenu()
     // The position should be the coordinate system of the parent item. Note that
     // the parentItem() of a menu will be the MenuBarItem (currentItem), and not the
     // MenuBar (even if parent() usually points to the MenuBar).
-    QScopedValueRollback triggerRollback(triggering, true);
     menu->popup(posInParentItem);
 }
 
@@ -142,7 +141,7 @@ void QQuickMenuBarPrivate::closeCurrentMenu()
         return;
     currentMenuOpen = false;
     QQuickMenu *menu = currentItem->menu();
-    QScopedValueRollback triggerRollback(triggering, true);
+    QScopedValueRollback triggerRollback(closingCurrentMenu, true);
     menu->dismiss();
 }
 
@@ -223,9 +222,20 @@ void QQuickMenuBarPrivate::onItemTriggered()
     }
 }
 
-void QQuickMenuBarPrivate::onMenuAboutToHide()
+void QQuickMenuBarPrivate::onMenuAboutToHide(QQuickMenu *menu)
 {
-    if (triggering || !currentItem || !currentItem->isHighlighted())
+    if (closingCurrentMenu) {
+        // We only react on a menu closing if it's
+        // initiated from outside of QQuickMenuBar.
+        return;
+    }
+
+    if (!currentItem || currentItem->menu() != menu)
+        return;
+
+    currentMenuOpen = false;
+
+    if (!currentItem->isHighlighted() || currentItem->isHovered())
         return;
 
     activateItem(nullptr);
@@ -966,7 +976,7 @@ void QQuickMenuBar::itemAdded(int index, QQuickItem *item)
         QObjectPrivate::connect(menuBarItem, &QQuickControl::hoveredChanged, d, &QQuickMenuBarPrivate::onItemHovered);
         QObjectPrivate::connect(menuBarItem, &QQuickMenuBarItem::triggered, d, &QQuickMenuBarPrivate::onItemTriggered);
         if (QQuickMenu *menu = menuBarItem->menu())
-            QObjectPrivate::connect(menu, &QQuickPopup::aboutToHide, d, &QQuickMenuBarPrivate::onMenuAboutToHide);
+            connect(menu, &QQuickPopup::aboutToHide, [this, menu]{ d_func()->onMenuAboutToHide(menu); });
     }
     d->updateImplicitContentSize();
     emit menusChanged();
@@ -987,7 +997,7 @@ void QQuickMenuBar::itemRemoved(int index, QQuickItem *item)
         QObjectPrivate::disconnect(menuBarItem, &QQuickControl::hoveredChanged, d, &QQuickMenuBarPrivate::onItemHovered);
         QObjectPrivate::disconnect(menuBarItem, &QQuickMenuBarItem::triggered, d, &QQuickMenuBarPrivate::onItemTriggered);
         if (QQuickMenu *menu = menuBarItem->menu())
-            QObjectPrivate::disconnect(menu, &QQuickPopup::aboutToHide, d, &QQuickMenuBarPrivate::onMenuAboutToHide);
+            menu->disconnect(this);
     }
     d->updateImplicitContentSize();
     emit menusChanged();

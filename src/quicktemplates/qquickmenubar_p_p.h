@@ -52,7 +52,7 @@ public:
 
     void onItemHovered();
     void onItemTriggered();
-    void onMenuAboutToHide();
+    void onMenuAboutToHide(QQuickMenu *menu);
 
     void insertMenu(int index, QQuickMenu *menu, QQuickMenuBarItem *delegateItem);
     QQuickMenu *takeMenu(int index);
@@ -85,7 +85,7 @@ public:
 
     QPalette defaultPalette() const override;
 
-    bool triggering = false;
+    bool closingCurrentMenu = false;
     bool altPressed = false;
     bool currentMenuOpen = false;
     QQmlComponent *delegate = nullptr;
