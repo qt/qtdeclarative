@@ -12,33 +12,33 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
+import org.qtproject.qt.android.QtQmlStatus;
+import org.qtproject.qt.android.QtQmlStatusChangeListener;
 import org.qtproject.qt.android.QtQuickView;
-
+import org.qtproject.example.qml_in_android_view.QmlModule.Main;
 import java.util.HashMap;
 import java.util.Map;
 
-
 // Implement QtQuickView StatusChangeListener interface to get status updates
 // from the underlying QQuickView
-public class MainActivity extends AppCompatActivity implements QtQuickView.StatusChangeListener {
+public class MainActivity extends AppCompatActivity implements QtQmlStatusChangeListener {
 
     private static final String TAG = "myTag";
     private final Colors m_colors = new Colors();
-    private final Map<Integer, String> m_statusNames = new HashMap<Integer, String>()  {{
-        put(QtQuickView.STATUS_READY, " READY");
-        put(QtQuickView.STATUS_LOADING, " LOADING");
-        put(QtQuickView.STATUS_ERROR, " ERROR");
-        put(QtQuickView.STATUS_NULL, " NULL");
+    private final Map<QtQmlStatus, String> m_statusNames = new HashMap<QtQmlStatus, String>()  {{
+        put(QtQmlStatus.READY, " READY");
+        put(QtQmlStatus.LOADING, " LOADING");
+        put(QtQmlStatus.ERROR, " ERROR");
+        put(QtQmlStatus.NULL, " NULL");
     }};
     private int m_qmlButtonSignalListenerId;
     private LinearLayout m_mainLinear;
     private FrameLayout m_qmlFrameLayout;
-    private QtQuickView m_qmlView;
+    private QtQuickView m_qtQuickView;
+    private Main m_mainQmlComponent;
     private LinearLayout m_androidControlsLayout;
     private TextView m_getPropertyValueText;
     private TextView m_qmlStatus;
@@ -56,31 +56,32 @@ public class MainActivity extends AppCompatActivity implements QtQuickView.Statu
         m_qmlStatus = findViewById(R.id.qmlStatus);
         m_androidControlsLayout = findViewById(R.id.javaLinear);
         m_box = findViewById(R.id.box);
-
         m_switch = findViewById(R.id.switch1);
         m_switch.setOnClickListener(view -> switchListener());
+        m_mainQmlComponent = new Main();
         //! [m_qmlView]
-        m_qmlView = new QtQuickView(this, "qrc:/qt/qml/qml_in_android_view/main.qml",
-                "qml_in_android_view");
+        m_qtQuickView = new QtQuickView(this);
         //! [m_qmlView]
 
         // Set status change listener for m_qmlView
         // listener implemented below in OnStatusChanged
         //! [setStatusChangeListener]
-        m_qmlView.setStatusChangeListener(this);
+        m_mainQmlComponent.setStatusChangeListener(this);
         //! [setStatusChangeListener]
         //! [layoutParams]
         ViewGroup.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         m_qmlFrameLayout = findViewById(R.id.qmlFrame);
-        m_qmlFrameLayout.addView(m_qmlView, params);
+        m_qmlFrameLayout.addView(m_qtQuickView, params);
         //! [layoutParams]
-        Button button = findViewById(R.id.button);
-        button.setOnClickListener(view -> onClickListener());
+        m_qtQuickView.loadComponent(m_mainQmlComponent);
+
+        findViewById(R.id.button).setOnClickListener(view -> onClickListener());
 
         // Check target device orientation on launch
         handleOrientationChanges();
     }
+
     //! [onCreate]
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
@@ -113,38 +114,13 @@ public class MainActivity extends AppCompatActivity implements QtQuickView.Statu
         m_androidControlsLayout.setLayoutParams(linearLayoutParams);
     }
 
-    //! [onStatusChanged]
-    @Override
-    public void onStatusChanged(int status) {
-        Log.i(TAG, "Status of QtQuickView: " + status);
-
-        final String qmlStatus = getResources().getString(R.string.qml_view_status)
-                + m_statusNames.get(status);
-
-        // Show current QML View status in a textview
-        m_qmlStatus.setText(qmlStatus);
-
-        // Connect signal listener to "onClicked" signal from main.qml
-        // addSignalListener returns int which can be used later to identify the listener
-        //! [qml signal listener]
-        if (status == QtQuickView.STATUS_READY && !m_switch.isChecked()) {
-            m_qmlButtonSignalListenerId = m_qmlView.connectSignalListener("onClicked", Object.class,
-                    (String signal, Object o) -> {
-                Log.i(TAG, "QML button clicked");
-                m_androidControlsLayout.setBackgroundColor(Color.parseColor(m_colors.getColor()));
-            });
-
-        }
-        //! [qml signal listener]
-    }
-    //! [onStatusChanged]
     //! [onClickListener]
     public void onClickListener() {
         // Set the QML view root object property "colorStringFormat" value to
         // color from Colors.getColor()
-        m_qmlView.setProperty("colorStringFormat", m_colors.getColor());
+        m_mainQmlComponent.setColorStringFormat(m_colors.getColor());
 
-        String qmlBackgroundColor = m_qmlView.getProperty("colorStringFormat");
+        String qmlBackgroundColor = m_mainQmlComponent.getColorStringFormat();
 
         // Display the QML View background color code
         m_getPropertyValueText.setText(qmlBackgroundColor);
@@ -162,17 +138,42 @@ public class MainActivity extends AppCompatActivity implements QtQuickView.Statu
             Log.i(TAG, "QML button onClicked signal listener disconnected");
             text.setText(R.string.connect_qml_button_signal_listener);
             //! [disconnect qml signal listener]
-            m_qmlView.disconnectSignalListener(m_qmlButtonSignalListenerId);
+            m_mainQmlComponent.disconnectSignalListener(m_qmlButtonSignalListenerId);
             //! [disconnect qml signal listener]
         } else {
             Log.i(TAG, "QML button onClicked signal listener connected");
             text.setText(R.string.disconnect_qml_button_signal_listener);
-            m_qmlButtonSignalListenerId = m_qmlView.connectSignalListener("onClicked",
-                    Object.class, (String t, Object value) -> {
-                Log.i(TAG, "QML button clicked");
-                m_androidControlsLayout.setBackgroundColor(Color.parseColor(m_colors.getColor()));
-            });
+            m_qmlButtonSignalListenerId = m_mainQmlComponent.connectOnClickedListener(
+                    (String name, Void v) -> {
+                        Log.i(TAG, "QML button clicked");
+                        m_androidControlsLayout.setBackgroundColor(Color.parseColor(m_colors.getColor()));
+                    });
         }
     }
+    //! [onStatusChanged]
+    @Override
+    public void onStatusChanged(QtQmlStatus qtQmlStatus) {
+        Log.i(TAG, "Status of QtQuickView: " + qtQmlStatus);
+
+        final String qmlStatus = getResources().getString(R.string.qml_view_status)
+                + m_statusNames.get(qtQmlStatus);
+
+        // Show current QML View status in a textview
+        m_qmlStatus.setText(qmlStatus);
+
+        // Connect signal listener to "onClicked" signal from main.qml
+        // addSignalListener returns int which can be used later to identify the listener
+        //! [qml signal listener]
+        if (qtQmlStatus == QtQmlStatus.READY && !m_switch.isChecked()) {
+            m_qmlButtonSignalListenerId = m_mainQmlComponent.connectOnClickedListener(
+                    (String name, Void v) -> {
+                        Log.i(TAG, "QML button clicked");
+                        m_androidControlsLayout.setBackgroundColor(Color.parseColor(m_colors.getColor()));
+                    });
+
+        }
+        //! [qml signal listener]
+    }
+    //! [onStatusChanged]
 }
 
