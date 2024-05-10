@@ -4,8 +4,7 @@ project(tst_models LANGUAGES CXX)
 
 enable_testing()
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Gui Test Quick)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Test Quick)
+find_package(Qt6 REQUIRED COMPONENTS Gui Test Quick)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -20,10 +19,11 @@ add_test(NAME tst_models COMMAND tst_models)
 target_link_libraries(tst_models
     PRIVATE
         scheduler
-        Qt${QT_VERSION_MAJOR}::Gui
-        Qt${QT_VERSION_MAJOR}::Test
-        Qt${QT_VERSION_MAJOR}::Quick
+        Qt6::Gui
+        Qt6::Test
+        Qt6::Quick
 )
+
 
 qt_add_qml_module(tst_models
     URI unittest
@@ -31,3 +31,10 @@ qt_add_qml_module(tst_models
         TARGET scheduler
 )
 
+
+qt_add_executable(tst_models_dummy_helper dummy.cpp)
+qt_add_qml_module(tst_models_dummy_helper
+    URI unimportant
+    DEPENDENCIES
+        TARGET nested_module
+)

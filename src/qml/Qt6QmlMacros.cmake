@@ -96,6 +96,46 @@ function(_qt_internal_parse_qml_module_dependency dependency was_marked_as_targe
     endif()
 endfunction()
 
+function(_qt_internal_write_deferred_builddir_qtconf folder)
+    set(qt_all_qml_output_dirs "")
+    get_directory_property(targets
+        DIRECTORY "${folder}"
+        QT_QML_TARGETS_FOR_DEFERRED_QTCONF_WRITEOUT
+    )
+    set(qtconf_file "${folder}/qt.conf")
+    foreach(target IN LISTS ${targets})
+        get_target_property(dependency_targets "${target}" QT_QML_DEPENDENT_QML_MODULE_TARGETS)
+        if(NOT dependency_targets)
+            continue()
+        endif()
+        foreach(dep_target ${dependency_targets})
+            qt6_query_qml_module(${dep_target}
+                QMLDIR qmldir_location
+            )
+            get_filename_component(module_location "${qmldir_location}" DIRECTORY)
+            get_filename_component(module_import_path "${module_location}" DIRECTORY)
+            list(APPEND qt_all_qml_output_dirs ${module_import_path})
+        endforeach()
+    endforeach()
+    if (NOT qt_all_qml_output_dirs)
+        return()
+    endif()
+
+    list(REMOVE_DUPLICATES qt_all_qml_output_dirs)
+    # lists are just strings containing semicolons;
+    # we replace them with "," to get the right format for qtconf.
+    # However, we need to add quotes to deal with whitespace
+    list(TRANSFORM qt_all_qml_output_dirs APPEND "\"")
+    list(TRANSFORM qt_all_qml_output_dirs PREPEND "\"")
+    list(JOIN qt_all_qml_output_dirs ","  qt_all_qml_output_dirs)
+
+    configure_file(
+        ${__qt_qml_macros_module_base_dir}/Qt6qtconf.in ${qtconf_file}
+        @ONLY
+    )
+endfunction()
+
+
 function(qt6_add_qml_module target)
     set(args_option
         STATIC
@@ -475,6 +515,7 @@ function(qt6_add_qml_module target)
     endif()
 
     set(all_qml_import_paths "${arg_IMPORT_PATH}")
+    set(all_dependency_targets)
 
     set(original_no_show_policy_value "${QT_NO_SHOW_OLD_POLICY_WARNINGS}")
     # silent by default, we only warn if someone uses TARGET as a URI
@@ -503,6 +544,7 @@ function(qt6_add_qml_module target)
                 OUTPUT_URI import_uri
                 OUTPUT_VERSION import_version
                 OUTPUT_MODULE_LOCATION module_location
+                OUTPUT_MODULE_TARGET dependency_target
             )
             get_filename_component(module_import_path "${module_location}" DIRECTORY)
             list(APPEND all_qml_import_paths "${module_import_path}")
@@ -515,6 +557,9 @@ function(qt6_add_qml_module target)
                 set_property(TARGET ${target} APPEND PROPERTY
                     QT_QML_MODULE_${import_set} "${import_uri}"
                 )
+            endif()
+            if(TARGET "${dependency_target}")
+                list(APPEND all_dependency_targets "${dependency_target}")
             endif()
             set(target_keyword_was_set FALSE)
         endforeach()
@@ -535,6 +580,7 @@ function(qt6_add_qml_module target)
             OUTPUT_URI dep_uri
             OUTPUT_VERSION dep_version
             OUTPUT_MODULE_LOCATION module_location
+            OUTPUT_MODULE_TARGET dependency_target
         )
         get_filename_component(module_import_path "${module_location}" DIRECTORY)
         list(APPEND all_qml_import_paths "${module_import_path}")
@@ -548,7 +594,13 @@ function(qt6_add_qml_module target)
             )
         endif()
         set(target_keyword_was_set FALSE)
+        if(TARGET "${dependency_target}")
+            list(APPEND all_dependency_targets "${dependency_target}")
+        endif()
     endforeach()
+    ### TODO: add support for transitive dependencies, too
+    list(REMOVE_DUPLICATES all_dependency_targets)
+    set_property(TARGET ${target} PROPERTY QT_QML_DEPENDENT_QML_MODULE_TARGETS "${all_dependency_targets}")
     _qt_internal_collect_qml_module_dependencies(${target})
 
     if(arg_AUTO_RESOURCE_PREFIX)
@@ -870,6 +922,27 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
                 message(WARNING "QT_QML_GENERATE_QMLLS_INI is not supported on CMake versions < 3.19, disabling...")
                 set_property(GLOBAL PROPERTY __qt_internal_generate_qmlls_ini_warning ON)
             endif()
+        endif()
+    endif()
+
+    if((backing_target_type STREQUAL "EXECUTABLE") AND (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0"))
+        set_property(
+            DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            APPEND
+            PROPERTY QT_QML_TARGETS_FOR_DEFERRED_QTCONF_WRITEOUT
+            ${target}
+        )
+        get_directory_property(is_qtconf_writeout_scheduled DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} QT_QML_BUILDDIR_QTCONF_DEFERRED)
+        if (NOT is_qtconf_writeout_scheduled)
+            set_property(
+                DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                PROPERTY QT_QML_BUILDDIR_QTCONF_DEFERRED TRUE
+            )
+
+            cmake_language(EVAL CODE "
+                cmake_language(DEFER DIRECTORY [[${PROJECT_SOURCE_DIR}]]
+                  CALL _qt_internal_write_deferred_builddir_qtconf [[${CMAKE_CURRENT_BINARY_DIR}]])
+            ")
         endif()
     endif()
 endfunction()

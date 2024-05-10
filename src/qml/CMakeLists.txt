@@ -492,6 +492,7 @@ qt_internal_add_qml_module(Qml
         Qt::QmlBuiltinsPrivate
     EXTRA_CMAKE_FILES
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}qmldirTemplate.cmake.in"
+        "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}qt.conf.in"
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlPluginTemplate.cpp.in"
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlFindQmlscInternal.cmake"
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlDeploySupport.cmake"
