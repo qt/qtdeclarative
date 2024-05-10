@@ -37,6 +37,8 @@ public:
     std::optional<QByteArray> openFile(const QString &uri);
     std::optional<QByteArray> openFileFromAbsolutePath(const QString &uri);
     void ignoreDiagnostics();
+    void compareQTextDocumentEdit(const QLspSpecification::TextDocumentEdit &a,
+                                  const QLspSpecification::TextDocumentEdit &b);
 private slots:
     void init() final;
     void cleanup();
@@ -67,7 +69,12 @@ private slots:
     void hover_data();
     void hover();
     void checkQuickSnippets();
-
+    void semanticHighlightingFull_data();
+    void semanticHighlightingFull();
+    void semanticHighlightingRange_data();
+    void semanticHighlightingRange();
+    void semanticHighlightingDelta_data();
+    void semanticHighlightingDelta();
 private:
     QProcess m_server;
     std::unique_ptr<QLanguageServerProtocol> m_protocol;

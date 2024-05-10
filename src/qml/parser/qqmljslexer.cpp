@@ -1214,6 +1214,32 @@ int Lexer::scanString(ScanStringMode mode)
 
 int Lexer::scanNumber(QChar ch)
 {
+    auto scanOptionalNumericSeparator = [this](auto isNextCharacterValid){
+        if (_state.currentChar == u'_') {
+            if (peekChar() == u'_') {
+                _state.errorCode = IllegalNumber;
+                _errorMessage = QCoreApplication::translate(
+                    "QQmlParser",
+                    "There can be at most one numeric separator beetwen digits"
+                );
+                return false;
+            }
+
+            if (!isNextCharacterValid()) {
+                _state.errorCode = IllegalNumber;
+                _errorMessage = QCoreApplication::translate(
+                    "QQmlParser",
+                    "A trailing numeric separator is not allowed in numeric literals"
+                );
+                return false;
+            }
+
+            scanChar();
+        }
+
+        return true;
+    };
+
     if (ch == u'0') {
         if (_state.currentChar == u'x' || _state.currentChar == u'X') {
             ch = _state.currentChar; // remember the x or X to use it in the error message below.
@@ -1238,6 +1264,9 @@ int Lexer::scanNumber(QChar ch)
                 d *= 16;
                 d += digit;
                 scanChar();
+
+                if (!scanOptionalNumericSeparator([this](){ return isHexDigit(peekChar()); }))
+                    return T_ERROR;
             }
 
             _state.tokenValue = d;
@@ -1265,6 +1294,12 @@ int Lexer::scanNumber(QChar ch)
                 d *= 8;
                 d += digit;
                 scanChar();
+
+                if (!scanOptionalNumericSeparator([this](){
+                    return isOctalDigit(peekChar().unicode());
+                })) {
+                    return T_ERROR;
+                }
             }
 
             _state.tokenValue = d;
@@ -1294,6 +1329,12 @@ int Lexer::scanNumber(QChar ch)
                 d *= 2;
                 d += digit;
                 scanChar();
+
+                if (!scanOptionalNumericSeparator([this](){
+                    return peekChar().unicode() == u'0' || peekChar().unicode() == u'1';
+                })) {
+                    return T_ERROR;
+                }
             }
 
             _state.tokenValue = d;
@@ -1311,9 +1352,15 @@ int Lexer::scanNumber(QChar ch)
     chars.append(ch.unicode());
 
     if (ch != u'.') {
+        if (!scanOptionalNumericSeparator([this](){ return peekChar().isDigit(); }))
+            return T_ERROR;
+
         while (_state.currentChar.isDigit()) {
             chars.append(_state.currentChar.unicode());
             scanChar(); // consume the digit
+
+            if (!scanOptionalNumericSeparator([this](){ return peekChar().isDigit(); }))
+                return T_ERROR;
         }
 
         if (_state.currentChar == u'.') {
@@ -1325,6 +1372,9 @@ int Lexer::scanNumber(QChar ch)
     while (_state.currentChar.isDigit()) {
         chars.append(_state.currentChar.unicode());
         scanChar();
+
+        if (!scanOptionalNumericSeparator([this](){ return peekChar().isDigit(); }))
+            return T_ERROR;
     }
 
     if (_state.currentChar == u'e' || _state.currentChar == u'E') {
@@ -1342,6 +1392,9 @@ int Lexer::scanNumber(QChar ch)
             while (_state.currentChar.isDigit()) {
                 chars.append(_state.currentChar.unicode());
                 scanChar();
+
+                if (!scanOptionalNumericSeparator([this](){ return peekChar().isDigit(); }))
+                    return T_ERROR;
             }
         }
     }

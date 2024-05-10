@@ -78,8 +78,10 @@ private slots:
     void isString();
     void isUndefined_data();
     void isUndefined();
+#if QT_DEPRECATED_SINCE(6, 9)
     void isVariant_data();
     void isVariant();
+#endif
     void toBool_data();
     void toBool();
     void toDateTime_data();
@@ -547,6 +549,7 @@ void tst_QJSValue::isUndefined()
     }
 }
 
+#if QT_DEPRECATED_SINCE(6, 9)
 void tst_QJSValue::isVariant_data()
 {
     defineStandardTestValues();
@@ -559,6 +562,7 @@ void tst_QJSValue::isVariant()
         val.isVariant();
     }
 }
+#endif
 
 void tst_QJSValue::toBool_data()
 {

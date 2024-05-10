@@ -660,10 +660,14 @@ void QQuickTextNodeEngine::addFrameDecorations(QTextDocument *document, QTextFra
     if (borderStyle == QTextFrameFormat::BorderStyle_None)
         return;
 
-    addBorder(boundingRect.adjusted(frameFormat.leftMargin(), frameFormat.topMargin(),
-                                    -frameFormat.rightMargin() - borderWidth,
-                                    -frameFormat.bottomMargin() - borderWidth),
-              borderWidth, borderStyle, borderBrush);
+    const auto collapsed = table->format().borderCollapse();
+
+    if (!collapsed) {
+        addBorder(boundingRect.adjusted(frameFormat.leftMargin(), frameFormat.topMargin(),
+                                        -frameFormat.rightMargin() - borderWidth,
+                                        -frameFormat.bottomMargin() - borderWidth),
+                  borderWidth, borderStyle, borderBrush);
+    }
     if (table != nullptr) {
         int rows = table->rows();
         int columns = table->columns();
@@ -673,7 +677,7 @@ void QQuickTextNodeEngine::addFrameDecorations(QTextDocument *document, QTextFra
                 QTextTableCell cell = table->cellAt(row, column);
 
                 QRectF cellRect = documentLayout->tableCellBoundingRect(table, cell);
-                addBorder(cellRect.adjusted(-borderWidth, -borderWidth, 0, 0), borderWidth,
+                addBorder(cellRect.adjusted(-borderWidth, -borderWidth, collapsed ? -borderWidth : 0, collapsed ? -borderWidth : 0), borderWidth,
                           borderStyle, borderBrush);
             }
         }

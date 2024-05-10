@@ -94,7 +94,6 @@ function(qt_internal_add_qml_module target)
     )
     # TODO: Remove these once all repos have been updated to not use them
     set(ignore_option_args
-        SKIP_TYPE_REGISTRATION  # Now always done
         PLUGIN_OPTIONAL         # Now the default
         GENERATE_QMLTYPES       # Now the default
         INSTALL_QMLTYPES        # Now the default

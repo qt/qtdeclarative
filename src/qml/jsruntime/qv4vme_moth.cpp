@@ -398,16 +398,16 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
 struct AOTCompiledMetaMethod
 {
 public:
-    AOTCompiledMetaMethod(const QQmlPrivate::AOTCompiledFunction *aotCompiledFunction)
+    AOTCompiledMetaMethod(const Function::AOTCompiledFunction *aotCompiledFunction)
         : aotCompiledFunction(aotCompiledFunction)
     {}
 
-    int parameterCount() const { return aotCompiledFunction->argumentTypes.size(); }
-    QMetaType returnMetaType() const { return aotCompiledFunction->returnType; }
-    QMetaType parameterMetaType(int i) const { return aotCompiledFunction->argumentTypes[i]; }
+    int parameterCount() const { return aotCompiledFunction->types.size() - 1; }
+    QMetaType returnMetaType() const { return aotCompiledFunction->types[0]; }
+    QMetaType parameterMetaType(int i) const { return aotCompiledFunction->types[i + 1]; }
 
 private:
-    const QQmlPrivate::AOTCompiledFunction *aotCompiledFunction = nullptr;
+    const Function::AOTCompiledFunction *aotCompiledFunction = nullptr;
 };
 
 void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
@@ -420,14 +420,14 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
     ExecutionEngineCallDepthRecorder executionEngineCallDepthRecorder(engine);
 
     Function *function = frame->v4Function;
-    Q_ASSERT(function->aotCompiledFunction);
+    Q_ASSERT(function->aotCompiledCode);
     Q_TRACE_SCOPE(QQmlV4_function_call, engine, function->name()->toQString(),
                   function->executableCompilationUnit()->fileName(),
                   function->compiledFunction->location.line(),
                   function->compiledFunction->location.column());
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
 
-    const AOTCompiledMetaMethod method(function->aotCompiledFunction);
+    const AOTCompiledMetaMethod method(&function->aotCompiledFunction);
     QV4::coerceAndCall(
             engine, &method, frame->returnAndArgValues(),
             frame->returnAndArgTypes(), frame->argc(),
@@ -443,7 +443,7 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
 
         aotContext.engine = engine->jsEngine();
         aotContext.compilationUnit = function->executableCompilationUnit();
-        function->aotCompiledFunction->functionPtr(&aotContext, argv[0], argv + 1);
+        function->aotCompiledCode(&aotContext, argv);
     });
 }
 

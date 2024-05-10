@@ -2470,12 +2470,32 @@ bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
 */
 bool QQuickItemPrivate::focusNextPrev(QQuickItem *item, bool forward)
 {
-    QQuickItem *next = QQuickItemPrivate::nextPrevItemInTabFocusChain(item, forward);
+    QQuickWindow *window = item->window();
+    const bool wrap = !window || window->isTopLevel();
+
+    QQuickItem *next = QQuickItemPrivate::nextPrevItemInTabFocusChain(item, forward, wrap);
 
     if (next == item)
         return false;
 
-    next->forceActiveFocus(forward ? Qt::TabFocusReason : Qt::BacktabFocusReason);
+    const auto reason = forward ? Qt::TabFocusReason : Qt::BacktabFocusReason;
+
+    if (!wrap && !next) {
+        // Focus chain wrapped and we are not top-level window
+        // Give focus to parent window
+        Q_ASSERT(window);
+        Q_ASSERT(window->parent());
+
+
+        qt_window_private(window->parent())->setFocusToTarget(
+            forward ? QWindowPrivate::FocusTarget::Next
+                    : QWindowPrivate::FocusTarget::Prev,
+            reason);
+        window->parent()->requestActivate();
+        return true;
+    }
+
+    next->forceActiveFocus(reason);
 
     return true;
 }
@@ -2524,7 +2544,7 @@ QQuickItem *QQuickItemPrivate::prevTabChildItem(const QQuickItem *item, int star
     return nullptr;
 }
 
-QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, bool forward)
+QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, bool forward, bool wrap)
 {
     Q_ASSERT(item);
     qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: item:" << item << ", forward:" << forward;
@@ -2618,6 +2638,14 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
             }
             current = parent;
         } else if (hasChildren) {
+            if (!wrap && (forward || firstFromItem != from)) {
+                qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain:"
+                                 << "Focus chain about to wrap.";
+                // If focus chain wraps, we should give the parent window
+                // a chance to get focus, so we should stop here
+                return nullptr;
+            }
+
             // Wrap around after checking all items forward
             if (forward) {
                 current = firstChild;
@@ -9289,12 +9317,12 @@ void QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, bool isFil
         bool hasAnotherGrabber = pointGrabber && pointGrabber != q;
         // if there's no exclusive grabber, look for passive grabbers during filtering
         if (isFiltering && !pointGrabber) {
-            auto pg = event->passiveGrabbers(p);
+            const auto pg = event->passiveGrabbers(p);
             if (!pg.isEmpty()) {
                 // It seems unlikely to have multiple passive grabbers of one eventpoint with different grandparents.
                 // So hopefully if we start from one passive grabber and go up the parent chain from there,
                 // we will find any filtering parent items that exist.
-                auto handler = qmlobject_cast<QQuickPointerHandler *>(pg.first());
+                auto handler = qmlobject_cast<QQuickPointerHandler *>(pg.constFirst());
                 if (handler)
                     pointGrabber = handler->parentItem();
             }

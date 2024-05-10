@@ -45,6 +45,7 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
                                                        secondFolder.absolutePath()));
     }
 
+    {
     QDir sourceSubfolder = source;
     QVERIFY(sourceSubfolder.cd(u"SomeSubfolder"_s));
     QDir buildSubfolder(build.absolutePath().append(u"/SomeSubfolder/qml/Some/Sub/Folder"_s));
@@ -55,6 +56,38 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         const auto fileContent = QString::fromUtf8(file.readAll());
         QCOMPARE(fileContent,
                  u"[General]\nbuildDir=%1\nno-cmake-calls=false\n"_s.arg(buildSubfolder.absolutePath()));
+    }
+    }
+
+    {
+        QDir dottedUriSubfolder = source;
+        QVERIFY(dottedUriSubfolder.cd(u"Dotted"_s));
+        QVERIFY(dottedUriSubfolder.cd(u"Uri"_s));
+        {
+            auto file = QFile(dottedUriSubfolder.absoluteFilePath(qmllsIniName));
+            QVERIFY(file.exists());
+            QVERIFY(file.open(QFile::ReadOnly | QFile::Text));
+            const auto fileContent = QString::fromUtf8(file.readAll());
+            QCOMPARE(
+                    fileContent,
+                    u"[General]\nbuildDir=%1\nno-cmake-calls=false\n"_s.arg(build.absolutePath()));
+        }
+    }
+    {
+        QDir dottedUriSubfolder = source;
+        QVERIFY(dottedUriSubfolder.cd(u"Dotted"_s));
+        QVERIFY(dottedUriSubfolder.cd(u"Uri"_s));
+        QVERIFY(dottedUriSubfolder.cd(u"Hello"_s));
+        QVERIFY(dottedUriSubfolder.cd(u"World"_s));
+        {
+            auto file = QFile(dottedUriSubfolder.absoluteFilePath(qmllsIniName));
+            QVERIFY(file.exists());
+            QVERIFY(file.open(QFile::ReadOnly | QFile::Text));
+            const auto fileContent = QString::fromUtf8(file.readAll());
+            QCOMPARE(
+                    fileContent,
+                    u"[General]\nbuildDir=%1\nno-cmake-calls=false\n"_s.arg(build.absolutePath()));
+        }
     }
 }
 

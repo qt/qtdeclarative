@@ -255,6 +255,7 @@ qt_internal_add_qml_module(Qml
         jsruntime/qv4property_p.h
         jsruntime/qv4propertykey.cpp jsruntime/qv4propertykey_p.h
         jsruntime/qv4proxy.cpp jsruntime/qv4proxy_p.h
+        jsruntime/qv4qmetaobjectwrapper.cpp jsruntime/qv4qmetaobjectwrapper_p.h
         jsruntime/qv4qmlcontext.cpp jsruntime/qv4qmlcontext_p.h
         jsruntime/qv4qobjectwrapper.cpp jsruntime/qv4qobjectwrapper_p.h
         jsruntime/qv4reflect.cpp jsruntime/qv4reflect_p.h

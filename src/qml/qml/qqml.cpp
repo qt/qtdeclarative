@@ -176,6 +176,22 @@ void QQmlPrivate::qmlRegistrationWarning(
     }
 }
 
+QMetaType QQmlPrivate::compositeMetaType(
+        QV4::ExecutableCompilationUnit *unit, const QString &elementName)
+{
+    return QQmlTypePrivate::compositeQmlType(
+                   unit->baseCompilationUnit(), unit->engine->typeLoader(), elementName)
+            .typeId();
+}
+
+QMetaType QQmlPrivate::compositeListMetaType(
+        QV4::ExecutableCompilationUnit *unit, const QString &elementName)
+{
+    return QQmlTypePrivate::compositeQmlType(
+                   unit->baseCompilationUnit(), unit->engine->typeLoader(), elementName)
+            .qListTypeId();
+}
+
 int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
                                      const char *uri, int versionMajor,
                                      int versionMinor, const char *qmlName,

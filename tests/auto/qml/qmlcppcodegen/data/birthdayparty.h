@@ -52,7 +52,6 @@ private:
 };
 
 struct Foozle {
-    Q_GADGET
     int foo = 1;
 };
 

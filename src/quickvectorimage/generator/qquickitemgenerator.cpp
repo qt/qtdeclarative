@@ -27,7 +27,6 @@ QQuickItemGenerator::QQuickItemGenerator(const QString fileName, QQuickVectorIma
 
 QQuickItemGenerator::~QQuickItemGenerator()
 {
-
 }
 
 void QQuickItemGenerator::generateNodeBase(const NodeInfo &info)
@@ -107,7 +106,6 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info)
         m_parentShapeItem = shapeItem;
         m_inShapeItem = true;
 
-        // Check ??
         generateNodeBase(info);
 
         optimizePaths(info);
@@ -123,7 +121,7 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     Q_UNUSED(pathSelector)
     Q_ASSERT(painterPath || quadPath);
 
-    const bool noPen = info.strokeColor == QColorConstants::Transparent;
+    const bool noPen = info.strokeStyle.color == QColorConstants::Transparent;
     if (pathSelector == QQuickVectorImageGenerator::StrokePath && noPen)
         return;
 
@@ -137,19 +135,23 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     QQuickShapePath *shapePath = new QQuickShapePath;
     Q_ASSERT(shapePath);
 
-    if (!info.nodeId.isEmpty()) {
-
+    if (!info.nodeId.isEmpty())
         shapePath->setObjectName(QStringLiteral("svg_path:") + info.nodeId);
-    }
 
     if (noPen || !(pathSelector & QQuickVectorImageGenerator::StrokePath)) {
         shapePath->setStrokeColor(Qt::transparent);
     } else {
-        shapePath->setStrokeColor(info.strokeColor);
-        shapePath->setStrokeWidth(info.strokeWidth);
+        shapePath->setStrokeColor(info.strokeStyle.color);
+        shapePath->setStrokeWidth(info.strokeStyle.width);
+        shapePath->setCapStyle(QQuickShapePath::CapStyle(info.strokeStyle.lineCapStyle));
+        shapePath->setJoinStyle(QQuickShapePath::JoinStyle(info.strokeStyle.lineJoinStyle));
+        shapePath->setMiterLimit(info.strokeStyle.miterLimit);
+        if (info.strokeStyle.dashArray.length() != 0) {
+            shapePath->setStrokeStyle(QQuickShapePath::DashLine);
+            shapePath->setDashPattern(info.strokeStyle.dashArray.toVector());
+            shapePath->setDashOffset(info.strokeStyle.dashOffset);
+        }
     }
-
-    shapePath->setCapStyle(QQuickShapePath::CapStyle(info.capStyle));
 
     if (!(pathSelector & QQuickVectorImageGenerator::FillPath))
         shapePath->setFillColor(Qt::transparent);
@@ -195,27 +197,25 @@ void QQuickItemGenerator::generateGradient(const QGradient *grad, QQuickShapePat
         QRectF gradRect(linGrad->start(), linGrad->finalStop());
         QRectF logRect = linGrad->coordinateMode() == QGradient::LogicalMode ? gradRect : QQuickVectorImageGenerator::Utils::mapToQtLogicalMode(gradRect, boundingRect);
 
-            auto *quickGrad = new QQuickShapeLinearGradient(shapePath);
+        auto *quickGrad = new QQuickShapeLinearGradient(shapePath);
+        quickGrad->setX1(logRect.left());
+        quickGrad->setY1(logRect.top());
+        quickGrad->setX2(logRect.right());
+        quickGrad->setY2(logRect.bottom());
+        setStops(quickGrad, linGrad->stops());
 
-            quickGrad->setX1(logRect.left());
-            quickGrad->setY1(logRect.top());
-            quickGrad->setX2(logRect.right());
-            quickGrad->setY2(logRect.bottom());
-            setStops(quickGrad, linGrad->stops());
-
-            shapePath->setFillGradient(quickGrad);
+        shapePath->setFillGradient(quickGrad);
     } else if (grad->type() == QGradient::RadialGradient) {
         auto *radGrad = static_cast<const QRadialGradient*>(grad);
+        auto *quickGrad = new QQuickShapeRadialGradient(shapePath);
+        quickGrad->setCenterX(radGrad->center().x());
+        quickGrad->setCenterY(radGrad->center().y());
+        quickGrad->setCenterRadius(radGrad->radius());
+        quickGrad->setFocalX(radGrad->focalPoint().x());
+        quickGrad->setFocalY(radGrad->focalPoint().y());
+        setStops(quickGrad, radGrad->stops());
 
-            auto *quickGrad = new QQuickShapeRadialGradient(shapePath);
-            quickGrad->setCenterX(radGrad->center().x());
-            quickGrad->setCenterY(radGrad->center().y());
-            quickGrad->setCenterRadius(radGrad->radius());
-            quickGrad->setFocalX(radGrad->focalPoint().x());
-            quickGrad->setFocalY(radGrad->focalPoint().y());
-            setStops(quickGrad, radGrad->stops());
-
-            shapePath->setFillGradient(quickGrad);
+        shapePath->setFillGradient(quickGrad);
     }
 }
 
@@ -225,8 +225,8 @@ void QQuickItemGenerator::generateNode(const NodeInfo &info)
         return;
 
     qCWarning(lcQuickVectorImage) << "SVG NODE NOT IMPLEMENTED: "
-                                     << info.nodeId
-                                     << " type: " << info.typeName;
+                                  << info.nodeId
+                                  << " type: " << info.typeName;
 }
 
 void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)

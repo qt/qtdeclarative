@@ -273,7 +273,7 @@ int main(int argc, char **argv)
 
     auto currentScope = QQmlJSScope::create();
     if (parser.isSet(moduleOption))
-        currentScope->setModuleName(parser.value(moduleOption));
+        currentScope->setOwnModuleName(parser.value(moduleOption));
 
     QmltcVisitor visitor(currentScope, &importer, &logger,
                          QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);

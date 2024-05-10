@@ -44,6 +44,9 @@ Q_LOGGING_CATEGORY(lcAttached, "qt.quick.controls.attachedpropertypropagator")
     \li Call \l initialize() in the constructor
     \li Define set/inherit/propagate/reset functions for each property as needed
     \li Reimplement \l attachedParentChange() to handle property inheritance
+    \li Implement a static \c qmlAttachedProperties function and declare the
+        type as an attached QML type with \l QML_ELEMENT and \l QML_ATTACHED,
+        as detailed in \l {Providing Attached Properties}
     \endlist
 
     For an example that demonstrates this in depth, see

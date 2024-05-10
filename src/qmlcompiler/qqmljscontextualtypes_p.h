@@ -42,14 +42,23 @@ struct ContextualTypes
     QQmlJSScope::ConstPtr arrayType() const { return m_arrayType; }
 
     bool hasType(const QString &name) const { return m_types.contains(name); }
+
     ImportedScope<QQmlJSScope::ConstPtr> type(const QString &name) const { return m_types[name]; }
+    QString name(const QQmlJSScope::ConstPtr &type) const { return m_names[type]; }
+
     void setType(const QString &name, const ImportedScope<QQmlJSScope::ConstPtr> &type)
     {
+        if (!name.startsWith(u'$'))
+            m_names.insert(type.scope, name);
         m_types.insert(name, type);
     }
     void clearType(const QString &name)
     {
-        m_types[name].scope = QQmlJSScope::ConstPtr();
+        auto &scope = m_types[name].scope;
+        auto it = m_names.constFind(scope);
+        while (it != m_names.constEnd() && it.key() == scope)
+            it = m_names.erase(it);
+        scope = QQmlJSScope::ConstPtr();
     }
 
     bool isNullType(const QString &name) const
@@ -61,21 +70,37 @@ struct ContextualTypes
     void addTypes(ContextualTypes &&types)
     {
         Q_ASSERT(types.m_context == m_context);
+        insertNames(types);
         m_types.insert(std::move(types.m_types));
     }
 
     void addTypes(const ContextualTypes &types)
     {
         Q_ASSERT(types.m_context == m_context);
+        insertNames(types);
         m_types.insert(types.m_types);
     }
 
     const QHash<QString, ImportedScope<QQmlJSScope::ConstPtr>> &types() const { return m_types; }
 
-    void clearTypes() { m_types.clear(); }
+    void clearTypes()
+    {
+        m_names.clear();
+        m_types.clear();
+    }
 
 private:
+    void insertNames(const ContextualTypes &types) {
+        for (auto it = types.m_types.constBegin(), end = types.m_types.constEnd();
+             it != end; ++it) {
+            const QString &name = it.key();
+            if (!name.startsWith(u'$'))
+                m_names.insert(it->scope, name);
+        }
+    }
+
     QHash<QString, ImportedScope<QQmlJSScope::ConstPtr>> m_types;
+    QMultiHash<QQmlJSScope::ConstPtr, QString> m_names;
     CompileContext m_context;
 
     // For resolving sequence types

@@ -219,12 +219,12 @@ void tst_Qmlls::didOpenTextDocument()
                     WorkspaceEdit edit = action.edit.value();
 
                     QVERIFY(edit.documentChanges.has_value());
-                    auto docChangeVariant = edit.documentChanges.value();
-                    QVERIFY(std::holds_alternative<QList<TextDocumentEdit>>(docChangeVariant));
-                    auto documentChanges = std::get<QList<TextDocumentEdit>>(docChangeVariant);
+                    auto documentChanges = edit.documentChanges.value();
                     QCOMPARE(documentChanges.size(), 1);
 
-                    TextDocumentEdit textDocEdit = documentChanges.first();
+                    QVERIFY(std::holds_alternative<TextDocumentEdit>(documentChanges.first()));
+                    TextDocumentEdit textDocEdit
+                            = std::get<TextDocumentEdit>(documentChanges.first());
                     QCOMPARE(textDocEdit.textDocument.uri, textDocument.uri);
                     QVERIFY(std::holds_alternative<int>(textDocEdit.textDocument.version));
 

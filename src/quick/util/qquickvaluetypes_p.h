@@ -409,6 +409,7 @@ class Q_QUICK_EXPORT QQuickFontValueType
     Q_PROPERTY(bool preferShaping READ preferShaping WRITE setPreferShaping FINAL)
     Q_PROPERTY(QVariantMap features READ features WRITE setFeatures FINAL)
     Q_PROPERTY(QVariantMap variableAxes READ variableAxes WRITE setVariableAxes FINAL)
+    Q_PROPERTY(bool contextFontMerging READ contextFontMerging WRITE setContextFontMerging FINAL)
 
     QML_VALUE_TYPE(font)
     QML_FOREIGN(QFont)
@@ -474,6 +475,9 @@ public:
 
     QVariantMap variableAxes() const;
     void setVariableAxes(const QVariantMap &variableAxes);
+
+    bool contextFontMerging() const;
+    void setContextFontMerging(bool b);
 
     operator QFont() const { return v; }
 };

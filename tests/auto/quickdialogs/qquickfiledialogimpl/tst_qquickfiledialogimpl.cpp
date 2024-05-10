@@ -118,8 +118,10 @@ private:
 
     QDir oldCurrentDir;
 
+#if QT_CONFIG(shortcut)
     const QKeySequence goUpKeySequence = QKeySequence(Qt::ALT | Qt::Key_Up);
     const QKeySequence editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
+#endif
 };
 
 QStringList tst_QQuickFileDialogImpl::tempDirExpectedVisibleFiles(DelegateOrderPolicy order) const
@@ -391,6 +393,7 @@ void tst_QQuickFileDialogImpl::chooseFileViaTextEdit()
     // below fail due to it being hidden when it loses activeFocus.
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), QUrl::fromLocalFile(tempSubDir.path()), 0);
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
@@ -410,6 +413,7 @@ void tst_QQuickFileDialogImpl::chooseFileViaTextEdit()
     COMPARE_URLS(dialogHelper.dialog->selectedFiles(), { QUrl::fromLocalFile(tempFile2->fileName()) });
     QVERIFY(!dialogHelper.dialog->isVisible());
     QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
+#endif
 }
 
 void tst_QQuickFileDialogImpl::chooseFileViaEnter()
@@ -553,9 +557,11 @@ void tst_QQuickFileDialogImpl::chooseFolderViaTextEdit()
     // See comment in chooseFileViaTextEdit for why we check for this.
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), QUrl::fromLocalFile(tempSubDir.path()), 0);
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     const auto editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+#endif
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
     QVERIFY(breadcrumbBar);
     QVERIFY(breadcrumbBar->textField()->isVisible());
@@ -614,8 +620,10 @@ void tst_QQuickFileDialogImpl::chooseFileAndThenFolderViaTextEdit()
     // See comment in chooseFileViaTextEdit for why we check for this.
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), QUrl::fromLocalFile(tempSubDir.path()), 0);
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+#endif
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
     QVERIFY(breadcrumbBar);
     QVERIFY(breadcrumbBar->textField()->isVisible());
@@ -642,8 +650,10 @@ void tst_QQuickFileDialogImpl::chooseFileAndThenFolderViaTextEdit()
     // The breadcrumbs should be visible after opening, not the text edit.
     QVERIFY(!breadcrumbBar->textField()->isVisible());
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+#endif
     QVERIFY(breadcrumbBar->textField()->isVisible());
     // The text edit should show the directory that contains the last file that was selected.
     QCOMPARE(breadcrumbBar->textField()->text(), tempDir.path());
@@ -677,8 +687,10 @@ void tst_QQuickFileDialogImpl::cancelDialogWhileTextEditHasFocus()
     // See comment in chooseFileViaTextEdit for why we check for this.
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), QUrl::fromLocalFile(tempSubDir.path()), 0);
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+#endif
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
     QVERIFY(breadcrumbBar);
     QVERIFY(breadcrumbBar->textField()->hasActiveFocus());
@@ -763,6 +775,7 @@ void tst_QQuickFileDialogImpl::goUp()
     int expectedCurrentIndex = showDirsFirst ? 0 : 2;
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), QUrl::fromLocalFile(tempSubDir.path()), expectedCurrentIndex);
 
+#if QT_CONFIG(shortcut)
     // Go up a directory via the keyboard shortcut.
     QDir tempParentDir(tempDir.path());
     QVERIFY(tempParentDir.cdUp());
@@ -775,6 +788,7 @@ void tst_QQuickFileDialogImpl::goUp()
         QVERIFY(expectedCurrentIndex != -1);
         VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempParentDir.path()), QUrl::fromLocalFile(tempDir.path()), expectedCurrentIndex);
     }
+#endif
 }
 
 void tst_QQuickFileDialogImpl::goUpWhileTextEditHasFocus()
@@ -786,8 +800,10 @@ void tst_QQuickFileDialogImpl::goUpWhileTextEditHasFocus()
     // See comment in chooseFileViaTextEdit for why we check for this.
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempSubDir.path()), QUrl::fromLocalFile(tempSubSubDir.path()), 0);
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+#endif
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
     QVERIFY(breadcrumbBar);
     QVERIFY(breadcrumbBar->textField()->hasActiveFocus());
@@ -854,6 +870,7 @@ void tst_QQuickFileDialogImpl::goUpIntoLargeFolder()
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(largeTempDirLargeSubDir.path()),
         QUrl::fromLocalFile(largeTempDirLargeSubDir.path() + "/sub-dir000"), 0);
 
+#if QT_CONFIG(shortcut)
     // Go up a directory via the keyboard shortcut.
     QTest::keySequence(dialogHelper.window(), goUpKeySequence);
     QString failureMessage;
@@ -861,6 +878,7 @@ void tst_QQuickFileDialogImpl::goUpIntoLargeFolder()
         largeTempDirPaths, failureMessage), qPrintable(failureMessage));
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(largeTempDir.path()),
         QUrl::fromLocalFile(largeTempDirLargeSubDir.path()), largeTempDirLargeSubDirIndex);
+#endif
 }
 
 void tst_QQuickFileDialogImpl::keyAndShortcutHandling()
@@ -870,16 +888,20 @@ void tst_QQuickFileDialogImpl::keyAndShortcutHandling()
     OPEN_QUICK_DIALOG();
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), QUrl::fromLocalFile(tempSubDir.path()), 0);
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+#endif
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
     QVERIFY(breadcrumbBar);
     QVERIFY(breadcrumbBar->textField()->isVisible());
     QCOMPARE(breadcrumbBar->textField()->text(), dialogHelper.dialog->currentFolder().toLocalFile());
     QCOMPARE(breadcrumbBar->textField()->selectedText(), breadcrumbBar->textField()->text());
 
+#if QT_CONFIG(shortcut)
     // Ctrl+L shouldn't hide it.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+#endif
     QVERIFY(breadcrumbBar->textField()->isVisible());
 
     // Cancel it with the escape key.
@@ -887,8 +909,10 @@ void tst_QQuickFileDialogImpl::keyAndShortcutHandling()
     QVERIFY(!breadcrumbBar->textField()->isVisible());
     QVERIFY(dialogHelper.dialog->isVisible());
 
+#if QT_CONFIG(shortcut)
     // Make it visible.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+#endif
     QVERIFY(breadcrumbBar->textField()->isVisible());
 
     // Cancel it with the escape key again.
@@ -1187,10 +1211,12 @@ void tst_QQuickFileDialogImpl::itemsDisabledWhenNecessary()
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(anotherTempDir.path()));
     COMPARE_URL(dialogHelper.quickDialog->currentFolder(), QUrl::fromLocalFile(anotherTempDir.path()));
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L. The Open button should now be disabled.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
     QVERIFY(breadcrumbBar->textField()->isVisible());
     QCOMPARE(openButton->isEnabled(), false);
+#endif
 
     // Hide it with the escape key. The Open button should now be enabled.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Escape);
@@ -1254,8 +1280,10 @@ void tst_QQuickFileDialogImpl::fileMode()
         COMPARE_URLS(dialogHelper.dialog->currentFiles(), { QUrl::fromLocalFile(tempFile2->fileName()) });
     }
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+#endif
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
     QVERIFY(breadcrumbBar);
     QVERIFY(breadcrumbBar->textField()->isVisible());

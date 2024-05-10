@@ -43,37 +43,39 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(popupControl, testCase)
         verify(control)
     }
 
     function test_padding() {
-        var control = createTemporaryObject(popupTemplate, testCase)
+        let control = createTemporaryObject(popupTemplate, testCase)
         verify(control)
 
-        var paddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "paddingChanged"})
+        let paddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "paddingChanged"})
         verify(paddingSpy.valid)
 
-        var topPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topPaddingChanged"})
+        let topPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topPaddingChanged"})
         verify(topPaddingSpy.valid)
 
-        var leftPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftPaddingChanged"})
+        let leftPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftPaddingChanged"})
         verify(leftPaddingSpy.valid)
 
-        var rightPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightPaddingChanged"})
+        let rightPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightPaddingChanged"})
         verify(rightPaddingSpy.valid)
 
-        var bottomPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomPaddingChanged"})
+        let bottomPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomPaddingChanged"})
         verify(bottomPaddingSpy.valid)
 
-        var paddingChanges = 0
-        var topPaddingChanges = 0
-        var leftPaddingChanges = 0
-        var rightPaddingChanges = 0
-        var bottomPaddingChanges = 0
+        let paddingChanges = 0
+        let topPaddingChanges = 0
+        let leftPaddingChanges = 0
+        let rightPaddingChanges = 0
+        let bottomPaddingChanges = 0
 
         compare(control.padding, 0)
         compare(control.topPadding, 0)
@@ -160,17 +162,17 @@ TestCase {
     }
 
     function test_availableSize() {
-        var control = createTemporaryObject(popupTemplate, testCase)
+        let control = createTemporaryObject(popupTemplate, testCase)
         verify(control)
 
-        var availableWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "availableWidthChanged"})
+        let availableWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "availableWidthChanged"})
         verify(availableWidthSpy.valid)
 
-        var availableHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "availableHeightChanged"})
+        let availableHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "availableHeightChanged"})
         verify(availableHeightSpy.valid)
 
-        var availableWidthChanges = 0
-        var availableHeightChanges = 0
+        let availableWidthChanges = 0
+        let availableHeightChanges = 0
 
         control.width = 100
         compare(control.availableWidth, 100)
@@ -230,14 +232,14 @@ TestCase {
     }
 
     function test_position() {
-        var control = createTemporaryObject(popupControl, testCase, {visible: true, leftMargin: 10, topMargin: 20, width: 100, height: 100})
+        let control = createTemporaryObject(popupControl, testCase, {visible: true, leftMargin: 10, topMargin: 20, width: 100, height: 100})
         verify(control)
         verify(control.visible)
 
-        var xSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "xChanged"})
+        let xSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "xChanged"})
         verify(xSpy.valid)
 
-        var ySpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "yChanged"})
+        let ySpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "yChanged"})
         verify(ySpy.valid)
 
         // moving outside margins does not trigger change notifiers
@@ -286,7 +288,7 @@ TestCase {
     }
 
     function test_resetSize() {
-        var control = createTemporaryObject(popupControl, testCase, {visible: true, margins: 0})
+        let control = createTemporaryObject(popupControl, testCase, {visible: true, margins: 0})
         verify(control)
 
         control.scale = 1.0
@@ -303,7 +305,7 @@ TestCase {
     }
 
     function test_negativeMargins() {
-        var control = createTemporaryObject(popupControl, testCase, {implicitWidth: testCase.width, implicitHeight: testCase.height})
+        let control = createTemporaryObject(popupControl, testCase, {implicitWidth: testCase.width, implicitHeight: testCase.height})
         verify(control)
 
         control.open()
@@ -325,7 +327,7 @@ TestCase {
     }
 
     function test_margins() {
-        var control = createTemporaryObject(popupTemplate, testCase, {width: 100, height: 100})
+        let control = createTemporaryObject(popupTemplate, testCase, {width: 100, height: 100})
         verify(control)
 
         control.open()
@@ -411,7 +413,7 @@ TestCase {
     }
 
     function test_background() {
-        var control = createTemporaryObject(popupTemplate, testCase)
+        let control = createTemporaryObject(popupTemplate, testCase)
         verify(control)
 
         control.background = rect.createObject(testCase)
@@ -456,8 +458,8 @@ TestCase {
     }
 
     function getChild(control, objname, idx) {
-        var index = idx
-        for (var i = index+1; i < control.children.length; i++)
+        let index = idx
+        for (let i = index+1; i < control.children.length; i++)
         {
             if (control.children[i].objectName === objname) {
                 index = i
@@ -526,15 +528,15 @@ TestCase {
     }
 
     function test_font() { // QTBUG_50984, QTBUG-51696
-        var window = createTemporaryObject(component, testCase)
+        let window = createTemporaryObject(component, testCase)
         verify(window)
 
         compare(window.font.pixelSize, 40)
         compare(window.pane.font.pixelSize, 30)
         compare(window.pane.button.font.pixelSize, 20)
         compare(window.popup.font.pixelSize, 40)
-        var idx1 = getChild(window.popup.listview.contentItem, "delegate", -1)
-        var idx2 = getChild(window.popup.listview.contentItem, "delegate", idx1)
+        let idx1 = getChild(window.popup.listview.contentItem, "delegate", -1)
+        let idx2 = getChild(window.popup.listview.contentItem, "delegate", idx1)
         window.popup.listview.contentItem.children[idx1].fontspy.clear()
         window.popup.listview.contentItem.children[idx2].fontspy.clear()
         window.popup.button.fontspy.clear()
@@ -650,7 +652,7 @@ TestCase {
 
     function test_locale() { // QTBUG_50984
         // test looking up natural locale from ancestors
-        var control = createTemporaryObject(localeComponent, applicationWindow.contentItem)
+        let control = createTemporaryObject(localeComponent, applicationWindow.contentItem)
         verify(control)
 
         compare(control.locale.name, "en_US")
@@ -733,10 +735,10 @@ TestCase {
 
     function test_locale_changes() { // QTBUG_50984
         // test default locale and locale inheritance
-        var control = createTemporaryObject(localeChangeComponent, applicationWindow.contentItem)
+        let control = createTemporaryObject(localeChangeComponent, applicationWindow.contentItem)
         verify(control)
 
-        var defaultLocale = Qt.locale()
+        let defaultLocale = Qt.locale()
         compare(control.ApplicationWindow.window.locale.name, defaultLocale.name)
         compare(control.locale.name, defaultLocale.name)
         compare(control.button.locale.name, defaultLocale.name)
@@ -902,10 +904,10 @@ TestCase {
     }
 
     function test_size() {
-        var control = createTemporaryObject(popupControl, testCase)
+        let control = createTemporaryObject(popupControl, testCase)
         verify(control)
 
-        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        let openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
         verify(openedSpy.valid)
 
         control.open()
@@ -963,7 +965,7 @@ TestCase {
     }
 
     function test_visible() {
-        var control = createTemporaryObject(popupTemplate, testCase, {visible: true})
+        let control = createTemporaryObject(popupTemplate, testCase, {visible: true})
         verify(control)
 
         // QTBUG-51989
@@ -1021,7 +1023,7 @@ TestCase {
     }
 
     function indexOf(array, item) {
-        for (var idx = 0; idx < array.length; ++idx) {
+        for (let idx = 0; idx < array.length; ++idx) {
             if (item === array[idx])
                 return idx;
         }
@@ -1029,13 +1031,13 @@ TestCase {
     }
 
     function findOverlay(window, popup) {
-        var item = popup.contentItem.parent
-        var idx = indexOf(window.Overlay.overlay.children, item)
+        let item = popup.contentItem.parent
+        let idx = indexOf(window.Overlay.overlay.children, item)
         return window.Overlay.overlay.children[idx - 1]
     }
 
     function test_overlay() {
-        var window = createTemporaryObject(overlayTest, testCase)
+        let window = createTemporaryObject(overlayTest, testCase)
         verify(window)
 
         window.requestActivate()
@@ -1043,7 +1045,7 @@ TestCase {
 
         compare(window.Overlay.overlay.children.length, 0)
 
-        var firstOverlay = findOverlay(window, window.firstDrawer)
+        let firstOverlay = findOverlay(window, window.firstDrawer)
         verify(!firstOverlay)
         window.firstDrawer.open()
         compare(window.Overlay.overlay.children.length, 2) // 1 drawer + 1 overlay
@@ -1054,7 +1056,7 @@ TestCase {
                 indexOf(window.Overlay.overlay.children, window.firstDrawer.contentItem.parent) - 1)
         tryCompare(firstOverlay, "opacity", 1.0)
 
-        var secondOverlay = findOverlay(window, window.secondDrawer)
+        let secondOverlay = findOverlay(window, window.secondDrawer)
         verify(!secondOverlay)
         window.secondDrawer.open()
         compare(window.Overlay.overlay.children.length, 4) // 2 drawers + 2 overlays
@@ -1077,7 +1079,7 @@ TestCase {
         verify(!secondOverlay)
         compare(window.Overlay.overlay.children.length, 0)
 
-        var modalOverlay = findOverlay(window, window.modalPopup)
+        let modalOverlay = findOverlay(window, window.modalPopup)
         verify(!modalOverlay)
         window.modalPopup.open()
         modalOverlay = findOverlay(window, window.modalPopup)
@@ -1087,7 +1089,7 @@ TestCase {
         tryCompare(modalOverlay, "opacity", 1.0)
         compare(window.Overlay.overlay.children.length, 2) // 1 popup + 1 overlay
 
-        var modelessOverlay = findOverlay(window, window.modelessPopup)
+        let modelessOverlay = findOverlay(window, window.modelessPopup)
         verify(!modelessOverlay)
         window.modelessPopup.open()
         modelessOverlay = findOverlay(window, window.modelessPopup)
@@ -1136,10 +1138,10 @@ TestCase {
     }
 
     function test_attached_applicationwindow() {
-        var control = createTemporaryObject(popupControl, applicationWindow.contentItem)
+        let control = createTemporaryObject(popupControl, applicationWindow.contentItem)
         verify(control)
 
-        var child = rect.createObject(control.contentItem)
+        let child = rect.createObject(control.contentItem)
 
         compare(control.ApplicationWindow.window, applicationWindow)
         compare(control.contentItem.ApplicationWindow.window, applicationWindow)
@@ -1160,14 +1162,14 @@ TestCase {
     }
 
     function test_openedClosed() {
-        var control = createTemporaryObject(pausePopup, testCase)
+        let control = createTemporaryObject(pausePopup, testCase)
         verify(control)
 
-        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        let openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
         verify(openedSpy.valid)
-        var closedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "closed"})
+        let closedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "closed"})
         verify(closedSpy.valid)
-        var openedChangeSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "openedChanged"})
+        let openedChangeSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "openedChanged"})
         verify(openedChangeSpy.valid)
 
         control.open()
@@ -1215,15 +1217,15 @@ TestCase {
     }
 
     function test_xyBindingLoop() {
-        var window = createTemporaryObject(xyBindingLoop, testCase)
-        var control = window.popup
+        let window = createTemporaryObject(xyBindingLoop, testCase)
+        let control = window.popup
         waitForRendering(control.contentItem)
         compare(control.x, (control.parent.width - control.width) / 2)
         compare(control.y, (control.parent.height - control.height) / 2)
     }
 
     function test_windowParent() {
-        var control = createTemporaryObject(popupControl, applicationWindow, {width: 100, height: 100})
+        let control = createTemporaryObject(popupControl, applicationWindow, {width: 100, height: 100})
         verify(control)
 
         control.open()
@@ -1231,7 +1233,7 @@ TestCase {
     }
 
     function test_deferredBackgroundSize() {
-        var control = createTemporaryObject(popupControl, testCase, {width: 200, height: 100})
+        let control = createTemporaryObject(popupControl, testCase, {width: 200, height: 100})
         verify(control)
 
         compare(control.background.width, 200 + (control.background.leftInset || 0) + (control.background.rightInset || 0))
@@ -1239,7 +1241,7 @@ TestCase {
     }
 
     function test_anchors() {
-        var control = createTemporaryObject(popupControl, applicationWindow.contentItem.Overlay.overlay,
+        let control = createTemporaryObject(popupControl, applicationWindow.contentItem.Overlay.overlay,
             { visible: true, width: 100, height: 100 })
 
         applicationWindow.visible = true
@@ -1254,10 +1256,10 @@ TestCase {
         compare(control.x, 0)
         compare(control.y, 0)
 
-        var overlay = control.Overlay.overlay
+        let overlay = control.Overlay.overlay
         verify(overlay)
 
-        var centerInSpy = createTemporaryObject(signalSpy, testCase, { target: control.anchors, signalName: "centerInChanged" })
+        let centerInSpy = createTemporaryObject(signalSpy, testCase, { target: control.anchors, signalName: "centerInChanged" })
         verify(centerInSpy.valid)
 
         verify(overlay.width > 0)
@@ -1270,7 +1272,7 @@ TestCase {
         compare(control.y, (overlay.height - (control.width * control.scale)) / 2)
 
         // Ensure that it warns when trying to set it to an item that's not its parent.
-        var anotherItem = createTemporaryObject(rect, applicationWindow.contentItem, { x: 100, y: 100, width: 50, height: 50 })
+        let anotherItem = createTemporaryObject(rect, applicationWindow.contentItem, { x: 100, y: 100, width: 50, height: 50 })
         verify(anotherItem)
 
         ignoreWarning(new RegExp(".*QML Popup: Popup can only be centered within its immediate parent or Overlay.overlay"))
@@ -1341,13 +1343,13 @@ TestCase {
     function test_shortcut() {
         // Tests that a Shortcut with Qt.WindowShortcut context
         // that is declared within a Popup is activated.
-        var window = createTemporaryObject(shortcutWindowComponent, testCase)
-        var control = window.popup
+        let window = createTemporaryObject(shortcutWindowComponent, testCase)
+        let control = window.popup
 
         window.requestActivate()
         tryCompare(window, "active", true)
 
-        var shortcutActivatedSpy = createTemporaryObject(signalSpy, testCase,
+        let shortcutActivatedSpy = createTemporaryObject(signalSpy, testCase,
             { target: window.shortcut, signalName: "activated"} )
         verify(shortcutActivatedSpy.valid)
 

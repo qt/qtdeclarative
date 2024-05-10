@@ -131,7 +131,9 @@ void registerStaticPlugin(const char *uri)
     PluginType::metaData.append(char(QT_VERSION_MAJOR));
     PluginType::metaData.append(char(QT_VERSION_MINOR));
     PluginType::metaData.append(char(qPluginArchRequirements()));
+#if QT_CONFIG(cborstreamwriter)
     PluginType::metaData.append(QCborValue(QCborMap::fromJsonObject(md)).toCbor());
+#endif
 
     auto rawMetaDataFunctor = []() -> QPluginMetaData {
         return {reinterpret_cast<const uchar *>(PluginType::metaData.constData()), size_t(PluginType::metaData.size())};

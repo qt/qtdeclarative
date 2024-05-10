@@ -61,6 +61,7 @@
 #include "qv4variantobject_p.h"
 #include "qv4sequenceobject_p.h"
 #include "qv4qobjectwrapper_p.h"
+#include "qv4qmetaobjectwrapper_p.h"
 #include "qv4memberdata_p.h"
 #include "qv4arraybuffer_p.h"
 #include "qv4dataview_p.h"

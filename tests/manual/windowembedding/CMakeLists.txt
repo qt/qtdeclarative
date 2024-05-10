@@ -4,12 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(windowembedding LANGUAGES CXX)
 
-if(NOT DEFINED INSTALL_EXAMPLESDIR)
-    set(INSTALL_EXAMPLESDIR "examples")
-endif()
-
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/windowembedding")
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Widgets)
 find_package(Qt6 QUIET OPTIONAL_COMPONENTS Multimedia)
 
@@ -77,9 +71,16 @@ if(APPLE)
 endif()
 
 install(TARGETS windowembedding
-    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
-    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
-    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-bundle_shared(windowembedding)
+qt_generate_deploy_qml_app_script(
+    TARGET windowembedding
+    OUTPUT_SCRIPT deploy_script
+    MACOS_BUNDLE_POST_BUILD
+    NO_UNSUPPORTED_PLATFORM_ERROR
+    DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
+)
+install(SCRIPT ${deploy_script})

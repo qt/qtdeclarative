@@ -376,6 +376,13 @@ QString QQuickTextEdit::text() const
 */
 
 /*!
+    \qmlproperty object QtQuick::TextEdit::font.contextFontMerging
+    \since 6.8
+
+    \include qquicktext.cpp qml-font-context-font-merging
+*/
+
+/*!
     \qmlproperty string QtQuick::TextEdit::text
 
     The text to display.  If the text format is AutoText the text edit will

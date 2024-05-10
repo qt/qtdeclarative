@@ -39,6 +39,7 @@ bool QQmlToolingSettings::read(const QString &settingsFilePath)
 
     return true;
 #else
+    Q_UNUSED(settingsFilePath);
     return false;
 #endif
 }
@@ -118,6 +119,7 @@ bool QQmlToolingSettings::search(const QString &path)
         m_seenDirectories[dir] = QString();
 
 #endif
+    Q_UNUSED(path);
     return false;
 }
 

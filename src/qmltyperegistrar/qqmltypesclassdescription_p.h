@@ -56,6 +56,7 @@ struct QmlTypesClassDescription
     MetaType resolvedClass;
     QAnyStringView file;
     QAnyStringView className;
+    QList<QAnyStringView> primitiveAliases;
     QList<QAnyStringView> elementNames;
     QAnyStringView defaultProp;
     QAnyStringView parentProp;
@@ -108,6 +109,16 @@ private:
             const MetaType &classDef, const QVector<MetaType> &types,
             const QVector<MetaType> &foreign, CollectMode mode, QTypeRevision defaultRevision);
     void collectInterfaces(const MetaType &classDef);
+};
+
+struct ResolvedTypeAlias
+{
+    ResolvedTypeAlias(QAnyStringView alias);
+
+    QAnyStringView type;
+    bool isList = false;
+    bool isPointer = false;
+    bool isConstant = false;
 };
 
 QT_END_NAMESPACE

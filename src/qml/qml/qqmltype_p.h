@@ -51,10 +51,6 @@ public:
     explicit QQmlType(const QQmlTypePrivate *priv);
     ~QQmlType();
 
-    bool operator ==(const QQmlType &other) const {
-        return d.data() == other.d.data();
-    }
-
     bool isValid() const { return !d.isNull(); }
 
     QByteArray typeName() const;
@@ -176,6 +172,15 @@ public:
 private:
     friend class QQmlTypePrivate;
     friend size_t qHash(const QQmlType &t, size_t seed);
+    friend bool operator==(const QQmlType &a, const QQmlType &b) noexcept
+    {
+        return a.d.data() == b.d.data();
+    }
+    friend bool operator!=(const QQmlType &a, const QQmlType &b) noexcept
+    {
+        return !(a == b);
+    }
+
     QQmlRefPointer<const QQmlTypePrivate> d;
 };
 

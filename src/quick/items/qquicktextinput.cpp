@@ -403,6 +403,13 @@ QString QQuickTextInputPrivate::realText() const
 
     \include qquicktext.cpp qml-font-features
 */
+
+/*!
+    \qmlproperty object QtQuick::TextInput::font.contextFontMerging
+    \since 6.8
+
+    \include qquicktext.cpp qml-font-context-font-merging
+*/
 QFont QQuickTextInput::font() const
 {
     Q_D(const QQuickTextInput);

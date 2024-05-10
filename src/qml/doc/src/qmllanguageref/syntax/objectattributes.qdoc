@@ -868,7 +868,7 @@ provided by the client:
 SquareButton {
     onDeactivated: console.log("Deactivated!")
     onActivated: (xPosition, yPosition) => {
-        console.log(`Activated at {xPosition}, ${yPosition}`)
+        console.log(`Activated at ${xPosition}, ${yPosition}`)
     }
 }
 \endqml

@@ -116,10 +116,11 @@ void QQmlJSFunctionInitializer::populateSignature(
         }
     }
 
-    if (!function->returnType) {
+    if (!function->returnType.isValid()) {
         if (ast->typeAnnotation) {
-            function->returnType = m_typeResolver->typeFromAST(ast->typeAnnotation->type);
-            if (!function->returnType)
+            function->returnType = m_typeResolver->globalType(
+                    m_typeResolver->typeFromAST(ast->typeAnnotation->type));
+            if (!function->returnType.isValid())
                 signatureError(u"Cannot resolve return type %1"_s.arg(
                                    QmlIR::IRBuilder::asString(ast->typeAnnotation->type->typeId)));
         }
@@ -218,9 +219,9 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
 
         const auto property = m_objectType->property(propertyName);
         if (const QQmlJSScope::ConstPtr propertyType = property.type()) {
-            function.returnType = propertyType->isListProperty()
-                    ? m_typeResolver->qObjectListType()
-                    : propertyType;
+            function.returnType = m_typeResolver->globalType(propertyType->isListProperty()
+                ? m_typeResolver->qObjectListType()
+                : QQmlJSScope::ConstPtr(property.type()));
         } else {
             QString message = u"Cannot resolve property type %1 for binding on %2."_s
                     .arg(property.typeName(), propertyName);

@@ -306,6 +306,7 @@ QSharedPointer<QSettings> QQuickStylePrivate::settings(const QString &group)
         return QSharedPointer<QSettings>(settings);
     }
 #endif // QT_NO_SETTINGS
+    Q_UNUSED(group)
     return QSharedPointer<QSettings>();
 }
 

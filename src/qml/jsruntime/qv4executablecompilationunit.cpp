@@ -157,7 +157,7 @@ void ExecutableCompilationUnit::populate()
     auto advanceAotFunction = [&](int i) -> const QQmlPrivate::AOTCompiledFunction * {
         if (aotFunction) {
             if (aotFunction->functionPtr) {
-                if (aotFunction->extraData == i)
+                if (aotFunction->functionIndex == i)
                     return aotFunction++;
             } else {
                 aotFunction = nullptr;

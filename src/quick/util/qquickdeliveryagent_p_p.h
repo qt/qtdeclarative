@@ -67,6 +67,8 @@ public:
     void clearFocusObject();
     void updateFocusItemTransform();
 
+    QQuickItem *focusTargetItem() const;
+
     // Keeps track of the item currently receiving mouse events
 #if QT_CONFIG(quick_draganddrop)
     QQuickDragGrabber *dragGrabber = nullptr;

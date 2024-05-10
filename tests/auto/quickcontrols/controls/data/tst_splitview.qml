@@ -74,19 +74,18 @@ TestCase {
             // Note that the indices mentioned here account for handles; they do not
             // match the indices reported by QQuickSplitView's logging categories.
             compare(item.x, expectedGeometry.x, "Mismatch in actual vs expected x value of "
-                + itemType + " at index " + typeSpecificIndex + context)
+                + itemType + " " + item + " at index " + typeSpecificIndex + context)
             compare(item.y, expectedGeometry.y, "Mismatch in actual vs expected y value of "
-                + itemType + " at index " + typeSpecificIndex + context)
+                + itemType + " " + item + " at index " + typeSpecificIndex + context)
             compare(item.width, expectedGeometry.width, "Mismatch in actual vs expected width value of "
-                + itemType + " at index " + typeSpecificIndex + context)
+                + itemType + " " + item + " at index " + typeSpecificIndex + context)
             compare(item.height, expectedGeometry.height, "Mismatch in actual vs expected height value of "
-                + itemType + " at index " + typeSpecificIndex + context)
+                + itemType + " " + item + " at index " + typeSpecificIndex + context)
         }
     }
 
     property real defaultHorizontalHandleWidth: 10
     property real defaultVerticalHandleHeight: 10
-
 
     Component {
         id: signalSpyComponent
@@ -96,14 +95,14 @@ TestCase {
     Component {
         id: handleComponent
         Rectangle {
-            objectName: "handle"
+            objectName: `handle ${x},${y} ${width}x${height} visible: ${visible}`
             implicitWidth: defaultHorizontalHandleWidth
             implicitHeight: defaultVerticalHandleHeight
             color: "#444"
 
             Text {
-                objectName: "handleText_" + text
-                text: parent.x + "," + parent.y + " " + parent.width + "x" + parent.height
+                objectName: text + "_Text"
+                text: parent.objectName
                 color: "white"
                 anchors.centerIn: parent
                 rotation: 90
@@ -2677,5 +2676,89 @@ TestCase {
         touch.release(0, control, handleCenter.x + 100, handleCenter.y).commit()
         verify(!firstHandle.SplitHandle.pressed)
         compare(firstItem.width, 125)
+    }
+
+    Component {
+        id: hiddenItemComponent
+
+        SplitView {
+            anchors.fill: parent
+            handle: handleComponent
+            orientation: Qt.Horizontal
+
+            component SplitItem: Rectangle {
+                objectName: labelText
+
+                SplitView.preferredWidth: 50
+                SplitView.fillHeight: true
+
+                required property string labelText
+
+                Text {
+                    anchors.fill: parent
+                    wrapMode: Text.Wrap
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    text: `${parent.labelText} - width: ${parent.width.toFixed(2)}`
+                }
+            }
+
+            SplitItem {
+                color: "blue"
+                labelText: "View 1"
+            }
+            SplitItem {
+                color: "red"
+                labelText: "View 2 (hidden)"
+                visible: false
+            }
+            SplitItem {
+                color: "purple"
+                labelText: "View 3"
+            }
+            SplitItem {
+                color: "yellow"
+                labelText: "View 4"
+            }
+        }
+    }
+
+    function test_resizeHiddenItem() {
+        let control = createTemporaryObject(hiddenItemComponent, testCase)
+        verify(control)
+
+        const standardItemWidth = 50
+        let expectedGeometries = [
+            // First item.
+            { x: 0, y: 0, width: standardItemWidth, height: control.height },
+            // First handle.
+            { x: standardItemWidth, y: 0, width: defaultHorizontalHandleWidth, height: control.height },
+            // The second item and its handle are hidden.
+            { hidden: true },
+            { hidden: true },
+            // Third item.
+            { x: standardItemWidth + defaultHorizontalHandleWidth, y: 0, width: standardItemWidth, height: control.height },
+            // Third handle.
+            { x: (standardItemWidth * 2) + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth, height: control.height },
+            // Fourth item.
+            { x: (standardItemWidth * 2) + (defaultHorizontalHandleWidth * 2), y: 0,
+                width: control.width - (standardItemWidth * 2) - (defaultHorizontalHandleWidth * 2), height: control.height }
+        ]
+        compareSizes(control, expectedGeometries, "before dragging handle")
+
+        // Drag the third handle to the right.
+        let handles = findHandles(control)
+        let thirdHandle = handles[2]
+        // The third (index 4 here) item should get one pixel bigger, and the fourth one pixel smaller.
+        ++expectedGeometries[4].width
+        ++expectedGeometries[5].x // handle
+        ++expectedGeometries[6].x
+        --expectedGeometries[6].width
+        // Use individual events rather than mouseDrag because that will move it past the drag threshold,
+        // which we don't want, since we only want to move by 1 pixel.
+        mousePress(thirdHandle)
+        mouseMove(thirdHandle, thirdHandle.width / 2 + 1, thirdHandle.height / 2, 16)
+        mouseRelease(thirdHandle)
+        compareSizes(control, expectedGeometries, "after dragging handle")
     }
 }

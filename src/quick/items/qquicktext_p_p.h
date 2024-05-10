@@ -77,7 +77,6 @@ public:
         QString hoveredLink;
         int minimumPixelSize;
         int minimumPointSize;
-        int nbActiveDownloads;
         int maximumLineCount;
         int renderTypeQuality;
         bool lineHeightValid : 1;
@@ -96,8 +95,8 @@ public:
     QFontInfo fontInfo;
 
     QTextLayout layout;
-    QTextLayout *elideLayout;
-    QQuickTextLine *textLine;
+    QScopedPointer<QTextLayout> elideLayout;
+    QScopedPointer<QQuickTextLine> textLine;
 
     qreal lineWidth;
 
@@ -163,6 +162,8 @@ public:
 
     void ensureDoc();
     void updateDocumentText();
+
+    qreal devicePixelRatio() const;
 
     QRectF setupTextLayout(qreal * const baseline);
     void setupCustomLineGeometry(QTextLine &line, qreal &height, int fullLayoutTextLength, int lineOffset = 0);

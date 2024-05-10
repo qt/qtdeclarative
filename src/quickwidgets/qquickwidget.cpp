@@ -200,6 +200,27 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     if (!engine.isNull() && !engine.data()->incubationController())
         engine.data()->setIncubationController(offscreenWindow->incubationController());
 
+    q->setMouseTracking(true);
+    q->setFocusPolicy(Qt::StrongFocus);
+#ifndef Q_OS_MACOS
+    /*
+        Usually, a QTouchEvent comes from a touchscreen, and we want those
+        touch events in Qt Quick. But on macOS, there are no touchscreens, and
+        WA_AcceptTouchEvents has a different meaning: QApplication::notify()
+        calls the native-integration function registertouchwindow() to change
+        NSView::allowedTouchTypes to include NSTouchTypeMaskIndirect when the
+        trackpad cursor enters the window, and removes that mask when the
+        cursor exits. In other words, WA_AcceptTouchEvents enables getting
+        discrete touchpoints from the trackpad. We rather prefer to get mouse,
+        wheel and native gesture events from the trackpad (because those
+        provide more of a "native feel"). The only exception is for
+        MultiPointTouchArea, and it takes care of that for itself. So don't
+        automatically set WA_AcceptTouchEvents on macOS. The user can still do
+        it, but we don't recommend it.
+    */
+    q->setAttribute(Qt::WA_AcceptTouchEvents);
+#endif
+
 #if QT_CONFIG(quick_draganddrop)
     q->setAcceptDrops(true);
 #endif
@@ -607,41 +628,22 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
 */
 
 /*!
-  Constructs a QQuickWidget with the given \a parent.
-  The default value of \a parent is 0.
+  Constructs a QQuickWidget with a default QML engine as a child of \a parent.
 
+  The default value of \a parent is \c nullptr.
 */
 QQuickWidget::QQuickWidget(QWidget *parent)
     : QWidget(*(new QQuickWidgetPrivate), parent, {})
 {
-    setMouseTracking(true);
-    setFocusPolicy(Qt::StrongFocus);
-#ifndef Q_OS_MACOS
-    /*
-        Usually, a QTouchEvent comes from a touchscreen, and we want those
-        touch events in Qt Quick. But on macOS, there are no touchscreens, and
-        WA_AcceptTouchEvents has a different meaning: QApplication::notify()
-        calls the native-integration function registertouchwindow() to change
-        NSView::allowedTouchTypes to include NSTouchTypeMaskIndirect when the
-        trackpad cursor enters the window, and removes that mask when the
-        cursor exits. In other words, WA_AcceptTouchEvents enables getting
-        discrete touchpoints from the trackpad. We rather prefer to get mouse,
-        wheel and native gesture events from the trackpad (because those
-        provide more of a "native feel"). The only exception is for
-        MultiPointTouchArea, and it takes care of that for itself. So don't
-        automatically set WA_AcceptTouchEvents on macOS. The user can still do
-        it, but we don't recommend it.
-    */
-    setAttribute(Qt::WA_AcceptTouchEvents);
-#endif
     d_func()->init();
 }
 
 /*!
-  Constructs a QQuickWidget with the given QML \a source and \a parent.
-  The default value of \a parent is 0.
+  Constructs a QQuickWidget with a default QML engine and the given QML \a source
+  as a child of \a parent.
 
-*/
+  The default value of \a parent is \c nullptr.
+ */
 QQuickWidget::QQuickWidget(const QUrl &source, QWidget *parent)
     : QQuickWidget(parent)
 {
@@ -649,19 +651,15 @@ QQuickWidget::QQuickWidget(const QUrl &source, QWidget *parent)
 }
 
 /*!
-  Constructs a QQuickWidget with the given QML \a engine and \a parent.
+  Constructs a QQuickWidget with the given QML \a engine as a child of \a parent.
 
-  Note: In this case, the QQuickWidget does not own the given \a engine object;
+  \note The QQuickWidget does not take ownership of the given \a engine object;
   it is the caller's responsibility to destroy the engine. If the \a engine is deleted
-  before the view, status() will return QQuickWidget::Error.
-
-  \sa Status, status(), errors()
+  before the view, \l status() will return \l QQuickWidget::Error.
 */
 QQuickWidget::QQuickWidget(QQmlEngine* engine, QWidget *parent)
     : QWidget(*(new QQuickWidgetPrivate), parent, {})
 {
-    setMouseTracking(true);
-    setFocusPolicy(Qt::StrongFocus);
     d_func()->init(engine);
 }
 

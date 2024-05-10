@@ -43,40 +43,14 @@ public:
         return m_color;
     }
 
-    void setStrokeColor(QColor col)
-    {
-        const bool hadStroke = hasStroke();
-        m_strokeColor = col;
-        if (hadStroke != hasStroke())
-            updateMaterial();
-    }
-
-    QColor strokeColor() const
-    {
-        return m_strokeColor;
-    }
-
-    void setStrokeWidth(float width)
-    {
-        const bool hadStroke = hasStroke();
-        m_strokeWidth = width;
-        if (hadStroke != hasStroke())
-            updateMaterial();
-    }
-
-    float strokeWidth() const
-    {
-        return m_strokeWidth;
-    }
-
     void setFillGradient(const QSGGradientCache::GradientDesc &fillGradient)
     {
         m_fillGradient = fillGradient;
     }
 
-    QSGGradientCache::GradientDesc fillGradient() const
+    const QSGGradientCache::GradientDesc *fillGradient() const
     {
-        return m_fillGradient;
+        return &m_fillGradient;
     }
 
     void setGradientType(QGradient::Type type)
@@ -100,12 +74,6 @@ public:
     void setDebug(float newDebug)
     {
         m_debug = newDebug;
-    }
-
-
-    bool hasStroke() const
-    {
-        return m_strokeWidth > 0.0f && m_strokeColor.alpha() > 0;
     }
 
     void appendTriangle(const std::array<QVector2D, 3> &v, // triangle vertices
@@ -215,8 +183,6 @@ private:
     static const QSGGeometry::AttributeSet &attributes();
 
     QColor m_color = Qt::white;
-    QColor m_strokeColor = Qt::transparent;
-    float m_strokeWidth = 0.0f;
     float m_debug = 0.0f;
     QSGGradientCache::GradientDesc m_fillGradient;
     QGradient::Type m_gradientType = QGradient::NoGradient;

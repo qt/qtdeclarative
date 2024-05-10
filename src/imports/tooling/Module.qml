@@ -5,5 +5,5 @@ import QML
 
 QtObject {
     default property list<Component> components
-    property var dependencies: []
+    property list<string> dependencies: []
 }

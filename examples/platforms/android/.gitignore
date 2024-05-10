@@ -1,10 +1,10 @@
 *.user
 build/
-qml_in_java_based_android_project/.idea/
-qml_in_java_based_android_project/.gradle/
-qml_in_java_based_android_project/local.properties
-qml_in_java_based_android_project/app/libs/
-qml_in_java_based_android_project/app/src/main/res/xml/qtprovider_paths.xml
-qml_in_java_based_android_project/app/src/main/res/values/libs.xml
-qml_in_java_based_android_project/app/assets/android_rcc_bundle.rcc
+**/.idea/
+**/.gradle/
+**/local.properties
+**/app/libs/
+**/app/src/main/res/xml/qtprovider_paths.xml
+**/app/src/main/res/values/libs.xml
+**/app/assets/android_rcc_bundle.rcc
 

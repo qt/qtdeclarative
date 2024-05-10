@@ -52,8 +52,6 @@ protected:
     void lnAcceptIndented(AST::Node *node);
     bool acceptBlockOrIndented(AST::Node *ast, bool finishWithSpaceOrNewline = false);
 
-    void outputScope(AST::VariableScope scope);
-
     bool preVisit(AST::Node *n) override;
     void postVisit(AST::Node *n) override;
 

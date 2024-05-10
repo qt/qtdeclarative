@@ -1,0 +1,12 @@
+import QtQuick.tooling 1.2
+
+Module {
+    Component {
+        file: "typewithjsonobjectlist.h"
+        name: "TypeWithJsonObjectList"
+        exports: ["QmlLintTestLib/TypeWithJsonObjectList 1.0"]
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "jsonObjectList"; type: "QJsonObject"; isList: true; read: "getJsonObjectList"; index: 0; isReadonly: true }
+    }
+}

@@ -707,7 +707,7 @@ static constexpr int markLoopIterationCount = 1024;
 
 bool wasDrainNecessary(MarkStack *ms, QDeadlineTimer deadline)
 {
-    if (ms->remainingBeforeSoftLimit() < markLoopIterationCount)
+    if (ms->remainingBeforeSoftLimit() > markLoopIterationCount)
         return false;
     // drain
     ms->drain(deadline);
@@ -805,9 +805,14 @@ GCState initCallDestroyObjects(GCStateMachine *that, ExtraData &stateData)
     stateData = GCIteratorStorage { that->mm->m_weakValues->begin() };
     return CallDestroyObjects;
 }
-GCState callDestroyObject(GCStateMachine *, ExtraData &stateData)
+GCState callDestroyObject(GCStateMachine *that, ExtraData &stateData)
 {
     PersistentValueStorage::Iterator& it = get<GCIteratorStorage>(stateData).it;
+    // destroyObject might call user code, which really shouldn't call back into the gc
+    auto oldState = std::exchange(that->mm->gcBlocked, QV4::MemoryManager::Blockness::InCriticalSection);
+    auto cleanup = qScopeGuard([&]() {
+        that->mm->gcBlocked = oldState;
+    });
     // avoid repeatedly hitting the timer constantly by batching iterations
     for (int i = 0; i < markLoopIterationCount; ++i) {
         if (!it.p)
@@ -1235,8 +1240,9 @@ bool MemoryManager::tryForceGCCompletion()
     const bool incrementalGCIsAlreadyRunning = m_markStack != nullptr;
     Q_ASSERT(incrementalGCIsAlreadyRunning);
     auto oldTimeLimit = std::exchange(gcStateMachine->timeLimit, std::chrono::microseconds::max());
-    while (gcStateMachine->inProgress())
+    while (gcStateMachine->inProgress()) {
         gcStateMachine->step();
+    }
     gcStateMachine->timeLimit = oldTimeLimit;
     return true;
 }

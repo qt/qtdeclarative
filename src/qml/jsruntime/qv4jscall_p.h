@@ -113,15 +113,15 @@ void populateJSCallArguments(ExecutionEngine *v4, JSCallArguments &jsCall, int a
 
 template<typename Callable>
 ReturnedValue convertAndCall(
-        ExecutionEngine *engine, const QQmlPrivate::AOTCompiledFunction *aotFunction,
+        ExecutionEngine *engine, const Function::AOTCompiledFunction *aotFunction,
         const Value *thisObject, const Value *argv, int argc, Callable call)
 {
-    const qsizetype numFunctionArguments = aotFunction->argumentTypes.size();
+    const qsizetype numFunctionArguments = aotFunction->types.length() - 1;
     Q_ALLOCA_VAR(void *, values, (numFunctionArguments + 1) * sizeof(void *));
     Q_ALLOCA_VAR(QMetaType, types, (numFunctionArguments + 1) * sizeof(QMetaType));
 
     for (qsizetype i = 0; i < numFunctionArguments; ++i) {
-        const QMetaType argumentType = aotFunction->argumentTypes[i];
+        const QMetaType argumentType = aotFunction->types[i + 1];
         types[i + 1] = argumentType;
         if (const qsizetype argumentSize = argumentType.sizeOf()) {
             Q_ALLOCA_VAR(void, argument, argumentSize);
@@ -144,7 +144,7 @@ ReturnedValue convertAndCall(
     }
 
     Q_ALLOCA_DECLARE(void, returnValue);
-    types[0] = aotFunction->returnType;
+    types[0] = aotFunction->types[0];
     if (const qsizetype returnSize = types[0].sizeOf()) {
         Q_ALLOCA_ASSIGN(void, returnValue, returnSize);
         values[0] = returnValue;
@@ -412,16 +412,16 @@ ReturnedValue coerceAndCall(
 {
     Scope scope(engine);
 
-    QV4::JSCallArguments jsCallData(scope, typedFunction->argumentTypes.size());
+    QV4::JSCallArguments jsCallData(scope, typedFunction->types.size() - 1);
     const CompiledData::Parameter *formals = compiledFunction->formalsTable();
     for (qsizetype i = 0; i < jsCallData.argc; ++i) {
         jsCallData.args[i] = coerce(
             engine, i < argc ? argv[i] : Encode::undefined(),
-            typedFunction->argumentTypes[i], formals[i].type.isList());
+            typedFunction->types[i + 1], formals[i].type.isList());
     }
 
     ScopedValue result(scope, call(jsCallData.args, jsCallData.argc));
-    return coerce(engine, result, typedFunction->returnType, compiledFunction->returnType.isList());
+    return coerce(engine, result, typedFunction->types[0], compiledFunction->returnType.isList());
 }
 
 // Note: \a to is unininitialized here! This is in contrast to most other related functions.

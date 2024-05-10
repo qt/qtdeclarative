@@ -652,6 +652,27 @@ void QQuickDeliveryAgentPrivate::updateFocusItemTransform()
 #endif
 }
 
+/*!
+    Returns the item that should get active focus when the
+    root focus scope gets active focus.
+*/
+QQuickItem *QQuickDeliveryAgentPrivate::focusTargetItem() const
+{
+    if (activeFocusItem)
+        return activeFocusItem;
+
+    Q_ASSERT(rootItem);
+    QQuickItem *targetItem = rootItem;
+
+    while (targetItem->isFocusScope()
+            && targetItem->scopedFocusItem()
+            && targetItem->scopedFocusItem()->isEnabled()) {
+        targetItem = targetItem->scopedFocusItem();
+    }
+
+    return targetItem;
+}
+
 /*! \internal
     If called during event delivery, returns the agent that is delivering the
     event, without checking whether \a item is reachable from there.
@@ -821,16 +842,7 @@ bool QQuickDeliveryAgent::event(QEvent *ev)
     case QEvent::InputMethod:
     case QEvent::InputMethodQuery:
         {
-            QQuickItem *target = d->activeFocusItem;
-            // while an input method delivers the event, this window might still be inactive
-            if (!target) {
-                target = d->rootItem;
-                if (!target || !target->isEnabled())
-                    break;
-                // see setFocusInScope for a similar loop
-                while (target->isFocusScope() && target->scopedFocusItem() && target->scopedFocusItem()->isEnabled())
-                    target = target->scopedFocusItem();
-            }
+            QQuickItem *target = d->focusTargetItem();
             if (target)
                 QCoreApplication::sendEvent(target, ev);
         }

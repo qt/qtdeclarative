@@ -5,7 +5,7 @@
 #define TST_QMLTYPEREGISTRAR_H
 
 #include "foreign.h"
-#include "foreign_p.h"
+#include "private/foreign_p.h"
 
 #include <QtQmlTypeRegistrar/private/qqmltyperegistrar_p.h>
 

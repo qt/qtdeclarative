@@ -25,14 +25,6 @@ layout(std140, binding = 0) uniform buf {
     float debug;
     float reserved3;
 
-#if defined(STROKE)
-    vec4 strokeColor;
-    float strokeWidth;
-    float reserved4;
-    float reserved5;
-    float reserved6;
-#endif
-
 #if defined(LINEARGRADIENT)
     vec2 gradientStart;
     vec2 gradientEnd;

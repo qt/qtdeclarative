@@ -71,6 +71,12 @@ struct ToIndex
     int leftDepth;
 };
 
+struct RegisteredSemanticTokens
+{
+    QByteArray resultId = "0";
+    QList<int> lastTokens;
+};
+
 class QQmlCodeModel : public QObject
 {
     Q_OBJECT
@@ -109,6 +115,10 @@ public:
     static QStringList fileNamesToWatch(const QQmlJS::Dom::DomItem &qmlFile);
     void disableCMakeCalls();
     const QFactoryLoader &pluginLoader() const { return m_pluginLoader; }
+
+    RegisteredSemanticTokens &registeredTokens();
+    const RegisteredSemanticTokens &registeredTokens() const;
+
 Q_SIGNALS:
     void updatedSnapshot(const QByteArray &url);
 private:
@@ -153,6 +163,7 @@ private:
     QFactoryLoader m_pluginLoader;
     bool m_rebuildRequired = true; // always trigger a rebuild on start
     CMakeStatus m_cmakeStatus = RequiresInitialization;
+    RegisteredSemanticTokens m_tokens;
 private slots:
     void onCppFileChanged(const QString &);
 };

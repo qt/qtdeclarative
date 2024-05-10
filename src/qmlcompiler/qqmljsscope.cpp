@@ -1011,6 +1011,22 @@ void QQmlJSScope::setBaseTypeError(const QString &baseTypeError)
     m_baseTypeNameOrError = baseTypeError;
 }
 
+/*!
+\internal
+The name of the module is only saved in the QmlComponent. Iterate through the parent scopes until
+the QmlComponent or the root is reached to find out the module name of the component in which `this`
+resides.
+*/
+QString QQmlJSScope::moduleName() const
+{
+    for (const QQmlJSScope *it = this; it; it = it->parentScope().get()) {
+        const QString name = it->ownModuleName();
+        if (!name.isEmpty())
+            return name;
+    }
+    return {};
+}
+
 QString QQmlJSScope::baseTypeError() const
 {
     return m_flags.testFlag(HasBaseTypeError) ? m_baseTypeNameOrError : QString();
@@ -1129,7 +1145,7 @@ bool QQmlJSScope::Export::isValid() const
 
 void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &scope) const
 {
-    scope->setModuleName(m_moduleName);
+    scope->setOwnModuleName(m_moduleName);
     QQmlJSTypeReader typeReader(m_importer, m_filePath);
     typeReader(scope);
     m_importer->m_globalWarnings.append(typeReader.errors());

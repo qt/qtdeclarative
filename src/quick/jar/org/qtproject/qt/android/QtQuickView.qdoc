@@ -60,7 +60,7 @@
     }
     \endcode
 
-    For a more detailed example, see \l {QML in Java-Based Android Projects}.
+    For a more detailed example, see \l {QML in Android Studio Projects}.
 
     \section1 Constructors
 

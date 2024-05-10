@@ -945,7 +945,19 @@ Item {
                     },
                     layoutWidth:     0,
                     expectedWidths: [0]
-                  }
+                },{
+                  tag: "preferred_infinity",    // Do not crash/assert when the preferred size is infinity
+                  layout: {
+                    type: "RowLayout",
+                    items: [
+                        {minimumWidth:  10, preferredWidth: Number.POSITIVE_INFINITY, fillWidth: true},
+                        {minimumWidth:  20, preferredWidth: Number.POSITIVE_INFINITY, fillWidth: true},
+                      ]
+                  },
+                  layoutWidth:     31,      // Important that this is between minimum and preferred width of the layout.
+                  expectedWidths: [10, 21]  // The result here does not have to be exact. (This
+                                            // test is mostly concerned about not crashing).
+                }
             ];
         }
 
@@ -1566,6 +1578,49 @@ Item {
             waitForRendering(rootRect.layout)
             compare(rootRect.item1.width, 100)
         }
+
+        //---------------------------
+        // Layout with negative size
+        Component {
+            id: negativeSize_Component
+            Item {
+                id: rootItem
+                width: 0
+                height: 0
+                // default width x height: (0 x 0)
+                RowLayout {
+                    spacing: 0
+                    anchors.fill: parent
+                    anchors.leftMargin: 1   // since parent size == (0 x 0), it causes layout size
+                    anchors.bottomMargin: 1 // to become (-1, -1)
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                }
+            }
+        }
+
+        function test_negativeSize() {
+            let rootItem = createTemporaryObject(negativeSize_Component, container)
+            let rowLayout = rootItem.children[0]
+            let item = rowLayout.children[0]
+
+            const arr = [7, 1, 7, 0]
+            arr.forEach((n) => {
+                                rootItem.width = n
+                                rootItem.height = n
+
+                                // n === 0 is special: It will cause the layout to have a
+                                // negative size. In this case it will simply not rearrange its
+                                // child (and leave it at its previous size, 6)
+                                const expectedItemExtent = n === 0 ? 6 : n - 1
+
+                                compare(item.width, expectedItemExtent)
+                                compare(item.height, expectedItemExtent)
+                               });
+        }
+
 
 //---------------------------
         Component {
