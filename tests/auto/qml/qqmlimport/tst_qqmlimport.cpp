@@ -17,6 +17,7 @@
 
 #include <QtCore/qscopeguard.h>
 #include <QtCore/qlibraryinfo.h>
+#include <QtCore/private/qlibraryinfo_p.h>
 
 class TheThing : public QObject
 {
@@ -68,6 +69,7 @@ private slots:
     void qualifiedScriptImport();
     void invalidImportUrl();
     void registerTypesFromImplicitImport();
+    void containsAllQtConfEntries();
 
 private:
     QQmlModuleRegistration noimportRegistration;
@@ -200,6 +202,22 @@ void tst_QQmlImport::registerTypesFromImplicitImport()
     TheThing *t = qobject_cast<TheThing *>(o.data());
     QVERIFY(t);
     QCOMPARE(t->m_width, 640);
+}
+
+void tst_QQmlImport::containsAllQtConfEntries()
+{
+    QString qtConfPath(u":/qmlimports.qt.conf");
+    QLibraryInfoPrivate::setQtconfManualPath(&qtConfPath);
+    QLibraryInfoPrivate::reload();
+    auto cleanup = qScopeGuard([](){
+        QLibraryInfoPrivate::setQtconfManualPath(nullptr);
+        QLibraryInfoPrivate::reload();
+    });
+    QQmlEngine engine;
+    auto importPaths = engine.importPathList();
+    QVERIFY(importPaths.contains(u"qrc:/a/path"));
+    QVERIFY(importPaths.contains(u"qrc:/another/path"));
+    QVERIFY(importPaths.contains(u"qrc:/even/more/path"));
 }
 
 void tst_QQmlImport::testDesignerSupported()

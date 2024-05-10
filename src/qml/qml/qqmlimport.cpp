@@ -1516,8 +1516,9 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
     // 6. $QML_IMPORT_PATH
     // 7. QLibraryInfo::QmlImportsPath
 
-    QString installImportsPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
-    addImportPath(installImportsPath);
+    const auto paths = QLibraryInfo::paths(QLibraryInfo::QmlImportsPath);
+    for (const auto &installImportsPath: paths)
+        addImportPath(installImportsPath);
 
     auto addEnvImportPath = [this](const char *var) {
         if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(var))) {
