@@ -468,7 +468,16 @@ bool QQuickPopupPrivate::handlePress(QQuickItem *item, const QPointF &point, ulo
     Q_UNUSED(timestamp);
     pressPoint = point;
     outsidePressed = !contains(point);
-    outsideParentPressed = outsidePressed && parentItem && !parentItem->contains(parentItem->mapFromScene(point));
+
+    if (outsidePressed && parentItem) {
+        // Note that the parentItem (e.g a menuBarItem, in case of a MenuBar) will
+        // live inside another window when using popup windows. We therefore need to
+        // map to and from global.
+        const QPointF globalPoint = item->mapToGlobal(point);
+        const QPointF localPoint = parentItem->mapFromGlobal(globalPoint);
+        outsideParentPressed = !parentItem->contains(localPoint);
+    }
+
     tryClose(point, QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseOnPressOutsideParent);
     return blockInput(item, point);
 }
