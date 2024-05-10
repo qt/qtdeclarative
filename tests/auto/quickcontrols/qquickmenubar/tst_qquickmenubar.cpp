@@ -39,8 +39,6 @@ private slots:
     void hoverAfterClosingWithEscape();
 
 private:
-    static bool hasWindowActivation();
-
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 };
 
@@ -53,11 +51,6 @@ tst_qquickmenubar::tst_qquickmenubar()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
-}
-
-bool tst_qquickmenubar::hasWindowActivation()
-{
-    return (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation));
 }
 
 void tst_qquickmenubar::delegate()
@@ -75,8 +68,7 @@ void tst_qquickmenubar::delegate()
 
 void tst_qquickmenubar::mouse()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
@@ -287,8 +279,7 @@ void tst_qquickmenubar::touch()
 
 void tst_qquickmenubar::keys()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
 
@@ -479,8 +470,7 @@ void tst_qquickmenubar::keys()
 
 void tst_qquickmenubar::mnemonics()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
 #if defined(Q_OS_MACOS) or defined(Q_OS_WEBOS)
     QSKIP("Mnemonics are not used on this platform");

@@ -6,6 +6,7 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <private/qinputmethod_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -213,7 +214,6 @@ private:
 #if QT_CONFIG(shortcut)
     void simulateKeys(QWindow *window, const QKeySequence &sequence);
 #endif
-    static bool hasWindowActivation();
 
     QQmlEngine engine;
     QStringList standard;
@@ -237,11 +237,6 @@ void tst_qquicktextinput::simulateKeys(QWindow *window, const QList<Key> &keys)
         else
             QTest::keyClick(window, keys.at(i).keyCombination.key(), modifiers);
     }
-}
-
-bool tst_qquicktextinput::hasWindowActivation()
-{
-    return (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation));
 }
 
 #if QT_CONFIG(shortcut)
@@ -7201,8 +7196,8 @@ void tst_qquicktextinput::touchscreenDoesNotSelect()
 
 void tst_qquicktextinput::touchscreenSetsFocusAndMovesCursor()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
+
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("twoInAColumn.qml")));
     window.requestActivate();
