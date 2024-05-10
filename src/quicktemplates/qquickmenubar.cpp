@@ -106,19 +106,9 @@ QQuickMenuBarItem *QQuickMenuBarPrivate::createMenuBarItem(QQuickMenu *menu)
     return menuBarItem;
 }
 
-bool QQuickMenuBarPrivate::isCurrentMenuOpen()
-{
-    if (!currentItem)
-        return false;
-    QQuickMenu *menu = currentItem->menu();
-    if (!menu)
-        return false;
-    return menu->isVisible();
-}
-
 void QQuickMenuBarPrivate::openCurrentMenu()
 {
-    if (!currentItem || isCurrentMenuOpen())
+    if (!currentItem || currentMenuOpen)
         return;
     QQuickMenu *menu = currentItem->menu();
     if (!menu || menu->isOpened())
@@ -133,6 +123,12 @@ void QQuickMenuBarPrivate::openCurrentMenu()
     const QPointF posInParentItem{0, currentItem->y() + currentItem->height()};
 #endif
 
+    // Store explicit if the current menu is logically supposed to be open.
+    // menu->isVisible() is async when using top-level menus, and will not become
+    // "true" before the menu is actually shown by the OS. This will cause us to
+    // lose track of if a menu is (supposed to be) open, if relying on menu->isVisible().
+    currentMenuOpen = true;
+
     // The position should be the coordinate system of the parent item. Note that
     // the parentItem() of a menu will be the MenuBarItem (currentItem), and not the
     // MenuBar (even if parent() usually points to the MenuBar).
@@ -142,8 +138,9 @@ void QQuickMenuBarPrivate::openCurrentMenu()
 
 void QQuickMenuBarPrivate::closeCurrentMenu()
 {
-    if (!currentItem || !isCurrentMenuOpen())
+    if (!currentItem || !currentMenuOpen)
         return;
+    currentMenuOpen = false;
     QQuickMenu *menu = currentItem->menu();
     QScopedValueRollback triggerRollback(triggering, true);
     menu->dismiss();
@@ -164,7 +161,7 @@ void QQuickMenuBarPrivate::activateItem(QQuickMenuBarItem *item)
     if (currentItem == item)
         return;
 
-    const bool stayOpen = isCurrentMenuOpen();
+    const bool stayOpen = currentMenuOpen;
 
     if (currentItem) {
         currentItem->setHighlighted(false);
@@ -214,7 +211,7 @@ void QQuickMenuBarPrivate::onItemTriggered()
         return;
 
     if (item == currentItem) {
-        if (isCurrentMenuOpen()) {
+        if (currentMenuOpen) {
             closeCurrentMenu();
             currentItem->forceActiveFocus();
         } else {
@@ -928,7 +925,7 @@ void QQuickMenuBar::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QQuickMenuBar);
     QQuickContainer::hoverLeaveEvent(event);
-    if (!d->isCurrentMenuOpen() && d->currentItem)
+    if (!d->currentMenuOpen && d->currentItem)
         d->activateItem(nullptr);
 }
 

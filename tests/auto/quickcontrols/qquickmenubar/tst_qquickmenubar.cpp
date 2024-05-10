@@ -65,10 +65,13 @@ private slots:
     void changeDelegate();
     void invalidDelegate_data();
     void invalidDelegate();
+    void panMenuBar_data();
+    void panMenuBar();
 
 private:
     static bool hasWindowActivation();
     bool nativeMenuBarSupported = false;
+    bool popupWindowsSupported = false;
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 };
 
@@ -83,6 +86,7 @@ tst_qquickmenubar::tst_qquickmenubar()
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
     QQuickMenuBar mb;
     nativeMenuBarSupported = QQuickMenuBarPrivate::get(&mb)->useNativeMenuBar();
+    popupWindowsSupported = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows);
 }
 
 bool tst_qquickmenubar::hasWindowActivation()
@@ -96,6 +100,7 @@ void tst_qquickmenubar::init()
     // Note that some tests will set this property to 'true', which
     // is why we need to set it back to 'false' here.
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, false);
+    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, false);
 }
 
 void tst_qquickmenubar::delegate()
@@ -1590,6 +1595,63 @@ void tst_qquickmenubar::invalidDelegate()
 
     // inlineMenuBarItem was not created from a delegate, and shouldn't change
     QCOMPARE(qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(2)), inlineMenuBarItem);
+}
+
+void tst_qquickmenubar::panMenuBar_data()
+{
+    QTest::addColumn<bool>("usePopupWindow");
+    QTest::newRow("in-scene popup") << false;
+    if (popupWindowsSupported)
+        QTest::newRow("popup window") << true;
+}
+
+void tst_qquickmenubar::panMenuBar()
+{
+    // Check that a MenuBarItem's menu opens when you click it. And then check that
+    // if you hover the next MenuBarItem in the MenuBar, that the first one will
+    // close, and the second one will open.
+    QFETCH(bool, usePopupWindow);
+
+#if !defined(Q_OS_MACOS) || !defined(Q_OS_WINDOWS)
+    QSKIP("This test doesn't pass on e.g QNX. It needs more investigation before it can be enabled");
+#endif
+
+#ifdef Q_OS_ANDROID
+    // Android theme does not use hover effects, so moving the mouse would not
+    // highlight an item
+    QSKIP("Panning of MenuBar not supported");
+#endif
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, true);
+    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    QQuickMenuBarPrivate *menuBar_d = QQuickMenuBarPrivate::get(menuBar);
+
+    auto menuBarItem0 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(0));
+    auto menuBarItem1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(1));
+    QVERIFY(menuBarItem0);
+    QVERIFY(menuBarItem1);
+
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(menuBarItem0));
+    QVERIFY(menuBarItem0->isHighlighted());
+    QVERIFY(!menuBarItem1->isHighlighted());
+    QCOMPARE(menuBar_d->currentItem, menuBarItem0);
+    QVERIFY(menuBar_d->currentMenuOpen);
+    QTRY_VERIFY(menuBarItem0->menu()->isOpened());
+
+    QTest::mouseMove(window.data(), itemSceneCenter(menuBarItem1));
+    QVERIFY(!menuBarItem0->isHighlighted());
+    QVERIFY(menuBarItem1->isHighlighted());
+    QCOMPARE(menuBar_d->currentItem, menuBarItem1);
+    QVERIFY(menuBar_d->currentMenuOpen);
+    QTRY_VERIFY(menuBarItem1->menu()->isOpened());
+    QTRY_VERIFY(!menuBarItem0->menu()->isOpened());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)

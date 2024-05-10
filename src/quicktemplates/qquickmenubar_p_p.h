@@ -42,7 +42,6 @@ public:
     QQuickItem *createItemFromDelegate();
     QQuickMenuBarItem *createMenuBarItem(QQuickMenu *menu);
 
-    bool isCurrentMenuOpen();
     void openCurrentMenu();
     void closeCurrentMenu();
     void activateMenuItem(int index);
@@ -88,6 +87,7 @@ public:
 
     bool triggering = false;
     bool altPressed = false;
+    bool currentMenuOpen = false;
     QQmlComponent *delegate = nullptr;
     QPointer<QQuickMenuBarItem> currentItem;
     QPointer<QQuickItem> windowContentItem;
