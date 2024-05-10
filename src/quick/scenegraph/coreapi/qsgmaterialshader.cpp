@@ -661,6 +661,17 @@ bool QSGMaterialShader::updateGraphicsPipelineState(RenderState &state, Graphics
  */
 
 /*!
+    \enum QSGMaterialShader::GraphicsPipelineState::BlendOp
+    \since 6.8
+
+    \value BlendOpAdd
+    \value BlendOpSubtract
+    \value BlendOpReverseSubtract
+    \value BlendOpMin
+    \value BlendOpMax
+ */
+
+/*!
     \enum QSGMaterialShader::GraphicsPipelineState::ColorMaskComponent
     \since 5.14
 
@@ -769,6 +780,18 @@ bool QSGMaterialShader::updateGraphicsPipelineState(RenderState &state, Graphics
     \brief Destination alpha blending factor.
 
     Applies only when separateBlendFactors is set to true.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::opColor
+    \since 6.8
+    \brief RGB blending operation.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::opAlpha
+    \since 6.8
+    \brief Alpha blending operation.
  */
 
 /*!
