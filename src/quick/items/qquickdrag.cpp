@@ -362,7 +362,7 @@ void QQuickDragAttached::setImageSource(const QUrl &url)
 }
 
 /*!
-    \qmlattachedproperty QUrl QtQuick::Drag::imageSourceSize
+    \qmlattachedproperty size QtQuick::Drag::imageSourceSize
     \since 6.8
 
     This property holds the size of the image that will be used to represent
