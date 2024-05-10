@@ -3399,6 +3399,7 @@ BindingProperty: PropertyName T_COLON BindingIdentifier InitializerOpt_In;
     case $rule_number: {
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, stringRef(3), sym(4).Expression);
         node->colonToken = loc(2);
+        node->identifierToken = loc(3);
         sym(1).Node = node;
     } break;
 ./
@@ -3567,6 +3568,11 @@ IterationStatement: T_FOR T_LPAREN LexicalDeclaration T_SEMICOLON ExpressionOpt_
         AST::ForStatement *node = new (pool) AST::ForStatement(
           static_cast<AST::VariableStatement *>(sym(3).Node)->declarations, sym(5).Expression,
           sym(7).Expression, sym(9).Statement);
+        if (node->declarations) {
+            AST::PatternElement *pe = node->declarations->declaration;
+            pe->isForDeclaration = true;
+            pe->declarationKindToken = loc(3);
+        }
         node->forToken = loc(1);
         node->lparenToken = loc(2);
         node->firstSemicolonToken = loc(4);
@@ -3638,6 +3644,7 @@ ForDeclaration: Var BindingIdentifier TypeAnnotationOpt;
         node->identifierToken = loc(2);
         node->scope = sym(1).scope;
         node->isForDeclaration = true;
+        node->declarationKindToken = loc(1);
         sym(1).Node = node;
     } break;
 ./
@@ -3650,6 +3657,7 @@ ForDeclaration: Var BindingPattern;
         auto *node = new (pool) AST::PatternElement(sym(2).Pattern, nullptr);
         node->scope = sym(1).scope;
         node->isForDeclaration = true;
+        node->declarationKindToken = loc(1);
         sym(1).Node = node;
     } break;
 ./

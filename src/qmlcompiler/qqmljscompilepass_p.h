@@ -94,7 +94,7 @@ public:
         QQmlJSScopesById addressableScopes;
         QList<QQmlJSRegisterContent> argumentTypes;
         QList<QQmlJSRegisterContent> registerTypes;
-        QQmlJSScope::ConstPtr returnType;
+        QQmlJSRegisterContent returnType;
         QQmlJSScope::ConstPtr qmlScope;
         QByteArray code;
         const SourceLocationTable *sourceLocations = nullptr;

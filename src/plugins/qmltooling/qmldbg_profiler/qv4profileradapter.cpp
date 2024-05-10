@@ -98,10 +98,10 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
                 return finalizeMessages(until, messages, props.start, d);
 
             appendMemoryEvents(props.start, messages, d);
-            auto location = m_functionLocations.find(props.id);
+            auto location = m_functionLocations.constFind(props.id);
 
             d << props.start << int(RangeStart) << int(Javascript) << static_cast<qint64>(props.id);
-            if (location != m_functionLocations.end()) {
+            if (location != m_functionLocations.cend()) {
                 messages.push_back(d.squeezedData());
                 d.clear();
                 d << props.start << int(RangeLocation) << int(Javascript) << location->file << location->line

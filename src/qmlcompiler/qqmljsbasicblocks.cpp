@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmljsbasicblocks_p.h"
+#include "qqmljsutils_p.h"
 
 #include <QtQml/private/qv4instr_moth_p.h>
 
@@ -101,15 +102,6 @@ void QQmlJSBasicBlocks::dumpDOTGraph()
     }
 }
 
-template<typename Container>
-void deduplicate(Container &container)
-{
-    std::sort(container.begin(), container.end());
-    auto erase = std::unique(container.begin(), container.end());
-    container.erase(erase, container.end());
-}
-
-
 QQmlJSCompilePass::BlocksAndAnnotations
 QQmlJSBasicBlocks::run(const Function *function, QQmlJSAotCompiler::Flags compileFlags,
                        bool &basicBlocksValidationFailed)
@@ -156,7 +148,7 @@ QQmlJSBasicBlocks::run(const Function *function, QQmlJSAotCompiler::Flags compil
         reset();
         decode(byteCode.constData(), static_cast<uint>(byteCode.size()));
         for (auto it = m_basicBlocks.begin(), end = m_basicBlocks.end(); it != end; ++it)
-            deduplicate(it->second.jumpOrigins);
+            QQmlJSUtils::deduplicate(it->second.jumpOrigins);
     }
 
     if (compileFlags.testFlag(QQmlJSAotCompiler::ValidateBasicBlocks) || qv4ValidateBasicBlocks()) {

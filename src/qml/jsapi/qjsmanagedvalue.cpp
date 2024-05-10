@@ -13,6 +13,7 @@
 #include <QtQml/private/qv4urlobject_p.h>
 #include <QtQml/private/qv4variantobject_p.h>
 #include <QtQml/private/qv4qobjectwrapper_p.h>
+#include <QtQml/private/qv4qmetaobjectwrapper_p.h>
 #include <QtQml/private/qv4regexpobject_p.h>
 #include <QtQml/private/qv4dateobject_p.h>
 #include <QtQml/private/qv4errorobject_p.h>

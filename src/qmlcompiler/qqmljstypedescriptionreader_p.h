@@ -55,6 +55,7 @@ private:
     QTypeRevision readNumericVersionBinding(QQmlJS::AST::UiScriptBinding *ast);
     int readIntBinding(QQmlJS::AST::UiScriptBinding *ast);
     QList<QQmlJSScope::Export> readExports(QQmlJS::AST::UiScriptBinding *ast);
+    void readAliases(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
     void readInterfaces(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
     void checkMetaObjectRevisions(
             QQmlJS::AST::UiScriptBinding *ast, QList<QQmlJSScope::Export> *exports);

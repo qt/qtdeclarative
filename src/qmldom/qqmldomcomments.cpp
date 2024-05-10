@@ -65,7 +65,8 @@ Comments store a string (rawComment) with comment characters (//,..) and spaces.
 Sometime one wants just the comment, the commentcharacters, the space before the comment,....
 CommentInfo gets such a raw comment string and makes the various pieces available
 */
-CommentInfo::CommentInfo(QStringView rawComment) : rawComment(rawComment)
+CommentInfo::CommentInfo(QStringView rawComment, QQmlJS::SourceLocation loc)
+    : rawComment(rawComment), commentLocation(loc)
 {
     commentBegin = 0;
     while (commentBegin < quint32(rawComment.size()) && rawComment.at(commentBegin).isSpace()) {
@@ -97,6 +98,7 @@ CommentInfo::CommentInfo(QStringView rawComment) : rawComment(rawComment)
             warnings.append(tr("Unexpected comment start %1").arg(commentStartStr));
             break;
         }
+
         commentEnd = commentBegin + commentStartStr.size();
         quint32 rawEnd = quint32(rawComment.size());
         commentContentEnd = commentContentBegin = commentEnd;
@@ -155,6 +157,11 @@ CommentInfo::CommentInfo(QStringView rawComment) : rawComment(rawComment)
                                     .arg(i));
         }
     }
+
+    // Post process comment source location
+    commentLocation.offset -= commentStartStr.size();
+    commentLocation.startColumn -=  commentStartStr.size();
+    commentLocation.length = commentEnd - commentBegin;
 }
 
 /*!

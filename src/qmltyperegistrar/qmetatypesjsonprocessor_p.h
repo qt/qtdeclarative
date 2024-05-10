@@ -174,13 +174,11 @@ public:
     using Kind = MetaTypePrivate::Kind;
 
     MetaType() = default;
-    MetaType(const QCborMap &cbor, const QString &inputFile)
-        : d(new MetaTypePrivate(cbor, inputFile))
-    {}
+    MetaType(const QCborMap &cbor, const QString &inputFile);
 
     bool isEmpty() const { return d == &s_empty; }
 
-    QAnyStringView inputFile() const { return d->inputFile; }
+    QString inputFile() const { return d->inputFile; }
     QAnyStringView className() const { return d->className; }
     QAnyStringView qualifiedClassName() const { return d->qualifiedClassName; }
     const BaseType::Container &superClasses() const { return d->superClasses; }
@@ -197,8 +195,6 @@ public:
     Kind kind() const { return d->kind; }
 
 private:
-    friend class MetaTypesJsonProcessor;
-
     friend bool operator==(const MetaType &a, const MetaType &b) noexcept
     {
         return a.d == b.d;
@@ -219,7 +215,6 @@ public:
     static QList<QAnyStringView> namespaces(const MetaType &classDef);
 
     MetaTypesJsonProcessor(bool privateIncludes) : m_privateIncludes(privateIncludes) {}
-    ~MetaTypesJsonProcessor();
 
     bool processTypes(const QStringList &files);
 
@@ -244,7 +239,19 @@ private:
         NamespaceRegistration
     };
 
-    static RegistrationMode qmlTypeRegistrationMode(const MetaType &classDef);
+    struct PreProcessResult {
+        QList<QAnyStringView> primitiveAliases;
+        QAnyStringView foreignPrimitive;
+        RegistrationMode mode;
+    };
+
+    struct PotentialPrimitiveType {
+        QAnyStringView name;
+        QString file;
+    };
+
+    enum class PopulateMode { No, Yes };
+    static PreProcessResult preProcess(const MetaType &classDef, PopulateMode populateMode);
     void addRelatedTypes();
 
     void sortTypes(QVector<MetaType> &types);
@@ -252,8 +259,14 @@ private:
     void processTypes(const QCborMap &types);
     void processForeignTypes(const QCborMap &types);
 
+    bool isPrimitive(QAnyStringView type) const
+    {
+        return std::binary_search(m_primitiveTypes.begin(), m_primitiveTypes.end(), type);
+    }
+
     QList<QString> m_includes;
     QList<QAnyStringView> m_referencedTypes;
+    QList<QAnyStringView> m_primitiveTypes;
     QVector<MetaType> m_types;
     QVector<MetaType> m_foreignTypes;
     bool m_privateIncludes = false;

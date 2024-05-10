@@ -35,6 +35,36 @@ public:
     void setCommentString(const QString commentString);
     QString commentString() const;
 
+    void setRetainFilePaths(bool retainFilePaths)
+    {
+        m_retainFilePaths = retainFilePaths;
+    }
+
+    bool retainFilePaths() const
+    {
+        return m_retainFilePaths;
+    }
+
+    void setAssetFileDirectory(const QString &assetFileDirectory)
+    {
+        m_assetFileDirectory = assetFileDirectory;
+    }
+
+    QString assetFileDirectory() const
+    {
+        return m_assetFileDirectory;
+    }
+
+    void setAssetFilePrefix(const QString &assetFilePrefix)
+    {
+        m_assetFilePrefix = assetFilePrefix;
+    }
+
+    QString assetFilePrefix() const
+    {
+        return m_assetFilePrefix;
+    }
+
 protected:
     void generateNodeBase(const NodeInfo &info) override;
     bool generateDefsNode(const NodeInfo &info) override;
@@ -61,6 +91,9 @@ private:
     bool m_inShapeItem = false;
     QByteArray m_shapeTypeName;
     QString m_commentString;
+    bool m_retainFilePaths = false;
+    QString m_assetFileDirectory;
+    QString m_assetFilePrefix;
 };
 
 QT_END_NAMESPACE

@@ -166,6 +166,7 @@ public:
     static void purgeCache();
     static bool isCached(const QUrl &url, const QRect &requestRegion, const QSize &requestSize,
                          const int frame, const QQuickImageProviderOptions &options);
+    static bool isScalableImageFormat(const QUrl &url);
 
     static const QLatin1String itemGrabberScheme;
 

@@ -54,6 +54,7 @@ public:
     QQmlJSScope::ConstPtr uint32Type() const { return m_uint32Type; }
     QQmlJSScope::ConstPtr int64Type() const { return m_int64Type; }
     QQmlJSScope::ConstPtr uint64Type() const { return m_uint64Type; }
+    QQmlJSScope::ConstPtr sizeType() const { return m_sizeType; }
     QQmlJSScope::ConstPtr boolType() const { return m_boolType; }
     QQmlJSScope::ConstPtr stringType() const { return m_stringType; }
     QQmlJSScope::ConstPtr stringListType() const { return m_stringListType; }
@@ -77,6 +78,9 @@ public:
     QQmlJSScope::ConstPtr forInIteratorPtr() const { return m_forInIteratorPtr; }
     QQmlJSScope::ConstPtr forOfIteratorPtr() const { return m_forOfIteratorPtr; }
 
+    QQmlJSScope::ConstPtr mathObject() const;
+    QQmlJSScope::ConstPtr consoleObject() const;
+
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
 
     bool isPrefix(const QString &name) const
@@ -92,6 +96,11 @@ public:
     {
         return m_imports.type(name).scope;
     }
+    QString nameForType(const QQmlJSScope::ConstPtr &type) const
+    {
+        return m_imports.name(originalType(type));
+    }
+
     QQmlJSScope::ConstPtr typeFromAST(QQmlJS::AST::Type *type) const;
     QQmlJSScope::ConstPtr typeForConst(QV4::ReturnedValue rv) const;
     QQmlJSRegisterContent typeForBinaryOperation(QSOperator::Op oper,
@@ -197,6 +206,7 @@ public:
     bool isIntegral(const QQmlJSScope::ConstPtr &type) const;
     bool isSignedInteger(const QQmlJSScope::ConstPtr &type) const;
     bool isUnsignedInteger(const QQmlJSScope::ConstPtr &type) const;
+    bool isNativeArrayIndex(const QQmlJSScope::ConstPtr &type) const;
 
     bool canHold(const QQmlJSScope::ConstPtr &container,
                  const QQmlJSScope::ConstPtr &contained) const;
@@ -252,6 +262,7 @@ protected:
     QQmlJSScope::ConstPtr m_uint32Type;
     QQmlJSScope::ConstPtr m_int64Type;
     QQmlJSScope::ConstPtr m_uint64Type;
+    QQmlJSScope::ConstPtr m_sizeType;
     QQmlJSScope::ConstPtr m_boolType;
     QQmlJSScope::ConstPtr m_stringType;
     QQmlJSScope::ConstPtr m_stringListType;

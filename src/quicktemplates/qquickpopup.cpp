@@ -625,6 +625,8 @@ bool QQuickPopupPrivate::prepareExitTransition()
     if (transitionState == ExitTransition && transitionManager.isRunning())
         return false;
 
+    Q_ASSERT(popupItem);
+
     // We need to cache the original scale and opacity values so we can reset it after
     // the exit transition is done so they have the original values again
     prevScale = popupItem->scale();
@@ -634,24 +636,8 @@ bool QQuickPopupPrivate::prepareExitTransition()
         // The setFocus(false) call below removes any active focus before we're
         // able to check it in finalizeExitTransition.
         if (!hadActiveFocusBeforeExitTransition) {
-            const auto hasFocusInRoot = [](QQuickItem *item) {
-                Q_ASSERT(item);
-                if (!item->window() || item->window()->isActive())
-                    return item->hasActiveFocus();
-
-                // fallback for when there's no active window
-                const auto *da = QQuickItemPrivate::get(item)->deliveryAgentPrivate();
-                if (!da || !da->rootItem)
-                    return false;
-
-                QQuickItem *focusItem = da->rootItem;
-                while (focusItem->isFocusScope() && focusItem->scopedFocusItem())
-                    focusItem = focusItem->scopedFocusItem();
-
-                return focusItem == item;
-            };
-
-            hadActiveFocusBeforeExitTransition = hasFocusInRoot(popupItem);
+            const auto *da = QQuickItemPrivate::get(popupItem)->deliveryAgentPrivate();
+            hadActiveFocusBeforeExitTransition = popupItem->hasActiveFocus() || (da && da->focusTargetItem() == popupItem);
         }
 
         if (focus)

@@ -242,11 +242,14 @@ protected:
                              const QQmlJSRegisterContent &to,
                              const QString &variable);
 
-    QString errorReturnValue();
+    void generateReturnError();
     void reject(const QString &thing);
 
     QString metaTypeFromType(const QQmlJSScope::ConstPtr &type) const;
     QString metaTypeFromName(const QQmlJSScope::ConstPtr &type) const;
+    QString compositeMetaType(const QString &elementName) const;
+    QString compositeListMetaType(const QString &elementName) const;
+
     QString contentPointer(const QQmlJSRegisterContent &content, const QString &var);
     QString contentType(const QQmlJSRegisterContent &content, const QString &var);
 
@@ -321,18 +324,6 @@ private:
     bool inlineArrayMethod(const QString &name, int base, int argc, int argv);
 
     void generate_GetLookupHelper(int index);
-
-    QQmlJSScope::ConstPtr mathObject() const
-    {
-        using namespace Qt::StringLiterals;
-        return m_typeResolver->jsGlobalObject()->property(u"Math"_s).type();
-    }
-
-    QQmlJSScope::ConstPtr consoleObject() const
-    {
-        using namespace Qt::StringLiterals;
-        return m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
-    }
 
     QString resolveValueTypeContentPointer(
             const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,

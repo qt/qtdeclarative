@@ -509,9 +509,23 @@ void TestQmlformat::testExample_data()
     QString examples = QLatin1String(SRCDIR) + "/../../../../examples/";
     QString tests = QLatin1String(SRCDIR) + "/../../../../tests/";
 
+    QStringList exampleFiles;
+    QStringList testFiles;
     QStringList files;
-    files << findFiles(QDir(examples));
-    files << findFiles(QDir(tests));
+    exampleFiles << findFiles(QDir(examples));
+    testFiles << findFiles(QDir(tests));
+
+    // Actually this test is an e2e test and not the unit test.
+    // At the moment of writing, CI lacks providing instruments for the automated tests
+    // which might be time-consuming, as for example this one.
+    // Therefore as part of QTBUG-122990 this test was copied to the /manual/e2e/qml/qmlformat
+    // however very small fraction of the test data is still preserved here for the sake of
+    // testing automatically at least a small part of the examples
+    const int nBatch = 10;
+    files << exampleFiles.mid(0, nBatch) << exampleFiles.mid(exampleFiles.size() / 2, nBatch)
+          << exampleFiles.mid(exampleFiles.size() - nBatch, nBatch);
+    files << testFiles.mid(0, nBatch) << testFiles.mid(exampleFiles.size() / 2, nBatch)
+          << testFiles.mid(exampleFiles.size() - nBatch, nBatch);
 
     for (const QString &file : files)
         QTest::newRow(qPrintable(file)) << file;

@@ -826,4 +826,42 @@ TestCase {
             compare(dial.endAngle, 300.)
         }
     }
+
+    function test_notSquareGeometry() {
+        let dial = createTemporaryObject(dialComponent, testCase)
+        verify(dial);
+        if (!dial.handle) {
+            skip("Test cannot run on styles where handle == null (macOS style)")
+        }
+        dial.from = 0
+        dial.to = 1
+        dial.live = true
+        dial.wrap = true
+        dial.startAngle = -180
+        dial.endAngle = 180
+
+        // Dial input handling always assumes that the dial is in the *center*.
+        // Instantiate a Dial with a geometries of 400x100 and then 100x400
+        // Some styles always could wrongly align the Dial background and handle in the topLeft
+        // corner. Pressing in the handle would cause the Dial to move because the dial
+        // assumes that the "Dial circle" is center aligned in its geometry.
+        for (let pass = 0; pass < 2; ++pass) {
+            if (pass === 0) {
+                dial.width = testCase.width
+                dial.height = 100
+            } else {
+                dial.width = 100
+                dial.height = testCase.height
+            }
+
+            let val = pass * 0.25
+            dial.value = val
+            // find coordinates in the middle of the handle
+            let pt2 = dial.mapFromItem(dial.handle, dial.handle.width/2, dial.handle.height/2)
+            // press the knob in the middle. It shouldn't move (except from due to rounding errors)
+            mousePress(dial, pt2.x, pt2.y)
+            fuzzyCompare(dial.value, val, 0.1)
+        }
+    }
+
 }

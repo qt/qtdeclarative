@@ -12,6 +12,7 @@
 #include <QtCore/qcbormap.h>
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
 using namespace Constants;
 using namespace Constants::MetatypesDotJson;
 using namespace Constants::MetatypesDotJson::Qml;
@@ -286,6 +287,8 @@ void QmlTypesClassDescription::collect(
             foreignTypeName = value;
         } else if (name == S_FOREIGN_IS_NAMESPACE) {
             foreignIsNamespace = (value == S_TRUE);
+        } else if (name == S_PRIMITIVE_ALIAS) {
+            primitiveAliases.append(value);
         } else if (name == S_ROOT) {
             isRootClass = (value == S_TRUE);
         } else if (name == S_HAS_CUSTOM_PARSER) {
@@ -452,6 +455,51 @@ FoundType QmlTypesClassDescription::collectRelated(
         return other;
     }
     return FoundType();
+}
+
+
+ResolvedTypeAlias::ResolvedTypeAlias(QAnyStringView alias)
+    : type(alias)
+{
+    if (type.isEmpty())
+        return;
+
+    if (type == "void") {
+        type = "";
+        return;
+    }
+
+    // This is a best effort approach and will not return correct results in the
+    // presence of typedefs.
+
+    auto handleList = [&](QLatin1StringView list) {
+        if (!startsWith(type, list) || type.back() != '>'_L1)
+            return false;
+
+        const int listSize = list.size();
+        const QAnyStringView elementType = trimmed(type.mid(listSize, type.size() - listSize - 1));
+
+        // QQmlListProperty internally constructs the pointer. Passing an explicit '*' will
+        // produce double pointers. QList is only for value types. We can't handle QLists
+        // of pointers (unless specially registered, but then they're not isList).
+        if (elementType.back() == '*'_L1)
+            return false;
+
+        isList = true;
+        type = elementType;
+        return true;
+    };
+
+    if (!handleList("QQmlListProperty<"_L1) && !handleList("QList<"_L1)) {
+        if (type.back() == '*'_L1) {
+            isPointer = true;
+            type = type.chopped(1);
+        }
+        if (startsWith(type, "const "_L1)) {
+            isConstant = true;
+            type = type.sliced(strlen("const "));
+        }
+    }
 }
 
 QT_END_NAMESPACE

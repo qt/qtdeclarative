@@ -11,7 +11,6 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include "qsginternaltextnode_p.h"
-#include "qquickimage_p_p.h"
 #include "qquicktextutil_p.h"
 
 #include <QtQuick/private/qsgtexture_p.h>
@@ -49,7 +48,7 @@ const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 const int QQuickTextPrivate::largeTextSizeThreshold = QQUICKTEXT_LARGETEXT_THRESHOLD;
 
 QQuickTextPrivate::QQuickTextPrivate()
-    : fontInfo(font), elideLayout(nullptr), textLine(nullptr), lineWidth(0)
+    : fontInfo(font), lineWidth(0)
     , color(0xFF000000), linkColor(0xFF0000FF), styleColor(0xFF000000)
     , lineCount(1), multilengthEos(-1)
     , elideMode(QQuickText::ElideNone), hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop)
@@ -82,7 +81,6 @@ QQuickTextPrivate::ExtraData::ExtraData()
     , doc(nullptr)
     , minimumPixelSize(12)
     , minimumPointSize(12)
-    , nbActiveDownloads(0)
     , maximumLineCount(INT_MAX)
     , renderTypeQuality(QQuickText::DefaultRenderTypeQuality)
     , lineHeightValid(false)
@@ -101,9 +99,6 @@ void QQuickTextPrivate::init()
 
 QQuickTextPrivate::~QQuickTextPrivate()
 {
-    delete elideLayout;
-    delete textLine; textLine = nullptr;
-
     if (extra.isAllocated()) {
         qDeleteAll(extra->imgTags);
         extra->imgTags.clear();
@@ -357,29 +352,33 @@ void QQuickText::resourceRequestFinished()
 void QQuickText::imageDownloadFinished()
 {
     Q_D(QQuickText);
+    if (!d->extra.isAllocated())
+        return;
 
-    (d->extra->nbActiveDownloads)--;
+    if (std::any_of(d->extra->imgTags.cbegin(), d->extra->imgTags.cend(),
+                    [] (auto *image) { return image->pix && image->pix->isLoading(); })) {
+        // return if we still have any active download
+        return;
+    }
 
     // when all the remote images have been downloaded,
     // if one of the sizes was not specified at parsing time
     // we use the implicit size from pixmapcache and re-layout.
 
-    if (d->extra.isAllocated() && d->extra->nbActiveDownloads == 0) {
-        bool needToUpdateLayout = false;
-        for (QQuickStyledTextImgTag *img : std::as_const(d->extra->visibleImgTags)) {
-            if (!img->size.isValid()) {
-                img->size = img->pix->implicitSize();
-                needToUpdateLayout = true;
-            }
+    bool needToUpdateLayout = false;
+    for (QQuickStyledTextImgTag *img : std::as_const(d->extra->visibleImgTags)) {
+        if (!img->size.isValid()) {
+            img->size = img->pix->implicitSize();
+            needToUpdateLayout = true;
         }
+    }
 
-        if (needToUpdateLayout) {
-            d->textHasChanged = true;
-            d->updateLayout();
-        } else {
-            d->updateType = QQuickTextPrivate::UpdatePaintNode;
-            update();
-        }
+    if (needToUpdateLayout) {
+        d->textHasChanged = true;
+        d->updateLayout();
+    } else {
+        d->updateType = QQuickTextPrivate::UpdatePaintNode;
+        update();
     }
 }
 
@@ -677,7 +676,7 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
     Q_Q(QQuickText);
 
     if (!textLine)
-        textLine = new QQuickTextLine;
+        textLine.reset(new QQuickTextLine);
     textLine->setFullLayoutTextLength(fullLayoutTextLength);
     textLine->setLine(&line);
     textLine->setY(height);
@@ -693,7 +692,7 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
     if (lineHeight() != 1.0)
         textLine->setHeight((lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : line.height() * lineHeight());
 
-    emit q->lineLaidOut(textLine);
+    emit q->lineLaidOut(textLine.get());
 
     height += textLine->height();
 }
@@ -1189,7 +1188,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
     if (elide) {
         if (!elideLayout) {
-            elideLayout = new QTextLayout;
+            elideLayout.reset(new QTextLayout);
             elideLayout->setCacheEnabled(true);
         }
         QTextEngine *engine = layout.engine();
@@ -1239,8 +1238,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         if (visibleCount == 1)
             layout.clearLayout();
     } else {
-        delete elideLayout;
-        elideLayout = nullptr;
+        elideLayout.reset();
     }
 
     QTextLine firstLine = visibleCount == 1 && elideLayout
@@ -1289,12 +1287,10 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
                 if (!image->pix) {
                     const QQmlContext *context = qmlContext(q);
                     const QUrl url = context->resolvedUrl(q->baseUrl()).resolved(image->url);
-                    image->pix = new QQuickPixmap(context->engine(), url, QRect(), image->size);
+                    image->pix.reset(new QQuickPixmap(context->engine(), url, QRect(), image->size * devicePixelRatio()));
+
                     if (image->pix->isLoading()) {
                         image->pix->connectFinished(q, SLOT(imageDownloadFinished()));
-                        if (!extra.isAllocated() || !extra->nbActiveDownloads)
-                            extra.value().nbActiveDownloads = 0;
-                        extra->nbActiveDownloads++;
                     } else if (image->pix->isReady()) {
                         if (!image->size.isValid()) {
                             image->size = image->pix->implicitSize();
@@ -1377,6 +1373,11 @@ void QQuickTextPrivate::updateDocumentText()
         extra->doc->setPlainText(text);
 #endif
     rightToLeftText = extra->doc->toPlainText().isRightToLeft();
+}
+
+qreal QQuickTextPrivate::devicePixelRatio() const
+{
+    return (window ? window->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
 }
 
 /*!
@@ -1773,9 +1774,7 @@ QQuickText::~QQuickText()
 
     By default, no variable axes are set.
 
-    \note In order to use variable axes on Windows, the application has to run with either the
-    FreeType or DirectWrite font databases. See the documentation for
-    QGuiApplication::QGuiApplication() for more information on how to select these technologies.
+    \note On Windows, variable axes are not supported if the optional GDI font backend is in use.
 
     \sa QFont::setVariableAxis()
 //! [qml-font-variable-axes]
@@ -1849,6 +1848,27 @@ QQuickText::~QQuickText()
     \sa QFont::setFeature()
 //! [qml-font-features]
 */
+
+/*!
+    \qmlproperty object QtQuick::Text::font.contextFontMerging
+    \since 6.8
+
+//! [qml-font-context-font-merging]
+    If the selected font does not contain a certain character, Qt automatically chooses a
+    similar-looking fallback font that contains the character. By default this is done on a
+    character-by-character basis.
+
+    This means that in certain uncommon cases, many different fonts may be used to represent one
+    string of text even if it's in the same script. Setting \c contextFontMerging to true will try
+    finding the fallback font that matches the largest subset of the input string instead. This
+    will be more expensive for strings where missing glyphs occur, but may give more consistent
+    results. By default, \c contextFontMerging is \c{false}.
+
+    \sa QFont::StyleStrategy
+//! [qml-font-context-font-merging]
+*/
+
+
 QFont QQuickText::font() const
 {
     Q_D(const QQuickText);
@@ -1903,14 +1923,30 @@ void QQuickText::itemChange(ItemChange change, const ItemChangeData &value)
         break;
 
     case ItemDevicePixelRatioHasChanged:
-        if (d->renderType == NativeRendering) {
-            // Native rendering optimizes for a given pixel grid, so its results must not be scaled.
-            // Text layout code respects the current device pixel ratio automatically, we only need
-            // to rerun layout after the ratio changed.
-            // Changes of implicit size should be minimal; they are hard to avoid.
-            d->implicitWidthValid = false;
-            d->implicitHeightValid = false;
-            d->updateLayout();
+        {
+            bool needUpdateLayout = false;
+            if (d->renderType == NativeRendering) {
+                // Native rendering optimizes for a given pixel grid, so its results must not be scaled.
+                // Text layout code respects the current device pixel ratio automatically, we only need
+                // to rerun layout after the ratio changed.
+                // Changes of implicit size should be minimal; they are hard to avoid.
+                d->implicitWidthValid = false;
+                d->implicitHeightValid = false;
+                needUpdateLayout = true;
+            }
+
+            if (d->extra.isAllocated()) {
+                // check if we have scalable inline images with explicit size set, which should be reloaded
+                for (QQuickStyledTextImgTag *image : std::as_const(d->extra->visibleImgTags)) {
+                    if (image->size.isValid() && QQuickPixmap::isScalableImageFormat(image->url)) {
+                        image->pix.reset();
+                        needUpdateLayout = true;
+                    }
+                }
+            }
+
+            if (needUpdateLayout)
+                d->updateLayout();
         }
         break;
 
@@ -2751,13 +2787,12 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
             node->addTextLayout(QPointF(dx, dy), &d->layout, -1, -1,0, unelidedLineCount);
 
         if (d->elideLayout)
-            node->addTextLayout(QPointF(dx, dy), d->elideLayout);
+            node->addTextLayout(QPointF(dx, dy), d->elideLayout.get());
 
         if (d->extra.isAllocated()) {
             for (QQuickStyledTextImgTag *img : std::as_const(d->extra->visibleImgTags)) {
-                QQuickPixmap *pix = img->pix;
-                if (pix && pix->isReady())
-                    node->addImage(QRectF(img->pos.x() + dx, img->pos.y() + dy, pix->width(), pix->height()), pix->image());
+                if (img->pix && img->pix->isReady())
+                    node->addImage(QRectF(img->pos.x() + dx, img->pos.y() + dy, img->size.width(), img->size.height()), img->pix->image());
             }
         }
     }
@@ -3044,7 +3079,7 @@ QString QQuickTextPrivate::anchorAt(const QPointF &mousePos) const
     if (styledText) {
         QString link = anchorAt(&layout, translatedMousePos);
         if (link.isEmpty() && elideLayout)
-            link = anchorAt(elideLayout, translatedMousePos);
+            link = anchorAt(elideLayout.get(), translatedMousePos);
         return link;
     } else if (richText && extra.isAllocated() && extra->doc) {
         translatedMousePos.rx() -= QQuickTextUtil::alignedX(layedOutTextRect.width(), availableWidth(), q->effectiveHAlign());

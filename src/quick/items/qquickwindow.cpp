@@ -956,6 +956,10 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     // The confirmExitPopup allows user to save or discard the document,
     // or to cancel the closing.
     \endcode
+
+    \note If using \l {Qt Quick Controls}, it's recommended to use
+        \l ApplicationWindow instead of Window, as it has better styling
+        support.
 */
 
 /*!
@@ -1851,6 +1855,35 @@ void QQuickWindowPrivate::clearFocusObject()
 {
     if (auto da = deliveryAgentPrivate())
         da->clearFocusObject();
+}
+
+void QQuickWindowPrivate::setFocusToTarget(FocusTarget target, Qt::FocusReason reason)
+{
+    QQuickItem *newFocusItem = nullptr;
+    if (contentItem) {
+        switch (target) {
+        case FocusTarget::First:
+            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(contentItem, true);
+            break;
+        case FocusTarget::Last:
+            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(contentItem, false);
+            break;
+        case FocusTarget::Next:
+        case FocusTarget::Prev: {
+            auto da = deliveryAgentPrivate();
+            Q_ASSERT(da);
+            QQuickItem *focusItem = da->focusTargetItem() ? da->focusTargetItem() : contentItem;
+            bool forward = (target == FocusTarget::Next);
+            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(focusItem, forward);
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    if (newFocusItem)
+        newFocusItem->setFocus(true, reason);
 }
 
 /*!

@@ -46,9 +46,31 @@ int main(int argc, char *argv[])
     parser.addOption(copyrightOption);
 
     QCommandLineOption outlineModeOption("outline-stroke-mode",
-                                         QCoreApplication::translate("main", "Stroke the outside of the filled shape instead of "
+                                         QCoreApplication::translate("main", "Stroke the outline (contour) of the filled shape instead of "
                                                                              "the original path. Also sets optimize-paths."));
     parser.addOption(outlineModeOption);
+
+    QCommandLineOption keepPathsOption("keep-external-paths",
+                                       QCoreApplication::translate("main", "Any paths to external files will be retained in the QML output. "
+                                                                           "The paths will be reformatted as relative to the output file. If "
+                                                                           "this is not enabled, copies of the file will be saved to the asset output "
+                                                                           "directory. Embedded data will still be saved to files, even if "
+                                                                           "this option is set."));
+    parser.addOption(keepPathsOption);
+
+    QCommandLineOption assetOutputDirectoryOption("asset-output-directory",
+                                                  QCoreApplication::translate("main", "If the SVG refers to external or embedded files, such as images, these "
+                                                                                      "will be copied into the same directory as the output QML file by default. "
+                                                                                      "Set the asset output directory to override the location."),
+                                                  QCoreApplication::translate("main", "directory"));
+    parser.addOption(assetOutputDirectoryOption);
+
+    QCommandLineOption assetOutputPrefixOption("asset-output-prefix",
+                                               QCoreApplication::translate("main", "If the SVG refers to external or embedded files, such as images, these "
+                                                                                   "will be copied to files with unique identifiers. By default, the files will be prefixed "
+                                                                                   "with \"svg_asset_\". Set the asset output prefix to override the prefix."),
+                                               QCoreApplication::translate("main", "prefix"));
+    parser.addOption(assetOutputPrefixOption);
 
 #ifdef ENABLE_GUI
     QCommandLineOption guiOption(QStringList() << "v" << "view",
@@ -67,6 +89,9 @@ int main(int argc, char *argv[])
 
     const auto outFileName = args.size() > 1 ? args.at(1) : QString{};
     const auto typeName = parser.value(typeNameOption);
+    const auto assetOutputDirectory = parser.value(assetOutputDirectoryOption);
+    const auto assetOutputPrefix = parser.value(assetOutputPrefixOption);
+    const bool keepPaths = parser.isSet(keepPathsOption);
     auto copyrightString = parser.value(copyrightOption);
 
     if (!copyrightString.isEmpty()) {
@@ -86,6 +111,9 @@ int main(int argc, char *argv[])
     QQuickQmlGenerator generator(inFileName, flags, outFileName);
     generator.setShapeTypeName(typeName);
     generator.setCommentString(commentString);
+    generator.setAssetFileDirectory(assetOutputDirectory);
+    generator.setAssetFilePrefix(assetOutputPrefix);
+    generator.setRetainFilePaths(keepPaths);
     generator.generate();
 
 #ifdef ENABLE_GUI

@@ -52,7 +52,8 @@ void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArg
     if (guard.setErrorFrom(QQmlLSUtils::checkNameForRename(front.domItem, newName, expressionType)))
         return;
 
-    QList<QLspSpecification::TextDocumentEdit> editsByFileForResult;
+    auto &editsByFileForResult = result.documentChanges.emplace();
+
     // The QLspSpecification::WorkspaceEdit requires the changes to be grouped by files, so
     // collect them into editsByFileUris.
     QMap<QUrl, QList<QLspSpecification::TextEdit>> editsByFileUris;
@@ -102,8 +103,6 @@ void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArg
         }
         editsByFileForResult.append(editsForCurrentFile);
     }
-
-    result.documentChanges = editsByFileForResult;
 }
 
 QT_END_NAMESPACE

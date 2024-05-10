@@ -1080,6 +1080,19 @@ QVariantMap QQuickFontValueType::features() const
     return ret;
 }
 
+bool QQuickFontValueType::contextFontMerging() const
+{
+    return (v.styleStrategy() & QFont::ContextFontMerging) != 0;
+}
+
+void QQuickFontValueType::setContextFontMerging(bool enable)
+{
+    if (enable)
+        v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() | QFont::ContextFontMerging));
+    else
+        v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() & ~QFont::ContextFontMerging));
+}
+
 QVariant QQuickColorSpaceValueType::create(const QJSValue &params)
 {
     if (!params.isObject())

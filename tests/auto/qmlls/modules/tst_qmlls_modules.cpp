@@ -3,6 +3,7 @@
 
 #include "tst_qmlls_modules.h"
 #include "QtQmlLS/private/qqmllsutils_p.h"
+#include "QtQmlLS/private/qqmlsemantictokens_p.h"
 #include <algorithm>
 #include <memory>
 #include <optional>
@@ -372,7 +373,7 @@ void tst_qmlls_modules::buildDir()
     didChange.textDocument.uri = *uri;
     didChange.textDocument.version = 2;
 
-    // change the file content to force qqmlcodemodel to recreate a new DomItem
+    // change the file content to force qqml— to recreate a new DomItem
     // if it reuses the old DomItem then it will not know about the added build directory
     TextDocumentContentChangeEvent change;
     change.range = Range{ Position{ 4, 0 }, Position{ 4, 0 } };
@@ -874,7 +875,7 @@ void tst_qmlls_modules::renameUsages_data()
     // TODO: create workspace edit for the tests
     QLspSpecification::WorkspaceEdit sumRenames{
         std::nullopt, // TODO
-        QList<TextDocumentEdit>{
+        QList<QLspSpecification::WorkspaceEdit::DocumentChange>{
                 TextDocumentEdit{
                         OptionalVersionedTextDocumentIdentifier{ { jsIdentifierUsagesUri } },
                         {
@@ -905,6 +906,38 @@ void tst_qmlls_modules::renameUsages_data()
                    "Invalid EcmaScript identifier!",
                    std::nullopt,
                };
+}
+
+void tst_qmlls_modules::compareQTextDocumentEdit(const TextDocumentEdit &a,
+                                                 const TextDocumentEdit &b)
+{
+
+    QCOMPARE(a.textDocument.uri, b.textDocument.uri);
+    QVERIFY(a.textDocument.uri.startsWith("file://"));
+    QCOMPARE(a.textDocument.version, b.textDocument.version);
+    QCOMPARE(a.edits.size(), b.edits.size());
+
+    for (qsizetype j = 0; j < a.edits.size(); ++j) {
+        std::visit(
+                [](auto &&textEdit, auto &&expectedTextEdit) {
+                    using U = std::decay_t<decltype(textEdit)>;
+                    using V = std::decay_t<decltype(expectedTextEdit)>;
+
+                    if constexpr (std::conjunction_v<std::is_same<U, V>,
+                                                     std::is_same<U, TextEdit>>) {
+                        QCOMPARE(textEdit.range.start.line, expectedTextEdit.range.start.line);
+                        QCOMPARE(textEdit.range.start.character,
+                                 expectedTextEdit.range.start.character);
+                        QCOMPARE(textEdit.range.end.line, expectedTextEdit.range.end.line);
+                        QCOMPARE(textEdit.range.end.character,
+                                 expectedTextEdit.range.end.character);
+                        QCOMPARE(textEdit.newText, expectedTextEdit.newText);
+                    } else {
+                        QFAIL("Comparison not implemented");
+                    }
+                },
+                a.edits[j], b.edits[j]);
+    }
 }
 
 void tst_qmlls_modules::renameUsages()
@@ -944,66 +977,24 @@ void tst_qmlls_modules::renameUsages()
                 QCOMPARE(result->documentChanges.has_value(),
                          expectedEdit.documentChanges.has_value());
 
-                std::visit(
-                        [&expectedError](auto &&documentChanges, auto &&expectedDocumentChanges) {
-                            if (!expectedError.message.isEmpty())
-                                QVERIFY2(false, "No expected error was thrown.");
+                auto &documentChanges = *result->documentChanges;
+                auto &expectedDocumentChanges = *expectedEdit.documentChanges;
 
-                            QCOMPARE(documentChanges.size(), expectedDocumentChanges.size());
-                            using U = std::decay_t<decltype(documentChanges)>;
-                            using V = std::decay_t<decltype(expectedDocumentChanges)>;
+                if (!expectedError.message.isEmpty())
+                    QVERIFY2(false, "No expected error was thrown.");
 
-                            if constexpr (std::conjunction_v<
-                                                  std::is_same<U, V>,
-                                                  std::is_same<U, QList<TextDocumentEdit>>>) {
-                                for (qsizetype i = 0; i < expectedDocumentChanges.size(); ++i) {
-                                    QCOMPARE(documentChanges[i].textDocument.uri,
-                                             expectedDocumentChanges[i].textDocument.uri);
-                                    QVERIFY(documentChanges[i].textDocument.uri.startsWith(
-                                            "file://"));
-                                    QCOMPARE(documentChanges[i].textDocument.version,
-                                             expectedDocumentChanges[i].textDocument.version);
-                                    QCOMPARE(documentChanges[i].edits.size(),
-                                             expectedDocumentChanges[i].edits.size());
+                QCOMPARE(documentChanges.size(), expectedDocumentChanges.size());
 
-                                    for (qsizetype j = 0; j < documentChanges[i].edits.size();
-                                         ++j) {
-                                        std::visit(
-                                                [](auto &&textEdit, auto &&expectedTextEdit) {
-                                                    using U = std::decay_t<decltype(textEdit)>;
-                                                    using V = std::decay_t<
-                                                            decltype(expectedTextEdit)>;
-
-                                                    if constexpr (std::conjunction_v<
-                                                                          std::is_same<U, V>,
-                                                                          std::is_same<U,
-                                                                                       TextEdit>>) {
-                                                        QCOMPARE(textEdit.range.start.line,
-                                                                 expectedTextEdit.range.start.line);
-                                                        QCOMPARE(textEdit.range.start.character,
-                                                                 expectedTextEdit.range.start
-                                                                         .character);
-                                                        QCOMPARE(textEdit.range.end.line,
-                                                                 expectedTextEdit.range.end.line);
-                                                        QCOMPARE(textEdit.range.end.character,
-                                                                 expectedTextEdit.range.end
-                                                                         .character);
-                                                        QCOMPARE(textEdit.newText,
-                                                                 expectedTextEdit.newText);
-                                                    } else {
-                                                        QFAIL("Comparison not implemented");
-                                                    }
-                                                },
-                                                documentChanges[i].edits[j],
-                                                expectedDocumentChanges[i].edits[j]);
-                                    }
-                                }
-
-                            } else {
-                                QFAIL("Comparison not implemented");
-                            }
-                        },
-                        result->documentChanges.value(), expectedEdit.documentChanges.value());
+                for (qsizetype i = 0; i < expectedDocumentChanges.size(); ++i) {
+                    QCOMPARE(documentChanges[i].index(), expectedDocumentChanges[i].index());
+                    if (std::holds_alternative<TextDocumentEdit>(documentChanges[i])) {
+                        compareQTextDocumentEdit(
+                                std::get<TextDocumentEdit>(documentChanges[i]),
+                                std::get<TextDocumentEdit>(expectedDocumentChanges[i]));
+                    } else {
+                        QFAIL("TODO: implement me!");
+                    }
+                }
             },
             [clean, &expectedError](const ResponseError &err) {
                 QScopeGuard cleanup(clean);
@@ -1487,12 +1478,12 @@ void tst_qmlls_modules::quickFixes()
 
         QVERIFY(codeAction.edit);
         QVERIFY(codeAction.edit->documentChanges);
-        QVERIFY(std::holds_alternative<QList<TextDocumentEdit>>(*codeAction.edit->documentChanges));
-        auto edits = std::get<QList<TextDocumentEdit>>(*codeAction.edit->documentChanges);
+        const auto &edits =  *codeAction.edit->documentChanges;
         QCOMPARE(edits.size(), 1);
-        QCOMPARE(edits.front().edits.size(), 1);
-        QVERIFY(std::holds_alternative<TextEdit>(edits.front().edits.front()));
-        auto textEdit = std::get<TextEdit>(edits.front().edits.front());
+        const auto& firstEdit = std::get<TextDocumentEdit>(edits.front());
+        QCOMPARE(firstEdit.edits.size(), 1);
+        QVERIFY(std::holds_alternative<TextEdit>(firstEdit.edits.front()));
+        auto textEdit = std::get<TextEdit>(firstEdit.edits.front());
 
         // make sure that the quick fix does something
         QCOMPARE(textEdit.newText, replacementText);
@@ -1502,6 +1493,204 @@ void tst_qmlls_modules::quickFixes()
     });
 
     QTRY_VERIFY_WITH_TIMEOUT(codeActionOk, 5000);
+}
+
+static QQmlJS::Dom::DomItem fileObject(const QString &filePath)
+{
+    QFile f(filePath);
+    DomItem file;
+    if (!f.open(QIODevice::ReadOnly))
+        return file;
+    QString code = f.readAll();
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithRecovery);
+
+    QStringList dirs = {QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath)};
+    auto envPtr = QQmlJS::Dom::DomEnvironment::create(dirs,
+            QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                    | QQmlJS::Dom::DomEnvironment::Option::NoDependencies, options);
+    envPtr->loadBuiltins();
+    envPtr->loadFile(QQmlJS::Dom::FileToLoad::fromMemory(envPtr, filePath, code),
+                        [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &, const QQmlJS::Dom::DomItem &newIt) {
+                            file = newIt.fileObject();
+                        });
+    envPtr->loadPendingDependencies();
+    return file;
+};
+
+void tst_qmlls_modules::semanticHighlightingFull_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addRow("bigfile") << u"highlighting/bigFile.qml"_s;
+}
+
+void tst_qmlls_modules::semanticHighlightingFull()
+{
+    QFETCH(QString, filePath);
+    const auto item = fileObject(testFile(filePath));
+    Highlights highlights;
+    const auto expectedData = highlights.collectTokens(item, std::nullopt);
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    QLspSpecification::SemanticTokensParams params;
+    params.textDocument.uri = *uri;
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    const auto cleanup = [didFinish]() { *didFinish = true; };
+
+    auto &&responseHandler = [&](auto res) {
+        QScopeGuard callAtExit(cleanup);
+        const auto *const result = std::get_if<QLspSpecification::SemanticTokens>(&res);
+        QVERIFY(result);
+        QList<int> data = result->data;
+        QCOMPARE(data.size(), expectedData.size());
+        QCOMPARE(data, expectedData);
+    };
+
+    auto &&errorHandler = [&](auto &error) {
+        QScopeGuard callAtExit(cleanup);
+        ProtocolBase::defaultResponseErrorHandler(error);
+        QVERIFY2(false, "error occurred on full semantic tokens");
+    };
+
+    m_protocol->requestSemanticTokens(params, std::move(responseHandler), std::move(errorHandler));
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+}
+
+void tst_qmlls_modules::semanticHighlightingRange_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<QLspSpecification::Range>("range");
+    QTest::addRow("bigfile") << u"highlighting/bigFile.qml"_s
+                             << QLspSpecification::Range{ { 6, 0 }, { 15, 0 } };
+}
+
+void tst_qmlls_modules::semanticHighlightingRange()
+{
+    QFETCH(QString, filePath);
+    QFETCH(QLspSpecification::Range, range);
+
+    const auto item = fileObject(testFile(filePath));
+    Highlights highlights;
+    const auto qmlFile = item.as<QQmlJS::Dom::QmlFile>();
+    const auto code = qmlFile->code();
+    const int startOffset = int(QQmlLSUtils::textOffsetFrom(code, range.start.line, range.end.character));
+    const int endOffset = int(QQmlLSUtils::textOffsetFrom(code, range.end.line, range.end.character));
+    const auto expectedData = highlights.collectTokens(item, HighlightsRange{startOffset, endOffset});
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    QLspSpecification::SemanticTokensRangeParams params;
+    params.textDocument.uri = *uri;
+    params.range = range;
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    const auto cleanup = [didFinish]() { *didFinish = true; };
+
+    auto &&responseHandler = [&](auto res) {
+        QScopeGuard callAtExit(cleanup);
+        const auto *const result = std::get_if<QLspSpecification::SemanticTokens>(&res);
+        QVERIFY(result);
+        QList<int> data = result->data;
+        QCOMPARE(data.size(), expectedData.size());
+        QCOMPARE(data, expectedData);
+    };
+
+    auto &&errorHandler = [&](auto &error) {
+        QScopeGuard callAtExit(cleanup);
+        ProtocolBase::defaultResponseErrorHandler(error);
+        QVERIFY2(false, "error occurred on full semantic tokens");
+    };
+
+    m_protocol->requestSemanticTokensRange(params, std::move(responseHandler),
+                                           std::move(errorHandler));
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+}
+
+void tst_qmlls_modules::semanticHighlightingDelta_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addRow("basicDelta") << u"highlighting/basic.qml"_s;
+}
+
+void tst_qmlls_modules::semanticHighlightingDelta()
+{
+    QSKIP("This test should be skipped until QTBUG-124870 is fixed");
+    QFETCH(QString, filePath);
+    QFETCH(QString, deltaFilePath);
+
+    const auto fileItem = fileObject(testFile(filePath));
+    const auto deltaFileItem = fileObject(testFile(deltaFilePath));
+    Highlights highlights;
+    auto fullDocumentSemanticTokensData = highlights.collectTokens(fileItem, std::nullopt);
+    auto editedDocumentSemanticTokensData = highlights.collectTokens(deltaFileItem, std::nullopt);
+    const auto expectedEdits = HighlightingUtils::computeDiff(fullDocumentSemanticTokensData, editedDocumentSemanticTokensData);
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    const auto deltaUri = openFile(deltaFilePath);
+    QVERIFY(deltaUri);
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    const auto cleanup = [didFinish]() { *didFinish = true; };
+
+    QLspSpecification::SemanticTokensDeltaParams params;
+    QLspSpecification::Responses::SemanticTokensDeltaResultType result;
+
+    auto &&errorHandler = [&](auto &error) {
+        QScopeGuard callAtExit(cleanup);
+        ProtocolBase::defaultResponseErrorHandler(error);
+        QVERIFY2(false, "error occurred on semantic tokens/delta");
+    };
+
+    QLspSpecification::SemanticTokensParams fullParams;
+    fullParams.textDocument.uri = *uri;
+    m_protocol->requestSemanticTokens(fullParams,
+    [&](auto res) {
+        QScopeGuard callAtExit(cleanup);
+        if (auto r = std::get_if<QLspSpecification::SemanticTokens>(&res)) {
+            params.previousResultId = r->resultId.value();
+            fullDocumentSemanticTokensData = r->data;
+        }
+    }, errorHandler);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+
+    // Change the file
+    DidChangeTextDocumentParams didChange;
+    didChange.textDocument.uri = *uri;
+    didChange.textDocument.version = 2;
+
+    TextDocumentContentChangeEvent change;
+    change.range = Range{ Position{ 8, 4 }, Position{ 8, 4 } };
+    change.text = "const Patron = 42";
+
+    didChange.contentChanges.append(change);
+    m_protocol->notifyDidChangeTextDocument(didChange);
+
+    *didFinish = false;
+    params.textDocument.uri = *uri;
+    m_protocol->requestSemanticTokensDelta(params,
+    [&](auto res) {
+        QScopeGuard callAtExit(cleanup);
+        result = res;
+    }, std::move(errorHandler));
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+
+    if (const auto *const delta = std::get_if<QLspSpecification::SemanticTokensDelta>(&result)) {
+        QVERIFY(delta);
+        const auto data = delta->edits.front().data;
+        const auto start = delta->edits.front().start;
+        const auto deleteCount = delta->edits.front().deleteCount;
+        QCOMPARE(start, expectedEdits.front().start);
+        QCOMPARE(deleteCount, expectedEdits.front().deleteCount);
+        QCOMPARE(data, expectedEdits.front().data);
+    } else {
+        const auto *const full = std::get_if<QLspSpecification::SemanticTokens>(&result);
+        QVERIFY(full);
+        QCOMPARE(full->data, expectedEdits.front().data);
+    }
 }
 
 QTEST_MAIN(tst_qmlls_modules)

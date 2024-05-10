@@ -24,13 +24,13 @@ QQmlJSStorageGeneralizer::run(Function *function, QQmlJS::DiagnosticMessage *err
 {
     m_error = error;
 
-    if (QQmlJSScope::ConstPtr &returnType = function->returnType) {
+    if (QQmlJSRegisterContent &returnType = function->returnType; returnType.isValid()) {
         if (QQmlJSScope::ConstPtr stored = m_typeResolver->genericType(
-                    returnType, QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
-            returnType = stored;
+                    returnType.storedType(), QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
+            returnType = returnType.storedIn(stored);
         } else {
             setError(QStringLiteral("Cannot store the return type %1.")
-                     .arg(returnType->internalName(), 0));
+                     .arg(returnType.storedType()->internalName()));
             return {};
         }
     }

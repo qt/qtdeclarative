@@ -27,11 +27,20 @@ public:
 
     static constexpr bool isArrayIndex(double d)
     {
-        if (d < 0 || !equals(d, d) || d > (std::numeric_limits<int>::max)()) {
-            return false;
-        }
+        return d >= 0
+                && equals(d, d)
+                && d <= (std::numeric_limits<uint>::max)()
+                && equals(static_cast<uint>(d), d);
+    }
 
-        return equals(static_cast<int>(d), d);
+    static constexpr bool isArrayIndex(qint64 i)
+    {
+        return i >= 0 && i <= (std::numeric_limits<uint>::max)();
+    }
+
+    static constexpr bool isArrayIndex(quint64 i)
+    {
+        return i <= (std::numeric_limits<uint>::max)();
     }
 
     static constexpr int toInteger(double d) {

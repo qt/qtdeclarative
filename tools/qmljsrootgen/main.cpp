@@ -142,8 +142,8 @@ static QString buildClass(const QJSManagedValue &value, QJsonArray *classes,
                 protoName = name.at(0).toUpper() + name.mid(1) + QStringLiteral("Prototype");
             }
 
-            auto it = seen->prototypes.find(protoName);
-            if (it == seen->prototypes.end()) {
+            auto it = seen->prototypes.constFind(protoName);
+            if (it == seen->prototypes.cend()) {
                 seen->prototypes.insert(protoName, prototype.toJSValue());
                 buildClass(prototype, classes, seen, protoName);
             } else if (!it->strictlyEquals(prototype.toJSValue())) {
@@ -312,8 +312,8 @@ static QString buildConstructor(const QJSManagedValue &constructor, QJsonArray *
         Q_UNREACHABLE();
     }
 
-    auto it = seen->constructors.find(name);
-    if (it == seen->constructors.end()) {
+    auto it = seen->constructors.constFind(name);
+    if (it == seen->constructors.cend()) {
         seen->constructors.insert(name, constructor.toJSValue());
         return buildClass(*constructed, classes, seen, name);
     } else if (!constructor.strictlyEquals(QJSManagedValue(*it, constructor.engine()))) {

@@ -201,6 +201,8 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 scope->setOwnParentPropertyName(readStringBinding(script));
             } else if (name == QLatin1String("exports")) {
                 exports = readExports(script);
+            } else if (name == QLatin1String("aliases")) {
+                readAliases(script, scope);
             } else if (name == QLatin1String("interfaces")) {
                 readInterfaces(script, scope);
             } else if (name == QLatin1String("exportMetaObjectRevisions")) {
@@ -247,7 +249,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only name, prototype, defaultProperty, attachedType, "
                               "valueType, exports, interfaces, isSingleton, isCreatable, "
-                              "isStructured, isComposite, hasCustomParser, "
+                              "isStructured, isComposite, hasCustomParser, aliases, "
                               "exportMetaObjectRevisions, deferredNames, and immediateNames "
                               "in script bindings, not \"%1\".")
                            .arg(name));
@@ -684,6 +686,12 @@ QList<QQmlJSScope::Export> QQmlJSTypeDescriptionReader::readExports(UiScriptBind
     }
 
     return exports;
+}
+
+void QQmlJSTypeDescriptionReader::readAliases(
+        QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope)
+{
+    scope->setAliases(readStringList(ast));
 }
 
 void QQmlJSTypeDescriptionReader::readInterfaces(UiScriptBinding *ast, const QQmlJSScope::Ptr &scope)

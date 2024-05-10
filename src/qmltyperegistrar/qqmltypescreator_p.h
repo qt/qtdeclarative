@@ -37,6 +37,7 @@ public:
     void setVersion(QTypeRevision version) { m_version = version; }
 
 private:
+    void writeComponent(const QmlTypesClassDescription &collector);
     void writeClassProperties(const QmlTypesClassDescription &collector);
     void writeType(QAnyStringView type);
     void writeProperties(const Property::Container &properties);

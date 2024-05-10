@@ -740,10 +740,10 @@ namespace QQmlPrivate
     };
 
     struct AOTCompiledFunction {
-        qintptr extraData;
-        QMetaType returnType;
-        QList<QMetaType> argumentTypes;
-        void (*functionPtr)(const AOTCompiledContext *context, void *resultPtr, void **arguments);
+        int functionIndex;
+        int numArguments;
+        void (*signature)(QV4::ExecutableCompilationUnit *unit, QMetaType *argTypes);
+        void (*functionPtr)(const AOTCompiledContext *context, void **argv);
     };
 
 #if QT_DEPRECATED_SINCE(6, 6)
@@ -1151,6 +1151,11 @@ namespace QQmlPrivate
     };
 
     Q_QML_EXPORT void qmlRegistrationWarning(QmlRegistrationWarning warning, QMetaType type);
+
+    Q_QML_EXPORT QMetaType compositeMetaType(
+            QV4::ExecutableCompilationUnit *unit, const QString &elementName);
+    Q_QML_EXPORT QMetaType compositeListMetaType(
+            QV4::ExecutableCompilationUnit *unit, const QString &elementName);
 
 } // namespace QQmlPrivate
 

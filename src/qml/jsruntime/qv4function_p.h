@@ -51,11 +51,12 @@ protected:
 
 public:
     struct JSTypedFunction {
-        QList<QQmlType> argumentTypes;
-        QQmlType returnType;
+        QVarLengthArray<QQmlType, 4> types;
     };
 
-    const CompiledData::Function *compiledFunction;
+    struct AOTCompiledFunction {
+        QVarLengthArray<QMetaType, 4> types;
+    };
 
     QV4::ExecutableCompilationUnit *executableCompilationUnit() const
     {
@@ -73,20 +74,28 @@ public:
     ReturnedValue call(const Value *thisObject, const Value *argv, int argc,
                        ExecutionContext *context);
 
-    const char *codeData;
+    const CompiledData::Function *compiledFunction = nullptr;
+    const char *codeData = nullptr;
+    JSC::MacroAssemblerCodeRef *codeRef = nullptr;
 
     typedef ReturnedValue (*JittedCode)(CppStackFrame *, ExecutionEngine *);
-    JittedCode jittedCode;
-    JSC::MacroAssemblerCodeRef *codeRef;
+    typedef void (*AotCompiledCode)(const QQmlPrivate::AOTCompiledContext *context, void **argv);
+
     union {
-        const QQmlPrivate::AOTCompiledFunction *aotCompiledFunction = nullptr;
-        const JSTypedFunction *jsTypedFunction;
+        void *noFunction = nullptr;
+        JSTypedFunction jsTypedFunction;
+        AOTCompiledFunction aotCompiledFunction;
+    };
+
+    union {
+        JittedCode jittedCode = nullptr;
+        AotCompiledCode aotCompiledCode;
     };
 
     // first nArguments names in internalClass are the actual arguments
     QV4::WriteBarrier::Pointer<Heap::InternalClass> internalClass;
     int interpreterCallCount = 0;
-    quint16 nFormals;
+    quint16 nFormals = 0;
     enum Kind : quint8 { JsUntyped, JsTyped, AotCompiled, Eval };
     Kind kind = JsUntyped;
     bool detectedInjectedParameters = false;

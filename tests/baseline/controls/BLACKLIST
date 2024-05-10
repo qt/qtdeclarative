@@ -1,0 +1,15 @@
+# animated controls, can't take stable snapshot
+[native:busyIndicator/busy_indicator]
+*
+[basic:busyIndicator/busy_indicator]
+*
+[universal:busyIndicator/busy_indicator]
+*
+[imagine:busyIndicator/busy_indicator]
+*
+[fusion:busyIndicator/busy_indicator]
+*
+[material:busyIndicator/busy_indicator]
+*
+[ios:busyIndicator/busy_indicator]
+*

@@ -55,6 +55,10 @@ private slots:
     void qmlBaseFromAnotherModule();
     void invalidTypeAnnotation();
     void constructFromString();
+    void unboundRequiredPropertyInInlineComponent();
+    void componentDefinitionInnerRequiredProperty();
+    void componentDefinitionInnerRequiredPropertyFromOutside();
+    void innerLevelRequiredProperty();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -338,6 +342,47 @@ void tst_qmltc_qprocess::constructFromString()
     QVERIFY(errors.contains(warningMessage.arg(4).arg(23).arg(u"QPointF")));
     QVERIFY(errors.contains(warningMessage.arg(5).arg(23).arg(u"QRectF")));
     QVERIFY(errors.contains(warningMessage.arg(6).arg(23).arg(u"QSizeF")));
+}
+
+void tst_qmltc_qprocess::unboundRequiredPropertyInInlineComponent()
+{
+    {
+        const auto errors = runQmltc(u"unboundRequiredPropertyInInlineComponent.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"unboundRequiredPropertyInInlineComponent.qml:9:5: Component is missing required property foo from InlineComponent [required]"_s
+        ));
+    }
+}
+
+void tst_qmltc_qprocess::componentDefinitionInnerRequiredProperty()
+{
+    {
+        const auto errors = runQmltc(u"componentDefinitionInnerRequiredProperty.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"componentDefinitionInnerRequiredProperty.qml:11:13: Component is missing required property bar from here [required]"
+        ));
+    }
+}
+
+void tst_qmltc_qprocess::componentDefinitionInnerRequiredPropertyFromOutside()
+{
+    {
+        const auto errors =
+                runQmltc(u"componentDefinitionInnerRequiredPropertyFromOutside.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"componentDefinitionInnerRequiredPropertyFromOutside.qml:15:13: Component is missing required property requiredProperty from TypeWithRequiredProperty [required]"
+        ));
+    }
+}
+
+void tst_qmltc_qprocess::innerLevelRequiredProperty()
+{
+    {
+        const auto errors = runQmltc(u"innerLevelRequiredProperty.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"innerLevelRequiredProperty.qml:7:5: Component is missing required property foo from here [required]"
+        ));
+    }
 }
 
 QTEST_MAIN(tst_qmltc_qprocess)

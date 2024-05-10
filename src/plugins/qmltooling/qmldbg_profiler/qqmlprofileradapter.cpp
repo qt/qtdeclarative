@@ -62,8 +62,8 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData &d,
             if (d.locationId != 0)
                 ds << static_cast<qint64>(d.locationId);
         } else {
-            auto i = locations.find(d.locationId);
-            if (i != locations.end()) {
+            auto i = locations.constFind(d.locationId);
+            if (i != locations.cend()) {
                 ds << d.time << decodedMessageType << static_cast<quint32>(d.detailType);
                 ds << (i->url.isEmpty() ? i->location.sourceFile : i->url.toString())
                    << static_cast<qint32>(i->location.line)

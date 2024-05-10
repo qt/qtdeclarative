@@ -460,29 +460,10 @@ bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl, Q
             QV4::CompiledData::SaveableUnitPointer(unit->unitData()), empty, &error->message);
 }
 
-static const char *wrapCallCode = R"(
-template <typename Binding>
-void wrapCall(const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, void **argumentsPtr, Binding &&binding)
-{
-    using return_type = std::invoke_result_t<Binding, const QQmlPrivate::AOTCompiledContext *, void **>;
-    if constexpr (std::is_same_v<return_type, void>) {
-       Q_UNUSED(dataPtr)
-       binding(aotContext, argumentsPtr);
-    } else {
-        if (dataPtr) {
-           *static_cast<return_type *>(dataPtr) = binding(aotContext, argumentsPtr);
-        } else {
-           binding(aotContext, argumentsPtr);
-        }
-    }
-}
-)";
-
 static const char *funcHeaderCode = R"(
-    [](const QQmlPrivate::AOTCompiledContext *context, void *data, void **argv) {
-        wrapCall(context, data, argv, [](const QQmlPrivate::AOTCompiledContext *aotContext, void **argumentsPtr) {
+    [](const QQmlPrivate::AOTCompiledContext *aotContext, void **argv) {
 Q_UNUSED(aotContext)
-Q_UNUSED(argumentsPtr)
+Q_UNUSED(argv)
 )";
 
 bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFileName, const QV4::CompiledData::SaveableUnitPointer &unit, const QQmlJSAotFunctionMap &aotFunctions, QString *errorString)
@@ -579,13 +560,12 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
     if (aotFunctions.size() <= 1) {
         // FileScopeCodeIndex is always there, but it may be the only one.
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];\n"
-                 "extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), {}, nullptr } };");
+                 "extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, 0, nullptr, nullptr } };\n");
     } else {
-        writeStr(wrapCallCode);
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];\n"
                  "extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = {\n");
 
-        QString footer = QStringLiteral("});}\n");
+        QString footer = QStringLiteral("}\n");
 
         for (QQmlJSAotFunctionMap::ConstIterator func = aotFunctions.constBegin(),
              end = aotFunctions.constEnd();
@@ -594,25 +574,18 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
             if (func.key() == FileScopeCodeIndex)
                 continue;
 
-            QString function = QString::fromUtf8(funcHeaderCode) + func.value().code + footer;
+            const QString function = QString::fromUtf8(funcHeaderCode) + func.value().code + footer;
 
-            QString argumentTypes = func.value().argumentTypes.join(
-                        QStringLiteral(">(), QMetaType::fromType<"));
-            if (!argumentTypes.isEmpty()) {
-                argumentTypes = QStringLiteral("QMetaType::fromType<")
-                        + argumentTypes + QStringLiteral(">()");
-            }
-
-            writeStr(QStringLiteral("{ %1, QMetaType::fromType<%2>(), { %3 }, %4 },")
+            writeStr(QStringLiteral("{ %1, %2, [](QV4::ExecutableCompilationUnit *unit, "
+                                    "QMetaType *argTypes) {\n%3}, %4 },")
                      .arg(func.key())
-                     .arg(func.value().returnType)
-                     .arg(argumentTypes)
-                     .arg(function)
+                     .arg(func->numArguments)
+                     .arg(func->signature, function)
                      .toUtf8().constData());
         }
 
         // Conclude the list with a nullptr
-        writeStr("{ 0, QMetaType::fromType<void>(), {}, nullptr }");
+        writeStr("{ 0, 0, nullptr, nullptr }");
         writeStr("};\n");
     }
 

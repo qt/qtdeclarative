@@ -243,6 +243,21 @@ private:
     void recordEqualsType(int lhs);
     void recordCompareType(int lhs);
 
+    // helper functions to deal with special cases in generate_ methods
+    void generate_CallProperty_SCMath(int base, int arcg, int argv);
+    void generate_CallProperty_SCconsole(int base, int argc, int argv);
+    void generate_Construct_SCDate(int argc, int argv);
+    void generate_Construct_SCArray(int argc, int argv);
+
+    // helper functions to perform QQmlSA checks
+    void generate_ret_SAcheck();
+    void generate_LoadQmlContextPropertyLookup_SAcheck(const QString &name);
+    void generate_StoreNameCommon_SAcheck(const QQmlJSRegisterContent &in, const QString &name);
+    void propagatePropertyLookup_SAcheck(const QString &propertyName);
+    void generate_StoreProperty_SAcheck(const QString propertyName, const QQmlJSRegisterContent &callBase);
+    void generate_callProperty_SAcheck(const QString propertyName, const QQmlJSScope::ConstPtr &baseType);
+
+
     QQmlJSRegisterContent m_returnType;
     QQmlSA::PassManager *m_passManager = nullptr;
     QQmlJSScope::ConstPtr m_attachedContext;

@@ -16,6 +16,7 @@
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4qmetaobjectwrapper_p.h>
 #include <private/qv4stackframe_p.h>
 #include <private/qv4module_p.h>
 #include <private/qv4symbol_p.h>

@@ -23,7 +23,7 @@ public:
     void run(const QQmlSA::Element &element) override
     {
         auto property = element.property(u"radius"_s);
-        if (!property.isValid() || element.property(u"radius"_s).typeName() != u"double") {
+        if (!property.isValid() || element.property(u"radius"_s).typeName() != u"qreal") {
             emitWarning(u"Failed to verify radius property", plugin, element.sourceLocation());
             return;
         }

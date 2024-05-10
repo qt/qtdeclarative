@@ -344,6 +344,7 @@ void tst_QQuickFolderDialogImpl::changeFolderViaTextEdit()
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     const auto editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
@@ -356,6 +357,7 @@ void tst_QQuickFolderDialogImpl::changeFolderViaTextEdit()
     // Enter the path to the folder in the text edit.
     enterText(dialogHelper.window(), tempSubDir2.path());
     QCOMPARE(breadcrumbBar->textField()->text(), tempSubDir2.path());
+#endif
 
     // Hit enter to accept.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
@@ -417,9 +419,11 @@ void tst_QQuickFolderDialogImpl::cancelDialogWhileTextEditHasFocus()
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     const auto editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+#endif
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
     QVERIFY(breadcrumbBar);
     QVERIFY(breadcrumbBar->textField()->isVisible());
@@ -471,6 +475,7 @@ void tst_QQuickFolderDialogImpl::goUp()
     QTRY_VERIFY(findViewDelegateItem(folderDialogListView, 0, subDirDelegate));
     QCOMPARE(subDirDelegate->isHighlighted(), true);
 
+#if QT_CONFIG(shortcut)
     // Go up a directory via the keyboard shortcut.
     const auto goUpKeySequence = QKeySequence(Qt::ALT | Qt::Key_Up);
     QTest::keySequence(dialogHelper.window(), goUpKeySequence);
@@ -478,6 +483,7 @@ void tst_QQuickFolderDialogImpl::goUp()
     QVERIFY(tempParentDir.cdUp());
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempParentDir.path()));
     COMPARE_URL(dialogHelper.dialog->selectedFolder(), QUrl::fromLocalFile(tempDir.path()));
+#endif
 }
 
 void tst_QQuickFolderDialogImpl::goUpWhileTextEditHasFocus()
@@ -610,27 +616,33 @@ void tst_QQuickFolderDialogImpl::keyAndShortcutHandling()
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     const auto editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+#endif
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
     QVERIFY(breadcrumbBar);
     QVERIFY(breadcrumbBar->textField()->isVisible());
     QCOMPARE(breadcrumbBar->textField()->text(), dialogHelper.dialog->currentFolder().toLocalFile());
     QCOMPARE(breadcrumbBar->textField()->selectedText(), breadcrumbBar->textField()->text());
 
+#if QT_CONFIG(shortcut)
     // Ctrl+L shouldn't hide it.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
     QVERIFY(breadcrumbBar->textField()->isVisible());
+#endif
 
     // Cancel it with the escape key.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Escape);
     QVERIFY(!breadcrumbBar->textField()->isVisible());
     QVERIFY(dialogHelper.dialog->isVisible());
 
+#if QT_CONFIG(shortcut)
     // Make it visible.
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
     QVERIFY(breadcrumbBar->textField()->isVisible());
+#endif
 
     // Cancel it with the escape key again.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Escape);
@@ -795,11 +807,13 @@ void tst_QQuickFolderDialogImpl::itemsDisabledWhenNecessary()
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempDir.path()));
     COMPARE_URL(dialogHelper.quickDialog->currentFolder(), QUrl::fromLocalFile(tempDir.path()));
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L. The Open button should now be disabled.
     const auto editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
     QTest::keySequence(dialogHelper.window(), editPathKeySequence);
     QVERIFY(breadcrumbBar->textField()->isVisible());
     QCOMPARE(openButton->isEnabled(), false);
+#endif
 
     // Hide it with the escape key. The Open button should now be enabled.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Escape);

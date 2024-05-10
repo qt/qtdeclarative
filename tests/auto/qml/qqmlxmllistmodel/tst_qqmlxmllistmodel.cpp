@@ -321,14 +321,12 @@ void tst_QQmlXmlListModel::headers()
     QTRY_COMPARE_WITH_TIMEOUT(qvariant_cast<QQmlXmlListModel::Status>(model->property("status")),
                               QQmlXmlListModel::Error, 10000);
 
-    QVariantMap expectedHeaders;
-    expectedHeaders["Accept"] = "application/xml,*/*";
+    QLatin1String expectedAcceptHeader = "application/xml,*/*"_L1;
 
-    QCOMPARE(factory.lastSentHeaders.size(), expectedHeaders.size());
-    for (auto it = expectedHeaders.cbegin(), end = expectedHeaders.cend(); it != end; ++it) {
-        QVERIFY(factory.lastSentHeaders.contains(it.key()));
-        QCOMPARE(factory.lastSentHeaders[it.key()].toString(), it.value().toString());
-    }
+    QCOMPARE(factory.lastSentHeaders.size(), 1);
+    QVariant acceptHeader = factory.lastSentHeaders["accept"];
+    QVERIFY(acceptHeader.isValid());
+    QCOMPARE(acceptHeader.toString(), expectedAcceptHeader);
 }
 
 void tst_QQmlXmlListModel::source()

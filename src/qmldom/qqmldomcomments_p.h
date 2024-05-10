@@ -38,7 +38,7 @@ class QMLDOM_EXPORT CommentInfo
 {
     Q_DECLARE_TR_FUNCTIONS(CommentInfo)
 public:
-    CommentInfo(QStringView);
+    CommentInfo(QStringView, QQmlJS::SourceLocation loc);
 
     QStringView preWhitespace() const { return rawComment.mid(0, commentBegin); }
 
@@ -54,6 +54,10 @@ public:
         return rawComment.mid(commentEnd, rawComment.size() - commentEnd);
     }
 
+    // Comment source location populated during lexing doesn't include start strings // or /*
+    // Returns the location starting from // or /*
+    QQmlJS::SourceLocation sourceLocation() const { return commentLocation; }
+
     quint32 commentBegin = 0;
     quint32 commentEnd = 0;
     quint32 commentContentBegin = 0;
@@ -65,6 +69,7 @@ public:
     int nContentNewlines = 0;
     QStringView rawComment;
     QStringList warnings;
+    QQmlJS::SourceLocation commentLocation;
 };
 
 class QMLDOM_EXPORT Comment
@@ -90,7 +95,7 @@ public:
     int newlinesBefore() const { return m_newlinesBefore; }
     void setNewlinesBefore(int n) { m_newlinesBefore = n; }
     QStringView rawComment() const { return m_comment; }
-    CommentInfo info() const { return CommentInfo(m_comment); }
+    CommentInfo info() const { return CommentInfo(m_comment, m_location); }
     void write(OutWriter &lw, SourceLocation *commentLocation = nullptr) const;
 
     CommentType type() const { return m_type; }
@@ -100,8 +105,6 @@ public:
         return c1.m_newlinesBefore == c2.m_newlinesBefore && c1.m_comment == c2.m_comment;
     }
     friend bool operator!=(const Comment &c1, const Comment &c2) { return !(c1 == c2); }
-
-    QQmlJS::SourceLocation sourceLocation() const { return m_location; };
 
 private:
     QStringView m_comment;

@@ -478,10 +478,12 @@ void tst_qqmllocale::toString_data()
     QTest::newRow(qPrintable(functionCallScript)) << "ar" << functionCallScript << "١٦" << QString();
 
     functionCallScript = "locale.toString(new Date(2022, 7, 16), Locale.ShortFormat)";
-    QTest::newRow(qPrintable(functionCallScript)) << "en_AU" << functionCallScript << "16/8/22 12:00 AM" << QString();
+    QTest::newRow(qPrintable(functionCallScript))
+        << "en_AU" << functionCallScript << "16/8/22 12:00 am" << QString();
 
     functionCallScript = "locale.toString(new Date(2022, 7, 16, 1, 23, 4), Locale.ShortFormat)";
-    QTest::newRow(qPrintable(functionCallScript)) << "en_AU" << functionCallScript << "16/8/22 1:23 AM" << QString();
+    QTest::newRow(qPrintable(functionCallScript))
+        << "en_AU" << functionCallScript << "16/8/22 1:23 am" << QString();
 }
 
 void tst_qqmllocale::toString()

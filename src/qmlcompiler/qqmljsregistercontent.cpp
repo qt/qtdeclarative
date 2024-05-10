@@ -13,7 +13,6 @@ QString QQmlJSRegisterContent::descriptiveName() const
     if (m_storedType.isNull())
         return u"(invalid type)"_s;
 
-    QString result = m_storedType->internalName() + u" of "_s;
     const auto scope = [this]() -> QString {
         if (m_scope.isNull())
             return u"(invalid type)::"_s;
@@ -25,36 +24,46 @@ QString QQmlJSRegisterContent::descriptiveName() const
                 + u"::"_s;
     };
 
+    QString result;
     switch (m_content.index()) {
-    case Type:
-        return result
-                + std::get<std::pair<QQmlJSScope::ConstPtr, int>>(m_content).first->internalName();
+    case Type: {
+        auto contained = std::get<std::pair<QQmlJSScope::ConstPtr, int>>(m_content).first;
+        result += contained->internalName();
+        if (m_storedType->internalName() != contained->internalName())
+            result += u" stored as "_s + m_storedType->internalName();
+        return result;
+    }
     case Property: {
         const QQmlJSMetaProperty prop = std::get<PropertyLookup>(m_content).property;
-        return result + scope() + prop.propertyName() + u" with type "_s + prop.typeName();
+        result += scope() + prop.propertyName() + u" with type "_s + prop.typeName();
+        if (m_storedType->internalName() != prop.typeName())
+            result += u" (stored as "_s + m_storedType->internalName() + u")";
+        return result;
     }
     case Method: {
         const auto methods = std::get<QList<QQmlJSMetaMethod>>(m_content);
         if (methods.isEmpty())
-            return result + scope() + u"(unknown method)"_s;
+            result = scope() + u"(unknown method)"_s;
         else
-            return result + scope() + methods[0].methodName() + u"(...)"_s;
+            result = scope() + methods[0].methodName() + u"(...)"_s;
+        return result + u" (stored as "_s + m_storedType->internalName() + u")";
     }
     case Enum: {
         const auto e = std::get<std::pair<QQmlJSMetaEnum, QString>>(m_content);
         if (e.second.isEmpty())
-            return result + scope() + e.first.name();
+            result = scope() + e.first.name();
         else
-            return result + scope() + e.first.name() + u"::"_s + e.second;
+            result = scope() + e.first.name() + u"::"_s + e.second;
+        return result + u" (stored as "_s + m_storedType->internalName() + u")";
     }
     case ImportNamespace: {
         return u"import namespace %1"_s.arg(std::get<uint>(m_content));
     }
     case Conversion: {
-        return u"conversion to %1"_s.arg(
-                    std::get<ConvertedTypes>(m_content).result->internalName());
+        return u"conversion to %1"_s.arg(std::get<ConvertedTypes>(m_content).result->internalName());
     }
     }
+
     Q_UNREACHABLE_RETURN(result + u"wat?"_s);
 }
 

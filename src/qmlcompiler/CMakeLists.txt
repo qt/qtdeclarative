@@ -44,6 +44,8 @@ qt_internal_add_module(QmlCompiler
         qqmlsa_p.h qqmlsa.h qqmlsa.cpp
         qqmlsaconstants.h
         qqmlsasourcelocation.h qqmlsasourcelocation.cpp qqmlsasourcelocation_p.h
+    NO_UNITY_BUILD_SOURCES
+        qqmljsoptimizations.cpp
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Qml

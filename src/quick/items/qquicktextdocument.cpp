@@ -326,13 +326,15 @@ void QQuickTextDocumentPrivate::load()
             setStatus(QQuickTextDocument::Status::Loading, {});
             QByteArray data = file.readAll();
             doc->setBaseUrl(resolvedUrl.adjusted(QUrl::RemoveFilename));
+#if QT_CONFIG(textmarkdownreader) || QT_CONFIG(texthtmlparser)
             const bool plainText = editor->textFormat() == QQuickTextEdit::PlainText;
+#endif
 #if QT_CONFIG(textmarkdownreader)
             if (!plainText && isMarkdown) {
                 doc->setMarkdown(QString::fromUtf8(data));
             } else
 #endif
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
             if (!plainText && isHtml) {
                 // If a user loads an HTML file, remember the encoding.
                 // If the user then calls save() later, the same encoding will be used.
@@ -411,7 +413,7 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
         raw = doc->toMarkdown().toUtf8();
         break;
 #endif
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
     case Qt::RichText:
         if (sameUrl && encoding) {
             QStringEncoder enc(*encoding);

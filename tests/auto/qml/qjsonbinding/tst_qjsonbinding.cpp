@@ -145,9 +145,11 @@ void tst_qjsonbinding::cppJsConversion()
 
     {
         QJSValue jsValue = eng.toScriptValue(jsonValue);
+#if QT_DEPRECATED_SINCE(6, 9)
         QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
         QVERIFY(!jsValue.isVariant());
         QT_WARNING_POP
+#endif
         switch (jsonValue.type()) {
         case QJsonValue::Null:
             QVERIFY(jsValue.isNull());

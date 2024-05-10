@@ -89,6 +89,7 @@ private slots:
     void enumProblems();
     void enumScope();
     void enums();
+    void enforceSignature();
     void enumsInOtherObject();
     void equalityQObjects();
     void equalityQUrl();
@@ -1652,6 +1653,23 @@ void tst_QmlCppCodegen::enums()
 
 }
 
+void tst_QmlCppCodegen::enforceSignature()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enforceSignature.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    const QVariant a = object->property("a");
+    QCOMPARE(a.metaType(), QMetaType::fromType<QObject *>());
+    QCOMPARE(a.value<QObject *>(), nullptr);
+
+    const QVariant b = object->property("b");
+    QCOMPARE(b.metaType(), QMetaType::fromType<QObject *>());
+    QCOMPARE(b.value<QObject *>(), nullptr);
+}
+
 void tst_QmlCppCodegen::enumsInOtherObject()
 {
     QQmlEngine engine;
@@ -1865,9 +1883,8 @@ void tst_QmlCppCodegen::failures()
 {
     const auto &aotFailure
             = QmlCacheGeneratedCode::_qt_qml_TestTypes_failures_qml::aotBuiltFunctions[0];
-    QVERIFY(aotFailure.argumentTypes.isEmpty());
     QVERIFY(!aotFailure.functionPtr);
-    QCOMPARE(aotFailure.extraData, 0);
+    QCOMPARE(aotFailure.functionIndex, 0);
 }
 
 void tst_QmlCppCodegen::fallbackLookups()

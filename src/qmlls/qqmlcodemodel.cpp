@@ -320,6 +320,18 @@ OpenDocument QQmlCodeModel::openDocumentByUrl(const QByteArray &url)
     return m_openDocuments.value(url);
 }
 
+RegisteredSemanticTokens &QQmlCodeModel::registeredTokens()
+{
+    QMutexLocker l(&m_mutex);
+    return m_tokens;
+}
+
+const RegisteredSemanticTokens &QQmlCodeModel::registeredTokens() const
+{
+    QMutexLocker l(&m_mutex);
+    return m_tokens;
+}
+
 void QQmlCodeModel::indexNeedsUpdate()
 {
     const int maxIndexThreads = 1;

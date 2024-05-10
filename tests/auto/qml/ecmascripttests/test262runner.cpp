@@ -222,10 +222,20 @@ void Test262Runner::createProcesses()
             }
         });
 
-        QObject::connect(&p, &QProcess::finished, this, [&, i](int, QProcess::ExitStatus status) {
+        QObject::connect(&p, &QProcess::finished, this,
+                         [this, processCount, i](int, QProcess::ExitStatus status) {
             if (status != QProcess::NormalExit) {
-                qDebug() << QStringLiteral("Process %1 of %2 exited with a non-normal status")
-                                    .arg(i).arg(processCount - 1);
+                TestData &testData(currentTasks[i]);
+
+                auto &result = testData.stillNeedStrictRun
+                        ? testData.sloppyResult
+                        : testData.strictResult;
+                result = TestCase::Result(
+                        TestCase::Crashes,
+                        QStringLiteral("Process %1 of %2 exited with a non-normal status")
+                                .arg(i).arg(processCount - 1));
+
+                addResult(testData);
             }
 
             --runningCount;

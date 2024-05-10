@@ -57,8 +57,10 @@ private slots:
     void alpha();
     void tint();
     void color();
+#if QT_CONFIG(desktopservices)
     void openUrlExternally();
     void openUrlExternally_pragmaLibrary();
+#endif
     void md5();
     void createComponent();
     void createComponent_pragmaLibrary();
@@ -613,6 +615,7 @@ public slots:
     void noteCall(const QUrl &url) { called++; last = url; }
 };
 
+#if QT_CONFIG(desktopservices)
 void tst_qqmlqt::openUrlExternally()
 {
     MyUrlHandler handler;
@@ -659,6 +662,7 @@ void tst_qqmlqt::openUrlExternally_pragmaLibrary()
     QCOMPARE(handler.called,2);
     QCOMPARE(handler.last, htmlTestFile);
 }
+#endif
 
 void tst_qqmlqt::md5()
 {

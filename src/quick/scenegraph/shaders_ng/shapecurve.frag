@@ -26,14 +26,6 @@ layout(std140, binding = 0) uniform buf {
     float debug;
     float reserved3;
 
-#if defined(STROKE)
-    vec4 strokeColor;
-    float strokeWidth;
-    float reserved4;
-    float reserved5;
-    float reserved6;
-#endif
-
 #if defined(LINEARGRADIENT)
     vec2 gradientStart;
     vec2 gradientEnd;
@@ -142,27 +134,9 @@ void main()
     float debugB = isCurve * min(1.0, 1.0 - qt_TexCoord.z * -1.0) + debugG;
     vec3 debugColor = vec3(debugR, debugG, debugB);
 
-#if defined(STROKE)
-    float distance = (f / df); // distance from centre of fragment to line
-
-    float halfStrokeWidth = ubuf.strokeWidth / 2.0;
-
-    // calculate stroke
-    float strokeCoverage = 1.0 - clamp(0.5 + abs(distance) - halfStrokeWidth, 0.0, 1.0);
-    vec4 stroke = ubuf.strokeColor * strokeCoverage;
-
-    float fillCoverage = clamp(0.5 + f / df, 0.0, 1.0);
-    vec4 fill = baseColor() * fillCoverage;
-
-    vec4 combined = fill * (1.0 - stroke.a) +  stroke * stroke.a;
-
-    // finally mix in debug
-    fragColor = mix(combined, vec4(debugColor, 1.0), ubuf.debug) * ubuf.opacity;
-#else
     // Special case: mask out concave curve in "negative space".
     int specialCaseMask = 1 - int(qt_TexCoord.w != 0.0) * (int(qt_TexCoord.x < 0.0) +  int(qt_TexCoord.x > 1.0));
     float fillCoverage = clamp(0.5 + f / df, 0.0, 1.0) * float(specialCaseMask);
 
     fragColor = mix(baseColor() * fillCoverage, vec4(debugColor, 1.0), ubuf.debug) * ubuf.opacity;
-#endif
 }

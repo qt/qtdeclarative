@@ -35,7 +35,15 @@ QQuickWindowQmlImpl::QQuickWindowQmlImpl(QQuickWindowQmlImplPrivate &dd, QWindow
     : QQuickWindow(dd, parent)
 {
     connect(this, &QWindow::visibleChanged, this, &QQuickWindowQmlImpl::visibleChanged);
-    connect(this, &QWindow::visibilityChanged, this, &QQuickWindowQmlImpl::visibilityChanged);
+    connect(this, &QWindow::visibilityChanged, this, [&]{
+        Q_D(QQuickWindowQmlImpl);
+        // Update the window's actual visibility and turn off visibilityExplicitlySet,
+        // so that future applyWindowVisibility() calls do not apply both window state
+        // and visible state, unless setVisibility() is called again by the user.
+        d->visibility = QWindow::visibility();
+        d->visibilityExplicitlySet = false;
+        emit QQuickWindowQmlImpl::visibilityChanged(d->visibility);
+    });
     connect(this, &QWindow::screenChanged, this, &QQuickWindowQmlImpl::screenChanged);
 
     // We shadow the x and y properties, so that we can re-map them in case
@@ -110,6 +118,7 @@ void QQuickWindowQmlImpl::setVisibility(Visibility visibility)
 {
     Q_D(QQuickWindowQmlImpl);
     d->visibility = visibility;
+    d->visibilityExplicitlySet = true;
     if (d->componentComplete)
         applyWindowVisibility();
 }
@@ -190,8 +199,8 @@ void QQuickWindowQmlImpl::applyWindowVisibility()
 
     Q_ASSERT(d->componentComplete);
 
-    const bool visible = d->visibility == AutomaticVisibility
-        ? d->visible : d->visibility != Hidden;
+    const bool visible = d->visibilityExplicitlySet
+        ? d->visibility != Hidden : d->visible;
 
     qCDebug(lcQuickWindow) << "Applying visible" << visible << "for" << this;
 
@@ -234,20 +243,30 @@ void QQuickWindowQmlImpl::applyWindowVisibility()
         }
     }
 
-    if (d->visibleExplicitlySet && ((d->visibility == Hidden && d->visible) ||
-                                    (d->visibility > AutomaticVisibility && !d->visible))) {
+    if (d->visibleExplicitlySet && d->visibilityExplicitlySet &&
+        ((d->visibility == Hidden && d->visible) ||
+         (d->visibility > AutomaticVisibility && !d->visible))) {
         // FIXME: Should we bail out in this case?
         qmlWarning(this) << "Conflicting properties 'visible' and 'visibility'";
     }
 
     if (d->visibility == AutomaticVisibility) {
+        // We're either showing for the first time, with the default
+        // visibility of AutomaticVisibility, or the user has called
+        // setVisibility with AutomaticVisibility at some point, so
+        // apply both window state and visible.
         if (QWindow::parent() || visualParent())
             setWindowState(Qt::WindowNoState);
         else
             setWindowState(QGuiApplicationPrivate::platformIntegration()->defaultWindowState(flags()));
         QQuickWindow::setVisible(d->visible);
-    } else {
+    } else if (d->visibilityExplicitlySet) {
+        // We're not AutomaticVisibility, but the user has requested
+        // an explicit visibility, so apply both window state and visible.
         QQuickWindow::setVisibility(d->visibility);
+    } else {
+        // Our window state should be up to date, so only apply visible
+        QQuickWindow::setVisible(d->visible);
     }
 }
 

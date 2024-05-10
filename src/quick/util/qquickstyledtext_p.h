@@ -19,6 +19,7 @@
 #include <QPointF>
 #include <QList>
 #include <QUrl>
+#include <QScopedPointer>
 #include <QtQuick/private/qquickpixmap_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -31,9 +32,8 @@ class QQmlContext;
 class Q_AUTOTEST_EXPORT QQuickStyledTextImgTag
 {
 public:
-    QQuickStyledTextImgTag() { }
-
-    ~QQuickStyledTextImgTag() { delete pix; }
+    QQuickStyledTextImgTag() = default;
+    ~QQuickStyledTextImgTag() = default;
 
     enum Align {
         Bottom,
@@ -47,7 +47,7 @@ public:
     int position = 0;
     qreal offset = 0.0; // this offset allows us to compensate for flooring reserved space
     Align align = QQuickStyledTextImgTag::Bottom;
-    QQuickPixmap *pix = nullptr;
+    QScopedPointer<QQuickPixmap> pix;
 };
 
 class Q_AUTOTEST_EXPORT QQuickStyledText

@@ -16,7 +16,6 @@
 #include <QtCore/QDir>
 #include <QtCore/QScopeGuard>
 #include <QtCore/QFileInfo>
-#include <QtCore/QRegularExpression>
 #include <QtCore/QRegularExpressionMatch>
 
 #include <algorithm>
@@ -604,9 +603,11 @@ bool QmlDirectory::iterateDirectSubpaths(const DomItem &self, DirectVisitor visi
 
 bool QmlDirectory::addQmlFilePath(const QString &relativePath)
 {
-    QRegularExpression qmlFileRe(QRegularExpression::anchoredPattern(
-            uR"((?<compName>[a-zA-z0-9_]+)\.(?:qml|qmlannotation))"));
-    QRegularExpressionMatch m = qmlFileRe.match(relativePath);
+    static const QRegularExpression qmlFileRegularExpression{
+        QRegularExpression::anchoredPattern(
+                uR"((?<compName>[a-zA-z0-9_]+)\.(?:qml|qmlannotation|ui\.qml))")
+    };
+    QRegularExpressionMatch m = qmlFileRegularExpression.match(relativePath);
     if (m.hasMatch() && !m_qmlFiles.values(m.captured(u"compName")).contains(relativePath)) {
         m_qmlFiles.insert(m.captured(u"compName"), relativePath);
         Export e;

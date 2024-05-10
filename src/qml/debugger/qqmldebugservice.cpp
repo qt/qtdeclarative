@@ -103,8 +103,8 @@ Q_GLOBAL_STATIC(ObjectReferenceHash, objectReferenceHash)
 
 void ObjectReferenceHash::remove(QObject *obj)
 {
-    QHash<QObject *, int>::Iterator iter = objects.find(obj);
-    if (iter != objects.end()) {
+    const auto iter = objects.constFind(obj);
+    if (iter != objects.cend()) {
         ids.remove(iter.value());
         objects.erase(iter);
     }
@@ -120,9 +120,9 @@ int QQmlDebugService::idForObject(QObject *object)
         return -1;
 
     ObjectReferenceHash *hash = objectReferenceHash();
-    QHash<QObject *, int>::Iterator iter = hash->objects.find(object);
+    auto iter = hash->objects.constFind(object);
 
-    if (iter == hash->objects.end()) {
+    if (iter == hash->objects.cend()) {
         int id = hash->nextId++;
         hash->ids.insert(id, object);
         iter = hash->objects.insert(object, id);
