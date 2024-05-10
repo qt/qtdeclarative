@@ -227,7 +227,6 @@ private:
 
     void simulateKey(QWindow *, int key, Qt::KeyboardModifiers modifiers = {});
     bool isMainFontFixed();
-    static bool hasWindowActivation();
 
     QStringList standard;
     QStringList richText;
@@ -3389,11 +3388,6 @@ bool tst_qquicktextedit::isMainFontFixed()
                            << QFontDatabase::systemFont(QFontDatabase::GeneralFont);
     }
     return ret;
-}
-
-bool tst_qquicktextedit::hasWindowActivation()
-{
-    return (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation));
 }
 
 void tst_qquicktextedit::textInput()
@@ -6588,8 +6582,8 @@ void tst_qquicktextedit::touchscreenDoesNotSelect()
 
 void tst_qquicktextedit::touchscreenSetsFocusAndMovesCursor()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
+
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("twoInAColumn.qml")));
     window.requestActivate();

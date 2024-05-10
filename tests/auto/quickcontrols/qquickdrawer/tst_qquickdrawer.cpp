@@ -1051,8 +1051,7 @@ void tst_QQuickDrawer::interactive_data()
 
 void tst_QQuickDrawer::interactive()
 {
-    if (!(QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation)))
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     QFETCH(QString, source);
     QQuickControlsApplicationHelper helper(this, source);
