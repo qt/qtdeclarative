@@ -43,12 +43,6 @@ public:
     QMultiMap<QByteArray, ConnectionInfo> connectionInfoMap;
     QHash<int, QMetaObject::Connection> connections;
 
-    template <typename JT, typename T>
-    inline QJniObject qVariantToJniObject(const QVariant &v)
-    {
-        return QJniObject(QtJniTypes::Traits<JT>::className(), get<T>(std::move(v)));
-    };
-
 public slots:
     void forwardSignal();
     void forwardSignal(int);

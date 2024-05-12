@@ -563,6 +563,8 @@ qt_internal_extend_target(Quick CONDITION ANDROID
     SOURCES
         platform/android/qandroidquickviewembedding.cpp platform/android/qandroidquickviewembedding_p.h
         platform/android/qandroidviewsignalmanager.cpp platform/android/qandroidviewsignalmanager_p.h
+        platform/android/qandroidtypes_p.h
+        platform/android/qandroidtypeconverter_p.h
 )
 if (ANDROID)
     add_subdirectory(jar)

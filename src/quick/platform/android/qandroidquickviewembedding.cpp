@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include <QtQuick/private/qandroidquickviewembedding_p.h>
+#include <QtQuick/private/qandroidtypes_p.h>
+#include <QtQuick/private/qandroidtypeconverter_p.h>
 #include <QtQuick/private/qandroidviewsignalmanager_p.h>
 
 #include <QtCore/qcoreapplication.h>
@@ -18,14 +20,6 @@ Q_DECLARE_JNI_CLASS(QtDelegate, "org/qtproject/qt/android/QtEmbeddedContextDeleg
 Q_DECLARE_JNI_CLASS(QtQuickView, "org/qtproject/qt/android/QtQuickView");
 Q_DECLARE_JNI_CLASS(QtWindow, "org/qtproject/qt/android/QtWindow");
 Q_DECLARE_JNI_CLASS(View, "android/view/View");
-
-Q_DECLARE_JNI_CLASS(Void, "java/lang/Void");
-Q_DECLARE_JNI_CLASS(Integer, "java/lang/Integer");
-Q_DECLARE_JNI_CLASS(Double, "java/lang/Double");
-Q_DECLARE_JNI_CLASS(Float, "java/lang/Float");
-Q_DECLARE_JNI_CLASS(Boolean, "java/lang/Boolean");
-Q_DECLARE_JNI_CLASS(String, "java/lang/String");
-Q_DECLARE_JNI_CLASS(Class, "java/lang/Class");
 
 namespace QtAndroidQuickViewEmbedding
 {
@@ -105,20 +99,14 @@ namespace QtAndroidQuickViewEmbedding
 
         QMetaProperty metaProperty = rootMetaObject->property(propertyIndex);
         const QJniObject propertyValue(value);
-        const QByteArray valueClassname = propertyValue.className();
+        const QVariant variantToWrite = QAndroidTypeConverter::toQVariant(propertyValue);
 
-        if (valueClassname == QtJniTypes::Traits<QtJniTypes::String>::className())
-            metaProperty.write(rootObject, propertyValue.toString());
-        else if (valueClassname == QtJniTypes::Traits<QtJniTypes::Integer>::className())
-            metaProperty.write(rootObject, propertyValue.callMethod<jint>("intValue"));
-        else if (valueClassname == QtJniTypes::Traits<QtJniTypes::Double>::className())
-            metaProperty.write(rootObject, propertyValue.callMethod<jdouble>("doubleValue"));
-        else if (valueClassname == QtJniTypes::Traits<QtJniTypes::Float>::className())
-            metaProperty.write(rootObject, propertyValue.callMethod<jfloat>("floatValue"));
-        else if (valueClassname == QtJniTypes::Traits<QtJniTypes::Boolean>::className())
-            metaProperty.write(rootObject, propertyValue.callMethod<jboolean>("booleanValue"));
-        else
-            qWarning("Setting the property type of %s is not supported.", valueClassname.data());
+        if (!variantToWrite.isValid()) {
+            qWarning("Setting the property type of %s is not supported.",
+                     qPrintable(propertyValue.className()));
+        } else {
+            metaProperty.write(rootObject, variantToWrite);
+        }
     }
 
     jobject getRootObjectProperty(JNIEnv *env, jobject object, jlong windowReference,
@@ -143,35 +131,13 @@ namespace QtAndroidQuickViewEmbedding
         }
 
         QMetaProperty metaProperty = rootMetaObject->property(propertyIndex);
-        QVariant propertyValue = metaProperty.read(rootObject);
-        const int propertyTypeId = propertyValue.typeId();
-
-        switch (propertyTypeId) {
-        case QMetaType::Type::Int:
-            return env->NewLocalRef(
-                QJniObject::construct<QtJniTypes::Integer>(get<int>(std::move(propertyValue)))
-                    .object());
-        case QMetaType::Type::Double:
-            return env->NewLocalRef(
-                QJniObject::construct<QtJniTypes::Double>(get<double>(std::move(propertyValue)))
-                    .object());
-        case QMetaType::Type::Float:
-            return env->NewLocalRef(
-                QJniObject::construct<QtJniTypes::Float>(get<float>(std::move(propertyValue)))
-                    .object());
-        case QMetaType::Type::Bool:
-            return env->NewLocalRef(
-                QJniObject::construct<QtJniTypes::Boolean>(get<bool>(std::move(propertyValue)))
-                    .object());
-        case QMetaType::Type::QString:
-            return env->NewLocalRef(
-                QJniObject::fromString(get<QString>(std::move(propertyValue))).object());
-        default:
+        const QVariant propertyValue = metaProperty.read(rootObject);
+        jobject jObject = QAndroidTypeConverter::toJavaObject(propertyValue, env);
+        if (!jObject) {
             qWarning("Property %s cannot be converted to a supported Java data type.",
                      qPrintable(property));
         }
-
-        return nullptr;
+        return jObject;
     }
 
     int addRootObjectSignalListener(JNIEnv *env, jobject, jlong windowReference, jstring signalName,
