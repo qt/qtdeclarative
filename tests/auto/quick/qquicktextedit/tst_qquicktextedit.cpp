@@ -985,8 +985,8 @@ void tst_qquicktextedit::hAlignVisual()
     view.showNormal();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
 
-    QQuickText *text = view.rootObject()->findChild<QQuickText*>("textItem");
-    QVERIFY(text != nullptr);
+    QQuickTextEdit *text = view.rootObject()->findChild<QQuickTextEdit*>("textEditItem");
+    QVERIFY(text);
 
     // Try to check whether alignment works by checking the number of black
     // pixels in the thirds of the grabbed image.
@@ -1013,7 +1013,7 @@ void tst_qquicktextedit::hAlignVisual()
     }
     {
         // HCenter Align
-        text->setHAlign(QQuickText::AlignHCenter);
+        text->setHAlign(QQuickTextEdit::AlignHCenter);
         QImage image = view.grabWindow();
         const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
         const int mid = numberOfNonWhitePixels(centeredSection2, centeredSection3, image);
@@ -1023,7 +1023,7 @@ void tst_qquicktextedit::hAlignVisual()
     }
     {
         // Right Align
-        text->setHAlign(QQuickText::AlignRight);
+        text->setHAlign(QQuickTextEdit::AlignRight);
         QImage image = view.grabWindow();
         const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
         const int mid = numberOfNonWhitePixels(centeredSection2, centeredSection3, image);
@@ -1035,36 +1035,36 @@ void tst_qquicktextedit::hAlignVisual()
     text->setWidth(200);
 
     {
-        // Left Align
+        // Right Align
         QImage image = view.grabWindow();
-        int x = qCeil(text->implicitWidth() * view.devicePixelRatio());
-        int left = numberOfNonWhitePixels(0, x, image);
-        int right = numberOfNonWhitePixels(x, image.width() - x, image);
-        QVERIFY2(left > 0, msgNotGreaterThan(left, 0).constData());
-        QCOMPARE(right, 0);
+        const int x = image.width() - qCeil(text->implicitWidth() * view.devicePixelRatio());
+        const int left = numberOfNonWhitePixels(0, x, image);
+        const int right = numberOfNonWhitePixels(x, image.width() - x, image);
+        QCOMPARE(left, 0);
+        QVERIFY2(right > 0, msgNotGreaterThan(left, 0).constData());
     }
     {
         // HCenter Align
-        text->setHAlign(QQuickText::AlignHCenter);
+        text->setHAlign(QQuickTextEdit::AlignHCenter);
         QImage image = view.grabWindow();
-        int x1 = qFloor(image.width() - text->implicitWidth() * view.devicePixelRatio()) / 2;
-        int x2 = image.width() - x1;
-        int left = numberOfNonWhitePixels(0, x1, image);
-        int mid = numberOfNonWhitePixels(x1, x2 - x1, image);
-        int right = numberOfNonWhitePixels(x2, image.width() - x2, image);
+        const int x1 = qFloor(image.width() - text->implicitWidth() * view.devicePixelRatio()) / 2;
+        const int x2 = image.width() - x1;
+        const int left = numberOfNonWhitePixels(0, x1, image);
+        const int mid = numberOfNonWhitePixels(x1, x2 - x1, image);
+        const int right = numberOfNonWhitePixels(x2, image.width(), image);
         QCOMPARE(left, 0);
         QVERIFY2(mid > 0, msgNotGreaterThan(left, 0).constData());
         QCOMPARE(right, 0);
     }
     {
-        // Right Align
-        text->setHAlign(QQuickText::AlignRight);
+        // Left Align
+        text->setHAlign(QQuickTextEdit::AlignLeft);
         QImage image = view.grabWindow();
-        int x = image.width() - qCeil(text->implicitWidth() * view.devicePixelRatio());
-        int left = numberOfNonWhitePixels(0, x, image);
-        int right = numberOfNonWhitePixels(x, image.width() - x, image);
-        QCOMPARE(left, 0);
-        QVERIFY2(right > 0, msgNotGreaterThan(left, 0).constData());
+        const int x = qCeil(text->implicitWidth() * view.devicePixelRatio());
+        const int left = numberOfNonWhitePixels(0, x, image);
+        const int right = numberOfNonWhitePixels(x, image.width() - x, image);
+        QVERIFY2(left > 0, msgNotGreaterThan(left, 0).constData());
+        QCOMPARE(right, 0);
     }
 }
 
