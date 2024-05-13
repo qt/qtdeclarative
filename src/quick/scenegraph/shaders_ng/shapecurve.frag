@@ -10,8 +10,9 @@ layout(location = 1) in vec4 gradient;
 layout(location = 2) in float gradTabIndex;
 #elif defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
 layout(location = 2) in vec2 coord;
+#elif defined(TEXTUREFILL)
+layout(location = 2) in vec2 textureCoord;
 #endif
-
 
 layout(location = 0) out vec4 fragColor;
 
@@ -26,7 +27,7 @@ layout(std140, binding = 0) uniform buf {
     float debug;
     float reserved3;
 
-#if defined(LINEARGRADIENT) || defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
+#if defined(LINEARGRADIENT) || defined(RADIALGRADIENT) || defined(CONICALGRADIENT) || defined(TEXTUREFILL)
     mat4 gradientMatrix;
 #endif
 #if defined(LINEARGRADIENT)
@@ -40,6 +41,8 @@ layout(std140, binding = 0) uniform buf {
 #elif defined(CONICALGRADIENT)
     vec2 translationPoint;
     float angle;
+#elif defined(TEXTUREFILL)
+    vec2 boundsSize;
 #else
     vec4 color;
 #endif
@@ -49,6 +52,8 @@ layout(std140, binding = 0) uniform buf {
 
 #if defined(LINEARGRADIENT) || defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
 layout(binding = 1) uniform sampler2D gradTabTexture;
+#elif defined(TEXTUREFILL)
+layout(binding = 1) uniform sampler2D sourceTexture;
 #endif
 
 vec4 baseColor()
@@ -77,6 +82,8 @@ vec4 baseColor()
     else
         t = (atan(-coord.y, coord.x) + ubuf.angle) * INVERSE_2PI;
     return texture(gradTabTexture, vec2(t - floor(t), 0.5));
+#elif defined(TEXTUREFILL)
+    return texture(sourceTexture, textureCoord);
 #else
     return vec4(ubuf.color.rgb, 1.0) * ubuf.color.a;
 #endif

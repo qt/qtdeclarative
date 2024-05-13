@@ -1,4 +1,4 @@
-// Copyright (C) 2022 The Qt Company Ltd.
+// Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef QQUICKSHAPECURVERENDERER_P_H
@@ -55,10 +55,12 @@ public:
     void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
+    void setFillTextureProvider(int index, QQuickItem *textureProviderItem) override;
     void setFillTransform(int index, const QSGTransform &transform) override;
     void endSync(bool async) override;
     void setAsyncCallback(void (*)(void *), void *) override;
     Flags flags() const override { return SupportsAsync; }
+    void handleSceneChange(QQuickWindow *window) override;
 
     void updateNode() override;
 
@@ -112,6 +114,7 @@ private:
         NodeList strokeNodes;
 
         QQuickShapeCurveRunnable *currentRunner = nullptr;
+        QQuickItem *fillTextureProviderItem = nullptr;
     };
 
     void createRunner(PathData *pathData);

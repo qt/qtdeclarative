@@ -138,6 +138,18 @@ void QQuickShapeSoftwareRenderer::setFillGradient(int index, QQuickShapeGradient
     m_accDirty |= DirtyBrush;
 }
 
+void QQuickShapeSoftwareRenderer::setFillTextureProvider(int index, QQuickItem *textureProviderItem)
+{
+    Q_UNUSED(index);
+    Q_UNUSED(textureProviderItem);
+}
+
+void QQuickShapeSoftwareRenderer::handleSceneChange(QQuickWindow *window)
+{
+    Q_UNUSED(window);
+    // No action needed
+}
+
 void QQuickShapeSoftwareRenderer::setFillTransform(int index, const QSGTransform &transform)
 {
     ShapePathGuiData &d(m_sp[index]);

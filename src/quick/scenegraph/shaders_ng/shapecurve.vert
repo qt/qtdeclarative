@@ -12,6 +12,8 @@ layout(location = 1) out vec4 gradient;
 layout(location = 2) out float gradTabIndex;
 #elif defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
 layout(location = 2) out vec2 coord;
+#elif defined(TEXTUREFILL)
+layout(location = 2) out vec2 textureCoord;
 #endif
 
 layout(std140, binding = 0) uniform buf {
@@ -25,7 +27,7 @@ layout(std140, binding = 0) uniform buf {
     float debug;
     float reserved3;
 
-#if defined(LINEARGRADIENT) || defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
+#if defined(LINEARGRADIENT) || defined(RADIALGRADIENT) || defined(CONICALGRADIENT) || defined(TEXTUREFILL)
     mat4 gradientMatrix;
 #endif
 #if defined(LINEARGRADIENT)
@@ -39,6 +41,8 @@ layout(std140, binding = 0) uniform buf {
 #elif defined(CONICALGRADIENT)
     vec2 translationPoint;
     float angle;
+#elif defined(TEXTUREFILL)
+    vec2 boundsSize;
 #else
     vec4 color;
 #endif
@@ -67,7 +71,7 @@ void main()
 
     gradient = vertexGradient / ubuf.matrixScale;
 
-#if defined(LINEARGRADIENT) || defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
+#if defined(LINEARGRADIENT) || defined(RADIALGRADIENT) || defined(CONICALGRADIENT) || defined(TEXTUREFILL)
     vec2 gradVertexCoord = (ubuf.gradientMatrix * vertexCoord).xy;
 #endif
 #if defined(LINEARGRADIENT)
@@ -75,6 +79,9 @@ void main()
     gradTabIndex = dot(gradVec, gradVertexCoord - ubuf.gradientStart) / dot(gradVec, gradVec);
 #elif defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
     coord = gradVertexCoord - ubuf.translationPoint;
+#elif defined(TEXTUREFILL)
+    textureCoord = vec2(gradVertexCoord.x / ubuf.boundsSize.x,
+                        gradVertexCoord.y / ubuf.boundsSize.y);
 #endif
 
 #if QSHADER_VIEW_COUNT >= 2

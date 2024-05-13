@@ -6,6 +6,7 @@
 #include "util/qsggradientcache_p.h"
 
 #include <private/qsgtexture_p.h>
+#include <private/qsgplaintexture_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -15,6 +16,7 @@ namespace {
     {
     public:
         QSGCurveFillMaterialShader(QGradient::Type gradientType,
+                                   bool useTextureFill,
                                    bool useDerivatives,
                                    int viewCount);
 
@@ -24,6 +26,7 @@ namespace {
     };
 
     QSGCurveFillMaterialShader::QSGCurveFillMaterialShader(QGradient::Type gradientType,
+                                                           bool useTextureFill,
                                                            bool useDerivatives,
                                                            int viewCount)
     {
@@ -35,6 +38,8 @@ namespace {
             baseName += QStringLiteral("_rg");
         } else if (gradientType == QGradient::ConicalGradient) {
             baseName += QStringLiteral("_cg");
+        } else if (useTextureFill) {
+            baseName += QStringLiteral("_tf");
         }
 
         if (useDerivatives)
@@ -48,15 +53,50 @@ namespace {
                                                         QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
     {
         Q_UNUSED(oldMaterial);
-        const QSGCurveFillMaterial *m = static_cast<QSGCurveFillMaterial *>(newMaterial);
+        QSGCurveFillMaterial *m = static_cast<QSGCurveFillMaterial *>(newMaterial);
         const QSGCurveFillNode *node = m->node();
-        if (binding != 1 || node->gradientType() == QGradient::NoGradient)
+        if (binding != 1
+            || (node->gradientType() == QGradient::NoGradient && node->fillTextureProvider() == nullptr)) {
             return;
+        }
 
-        const QSGGradientCacheKey cacheKey(node->fillGradient()->stops,
-                                           node->fillGradient()->spread);
-        QSGTexture *t = QSGGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
-        t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
+        QSGTexture *t = nullptr;
+        if (node->gradientType() != QGradient::NoGradient) {
+            const QSGGradientCacheKey cacheKey(node->fillGradient()->stops,
+                                               node->fillGradient()->spread);
+            t = QSGGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
+        } else if (node->fillTextureProvider() != nullptr) {
+            t = node->fillTextureProvider()->texture();
+            if (t != nullptr && t->isAtlasTexture()) {
+                // Create a non-atlas copy to make texture coordinate wrapping work. This
+                // texture copy is owned by the QSGTexture so memory is managed with the original
+                // texture provider.
+                QSGTexture *newTexture = t->removedFromAtlas(state.resourceUpdateBatch());
+                if (newTexture != nullptr)
+                    t = newTexture;
+            }
+
+        }
+
+        if (t != nullptr) {
+            t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
+        } else {
+            if (m->dummyTexture() == nullptr) {
+                QSGPlainTexture *dummyTexture = new QSGPlainTexture;
+                dummyTexture->setFiltering(QSGTexture::Nearest);
+                dummyTexture->setHorizontalWrapMode(QSGTexture::Repeat);
+                dummyTexture->setVerticalWrapMode(QSGTexture::Repeat);
+                QImage img(128, 128, QImage::Format_ARGB32_Premultiplied);
+                img.fill(0);
+                dummyTexture->setImage(img);
+                dummyTexture->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
+
+                m->setDummyTexture(dummyTexture);
+            }
+
+            t = m->dummyTexture();
+        }
+
         *texture = t;
     }
 
@@ -105,7 +145,8 @@ namespace {
         }
         offset += 8;
 
-        if (newNode->gradientType() == QGradient::NoGradient) {
+        if (newNode->gradientType() == QGradient::NoGradient
+            && newNode->fillTextureProvider() == nullptr) {
             Q_ASSERT(buf->size() >= offset + 16);
 
             QVector4D newColor = QVector4D(newNode->color().redF(),
@@ -136,7 +177,26 @@ namespace {
             offset += 64;
         }
 
-        if (newNode->gradientType() == QGradient::LinearGradient) {
+        if (newNode->gradientType() == QGradient::NoGradient
+            && newNode->fillTextureProvider() != nullptr) {
+            Q_ASSERT(buf->size() >= offset + 8);
+            const QSizeF newTextureSize = newNode->fillTextureProvider()->texture() != nullptr
+                                             ? newNode->fillTextureProvider()->texture()->textureSize()
+                                             : QSizeF(0, 0);
+            const QVector2D newBoundsSize(newTextureSize.width() / state.devicePixelRatio(),
+                                          newTextureSize.height() / state.devicePixelRatio());
+            const QVector2D oldBoundsSize = oldNode != nullptr
+                                            ? oldNode->boundsSize()
+                                            : QVector2D{};
+
+            if (oldEffect == nullptr || newBoundsSize != oldBoundsSize) {
+                newNode->setBoundsSize(newBoundsSize);
+                memcpy(buf->data() + offset, &newBoundsSize, 8);
+                changed = true;
+            }
+            offset += 8;
+
+        } else if (newNode->gradientType() == QGradient::LinearGradient) {
             Q_ASSERT(buf->size() >= offset + 8 + 8);
 
             QVector2D newGradientStart = QVector2D(newNode->fillGradient()->a);
@@ -244,6 +304,11 @@ QSGCurveFillMaterial::QSGCurveFillMaterial(QSGCurveFillNode *node)
     setFlag(RequiresDeterminant, true);
 }
 
+QSGCurveFillMaterial::~QSGCurveFillMaterial()
+{
+    delete m_dummyTexture;
+}
+
 int QSGCurveFillMaterial::compare(const QSGMaterial *other) const
 {
     if (other->type() != type())
@@ -257,7 +322,7 @@ int QSGCurveFillMaterial::compare(const QSGMaterial *other) const
     if (a == b)
         return 0;
 
-    if (a->gradientType() == QGradient::NoGradient) {
+    if (a->gradientType() == QGradient::NoGradient && a->fillTextureProvider() == nullptr) {
         if (int d = a->color().red() - b->color().red())
             return d;
         if (int d = a->color().green() - b->color().green())
@@ -267,48 +332,54 @@ int QSGCurveFillMaterial::compare(const QSGMaterial *other) const
         if (int d = a->color().alpha() - b->color().alpha())
             return d;
     } else {
-        const QSGGradientCache::GradientDesc &ga = *a->fillGradient();
-        const QSGGradientCache::GradientDesc &gb = *b->fillGradient();
+        if (a->gradientType() != QGradient::NoGradient) {
+            const QSGGradientCache::GradientDesc &ga = *a->fillGradient();
+            const QSGGradientCache::GradientDesc &gb = *b->fillGradient();
 
-        if (int d = ga.a.x() - gb.a.x())
-            return d;
-        if (int d = ga.a.y() - gb.a.y())
-            return d;
-        if (int d = ga.b.x() - gb.b.x())
-            return d;
-        if (int d = ga.b.y() - gb.b.y())
-            return d;
-
-        if (int d = ga.v0 - gb.v0)
-            return d;
-        if (int d = ga.v1 - gb.v1)
-            return d;
-
-        if (int d = ga.spread - gb.spread)
-            return d;
-
-        if (int d = ga.stops.size() - gb.stops.size())
-            return d;
-
-        for (int i = 0; i < ga.stops.size(); ++i) {
-            if (int d = ga.stops[i].first - gb.stops[i].first)
+            if (int d = ga.a.x() - gb.a.x())
                 return d;
-            if (int d = ga.stops[i].second.rgba() - gb.stops[i].second.rgba())
+            if (int d = ga.a.y() - gb.a.y())
                 return d;
+            if (int d = ga.b.x() - gb.b.x())
+                return d;
+            if (int d = ga.b.y() - gb.b.y())
+                return d;
+
+            if (int d = ga.v0 - gb.v0)
+                return d;
+            if (int d = ga.v1 - gb.v1)
+                return d;
+
+            if (int d = ga.spread - gb.spread)
+                return d;
+
+            if (int d = ga.stops.size() - gb.stops.size())
+                return d;
+
+            for (int i = 0; i < ga.stops.size(); ++i) {
+                if (int d = ga.stops[i].first - gb.stops[i].first)
+                    return d;
+                if (int d = ga.stops[i].second.rgba() - gb.stops[i].second.rgba())
+                    return d;
+            }
         }
 
         if (int d = a->fillTransform()->compareTo(*b->fillTransform()))
             return d;
     }
 
-    return 0;
+    const qintptr diff = qintptr(a->fillTextureProvider()) - qintptr(b->fillTextureProvider());
+    return diff < 0 ? -1 : (diff > 0 ? 1 : 0);
 }
 
 QSGMaterialType *QSGCurveFillMaterial::type() const
 {
-    static QSGMaterialType type[4];
+    static QSGMaterialType type[5];
     uint index = node()->gradientType();
     Q_ASSERT((index & ~3) == 0); // Only two first bits for gradient type
+
+    if (node()->gradientType() == QGradient::NoGradient && node()->fillTextureProvider() != nullptr)
+        index = 5;
 
     return &type[index];
 }
@@ -316,6 +387,8 @@ QSGMaterialType *QSGCurveFillMaterial::type() const
 QSGMaterialShader *QSGCurveFillMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     return new QSGCurveFillMaterialShader(node()->gradientType(),
+                                          node()->gradientType() == QGradient::NoGradient
+                                              && node()->fillTextureProvider() != nullptr,
                                           renderMode == QSGRendererInterface::RenderMode3D,
                                           viewCount());
 }

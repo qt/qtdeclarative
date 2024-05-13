@@ -1,4 +1,4 @@
-// Copyright (C) 2023 The Qt Company Ltd.
+// Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickshapecurverenderer_p.h"
@@ -271,7 +271,32 @@ void QQuickShapeCurveRenderer::setFillTransform(int index, const QSGTransform &t
 {
     auto &pathData = m_paths[index];
     pathData.fillTransform = transform;
-    pathData.m_dirty |= FillDirty;
+    pathData.m_dirty |= FillDirty | UniformsDirty;
+}
+
+void QQuickShapeCurveRenderer::setFillTextureProvider(int index, QQuickItem *textureProviderItem)
+{
+    auto &pathData = m_paths[index];
+    if ((pathData.fillTextureProviderItem == nullptr) != (textureProviderItem == nullptr))
+        pathData.m_dirty |= FillDirty;
+    if (pathData.fillTextureProviderItem != nullptr)
+        QQuickItemPrivate::get(pathData.fillTextureProviderItem)->derefWindow();
+    pathData.fillTextureProviderItem = textureProviderItem;
+    if (pathData.fillTextureProviderItem != nullptr)
+        QQuickItemPrivate::get(pathData.fillTextureProviderItem)->refWindow(m_item->window());
+    pathData.m_dirty |= UniformsDirty;
+}
+
+void QQuickShapeCurveRenderer::handleSceneChange(QQuickWindow *window)
+{
+    for (auto &pathData : m_paths) {
+        if (pathData.fillTextureProviderItem != nullptr) {
+            if (window == nullptr)
+                QQuickItemPrivate::get(pathData.fillTextureProviderItem)->derefWindow();
+            else
+                QQuickItemPrivate::get(pathData.fillTextureProviderItem)->refWindow(window);
+        }
+    }
 }
 
 void QQuickShapeCurveRenderer::setAsyncCallback(void (*callback)(void *), void *data)
@@ -364,8 +389,23 @@ void QQuickShapeCurveRenderer::updateNode()
         return;
 
     auto updateUniforms = [](const PathData &pathData) {
-        for (auto &pathNode : std::as_const(pathData.fillNodes))
+        for (auto &pathNode : std::as_const(pathData.fillNodes)) {
             pathNode->setColor(pathData.fillColor);
+
+            QSGCurveFillNode *fillNode = static_cast<QSGCurveFillNode *>(pathNode);
+            bool needsUpdate = pathData.fillTextureProviderItem == nullptr && fillNode->fillTextureProvider() != nullptr;
+            if (!needsUpdate
+                && pathData.fillTextureProviderItem != nullptr
+                && fillNode->fillTextureProvider() != pathData.fillTextureProviderItem->textureProvider()) {
+                needsUpdate = true;
+            }
+
+            if (needsUpdate) {
+                fillNode->setFillTextureProvider(pathData.fillTextureProviderItem != nullptr
+                                                 ? pathData.fillTextureProviderItem->textureProvider()
+                                                 : nullptr);
+            }
+        }
         for (auto &strokeNode : std::as_const(pathData.strokeNodes))
             strokeNode->setColor(pathData.pen.color());
     };

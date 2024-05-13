@@ -21,10 +21,12 @@
 QT_BEGIN_NAMESPACE
 
 class QSGCurveFillNode;
+class QSGPlainTexture;
 class Q_QUICK_EXPORT QSGCurveFillMaterial : public QSGMaterial
 {
 public:
     QSGCurveFillMaterial(QSGCurveFillNode *node);
+    ~QSGCurveFillMaterial() override;
     int compare(const QSGMaterial *other) const override;
 
     QSGCurveFillNode *node() const
@@ -32,11 +34,22 @@ public:
         return m_node;
     }
 
+    QSGPlainTexture *dummyTexture() const
+    {
+        return m_dummyTexture;
+    }
+
+    void setDummyTexture(QSGPlainTexture *dummyTexture)
+    {
+        m_dummyTexture = dummyTexture;
+    }
+
 private:
     QSGMaterialType *type() const override;
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 
     QSGCurveFillNode *m_node;
+    QSGPlainTexture *m_dummyTexture = nullptr;
 };
 
 QT_END_NAMESPACE

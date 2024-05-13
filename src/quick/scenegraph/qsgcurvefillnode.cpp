@@ -9,6 +9,7 @@ QT_BEGIN_NAMESPACE
 QSGCurveFillNode::QSGCurveFillNode()
 {
     setFlag(OwnsGeometry, true);
+    setFlag(UsePreprocess, true);
     setGeometry(new QSGGeometry(attributes(), 0, 0));
 
     updateMaterial();

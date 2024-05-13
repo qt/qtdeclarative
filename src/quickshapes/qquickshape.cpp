@@ -88,7 +88,8 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
       capStyle(QQuickShapePath::SquareCap),
       strokeStyle(QQuickShapePath::SolidLine),
       dashOffset(0),
-      fillGradient(nullptr)
+      fillGradient(nullptr),
+      fillItem(nullptr)
 {
     dashPattern << 4 << 2; // 4 * strokeWidth dash followed by 2 * strokeWidth space
 }
@@ -240,6 +241,9 @@ void QQuickShapePath::setStrokeWidth(qreal w)
     When set to \c transparent, no filling occurs.
 
     The default value is \c white.
+
+    \note If either \l fillGradient or \l fillItem are set to something other than \c null, these
+    will take precedence over \c fillColor. The \c fillColor will be ignored in this case.
  */
 
 QColor QQuickShapePath::fillColor() const
@@ -474,14 +478,14 @@ void QQuickShapePath::setDashPattern(const QVector<qreal> &array)
     \qmlproperty ShapeGradient QtQuick.Shapes::ShapePath::fillGradient
 
     This property defines the fill gradient. By default no gradient is enabled
-    and the value is \c null. In this case the fill uses a solid color based
-    on the value of ShapePath.fillColor.
-
-    When set, ShapePath.fillColor is ignored and filling is done using one of
-    the ShapeGradient subtypes.
+    and the value is \c null. In this case the fill will either be based on the \l fillItem
+    property if it is set, and otherwise the \l{fillColor} property will be used.
 
     \note The Gradient type cannot be used here. Rather, prefer using one of
     the advanced subtypes, like LinearGradient.
+
+    \note If set to something other than \c{null}, the \c fillGradient will take precedence over
+    both \l fillItem and \l fillColor.
  */
 
 QQuickShapeGradient *QQuickShapePath::fillGradient() const
@@ -506,6 +510,11 @@ void QQuickShapePath::setFillGradient(QQuickShapeGradient *gradient)
     }
 }
 
+void QQuickShapePath::resetFillGradient()
+{
+    setFillGradient(nullptr);
+}
+
 void QQuickShapePathPrivate::_q_fillGradientChanged()
 {
     Q_Q(QQuickShapePath);
@@ -513,9 +522,58 @@ void QQuickShapePathPrivate::_q_fillGradientChanged()
     emit q->shapePathChanged();
 }
 
-void QQuickShapePath::resetFillGradient()
+/*!
+    \qmlproperty Item QtQuick.Shapes::ShapePath::fillItem
+    \since 6.8
+
+    This property defines another Qt Quick Item to use as fill by the shape. The item must be
+    texture provider (such as a \l {Item Layers} {layered item}, a \l{ShaderEffectSource} or an
+    \l{Image}). If it is not a valid texture provider, this property will be ignored.
+
+    \note When using a layered item as a \c fillItem, you may see pixelation effects when
+    transforming the fill. Setting the \l layer.smooth property to true will give better visual
+    results in this case.
+
+    By default no fill item is set and the value is \c null.
+
+    \note If set to something other than \c null, the \c fillItem property takes precedence over
+    \l fillColor. The \l fillGradient property in turn takes precedence over both \c fillItem and
+    \l{fillColor}.
+ */
+
+QQuickItem *QQuickShapePath::fillItem() const
 {
-    setFillGradient(nullptr);
+    Q_D(const QQuickShapePath);
+    return d->sfp.fillItem;
+}
+
+void QQuickShapePath::setFillItem(QQuickItem *fillItem)
+{
+    Q_D(QQuickShapePath);
+    if (d->sfp.fillItem != fillItem) {
+        if (d->sfp.fillItem != nullptr) {
+            qmlobject_disconnect(d->sfp.fillItem, QQuickItem, SIGNAL(destroyed()),
+                                 this, QQuickShapePath, SLOT(_q_fillItemDestroyed()));
+        }
+        d->sfp.fillItem = fillItem;
+        if (d->sfp.fillItem != nullptr) {
+            qmlobject_connect(d->sfp.fillItem, QQuickItem, SIGNAL(destroyed()),
+                              this, QQuickShapePath, SLOT(_q_fillItemDestroyed()));
+        }
+        emit fillItemChanged();
+
+        d->dirty |= QQuickShapePathPrivate::DirtyFillItem;
+        emit shapePathChanged();
+    }
+}
+
+void QQuickShapePathPrivate::_q_fillItemDestroyed()
+{
+    Q_Q(QQuickShapePath);
+    sfp.fillItem = nullptr;
+    dirty |= DirtyFillItem;
+    emit q->fillItemChanged();
+    emit q->shapePathChanged();
 }
 
 /*!
@@ -724,6 +782,12 @@ void QQuickShapePrivate::_q_shapePathChanged()
     emit q->boundingRectChanged();
     auto br = q->boundingRect();
     q->setImplicitSize(br.right(), br.bottom());
+}
+
+void QQuickShapePrivate::handleSceneChange(QQuickWindow *w)
+{
+    if (renderer != nullptr)
+        renderer->handleSceneChange(w);
 }
 
 void QQuickShapePrivate::setStatus(QQuickShape::Status newStatus)
@@ -1190,6 +1254,7 @@ void QQuickShape::itemChange(ItemChange change, const ItemChangeData &data)
         for (int i = 0; i < d->sp.size(); ++i)
             QQuickShapePathPrivate::get(d->sp[i])->dirty = QQuickShapePathPrivate::DirtyAll;
         d->_q_shapePathChanged();
+        d->handleSceneChange(data.window);
     }
 
     QQuickItem::itemChange(change, data);
@@ -1396,6 +1461,16 @@ void QQuickShapePrivate::sync()
             renderer->setFillGradient(i, p->fillGradient());
         if (dirty & QQuickShapePathPrivate::DirtyFillTransform)
             renderer->setFillTransform(i, QQuickShapePathPrivate::get(p)->sfp.fillTransform);
+        if (dirty & QQuickShapePathPrivate::DirtyFillItem) {
+            if (p->fillItem() == nullptr) {
+                renderer->setFillTextureProvider(i, nullptr);
+            } else if (p->fillItem()->isTextureProvider()) {
+                renderer->setFillTextureProvider(i, p->fillItem());
+            } else {
+                renderer->setFillTextureProvider(i, nullptr);
+                qWarning() << "QQuickShape: Fill item is not texture provider";
+            }
+        }
 
         dirty = 0;
     }

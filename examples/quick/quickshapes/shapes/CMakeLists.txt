@@ -54,6 +54,7 @@ qt_add_qml_module(shapesexample
         "zoomtiger.qml"
         "fillTransform.qml"
         "rectangle.qml"
+        "fillItem.qml"
 )
 
 install(TARGETS shapesexample

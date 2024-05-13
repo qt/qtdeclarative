@@ -154,6 +154,10 @@ Rectangle {
                     name: qsTr("Shape Rectangle")
                     shapeUrl: "rectangle.qml"
                 }
+                ListElement {
+                    name: qsTr("Fill item")
+                    shapeUrl: "fillItem.qml"
+                }
             }
         }
     }

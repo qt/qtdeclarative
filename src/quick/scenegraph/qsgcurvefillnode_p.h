@@ -10,6 +10,7 @@
 #include <QtQuick/private/qsggradientcache_p.h>
 #include <QtQuick/private/qsgtransform_p.h>
 #include <QtQuick/qsgnode.h>
+#include <QtQuick/qsgtextureprovider.h>
 
 #include "qsgcurveabstractnode_p.h"
 
@@ -26,8 +27,11 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_EXPORT QSGCurveFillNode : public QSGCurveAbstractNode
+class QSGTextureProvider;
+
+class Q_QUICK_EXPORT QSGCurveFillNode : public QObject, public QSGCurveAbstractNode
 {
+    Q_OBJECT
 public:
     QSGCurveFillNode();
 
@@ -42,6 +46,30 @@ public:
     QColor color() const
     {
         return m_color;
+    }
+
+    void setFillTextureProvider(QSGTextureProvider *provider)
+    {
+        if (m_textureProvider != nullptr) {
+            disconnect(m_textureProvider, &QSGTextureProvider::textureChanged,
+                       this, &QSGCurveFillNode::handleTextureChanged);
+            disconnect(m_textureProvider, &QSGTextureProvider::destroyed,
+                       this, &QSGCurveFillNode::handleTextureProviderDestroyed);
+        }
+
+        m_textureProvider = provider;
+
+        if (m_textureProvider != nullptr) {
+            connect(m_textureProvider, &QSGTextureProvider::textureChanged,
+                    this, &QSGCurveFillNode::handleTextureChanged);
+            connect(m_textureProvider, &QSGTextureProvider::destroyed,
+                    this, &QSGCurveFillNode::handleTextureProviderDestroyed);
+        }
+    }
+
+    QSGTextureProvider *fillTextureProvider() const
+    {
+        return m_textureProvider;
     }
 
     void setFillGradient(const QSGGradientCache::GradientDesc &fillGradient)
@@ -182,6 +210,36 @@ public:
         m_uncookedVertexes.reserve(size);
     }
 
+    void preprocess() override
+    {
+        if (m_textureProvider != nullptr) {
+            if (QSGDynamicTexture *texture = qobject_cast<QSGDynamicTexture *>(m_textureProvider->texture()))
+                texture->updateTexture();
+        }
+    }
+
+    QVector2D boundsSize() const
+    {
+        return m_boundsSize;
+    }
+
+    void setBoundsSize(const QVector2D &boundsSize)
+    {
+        m_boundsSize = boundsSize;
+    }
+
+private Q_SLOTS:
+    void handleTextureChanged()
+    {
+        markDirty(DirtyMaterial);
+    }
+
+    void handleTextureProviderDestroyed()
+    {
+        m_textureProvider = nullptr;
+        markDirty(DirtyMaterial);
+    }
+
 private:
     struct CurveNodeVertex
     {
@@ -203,6 +261,8 @@ private:
 
     QVector<CurveNodeVertex> m_uncookedVertexes;
     QVector<quint32> m_uncookedIndexes;
+    QSGTextureProvider *m_textureProvider = nullptr;
+    QVector2D m_boundsSize;
 };
 
 QT_END_NAMESPACE

@@ -57,8 +57,10 @@ public:
     virtual void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
                                 qreal dashOffset, const QVector<qreal> &dashPattern) = 0;
     virtual void setFillGradient(int index, QQuickShapeGradient *gradient) = 0;
+    virtual void setFillTextureProvider(int index, QQuickItem *textureProviderItem) = 0;
     virtual void setFillTransform(int index, const QSGTransform &transform) = 0;
     virtual void setTriangulationScale(qreal) { }
+    virtual void handleSceneChange(QQuickWindow *window) = 0;
 
     // Render thread, with gui blocked
     virtual void updateNode() = 0;
@@ -82,6 +84,7 @@ struct QQuickShapeStrokeFillParams
     QVector<qreal> dashPattern;
     QQuickShapeGradient *fillGradient;
     QSGTransform fillTransform;
+    QQuickItem *fillItem;
 };
 
 class Q_QUICKSHAPES_EXPORT QQuickShapePathPrivate : public QQuickPathPrivate
@@ -99,14 +102,18 @@ public:
         DirtyDash = 0x40,
         DirtyFillGradient = 0x80,
         DirtyFillTransform = 0x100,
+        DirtyFillItem = 0x200,
 
-        DirtyAll = 0x1FF
+        DirtyAll = 0x3FF
     };
 
     QQuickShapePathPrivate();
 
     void _q_pathChanged();
     void _q_fillGradientChanged();
+    void _q_fillItemDestroyed();
+
+    void handleSceneChange();
 
     static QQuickShapePathPrivate *get(QQuickShapePath *p) { return p->d_func(); }
 
@@ -130,6 +137,7 @@ public:
 
     void _q_shapePathChanged();
     void setStatus(QQuickShape::Status newStatus);
+    void handleSceneChange(QQuickWindow *w);
 
     static QQuickShapePrivate *get(QQuickShape *item) { return item->d_func(); }
 

@@ -464,6 +464,43 @@ qt_internal_add_shaders(Quick "scenegraph_curve_shaders_cg_derivatives"
         "scenegraph/shaders_ng/shapecurve_cg_derivatives.vert.qsb"
 )
 
+qt_internal_add_shaders(Quick "scenegraph_curve_shaders_tf"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    DEFINES
+        "TEXTUREFILL"
+    PREFIX
+        "/qt-project.org"
+    FILES
+        "scenegraph/shaders_ng/shapecurve.frag"
+        "scenegraph/shaders_ng/shapecurve.vert"
+    OUTPUTS
+        "scenegraph/shaders_ng/shapecurve_tf.frag.qsb"
+        "scenegraph/shaders_ng/shapecurve_tf.vert.qsb"
+)
+
+qt_internal_add_shaders(Quick "scenegraph_curve_shaders_tf_derivatives"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    DEFINES
+        "TEXTUREFILL"
+        "USE_DERIVATIVES"
+    PREFIX
+        "/qt-project.org"
+    FILES
+        "scenegraph/shaders_ng/shapecurve.frag"
+        "scenegraph/shaders_ng/shapecurve.vert"
+    OUTPUTS
+        "scenegraph/shaders_ng/shapecurve_tf_derivatives.frag.qsb"
+        "scenegraph/shaders_ng/shapecurve_tf_derivatives.vert.qsb"
+)
+
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_qml_network
     LIBRARIES
         Qt::Network

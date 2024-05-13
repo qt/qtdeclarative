@@ -52,6 +52,8 @@ qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders"
         "shaders_ng/radialgradient.frag"
         "shaders_ng/conicalgradient.vert"
         "shaders_ng/conicalgradient.frag"
+        "shaders_ng/texturefill.vert"
+        "shaders_ng/texturefill.frag"
         "shaders_ng/wireframe.frag"
         "shaders_ng/wireframe.vert"
 )

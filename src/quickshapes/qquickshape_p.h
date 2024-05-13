@@ -198,6 +198,7 @@ class Q_QUICKSHAPES_EXPORT QQuickShapePath : public QQuickPath
     Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION(1, 14))
     Q_PROPERTY(PathHints pathHints READ pathHints WRITE setPathHints NOTIFY pathHintsChanged REVISION(6, 7) FINAL)
     Q_PROPERTY(QMatrix4x4 fillTransform READ fillTransform WRITE setFillTransform NOTIFY fillTransformChanged REVISION(6, 8) FINAL)
+    Q_PROPERTY(QQuickItem *fillItem READ fillItem WRITE setFillItem NOTIFY fillItemChanged REVISION(6, 8) FINAL)
     QML_NAMED_ELEMENT(ShapePath)
     QML_ADDED_IN_VERSION(1, 0)
 
@@ -283,6 +284,9 @@ public:
     QMatrix4x4 fillTransform() const;
     void setFillTransform(const QMatrix4x4 &matrix);
 
+    QQuickItem *fillItem() const;
+    void setFillItem(QQuickItem *newFillItem);
+
 Q_SIGNALS:
     void shapePathChanged();
     void strokeColorChanged();
@@ -298,11 +302,13 @@ Q_SIGNALS:
 
     Q_REVISION(6, 7) void pathHintsChanged();
     Q_REVISION(6, 8) void fillTransformChanged();
+    Q_REVISION(6, 8) void fillItemChanged();
 
 private:
     Q_DISABLE_COPY(QQuickShapePath)
     Q_DECLARE_PRIVATE(QQuickShapePath)
     Q_PRIVATE_SLOT(d_func(), void _q_fillGradientChanged())
+    Q_PRIVATE_SLOT(d_func(), void _q_fillItemDestroyed())
 };
 
 class Q_QUICKSHAPES_EXPORT QQuickShape : public QQuickItem

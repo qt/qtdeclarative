@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef QQUICKSHAPEGENERICRENDERER_P_H
@@ -41,7 +41,8 @@ public:
         DirtyColor = 0x04,
         DirtyFillGradient = 0x08,
         DirtyFillTransform = 0x10,
-        DirtyList = 0x20 // only for accDirty
+        DirtyFillTexture = 0x20,
+        DirtyList = 0x40 // only for accDirty
     };
 
     QQuickShapeGenericRenderer(QQuickItem *item)
@@ -65,11 +66,13 @@ public:
     void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
+    void setFillTextureProvider(int index, QQuickItem *textureProviderItem) override;
     void setFillTransform(int index, const QSGTransform &transform) override;
     void setTriangulationScale(qreal scale) override;
     void endSync(bool async) override;
     void setAsyncCallback(void (*)(void *), void *) override;
     Flags flags() const override { return SupportsAsync; }
+    void handleSceneChange(QQuickWindow *window) override;
 
     void updateNode() override;
 
@@ -77,6 +80,7 @@ public:
 
     struct Color4ub { unsigned char r, g, b, a; };
     typedef QVector<QSGGeometry::ColoredPoint2D> VertexContainerType;
+    typedef QVector<QSGGeometry::TexturedPoint2D> TexturedVertexContainerType;
     typedef QVector<quint32> IndexContainerType;
 
     static void triangulateFill(const QPainterPath &path,
@@ -105,6 +109,7 @@ private:
         QPainterPath path;
         FillGradientType fillGradientActive;
         QSGGradientCache::GradientDesc fillGradient;
+        QQuickItem *fillTextureProviderItem = nullptr;
         QSGTransform fillTransform;
         VertexContainerType fillVertices;
         IndexContainerType fillIndices;
@@ -177,8 +182,9 @@ Q_SIGNALS:
     void done(QQuickShapeStrokeRunnable *self);
 };
 
-class QQuickShapeGenericStrokeFillNode : public QSGGeometryNode
+class QQuickShapeGenericStrokeFillNode : public QObject, public QSGGeometryNode
 {
+    Q_OBJECT
 public:
     QQuickShapeGenericStrokeFillNode(QQuickWindow *window);
 
@@ -186,14 +192,21 @@ public:
         MatSolidColor,
         MatLinearGradient,
         MatRadialGradient,
-        MatConicalGradient
+        MatConicalGradient,
+        MatTextureFill
     };
 
     void activateMaterial(QQuickWindow *window, Material m);
 
     // shadow data for custom materials
     QSGGradientCache::GradientDesc m_fillGradient;
+    QSGTextureProvider *m_fillTextureProvider = nullptr;
     QSGTransform m_fillTransform;
+    void preprocess() override;
+
+private Q_SLOTS:
+    void handleTextureChanged();
+    void handleTextureProviderDestroyed();
 
 private:
     QScopedPointer<QSGMaterial> m_material;
@@ -216,6 +229,7 @@ public:
     static QSGMaterial *createLinearGradient(QQuickWindow *window, QQuickShapeGenericStrokeFillNode *node);
     static QSGMaterial *createRadialGradient(QQuickWindow *window, QQuickShapeGenericStrokeFillNode *node);
     static QSGMaterial *createConicalGradient(QQuickWindow *window, QQuickShapeGenericStrokeFillNode *node);
+    static QSGMaterial *createTextureFill(QQuickWindow *window, QQuickShapeGenericStrokeFillNode *node);
 };
 
 class QQuickShapeLinearGradientRhiShader : public QSGMaterialShader
@@ -328,6 +342,53 @@ public:
 
 private:
     QQuickShapeGenericStrokeFillNode *m_node;
+};
+
+class QQuickShapeTextureFillRhiShader : public QSGMaterialShader
+{
+public:
+    QQuickShapeTextureFillRhiShader(int viewCount);
+
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial,
+                           QSGMaterial *oldMaterial) override;
+    void updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
+                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+
+private:
+    QSGTransform m_fillTransform;
+    QVector2D m_boundsOffset;
+    QVector2D m_boundsSize;
+};
+
+class QQuickShapeTextureFillMaterial : public QSGMaterial
+{
+public:
+    QQuickShapeTextureFillMaterial(QQuickShapeGenericStrokeFillNode *node)
+        : m_node(node)
+    {
+        setFlag(Blending | RequiresFullMatrix);
+    }
+    ~QQuickShapeTextureFillMaterial() override;
+
+    QSGMaterialType *type() const override;
+    int compare(const QSGMaterial *other) const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
+
+    QQuickShapeGenericStrokeFillNode *node() const { return m_node; }
+
+    QSGPlainTexture *dummyTexture() const
+    {
+        return m_dummyTexture;
+    }
+
+    void setDummyTexture(QSGPlainTexture *texture)
+    {
+        m_dummyTexture = texture;
+    }
+
+private:
+    QQuickShapeGenericStrokeFillNode *m_node;
+    QSGPlainTexture *m_dummyTexture = nullptr;
 };
 
 QT_END_NAMESPACE
