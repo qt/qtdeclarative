@@ -33,23 +33,44 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlTypeWrapper : Object {
-    enum TypeNameMode {
-        IncludeEnums,
-        ExcludeEnums
+
+    enum TypeNameMode : quint8  {
+        ExcludeEnums     = 0x0,
+        IncludeEnums     = 0x1,
+        TypeNameModeMask = 0x1,
+    };
+
+    enum Kind : quint8 {
+        Type      = 0x0,
+        Namespace = 0x2,
+        KindMask  = 0x2
     };
 
     void init(TypeNameMode m, QObject *o, const QQmlTypePrivate *type);
     void init(TypeNameMode m, QObject *o, QQmlTypeNameCache *type, const QQmlImportRef *import);
 
     void destroy();
-    TypeNameMode mode;
+    QQmlType type() const;
+    TypeNameMode typeNameMode() const { return TypeNameMode(flags & TypeNameModeMask); }
+    Kind kind() const { return Kind(flags & KindMask); }
+
+    QQmlTypeNameCache::Result queryNamespace(
+            const QV4::String *name, QQmlEnginePrivate *enginePrivate) const;
+
     QV4QPointer<QObject> object;
 
-    QQmlType type() const;
+    union {
+        struct {
+            const QQmlTypePrivate *typePrivate;
+            const void *reserved;
+        } t;
+        struct {
+            QQmlTypeNameCache *typeNamespace;
+            const QQmlImportRef *importNamespace;
+        } n;
+    };
 
-    const QQmlTypePrivate *typePrivate;
-    QQmlTypeNameCache *typeNamespace;
-    const QQmlImportRef *importNamespace;
+    quint8 flags;
 };
 
 struct QQmlScopedEnumWrapper : Object {

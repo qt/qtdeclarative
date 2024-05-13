@@ -28,10 +28,10 @@ void Heap::QQmlTypeWrapper::init(TypeNameMode m, QObject *o, const QQmlTypePriva
 {
     Q_ASSERT(type);
     Object::init();
-    mode = m;
+    flags = quint8(m) | quint8(Type);
     object.init(o);
-    typePrivate = type;
-    QQmlType::refHandle(typePrivate);
+    QQmlType::refHandle(type);
+    t.typePrivate = type;
 }
 
 void Heap::QQmlTypeWrapper::init(
@@ -39,27 +39,50 @@ void Heap::QQmlTypeWrapper::init(
 {
     Q_ASSERT(type);
     Object::init();
-    mode = m;
+    flags = quint8(m) | quint8(Namespace);
     object.init(o);
-    typeNamespace = type;
-    typeNamespace->addref();
-    importNamespace = import;
+    n.typeNamespace = type;
+    n.typeNamespace->addref();
+    n.importNamespace = import;
 }
 
 void Heap::QQmlTypeWrapper::destroy()
 {
-    Q_ASSERT(typePrivate || typeNamespace);
-    QQmlType::derefHandle(typePrivate);
-    typePrivate = nullptr;
-    if (typeNamespace)
-        typeNamespace->release();
+    switch (kind()) {
+    case Type:
+        Q_ASSERT(t.typePrivate);
+        QQmlType::derefHandle(t.typePrivate);
+        break;
+    case Namespace:
+        Q_ASSERT(n.typeNamespace);
+        n.typeNamespace->release();
+        break;
+    }
+
     object.destroy();
     Object::destroy();
 }
 
 QQmlType Heap::QQmlTypeWrapper::type() const
 {
-    return QQmlType(typePrivate);
+    switch (kind()) {
+    case Type:
+        return QQmlType(t.typePrivate);
+    case Namespace:
+        return QQmlType();
+    }
+
+    Q_UNREACHABLE_RETURN(QQmlType());
+}
+
+QQmlTypeNameCache::Result Heap::QQmlTypeWrapper::queryNamespace(
+        const QV4::String *name, QQmlEnginePrivate *enginePrivate) const
+{
+    Q_ASSERT(kind() == Namespace);
+    Q_ASSERT(n.typeNamespace);
+    Q_ASSERT(n.importNamespace);
+    return n.typeNamespace->query(name, n.importNamespace, QQmlTypeLoader::get(enginePrivate));
+
 }
 
 bool QQmlTypeWrapper::isSingleton() const
@@ -203,7 +226,8 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
             if (type.isQObjectSingleton() || type.isCompositeSingleton()) {
                 if (QObject *qobjectSingleton = enginePrivate->singletonInstance<QObject*>(type)) {
                     // check for enum value
-                    const bool includeEnums = w->d()->mode == Heap::QQmlTypeWrapper::IncludeEnums;
+                    const bool includeEnums
+                            = w->d()->typeNameMode() == Heap::QQmlTypeWrapper::IncludeEnums;
                     if (includeEnums && name->startsWithUpper()) {
                         bool ok = false;
                         int value = enumForSingleton(v4, name, type, &ok);
@@ -278,14 +302,11 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
 
         // Fall through to base implementation
 
-    } else if (w->d()->typeNamespace) {
-        Q_ASSERT(w->d()->importNamespace);
-        QQmlTypeNameCache::Result r = w->d()->typeNamespace->query(
-                name, w->d()->importNamespace, QQmlTypeLoader::get(enginePrivate));
-
+    } else if (w->d()->kind() == Heap::QQmlTypeWrapper::Namespace) {
+        const QQmlTypeNameCache::Result r = w->d()->queryNamespace(name, enginePrivate);
         if (r.isValid()) {
             if (r.type.isValid()) {
-                return create(scope.engine, object, r.type, w->d()->mode);
+                return create(scope.engine, object, r.type, w->d()->typeNameMode());
             } else if (r.scriptIndex != -1) {
                 QV4::ScopedObject scripts(scope, context->importedScripts().valueRef());
                 return scripts->get(r.scriptIndex);
@@ -469,7 +490,8 @@ ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, 
             QQmlEnginePrivate *e = QQmlEnginePrivate::get(engine->qmlEngine());
             if (type.isQObjectSingleton() || type.isCompositeSingleton()) {
                 if (QObject *qobjectSingleton = e->singletonInstance<QObject*>(type)) {
-                    const bool includeEnums = w->d()->mode == Heap::QQmlTypeWrapper::IncludeEnums;
+                    const bool includeEnums
+                            = w->d()->typeNameMode() == Heap::QQmlTypeWrapper::IncludeEnums;
                     if (!includeEnums || !name->startsWithUpper()) {
                         QQmlData *ddata = QQmlData::get(qobjectSingleton, false);
                         if (ddata && ddata->propertyCache) {
