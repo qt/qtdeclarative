@@ -707,6 +707,7 @@ void QQuickTextEdit::setHAlign(HAlignment align)
     if (d->setHAlign(align, true) && isComponentComplete()) {
         d->updateDefaultTextOption();
         updateSize();
+        updateWholeDocument();
     }
 }
 
