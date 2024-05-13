@@ -159,6 +159,11 @@ function(_qt_internal_deploy_qml_imports_for_target)
             # file names, so account for those. There should never be plugin
             # libraries for more than one QML module in the directory, so we
             # shouldn't need to worry about matching plugins we don't want.
+            #
+            # install_qmldir and install_plugin do not contain $ENV{DESTDIR},
+            # whereas dest_qmldir and dest_plugin do.
+            # The install_ variants are used in file(INSTALL) to avoid double DESTDIR in paths.
+            # Other code should reference the dest_ variants instead.
             set(relative_qmldir "${arg_QML_DIR}/${entry_RELATIVEPATH}")
             if("${CMAKE_INSTALL_PREFIX}" STREQUAL "")
                 set(install_qmldir "./${relative_qmldir}")

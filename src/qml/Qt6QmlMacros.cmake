@@ -3796,9 +3796,30 @@ endif()")
             # imports deployed to the bundle anyway, the build RPATHs will allow
             # the regular libraries, frameworks and non-QML plugins to still be
             # found, even if they are outside the app bundle.
+
+            # Support Xcode, which places the application build dir into a configuration specific
+            # subdirectory. Override both the deploy prefix and install prefix, because we
+            # differentiate them in the qml installation implementation due to ENV{DESTDIR}
+            # handling.
+            set(deploy_path_suffix "")
+            get_cmake_property(is_multi_config GENERATOR_IS_MULTI_CONFIG)
+            if(is_multi_config)
+                set(deploy_path_suffix "/$<CONFIG>")
+            endif()
+
+            set(target_binary_dir_with_config_prefix
+                "$<TARGET_PROPERTY:${arg_TARGET},BINARY_DIR>${deploy_path_suffix}")
+
+            set(post_build_install_prefix
+                "CMAKE_INSTALL_PREFIX=${target_binary_dir_with_config_prefix}")
+
+            set(post_build_deploy_prefix
+                "QT_DEPLOY_PREFIX=${target_binary_dir_with_config_prefix}")
+
             add_custom_command(TARGET ${arg_TARGET} POST_BUILD
                 COMMAND ${CMAKE_COMMAND}
-                -D "QT_DEPLOY_PREFIX=$<TARGET_PROPERTY:${arg_TARGET},BINARY_DIR>"
+                -D "${post_build_install_prefix}"
+                -D "${post_build_deploy_prefix}"
                 -D "__QT_DEPLOY_IMPL_DIR=${deploy_impl_dir}"
                 -D "__QT_DEPLOY_POST_BUILD=TRUE"
                 -P "${post_build_deploy_script}"
