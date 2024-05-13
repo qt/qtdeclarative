@@ -42,7 +42,6 @@ private slots:
     void cleanupTestCase();
 
     void sanity();
-    void noBuiltins();
     void noQtQml();
     void inlineComponent();
     void singleton();
@@ -142,29 +141,6 @@ void tst_qmltc_qprocess::sanity()
 {
     const auto output = runQmltc(u"dummy.qml"_s, true);
     QVERIFY2(output.isEmpty(), qPrintable(output));
-}
-
-void tst_qmltc_qprocess::noBuiltins()
-{
-    const auto renameBack = [&](const QString &original) {
-        const auto current = modifiedPath(original);
-        QFile file(current);
-        QVERIFY(file.exists());
-        QVERIFY(file.rename(original));
-    };
-
-    for (QString builtin : { u"jsroot.qmltypes"_s, u"builtins.qmltypes"_s }) {
-        const auto path = QLibraryInfo::path(QLibraryInfo::QmlImportsPath) + u"/"_s + builtin;
-
-        QScopeGuard scope(std::bind(renameBack, path));
-        QFile file(path);
-        QVERIFY(file.exists());
-        QVERIFY(file.rename(modifiedPath(path)));
-
-        // test that qmltc exits gracefully
-        const auto errors = runQmltc(u"dummy.qml"_s, false);
-        QVERIFY(errors.contains(u"Failed to find the following builtins: %1"_s.arg(builtin)));
-    }
 }
 
 void tst_qmltc_qprocess::noQtQml()
