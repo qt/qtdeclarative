@@ -557,7 +557,7 @@
 
         \code
         import QtQuick
-        import QtQuick.Controls
+        import QtQuick.Controls.Basic
 
         ApplicationWindow {
             visible: true
@@ -728,7 +728,7 @@
 
         \quotefromfile qtquickcontrols-menu-custom.qml
         \skipto import QtQuick
-        \printuntil import QtQuick.Controls
+        \printuntil import QtQuick.Controls.Basic
         \skipto Menu
         \printto eof
 
@@ -743,7 +743,7 @@
 
         \quotefromfile qtquickcontrols-menubar-custom.qml
         \skipto import QtQuick
-        \printuntil import QtQuick.Controls
+        \printuntil import QtQuick.Controls.Basic
         \skipto MenuBar
         \printto eof
 
@@ -775,7 +775,7 @@
 
         \quotefromfile qtquickcontrols-popup-custom.qml
         \skipto import QtQuick
-        \printuntil import QtQuick.Controls
+        \printuntil import QtQuick.Controls.Basic
         \codeline
         \skipto Popup
         \printuntil {
@@ -1013,7 +1013,7 @@
 
         \quotefromfile qtquickcontrols-tooltip-custom.qml
         \skipto import QtQuick
-        \printuntil import QtQuick.Controls
+        \printuntil import QtQuick.Controls.Basic
         \skipto ToolTip
         \printuntil }
         \printuntil }
