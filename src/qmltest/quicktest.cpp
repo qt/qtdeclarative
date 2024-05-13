@@ -31,6 +31,8 @@
 #include <QtGui/qtextdocument.h>
 #include <stdio.h>
 #include <QtGui/QGuiApplication>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
 #include <QtCore/QTranslator>
 #include <QtTest/QSignalSpy>
 #include <QtQml/QQmlFileSelector>
@@ -649,10 +651,12 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
             qWarning().nospace()
                 << "Test '" << QDir::toNativeSeparators(path) << "' window not exposed after show().";
         }
-        view.requestActivate();
-        if (!QTest::qWaitForWindowActive(&view)) {
-            qWarning().nospace()
-                << "Test '" << QDir::toNativeSeparators(path) << "' window not active after requestActivate().";
+        if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation)) {
+            view.requestActivate();
+            if (!QTest::qWaitForWindowActive(&view)) {
+                qWarning().nospace()
+                    << "Test '" << QDir::toNativeSeparators(path) << "' window not active after requestActivate().";
+            }
         }
         if (view.isExposed()) {
             // Defer property update until event loop has started
