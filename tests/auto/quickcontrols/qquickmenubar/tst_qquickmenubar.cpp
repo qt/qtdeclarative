@@ -32,8 +32,10 @@ public:
 private slots:
     void init();
     void delegate();
+    void mouse_data();
     void mouse();
     void touch();
+    void keys_data();
     void keys();
     void mnemonics();
     void altNavigation();
@@ -50,7 +52,9 @@ private slots:
     void removeMenuThatIsOpen();
     void addRemoveExistingMenus_data();
     void addRemoveExistingMenus();
+    void checkHighlightWhenMenuDismissed_data();
     void checkHighlightWhenMenuDismissed();
+    void hoverAfterClosingWithEscape_data();
     void hoverAfterClosingWithEscape();
     void AA_DontUseNativeMenuBar();
     void containerItems_data();
@@ -116,10 +120,21 @@ void tst_qquickmenubar::delegate()
     QVERIFY(item);
 }
 
+void tst_qquickmenubar::mouse_data()
+{
+    QTest::addColumn<bool>("usePopupWindow");
+    QTest::newRow("in-scene popup") << false;
+    // Uncomment when popup windows work 100%
+    // if (popupWindowsSupported)
+    //     QTest::newRow("popup window") << true;
+}
+
 void tst_qquickmenubar::mouse()
 {
+    QFETCH(bool, usePopupWindow);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
 
     if (!hasWindowActivation())
         QSKIP("Window activation is not supported");
@@ -333,10 +348,21 @@ void tst_qquickmenubar::touch()
     QTRY_VERIFY(fileMenuBarMenu->isOpened());
 }
 
+void tst_qquickmenubar::keys_data()
+{
+    QTest::addColumn<bool>("usePopupWindow");
+    QTest::newRow("in-scene popup") << false;
+    // Uncomment when popup windows work 100%
+    // if (popupWindowsSupported)
+    //     QTest::newRow("popup window") << true;
+}
+
 void tst_qquickmenubar::keys()
 {
+    QFETCH(bool, usePopupWindow);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
     if (!hasWindowActivation())
         QSKIP("Window activation is not supported");
 
@@ -1041,9 +1067,13 @@ void tst_qquickmenubar::removeMenuThatIsOpen()
 void tst_qquickmenubar::addRemoveExistingMenus_data()
 {
     QTest::addColumn<bool>("native");
-    QTest::newRow("not native") << false;
+    QTest::addColumn<bool>("usePopupWindow");
+    QTest::newRow("non-native, in-scene") << false << false;
     if (nativeMenuBarSupported)
-        QTest::newRow("native") << true;
+        QTest::newRow("native, native") << true << true;
+    // Uncomment when popup windows work 100%
+    // if (popupWindowsSupported)
+    //     QTest::newRow("non-native, popup window") << false << true;
 }
 
 void tst_qquickmenubar::addRemoveExistingMenus()
@@ -1051,8 +1081,10 @@ void tst_qquickmenubar::addRemoveExistingMenus()
     // Check that you get warnings if trying to add menus that
     // are already in the menubar, or remove menus that are not.
     QFETCH(bool, native);
+    QFETCH(bool, usePopupWindow);
 
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
     QQmlApplicationEngine engine;
     engine.load(testFileUrl("menus.qml"));
 
@@ -1074,10 +1106,21 @@ void tst_qquickmenubar::addRemoveExistingMenus()
     menuBar->removeMenu(fileMenu);
 }
 
+void tst_qquickmenubar::checkHighlightWhenMenuDismissed_data()
+{
+    QTest::addColumn<bool>("usePopupWindow");
+    QTest::newRow("in-scene popup") << false;
+    // Uncomment when popup windows work 100%
+    // if (popupWindowsSupported)
+    //     QTest::newRow("popup window") << true;
+}
+
 void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
 {
+    QFETCH(bool, usePopupWindow);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
@@ -1134,10 +1177,21 @@ void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
     QVERIFY(!dynamicMenuBarItem->isHighlighted());
 }
 
+void tst_qquickmenubar::hoverAfterClosingWithEscape_data()
+{
+    QTest::addColumn<bool>("usePopupWindow");
+    QTest::newRow("in-scene popup") << false;
+    // Uncomment when popup windows work 100%
+    // if (popupWindowsSupported)
+    //     QTest::newRow("popup window") << true;
+}
+
 void tst_qquickmenubar::hoverAfterClosingWithEscape()
 {
+    QFETCH(bool, usePopupWindow);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
@@ -1601,8 +1655,9 @@ void tst_qquickmenubar::panMenuBar_data()
 {
     QTest::addColumn<bool>("usePopupWindow");
     QTest::newRow("in-scene popup") << false;
-    if (popupWindowsSupported)
-        QTest::newRow("popup window") << true;
+    // Uncomment when popup windows work 100%
+    // if (popupWindowsSupported)
+    //     QTest::newRow("popup window") << true;
 }
 
 void tst_qquickmenubar::panMenuBar()
