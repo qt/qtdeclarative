@@ -547,8 +547,8 @@ void QQuickShapePath::resetFillGradient()
         This implies \c PathNonIntersecting.
 
     Not all hints are logically independent, but the dependencies are not enforced.
-    For example, \c PathIsLinear implies \c PathIsQuadratic, but it is valid to have \c PathIsLinear
-    without \c PathIsQuadratic.
+    For example, \c PathLinear implies \c PathQuadratic, but it is valid to have \c PathLinear
+    without \c PathQuadratic.
 
     The pathHints property describes a set of statements known to be true; the absence of a hint
     does not necessarily mean that the corresponding statement is false.
