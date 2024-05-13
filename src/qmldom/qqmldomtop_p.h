@@ -721,6 +721,15 @@ class QMLDOM_EXPORT DomEnvironment final : public DomTop,
 protected:
     std::shared_ptr<OwningItem> doCopy(const DomItem &self) const override;
 
+private:
+    struct TypeReader
+    {
+        std::weak_ptr<DomEnvironment> m_env;
+
+        QList<QQmlJS::DiagnosticMessage>
+        operator()(QQmlJSImporter *importer, const QString &filePath,
+                   const QSharedPointer<QQmlJSScope> &scopeToPopulate);
+    };
 public:
     enum class Option {
         Default = 0x0,

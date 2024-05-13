@@ -169,6 +169,11 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
     auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, m_parameters.position.line,
                                                          m_parameters.position.character
                                                                  - ctx.filterChars().size());
+    if (itemsFound.isEmpty()) {
+        qCDebug(QQmlLSCompletionLog) << "No items found for completions at" << urlAndPos();
+        return {};
+    }
+
     if (itemsFound.size() > 1) {
         QStringList paths;
         for (auto &it : itemsFound)
@@ -176,11 +181,7 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
         qCWarning(QQmlLSCompletionLog) << "Multiple elements of " << urlAndPos()
                                        << " at the same depth:" << paths << "(using first)";
     }
-    DomItem currentItem;
-    if (!itemsFound.isEmpty())
-        currentItem = itemsFound.first().domItem;
-    else
-        qCDebug(QQmlLSCompletionLog) << "No items found for completions at" << urlAndPos();
+    const DomItem currentItem = itemsFound.first().domItem;
     qCDebug(QQmlLSCompletionLog) << "Completion at " << urlAndPos() << " "
                                  << m_parameters.position.line << ":"
                                  << m_parameters.position.character << "offset:" << pos

@@ -3189,6 +3189,157 @@ private slots:
         envPtrChild->loadPendingDependencies();
     }
 
+    void populateLazyFileBeforeCommitToBase()
+    {
+        DomItem qmlObject;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+        options.setFlag(DomCreationOption::WithRecovery);
+
+        std::shared_ptr<DomEnvironment> envPtr = DomEnvironment::create(
+                qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, options);
+
+        const QString fileName{ QDir::cleanPath(baseDir + u"/propertyBindings.qml"_s) };
+
+        {
+            DomItem envChild = DomItem(envPtr).makeCopy(DomItem::CopyOption::EnvConnected).item();
+            auto envPtrChild = envChild.ownerAs<DomEnvironment>();
+            envPtrChild->loadFile(
+                    FileToLoad::fromFileSystem(envPtrChild, fileName),
+                    [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
+                        qmlObject = newIt.fileObject();
+                    });
+            envPtrChild->loadPendingDependencies();
+
+            const DomItem childEnv = DomItem(envPtrChild->shared_from_this());
+            // populate the lazy file by accessing it via the DomItem interface
+            const DomItem mainComponent =
+                    childEnv.field(Fields::qmlFileWithPath)
+                            .key(fileName)
+                            .field(Fields::currentItem)
+                            .field(Fields::components)
+                            .key(QString());
+            QVERIFY(mainComponent);
+
+            envPtrChild->commitToBase(DomItem(envPtrChild));
+        } // destroy the temporary environment that the file was loaded into
+
+        // also make sure that the main component also exists in the base environment after the
+        // commitToBase call.
+        const DomItem env = DomItem(envPtr->shared_from_this());
+        const DomItem mainComponent = env.field(Fields::qmlFileWithPath)
+                                              .key(fileName)
+                                              .field(Fields::currentItem)
+                                              .field(Fields::components)
+                                              .key(QString());
+        QVERIFY(mainComponent);
+    }
+
+    void populateLazyFileAfterCommitToBase()
+    {
+        DomItem qmlObject;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+        options.setFlag(DomCreationOption::WithRecovery);
+
+        std::shared_ptr<DomEnvironment> envPtr = DomEnvironment::create(
+                qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, options);
+
+        const QString fileName{ QDir::cleanPath(baseDir + u"/propertyBindings.qml"_s) };
+
+        {
+            DomItem envChild = DomItem(envPtr).makeCopy(DomItem::CopyOption::EnvConnected).item();
+            auto envPtrChild = envChild.ownerAs<DomEnvironment>();
+            envPtrChild->loadFile(
+                    FileToLoad::fromFileSystem(envPtrChild, fileName),
+                    [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
+                        qmlObject = newIt.fileObject();
+                    });
+            envPtrChild->loadPendingDependencies();
+            envPtrChild->commitToBase(DomItem(envPtrChild));
+        } // destroy the temporary environment that the file was loaded into
+
+        const DomItem env = DomItem(envPtr->shared_from_this());
+        // populate the lazy file by accessing it via the DomItem interface
+        const DomItem mainComponent = env.field(Fields::qmlFileWithPath)
+                                              .key(fileName)
+                                              .field(Fields::currentItem)
+                                              .field(Fields::components)
+                                              .key(QString());
+        QVERIFY(mainComponent);
+    }
+
+    void qtbug_124799()
+    {
+        // reproduces the completion crash in QTBUG-124799 that was actually not completion related:
+        // triggering the completion was triggering the population of a file, that led to a
+        // heap-use-after-free. The steps to reproduce the crash are following:
+        // 1. load a file in a temporary environment
+        // 2. grab an unpopulated qqmljsscope from the type resolver of the loaded file
+        // 3. destroy the temporary environment
+        // 4. update the loaded file with new content, to make sure the QQmlJSImporter (used to
+        // populate of qmlfiles) has no more strong references in the QmlFile.
+        // 5. populate the unpopulated qqmljsscope: its factory should have kept track that its
+        // environment is not the temporary one but the base one (because of the commitToBase()
+        // call) and use the correct QQmlJSImporter (if its the one from the temporary environment
+        // this will lead to the heap-use-after-free memory error you get when triggering
+        // completions before this fix)
+
+        DomItem qmlObject;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+        options.setFlag(DomCreationOption::WithRecovery);
+
+        std::shared_ptr<DomEnvironment> envPtr = DomEnvironment::create(
+                qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, options);
+
+        const QString fileName{ QDir::cleanPath(baseDir + u"/propertyBindings.qml"_s) };
+
+        QQmlJSScope::ConstPtr populateAfterEnvironmentDestruction;
+
+        {
+            DomItem envChild = DomItem(envPtr).makeCopy(DomItem::CopyOption::EnvConnected).item();
+            auto envPtrChild = envChild.ownerAs<DomEnvironment>();
+            envPtrChild->loadFile(
+                    FileToLoad::fromFileSystem(envPtrChild, fileName),
+                    [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
+                        qmlObject = newIt.fileObject();
+                    });
+            envPtrChild->loadPendingDependencies();
+
+            auto qmlFilePtr = qmlObject.ownerAs<QmlFile>();
+            auto resolver = qmlFilePtr->typeResolver();
+            // simulate completion by grabbing some type from the resolver
+            populateAfterEnvironmentDestruction = resolver->importedTypes()[u"Derived"_s].scope;
+            envPtrChild->commitToBase(DomItem(envPtrChild));
+        }
+
+        // update the file
+        {
+            DomItem envChild = DomItem(envPtr).makeCopy(DomItem::CopyOption::EnvConnected).item();
+            auto envPtrChild = envChild.ownerAs<DomEnvironment>();
+
+            // simulate user typing something
+            QFile file(fileName);
+            QVERIFY(file.open(QFile::ReadOnly));
+            const QString content = file.readAll();
+            const QString newContent = content + "\n // important comment here\n";
+            envPtrChild->loadFile(FileToLoad::fromMemory(envPtrChild, fileName, newContent),
+                                  [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
+                                      qmlObject = newIt.fileObject();
+                                  });
+            envPtrChild->loadPendingDependencies();
+            envPtrChild->commitToBase(DomItem(envPtrChild));
+        }
+
+        // step 3: populate the lazy qqmljsscope, it should not crash
+        QCOMPARE(populateAfterEnvironmentDestruction->filePath(),
+                 QDir::cleanPath(baseDir + u"/Derived.qml"_s));
+    }
+
     void visitTreeFilter()
     {
         DomItem qmlObject;
