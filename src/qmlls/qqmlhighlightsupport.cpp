@@ -54,14 +54,13 @@ SemanticTokenFullHandler::SemanticTokenFullHandler(QmlLsp::QQmlCodeModel *codeMo
 void SemanticTokenFullHandler::process(
         QQmlBaseModule<SemanticTokensRequest>::RequestPointerArgument request)
 {
-    Responses::SemanticTokensResultType result;
-    ResponseScopeGuard guard(result, request->m_response);
-
     if (!request) {
         qCWarning(semanticTokens) << "No semantic token request is available!";
         return;
     }
 
+    Responses::SemanticTokensResultType result;
+    ResponseScopeGuard guard(result, request->m_response);
     const auto doc = m_codeModel->openDocumentByUrl(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
     DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
@@ -97,13 +96,13 @@ SemanticTokenDeltaHandler::SemanticTokenDeltaHandler(QmlLsp::QQmlCodeModel *code
 void SemanticTokenDeltaHandler::process(
         QQmlBaseModule<SemanticTokensDeltaRequest>::RequestPointerArgument request)
 {
-    Responses::SemanticTokensDeltaResultType result;
-    ResponseScopeGuard guard(result, request->m_response);
-
     if (!request) {
         qCWarning(semanticTokens) << "No semantic token request is available!";
         return;
     }
+
+    Responses::SemanticTokensDeltaResultType result;
+    ResponseScopeGuard guard(result, request->m_response);
     const auto doc = m_codeModel->openDocumentByUrl(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
     DomItem file = doc.snapshot.validDoc.fileObject(GoTo::MostLikely);
@@ -116,15 +115,16 @@ void SemanticTokenDeltaHandler::process(
     // Return full token list if result ids not align
     // otherwise compute the delta.
     if (lastResultId == request->m_parameters.previousResultId) {
-        auto &&oldEncoded = registeredTokens.lastTokens;
-        QList<SemanticTokensEdit> edits = HighlightingUtils::computeDiff(oldEncoded, newEncoded);
-        result = QLspSpecification::SemanticTokensDelta{ registeredTokens.resultId, edits };
+        result = QLspSpecification::SemanticTokensDelta {
+            registeredTokens.resultId,
+            HighlightingUtils::computeDiff(registeredTokens.lastTokens, newEncoded)
+        };
     } else if (!newEncoded.isEmpty()){
         result = QLspSpecification::SemanticTokens{ registeredTokens.resultId, newEncoded };
     } else {
         result = nullptr;
     }
-    registeredTokens.lastTokens = newEncoded;
+    registeredTokens.lastTokens = std::move(newEncoded);
 }
 
 void SemanticTokenDeltaHandler::registerHandlers(QLanguageServer *, QLanguageServerProtocol *protocol)
@@ -146,20 +146,20 @@ SemanticTokenRangeHandler::SemanticTokenRangeHandler(QmlLsp::QQmlCodeModel *code
 void SemanticTokenRangeHandler::process(
         QQmlBaseModule<SemanticTokensRangeRequest>::RequestPointerArgument request)
 {
-    Responses::SemanticTokensRangeResultType result;
-    ResponseScopeGuard guard(result, request->m_response);
-
     if (!request) {
         qCWarning(semanticTokens) << "No semantic token request is available!";
         return;
     }
+
+    Responses::SemanticTokensRangeResultType result;
+    ResponseScopeGuard guard(result, request->m_response);
     const auto doc = m_codeModel->openDocumentByUrl(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
     DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
     const auto qmlFile = file.as<QmlFile>();
     if (!qmlFile)
         return;
-    const auto code = qmlFile->code();
+    const QString &code = qmlFile->code();
     const auto range = request->m_parameters.range;
     int startOffset = int(QQmlLSUtils::textOffsetFrom(code, range.start.line, range.end.character));
     int endOffset = int(QQmlLSUtils::textOffsetFrom(code, range.end.line, range.end.character));
@@ -168,7 +168,7 @@ void SemanticTokenRangeHandler::process(
     auto &registeredTokens = m_codeModel->registeredTokens();
     if (!encoded.isEmpty()) {
         HighlightingUtils::updateResultID(registeredTokens.resultId);
-        result = SemanticTokens{ registeredTokens.resultId, encoded };
+        result = SemanticTokens{ registeredTokens.resultId, std::move(encoded) };
     } else {
         result = nullptr;
     }
