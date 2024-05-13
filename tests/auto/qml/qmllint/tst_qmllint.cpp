@@ -1814,8 +1814,8 @@ void TestQmllint::settingsFile()
                     .contains(QStringLiteral("Warning: %1:2:1: Unused import")
                                       .arg(testFile("settings/unusedImportWarning/unused.qml"))));
     QVERIFY(runQmllint("settings/bare/bare.qml", false, warningsShouldFailArgs(), false, false)
-                    .contains(QStringLiteral("Failed to find the following builtins: "
-                                             "jsroot.qmltypes, builtins.qmltypes")));
+                    .contains(
+                            u"Failed to import QtQuick. Are your import paths set up properly?"_s));
     QVERIFY(runQmllint("settings/qmltypes/qmltypes.qml", false, warningsShouldFailArgs(), false)
                     .contains(QStringLiteral("not a qmldir file. Assuming qmltypes.")));
     QVERIFY(runQmllint("settings/qmlimports/qmlimports.qml", true, warningsShouldFailArgs(), false).isEmpty());
@@ -1921,9 +1921,10 @@ void TestQmllint::missingBuiltinsNoCrash()
     QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());
     warnings = jsonOutput.at(0)[u"warnings"_s].toArray();
 
-    checkResult(warnings,
-                Result { { Message { QStringLiteral("Failed to find the following builtins: "
-                                                    "jsroot.qmltypes, builtins.qmltypes") } } });
+    checkResult(
+            warnings,
+            Result{ { Message{
+                    u"Failed to import QtQuick. Are your import paths set up properly?"_s } } });
 }
 
 void TestQmllint::absolutePath()

@@ -632,26 +632,13 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
         return false;
     };
 
-    // If the same name (such as "Qt") appears in the JS root and in the builtins,
-    // we want the builtins to override the JS root. Therefore, process jsroot first.
-    QStringList qmltypesFiles;
-    for (QString qmltypesFile : { "jsroot.qmltypes"_L1, "builtins.qmltypes"_L1 }) {
-        if (!importBuiltins(qmltypesFile, m_importPaths))
-            qmltypesFiles.append(std::move(qmltypesFile));
-    }
-
-    if (!qmltypesFiles.isEmpty()) {
-        const QString pathsString =
-                m_importPaths.isEmpty() ? u"<empty>"_s : m_importPaths.join(u"\n\t");
-        m_warnings.append({ QStringLiteral("Failed to find the following builtins: %1 (so will use "
-                                           "qrc). Import paths used:\n\t%2")
-                                    .arg(qmltypesFiles.join(u", "), pathsString),
-                            QtWarningMsg, QQmlJS::SourceLocation() });
-
-        // use qrc as a "last resort"
-        for (const QString &qmltypesFile : std::as_const(qmltypesFiles)) {
-            const bool found = importBuiltins(qmltypesFile, { u":/qt-project.org/qml/builtins"_s });
-            Q_ASSERT(found); // since qrc must cover it in all the bad cases
+    {
+        // If the same name (such as "Qt") appears in the JS root and in the builtins,
+        // we want the builtins to override the JS root. Therefore, process jsroot first.
+        const QStringList builtinsPath{ u":/qt-project.org/qml/builtins"_s };
+        for (const QString qmltypesFile : { "jsroot.qmltypes"_L1, "builtins.qmltypes"_L1 }) {
+            if (!importBuiltins(qmltypesFile, builtinsPath))
+                qFatal() << u"Failed to find the following builtin:" << qmltypesFile;
         }
     }
 
