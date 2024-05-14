@@ -929,9 +929,21 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     // or to cancel the closing.
     \endcode
 
-    \note If using \l {Qt Quick Controls}, it's recommended to use
-        \l ApplicationWindow instead of Window, as it has better styling
-        support.
+    \section1 Styling
+
+    As with all visual types in Qt Quick, Window supports
+    \l {palette}{palettes}. However, as with types like \l Text, Window does
+    not use palettes by default. For example, to change the background color
+    of the window when the operating system's theme changes, the \l color must
+    be set:
+
+    \snippet qml/windowPalette.qml declaration-and-color
+    \codeline
+    \snippet qml/windowPalette.qml text-item
+    \snippet qml/windowPalette.qml closing-brace
+
+    Use \l {ApplicationWindow} (and \l {Label}) from \l {Qt Quick Controls}
+    instead of Window to get automatic styling.
 */
 
 /*!
