@@ -17,12 +17,14 @@ Window {
     palette.active.window: "peachpuff"
     palette.windowText: "brown"
 
+//![text-item]
     Text {
         anchors.centerIn: parent
         // here we use the Window.active attached property and the Item.palette property
         color: Window.active ? palette.active.windowText : palette.inactive.windowText
         text: Window.active ? "active" : "inactive"
     }
+//![text-item]
 
     Button {
         text: "Button"
