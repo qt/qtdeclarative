@@ -54,6 +54,7 @@ class Q_QUICK_EXPORT QQuickColorValueType
 public:
     static QVariant create(const QJSValue &params);
 
+    Q_INVOKABLE QQuickColorValueType() = default;
     Q_INVOKABLE QQuickColorValueType(const QString &string);
     Q_INVOKABLE QString toString() const;
 
@@ -102,6 +103,7 @@ class Q_QUICK_EXPORT QQuickVector2DValueType
 public:
     static QVariant create(const QJSValue &params);
 
+    Q_INVOKABLE QQuickVector2DValueType() = default;
     Q_INVOKABLE QString toString() const;
 
     qreal x() const;
@@ -140,6 +142,7 @@ class Q_QUICK_EXPORT QQuickVector3DValueType
 public:
     static QVariant create(const QJSValue &params);
 
+    Q_INVOKABLE QQuickVector3DValueType() = default;
     Q_INVOKABLE QString toString() const;
 
     qreal x() const;
@@ -183,6 +186,7 @@ class Q_QUICK_EXPORT QQuickVector4DValueType
 public:
     static QVariant create(const QJSValue &params);
 
+    Q_INVOKABLE QQuickVector4DValueType() = default;
     Q_INVOKABLE QString toString() const;
 
     qreal x() const;
@@ -227,6 +231,7 @@ class Q_QUICK_EXPORT QQuickQuaternionValueType
 public:
     static QVariant create(const QJSValue &params);
 
+    Q_INVOKABLE QQuickQuaternionValueType() = default;
     Q_INVOKABLE QString toString() const;
 
     qreal scalar() const;
@@ -287,6 +292,8 @@ class Q_QUICK_EXPORT QQuickMatrix4x4ValueType
 
 public:
     static QVariant create(const QJSValue &params);
+
+    Q_INVOKABLE QQuickMatrix4x4ValueType() = default;
 
     qreal m11() const { return v(0, 0); }
     qreal m12() const { return v(0, 1); }
@@ -441,6 +448,7 @@ class Q_QUICK_EXPORT QQuickFontValueType
 public:
     static QVariant create(const QJSValue &value);
 
+    Q_INVOKABLE QQuickFontValueType() = default;
     Q_INVOKABLE QString toString() const;
 
     QString family() const;
