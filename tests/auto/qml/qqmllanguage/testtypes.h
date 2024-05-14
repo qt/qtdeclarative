@@ -6,6 +6,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qdatetime.h>
+#include <QtCore/qjsonarray.h>
 #include <QtGui/qtransform.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qvector2d.h>
@@ -2940,6 +2941,25 @@ public:
     EnumType enumProperty() const {
         return EnumType::EnumValue2;
     }
+};
+
+class TypeWithQJsonArrayProperty : public QObject {
+    Q_OBJECT
+    QML_ELEMENT
+
+    Q_PROPERTY(QJsonArray jsonArray READ jsonArray WRITE setJsonArray NOTIFY jsonArrayChanged)
+
+public:
+    TypeWithQJsonArrayProperty(QObject *parent = nullptr) : QObject(parent) {}
+
+    const QJsonArray& jsonArray() { return m_jsonArray; }
+    void setJsonArray(const QJsonArray& a) { m_jsonArray = a; }
+
+signals:
+    void jsonArrayChanged();
+
+private:
+    QJsonArray m_jsonArray;
 };
 
 #endif // TESTTYPES_H

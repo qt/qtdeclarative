@@ -454,6 +454,8 @@ private slots:
 
     void typedObjectList();
 
+    void jsonArrayPropertyBehavesLikeAnArray();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8657,6 +8659,51 @@ void tst_qqmllanguage::typedObjectList()
 
     QCOMPARE(list.count(&list), 1);
     QVERIFY(list.at(&list, 0) != nullptr);
+}
+
+
+void tst_qqmllanguage::jsonArrayPropertyBehavesLikeAnArray() {
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("jsonArrayProperty.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("concatedJsonArray"), o->property("concatedJsArray"));
+    QVERIFY(o->property("entriesMatch").toBool());
+    QCOMPARE(o->property("jsonArrayEvery"), o->property("jsArrayEvery"));
+    QCOMPARE(o->property("jsonArrayFiltered"), o->property("jsArrayFiltered"));
+    QCOMPARE(o->property("jsonArrayFind"), o->property("jsArrayFind"));
+    QCOMPARE(o->property("jsonArrayFindIndex"), o->property("jsArrayFindIndex"));
+    QCOMPARE(o->property("jsonArrayForEach"), o->property("jsArrayForEach"));
+    QCOMPARE(o->property("jsonArrayIncludes"), o->property("jsArrayIncludes"));
+    QCOMPARE(o->property("jsonArrayIndexOf"), o->property("jsArrayIndexOf"));
+    QCOMPARE(o->property("jsonArrayJoin"), o->property("jsArrayJoin"));
+    QVERIFY(o->property("keysMatch").toBool());
+    QCOMPARE(o->property("jsonArrayLastIndexOf"), o->property("jsArrayLastIndexOf"));
+    QCOMPARE(o->property("jsonArrayMap"), o->property("jsArrayMap"));
+    QCOMPARE(o->property("jsonArrayReduce"), o->property("jsArrayReduce"));
+    QCOMPARE(o->property("jsonArrayReduceRight"), o->property("jsArrayReduceRight"));
+    QCOMPARE(o->property("jsonArraySlice"), o->property("jsArraySlice"));
+    QCOMPARE(o->property("jsonArraySome"), o->property("jsArraySome"));
+    QCOMPARE(o->property("stringifiedLocaleJsonArray"), o->property("stringifiedLocaleJsArray"));
+    QCOMPARE(o->property("stringifiedJsonArray"), o->property("stringifiedJsArray"));
+    QVERIFY(o->property("valuesMatch").toBool());
+
+    QVERIFY(o->property("jsonArrayWasCopiedWithin").toBool());
+    QVERIFY(o->property("jsonArrayWasFilled").toBool());
+    QVERIFY(o->property("jsonArrayWasPopped").toBool());
+    QVERIFY(o->property("jsonArrayWasPushed").toBool());
+    QVERIFY(o->property("jsonArrayWasReversed").toBool());
+    QVERIFY(o->property("jsonArrayWasShifted").toBool());
+    QVERIFY(o->property("jsonArrayWasSpliced").toBool());
+    QVERIFY(o->property("jsonArrayWasUnshifted").toBool());
+    QEXPECT_FAIL(
+        "",
+        "The sort method for sequences will not currently work with QJsonArray. See QTBUG-125400.",
+        Continue
+    );
+    QVERIFY(o->property("jsonArrayWasSorted").toBool());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

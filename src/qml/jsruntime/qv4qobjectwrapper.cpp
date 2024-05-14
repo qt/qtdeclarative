@@ -246,11 +246,8 @@ static ReturnedValue loadProperty(
         property.readProperty(object, &v);
         return QV4::JsonObject::fromJsonObject(v4, v);
     }
-    case QMetaType::QJsonArray: {
-        QJsonArray v;
-        property.readProperty(object, &v);
-        return QV4::JsonObject::fromJsonArray(v4, v);
-    }
+    case QMetaType::QJsonArray:
+        return encodeSequence(QMetaSequence::fromContainer<QJsonArray>());
     case QMetaType::QStringList:
         return encodeSequence(QMetaSequence::fromContainer<QStringList>());
     case QMetaType::QVariantList:
