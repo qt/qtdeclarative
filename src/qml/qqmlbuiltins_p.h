@@ -36,6 +36,8 @@
 #include <QtCore/qtypes.h>
 #include <QtCore/qchar.h>
 #include <QtCore/qjsonobject.h>
+#include <QtCore/qjsonvalue.h>
+#include <QtCore/qjsonarray.h>
 
 #include <climits>
 
@@ -408,6 +410,22 @@ struct QQmlQJsonObjectForeign
     QML_ANONYMOUS
     QML_FOREIGN(QJsonObject)
     QML_EXTENDED_JAVASCRIPT(Object)
+};
+
+struct QQmlQJsonValueForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QJsonValue)
+    QML_EXTENDED_JAVASCRIPT(Object)
+};
+
+struct QQmlQJsonArrayForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QJsonArray)
+    QML_SEQUENTIAL_CONTAINER(QJsonValue)
 };
 
 QT_END_NAMESPACE

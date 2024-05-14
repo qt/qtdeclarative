@@ -9,4 +9,12 @@ Module {
         prototype: "QObject"
         Property { name: "jsonObjectList"; type: "QJsonObject"; isList: true; read: "getJsonObjectList"; index: 0; isReadonly: true }
     }
+    Component {
+        file: "typewithjsonarray.h"
+        name: "TypeWithJsonArray"
+        exports: ["QmlLintTestLib/TypeWithJsonArray 1.0"]
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "jsonArray"; type: "QJsonArray"; read: "getJsonArray"; index: 0; isReadonly: true }
+    }
 }
