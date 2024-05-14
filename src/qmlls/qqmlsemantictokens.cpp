@@ -740,7 +740,7 @@ void Highlights::addHighlight(const QQmlJS::SourceLocation &loc, int tokenType, 
     }
 
     if (!m_highlights.contains(loc.offset))
-        m_highlights.insert(loc.offset, Token(loc, tokenType, tokenModifier));
+        m_highlights.insert(loc.offset, QT_PREPEND_NAMESPACE(Token)(loc, tokenType, tokenModifier));
 }
 
 void Highlights::addHighlight(const QMap<FileLocationRegion, QQmlJS::SourceLocation> &regions,
