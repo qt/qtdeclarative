@@ -141,6 +141,13 @@ To find out more about using the QML language, see the \l{Qt Qml} module documen
             - provides classes for using QML with Java/Kotlin Android APIs.
 \endlist
 
+\section1 Qt Academy Courses
+    \list
+        \li \l {https://www.qt.io/academy/course-catalog#introduction-to-qt-quick}
+               {Introduction to Qt Quick}
+    \endlist
+
+
 \section1 Licenses and Attributions
 
 Qt Quick is available under commercial licenses from \l{The Qt Company}.
