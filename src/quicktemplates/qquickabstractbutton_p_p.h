@@ -103,6 +103,7 @@ public:
     int repeatTimer = 0;
     int repeatDelay = AUTO_REPEAT_DELAY;
     int repeatInterval = AUTO_REPEAT_INTERVAL;
+    int animateTimer = 0;
 #if QT_CONFIG(shortcut)
     int shortcutId = 0;
     QKeySequence shortcut;
