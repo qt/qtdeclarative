@@ -2793,6 +2793,17 @@ function(qt6_target_qml_sources target)
                 set_property(TARGET ${target} APPEND_STRING PROPERTY
                     _qt_internal_qmldir_content "${qmldir_file_contents}"
                 )
+
+                if(ANDROID AND QT_ANDROID_GENERATE_JAVA_QML_COMPONENTS)
+                    get_source_file_property(qml_file_generate_java_classes ${qml_file_src}
+                        QT_QML_GENERATE_JAVA_CLASS
+                    )
+                    if(qml_file_generate_java_classes)
+                        get_target_property(qml_module_uri ${target} QT_QML_MODULE_URI)
+                        set_property(TARGET ${target} APPEND PROPERTY
+                            _qt_qml_files_for_java_generator "${qml_module_uri}.${qml_file_typename}")
+                    endif()
+                endif()
             endif()
         endif()
 

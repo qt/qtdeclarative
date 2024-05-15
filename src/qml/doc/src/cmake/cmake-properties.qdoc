@@ -206,3 +206,24 @@ C++ during qmltc compilation.
 
 \sa{qmltc-cmake}
 */
+
+/*!
+\page cmake-source-file-property-qt-qml-generate-java-class.html
+\ingroup cmake-source-file-properties-qtqml
+\ingroup cmake-android-build-properties
+
+\title QT_QML_GENERATE_JAVA_CLASS
+
+\summary {Marks a QML file for Java code generation.}
+
+\cmakepropertysince 6.8
+When using QML as a \l {Android: View} in Android via \l QtQuickView, you can choose
+the QML components to make available as generated Java classes usable from Android code.
+To mark a \c {.qml} file for code generation, set its \c QT_QML_GENERATE_JAVA_CLASS
+source property to \c TRUE. The source property must be set before
+\l {qt_add_qml_module}{creating} the module. The file should start with an uppercase
+letter and define a QML component. This property is valid only if
+\l QT_ANDROID_GENERATE_JAVA_QML_COMPONENTS is defined.
+
+\sa {Naming Custom QML Object Types}
+*/

@@ -139,5 +139,9 @@ function(_qt_internal_generate_android_qml_deployment_settings out_var target)
     _qt_internal_add_tool_to_android_deployment_settings(${out_var} qmldom "qml-dom-binary"
         "${target}")
 
+
+    _qt_internal_add_android_deployment_list_property(${out_var} "qml-files-for-code-generator"
+            ${target} "_qt_qml_files_for_java_generator")
+
     set(${out_var} "${${out_var}}" PARENT_SCOPE)
 endfunction()
