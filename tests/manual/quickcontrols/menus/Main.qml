@@ -192,9 +192,14 @@ ApplicationWindow {
             Layout.minimumHeight: 100
 
             TapHandler {
-                objectName: "textAreaTapHandler"
+                objectName: "textAreaMouseTapHandler"
                 acceptedButtons: Qt.RightButton
-                onTapped: editContextMenu.popup()
+                onPressedChanged: if (pressed) editContextMenu.popup()
+            }
+            TapHandler {
+                objectName: "textAreaTouchTapHandler"
+                acceptedDevices: PointerDevice.TouchScreen
+                onLongPressed: editContextMenu.popup()
             }
         }
 
@@ -266,9 +271,14 @@ ApplicationWindow {
     }
 
     TapHandler {
-        objectName: "backgroundTapHandler"
+        objectName: "backgroundMouseTapHandler"
         acceptedButtons: Qt.RightButton
-        onTapped: backgroundContextMenu.popup()
+        onPressedChanged: if (pressed) backgroundContextMenu.popup()
+    }
+    TapHandler {
+        objectName: "backgroundTouchTapHandler"
+        acceptedDevices: PointerDevice.TouchScreen
+        onLongPressed: backgroundContextMenu.popup()
     }
 
     Component {
