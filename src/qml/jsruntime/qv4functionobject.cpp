@@ -54,6 +54,7 @@ void Heap::FunctionObject::init()
 void Heap::JavaScriptFunctionObject::init(
         QV4::ExecutionContext *scope, Function *function, QV4::String *n)
 {
+    Q_ASSERT(n || function);
     Scope s(scope->engine());
     ScopedString name(s, n ? n->d() : function->name());
     FunctionObject::init(s.engine, name);
@@ -713,6 +714,7 @@ void Heap::BoundFunction::init(
         ScopedContext ctx(s, js->scope());
         JavaScriptFunctionObject::init(ctx, js->function(), name);
     } else {
+        Q_ASSERT(name);
         JavaScriptFunctionObject::init(engine->rootContext(), nullptr, name);
     }
 
