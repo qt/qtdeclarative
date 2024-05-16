@@ -3,9 +3,10 @@
 
 #include "../shared/qqmltoolingsettings.h"
 
-#include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
 #include <QtQmlCompiler/private/qqmljscompiler_p.h>
 #include <QtQmlCompiler/private/qqmljslinter_p.h>
+#include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
+#include <QtQmlCompiler/private/qqmljsutils_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
@@ -269,7 +270,7 @@ All warnings can be set to three levels:
 
     QStringList defaultQmldirFiles;
     if (parser.isSet(qmldirFilesOption)) {
-        defaultQmldirFiles = parser.values(qmldirFilesOption);
+        defaultQmldirFiles = QQmlJSUtils::cleanPaths(parser.values(qmldirFilesOption));
     } else if (!parser.isSet(qmlImportNoDefault)){
         // If nothing given explicitly, use the qmldir file from the current directory.
         QFileInfo qmldirFile(QStringLiteral("qmldir"));

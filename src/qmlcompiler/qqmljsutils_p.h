@@ -21,10 +21,12 @@
 #include "qqmljsscope_p.h"
 #include "qqmljsmetatypes_p.h"
 
+#include <QtCore/qdir.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qstring.h>
-#include <QtCore/qstringview.h>
 #include <QtCore/qstringbuilder.h>
+#include <QtCore/qstringview.h>
+
 #include <private/qduplicatetracker_p.h>
 
 #include <optional>
@@ -365,6 +367,13 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
 
     static std::variant<QString, QQmlJS::DiagnosticMessage>
     sourceDirectoryPath(const QQmlJSImporter *importer, const QString &buildDirectoryPath);
+
+    static QStringList cleanPaths(QStringList &&paths)
+    {
+        for (QString &path : paths)
+            path = QDir::cleanPath(path);
+        return paths;
+    }
 };
 
 bool Q_QMLCOMPILER_PRIVATE_EXPORT canStrictlyCompareWithVar(
