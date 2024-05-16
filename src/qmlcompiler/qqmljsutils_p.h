@@ -21,10 +21,12 @@
 #include "qqmljsscope_p.h"
 #include "qqmljsmetatypes_p.h"
 
+#include <QtCore/qdir.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qstring.h>
-#include <QtCore/qstringview.h>
 #include <QtCore/qstringbuilder.h>
+#include <QtCore/qstringview.h>
+
 #include <QtQml/private/qqmlsignalnames_p.h>
 #include <private/qduplicatetracker_p.h>
 
@@ -371,6 +373,13 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSUtils
         std::sort(container.begin(), container.end());
         auto erase = std::unique(container.begin(), container.end());
         container.erase(erase, container.end());
+    }
+
+    static QStringList cleanPaths(QStringList &&paths)
+    {
+        for (QString &path : paths)
+            path = QDir::cleanPath(path);
+        return paths;
     }
 };
 

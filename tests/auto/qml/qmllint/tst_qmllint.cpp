@@ -105,6 +105,7 @@ private Q_SLOTS:
     void valueTypesFromString();
 
     void ignoreSettingsNotCommandLineOptions();
+    void backslashedQmldirPath();
 
     void environment_data();
     void environment();
@@ -113,6 +114,7 @@ private Q_SLOTS:
     void testPlugin();
     void quickPlugin();
 #endif
+
 private:
     enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
     enum ContainOption { StringNotContained, StringContained };
@@ -2251,6 +2253,15 @@ void TestQmllint::ignoreSettingsNotCommandLineOptions()
                                       QStringList{ u"-I"_s, importPath }, true);
     // should not complain about not finding the module that is in importPath
     QCOMPARE(output, QString());
+}
+
+void TestQmllint::backslashedQmldirPath()
+{
+    const QString qmldirPath
+            = testFile(u"ImportPath/ModuleInImportPath/qmldir"_s).replace('/', QDir::separator());
+    const QString output = runQmllint(
+            testFile(u"something.qml"_s), true, QStringList{ u"-i"_s, qmldirPath });
+    QVERIFY(output.isEmpty());
 }
 
 QTEST_GUILESS_MAIN(TestQmllint)
