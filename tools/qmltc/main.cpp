@@ -9,6 +9,7 @@
 
 #include <private/qqmljscompiler_p.h>
 #include <private/qqmljsresourcefilemapper_p.h>
+#include <private/qqmljsutils_p.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qurl.h>
@@ -172,7 +173,7 @@ int main(int argc, char **argv)
     if (!parser.isSet(bareOption))
         importPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
 
-    QStringList qmldirFiles = parser.values(qmldirOption);
+    QStringList qmldirFiles = QQmlJSUtils::cleanPaths(parser.values(qmldirOption));
 
     QString outputCppFile;
     if (!parser.isSet(outputCppOption)) {
