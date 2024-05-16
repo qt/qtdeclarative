@@ -18,7 +18,7 @@ void tst_qv4estable::checkRemoveAvoidsHeapBufferOverflow()
     QV4::ESTable estable;
 
     // Fill the ESTable with values so it is at max capacity.
-    QCOMPARE_EQ(estable.m_capacity, 8);
+    QCOMPARE_EQ(estable.m_capacity, 8U);
     for (uint i = 0; i < estable.m_capacity; ++i) {
         estable.set(QV4::Value::fromUInt32(i), QV4::Value::fromUInt32(i));
     }
@@ -27,8 +27,8 @@ void tst_qv4estable::checkRemoveAvoidsHeapBufferOverflow()
     for (uint i = 0; i < estable.m_capacity; ++i) {
         QVERIFY(estable.m_keys[i].sameValueZero(QV4::Value::fromUInt32(i)));
     }
-    QCOMPARE_EQ(estable.m_capacity, 8);
-    QCOMPARE_EQ(estable.m_size, 8);
+    QCOMPARE_EQ(estable.m_capacity, 8U);
+    QCOMPARE_EQ(estable.m_size, 8U);
 
     // Remove the first item from the set to verify that asan does not trip.
     // Relies on the CI platform propagating asan flag to all tests.
