@@ -25,5 +25,6 @@
         <file>text.qml</file>
         <file>zoomtiger.qml</file>
         <file>fillTransform.qml</file>
+        <file>rectangle.qml</file>
     </qresource>
 </RCC>

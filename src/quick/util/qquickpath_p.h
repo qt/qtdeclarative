@@ -22,6 +22,7 @@ QT_REQUIRE_CONFIG(quick_path);
 #include <qqml.h>
 
 #include <private/qqmlnullablevalue_p.h>
+#include <private/qlazilyallocated_p.h>
 #include <private/qbezier_p.h>
 #include <private/qtquickglobal_p.h>
 
@@ -395,6 +396,83 @@ Q_SIGNALS:
 
 private:
     QString _path;
+};
+
+class Q_QUICK_EXPORT QQuickPathRectangle : public QQuickCurve
+{
+    Q_OBJECT
+
+    Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY widthChanged FINAL)
+    Q_PROPERTY(qreal height READ height WRITE setHeight NOTIFY heightChanged FINAL)
+    Q_PROPERTY(qreal strokeAdjustment READ strokeAdjustment WRITE setStrokeAdjustment NOTIFY strokeAdjustmentChanged FINAL)
+    Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged FINAL)
+    Q_PROPERTY(qreal topLeftRadius READ topLeftRadius WRITE setTopLeftRadius RESET resetTopLeftRadius NOTIFY topLeftRadiusChanged FINAL)
+    Q_PROPERTY(qreal topRightRadius READ topRightRadius WRITE setTopRightRadius NOTIFY topRightRadiusChanged RESET resetTopRightRadius FINAL)
+    Q_PROPERTY(qreal bottomLeftRadius READ bottomLeftRadius WRITE setBottomLeftRadius NOTIFY bottomLeftRadiusChanged RESET resetBottomLeftRadius FINAL)
+    Q_PROPERTY(qreal bottomRightRadius READ bottomRightRadius WRITE setBottomRightRadius NOTIFY bottomRightRadiusChanged RESET resetBottomRightRadius FINAL)
+
+    QML_NAMED_ELEMENT(PathRectangle)
+    QML_ADDED_IN_VERSION(6, 8)
+public:
+    QQuickPathRectangle(QObject *parent = nullptr) : QQuickCurve(parent) {}
+
+    qreal width() const;
+    void setWidth(qreal width);
+
+    qreal height() const;
+    void setHeight(qreal height);
+
+    qreal strokeAdjustment() const;
+    void setStrokeAdjustment(qreal newStrokeAdjustment);
+
+    qreal radius() const;
+    void setRadius(qreal newRadius);
+
+    qreal topLeftRadius() const { return cornerRadius(Qt::TopLeftCorner); }
+    void setTopLeftRadius(qreal radius) { setCornerRadius(Qt::TopLeftCorner, radius); }
+    void resetTopLeftRadius() { resetCornerRadius(Qt::TopLeftCorner); }
+
+    qreal topRightRadius() const { return cornerRadius(Qt::TopRightCorner); }
+    void setTopRightRadius(qreal radius) { setCornerRadius(Qt::TopRightCorner, radius); }
+    void resetTopRightRadius() { resetCornerRadius(Qt::TopRightCorner); }
+
+    qreal bottomLeftRadius() const { return cornerRadius(Qt::BottomLeftCorner); }
+    void setBottomLeftRadius(qreal radius) { setCornerRadius(Qt::BottomLeftCorner, radius); }
+    void resetBottomLeftRadius() { resetCornerRadius(Qt::BottomLeftCorner); }
+
+    qreal bottomRightRadius() const { return cornerRadius(Qt::BottomRightCorner); }
+    void setBottomRightRadius(qreal radius) { setCornerRadius(Qt::BottomRightCorner, radius); }
+    void resetBottomRightRadius() { resetCornerRadius(Qt::BottomRightCorner); }
+
+    qreal cornerRadius(Qt::Corner corner) const;
+    void setCornerRadius(Qt::Corner corner, qreal newCornerRadius);
+    void resetCornerRadius(Qt::Corner corner);
+
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
+
+Q_SIGNALS:
+    void widthChanged();
+    void heightChanged();
+    void strokeAdjustmentChanged();
+    void radiusChanged();
+    void topLeftRadiusChanged();
+    void topRightRadiusChanged();
+    void bottomLeftRadiusChanged();
+    void bottomRightRadiusChanged();
+
+private:
+    void emitCornerRadiusChanged(Qt::Corner corner);
+
+    qreal _width = 0;
+    qreal _height = 0;
+    qreal _strokeAdjustment = 0;
+    struct ExtraData
+    {
+        ExtraData() { std::fill_n(cornerRadii, 4, -1); }
+        qreal radius = 0;
+        qreal cornerRadii[4];
+    };
+    QLazilyAllocated<ExtraData> _extra;
 };
 
 class Q_QUICK_EXPORT QQuickPathPercent : public QQuickPathElement

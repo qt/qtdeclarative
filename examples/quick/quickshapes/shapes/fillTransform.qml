@@ -40,12 +40,7 @@ Rectangle {
 
             fillTransform: PlanarTransform.fromScale(fillScale, 1, grad.centerX, grad.centerY)
 
-            startX: 0
-            startY: 0
-            PathLine { relativeX: 200; relativeY: 0 }
-            PathLine { relativeX: 0; relativeY: 100 }
-            PathLine { relativeX: -200; relativeY: 0 }
-            PathLine { relativeX: 0; relativeY: -100 }
+            PathRectangle { width: 200; height: 100 }
         }
     }
 }

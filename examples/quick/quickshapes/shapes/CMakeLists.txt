@@ -53,6 +53,7 @@ qt_add_qml_module(shapesexample
         "tiger.qml"
         "zoomtiger.qml"
         "fillTransform.qml"
+        "rectangle.qml"
 )
 
 install(TARGETS shapesexample

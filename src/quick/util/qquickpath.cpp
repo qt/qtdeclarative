@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
     be instantiated.
 
     \sa Path, PathAttribute, PathPercent, PathLine, PathPolyline, PathQuad, PathCubic, PathArc,
-        PathAngleArc, PathCurve, PathSvg
+        PathAngleArc, PathCurve, PathSvg, PathRectangle
 */
 
 /*!
@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
         \li Yes
         \li Yes
     \row
-    \li PathMultiLine
+    \li PathMultiline
         \li Yes
         \li Yes
         \li Yes
@@ -100,6 +100,11 @@ QT_BEGIN_NAMESPACE
         \li Yes
         \li Yes
     \row
+        \li PathRectangle
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
         \li PathAttribute
         \li Yes
         \li N/A
@@ -119,7 +124,7 @@ QT_BEGIN_NAMESPACE
     \note Path is a non-visual type; it does not display anything on its own.
     To draw a path, use \l Shape.
 
-    \sa PathView, Shape, PathAttribute, PathPercent, PathLine, PathPolyline, PathMove, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg
+    \sa PathView, Shape, PathAttribute, PathPercent, PathLine, PathPolyline, PathMove, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg, PathRectangle
 */
 QQuickPath::QQuickPath(QObject *parent)
  : QObject(*(new QQuickPathPrivate), parent)
@@ -210,6 +215,7 @@ bool QQuickPath::isClosed() const
         \li \l PathArc - an arc to a given position with a radius.
         \li \l PathAngleArc - an arc specified by center point, radii, and angles.
         \li \l PathSvg - a path specified as an SVG path data string.
+        \li \l PathRectangle - a rectangle with a given position and size
         \li \l PathCurve - a point on a Catmull-Rom curve.
         \li \l PathAttribute - an attribute at a given position in the path.
         \li \l PathPercent - a way to spread out items along various segments of the path.
@@ -1191,7 +1197,7 @@ void QQuickPathAttribute::setValue(qreal value)
     }
     \endqml
 
-    \sa Path, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg, PathMove, PathPolyline
+    \sa Path, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg, PathMove, PathPolyline, PathRectangle
 */
 
 /*!
@@ -1467,7 +1473,7 @@ void QQuickPathQuad::addToPath(QPainterPath &path, const QQuickPathData &data)
     \endqml
     \endtable
 
-    \sa Path, PathQuad, PathLine, PathArc, PathAngleArc, PathCurve, PathSvg
+    \sa Path, PathQuad, PathLine, PathArc, PathAngleArc, PathCurve, PathSvg, PathRectangle
 */
 
 /*!
@@ -2035,7 +2041,7 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
     to work as part of a larger path (specifying start and end), PathAngleArc is designed
     to make a path where the arc is primary (such as a circular progress indicator) more intuitive.
 
-    \sa Path, PathLine, PathQuad, PathCubic, PathCurve, PathSvg, PathArc
+    \sa Path, PathLine, PathQuad, PathCubic, PathCurve, PathSvg, PathArc, PathRectangle
 */
 
 /*!
@@ -2247,6 +2253,268 @@ void QQuickPathSvg::setPath(const QString &path)
 void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)
 {
     QQuickSvgParser::parsePathDataFast(_path, path);
+}
+
+/****************************************************************************/
+
+/*!
+    \qmltype PathRectangle
+    \instantiates QQuickPathRectangle
+    \inqmlmodule QtQuick
+    \ingroup qtquick-animation-paths
+    \brief Defines a rectangle with optionally rounded corners.
+    \since QtQuick 6.8
+
+    PathRectangle provides an easy way to specify a rectangle, optionally with rounded corners. The
+    API corresponds to that of the \l Rectangle item.
+
+    \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::x
+    \qmlproperty real QtQuick::PathRectangle::y
+
+    Defines the top left corner of the rectangle.
+
+    Unless that corner is rounded, this will also be the start and end point of the path.
+
+    \sa relativeX, relativeY
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::relativeX
+    \qmlproperty real QtQuick::PathRectangle::relativeY
+
+    Defines the top left corner of the rectangle relative to the path's start point.
+
+    If both a relative and absolute end position are specified for a single axis, the relative
+    position will be used.
+
+    Relative and absolute positions can be mixed, for example it is valid to set a relative x
+    and an absolute y.
+
+    \sa x, y
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::width
+    \qmlproperty real QtQuick::PathRectangle::height
+
+    Defines the width and height of the rectangle.
+
+    \sa x, y
+*/
+
+qreal QQuickPathRectangle::width() const
+{
+    return _width;
+}
+
+void QQuickPathRectangle::setWidth(qreal width)
+{
+    if (_width == width)
+        return;
+
+    _width = width;
+    emit widthChanged();
+    emit changed();
+}
+
+qreal QQuickPathRectangle::height() const
+{
+    return _height;
+}
+
+void QQuickPathRectangle::setHeight(qreal height)
+{
+    if (_height == height)
+        return;
+
+    _height = height;
+    emit heightChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::strokeAdjustment
+
+    This property defines the stroke width adjustment to the rectangle coordinates.
+
+    When used in a \l ShapePath with stroking enabled, the actual stroked rectangle will by default
+    extend beyond the defined rectangle by half the stroke width on all sides. This is the expected
+    behavior since the path defines the midpoint line of the stroking, and corresponds to QPainter
+    and SVG rendering.
+
+    If one instead wants the defined rectangle to be the outer edge of the stroked rectangle, like
+    a \l Rectangle item with a border, one can set strokeAdjustment to the stroke width. This will
+    effectively shift all edges inwards by half the stroke width. Like in the following example:
+
+    \qml
+    ShapePath {
+        id: myRec
+        fillColor: "white"
+        strokeColor: "black"
+        strokeWidth: 16
+        joinStyle: ShapePath.MiterJoin
+
+        PathRectangle { x: 10; y: 10; width: 200; height: 100; strokeAdjustment: myRec.strokeWidth }
+    }
+    \endqml
+*/
+
+qreal QQuickPathRectangle::strokeAdjustment() const
+{
+    return _strokeAdjustment;
+}
+
+void QQuickPathRectangle::setStrokeAdjustment(qreal newStrokeAdjustment)
+{
+    if (_strokeAdjustment == newStrokeAdjustment)
+        return;
+    _strokeAdjustment = newStrokeAdjustment;
+    emit strokeAdjustmentChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::radius
+
+    This property defines the corner radius used to define a rounded rectangle.
+
+    If radius is a positive value, the rectangle path will be defined as a rounded rectangle,
+    otherwise it will be defined as a normal rectangle.
+
+    This property may be overridden by the individual corner radius properties.
+
+    \sa topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius
+*/
+
+qreal QQuickPathRectangle::radius() const
+{
+    return _extra.isAllocated() ? _extra->radius : 0;
+}
+
+void QQuickPathRectangle::setRadius(qreal newRadius)
+{
+    if (_extra.value().radius == newRadius)
+        return;
+    _extra->radius = newRadius;
+    emit radiusChanged();
+    if (_extra->cornerRadii[Qt::TopLeftCorner] < 0)
+        emit topLeftRadiusChanged();
+    if (_extra->cornerRadii[Qt::TopRightCorner] < 0)
+        emit topRightRadiusChanged();
+    if (_extra->cornerRadii[Qt::BottomLeftCorner] < 0)
+        emit bottomLeftRadiusChanged();
+    if (_extra->cornerRadii[Qt::BottomRightCorner] < 0)
+        emit bottomRightRadiusChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::topLeftRadius
+    \qmlproperty real QtQuick::PathRectangle::topRightRadius
+    \qmlproperty real QtQuick::PathRectangle::bottomLeftRadius
+    \qmlproperty real QtQuick::PathRectangle::bottomRightRadius
+
+    If set, these properties define the individual corner radii. A zero value defines that corner
+    to be sharp, while a positive value defines it to be rounded. When unset, the value of \l
+    radius is used instead.
+
+    These properties are unset by default. Assign \c undefined to them to return them to the unset
+    state.
+
+    \sa radius
+*/
+
+qreal QQuickPathRectangle::cornerRadius(Qt::Corner corner) const
+{
+    if (_extra.isAllocated())
+        return _extra->cornerRadii[corner] < 0 ? _extra->radius : _extra->cornerRadii[corner];
+    else
+        return 0;
+}
+
+void QQuickPathRectangle::setCornerRadius(Qt::Corner corner, qreal newCornerRadius)
+{
+    if (newCornerRadius < 0 || _extra.value().cornerRadii[corner] == newCornerRadius)
+        return;
+    _extra->cornerRadii[corner] = newCornerRadius;
+    emitCornerRadiusChanged(corner);
+}
+
+void QQuickPathRectangle::resetCornerRadius(Qt::Corner corner)
+{
+    if (!_extra.isAllocated() || _extra->cornerRadii[corner] < 0)
+        return;
+    _extra->cornerRadii[corner] = -1;
+    emitCornerRadiusChanged(corner);
+}
+
+void QQuickPathRectangle::emitCornerRadiusChanged(Qt::Corner corner)
+{
+    switch (corner) {
+    case Qt::TopLeftCorner:
+        emit topLeftRadiusChanged();
+        break;
+    case Qt::TopRightCorner:
+        emit topRightRadiusChanged();
+        break;
+    case Qt::BottomLeftCorner:
+        emit bottomLeftRadiusChanged();
+        break;
+    case Qt::BottomRightCorner:
+        emit bottomRightRadiusChanged();
+        break;
+    }
+    emit changed();
+}
+
+void QQuickPathRectangle::addToPath(QPainterPath &path, const QQuickPathData &data)
+{
+    QRectF rect(positionForCurve(data, path.currentPosition()), QSizeF(_width, _height));
+
+    qreal halfStroke = _strokeAdjustment * 0.5;
+    rect.adjust(halfStroke, halfStroke, -halfStroke, -halfStroke);
+    if (rect.isEmpty())
+        return;
+
+    if (!_extra.isAllocated()) {
+        // No rounded corners
+        path.addRect(rect);
+    } else {
+        // Radii must not exceed half of the width or half of the height
+        const qreal maxDiameter = qMin(rect.width(), rect.height());
+        const qreal generalDiameter = qMax(qreal(0), qMin(maxDiameter, 2 * _extra->radius));
+        auto effectiveDiameter = [&](Qt::Corner corner) {
+            qreal radius = _extra->cornerRadii[corner];
+            return radius < 0 ? generalDiameter : qMin(maxDiameter, 2 * radius);
+        };
+        const qreal diamTL = effectiveDiameter(Qt::TopLeftCorner);
+        const qreal diamTR = effectiveDiameter(Qt::TopRightCorner);
+        const qreal diamBL = effectiveDiameter(Qt::BottomLeftCorner);
+        const qreal diamBR = effectiveDiameter(Qt::BottomRightCorner);
+
+        path.moveTo(rect.left() + diamTL * 0.5, rect.top());
+        if (diamTR)
+            path.arcTo(QRectF(QPointF(rect.right() - diamTR, rect.top()), QSizeF(diamTR, diamTR)), 90, -90);
+        else
+            path.lineTo(rect.topRight());
+        if (diamBR)
+            path.arcTo(QRectF(QPointF(rect.right() - diamBR, rect.bottom() - diamBR), QSizeF(diamBR, diamBR)), 0, -90);
+        else
+            path.lineTo(rect.bottomRight());
+        if (diamBL)
+            path.arcTo(QRectF(QPointF(rect.left(), rect.bottom() - diamBL), QSizeF(diamBL, diamBL)), 270, -90);
+        else
+            path.lineTo(rect.bottomLeft());
+        if (diamTL)
+            path.arcTo(QRectF(rect.topLeft(), QSizeF(diamTL, diamTL)), 180, -90);
+        else
+            path.lineTo(rect.topLeft());
+        path.closeSubpath();
+    }
 }
 
 /****************************************************************************/
