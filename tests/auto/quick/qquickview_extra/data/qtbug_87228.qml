@@ -15,6 +15,8 @@ Item {
         Rectangle {
             ListView {
                 objectName: "listView"
+                width: 100
+                height: 100
                 delegate: Text {
                     required property string desc
                     text: desc

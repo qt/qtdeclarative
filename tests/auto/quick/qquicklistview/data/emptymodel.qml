@@ -6,6 +6,8 @@ Rectangle {
     }
     ListView {
         id: list
+        width: 100
+        height: 100
         model: model
         delegate: Item {
         }
