@@ -71,6 +71,8 @@ TestCase {
             }
 
             ListView {
+                width: 100
+                height: 100
                 model: 5
                 delegate: Item {
                     objectName: "listViewItem" + index
