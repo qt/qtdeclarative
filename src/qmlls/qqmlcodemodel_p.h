@@ -110,7 +110,7 @@ public:
     QStringList importPaths() const { return m_importPaths; };
     void setImportPaths(const QStringList &paths) { m_importPaths = paths; };
     void removeRootUrls(const QList<QByteArray> &urls);
-    QQmlToolingSettings *settings();
+    QQmlToolingSettings *settings() const { return m_settings; }
     QStringList findFilePathsFromFileNames(const QStringList &fileNames) const;
     static QStringList fileNamesToWatch(const QQmlJS::Dom::DomItem &qmlFile);
     void disableCMakeCalls();
@@ -118,9 +118,13 @@ public:
 
     RegisteredSemanticTokens &registeredTokens();
     const RegisteredSemanticTokens &registeredTokens() const;
+    QString documentationRootPath() const { return m_documentationRootPath; }
+    void setDocumentationRootPath(const QString &path);
 
 Q_SIGNALS:
     void updatedSnapshot(const QByteArray &url);
+    void documentationRootPathChanged(const QString &path);
+
 private:
     void indexDirectory(const QString &path, int depthLeft);
     int indexEvalProgress() const; // to be called in the mutex
@@ -164,6 +168,7 @@ private:
     bool m_rebuildRequired = true; // always trigger a rebuild on start
     CMakeStatus m_cmakeStatus = RequiresInitialization;
     RegisteredSemanticTokens m_tokens;
+    QString m_documentationRootPath;
 private slots:
     void onCppFileChanged(const QString &);
 };

@@ -609,6 +609,18 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
     if (std::shared_ptr<DomEnvironment> newCurrentPtr = newCurrent.ownerAs<DomEnvironment>()) {
         newCurrentPtr->setLoadPaths(loadPaths);
     }
+
+    // if the documentation root path is not set through the commandline,
+    // try to set it from the settings file (.qmlls.ini file)
+    if (m_documentationRootPath.isEmpty()) {
+        QString path = url2Path(url);
+        if (m_settings && m_settings->search(path)) {
+            QString docDir = QStringLiteral(u"docDir");
+            if (m_settings->isSet(docDir))
+                setDocumentationRootPath(m_settings->value(docDir).toString());
+        }
+    }
+
     Path p;
     auto newCurrentPtr = newCurrent.ownerAs<DomEnvironment>();
     newCurrentPtr->loadFile(FileToLoad::fromMemory(newCurrentPtr, fPath, docText),
@@ -806,6 +818,15 @@ QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)
         }
     }
     return res;
+}
+
+void QQmlCodeModel::setDocumentationRootPath(const QString &path)
+{
+    QMutexLocker l(&m_mutex);
+    if (m_documentationRootPath != path) {
+        m_documentationRootPath = path;
+        emit documentationRootPathChanged(path);
+    }
 }
 
 void QQmlCodeModel::setBuildPathsForRootUrl(QByteArray url, const QStringList &paths)

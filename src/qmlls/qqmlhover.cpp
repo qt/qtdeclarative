@@ -9,9 +9,15 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(hoverLog, "qt.languageserver.hover")
 
 QQmlHover::QQmlHover(QmlLsp::QQmlCodeModel *codeModel)
-    : QQmlBaseModule(codeModel),
-    m_helpManager(std::make_unique<HelpManager>())
+    : QQmlBaseModule(codeModel), m_helpManager(std::make_unique<HelpManager>())
 {
+    // if set thorugh the commandline
+    if (!codeModel->documentationRootPath().isEmpty())
+        m_helpManager->setDocumentationRootPath(codeModel->documentationRootPath());
+
+    connect(codeModel, &QmlLsp::QQmlCodeModel::documentationRootPathChanged, this, [this](const QString &path) {
+        m_helpManager->setDocumentationRootPath(path);
+    });
 }
 
 QQmlHover::~QQmlHover() = default;
@@ -35,6 +41,11 @@ void QQmlHover::setupCapabilities(
 
 void QQmlHover::process(RequestPointerArgument request)
 {
+    if (!m_helpManager) {
+        qCWarning(hoverLog)
+                << "No help manager is available, documentation hints will not function!";
+        return;
+    }
     using namespace QQmlJS::Dom;
     QLspSpecification::Hover result;
     ResponseScopeGuard guard(result, request->m_response);
@@ -51,6 +62,7 @@ void QQmlHover::process(RequestPointerArgument request)
                 0, u"Could not find the file %1"_s.arg(doc.snapshot.doc.canonicalFilePath()) });
         return;
     }
+
     const auto documentation = m_helpManager->documentationForItem(file, position);
     if (!documentation.has_value()) {
         qCDebug(hoverLog)

@@ -229,6 +229,11 @@ int main(int argv, char *argc[])
     parser.addOption(noCMakeCallsOption);
     settings.addOption("no-cmake-calls", "false");
 
+    QCommandLineOption docDir(QStringList() << "p",
+                              QLatin1String("Documentation path to use for the documentation hints feature"));
+    parser.addOption(docDir);
+    settings.addOption("docDir");
+
     parser.process(app);
 
     if (parser.isSet(writeDefaultsOption)) {
@@ -266,6 +271,9 @@ int main(int argv, char *argc[])
                 std::cout.flush();
             },
             (parser.isSet(ignoreSettings) ? nullptr : &settings));
+
+    if (parser.isSet(docDir))
+        qmlServer.codeModel()->setDocumentationRootPath(parser.value(docDir).toUtf8());
 
     const bool disableCMakeCallsViaEnvironment =
             qmlGetConfigOption<bool, qmlConvertBoolConfigOption>("QMLLS_NO_CMAKE_CALLS");

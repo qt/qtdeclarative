@@ -913,7 +913,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
             cmake_language(DEFER GET_CALL qmlls_ini_generation_id call)
             if("${call}" STREQUAL "")
                 cmake_language(EVAL CODE
-                    "cmake_language(DEFER ID qmlls_ini_generation_id CALL _qt_internal_write_deferred_qmlls_ini_file)"
+                    "cmake_language(DEFER ID qmlls_ini_generation_id CALL _qt_internal_write_deferred_qmlls_ini_file ${target})"
                 )
             endif()
         else()
@@ -1008,7 +1008,7 @@ function(_qt_internal_deferred_aggregate_aotstats_files target)
     endif()
 endfunction()
 
-function(_qt_internal_write_deferred_qmlls_ini_file)
+function(_qt_internal_write_deferred_qmlls_ini_file target)
     set(qmlls_ini_file "${CMAKE_CURRENT_SOURCE_DIR}/.qmlls.ini")
     get_directory_property(_qmlls_ini_build_folders _qmlls_ini_build_folders)
     list(REMOVE_DUPLICATES _qmlls_ini_build_folders)
@@ -1019,8 +1019,11 @@ function(_qt_internal_write_deferred_qmlls_ini_file)
         # cmake list separator and windows path separator are both ';', so no replacement needed
         set(concatenated_build_dirs "${_qmlls_ini_build_folders}")
     endif()
-    set(file_content "[General]\nbuildDir=${concatenated_build_dirs}\nno-cmake-calls=false\n")
+    set(file_content "[General]\n")
+    string(APPEND file_content "buildDir=${concatenated_build_dirs}\n")
+    string(APPEND file_content "no-cmake-calls=false\n")
     file(CONFIGURE OUTPUT "${qmlls_ini_file}" CONTENT "${file_content}")
+    _add_documentation_path_to_qmlls_ini_file(${target} ${qmlls_ini_file})
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
@@ -1032,6 +1035,35 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
         endif()
     endfunction()
 endif()
+
+function(_add_documentation_path_to_qmlls_ini_file target qmlls_ini_file)
+    get_target_property(qtpaths ${QT_CMAKE_EXPORT_NAMESPACE}::qtpaths LOCATION)
+    _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
+    set(docPath "${CMAKE_CURRENT_BINARY_DIR}/.docPath.tmp")
+    add_custom_command(
+        OUTPUT
+            ${docPath}
+        COMMAND
+            ${CMAKE_COMMAND} -E echo_append "docDir=" >> ${docPath};
+        COMMAND
+            ${tool_wrapper}
+            ${qtpaths}
+            --query QT_INSTALL_DOCS >> ${docPath}
+        COMMENT "Querying Qt documentation path"
+        VERBATIM
+    )
+    add_custom_target(${target}_custom ALL
+        DEPENDS ${docPath}
+        COMMAND
+            ${CMAKE_COMMAND} -E cat ${docPath} >> ${qmlls_ini_file}
+        COMMAND
+            ${CMAKE_COMMAND} -E rm -rf -- ${docPath}
+        COMMENT "Adding Qt documentation path to .qmlls.ini"
+        VERBATIM
+    )
+    add_dependencies(${target} ${target}_custom)
+
+endfunction()
 
 # Make the prefix conform to the following:
 #   - Starts with a "/"

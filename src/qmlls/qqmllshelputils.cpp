@@ -17,7 +17,7 @@ Q_LOGGING_CATEGORY(QQmlLSHelpUtilsLog, "qt.languageserver.helpUtils")
 
 using namespace QQmlJS::Dom;
 
-static QStringList documentationPaths(const QString &qtInstallationPath)
+static QStringList documentationFiles(const QString &qtInstallationPath)
 {
     QStringList result;
     QDirIterator dirIterator(qtInstallationPath, QStringList{ "*.qch"_L1 }, QDir::Files);
@@ -30,16 +30,6 @@ static QStringList documentationPaths(const QString &qtInstallationPath)
 
 HelpManager::HelpManager()
 {
-    // TODO: Find a way to get the docs from Qt kits.
-    // For now, we are using an empty list for proof of concept.
-    const auto &installedDocsPath = QLibraryInfo::path(QLibraryInfo::DocumentationPath);
-    const auto foundQchFiles = documentationPaths(installedDocsPath);
-    if (foundQchFiles.isEmpty()) {
-        qCWarning(QQmlLSHelpUtilsLog)
-                << "No documentation files found in the Qt doc installation path";
-        return;
-    }
-
     const QFactoryLoader pluginLoader(QQmlLSHelpPluginInterface_iid, u"/help"_s);
     const auto keys = pluginLoader.metaDataKeys();
     for (qsizetype i = 0; i < keys.size(); ++i) {
@@ -47,10 +37,30 @@ HelpManager::HelpManager()
         if (instance) {
             m_helpPlugin =
                     instance->initialize(QDir::tempPath() + "/collectionFile.qhc"_L1, nullptr);
-            registerDocumentations(foundQchFiles);
             break;
         }
     }
+}
+
+void HelpManager::setDocumentationRootPath(const QString &path)
+{
+    if (m_docRootPath == path)
+        return;
+    m_docRootPath = path;
+
+    const auto foundQchFiles = documentationFiles(path);
+    if (foundQchFiles.isEmpty()) {
+        qCWarning(QQmlLSHelpUtilsLog)
+                << "No documentation files found in the Qt doc installation path: " << path;
+        return;
+    }
+
+    return registerDocumentations(foundQchFiles);
+}
+
+QString HelpManager::documentationRootPath() const
+{
+    return m_docRootPath;
 }
 
 void HelpManager::registerDocumentations(const QStringList &docs) const
