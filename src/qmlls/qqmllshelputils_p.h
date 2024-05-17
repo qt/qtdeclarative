@@ -34,6 +34,8 @@ class HelpManager final
 {
 public:
     HelpManager();
+    void setDocumentationRootPath(const QString &path);
+    [[nodiscard]] QString documentationRootPath() const;
     [[nodiscard]] std::optional<QByteArray> documentationForItem(const DomItem &file,
                                                                  QLspSpecification::Position position) const;
 
@@ -50,6 +52,7 @@ private:
                                                                                               const QString &name) const;
     void registerDocumentations(const QStringList &docs) const;
     std::unique_ptr<QQmlLSHelpProviderBase> m_helpPlugin;
+    QString m_docRootPath;
 };
 
 QT_END_NAMESPACE

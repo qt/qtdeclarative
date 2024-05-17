@@ -5,6 +5,7 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
+#include <QtCore/qlibraryinfo.h>
 #include <QtQml/qqml.h>
 #include <QtTest/qtest.h>
 
@@ -33,6 +34,7 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         QSKIP(u"Cannot find source directory '%1', skipping test..."_s.arg(SOURCE_DIRECTORY)
                       .toLatin1());
 
+    const QString &docPath = QLibraryInfo::path(QLibraryInfo::DocumentationPath);
     {
         auto file = QFile(source.absoluteFilePath(qmllsIniName));
         QVERIFY(file.exists());
@@ -41,8 +43,8 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         auto secondFolder = QDir(build.absolutePath().append(u"/qml/hello/subfolders"_s));
         QVERIFY(secondFolder.exists());
         QCOMPARE(fileContent,
-                 u"[General]\nbuildDir=%1%2%3\nno-cmake-calls=false\n"_s.arg(build.absolutePath(), QDir::listSeparator(),
-                                                       secondFolder.absolutePath()));
+                 u"[General]\nbuildDir=%1%2%3\nno-cmake-calls=false\ndocDir=%4\n"_s.arg(build.absolutePath(), QDir::listSeparator(),
+                                                       secondFolder.absolutePath(), docPath));
     }
 
     {
@@ -55,7 +57,7 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         QVERIFY(file.open(QFile::ReadOnly | QFile::Text));
         const auto fileContent = QString::fromUtf8(file.readAll());
         QCOMPARE(fileContent,
-                 u"[General]\nbuildDir=%1\nno-cmake-calls=false\n"_s.arg(buildSubfolder.absolutePath()));
+                 u"[General]\nbuildDir=%1\nno-cmake-calls=false\ndocDir=%2\n"_s.arg(buildSubfolder.absolutePath(), docPath));
     }
     }
 
@@ -70,7 +72,7 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
             const auto fileContent = QString::fromUtf8(file.readAll());
             QCOMPARE(
                     fileContent,
-                    u"[General]\nbuildDir=%1\nno-cmake-calls=false\n"_s.arg(build.absolutePath()));
+                    u"[General]\nbuildDir=%1\nno-cmake-calls=false\ndocDir=%2\n"_s.arg(build.absolutePath(), docPath));
         }
     }
     {
@@ -86,7 +88,7 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
             const auto fileContent = QString::fromUtf8(file.readAll());
             QCOMPARE(
                     fileContent,
-                    u"[General]\nbuildDir=%1\nno-cmake-calls=false\n"_s.arg(build.absolutePath()));
+                    u"[General]\nbuildDir=%1\nno-cmake-calls=false\ndocDir=%2\n"_s.arg(build.absolutePath(), docPath));
         }
     }
 }
