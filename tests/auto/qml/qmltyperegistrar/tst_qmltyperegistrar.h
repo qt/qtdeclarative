@@ -792,6 +792,24 @@ public:
     Q_INVOKABLE const QObject *getObject() { return nullptr; }
 };
 
+using myint = int;
+
+struct IntAlias
+{
+    Q_GADGET
+    QML_FOREIGN(myint)
+    QML_USING(int);
+};
+
+class WithMyInt : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(myint a READ a CONSTANT)
+public:
+    myint a() const { return 10; }
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -864,6 +882,8 @@ private slots:
     void longNumberTypes();
     void enumList();
     void constReturnType();
+
+    void usingDeclaration();
 
 private:
     QByteArray qmltypesData;

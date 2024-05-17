@@ -457,48 +457,99 @@ FoundType QmlTypesClassDescription::collectRelated(
     return FoundType();
 }
 
+struct UsingCompare {
+    bool operator()(const UsingDeclaration &a, QAnyStringView b) const
+    {
+        return a.alias < b;
+    }
 
-ResolvedTypeAlias::ResolvedTypeAlias(QAnyStringView alias)
+    bool operator()(QAnyStringView a, const UsingDeclaration &b) const
+    {
+        return a < b.alias;
+    }
+};
+
+ResolvedTypeAlias::ResolvedTypeAlias(
+        QAnyStringView alias, const QList<UsingDeclaration> &usingDeclarations)
     : type(alias)
 {
+    handleVoid();
     if (type.isEmpty())
         return;
 
-    if (type == "void") {
-        type = "";
-        return;
+    handleList();
+
+    if (!isList) {
+        handlePointer();
+        handleConst();
     }
 
-    // This is a best effort approach and will not return correct results in the
-    // presence of typedefs.
+    while (true) {
+        const auto usingDeclaration = std::equal_range(
+                usingDeclarations.begin(), usingDeclarations.end(), type, UsingCompare());
+        if (usingDeclaration.first == usingDeclaration.second)
+            break;
 
-    auto handleList = [&](QLatin1StringView list) {
+        type = usingDeclaration.first->original;
+        handleVoid();
+        if (type.isEmpty())
+            return;
+
+        if (isPointer) {
+            handleConst();
+            continue;
+        }
+
+        if (!isList) {
+            handleList();
+            if (!isList) {
+                handlePointer();
+                handleConst();
+            }
+        }
+    }
+}
+
+void ResolvedTypeAlias::handleVoid()
+{
+    if (type == "void")
+        type = "";
+}
+
+void ResolvedTypeAlias::handleList()
+{
+    for (QLatin1StringView list : {"QQmlListProperty<"_L1, "QList<"_L1}) {
         if (!startsWith(type, list) || type.back() != '>'_L1)
-            return false;
+            continue;
 
         const int listSize = list.size();
         const QAnyStringView elementType = trimmed(type.mid(listSize, type.size() - listSize - 1));
 
-        // QQmlListProperty internally constructs the pointer. Passing an explicit '*' will
-        // produce double pointers. QList is only for value types. We can't handle QLists
-        // of pointers (unless specially registered, but then they're not isList).
+               // QQmlListProperty internally constructs the pointer. Passing an explicit '*' will
+               // produce double pointers. QList is only for value types. We can't handle QLists
+               // of pointers (unless specially registered, but then they're not isList).
         if (elementType.back() == '*'_L1)
-            return false;
+            continue;
 
         isList = true;
         type = elementType;
-        return true;
-    };
+        return;
+    }
+}
 
-    if (!handleList("QQmlListProperty<"_L1) && !handleList("QList<"_L1)) {
-        if (type.back() == '*'_L1) {
-            isPointer = true;
-            type = type.chopped(1);
-        }
-        if (startsWith(type, "const "_L1)) {
-            isConstant = true;
-            type = type.sliced(strlen("const "));
-        }
+void ResolvedTypeAlias::handlePointer()
+{
+    if (type.back() == '*'_L1) {
+        isPointer = true;
+        type = type.chopped(1);
+    }
+}
+
+void ResolvedTypeAlias::handleConst()
+{
+    if (startsWith(type, "const "_L1)) {
+        isConstant = true;
+        type = type.sliced(strlen("const "));
     }
 }
 

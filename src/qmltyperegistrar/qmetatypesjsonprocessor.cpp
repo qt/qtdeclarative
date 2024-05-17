@@ -227,8 +227,9 @@ MetaTypesJsonProcessor::PreProcessResult MetaTypesJsonProcessor::preProcess(
     // and is not the root object, then it's foreign type has no entry of its own.
     // In that case we need to generate a "primitive" entry.
 
-    QList<QAnyStringView> aliases;
-    QAnyStringView foreign;
+    QList<QAnyStringView> primitiveAliases;
+    UsingDeclaration usingDeclaration;
+
     RegistrationMode mode = NoRegistration;
     bool isSelfExtendingValueType = false;
     bool hasJavaScriptExtension = false;
@@ -237,9 +238,9 @@ MetaTypesJsonProcessor::PreProcessResult MetaTypesJsonProcessor::preProcess(
 
     for (const ClassInfo &classInfo : classDef.classInfos()) {
         if (classInfo.name == S_FOREIGN)
-            foreign = classInfo.value;
+            usingDeclaration.alias = classInfo.value;
         else if (classInfo.name == S_PRIMITIVE_ALIAS)
-            aliases.append(classInfo.value);
+            primitiveAliases.append(classInfo.value);
         else if (classInfo.name == S_EXTENSION_IS_JAVA_SCRIPT)
             hasJavaScriptExtension = (classInfo.value == S_TRUE);
         else if (classInfo.name == S_EXTENDED && classDef.kind() == MetaType::Kind::Gadget)
@@ -248,6 +249,8 @@ MetaTypesJsonProcessor::PreProcessResult MetaTypesJsonProcessor::preProcess(
             isRootObject = (classInfo.value == S_TRUE);
         else if (classInfo.name == S_SEQUENCE)
             isSequence = true;
+        else if (classInfo.name == S_USING)
+            usingDeclaration.original = classInfo.value;
         else if (populateMode == PopulateMode::Yes && classInfo.name == S_ELEMENT) {
             switch (classDef.kind()) {
             case MetaType::Kind::Object:
@@ -270,9 +273,10 @@ MetaTypesJsonProcessor::PreProcessResult MetaTypesJsonProcessor::preProcess(
     }
 
     return PreProcessResult {
-        aliases,
+        primitiveAliases,
+        usingDeclaration,
         (!isRootObject && (isSequence || isSelfExtendingValueType || hasJavaScriptExtension))
-                ? foreign
+                ? usingDeclaration.alias
                 : QAnyStringView(),
         mode
     };
@@ -517,7 +521,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
     const auto addProperties = [&](const MetaType &context,
                                    const QList<QAnyStringView> &namespaces) {
         for (const Property &property : context.properties()) {
-            ResolvedTypeAlias resolved(property.type);
+            ResolvedTypeAlias resolved(property.type, m_usingDeclarations);
             if (!resolved.type.isEmpty())
                 addType(context, resolved.type, namespaces, "property");
         }
@@ -529,12 +533,12 @@ void MetaTypesJsonProcessor::addRelatedTypes()
              : {context.methods(), context.constructors(), context.sigs() }) {
             for (const Method &methodObject : methods) {
                 for (const Argument &argument : std::as_const(methodObject.arguments)) {
-                    ResolvedTypeAlias resolved(argument.type);
+                    ResolvedTypeAlias resolved(argument.type, m_usingDeclarations);
                     if (!resolved.type.isEmpty())
                         addType(context, resolved.type, namespaces, "argument");
                 }
 
-                ResolvedTypeAlias resolved(methodObject.returnType);
+                ResolvedTypeAlias resolved(methodObject.returnType, m_usingDeclarations);
                 if (!resolved.type.isEmpty())
                     addType(context, resolved.type, namespaces, "return");
             }
@@ -544,7 +548,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
     const auto addEnums = [&](const MetaType &context,
                               const QList<QAnyStringView> &namespaces) {
         for (const Enum &enumerator : context.enums()) {
-            ResolvedTypeAlias resolved(enumerator.type);
+            ResolvedTypeAlias resolved(enumerator.type, m_usingDeclarations);
             if (!resolved.type.isEmpty())
                 addType(context, resolved.type, namespaces, "enum");
         }
@@ -557,7 +561,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
             addType(classDef, obj.value, namespaces, "attached");
             return true;
         } else if (objNameValue == S_SEQUENCE) {
-            ResolvedTypeAlias value(obj.value);
+            ResolvedTypeAlias value(obj.value, m_usingDeclarations);
             addType(classDef, value.type, namespaces, "sequence value");
             return true;
         } else if (objNameValue == S_EXTENDED) {
@@ -675,6 +679,9 @@ void MetaTypesJsonProcessor::processTypes(const QCborMap &types)
             m_primitiveTypes.emplaceBack(preprocessed.foreignPrimitive);
             m_primitiveTypes.append(preprocessed.primitiveAliases);
         }
+
+        if (preprocessed.usingDeclaration.isValid())
+            m_usingDeclarations.append(preprocessed.usingDeclaration);
     }
 }
 
@@ -691,6 +698,9 @@ void MetaTypesJsonProcessor::processForeignTypes(const QCborMap &types)
             m_primitiveTypes.emplaceBack(preprocessed.foreignPrimitive);
             m_primitiveTypes.append(preprocessed.primitiveAliases);
         }
+
+        if (preprocessed.usingDeclaration.isValid())
+            m_usingDeclarations.append(preprocessed.usingDeclaration);
     }
 }
 

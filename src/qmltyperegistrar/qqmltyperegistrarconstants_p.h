@@ -163,6 +163,7 @@ static constexpr QLatin1StringView S_ROOT                         { "QML.Root" }
 static constexpr QLatin1StringView S_SEQUENCE                     { "QML.Sequence" };
 static constexpr QLatin1StringView S_SINGLETON                    { "QML.Singleton" };
 static constexpr QLatin1StringView S_UNCREATABLE_REASON           { "QML.UncreatableReason" };
+static constexpr QLatin1StringView S_USING                        { "QML.Using" };
 } // namespace Qml
 
 } // namespace MetatypesJson

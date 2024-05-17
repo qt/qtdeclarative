@@ -192,4 +192,8 @@ QT_END_NAMESPACE
 #define QML_CUSTOMPARSER \
     Q_CLASSINFO("QML.HasCustomParser", "true")
 
+#define QML_USING(ORIGINAL) \
+    using QmlUsing ## ORIGINAL = ORIGINAL; \
+    Q_CLASSINFO("QML.Using", #ORIGINAL)
+
 #endif

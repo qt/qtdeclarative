@@ -209,6 +209,13 @@ private:
     const MetaTypePrivate *d = &s_empty;
 };
 
+struct UsingDeclaration {
+    QAnyStringView alias;
+    QAnyStringView original;
+
+    bool isValid() const { return !alias.isEmpty() && !original.isEmpty(); }
+};
+
 class MetaTypesJsonProcessor
 {
 public:
@@ -227,6 +234,7 @@ public:
     QVector<MetaType> types() const { return m_types; }
     QVector<MetaType> foreignTypes() const { return m_foreignTypes; }
     QList<QAnyStringView> referencedTypes() const { return m_referencedTypes; }
+    QList<UsingDeclaration> usingDeclarations() const { return m_usingDeclarations; }
     QList<QString> includes() const { return m_includes; }
 
     QString extractRegisteredTypes() const;
@@ -241,13 +249,9 @@ private:
 
     struct PreProcessResult {
         QList<QAnyStringView> primitiveAliases;
+        UsingDeclaration usingDeclaration;
         QAnyStringView foreignPrimitive;
         RegistrationMode mode;
-    };
-
-    struct PotentialPrimitiveType {
-        QAnyStringView name;
-        QString file;
     };
 
     enum class PopulateMode { No, Yes };
@@ -267,6 +271,7 @@ private:
     QList<QString> m_includes;
     QList<QAnyStringView> m_referencedTypes;
     QList<QAnyStringView> m_primitiveTypes;
+    QList<UsingDeclaration> m_usingDeclarations;
     QVector<MetaType> m_types;
     QVector<MetaType> m_foreignTypes;
     bool m_privateIncludes = false;
