@@ -338,6 +338,14 @@ struct QQmlQByteArrayForeign
     QML_FOREIGN(QByteArray)
 };
 
+struct QQmlQByteArrayListForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QByteArrayList)
+    QML_SEQUENTIAL_CONTAINER(QByteArray)
+};
+
 struct QQmlQStringListForeign
 {
     Q_GADGET
