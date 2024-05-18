@@ -1472,11 +1472,12 @@ use \l{QtQml::Qt::createQmlObject()}{Qt.createQmlObject()}.
 */
 
 /*!
+\since 6.5
 \qmlmethod Component Qt::createComponent(string moduleUri, string typeName, enumeration mode, QtObject parent)
 \overload
 Returns a \l Component object created for the type specified by \a moduleUri and \a typeName.
 \qml
-import QtQuick
+import QtQml
 QtObject {
     id: root
     property Component myComponent: Qt.createComponent("QtQuick", "Rectangle", Component.Asynchronous, root)
