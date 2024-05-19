@@ -558,6 +558,19 @@ void QQuickAccessibleAttached::setProxying(QQuickAccessibleAttached *proxying)
     }
 }
 
+/*!
+ * \since 6.8
+ * Issues an announcement event with a \a message with priority \a priority.
+ *
+ * \sa QAccessibleAnnouncementEvent
+ */
+void QQuickAccessibleAttached::announce(const QString &message, QAccessible::AnnouncementPriority priority)
+{
+    QAccessibleAnnouncementEvent event(parent(), message);
+    event.setPriority(priority);
+    QAccessible::updateAccessibility(&event);
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qquickaccessibleattached_p.cpp"

@@ -63,6 +63,7 @@ private slots:
     void checkableTest();
     void ignoredTest();
     void passwordTest();
+    void announceTest();
 };
 
 tst_QQuickAccessible::tst_QQuickAccessible()
@@ -695,6 +696,25 @@ void tst_QQuickAccessible::passwordTest()
     QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(object.get());
     QVERIFY(iface);
     QCOMPARE(iface->text(QAccessible::Value), password);
+
+    QTestAccessibility::clearEvents();
+}
+
+void tst_QQuickAccessible::announceTest()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick\nItem {\n"
+                      "Component.onCompleted: Accessible.announce('I am complete!')"
+                      "}",
+                      QUrl());
+    auto object = std::unique_ptr<QObject>(component.create());
+    QVERIFY(object != nullptr);
+
+    QAccessibleEvent createdEvent(object.get(), QAccessible::ObjectCreated);
+    QVERIFY_EVENT(&createdEvent);
+    QAccessibleAnnouncementEvent event(object.get(), QStringLiteral("I am complete!"));
+    QVERIFY_EVENT(&event);
 
     QTestAccessibility::clearEvents();
 }
