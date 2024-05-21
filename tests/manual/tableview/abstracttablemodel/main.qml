@@ -85,6 +85,22 @@ ApplicationWindow {
                     }
 
                     CheckBox {
+                        id: movableColumnEnabled
+                        checkable: true
+                        checked: false
+                        Layout.fillWidth: false
+                        text: "Reorder columns"
+                    }
+
+                    CheckBox {
+                        id: movableRowEnabled
+                        checkable: true
+                        checked: false
+                        Layout.fillWidth: false
+                        text: "Reorder rows"
+                    }
+
+                    CheckBox {
                         id: enableAnimation
                         checkable: true
                         checked: true
@@ -201,6 +217,14 @@ ApplicationWindow {
                     Button {
                         text: "Clear selection"
                         onClicked: tableView.selectionModel.clearSelection()
+                    }
+                    Button {
+                        text: "Clear column reordering"
+                        onClicked: tableView.clearColumnReordering()
+                    }
+                    Button {
+                        text: "Clear row reordering"
+                        onClicked: tableView.clearRowReordering()
                     }
                 }
             }
@@ -450,7 +474,7 @@ ApplicationWindow {
         }
     }
 
-    TableView {
+    HorizontalHeaderView {
         id: topHeader
         objectName: "topHeader"
         anchors.left: centerScrollView.left
@@ -465,8 +489,11 @@ ApplicationWindow {
         }
 
         delegate: Rectangle {
+            required property bool containsDrag
             implicitHeight: topHeader.height
             implicitWidth: 20
+            border.width: containsDrag ? 1 : 0
+            border.color: containsDrag ? window.palette.text : window.palette.alternateBase
             color: window.palette.alternateBase
             Label {
                 anchors.centerIn: parent
@@ -481,10 +508,11 @@ ApplicationWindow {
 
         syncView: tableView
         syncDirection: Qt.Horizontal
+        movableColumns: movableColumnEnabled.checked
         resizableColumns: resizableColumnsEnabled.checked
     }
 
-    TableView {
+    VerticalHeaderView {
         id: leftHeader
         objectName: "leftHeader"
         anchors.left: menu.right
@@ -499,8 +527,11 @@ ApplicationWindow {
         }
 
         delegate: Rectangle {
+            required property bool containsDrag
             implicitHeight: 50
             implicitWidth: leftHeader.width
+            border.width: containsDrag ? 1 : 0
+            border.color: containsDrag ? window.palette.text : window.palette.alternateBase
             color: window.palette.alternateBase
             Label {
                 anchors.centerIn: parent
@@ -515,6 +546,7 @@ ApplicationWindow {
 
         syncView: tableView
         syncDirection: Qt.Vertical
+        movableRows: movableRowEnabled.checked
         resizableRows: resizableRowsEnabled.checked
     }
 
