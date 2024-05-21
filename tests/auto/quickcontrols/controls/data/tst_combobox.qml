@@ -2004,11 +2004,16 @@ TestCase {
         compare(currentIndexSpy.count, 1)
     }
 
+    readonly property font testFont: ({
+        family: "Arial",
+        pixelSize: 12
+    })
+
     Component {
-        id: appFontTextFieldComponent
+        id: fixedFontTextFieldComponent
         TextField {
             objectName: "appFontTextField"
-            font: Qt.application.font
+            font: testCase.testFont
             // We don't want the background's implicit width to interfere with our tests,
             // which are about implicit width of the contentItem of ComboBox, which is by default TextField.
             background: null
@@ -2016,14 +2021,14 @@ TestCase {
     }
 
     Component {
-        id: appFontContentItemComboBoxComponent
+        id: fixedFontContentItemComboBoxComponent
         ComboBox {
             // Override the contentItem so that the font doesn't vary between styles.
             contentItem: TextField {
                 objectName: "appFontContentItemTextField"
                 // We do this just to be extra sure that the font never comes from the control,
-                // as we want it to match that of the TextField in the appFontTextFieldComponent.
-                font: Qt.application.font
+                // as we want it to match that of the TextField in the fixedFontTextFieldComponent.
+                font: testCase.testFont
                 background: null
             }
         }
@@ -2077,14 +2082,14 @@ TestCase {
     function test_implicitContentWidthPolicy_ContentItemImplicitWidth() {
         // Set ContentItemImplicitWidth and ensure that implicitContentWidth is as wide as the current item
         // by comparing it against the implicitWidth of an identical TextField
-        let control = createTemporaryObject(appFontContentItemComboBoxComponent, testCase, {
+        let control = createTemporaryObject(fixedFontContentItemComboBoxComponent, testCase, {
             model: ["Short", "Kinda long"],
             implicitContentWidthPolicy: ComboBox.ContentItemImplicitWidth
         })
         verify(control)
         compare(control.implicitContentWidthPolicy, ComboBox.ContentItemImplicitWidth)
 
-        let textField = createTemporaryObject(appFontTextFieldComponent, testCase)
+        let textField = createTemporaryObject(fixedFontTextFieldComponent, testCase)
         verify(textField)
         // Don't set any text on textField because we're not accounting for the widest
         // text here, so we want to compare it against an empty TextField.
@@ -2103,14 +2108,14 @@ TestCase {
     }
 
     function test_implicitContentWidthPolicy_WidestText(data) {
-        let control = createTemporaryObject(appFontContentItemComboBoxComponent, testCase, {
+        let control = createTemporaryObject(fixedFontContentItemComboBoxComponent, testCase, {
             model: data.model,
             implicitContentWidthPolicy: ComboBox.WidestText
         })
         verify(control)
         compare(control.implicitContentWidthPolicy, ComboBox.WidestText)
 
-        let textField = createTemporaryObject(appFontTextFieldComponent, testCase)
+        let textField = createTemporaryObject(fixedFontTextFieldComponent, testCase)
         verify(textField)
         textField.text = "Kinda long"
         // Note that we don't need to change the current index here, as the implicitContentWidth
@@ -2137,7 +2142,7 @@ TestCase {
         // Changes in font should result in the implicitContentWidth being updated.
         textField.font.pixelSize *= 2
         // We have to change the contentItem's font size manually since we break the
-        // style's binding to the control's font when we set Qt.application.font to it.
+        // style's binding to the control's font when we set the fixed font on it.
         control.contentItem.font.pixelSize *= 2
         control.font.pixelSize *= 2
         compare(Math.ceil(control.implicitContentWidth), Math.ceil(textField.implicitWidth))
@@ -2148,14 +2153,14 @@ TestCase {
     }
 
     function test_implicitContentWidthPolicy_WidestTextWhenCompleted(data) {
-        let control = createTemporaryObject(appFontContentItemComboBoxComponent, testCase, {
+        let control = createTemporaryObject(fixedFontContentItemComboBoxComponent, testCase, {
             model: data.model,
             implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
         })
         verify(control)
         compare(control.implicitContentWidthPolicy, ComboBox.WidestTextWhenCompleted)
 
-        let textField = createTemporaryObject(appFontTextFieldComponent, testCase)
+        let textField = createTemporaryObject(fixedFontTextFieldComponent, testCase)
         verify(textField)
         textField.text = "Kinda long"
         compare(Math.ceil(control.implicitContentWidth), Math.ceil(textField.implicitWidth))
