@@ -1,0 +1,10 @@
+# See qtbase/src/testlib/qtestblacklist.cpp for format
+
+# until adding Fluent's own BusyIndicator implementation
+[BusyIndicator::test_visibility]
+*
+
+# QTBUG-95750
+[RangeSlider::test_overlappingHandles]
+b2qt
+qnx

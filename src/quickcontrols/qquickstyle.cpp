@@ -400,6 +400,7 @@ QStringList QQuickStylePrivate::builtInStyles()
     return {
         QLatin1String("Basic"),
         QLatin1String("Fusion"),
+        QLatin1String("Fluent"),
         QLatin1String("Imagine"),
 #ifdef Q_OS_MACOS
         QLatin1String("macOS"),
