@@ -66,7 +66,7 @@ void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArg
 
     QHash<QString, QString> codeCache;
 
-    for (const auto &rename : renames) {
+    for (const auto &rename : renames.renameInFile()) {
         QLspSpecification::TextEdit edit;
 
         const QUrl uri = QUrl::fromLocalFile(rename.location.filename);

@@ -663,7 +663,7 @@ void tst_qmlls_utils::findBaseObject()
 struct UsageData
 {
     QString testFileName;
-    QList<QQmlLSUtils::Location> expectedUsages;
+    QQmlLSUtils::Usages expectedUsages;
 };
 
 void tst_qmlls_utils::findUsages_data()
@@ -682,7 +682,7 @@ void tst_qmlls_utils::findUsages_data()
     const auto makeUsages = [](const QString &fileName, QList<QQmlLSUtils::Location> &locations) {
         UsageData data;
         std::sort(locations.begin(), locations.end());
-        data.expectedUsages = locations;
+        data.expectedUsages = { locations, {} };
         data.testFileName = fileName;
         return data;
     };
@@ -1402,7 +1402,13 @@ void tst_qmlls_utils::findUsages()
     QFETCH(int, line);
     QFETCH(int, character);
     QFETCH(UsageData, data);
-    QVERIFY(std::is_sorted(data.expectedUsages.begin(), data.expectedUsages.end()));
+
+    {
+        auto usagesInFilename = data.expectedUsages.usagesInFilename();
+        QVERIFY(std::is_sorted(usagesInFilename.begin(), usagesInFilename.end()));
+        auto usagesInFile = data.expectedUsages.usagesInFile();
+        QVERIFY(std::is_sorted(usagesInFile.begin(), usagesInFile.end()));
+    }
 
     auto [env, file] = createEnvironmentAndLoadFile(data.testFileName);
 
@@ -1422,17 +1428,19 @@ void tst_qmlls_utils::findUsages()
     if constexpr (enable_debug_output) {
         if (usages != data.expectedUsages) {
             qDebug() << "Got:\n";
-            for (auto &x : usages) {
+            for (auto &x : usages.usagesInFile()) {
                 qDebug() << x.filename << "(" << x.sourceLocation.startLine << ", "
                          << x.sourceLocation.startColumn << "), " << x.sourceLocation.offset << "+"
                          << x.sourceLocation.length;
             }
+            qDebug() << "with usages in filenames:" << usages.usagesInFilename();
             qDebug() << "But expected: \n";
-            for (auto &x : data.expectedUsages) {
+            for (auto &x : data.expectedUsages.usagesInFile()) {
                 qDebug() << x.filename << "(" << x.sourceLocation.startLine << ", "
                          << x.sourceLocation.startColumn << "), " << x.sourceLocation.offset << "+"
                          << x.sourceLocation.length;
             }
+            qDebug() << "with usages in filenames:" << data.expectedUsages.usagesInFilename();
         }
     }
 
@@ -1446,7 +1454,7 @@ void tst_qmlls_utils::renameUsages_data()
     QTest::addColumn<int>("line");
     QTest::addColumn<int>("character");
     QTest::addColumn<QString>("newName");
-    QTest::addColumn<QList<QQmlLSUtils::Edit>>("expectedRenames");
+    QTest::addColumn<QQmlLSUtils::RenameUsages>("expectedRenames");
     QTest::addColumn<QString>("expectedError");
 
     const QString testFileName = testFile(u"JSUsages.qml"_s);
@@ -1455,97 +1463,109 @@ void tst_qmlls_utils::renameUsages_data()
     const QString testFileFromAnotherFileContent = readFileContent(testFileNameFromAnotherFile);
 
     const QString noError;
-    const QList<QQmlLSUtils::Edit> noRenames;
+    const QQmlLSUtils::RenameUsages noRenames;
 
-    QList<QQmlLSUtils::Edit> methodFRename{
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 72, 14, strlen("recursive"),
-                                u"newNameNewMe"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 74, 24, strlen("recursive"),
-                                u"newNameNewMe"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 74, 34, strlen("recursive"),
-                                u"newNameNewMe"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 74, 51, strlen("recursive"),
-                                u"newNameNewMe"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 74, 68, strlen("recursive"),
-                                u"newNameNewMe"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 76, 20, strlen("recursive"),
-                                u"newNameNewMe"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 79, 34, strlen("recursive"),
-                                u"newNameNewMe"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 84, 27, strlen("recursive"),
-                                u"newNameNewMe"_s),
+    QQmlLSUtils::RenameUsages methodFRename{
+        {
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 72, 14, strlen("recursive"),
+                                        u"newNameNewMe"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 74, 24, strlen("recursive"),
+                                        u"newNameNewMe"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 74, 34, strlen("recursive"),
+                                        u"newNameNewMe"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 74, 51, strlen("recursive"),
+                                        u"newNameNewMe"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 74, 68, strlen("recursive"),
+                                        u"newNameNewMe"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 76, 20, strlen("recursive"),
+                                        u"newNameNewMe"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 79, 34, strlen("recursive"),
+                                        u"newNameNewMe"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 84, 27, strlen("recursive"),
+                                        u"newNameNewMe"_s),
+        },
+        {}
     };
 
-    QList<QQmlLSUtils::Edit> JSIdentifierSumRename{
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 8, 13, strlen("sum"),
-                                u"sumsumsum123"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 10, 13, strlen("sum"),
-                                u"sumsumsum123"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 10, 19, strlen("sum"),
-                                u"sumsumsum123"_s),
+    QQmlLSUtils::RenameUsages JSIdentifierSumRename{
+        {
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 8, 13, strlen("sum"),
+                                        u"sumsumsum123"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 10, 13, strlen("sum"),
+                                        u"sumsumsum123"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 10, 19, strlen("sum"),
+                                        u"sumsumsum123"_s),
+        },
+        {}
     };
 
-    QList<QQmlLSUtils::Edit> qmlSignalRename{
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 88, 12, strlen("helloSignal"),
-                                u"finalSignal"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 91, 9, strlen("helloSignal"),
-                                u"finalSignal"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 93, 13, strlen("helloSignal"),
-                                u"finalSignal"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 97, 17, strlen("helloSignal"),
-                                u"finalSignal"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 101, 9, strlen("helloSignal"),
-                                u"finalSignal"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 119, 5, strlen("onHelloSignal"),
-                                u"onFinalSignal"_s),
+    QQmlLSUtils::RenameUsages qmlSignalRename{
+        {
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 88, 12,
+                                        strlen("helloSignal"), u"finalSignal"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 91, 9, strlen("helloSignal"),
+                                        u"finalSignal"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 93, 13,
+                                        strlen("helloSignal"), u"finalSignal"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 97, 17,
+                                        strlen("helloSignal"), u"finalSignal"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 101, 9,
+                                        strlen("helloSignal"), u"finalSignal"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 119, 5,
+                                        strlen("onHelloSignal"), u"onFinalSignal"_s),
+        },
+        {}
     };
 
-    QList<QQmlLSUtils::Edit> helloPropertyRename{
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 17, 18, strlen("helloProperty"),
-                                u"freshPropertyName"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 24, 13, strlen("helloProperty"),
-                                u"freshPropertyName"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 24, 29, strlen("helloProperty"),
-                                u"freshPropertyName"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 65, 60, strlen("helloProperty"),
-                                u"freshPropertyName"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 151, 9,
-                                strlen("helloPropertyChanged"), u"freshPropertyNameChanged"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 153, 5,
-                                strlen("onHelloPropertyChanged"), u"onFreshPropertyNameChanged"_s),
-        QQmlLSUtils::Edit::from(testFileNameFromAnotherFile, testFileFromAnotherFileContent, 12, 16,
-                                strlen("helloProperty"), u"freshPropertyName"_s),
+    QQmlLSUtils::RenameUsages helloPropertyRename{
+        {
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 17, 18,
+                                        strlen("helloProperty"), u"freshPropertyName"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 24, 13,
+                                        strlen("helloProperty"), u"freshPropertyName"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 24, 29,
+                                        strlen("helloProperty"), u"freshPropertyName"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 65, 60,
+                                        strlen("helloProperty"), u"freshPropertyName"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 151, 9,
+                                        strlen("helloPropertyChanged"),
+                                        u"freshPropertyNameChanged"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 153, 5,
+                                        strlen("onHelloPropertyChanged"),
+                                        u"onFreshPropertyNameChanged"_s),
+                QQmlLSUtils::Edit::from(testFileNameFromAnotherFile, testFileFromAnotherFileContent,
+                                        12, 16, strlen("helloProperty"), u"freshPropertyName"_s),
+        },
+        {}
     };
 
-    QList<QQmlLSUtils::Edit> nestedComponentRename{
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 42, 15, strlen("NestedComponent"),
-                                u"SuperInlineComponent"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 61, 5, strlen("NestedComponent"),
-                                u"SuperInlineComponent"_s),
+    QQmlLSUtils::RenameUsages nestedComponentRename{
+        {
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 42, 15,
+                                        strlen("NestedComponent"), u"SuperInlineComponent"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 61, 5,
+                                        strlen("NestedComponent"), u"SuperInlineComponent"_s),
+        },
+        {}
     };
 
-    QList<QQmlLSUtils::Edit> myNestedIdRename{
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 62, 13, strlen("myNested"),
-                                u"freshNewIdForMyNested"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 65, 17, strlen("myNested"),
-                                u"freshNewIdForMyNested"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 66, 17, strlen("myNested"),
-                                u"freshNewIdForMyNested"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 67, 17, strlen("myNested"),
-                                u"freshNewIdForMyNested"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 68, 17, strlen("myNested"),
-                                u"freshNewIdForMyNested"_s),
-        QQmlLSUtils::Edit::from(testFileName, testFileContent, 69, 17, strlen("myNested"),
-                                u"freshNewIdForMyNested"_s),
+    QQmlLSUtils::RenameUsages myNestedIdRename{
+        {
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 62, 13, strlen("myNested"),
+                                        u"freshNewIdForMyNested"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 65, 17, strlen("myNested"),
+                                        u"freshNewIdForMyNested"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 66, 17, strlen("myNested"),
+                                        u"freshNewIdForMyNested"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 67, 17, strlen("myNested"),
+                                        u"freshNewIdForMyNested"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 68, 17, strlen("myNested"),
+                                        u"freshNewIdForMyNested"_s),
+                QQmlLSUtils::Edit::from(testFileName, testFileContent, 69, 17, strlen("myNested"),
+                                        u"freshNewIdForMyNested"_s),
+        },
+        {}
     };
-
-    std::sort(methodFRename.begin(), methodFRename.end());
-    std::sort(JSIdentifierSumRename.begin(), JSIdentifierSumRename.end());
-    std::sort(qmlSignalRename.begin(), qmlSignalRename.end());
-    std::sort(helloPropertyRename.begin(), helloPropertyRename.end());
-    std::sort(helloPropertyRename.begin(), helloPropertyRename.end());
-    std::sort(nestedComponentRename.begin(), nestedComponentRename.end());
-    std::sort(myNestedIdRename.begin(), myNestedIdRename.end());
 
     const QString parserError = u"Invalid EcmaScript identifier!"_s;
 
@@ -1618,10 +1638,15 @@ void tst_qmlls_utils::renameUsages()
     QFETCH(int, line);
     QFETCH(int, character);
     QFETCH(QString, newName);
-    QFETCH(QList<QQmlLSUtils::Edit>, expectedRenames);
+    QFETCH(QQmlLSUtils::RenameUsages, expectedRenames);
     QFETCH(QString, expectedError);
 
-    QVERIFY(std::is_sorted(expectedRenames.begin(), expectedRenames.end()));
+    {
+        const auto renameInFile = expectedRenames.renameInFile();
+        QVERIFY(std::is_sorted(renameInFile.constBegin(), renameInFile.constEnd()));
+        const auto renameInFilename = expectedRenames.renameInFilename();
+        QVERIFY(std::is_sorted(renameInFilename.begin(), renameInFilename.end()));
+    }
 
     auto [env, file] = createEnvironmentAndLoadFile(filePath);
 
@@ -1652,20 +1677,28 @@ void tst_qmlls_utils::renameUsages()
     if constexpr (enable_debug_output) {
         if (edits != expectedRenames) {
             qDebug() << "Got:\n";
-            for (auto &x : edits) {
+            for (auto &x : edits.renameInFile()) {
                 qDebug() << x.replacement << x.location.filename << "("
                          << x.location.sourceLocation.startLine << ", "
                          << x.location.sourceLocation.startColumn << "), "
                          << x.location.sourceLocation.offset << "+"
                          << x.location.sourceLocation.length;
             }
+            qDebug() << "with renames in filenames:";
+            for (auto &x : edits.renameInFilename()) {
+                qDebug() << x.oldFilename << "->" << x.newFilename;
+            }
             qDebug() << "But expected: \n";
-            for (auto &x : expectedRenames) {
+            for (auto &x : expectedRenames.renameInFile()) {
                 qDebug() << x.replacement << x.location.filename << "("
                          << x.location.sourceLocation.startLine << ", "
                          << x.location.sourceLocation.startColumn << "), "
                          << x.location.sourceLocation.offset << "+"
                          << x.location.sourceLocation.length;
+            }
+            qDebug() << "with renames in filenames:";
+            for (auto &x : expectedRenames.renameInFilename()) {
+                qDebug() << x.oldFilename << "->" << x.newFilename;
             }
         }
     }

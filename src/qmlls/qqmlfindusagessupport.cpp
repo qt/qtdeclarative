@@ -53,7 +53,8 @@ void QQmlFindUsagesSupport::process(QQmlFindUsagesSupport::RequestPointerArgumen
 
     QHash<QString, QString> codeCache;
 
-    for (const auto &usage : usages) {
+    // note: ignore usages in filenames here as that is not supported by the protocol.
+    for (const auto &usage : usages.usagesInFile()) {
         QLspSpecification::Location location;
         location.uri = QUrl::fromLocalFile(usage.filename).toEncoded();
 

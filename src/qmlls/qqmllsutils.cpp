@@ -812,8 +812,7 @@ static FieldFilter filterForFindUsages()
     return filter;
 };
 
-static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &name,
-                                         QList<Location> &result)
+static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &name, Usages &result)
 {
     const auto expressionType = resolveExpressionType(item, ResolveOwnerType);
     if (!expressionType)
@@ -839,8 +838,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
                         return;
 
                     Location location{ toBeResolved.canonicalFilePath(), sourceLocation };
-                    if (!result.contains(location))
-                        result.append(location);
+                    result.appendUsage(location);
                 }
             };
 
@@ -932,7 +930,7 @@ static Location locationFromJSIdentifierDefinition(const DomItem &definitionOfIt
     return result;
 }
 
-static void findUsagesHelper(const DomItem &item, const QString &name, QList<Location> &result)
+static void findUsagesHelper(const DomItem &item, const QString &name, Usages &result)
 {
     qCDebug(QQmlLSUtilsLog) << "Looking for JS identifier with name" << name;
     DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
@@ -958,7 +956,7 @@ static void findUsagesHelper(const DomItem &item, const QString &name, QList<Loc
                     }
                     const QQmlJS::SourceLocation location = fileLocation->info().fullRegion;
                     const QString fileName = item.canonicalFilePath();
-                    result.append({ fileName, location });
+                    result.appendUsage({ fileName, location });
                     return true;
                 } else if (QQmlJSScope::ConstPtr scope = item.semanticScope();
                            scope && scope->ownJSIdentifier(name)) {
@@ -970,13 +968,12 @@ static void findUsagesHelper(const DomItem &item, const QString &name, QList<Loc
             emptyChildrenVisitor, filterForFindUsages());
 
     const Location definition = locationFromJSIdentifierDefinition(definitionOfItem, name);
-    if (!result.contains(definition))
-        result.append(definition);
+    result.appendUsage(definition);
 }
 
-QList<Location> findUsagesOf(const DomItem &item)
+Usages findUsagesOf(const DomItem &item)
 {
-    QList<Location> result;
+    Usages result;
 
     switch (item.internalKind()) {
     case DomType::ScriptIdentifierExpression: {
@@ -1014,15 +1011,17 @@ QList<Location> findUsagesOf(const DomItem &item)
         return result;
     }
 
-    std::sort(result.begin(), result.end());
+    result.sort();
 
     if (QQmlLSUtilsLog().isDebugEnabled()) {
-        qCDebug(QQmlLSUtilsLog) << "Found following usages:";
-        for (auto r : result) {
+        qCDebug(QQmlLSUtilsLog) << "Found following usages in files:";
+        for (auto r : result.usagesInFile()) {
             qCDebug(QQmlLSUtilsLog)
                     << r.filename << " @ " << r.sourceLocation.startLine << ":"
                     << r.sourceLocation.startColumn << " with length " << r.sourceLocation.length;
         }
+        qCDebug(QQmlLSUtilsLog) << "And following usages in file names:"
+                                << result.usagesInFilename();
     }
 
     return result;
@@ -2000,17 +1999,17 @@ Special cases:
     All of the chopping operations are done using the static helpers from QQmlSignalNames.
 \endlist
 */
-QList<Edit> renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
-                           const std::optional<ExpressionType> &targetType)
+RenameUsages renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
+                            const std::optional<ExpressionType> &targetType)
 {
-    QList<Edit> results;
-    const QList<Location> locations = findUsagesOf(item);
+    RenameUsages result;
+    const Usages locations = findUsagesOf(item);
     if (locations.isEmpty())
-        return results;
+        return result;
 
     auto oldName = oldNameFrom(item);
     if (!oldName)
-        return results;
+        return result;
 
     QQmlJSScope::ConstPtr semanticScope;
     if (targetType) {
@@ -2019,7 +2018,7 @@ QList<Edit> renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
                        QQmlLSUtils::resolveExpressionType(item, ResolveOptions::ResolveOwnerType)) {
         semanticScope = resolved->semanticScope;
     } else {
-        return results;
+        return result;
     }
 
     QString newName;
@@ -2044,7 +2043,7 @@ QList<Edit> renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
             QQmlSignalNames::propertyNameToChangedHandlerName(newName);
 
     // set the new name at the found usages, but add "on"-prefix and "Changed"-suffix if needed
-    for (const auto &location : locations) {
+    for (const auto &location : locations.usagesInFile()) {
         const qsizetype currentLength = location.sourceLocation.length;
         Edit edit;
         edit.location = location;
@@ -2068,10 +2067,25 @@ QList<Edit> renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
             qCDebug(QQmlLSUtilsLog) << "Found usage with wrong identifier length, ignoring...";
             continue;
         }
-        results.append(edit);
+        result.appendRename(edit);
     }
 
-    return results;
+    for (const auto &filename : locations.usagesInFilename()) {
+        // assumption: we only rename files ending in .qml or .ui.qml in qmlls
+        QString extension;
+        if (filename.endsWith(u".ui.qml"_s))
+            extension = u".ui.qml"_s;
+        else if (filename.endsWith(u".qml"_s))
+            extension = u".qml"_s;
+        else
+            continue;
+
+        const QString newFilename =
+                QDir::cleanPath(filename + "/..").append(u"/"_s).append(newName).append(extension);
+        result.appendRename({ filename, newFilename });
+    }
+
+    return result;
 }
 
 Location Location::from(const QString &fileName, const QString &code, quint32 startLine,
@@ -2138,6 +2152,32 @@ QByteArray getDocumentationFromLocation(const DomItem &file, const TextPosition 
     Q_UNUSED(itemLocation);
 
     return result;
+}
+
+void Usages::sort()
+{
+    std::sort(m_usagesInFile.begin(), m_usagesInFile.end());
+    std::sort(m_usagesInFilename.begin(), m_usagesInFilename.end());
+}
+
+bool Usages::isEmpty() const
+{
+    return m_usagesInFilename.isEmpty() && m_usagesInFile.isEmpty();
+}
+
+Usages::Usages(const QList<Location> &usageInFile, const QList<QString> &usageInFilename)
+    : m_usagesInFile(usageInFile), m_usagesInFilename(usageInFilename)
+{
+    std::sort(m_usagesInFile.begin(), m_usagesInFile.end());
+    std::sort(m_usagesInFilename.begin(), m_usagesInFilename.end());
+}
+
+RenameUsages::RenameUsages(const QList<Edit> &renamesInFile,
+                           const QList<FileRename> &renamesInFilename)
+    : m_renamesInFile(renamesInFile), m_renamesInFilename(renamesInFilename)
+{
+    std::sort(m_renamesInFile.begin(), m_renamesInFile.end());
+    std::sort(m_renamesInFilename.begin(), m_renamesInFilename.end());
 }
 
 } // namespace QQmlLSUtils

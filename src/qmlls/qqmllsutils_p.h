@@ -91,6 +91,28 @@ struct Location
     }
 };
 
+/*!
+Represents a rename operation where the file itself needs to be renamed.
+\internal
+*/
+struct FileRename
+{
+    QString oldFilename;
+    QString newFilename;
+
+    friend bool comparesEqual(const FileRename &a, const FileRename &b) noexcept
+    {
+        return std::tie(a.oldFilename, a.newFilename) == std::tie(b.oldFilename, b.newFilename);
+    }
+    friend Qt::strong_ordering compareThreeWay(const FileRename &a, const FileRename &b) noexcept
+    {
+        if (a.oldFilename != b.oldFilename)
+            return compareThreeWay(a.oldFilename, b.oldFilename);
+        return compareThreeWay(a.newFilename, b.newFilename);
+    }
+    Q_DECLARE_STRONGLY_ORDERED(FileRename);
+};
+
 struct Edit
 {
     Location location;
@@ -109,6 +131,81 @@ struct Edit
         return std::make_tuple(a.location, a.replacement)
                 == std::make_tuple(b.location, b.replacement);
     }
+};
+
+/*!
+Represents the locations where some highlighting should take place, like in the "find all
+references" feature of the LSP. Those locations are pointing to parts of a Qml file or to a Qml
+file name.
+
+The file names are not reported as usage to the LSP and are currently only needed for the renaming
+operation to be able to rename files.
+
+\internal
+*/
+class Usages
+{
+public:
+    void sort();
+    bool isEmpty() const;
+
+    friend bool comparesEqual(const Usages &a, const Usages &b)
+    {
+        return a.m_usagesInFile == b.m_usagesInFile && a.m_usagesInFilename == b.m_usagesInFilename;
+    }
+    Q_DECLARE_EQUALITY_COMPARABLE(Usages)
+
+    Usages() = default;
+    Usages(const QList<Location> &usageInFile, const QList<QString> &usageInFilename);
+
+    QList<Location> usagesInFile() const { return m_usagesInFile; };
+    QList<QString> usagesInFilename() const { return m_usagesInFilename; };
+
+    void appendUsage(const Location &edit)
+    {
+        if (!m_usagesInFile.contains(edit))
+            m_usagesInFile.append(edit);
+    };
+    void appendFilenameUsage(const QString &edit)
+    {
+
+        if (!m_usagesInFilename.contains(edit))
+            m_usagesInFilename.append(edit);
+    };
+
+private:
+    QList<Location> m_usagesInFile;
+    QList<QString> m_usagesInFilename;
+};
+
+/*!
+Represents the locations where a renaming should take place. Parts of text inside a file can be
+renamed and also filename themselves can be renamed.
+
+\internal
+*/
+class RenameUsages
+{
+public:
+    friend bool comparesEqual(const RenameUsages &a, const RenameUsages &b)
+    {
+        return std::tie(a.m_renamesInFile, a.m_renamesInFilename)
+                == std::tie(b.m_renamesInFile, b.m_renamesInFilename);
+    }
+    Q_DECLARE_EQUALITY_COMPARABLE(RenameUsages)
+
+    RenameUsages() = default;
+    RenameUsages(const QList<Edit> &renamesInFile, const QList<FileRename> &renamesInFilename);
+
+    QList<Edit> renameInFile() const { return m_renamesInFile; };
+    QList<FileRename> renameInFilename() const { return m_renamesInFilename; };
+
+    void appendRename(const Edit &edit) { m_renamesInFile.append(edit); };
+    void appendRename(const FileRename &edit) { m_renamesInFilename.append(edit); };
+
+private:
+    QList<Edit> m_renamesInFile;
+    QList<FileRename> m_renamesInFilename;
 };
 
 /*!
@@ -142,14 +239,13 @@ QLspSpecification::Range qmlLocationToLspLocation(const QString &code,
 DomItem baseObject(const DomItem &qmlObject);
 std::optional<Location> findTypeDefinitionOf(const DomItem &item);
 std::optional<Location> findDefinitionOf(const DomItem &item);
-QList<Location> findUsagesOf(const DomItem &item);
+Usages findUsagesOf(const DomItem &item);
 
 std::optional<ErrorMessage>
 checkNameForRename(const DomItem &item, const QString &newName,
                    const std::optional<ExpressionType> &targetType = std::nullopt);
-QList<Edit> renameUsagesOf(const DomItem &item, const QString &newName,
-                           const std::optional<ExpressionType> &targetType = std::nullopt);
-
+RenameUsages renameUsagesOf(const DomItem &item, const QString &newName,
+                            const std::optional<ExpressionType> &targetType = std::nullopt);
 std::optional<ExpressionType> resolveExpressionType(const DomItem &item, ResolveOptions);
 bool isValidEcmaScriptIdentifier(QStringView view);
 
