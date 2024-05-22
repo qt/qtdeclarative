@@ -102,6 +102,7 @@ private slots:
     void nativeMenuSeparator();
     void dontUseNativeMenuWindowsChanges();
     void nativeMixedItems();
+    void textPadding();
 
 private:
     bool nativeMenuSupported = false;
@@ -2621,6 +2622,67 @@ void tst_QQuickMenu::nativeMixedItems()
         auto *action2 = subMenu->actionAt(2);
         QVERIFY(action2);
         QCOMPARE(action2->text(), "subAction2");
+    }
+}
+
+void tst_QQuickMenu::textPadding()
+{
+    // Check that you can set implicitTextPadding on each MenuItem, and that
+    // textPadding will end up as the maximum implicitTextPadding among all the
+    // MenuItems in the same Menu.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeMixedItems.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(contextMenu);
+
+    contextMenu->setVisible(true);
+
+    // Go through all MenuItems, and give them an implicitTextPadding of 0
+    for (int i = 0; i < contextMenu->count(); ++i) {
+        auto menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(i));
+        QVERIFY(menuItem);
+        menuItem->setImplicitTextPadding(0);
+        QCOMPARE(menuItem->implicitTextPadding(), 0);
+    }
+
+    // Check that all MenuItems now has a textPadding of 0
+    for (int i = 0; i < contextMenu->count(); ++i) {
+        auto menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(i));
+        QCOMPARE(menuItem->textPadding(), 0);
+    }
+
+    // Let the first MenuItem get a implicitTextPadding of 100. This will
+    // make all MenuItems get a textPadding of 100.
+    auto firstItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+    firstItem->setImplicitTextPadding(100);
+    QCOMPARE(firstItem->implicitTextPadding(), 100);
+    QCOMPARE(firstItem->textPadding(), 100);
+    for (int i = 1; i < contextMenu->count(); ++i) {
+        auto menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(i));
+        QCOMPARE(menuItem->implicitTextPadding(), 0);
+        QCOMPARE(menuItem->textPadding(), 100);
+    }
+
+    // Hide the MenuItem with implicitTextPadding set to 100. This
+    // should make all the MenuItems get a textPadding of 0 again.
+    firstItem->setVisible(false);
+    QCOMPARE(firstItem->implicitTextPadding(), 100);
+    for (int i = 0; i < contextMenu->count(); ++i) {
+        auto menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(i));
+        QCOMPARE(menuItem->textPadding(), 0);
+    }
+
+    // Show it again
+    firstItem->setVisible(true);
+    for (int i = 0; i < contextMenu->count(); ++i) {
+        auto menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(i));
+        QCOMPARE(menuItem->textPadding(), 100);
     }
 }
 

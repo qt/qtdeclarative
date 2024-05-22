@@ -97,6 +97,7 @@ public:
     void onItemHovered();
     void onItemTriggered();
     void onItemActiveFocusChanged();
+    void updateTextPadding();
 
     QQuickMenu *currentSubMenu() const;
     void setParentMenu(QQuickMenu *parent);
@@ -125,6 +126,7 @@ public:
     int hoverTimer = 0;
     int currentIndex = -1;
     qreal overlap = 0;
+    qreal textPadding = 0;
     QPointer<QQuickMenu> parentMenu;
     QPointer<QQuickMenuItem> currentItem;
     QQuickItem *contentItem = nullptr; // TODO: cleanup

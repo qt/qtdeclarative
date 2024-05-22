@@ -572,6 +572,8 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
         if (QQuickMenu *subMenu = menuItem->subMenu())
             QQuickMenuPrivate::get(subMenu)->setParentMenu(q);
         QObjectPrivate::connect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
+        QObjectPrivate::connect(menuItem, &QQuickMenuItem::implicitTextPaddingChanged, this, &QQuickMenuPrivate::updateTextPadding);
+        QObjectPrivate::connect(menuItem, &QQuickMenuItem::visibleChanged, this, &QQuickMenuPrivate::updateTextPadding);
         QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::connect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
@@ -581,6 +583,8 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
 
     if (lcMenu().isDebugEnabled())
         printContentModelItems();
+
+    updateTextPadding();
 }
 
 void QQuickMenuPrivate::maybeCreateAndInsertNativeItem(int index, QQuickItem *item)
@@ -661,6 +665,8 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item, DestructionPolic
         if (QQuickMenu *subMenu = menuItem->subMenu())
             QQuickMenuPrivate::get(subMenu)->setParentMenu(nullptr);
         QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
+        QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::implicitTextPaddingChanged, this, &QQuickMenuPrivate::updateTextPadding);
+        QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::visibleChanged, this, &QQuickMenuPrivate::updateTextPadding);
         QObjectPrivate::disconnect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::disconnect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
@@ -988,6 +994,30 @@ void QQuickMenuPrivate::onItemActiveFocusChanged()
     int indexOfItem = contentModel->indexOf(item, nullptr);
     QQuickControl *control = qobject_cast<QQuickControl *>(item);
     setCurrentIndex(indexOfItem, control ? control->focusReason() : Qt::OtherFocusReason);
+}
+
+void QQuickMenuPrivate::updateTextPadding()
+{
+    Q_Q(QQuickMenu);
+    if (!complete)
+        return;
+
+    qreal padding = 0;
+    for (int i = 0; i < q->count(); ++i) {
+        if (const auto menuItem = qobject_cast<QQuickMenuItem *>(itemAt(i)))
+            if (menuItem->isVisible())
+                padding = qMax(padding, menuItem->implicitTextPadding());
+    }
+
+    if (padding == textPadding)
+        return;
+
+    textPadding = padding;
+
+    for (int i = 0; i < q->count(); ++i) {
+        if (const auto menuItem = qobject_cast<QQuickMenuItem *>(itemAt(i)))
+            emit menuItem->textPaddingChanged();
+    }
 }
 
 QQuickMenu *QQuickMenuPrivate::currentSubMenu() const
@@ -1983,6 +2013,7 @@ void QQuickMenu::componentComplete()
     Q_D(QQuickMenu);
     QQuickPopup::componentComplete();
     d->resizeItems();
+    d->updateTextPadding();
     d->syncWithUseNativeMenu();
 }
 

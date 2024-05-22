@@ -3,7 +3,7 @@
 
 #include "qquickmenuitem_p.h"
 #include "qquickmenuitem_p_p.h"
-#include "qquickmenu_p.h"
+#include "qquickmenu_p_p.h"
 #include "qquickdeferredexecute_p_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
@@ -54,6 +54,44 @@ QT_BEGIN_NAMESPACE
     \endcode
 
     \sa {Customizing Menu}, Menu, {Menu Controls}
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Controls::MenuItem::textPadding
+    \readonly
+    \since 6.8
+
+    This property holds the maximum \l implicitTextPadding found
+    among all the menu items inside the same \l menu.
+
+    This property can be used by the style to ensure that all MenuItems
+    inside the same Menu end up aligned with respect to the \l text.
+
+    A \l Menu can consist of meny different MenuItems, some can be checkable,
+    some can have an icon, and some will just contain text. And very often,
+    a style wants to make sure that the text inside all of them ends up
+    left-aligned (or right-aligned for \l mirrored items).
+    By letting each MenuItem assign its own minimum text padding to
+    \l implicitTextPadding (taking icons and checkmarks into account), but
+    using \l textPadding to actually position the \l text, all MenuItems should
+    end up being aligned
+
+    In order for this to work, all MenuItems should set \l implicitTextPadding
+    to be the minimum space needed from the left edge of the \l contentItem to
+    the text.
+
+    \sa implicitTextPadding
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Controls::MenuItem::implicitTextPadding
+    \since 6.8
+
+    This property holds the minimum space needed from the left edge of the
+    \l contentItem to the text. It's used to calculate a common \l textPadding
+    among all the MenuItems inside a \l Menu.
+
+    \sa textPadding
 */
 
 void QQuickMenuItemPrivate::setMenu(QQuickMenu *newMenu)
@@ -238,6 +276,26 @@ void QQuickMenuItem::componentComplete()
 QFont QQuickMenuItem::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::Menu);
+}
+
+qreal QQuickMenuItem::implicitTextPadding() const
+{
+    return d_func()->implicitTextPadding;
+}
+
+void QQuickMenuItem::setImplicitTextPadding(qreal newImplicitTextPadding)
+{
+    Q_D(QQuickMenuItem);
+    if (qFuzzyCompare(d->implicitTextPadding, newImplicitTextPadding))
+        return;
+    d->implicitTextPadding = newImplicitTextPadding;
+    emit implicitTextPaddingChanged();
+}
+
+qreal QQuickMenuItem::textPadding() const
+{
+    Q_D(const QQuickMenuItem);
+    return d->menu ? QQuickMenuPrivate::get(d->menu)->textPadding : 0;
 }
 
 #if QT_CONFIG(accessibility)

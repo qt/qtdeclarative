@@ -24,11 +24,12 @@ T.MenuItem {
     icon.width: 16
     icon.height: 16
 
+    implicitTextPadding: control.checkable && control.indicator ? control.indicator.width + control.spacing : 0
+
     contentItem: IconLabel {
         readonly property real arrowPadding: control.subMenu && control.arrow ? control.arrow.width + control.spacing : 0
-        readonly property real indicatorPadding: control.checkable && control.indicator ? control.indicator.width + control.spacing : 0
-        leftPadding: !control.mirrored ? indicatorPadding : arrowPadding
-        rightPadding: control.mirrored ? indicatorPadding : arrowPadding
+        leftPadding: !control.mirrored ? control.textPadding : arrowPadding
+        rightPadding: control.mirrored ? control.textPadding : arrowPadding
 
         spacing: control.spacing
         mirrored: control.mirrored
