@@ -47,27 +47,16 @@
     name = static_cast<type*>(alloca(size))
 
 #else
-QT_BEGIN_NAMESPACE
-class Qt_AllocaWrapper
-{
-public:
-    Qt_AllocaWrapper() { m_data = 0; }
-    ~Qt_AllocaWrapper() { free(m_data); }
-    void *data() { return m_data; }
-    void allocate(int size) { m_data = malloc(size); memset(m_data, 0, size); }
-private:
-    void *m_data;
-};
-QT_END_NAMESPACE
+#  include <memory>
 
 #define Q_ALLOCA_DECLARE(type, name) \
-    Qt_AllocaWrapper _qt_alloca_##name; \
+    std::unique_ptr<char[]> _qt_alloca_##name; \
     type *name = nullptr
 
 #define Q_ALLOCA_ASSIGN(type, name, size) \
     do { \
-        _qt_alloca_##name.allocate(size); \
-        name = static_cast<type*>(_qt_alloca_##name.data()); \
+        _qt_alloca_##name.reset(new char[size]); \
+        name = reinterpret_cast<type*>(_qt_alloca_##name.get()); \
     } while (false)
 
 #endif
