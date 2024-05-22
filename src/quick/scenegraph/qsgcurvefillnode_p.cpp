@@ -76,11 +76,11 @@ namespace {
             }
 
             matrixScale = qSqrt(qAbs(state.determinant()));
-            memcpy(buf->data() + offset + matrixCount * 64, &matrixScale, 4);
+            memcpy(buf->data() + offset + newEffect->viewCount() * 64, &matrixScale, 4);
 
             changed = true;
         }
-        offset += matrixCount * 64 + 4;
+        offset += newEffect->viewCount() * 64 + 4;
 
         if (state.isOpacityDirty()) {
             const float opacity = state.opacity();
