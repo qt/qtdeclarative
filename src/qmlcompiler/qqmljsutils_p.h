@@ -379,7 +379,7 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSUtils
     {
         for (QString &path : paths)
             path = QDir::cleanPath(path);
-        return paths;
+        return std::move(paths);
     }
 };
 
