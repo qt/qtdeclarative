@@ -895,7 +895,7 @@ void QQmlLSCompletion::insideQmlFileCompletion(const DomItem &currentItem,
 Generate the snippets for let, var and const variable declarations.
 */
 void QQmlLSCompletion::suggestVariableDeclarationStatementCompletion(
-        BackInsertIterator result, QQmlLSUtilsAppendOption option) const
+        BackInsertIterator result, AppendOption option) const
 {
     // let/var/const statement
     for (auto view : std::array<QUtf8StringView, 3>{ "let", "var", "const" }) {
@@ -1104,7 +1104,7 @@ void QQmlLSCompletion::insideForStatementCompletion(const DomItem &parentForCont
     if (betweenLocations(leftParenthesis, positionInfo, firstSemicolon)) {
         suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
         suggestVariableDeclarationStatementCompletion(result,
-                                                      QQmlLSUtilsAppendOption::AppendNothing);
+                                                      AppendOption::AppendNothing);
         return;
     }
     if (betweenLocations(firstSemicolon, positionInfo, secondSemicolon)

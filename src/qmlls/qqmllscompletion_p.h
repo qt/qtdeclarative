@@ -31,12 +31,14 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QQmlLSCompletionLog)
 
-enum QQmlLSUtilsAppendOption { AppendSemicolon, AppendNothing };
 
 class QQmlLSCompletion
 {
     using DomItem = QQmlJS::Dom::DomItem;
 public:
+    enum class ImportCompletionType { None, Module, Version };
+    enum AppendOption { AppendSemicolon, AppendNothing };
+
     QQmlLSCompletion(const QFactoryLoader &pluginLoader);
 
     using CompletionItem = QLspSpecification::CompletionItem;
@@ -84,7 +86,7 @@ private:
     void suggestJSStatementCompletion(const DomItem &currentItem, BackInsertIterator it) const;
     void suggestCaseAndDefaultStatementCompletion(BackInsertIterator it) const;
     void suggestVariableDeclarationStatementCompletion(
-            BackInsertIterator it, QQmlLSUtilsAppendOption option = AppendSemicolon) const;
+            BackInsertIterator it, AppendOption option = AppendSemicolon) const;
 
     void suggestJSExpressionCompletion(const DomItem &context, BackInsertIterator it) const;
 

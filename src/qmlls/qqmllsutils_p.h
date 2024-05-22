@@ -127,8 +127,6 @@ enum QQmlLSUtilsResolveOptions {
     ResolveActualTypeForFieldMemberExpression,
 };
 
-enum class ImportCompletionType { None, Module, Version };
-
 using DomItem = QQmlJS::Dom::DomItem;
 
 class QQmlLSUtils
