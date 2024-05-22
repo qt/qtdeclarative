@@ -94,14 +94,14 @@ T.ComboBox {
                 width: parent.width
                 height: parent.height
                 color: "transparent"
-                border.color: palette.mid
+                border.color: control.palette.mid
             }
 
             T.ScrollIndicator.vertical: ScrollIndicator { }
         }
 
         background: Rectangle {
-            color: palette.window
+            color: control.palette.window
         }
     }
 }
