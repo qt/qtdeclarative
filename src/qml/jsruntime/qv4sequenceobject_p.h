@@ -35,6 +35,7 @@ struct Q_QML_EXPORT SequencePrototype : public QV4::Object
 
     static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_shift(const FunctionObject *b, const Value *thisObject, const Value *, int);
 
     static ReturnedValue newSequence(
         QV4::ExecutionEngine *engine, QMetaType type, QMetaSequence metaSequence, const void *data,
@@ -101,6 +102,7 @@ public:
 
     qsizetype size() const;
     QVariant at(qsizetype index) const;
+    QVariant shift();
     void append(const QVariant &item);
     void append(qsizetype num, const QVariant &item);
     void replace(qsizetype index, const QVariant &item);

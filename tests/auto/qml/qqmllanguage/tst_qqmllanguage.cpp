@@ -460,6 +460,7 @@ private slots:
     void jsonArrayPropertyBehavesLikeAnArray();
 
     void nestedVectors();
+    void optimizedSequenceShift();
 
 private:
     QQmlEngine engine;
@@ -8913,6 +8914,21 @@ void tst_qqmllanguage::nestedVectors()
 
     const std::vector<std::vector<int>> expected2 { { 2, 3, 4 }, { 5, 6 } };
     QCOMPARE(n->getList(), expected2);
+}
+
+void tst_qqmllanguage::optimizedSequenceShift()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("optimizedSequenceShift.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("changes").toInt(), 2);
+
+    const QVariant one = o->property("one");
+    QCOMPARE(one.metaType(), QMetaType::fromType<int>());
+    QCOMPARE(one.toInt(), 1);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

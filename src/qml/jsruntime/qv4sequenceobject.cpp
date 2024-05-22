@@ -250,6 +250,42 @@ QVariant Sequence::at(qsizetype index) const
     return result;
 }
 
+QVariant Sequence::shift()
+{
+    auto *p = d();
+    void *storage = p->storagePointer();
+    Q_ASSERT(storage); // Must readReference() before
+    const QMetaType v = p->valueMetaType();
+    const QMetaSequence m = p->metaSequence();
+
+    const auto variantData = [&](QVariant *variant) -> void *{
+        if (v == QMetaType::fromType<QVariant>())
+            return variant;
+
+        *variant = QVariant(v);
+        return variant->data();
+    };
+
+    QVariant result;
+    void *resultData = variantData(&result);
+    m.valueAtIndex(storage, 0, resultData);
+
+    if (m.canRemoveValueAtBegin()) {
+        m.removeValueAtBegin(storage);
+        return result;
+    }
+
+    QVariant t;
+    void *tData = variantData(&t);
+    for (qsizetype i = 1, end = m.size(storage); i < end; ++i) {
+        m.valueAtIndex(storage, i, tData);
+        m.setValueAtIndex(storage, i - 1, tData);
+    }
+    m.removeValueAtEnd(storage);
+
+    return result;
+}
+
 
 template<typename Action>
 void convertAndDo(const QVariant &item, const QMetaType v, Action action)
@@ -602,6 +638,7 @@ void SequencePrototype::init()
     defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
     defineDefaultProperty(engine()->id_valueOf(), method_valueOf, 0);
     defineAccessorProperty(QStringLiteral("length"), method_get_length, method_set_length);
+    defineDefaultProperty(QStringLiteral("shift"), method_shift, 0);
 }
 
 ReturnedValue SequencePrototype::method_valueOf(const FunctionObject *f, const Value *thisObject, const Value *, int)
@@ -625,6 +662,29 @@ ReturnedValue SequencePrototype::method_sort(const FunctionObject *b, const Valu
     }
 
     return o.asReturnedValue();
+}
+
+ReturnedValue SequencePrototype::method_shift(
+        const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<Sequence> s(scope, thisObject);
+    if (!s)
+        return ArrayPrototype::method_shift(b, thisObject, argv, argc);
+
+    if (s->d()->isReference() && !s->loadReference())
+        RETURN_UNDEFINED();
+
+    const qsizetype len = s->size();
+    if (!len)
+        RETURN_UNDEFINED();
+
+    ScopedValue result(scope, scope.engine->fromVariant(s->shift()));
+
+    if (s->d()->object())
+        s->storeReference();
+
+    return result->asReturnedValue();
 }
 
 ReturnedValue SequencePrototype::newSequence(
