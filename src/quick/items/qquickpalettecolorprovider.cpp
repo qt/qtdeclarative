@@ -162,6 +162,7 @@ bool QQuickPaletteColorProvider::doInheritPalette(const QPalette &palette)
 {
     auto inheritedMask = m_requestedPalette.isAllocated() ? m_requestedPalette->resolveMask() | palette.resolveMask()
                                                           : palette.resolveMask();
+    // If a palette was set on this item, it should always win over the palette to be inherited from.
     QPalette parentPalette = m_requestedPalette.isAllocated() ? m_requestedPalette->resolve(palette) : palette;
     parentPalette.setResolveMask(inheritedMask);
 

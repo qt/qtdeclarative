@@ -130,15 +130,15 @@ T.ComboBox {
         }
 
         background: Rectangle {
-            color: palette.window
-            border.color: Fusion.outline(palette)
+            color: control.popup.palette.window
+            border.color: Fusion.outline(control.palette)
 
             Rectangle {
                 z: -1
                 x: 1; y: 1
                 width: parent.width
                 height: parent.height
-                color: palette.shadow
+                color: control.palette.shadow
                 opacity: 0.2
             }
         }
