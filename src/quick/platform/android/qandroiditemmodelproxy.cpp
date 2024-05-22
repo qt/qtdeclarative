@@ -107,6 +107,18 @@ bool QAndroidItemModelProxy::hasChildrenDefault(const QModelIndex &parent) const
     return QAbstractItemModel::hasChildren(parent);
 }
 
+QModelIndex QAndroidItemModelProxy::sibling(int row, int column, const QModelIndex &parent) const
+{
+    Q_ASSERT(jInstance.isValid());
+    return QAndroidModelIndexProxy::qInstance(jInstance.callMethod<jobject>(
+            "sibling", row, column, QAndroidModelIndexProxy::jInstance(parent)));
+}
+
+QModelIndex QAndroidItemModelProxy::siblingDefault(int row, int column, const QModelIndex &parent)
+{
+    return QAbstractItemModel::sibling(row, column, parent);
+}
+
 Q_REQUIRED_RESULT QAbstractItemModel *
 QAndroidItemModelProxy::nativeInstance(JQtAbstractItemModel itemModel)
 {
@@ -317,6 +329,15 @@ void QAndroidItemModelProxy::jni_endResetModel(JNIEnv *env, jobject object)
     invokeNativeProxyMethod(env, object, &QAndroidItemModelProxy::endResetModel);
 }
 
+jobject QAndroidItemModelProxy::jni_sibling(JNIEnv *env, jobject object, jint row, jint column,
+                                            JQtModelIndex parent)
+{
+    const QModelIndex index = invokeNativeImpl(env, object, &QAndroidItemModelProxy::siblingDefault,
+                                               &QAbstractItemModel::sibling, row, column,
+                                               QAndroidModelIndexProxy::qInstance(parent));
+    return env->NewLocalRef(QAndroidModelIndexProxy::jInstance(index).object());
+}
+
 bool QAndroidItemModelProxy::registerAbstractNatives(QJniEnvironment &env)
 {
     return env.registerNativeMethods(
@@ -340,7 +361,8 @@ bool QAndroidItemModelProxy::registerAbstractNatives(QJniEnvironment &env)
               Q_JNI_NATIVE_SCOPED_METHOD(jni_endMoveRows, QAndroidItemModelProxy),
               Q_JNI_NATIVE_SCOPED_METHOD(jni_endRemoveColumns, QAndroidItemModelProxy),
               Q_JNI_NATIVE_SCOPED_METHOD(jni_endRemoveRows, QAndroidItemModelProxy),
-              Q_JNI_NATIVE_SCOPED_METHOD(jni_endResetModel, QAndroidItemModelProxy) });
+              Q_JNI_NATIVE_SCOPED_METHOD(jni_endResetModel, QAndroidItemModelProxy),
+              Q_JNI_NATIVE_SCOPED_METHOD(jni_sibling, QAndroidItemModelProxy) });
 }
 
 bool QAndroidItemModelProxy::registerProxyNatives(QJniEnvironment &env)

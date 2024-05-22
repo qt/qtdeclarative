@@ -24,6 +24,11 @@ public abstract class QtAbstractItemModel
         return (HashMap<Integer, String>)jni_roleNames();
     }
 
+    public QtModelIndex sibling(int row, int column, QtModelIndex parent)
+    {
+        return (QtModelIndex)jni_sibling(row, column, parent);
+    }
+
     protected final void beginInsertColumns(QtModelIndex parent, int first, int last)
     {
         jni_beginInsertColumns(parent, first, last);
@@ -89,6 +94,7 @@ public abstract class QtAbstractItemModel
     private native void jni_endRemoveRows();
     private native void jni_endResetModel();
     private native Object jni_roleNames();
+    private native Object jni_sibling(int row, int column, QtModelIndex parent);
 
     private long m_nativeReference = 0;
     private QtAbstractItemModel(long nativeReference) { m_nativeReference = nativeReference; }

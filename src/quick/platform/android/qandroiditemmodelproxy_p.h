@@ -49,6 +49,8 @@ public:
     void fetchMoreDefault(const QModelIndex &parent);
     bool hasChildren(const QModelIndex &parent) const override;
     bool hasChildrenDefault(const QModelIndex &parent) const;
+    QModelIndex sibling(int row, int column, const QModelIndex &parent) const override;
+    QModelIndex siblingDefault(int row, int column, const QModelIndex &parent);
 
     Q_REQUIRED_RESULT static QAbstractItemModel *
     nativeInstance(QtJniTypes::JQtAbstractItemModel itemModel);
@@ -170,6 +172,10 @@ public:
 
     static void jni_endResetModel(JNIEnv *env, jobject object);
     Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(jni_endResetModel)
+
+    static jobject jni_sibling(JNIEnv *env, jobject object, jint row, jint column,
+                                 JQtModelIndex parent);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(jni_sibling)
 
     static bool registerAbstractNatives(QJniEnvironment &env);
     static bool registerProxyNatives(QJniEnvironment &env);
