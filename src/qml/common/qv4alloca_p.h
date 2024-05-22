@@ -17,16 +17,17 @@
 
 #include <QtCore/private/qglobal_p.h>
 
-#if QT_CONFIG(alloca_h)
+#include <stdlib.h>
+#if __has_include(<alloca.h>)
 #  include <alloca.h>
-#elif QT_CONFIG(alloca_malloc_h)
+#endif
+#if __has_include(<malloc.h>)
 #  include <malloc.h>
+#endif
+
+#ifdef Q_CC_MSVC
 // This does not matter unless compiling in strict standard mode.
-#  ifdef Q_CC_MSVC
-#    define alloca _alloca
-#  endif
-#else
-#  include <stdlib.h>
+#  define alloca _alloca
 #endif
 
 // Define Q_ALLOCA_VAR macro to be used instead of #ifdeffing
@@ -37,7 +38,7 @@
     Q_ALLOCA_DECLARE(type, name); \
     Q_ALLOCA_ASSIGN(type, name, size)
 
-#if QT_CONFIG(alloca)
+#ifdef alloca
 
 #define Q_ALLOCA_DECLARE(type, name) \
     type *name = 0
