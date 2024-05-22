@@ -20,7 +20,7 @@ the singleton in a QML file, or register it from C++.
 \section2 Defining singletons in QML
 To define a singleton in QML, you first have to add
 \code
-pragma singleton
+pragma Singleton
 \endcode
 to the top of your file.
 There's one more step: You will need to add an entry to the QML module's
