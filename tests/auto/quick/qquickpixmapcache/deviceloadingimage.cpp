@@ -19,25 +19,24 @@ void DeviceLoadingImage::load()
     Q_ASSERT(context);
     QUrl resolved = context->resolvedUrl(d->url);
     device = std::make_unique<QFile>(resolved.toLocalFile());
-    d->pix1.loadImageFromDevice(qmlEngine(this), device.get(), context->resolvedUrl(d->url),
+    const bool statusChange = (d->status != Loading);
+    if (statusChange)
+        d->status = Loading;
+    d->pendingPix->loadImageFromDevice(qmlEngine(this), device.get(), context->resolvedUrl(d->url),
                                d->sourceClipRect.toRect(), d->sourcesize * d->devicePixelRatio,
                                QQuickImageProviderOptions(), d->currentFrame, d->frameCount);
+    connectSuccess &= d->pendingPix->connectFinished(this, thisRequestFinished);
+    connectSuccess &= d->pendingPix->connectFinished(this, SLOT(onRequestFinished()));
+    qCDebug(lcTests) << "loading page" << d->currentFrame << "of" << d->frameCount
+                     << "statuses" << d->currentPix->status() << d->pendingPix->status()
+                     << "waiting?" << connectSuccess;
+    if (statusChange)
+        emit statusChanged(d->status);
+}
 
-    qCDebug(lcTests) << "loading page" << d->currentFrame << "of" << d->frameCount << "status" << d->pix1.status();
-
-    switch (d->pix1.status()) {
-    case QQuickPixmap::Ready:
-        pixmapChange();
-        break;
-    case QQuickPixmap::Loading:
-        d->pix1.connectFinished(this, thisRequestFinished);
-        if (d->status != Loading) {
-            d->status = Loading;
-            emit statusChanged(d->status);
-        }
-        break;
-    default:
-        qCWarning(lcTests) << "unexpected status" << d->pix1.status();
-        break;
-    }
+void DeviceLoadingImage::onRequestFinished()
+{
+    auto *d = static_cast<QQuickImagePrivate *>(QQuickImagePrivate::get(this));
+    qCDebug(lcTests) << "statuses" << d->currentPix->status() << d->pendingPix->status();
+    ++requestsFinished;
 }

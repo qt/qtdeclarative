@@ -362,8 +362,9 @@ void QQuickImageBase::load()
 void QQuickImageBase::requestFinished()
 {
     Q_D(QQuickImageBase);
-
-    if (d->pendingPix != d->currentPix) {
+    if (d->pendingPix != d->currentPix
+        && d->pendingPix->status() != QQuickPixmap::Null
+        && d->pendingPix->status() != QQuickPixmap::Loading) {
         std::swap(d->pendingPix, d->currentPix);
         d->pendingPix->clear(this); // Clear the old image
     }

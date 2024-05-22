@@ -15,5 +15,11 @@ public:
 protected:
     void load() override;
 
+protected slots:
+    void onRequestFinished();
+
+public:
     std::unique_ptr<QFile> device;
+    bool connectSuccess = true;
+    int requestsFinished = 0;
 };
