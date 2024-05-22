@@ -44,7 +44,8 @@ void QQmlFindUsagesSupport::process(QQmlFindUsagesSupport::RequestPointerArgumen
     if (guard.setErrorFrom(itemsFound))
         return;
 
-    QQmlLSUtilsItemLocation &front = std::get<QList<QQmlLSUtilsItemLocation>>(itemsFound).front();
+    QQmlLSUtils::ItemLocation &front =
+            std::get<QList<QQmlLSUtils::ItemLocation>>(itemsFound).front();
 
     auto usages = QQmlLSUtils::findUsagesOf(front.domItem);
 

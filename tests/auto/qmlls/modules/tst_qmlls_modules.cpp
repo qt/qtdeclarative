@@ -1498,7 +1498,7 @@ void tst_qmlls_modules::quickFixes()
 static QQmlJS::Dom::DomItem fileObject(const QString &filePath)
 {
     QFile f(filePath);
-    DomItem file;
+    QQmlJS::Dom::DomItem file;
     if (!f.open(QIODevice::ReadOnly))
         return file;
     QString code = f.readAll();

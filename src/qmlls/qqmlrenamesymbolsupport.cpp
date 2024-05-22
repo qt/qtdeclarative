@@ -39,13 +39,15 @@ void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArg
     if (guard.setErrorFrom(itemsFound))
         return;
 
-    QQmlLSUtilsItemLocation &front = std::get<QList<QQmlLSUtilsItemLocation>>(itemsFound).front();
+    QQmlLSUtils::ItemLocation &front =
+            std::get<QList<QQmlLSUtils::ItemLocation>>(itemsFound).front();
 
     const QString newName = QString::fromUtf8(request->m_parameters.newName);
-    auto expressionType = QQmlLSUtils::resolveExpressionType(front.domItem, ResolveOwnerType);
+    auto expressionType =
+            QQmlLSUtils::resolveExpressionType(front.domItem, QQmlLSUtils::ResolveOwnerType);
 
     if (!expressionType) {
-        guard.setError(QQmlLSUtilsErrorMessage{ 0, u"Cannot rename the requested object"_s });
+        guard.setError(QQmlLSUtils::ErrorMessage{ 0, u"Cannot rename the requested object"_s });
         return;
     }
 

@@ -393,17 +393,17 @@ void HighlightingVisitor::highlightIdentifier(const DomItem &item)
 void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJS::SourceLocation loc)
 {
     const auto expression = QQmlLSUtils::resolveExpressionType(
-            item, QQmlLSUtilsResolveOptions::ResolveOwnerType);
+            item, QQmlLSUtils::ResolveOptions::ResolveOwnerType);
 
     if (!expression) {
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Variable));
         return;
     }
     switch (expression->type) {
-    case QmlComponentIdentifier:
+    case QQmlLSUtils::QmlComponentIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Type));
         return;
-    case JavaScriptIdentifier: {
+    case QQmlLSUtils::JavaScriptIdentifier: {
         SemanticTokenTypes tokenType = SemanticTokenTypes::Variable;
         int modifier = 0;
         if (const auto jsIdentifier
@@ -427,7 +427,7 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
         m_highlights.addHighlight(loc, int(tokenType), modifier);
         return;
     }
-    case PropertyIdentifier: {
+    case QQmlLSUtils::PropertyIdentifier: {
         if (const auto scope = expression->semanticScope) {
             const auto property = scope->property(expression->name.value());
             int modifier = 0;
@@ -439,37 +439,37 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
         }
         return;
     }
-    case PropertyChangedSignalIdentifier:
+    case QQmlLSUtils::PropertyChangedSignalIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
         return;
-    case PropertyChangedHandlerIdentifier:
+    case QQmlLSUtils::PropertyChangedHandlerIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
         return;
-    case SignalIdentifier:
+    case QQmlLSUtils::SignalIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
         return;
-    case SignalHandlerIdentifier:
+    case QQmlLSUtils::SignalHandlerIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
         return;
-    case MethodIdentifier:
+    case QQmlLSUtils::MethodIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
         return;
-    case QmlObjectIdIdentifier:
+    case QQmlLSUtils::QmlObjectIdIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Variable));
         return;
-    case SingletonIdentifier:
+    case QQmlLSUtils::SingletonIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Type));
         return;
-    case EnumeratorIdentifier:
+    case QQmlLSUtils::EnumeratorIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Enum));
         return;
-    case EnumeratorValueIdentifier:
+    case QQmlLSUtils::EnumeratorValueIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::EnumMember));
         return;
-    case AttachedTypeIdentifier:
+    case QQmlLSUtils::AttachedTypeIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Type));
         return;
-    case GroupedPropertyIdentifier:
+    case QQmlLSUtils::GroupedPropertyIdentifier:
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Property));
         return;
     default:

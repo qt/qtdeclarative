@@ -149,7 +149,7 @@ QQmlLSCompletion::suggestBindingCompletion(const DomItem &itemAtPosition, BackIn
 
         const DomItem owner = itemAtPosition.directParent().field(Fields::left);
         auto expressionType = QQmlLSUtils::resolveExpressionType(
-                owner, ResolveActualTypeForFieldMemberExpression);
+                owner, QQmlLSUtils::ResolveActualTypeForFieldMemberExpression);
         return expressionType ? expressionType->semanticScope : QQmlJSScope::ConstPtr{};
     }();
 
@@ -511,13 +511,13 @@ void QQmlLSCompletion::suggestJSExpressionCompletion(const DomItem &scriptIdenti
                 (askForCompletionOnDot ? scriptIdentifier : scriptIdentifier.directParent())
                         .field(Fields::left);
         auto expressionType = QQmlLSUtils::resolveExpressionType(
-                owner, ResolveActualTypeForFieldMemberExpression);
+                owner, QQmlLSUtils::ResolveActualTypeForFieldMemberExpression);
         if (!expressionType || !expressionType->semanticScope)
             return;
         nearestScope = expressionType->semanticScope;
         // Use root element scope to use find the enumerations
         // This should be changed when we support usages in external files
-        if (expressionType->type == QmlComponentIdentifier)
+        if (expressionType->type == QQmlLSUtils::QmlComponentIdentifier)
             nearestScope = owner.rootQmlObject(GoTo::MostLikely).semanticScope();
         if (expressionType->name) {
             // note: you only get enumeration values in qualified expressions, never alone
@@ -529,7 +529,7 @@ void QQmlLSCompletion::suggestJSExpressionCompletion(const DomItem &scriptIdenti
                 enumerationCompletion(nearestScope, &usedNames, result);
             }
 
-            if (expressionType->type == EnumeratorIdentifier)
+            if (expressionType->type == QQmlLSUtils::EnumeratorIdentifier)
                 return;
         }
     }
@@ -823,7 +823,8 @@ void QQmlLSCompletion::insideBindingCompletion(const DomItem &currentItem,
     if (cursorAfterColon(containingBinding, positionInfo)) {
         suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
 
-        if (auto type = QQmlLSUtils::resolveExpressionType(currentItem, ResolveOwnerType)) {
+        if (auto type = QQmlLSUtils::resolveExpressionType(currentItem,
+                                                           QQmlLSUtils::ResolveOwnerType)) {
             const QStringList names = currentItem.field(Fields::name).toString().split(u'.');
             const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
             // add type names when binding to an object type or a property with var type

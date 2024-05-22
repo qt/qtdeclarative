@@ -55,7 +55,7 @@ struct ResponseScopeGuard
 {
     Q_DISABLE_COPY_MOVE(ResponseScopeGuard)
 
-    std::variant<Result *, QQmlLSUtilsErrorMessage> m_response;
+    std::variant<Result *, QQmlLSUtils::ErrorMessage> m_response;
     ResponseCallback &m_callback;
 
     ResponseScopeGuard(Result &results, ResponseCallback &callback)
@@ -64,15 +64,15 @@ struct ResponseScopeGuard
     }
 
     // note: discards the current result or error message, if there is any
-    void setError(const QQmlLSUtilsErrorMessage &error) { m_response = error; }
+    void setError(const QQmlLSUtils::ErrorMessage &error) { m_response = error; }
 
     template<typename... T>
     bool setErrorFrom(const std::variant<T...> &variant)
     {
-        static_assert(std::disjunction_v<std::is_same<T, QQmlLSUtilsErrorMessage>...>,
+        static_assert(std::disjunction_v<std::is_same<T, QQmlLSUtils::ErrorMessage>...>,
                       "ResponseScopeGuard::setErrorFrom was passed a variant that never contains"
                       " an error message.");
-        if (auto x = std::get_if<QQmlLSUtilsErrorMessage>(&variant)) {
+        if (auto x = std::get_if<QQmlLSUtils::ErrorMessage>(&variant)) {
             setError(*x);
             return true;
         }
@@ -89,7 +89,7 @@ struct ResponseScopeGuard
         // xxx was not an error, continue
         \endcode
     */
-    bool setErrorFrom(const std::optional<QQmlLSUtilsErrorMessage> &error)
+    bool setErrorFrom(const std::optional<QQmlLSUtils::ErrorMessage> &error)
     {
         if (error) {
             setError(*error);
@@ -101,7 +101,7 @@ struct ResponseScopeGuard
     ~ResponseScopeGuard()
     {
         std::visit(qOverloadedVisitor{ [this](Result *result) { m_callback.sendResponse(*result); },
-                                       [this](const QQmlLSUtilsErrorMessage &error) {
+                                       [this](const QQmlLSUtils::ErrorMessage &error) {
                                            m_callback.sendErrorResponse(error.code,
                                                                         error.message.toUtf8());
                                        } },
@@ -125,7 +125,7 @@ struct QQmlBaseModule : public QLanguageServerModule
     decltype(auto) getRequestHandler();
     // processes a request in a different thread.
     virtual void process(RequestPointerArgument toBeProcessed) = 0;
-    std::variant<QList<QQmlLSUtilsItemLocation>, QQmlLSUtilsErrorMessage>
+    std::variant<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
     itemsForRequest(const RequestPointer &request);
 
 public Q_SLOTS:
@@ -228,7 +228,7 @@ void QQmlBaseModule<RequestType>::updatedSnapshot(const QByteArray &url)
 }
 
 template<typename RequestType>
-std::variant<QList<QQmlLSUtilsItemLocation>, QQmlLSUtilsErrorMessage>
+std::variant<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
 QQmlBaseModule<RequestType>::itemsForRequest(const RequestPointer &request)
 {
 
@@ -236,9 +236,9 @@ QQmlBaseModule<RequestType>::itemsForRequest(const RequestPointer &request)
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
 
     if (!doc.snapshot.validDocVersion || doc.snapshot.validDocVersion != doc.snapshot.docVersion) {
-        return QQmlLSUtilsErrorMessage{ 0,
-                                        u"Cannot proceed: current QML document is invalid! Fix"
-                                        u" all the errors in your QML code and try again."_s };
+        return QQmlLSUtils::ErrorMessage{ 0,
+                                          u"Cannot proceed: current QML document is invalid! Fix"
+                                          u" all the errors in your QML code and try again."_s };
     }
 
     QQmlJS::Dom::DomItem file = doc.snapshot.validDoc.fileObject(QQmlJS::Dom::GoTo::MostLikely);
@@ -246,7 +246,7 @@ QQmlBaseModule<RequestType>::itemsForRequest(const RequestPointer &request)
     if (auto envPtr = file.environment().ownerAs<QQmlJS::Dom::DomEnvironment>())
         envPtr->clearReferenceCache();
     if (!file) {
-        return QQmlLSUtilsErrorMessage{
+        return QQmlLSUtils::ErrorMessage{
             0,
             u"Could not find file %1 in project."_s.arg(doc.snapshot.doc.toString()),
         };
@@ -256,7 +256,7 @@ QQmlBaseModule<RequestType>::itemsForRequest(const RequestPointer &request)
                                                          request->m_parameters.position.character);
 
     if (itemsFound.isEmpty()) {
-        return QQmlLSUtilsErrorMessage{
+        return QQmlLSUtils::ErrorMessage{
             0,
             u"Could not find any items at given text location."_s,
         };

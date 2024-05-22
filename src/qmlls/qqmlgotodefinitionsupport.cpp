@@ -47,7 +47,7 @@ void QmlGoToDefinitionSupport::process(RequestPointerArgument request)
     if (guard.setErrorFrom(itemsFound))
         return;
 
-    QQmlLSUtilsItemLocation &front = std::get<QList<QQmlLSUtilsItemLocation>>(itemsFound).front();
+    auto &front = std::get<QList<QQmlLSUtils::ItemLocation>>(itemsFound).front();
 
     auto location = QQmlLSUtils::findDefinitionOf(front.domItem);
     if (!location)

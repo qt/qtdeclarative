@@ -49,7 +49,7 @@ void QQmlHover::process(RequestPointerArgument request)
 
     DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
     if (!file) {
-        guard.setError(QQmlLSUtilsErrorMessage{
+        guard.setError(QQmlLSUtils::ErrorMessage{
                 0, u"Could not find the file %1"_s.arg(doc.snapshot.doc.canonicalFilePath()) });
         return;
     }
