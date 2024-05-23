@@ -42,25 +42,6 @@ static ReturnedValue doGetIndexed(const Sequence *s, qsizetype index) {
     return v->asReturnedValue();
 }
 
-template<typename Compare>
-void sortSequence(Sequence *sequence, const Compare &compare)
-{
-    /* non-const */ Heap::Sequence *p = sequence->d();
-
-    QSequentialIterable iterable(p->metaSequence(), p->listType(), p->storagePointer());
-    if (iterable.canRandomAccessIterate()) {
-        std::sort(QSequentialIterable::RandomAccessIterator(iterable.mutableBegin()),
-                  QSequentialIterable::RandomAccessIterator(iterable.mutableEnd()),
-                  compare);
-    } else if (iterable.canReverseIterate()) {
-        std::sort(QSequentialIterable::BidirectionalIterator(iterable.mutableBegin()),
-                  QSequentialIterable::BidirectionalIterator(iterable.mutableEnd()),
-                  compare);
-    } else {
-        qWarning() << "Container has no suitable iterator for sorting";
-    }
-}
-
 // helper function to generate valid warnings if errors occur during sequence operations.
 static void generateWarning(QV4::ExecutionEngine *v4, const QString& description)
 {
@@ -105,40 +86,6 @@ struct SequenceOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 
         // You cannot add any own properties via the regular JavaScript interfaces.
         return PropertyKey::invalid();
-    }
-};
-
-struct SequenceCompareFunctor
-{
-    SequenceCompareFunctor(QV4::ExecutionEngine *v4, const QV4::Value &compareFn)
-        : m_v4(v4), m_compareFn(&compareFn)
-    {}
-
-    bool operator()(const QVariant &lhs, const QVariant &rhs)
-    {
-        QV4::Scope scope(m_v4);
-        ScopedFunctionObject compare(scope, m_compareFn);
-        if (!compare)
-            return m_v4->throwTypeError();
-        Value *argv = scope.alloc(2);
-        argv[0] = m_v4->fromVariant(lhs);
-        argv[1] = m_v4->fromVariant(rhs);
-        QV4::ScopedValue result(scope, compare->call(m_v4->globalObject, argv, 2));
-        if (scope.hasException())
-            return false;
-        return result->toNumber() < 0;
-    }
-
-private:
-    QV4::ExecutionEngine *m_v4;
-    const QV4::Value *m_compareFn;
-};
-
-struct SequenceDefaultCompareFunctor
-{
-    bool operator()(const QVariant &lhs, const QVariant &rhs)
-    {
-        return lhs.toString() < rhs.toString();
     }
 };
 
@@ -440,24 +387,6 @@ bool Sequence::containerIsEqualTo(Managed *other)
     return false;
 }
 
-bool Sequence::sort(const FunctionObject *f, const Value *, const Value *argv, int argc)
-{
-    if (d()->isReadOnly())
-        return false;
-    if (d()->isReference() && !loadReference())
-        return false;
-
-    if (argc == 1 && argv[0].as<FunctionObject>())
-        sortSequence(this, SequenceCompareFunctor(f->engine(), argv[0]));
-    else
-        sortSequence(this, SequenceDefaultCompareFunctor());
-
-    if (d()->object())
-        storeReference();
-
-    return true;
-}
-
 void *Sequence::getRawContainerPtr() const
 { return d()->storagePointer(); }
 
@@ -635,7 +564,6 @@ static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value
 
 void SequencePrototype::init()
 {
-    defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
     defineDefaultProperty(engine()->id_valueOf(), method_valueOf, 0);
     defineAccessorProperty(QStringLiteral("length"), method_get_length, method_set_length);
     defineDefaultProperty(QStringLiteral("shift"), method_shift, 0);
@@ -644,24 +572,6 @@ void SequencePrototype::init()
 ReturnedValue SequencePrototype::method_valueOf(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {
     return Encode(thisObject->toString(f->engine()));
-}
-
-ReturnedValue SequencePrototype::method_sort(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
-{
-    Scope scope(b);
-    QV4::ScopedObject o(scope, thisObject);
-    if (!o || !o->isV4SequenceType())
-        THROW_TYPE_ERROR();
-
-    if (argc >= 2)
-        return o.asReturnedValue();
-
-    if (auto *s = o->as<Sequence>()) {
-        if (!s->sort(b, thisObject, argv, argc))
-            THROW_TYPE_ERROR();
-    }
-
-    return o.asReturnedValue();
 }
 
 ReturnedValue SequencePrototype::method_shift(

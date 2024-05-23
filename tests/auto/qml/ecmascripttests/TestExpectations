@@ -98,7 +98,6 @@ built-ins/Array/prototype/slice/length-exceeding-integer-limit-proxied-array.js 
 built-ins/Array/prototype/slice/length-exceeding-integer-limit.js fails
 built-ins/Array/prototype/some/15.4.4.17-3-28.js fails
 built-ins/Array/prototype/some/15.4.4.17-3-29.js fails
-built-ins/Array/prototype/sort/comparefn-nonfunction-call-throws.js fails
 built-ins/Array/prototype/splice/S15.4.4.12_A3_T1.js fails
 built-ins/Array/prototype/splice/clamps-length-to-integer-limit.js fails
 built-ins/Array/prototype/splice/create-ctor-non-object.js fails

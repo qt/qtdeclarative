@@ -34,7 +34,6 @@ struct Q_QML_EXPORT SequencePrototype : public QV4::Object
     void init();
 
     static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_shift(const FunctionObject *b, const Value *thisObject, const Value *, int);
 
     static ReturnedValue newSequence(
@@ -112,7 +111,6 @@ public:
     bool containerPutIndexed(qsizetype index, const QV4::Value &value);
     bool containerDeleteIndexedProperty(qsizetype index);
     bool containerIsEqualTo(Managed *other);
-    bool sort(const FunctionObject *f, const Value *, const Value *argv, int argc);
     void *getRawContainerPtr() const;
     bool loadReference() const;
     bool storeReference();

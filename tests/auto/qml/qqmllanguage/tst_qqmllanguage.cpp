@@ -8840,11 +8840,6 @@ void tst_qqmllanguage::jsonArrayPropertyBehavesLikeAnArray() {
     QVERIFY(o->property("jsonArrayWasShifted").toBool());
     QVERIFY(o->property("jsonArrayWasSpliced").toBool());
     QVERIFY(o->property("jsonArrayWasUnshifted").toBool());
-    QEXPECT_FAIL(
-        "",
-        "The sort method for sequences will not currently work with QJsonArray. See QTBUG-125400.",
-        Continue
-    );
     QVERIFY(o->property("jsonArrayWasSorted").toBool());
 }
 
