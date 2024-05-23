@@ -366,10 +366,10 @@ struct StaticValue
     QV4_NEARLY_ALWAYS_INLINE void setDouble(double d) {
         if (qt_is_nan(d)) {
             // We cannot store just any NaN. It has to be a NaN with only the quiet bit
-            // set in the upper bits of the mantissa and the sign bit off.
+            // set in the upper bits of the mantissa and the sign bit either on or off.
             // qt_qnan() happens to produce such a thing via std::numeric_limits,
             // but this is actually not guaranteed. Therefore, we make our own.
-            _val = (quint64(QuickType::NaN) << Tag_Shift);
+            _val = (quint64(std::signbit(d) ? QuickType::MinusNaN : QuickType::NaN) << Tag_Shift);
             Q_ASSERT(isNaN());
         } else {
             memcpy(&_val, &d, 8);
