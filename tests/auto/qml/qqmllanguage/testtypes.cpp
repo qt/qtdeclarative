@@ -160,6 +160,7 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<ByteArrayReceiver>("Test", 1);
 
     qmlRegisterTypesAndRevisions<Counter>("Test", 1);
+    qmlRegisterTypesAndRevisions<NestedVectors>("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
