@@ -73,13 +73,14 @@ public:
     const QLspSpecification::InitializeResult &serverInfo() const;
 
 public Q_SLOTS:
-    void receiveData(const QByteArray &d);
+    void receiveData(const QByteArray &d, bool isEndOfMessage);
 Q_SIGNALS:
     void runStatusChanged(RunStatus);
     void clientInitialized(QLanguageServer *server);
     void shutdown();
     void exit();
     void lifecycleError();
+    void readNextMessage();
 
 private:
     void registerMethods(QJsonRpc::TypedRpc &typedRpc);
