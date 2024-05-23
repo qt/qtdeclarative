@@ -74,16 +74,7 @@ TestCase {
                     objectName: "ShaderFX"
                     width: rect.width
                     height: rect.height
-                    fragmentShader: "
-                            uniform lowp sampler2D source; // this item
-                            uniform lowp float qt_Opacity; // inherited opacity of this item
-                            varying highp vec2 qt_TexCoord0;
-                            void main() {
-                                lowp vec4 p = texture2D(source, qt_TexCoord0);
-                                lowp float g = dot(p.xyz, vec3(0.344, 0.5, 0.156));
-                                gl_FragColor = vec4(g, g, g, p.a) * qt_Opacity;
-                            }"
-
+                    fragmentShader: "combobox/shader.frag.qsb"
                 }
             }
         }
