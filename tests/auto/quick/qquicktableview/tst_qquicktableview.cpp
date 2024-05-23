@@ -279,6 +279,13 @@ private slots:
     void checkScroll_data();
     void checkScroll();
     void checkRebuildJsModel();
+
+    // Row and column reordering
+    void checkVisualRowColumnAfterReorder();
+    void checkColumnRowSizeAfterReorder();
+    void checkCellModelIdxAfterReorder();
+    void checkEditAfterReorder();
+    void checkSelectionAfterReorder();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -7546,6 +7553,236 @@ void tst_QQuickTableView::checkRebuildJsModel()
     // Set the same model once again and check if model changes
     tableView->setModel(jsModel);
     QCOMPARE(tableView->property(modelUpdated).toInt(), 1);
+}
+
+void tst_QQuickTableView::checkVisualRowColumnAfterReorder()
+{
+    LOAD_TABLEVIEW("reordertableview.qml"); // gives us 'tableView' variable
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    QSignalSpy columnMovedSpy(tableView, &QQuickTableView::columnMoved);
+    QSignalSpy rowMovedSpy(tableView, &QQuickTableView::rowMoved);
+
+    // Move row and column
+    tableView->moveColumn(0, 2);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(columnMovedSpy.size(), 3);
+
+    tableView->moveRow(1, 0);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(rowMovedSpy.size(), 2);
+
+    QVariantList firstColumnVar = columnMovedSpy.takeFirst();
+    QCOMPARE(firstColumnVar.at(0), 0); // Logical index
+    QCOMPARE(firstColumnVar.at(1), 0); // Old visual index
+    QCOMPARE(firstColumnVar.at(2), 2); // New visual index
+
+    QVariantList firstRowVar = rowMovedSpy.takeFirst();
+    QCOMPARE(firstRowVar.at(0), 0); // Logical index
+    QCOMPARE(firstRowVar.at(1), 0); // Old visual index
+    QCOMPARE(firstRowVar.at(2), 1); // New visual index
+}
+
+void tst_QQuickTableView::checkColumnRowSizeAfterReorder()
+{
+    LOAD_TABLEVIEW("reordertableview.qml"); // gives us 'tableView' variable
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const QSignalSpy columMovedSpy(tableView, &QQuickTableView::columnMoved);
+    const QSignalSpy rowMovedSpy(tableView, &QQuickTableView::rowMoved);
+
+    for (int index = 0, minSize = 10; index < tableView->columns(); index++, minSize+=10) {
+        tableView->setColumnWidth(index, minSize);
+        tableView->setRowHeight(index, minSize);
+    }
+    WAIT_UNTIL_POLISHED;
+
+    // Move row and column
+    tableView->moveColumn(0, 2);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(columMovedSpy.size(), 3);
+
+    tableView->moveRow(0, 2);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(rowMovedSpy.size(), 3);
+
+    QCOMPARE(tableView->columnWidth(0), 20);
+    QCOMPARE(tableView->columnWidth(1), 30);
+    QCOMPARE(tableView->columnWidth(2), 10);
+
+    QCOMPARE(tableView->rowHeight(0), 20);
+    QCOMPARE(tableView->rowHeight(1), 30);
+    QCOMPARE(tableView->rowHeight(2), 10);
+}
+
+void tst_QQuickTableView::checkCellModelIdxAfterReorder()
+{
+    LOAD_TABLEVIEW("reordertableview.qml"); // gives us 'tableView' variable
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const QSignalSpy columnMovedSpy(tableView, &QQuickTableView::columnMoved);
+    const QSignalSpy rowMovedSpy(tableView, &QQuickTableView::rowMoved);
+
+    const QSharedPointer<TestModel> testModel = model.value<QSharedPointer<TestModel>>();
+    const QString objNameItem21(tableView->itemAtIndex(testModel->index(2, 1))->objectName());
+    const QString objNameItem00(tableView->itemAtIndex(testModel->index(0 ,0))->objectName());
+    const QString objNameItem11(tableView->itemAtIndex(testModel->index(1 ,1))->objectName());
+
+    // Move row and column
+    tableView->moveColumn(0, 2);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(columnMovedSpy.size(), 3);
+
+    tableView->moveRow(1, 0);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(rowMovedSpy.size(), 2);
+
+    // Check model index - index()
+    QModelIndex modelIndex = tableView->index(0, 0);
+    QCOMPARE(modelIndex.column(), 1);
+    QCOMPARE(modelIndex.row(), 1);
+
+    modelIndex = tableView->index(1, 1);
+    QCOMPARE(modelIndex.column(), 2);
+    QCOMPARE(modelIndex.row(), 0);
+
+    modelIndex = tableView->index(2, 2);
+    QCOMPARE(modelIndex.column(), 0);
+    QCOMPARE(modelIndex.row(), 2);
+
+    // Check cell index - cellAtIndex()
+    {
+        QPoint cell = tableView->cellAtIndex(testModel->index(0, 0));
+        QCOMPARE(cell.x(), 2);
+        QCOMPARE(cell.y(), 1);
+    }
+
+    // Check column and row index - columnAtIndex(), rowAtIndex()
+    {
+        int columnIndex = tableView->columnAtIndex(testModel->index(0, 0));
+        int rowIndex = tableView->rowAtIndex(testModel->index(0, 0));
+        QCOMPARE(columnIndex, 2);
+        QCOMPARE(rowIndex, 1);
+    }
+
+    // Check item - itemAtIndex()
+    // Item at index provides the item that is mapped to that model index
+    // and it shouldn't be confused with cell index
+    {
+        QQuickItem *item = tableView->itemAtIndex(testModel->index(0 ,0));
+        QCOMPARE(objNameItem00, item->objectName());
+    }
+
+    // Check item at cell localtion 0, 0 - itemAtCell()
+    {
+        QQuickItem *item = tableView->itemAtCell(QPoint(0, 0));
+        QCOMPARE(objNameItem11, item->objectName());
+    }
+}
+
+void tst_QQuickTableView::checkEditAfterReorder()
+{
+    LOAD_TABLEVIEW("editdelegate.qml"); // gives us 'tableView' variable
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const QSignalSpy columnMovedSpy(tableView, &QQuickTableView::columnMoved);
+    const QSignalSpy rowMovedSpy(tableView, &QQuickTableView::rowMoved);
+
+    // Move row and column
+    tableView->moveColumn(0, 1);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(columnMovedSpy.size(), 2);
+
+    tableView->moveRow(0, 1);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(rowMovedSpy.size(), 2);
+
+    // Edit model index (0, 0)
+    const QSharedPointer<TestModel> testModel = model.value<QSharedPointer<TestModel>>();
+    const auto cellItem1 = tableView->itemAtCell(QPoint(0, 0));
+    QCOMPARE(cellItem1->property("editing").toBool(), false);
+
+    tableView->edit(testModel->index(1, 1));
+    QCOMPARE(cellItem1->property("editing").toBool(), true);
+
+    // Close the editor
+    tableView->closeEditor();
+    QCOMPARE(cellItem1->property("editing").toBool(), false);
+}
+
+void tst_QQuickTableView::checkSelectionAfterReorder()
+{
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(10, 10);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(selectionModel.hasSelection(), false);
+    QCOMPARE(tableView->selectionBehavior(), QQuickTableView::SelectCells);
+
+    const QSignalSpy columnMovedSpy(tableView, &QQuickTableView::columnMoved);
+    tableView->moveColumn(0, 2);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(columnMovedSpy.size(), 3);
+
+    const QPoint endCellDist(1, 1);
+    const QPoint startCell(0, 0);
+    const QPoint endCell = startCell + endCellDist;
+
+    const QQuickItem *startItem = tableView->itemAtCell(startCell);
+    const QQuickItem *endItem = tableView->itemAtCell(endCell);
+    QVERIFY(startItem);
+    QVERIFY(endItem);
+
+    const QPointF startPos(startItem->x(), startItem->y());
+    const QPointF endPos(endItem->x(), endItem->y());
+
+    QVERIFY(tableViewPrivate->startSelection(startPos, Qt::NoModifier));
+    tableViewPrivate->setSelectionStartPos(startPos);
+    tableViewPrivate->setSelectionEndPos(endPos);
+
+    QCOMPARE(selectionModel.hasSelection(), true);
+
+    const int x1 = qMin(startCell.x(), endCell.x());
+    const int x2 = qMax(startCell.x(), endCell.x());
+    const int y1 = qMin(startCell.y(), endCell.y());
+    const int y2 = qMax(startCell.y(), endCell.y());
+
+    for (int x = x1; x <= x2; ++x) {
+        for (int y = y1; y <= y2; ++y) {
+            const auto index = tableView->index(y, x);
+            QVERIFY(selectionModel.isSelected(index));
+        }
+    }
+
+    const int expectedCount = (x2 - x1 + 1) * (y2 - y1 + 1);
+    const int actualCount = selectionModel.selectedIndexes().size();
+    QCOMPARE(actualCount, expectedCount);
+
+    // The column which has been moved shouldn't have the selected
+    // bit enabled
+    for (int index = 0; index < model.rowCount(); index++)
+        QCOMPARE(selectionModel.isSelected(model.index(index, 0)), false);
+
+    tableViewPrivate->clearSelection();
+    QCOMPARE(selectionModel.hasSelection(), false);
 }
 
 QTEST_MAIN(tst_QQuickTableView)
