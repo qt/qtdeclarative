@@ -8811,7 +8811,7 @@ void tst_qqmllanguage::jsonArrayPropertyBehavesLikeAnArray() {
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
 
-    QCOMPARE(o->property("concatedJsonArray"), o->property("concatedJsArray"));
+    QCOMPARE(o->property("concatenatedJsonArray"), o->property("concatenatedJsArray"));
     QVERIFY(o->property("entriesMatch").toBool());
     QCOMPARE(o->property("jsonArrayEvery"), o->property("jsArrayEvery"));
     QCOMPARE(o->property("jsonArrayFiltered"), o->property("jsArrayFiltered"));
