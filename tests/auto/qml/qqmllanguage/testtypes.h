@@ -2942,4 +2942,36 @@ public:
     }
 };
 
+class NestedVectors : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    NestedVectors(QObject *parent = nullptr) : QObject(parent)
+    {
+        std::vector<int> data;
+        data.push_back(1);
+        data.push_back(2);
+        data.push_back(3);
+        m_list.push_back(data);
+        data.clear();
+        data.push_back(4);
+        data.push_back(5);
+        m_list.push_back(data);
+    }
+
+    Q_INVOKABLE std::vector<std::vector<int>> getList()
+    {
+        return m_list;
+    }
+
+    Q_INVOKABLE void setList(std::vector<std::vector<int>> list)
+    {
+        m_list = list;
+    }
+
+private:
+    std::vector<std::vector<int>> m_list;
+};
+
 #endif // TESTTYPES_H
