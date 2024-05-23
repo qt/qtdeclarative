@@ -97,8 +97,10 @@ void tst_qmlls_modules::cleanup()
     }
     m_uriToClose.clear();
 
-    disconnect(&m_server, nullptr, this, nullptr);
-    m_server.closeWriteChannel();
+    // note: properly exit the language server
+    m_protocol->requestShutdown(nullptr, []() {});
+    m_protocol->notifyExit(nullptr);
+
     m_server.waitForFinished();
     QTRY_COMPARE(m_server.state(), QProcess::NotRunning);
     QCOMPARE(m_server.exitStatus(), QProcess::NormalExit);

@@ -49,47 +49,83 @@ class StdinReader : public QObject
 {
     Q_OBJECT
 public:
-    void run()
-    {
-        auto guard = qScopeGuard([this]() { emit eof(); });
-        const constexpr qsizetype bufSize = 1024;
-        qsizetype bytesInBuf = 0;
-        char bufferData[2 * bufSize];
-        char *buffer = static_cast<char *>(bufferData);
-
-        auto trySend = [this, &bytesInBuf, buffer]() {
-            if (bytesInBuf == 0)
-                return;
-            qsizetype toSend = bytesInBuf;
-            bytesInBuf = 0;
-            QByteArray dataToSend(buffer, toSend);
-            emit receivedData(dataToSend);
-        };
-        QHttpMessageStreamParser streamParser(
+    StdinReader()
+        : m_streamReader(
                 [](const QByteArray &, const QByteArray &) { /* just a header, do nothing */ },
-                [&trySend](const QByteArray &) {
-                    // message body
-                    trySend();
-                },
-                [&trySend](QtMsgType, QString) {
-                    // there was an error
-                    trySend();
-                },
-                QHttpMessageStreamParser::UNBUFFERED);
+                [this](const QByteArray &) {
+                    // stop reading until we are sure that the server is not shutting down
+                    m_isReading = false;
 
-        while (std::cin.get(buffer[bytesInBuf])) { // should poll/select and process events
-            qsizetype readNow = std::cin.readsome(buffer + bytesInBuf + 1, bufSize) + 1;
-            QByteArray toAdd(buffer + bytesInBuf, readNow);
-            bytesInBuf += readNow;
-            if (bytesInBuf >= bufSize)
-                trySend();
-            streamParser.receiveData(toAdd);
-        }
-        trySend();
+                    // message body
+                    m_shouldSendData = true;
+                },
+                [this](QtMsgType, QString) {
+                    // there was an error
+                    m_shouldSendData = true;
+                },
+                QHttpMessageStreamParser::UNBUFFERED)
+    {
     }
+
+    void sendData()
+    {
+        const bool isEndOfMessage = !m_isReading && !m_hasEof;
+        const qsizetype toSend = m_bytesInBuf;
+        m_bytesInBuf = 0;
+        const QByteArray dataToSend(m_buffer, toSend);
+        emit receivedData(dataToSend, isEndOfMessage);
+    }
+
+private:
+    const static constexpr qsizetype s_bufSize = 1024;
+    qsizetype m_bytesInBuf = 0;
+    char m_buffer[2 * s_bufSize] = {};
+    QHttpMessageStreamParser m_streamReader;
+    /*!
+    \internal
+    Indicates if the current message is not read out entirely.
+    */
+    bool m_isReading = true;
+    /*!
+    \internal
+    Indicates if an EOF was encountered. No more data can be read after an EOF.
+    */
+    bool m_hasEof = false;
+    /*!
+    \internal
+    Indicates whether sendData() should be called or not.
+    */
+    bool m_shouldSendData = false;
 signals:
-    void receivedData(const QByteArray &data);
+    void receivedData(const QByteArray &data, bool canRequestMoreData);
     void eof();
+public slots:
+    void readNextMessage()
+    {
+        if (m_hasEof)
+            return;
+        m_isReading = true;
+        // Try to fill up the buffer as much as possible before calling the queued signal:
+        // each loop iteration might read only one character from std::in in the worstcase, this
+        // happens for example on macos.
+        while (m_isReading) {
+            // block while waiting for some data
+            if (!std::cin.get(m_buffer[m_bytesInBuf])) {
+                m_hasEof = true;
+                emit eof();
+                return;
+            }
+            // see if more data is available and fill the buffer with it
+            qsizetype readNow = std::cin.readsome(m_buffer + m_bytesInBuf + 1, s_bufSize) + 1;
+            QByteArray toAdd(m_buffer + m_bytesInBuf, readNow);
+            m_bytesInBuf += readNow;
+            m_streamReader.receiveData(toAdd);
+
+            m_shouldSendData |= m_bytesInBuf >= s_bufSize;
+            if (std::exchange(m_shouldSendData, false))
+                sendData();
+        }
+    }
 };
 
 // To debug:
@@ -276,16 +312,28 @@ int main(int argv, char *argc[])
                    ".qmlls.ini files.";
     }
     StdinReader r;
+    QThread workerThread;
+    r.moveToThread(&workerThread);
     QObject::connect(&r, &StdinReader::receivedData,
                      qmlServer.server(), &QLanguageServer::receiveData);
-    QObject::connect(&r, &StdinReader::eof, &app, [&app]() {
+    QObject::connect(qmlServer.server(), &QLanguageServer::readNextMessage, &r,
+                     &StdinReader::readNextMessage);
+    auto exit = [&app, &workerThread]() {
+        workerThread.quit();
+        workerThread.wait();
         QTimer::singleShot(100, &app, []() {
             QCoreApplication::processEvents();
             QCoreApplication::exit();
         });
-    });
-    QThreadPool::globalInstance()->start([&r]() { r.run(); });
+    };
+    QObject::connect(&r, &StdinReader::eof, &app, exit);
+    QObject::connect(qmlServer.server(), &QLanguageServer::shutdown, exit);
+
+    emit r.readNextMessage();
+    workerThread.start();
     app.exec();
+    workerThread.quit();
+    workerThread.wait();
     return qmlServer.returnValue();
 }
 
