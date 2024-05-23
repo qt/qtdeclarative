@@ -2479,18 +2479,22 @@ bool convertToIterable(QMetaType metaType, void *data, Source *sequence)
         return false;
 
     const QMetaType elementMetaType = iterable.valueMetaType();
-    QVariant element(elementMetaType);
     for (qsizetype i = 0, end = sequence->getLength(); i < end; ++i) {
-        if (!ExecutionEngine::metaTypeFromJS(sequence->get(i), elementMetaType, element.data()))
-            element = QVariant(elementMetaType);
+        QVariant element(elementMetaType);
+        ExecutionEngine::metaTypeFromJS(sequence->get(i), elementMetaType, element.data());
         iterable.addValue(element, QSequentialIterable::AtEnd);
     }
     return true;
 }
 
-// Converts a JS value to a meta-type.
-// data must point to a place that can store a value of the given type.
-// Returns true if conversion succeeded, false otherwise.
+/*!
+ * \internal
+ *
+ * Converts a JS value to a meta-type.
+ * \a data must point to a default-constructed instance of \a metaType.
+ * Returns \c true if conversion succeeded, \c false otherwise. In the latter case,
+ * \a data is not modified.
+ */
 bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, void *data)
 {
     // check if it's one of the types we know

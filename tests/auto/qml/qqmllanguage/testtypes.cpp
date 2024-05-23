@@ -181,6 +181,7 @@ void registerTypes()
             InvokableUncreatable,
             InvokableValueType
     >("Test", 1);
+    qmlRegisterTypesAndRevisions<NestedVectors>("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

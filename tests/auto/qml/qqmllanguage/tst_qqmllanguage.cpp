@@ -459,6 +459,8 @@ private slots:
 
     void jsonArrayPropertyBehavesLikeAnArray();
 
+    void nestedVectors();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8891,6 +8893,26 @@ void tst_qqmllanguage::invokableCtors()
 
     InvokableUncreatable *l = qvariant_cast<InvokableUncreatable *>(o->property("l"));
     QVERIFY(l);
+}
+
+void tst_qqmllanguage::nestedVectors()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("nestedVectors.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    NestedVectors *n = qobject_cast<NestedVectors *>(o.data());
+    QVERIFY(n);
+
+    const std::vector<std::vector<int>> expected1 { { 1, 2, 3 }, { 4, 5 } };
+    const QVariant list1 = n->property("list1");
+    QCOMPARE(list1.metaType(), QMetaType::fromType<std::vector<std::vector<int>>>());
+    QCOMPARE(list1.value<std::vector<std::vector<int>>>(), expected1);
+
+    const std::vector<std::vector<int>> expected2 { { 2, 3, 4 }, { 5, 6 } };
+    QCOMPARE(n->getList(), expected2);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
