@@ -6,6 +6,7 @@
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsbasicblocks_p.h>
 #include <private/qqmljscodegenerator_p.h>
+#include <private/qqmljscompilerstats_p.h>
 #include <private/qqmljsfunctioninitializer_p.h>
 #include <private/qqmljsimportvisitor_p.h>
 #include <private/qqmljslexer_p.h>
@@ -679,7 +680,8 @@ std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> QQmlJSAotCompiler::co
     const QString name = m_document->stringAt(irBinding.propertyNameIndex);
     QQmlJSCompilePass::Function function = initializer.run(
                 context, name, astNode, irBinding, &error);
-    const QQmlJSAotFunction aotFunction = doCompile(context, &function, &error);
+    const QQmlJSAotFunction aotFunction = doCompileAndRecordAotStats(
+            context, &function, &error, name, astNode->firstSourceLocation());
 
     if (error.isValid()) {
         // If it's a signal and the function just returns a closure, it's harmless.
@@ -703,7 +705,8 @@ std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> QQmlJSAotCompiler::co
                 &m_typeResolver, m_currentObject->location, m_currentScope->location);
     QQmlJS::DiagnosticMessage error;
     QQmlJSCompilePass::Function function = initializer.run(context, name, astNode, &error);
-    const QQmlJSAotFunction aotFunction = doCompile(context, &function, &error);
+    const QQmlJSAotFunction aotFunction = doCompileAndRecordAotStats(
+            context, &function, &error, name, astNode->firstSourceLocation());
 
     if (error.isValid())
         return diagnose(error.message, QtWarningMsg, error.loc);
@@ -781,6 +784,28 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
     QQmlJSCodeGenerator codegen(context, m_unitGenerator, &m_typeResolver, m_logger, blocks, annotations);
     QQmlJSAotFunction result = codegen.run(function, error, basicBlocksValidationFailed);
     return error->isValid() ? compileError() : result;
+}
+
+QQmlJSAotFunction QQmlJSAotCompiler::doCompileAndRecordAotStats(
+        const QV4::Compiler::Context *context, QQmlJSCompilePass::Function *function,
+        QQmlJS::DiagnosticMessage *error, const QString &name, QQmlJS::SourceLocation location)
+{
+    auto t1 = std::chrono::high_resolution_clock::now();
+    auto &&result = doCompile(context, function, error);
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    if (QQmlJS::QQmlJSAotCompilerStats::recordAotStats()) {
+        QQmlJS::AotStatsEntry entry;
+        entry.codegenDuration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+        entry.functionName = name;
+        entry.errorMessage = error->message;
+        entry.line = location.startLine;
+        entry.column = location.startColumn;
+        entry.codegenSuccessful = !error->isValid();
+        QQmlJS::QQmlJSAotCompilerStats::addEntry(function->qmlScope->filePath(), entry);
+    }
+
+    return result;
 }
 
 QT_END_NAMESPACE

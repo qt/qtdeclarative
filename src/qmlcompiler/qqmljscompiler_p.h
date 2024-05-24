@@ -22,6 +22,7 @@
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljscompilepass_p.h>
+#include <private/qqmljscompilerstats_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmljsimporter_p.h>
 #include <private/qqmljslogger_p.h>
@@ -97,9 +98,14 @@ protected:
     QQmlJSLogger *m_logger = nullptr;
 
 private:
-    QQmlJSAotFunction doCompile(
-            const QV4::Compiler::Context *context, QQmlJSCompilePass::Function *function,
-            QQmlJS::DiagnosticMessage *error);
+    QQmlJSAotFunction doCompile(const QV4::Compiler::Context *context,
+                                QQmlJSCompilePass::Function *function,
+                                QQmlJS::DiagnosticMessage *error);
+    QQmlJSAotFunction doCompileAndRecordAotStats(const QV4::Compiler::Context *context,
+                                                 QQmlJSCompilePass::Function *function,
+                                                 QQmlJS::DiagnosticMessage *error,
+                                                 const QString &name,
+                                                 QQmlJS::SourceLocation location);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlJSAotCompiler::Flags);

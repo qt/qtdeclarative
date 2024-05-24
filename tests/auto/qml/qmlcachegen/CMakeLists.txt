@@ -28,6 +28,7 @@ qt_internal_add_test(tst_qmlcachegen
         Qt::Gui
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
+        Qt::QmlCompilerPrivate
     TESTDATA ${test_data}
 )
 

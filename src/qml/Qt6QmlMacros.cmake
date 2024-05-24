@@ -2395,6 +2395,8 @@ function(qt6_target_qml_sources target)
             "$<${have_direct_calls}:--direct-calls>"
             "$<${have_arguments}:${arguments}>"
             ${qrc_resource_args}
+            "--dump-aot-stats"
+            "--module-id=${arg_URI}(${target})"
         )
 
         # For direct evaluation in if() below
@@ -2641,9 +2643,16 @@ function(qt6_target_qml_sources target)
                 set(qmlcachegen_cmd "${qmlcachegen}")
             endif()
 
+            set(aotstats_file "")
+            if("${qml_file_src}" MATCHES ".+\\.qml")
+                set(aotstats_file "${compiled_file}.aotstats")
+            endif()
+
             _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
             add_custom_command(
-                OUTPUT ${compiled_file}
+                OUTPUT
+                    ${compiled_file}
+                    ${aotstats_file}
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${out_dir}
                 COMMAND
                     ${tool_wrapper}
