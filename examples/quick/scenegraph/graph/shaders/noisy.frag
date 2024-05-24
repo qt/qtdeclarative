@@ -11,7 +11,7 @@ layout(location = 0) out vec4 fragColor;
 layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
     vec4 color;
-    vec2 textureSize;
+    vec2 texCoordScale;
     float qt_Opacity;
 };
 
