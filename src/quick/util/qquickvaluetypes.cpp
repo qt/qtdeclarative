@@ -788,6 +788,19 @@ QQuickPlanarTransform::QQuickPlanarTransform(QObject *parent)
 }
 
 /*!
+    \qmlmethod matrix4x4 PlanarTransform::identity()
+
+    Returns a matrix4x4 for the identity transform.
+
+    This is equivalent to \l Qt::matrix4x4().
+*/
+
+QMatrix4x4 QQuickPlanarTransform::identity()
+{
+    return QMatrix4x4();
+}
+
+/*!
     \qmlmethod matrix4x4 PlanarTransform::fromAffineMatrix(real scaleX, real shearY,
                                                            real shearX, real scaleY,
                                                            real translateX, real translateY)

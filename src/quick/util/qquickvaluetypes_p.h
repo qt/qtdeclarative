@@ -370,6 +370,7 @@ class Q_QUICK_EXPORT QQuickPlanarTransform : public QObject
 public:
     explicit QQuickPlanarTransform(QObject *parent = nullptr);
 
+    Q_INVOKABLE static QMatrix4x4 identity();
     Q_INVOKABLE static QMatrix4x4 fromAffineMatrix(float scaleX, float shearY,
                                                    float shearX, float scaleY,
                                                    float translateX, float translateY);
