@@ -5,6 +5,7 @@
 #define QANDROIDMODELINDEXPROXY_P_H
 
 #include <QtQuick/private/qandroidtypes_p.h>
+#include <QtQuick/private/qtquickglobal_p.h>
 
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qjniobject.h>
@@ -29,7 +30,7 @@ using namespace QtJniTypes;
 
 class QAndroidItemModelProxy;
 
-class QAndroidModelIndexProxy
+class Q_QUICK_EXPORT QAndroidModelIndexProxy
 {
 public:
     static JQtModelIndex jInstance(QModelIndex modelIndex);

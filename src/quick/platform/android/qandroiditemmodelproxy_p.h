@@ -16,6 +16,7 @@
 
 #include <QtQuick/private/qandroidmodelindexproxy_p.h>
 #include <QtQuick/private/qandroidtypes_p.h>
+#include <QtQuick/private/qtquickglobal_p.h>
 
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qjniobject.h>
@@ -24,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QAndroidItemModelProxy : public QAbstractItemModel
+class Q_QUICK_EXPORT QAndroidItemModelProxy : public QAbstractItemModel
 {
     Q_OBJECT
 

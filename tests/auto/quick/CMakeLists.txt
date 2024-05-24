@@ -95,6 +95,7 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(qquickspritesequence)
     add_subdirectory(qquickrhiitem)
     add_subdirectory(rendernode)
+    add_subdirectory(platform)
 
     if(QT_FEATURE_opengl)
         add_subdirectory(qquickframebufferobject)
