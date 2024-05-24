@@ -360,7 +360,7 @@ void HighlightingVisitor::highlightScriptLiteral(const DomItem &item)
         return;
     const auto regions = fLocs->info().regions;
     if (std::holds_alternative<QString>(literal->literalValue())) {
-        const QString value = '\"' + std::get<QString>(literal->literalValue()) + '\"';
+        const QString value = u'\"' + std::get<QString>(literal->literalValue()) + u'\"';
         const auto &locs = HighlightingUtils::sourceLocationsFromMultiLineToken(
                 value, regions[MainRegion]);
         for (const auto &loc : locs)
