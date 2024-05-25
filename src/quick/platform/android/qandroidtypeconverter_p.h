@@ -34,6 +34,8 @@ namespace QAndroidTypeConverter
             return object.toString();
         else if (classname == QtJniTypes::Traits<QtJniTypes::Integer>::className())
             return object.callMethod<jint>("intValue");
+        else if (classname == QtJniTypes::Traits<QtJniTypes::Long>::className())
+            return QVariant::fromValue<long>(object.callMethod<jlong>("longValue"));
         else if (classname == QtJniTypes::Traits<QtJniTypes::Double>::className())
             return object.callMethod<jdouble>("doubleValue");
         else if (classname == QtJniTypes::Traits<QtJniTypes::Float>::className())
@@ -51,6 +53,11 @@ namespace QAndroidTypeConverter
         case QMetaType::Type::Int:
             return env->NewLocalRef(QJniObject::construct<QtJniTypes::Integer>(
                                             get<int>(var))
+                                            .object());
+        case QMetaType::Type::Long:
+        case QMetaType::Type::LongLong:
+            return env->NewLocalRef(QJniObject::construct<QtJniTypes::Long>(
+                                            get<jlong>(var))
                                             .object());
         case QMetaType::Type::Double:
             return env->NewLocalRef(QJniObject::construct<QtJniTypes::Double>(

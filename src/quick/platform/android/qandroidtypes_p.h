@@ -22,6 +22,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_JNI_CLASS(Void, "java/lang/Void");
 Q_DECLARE_JNI_CLASS(Integer, "java/lang/Integer");
+Q_DECLARE_JNI_CLASS(Long, "java/lang/Long");
 Q_DECLARE_JNI_CLASS(Double, "java/lang/Double");
 Q_DECLARE_JNI_CLASS(Float, "java/lang/Float");
 Q_DECLARE_JNI_CLASS(Boolean, "java/lang/Boolean");
