@@ -41,7 +41,7 @@ namespace QAndroidTypeConverter
         else if (classname == QtJniTypes::Traits<QtJniTypes::Float>::className())
             return object.callMethod<jfloat>("floatValue");
         else if (classname == QtJniTypes::Traits<QtJniTypes::Boolean>::className())
-            return object.callMethod<jboolean>("booleanValue");
+            return QVariant::fromValue<bool>(object.callMethod<jboolean>("booleanValue"));
 
         return QVariant{};
     }
