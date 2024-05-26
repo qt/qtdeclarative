@@ -113,7 +113,7 @@ void tst_font::font()
     QFETCH(QString, testFile);
     QFETCH(QFont, expectedFont);
 
-    if (QSysInfo::productType().compare(QLatin1String("osx"), Qt::CaseInsensitive) == 0
+    if (QSysInfo::productType().compare(QLatin1String("macos"), Qt::CaseInsensitive) == 0
             && qgetenv("QTEST_ENVIRONMENT").split(' ').contains("CI")) {
         QSKIP("This test crashes on macOS: QTBUG-70063");
     }
