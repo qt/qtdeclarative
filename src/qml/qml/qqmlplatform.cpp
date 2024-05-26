@@ -30,6 +30,8 @@ QString QQmlPlatform::os()
     return QStringLiteral("ios");
 #elif defined(Q_OS_TVOS)
     return QStringLiteral("tvos");
+#elif defined(Q_OS_VISIONOS)
+    return QStringLiteral("visionos");
 #elif defined(Q_OS_MACOS)
     // ### Qt7: Replace with "macos"
     return QStringLiteral("osx");

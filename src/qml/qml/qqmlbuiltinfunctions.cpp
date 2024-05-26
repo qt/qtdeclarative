@@ -172,6 +172,7 @@ The following functions are also on the Qt object.
         \li \c "android" - Android
         \li \c "ios" - iOS
         \li \c "tvos" - tvOS
+        \li \c "visionos" - visionOS
         \li \c "linux" - Linux
         \li \c "osx" - \macos
         \li \c "qnx" - QNX (since Qt 5.9.3)
