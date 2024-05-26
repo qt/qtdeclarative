@@ -114,7 +114,7 @@ available when you import \c QtQuick.
     \section1 SVG Color Reference
 
     The following table lists the available
-    \l {http://www.w3.org/TR/SVG/types.html#ColorKeywords}{SVG colors}:
+    \l {https://www.w3.org/TR/css-color-3/#svg-color}{SVG colors}:
 
     \include svg-colors.qdocinc
 
