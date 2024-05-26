@@ -15,7 +15,7 @@
 #define CAN_BACKTRACE_EXECINFO
 #endif
 
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_APPLE)
 #define CAN_BACKTRACE_EXECINFO
 #endif
 
@@ -103,7 +103,7 @@ QSGTexturePrivate::QSGTexturePrivate(QSGTexture *t)
 
 static int qt_debug_texture_count = 0;
 
-#if (defined(Q_OS_LINUX) || defined (Q_OS_MAC)) && !defined(Q_OS_ANDROID)
+#if (defined(Q_OS_LINUX) || defined (Q_OS_APPLE)) && !defined(Q_OS_ANDROID)
 DEFINE_BOOL_CONFIG_OPTION(qmlDebugLeakBacktrace, QML_DEBUG_LEAK_BACKTRACE)
 
 #define BACKTRACE_SIZE 20

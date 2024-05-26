@@ -1693,7 +1693,7 @@ void tst_qquickflickable::flickVelocity()
     QTRY_VERIFY(flickable->verticalVelocity() < 0.0);
     QTRY_COMPARE(flickable->verticalVelocity(), 0.0);
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     QSKIP("boost doesn't work on OS X");
     return;
 #endif
