@@ -73,7 +73,6 @@ private slots:
     void panMenuBar();
 
 private:
-    static bool hasWindowActivation();
     bool nativeMenuBarSupported = false;
     bool popupWindowsSupported = false;
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -91,11 +90,6 @@ tst_qquickmenubar::tst_qquickmenubar()
     QQuickMenuBar mb;
     nativeMenuBarSupported = QQuickMenuBarPrivate::get(&mb)->useNativeMenuBar();
     popupWindowsSupported = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows);
-}
-
-bool tst_qquickmenubar::hasWindowActivation()
-{
-    return (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation));
 }
 
 void tst_qquickmenubar::init()
@@ -136,8 +130,7 @@ void tst_qquickmenubar::mouse()
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
 
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
@@ -363,8 +356,8 @@ void tst_qquickmenubar::keys()
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
 
@@ -557,8 +550,8 @@ void tst_qquickmenubar::mnemonics()
 {
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
 #if defined(Q_OS_MACOS) or defined(Q_OS_WEBOS)
     QSKIP("Mnemonics are not used on this platform");

@@ -415,13 +415,12 @@ void QQmlConnections::connectSignalsToMethods()
                 auto *signal = new QQmlBoundSignal(target, signalIndex, this, qmlEngine(this));
                 signal->setEnabled(d->enabled);
 
-                QV4::ScopedFunctionObject method(
+                QV4::Scoped<QV4::JavaScriptFunctionObject> method(
                         scope, vmeMetaObject->vmeMethod(handler->coreIndex()));
 
                 QQmlBoundSignalExpression *expression = ctxtdata
                         ? new QQmlBoundSignalExpression(
-                                target, signalIndex, ctxtdata, this,
-                                method->as<QV4::FunctionObject>()->function())
+                                target, signalIndex, ctxtdata, this, method->function())
                         : nullptr;
 
                 signal->takeExpression(expression);

@@ -37,13 +37,15 @@ struct ProxyFunctionObject : ProxyObject {
     void init(const QV4::FunctionObject *target, const QV4::Object *handler);
 };
 
+struct ProxyConstructorObject : ProxyFunctionObject {};
+
 #define ProxyMembers(class, Member) \
     Member(class, Pointer, Symbol *, revokableProxySymbol) \
 
 DECLARE_HEAP_OBJECT(Proxy, FunctionObject) {
     DECLARE_MARKOBJECTS(Proxy)
 
-    void init(QV4::ExecutionContext *ctx);
+    void init(ExecutionEngine *engine);
 };
 
 }
@@ -60,9 +62,6 @@ struct ProxyObject : FunctionObject {
     V4_OBJECT2(ProxyObject, Object)
     Q_MANAGED_TYPE(ProxyObject)
     V4_INTERNALCLASS(ProxyObject)
-    enum {
-        IsFunctionObject = false
-    };
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
@@ -81,12 +80,14 @@ struct ProxyFunctionObject : ProxyObject {
     V4_OBJECT2(ProxyFunctionObject, FunctionObject)
     Q_MANAGED_TYPE(ProxyObject)
     V4_INTERNALCLASS(ProxyFunctionObject)
-    enum {
-        IsFunctionObject = true
-    };
+
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct ProxyConstructorObject : ProxyFunctionObject {
+    V4_OBJECT2(ProxyConstructorObject, ProxyFunctionObject)
 
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
-    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct Proxy : FunctionObject

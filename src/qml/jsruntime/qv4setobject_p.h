@@ -29,12 +29,12 @@ class ESTable;
 namespace Heap {
 
 struct WeakSetCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 
 struct SetCtor : WeakSetCtor {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct SetObject : Object {

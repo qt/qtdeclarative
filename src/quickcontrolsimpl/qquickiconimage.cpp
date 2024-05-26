@@ -82,7 +82,7 @@ void QQuickIconImagePrivate::updateFillMode()
 
     updatingFillMode = true;
 
-    const QSize pixmapSize = QSize(pix.width(), pix.height()) / calculateDevicePixelRatio();
+    const QSize pixmapSize = QSize(currentPix->width(), currentPix->height()) / calculateDevicePixelRatio();
     if (pixmapSize.width() > q->width() || pixmapSize.height() > q->height())
         q->setFillMode(QQuickImage::PreserveAspectFit);
     else
@@ -186,12 +186,12 @@ void QQuickIconImage::pixmapChange()
 
     // Don't apply the color if we're recursing (updateFillMode() can cause us to recurse).
     if (!d->updatingFillMode && d->color.alpha() > 0) {
-        QImage image = d->pix.image();
+        QImage image = d->currentPix->image();
         if (!image.isNull()) {
             QPainter painter(&image);
             painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
             painter.fillRect(image.rect(), d->color);
-            d->pix.setImage(image);
+            d->currentPix->setImage(image);
         }
     }
 }

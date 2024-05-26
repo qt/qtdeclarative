@@ -29,6 +29,7 @@ public:
     tst_focus();
 
 private slots:
+    void init() override;
     void initTestCase() override;
 
     void navigation_data();
@@ -50,8 +51,14 @@ tst_focus::tst_focus()
 {
 }
 
+void tst_focus::init()
+{
+    QTest::failOnWarning(QRegularExpression(".?"));
+}
+
 void tst_focus::initTestCase()
 {
+    SKIP_IF_NO_WINDOW_ACTIVATION
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     QQuickStyle::setStyle("Basic");
     QQmlDataTest::initTestCase();

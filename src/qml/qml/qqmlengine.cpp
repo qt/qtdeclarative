@@ -1945,7 +1945,7 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QV4::ExecutableCompilationU
         // different version of ExecutionEngine::callInContext() that returns a
         // QV4::ReturnedValue with no arguments since they are not needed by the
         // outer function anyhow
-        QV4::ScopedFunctionObject result(scope,
+        QV4::Scoped<QV4::JavaScriptFunctionObject> result(scope,
             v4->callInContext(function, thisObject, callContext, 0, nullptr));
         Q_ASSERT(result->function());
         Q_ASSERT(result->function()->compilationUnit == function->compilationUnit);

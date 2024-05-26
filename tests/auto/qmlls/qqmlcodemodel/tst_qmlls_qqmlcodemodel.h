@@ -23,6 +23,7 @@ class tst_qmlls_qqmlcodemodel : public QQmlDataTest
     Q_OBJECT
 public:
     tst_qmlls_qqmlcodemodel();
+    QString readFile(const QString &filename) const;
 
 private slots:
     void buildPathsForFileUrl_data();
@@ -30,6 +31,7 @@ private slots:
     void fileNamesToWatch();
     void findFilePathsFromFileNames_data();
     void findFilePathsFromFileNames();
+    void openFiles();
 };
 
 #endif // TST_QMLLS_QQMLCODEMODEL_H

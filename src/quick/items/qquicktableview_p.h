@@ -233,6 +233,11 @@ public:
     Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
 #endif
 
+    Q_REVISION(6, 8) Q_INVOKABLE void moveColumn(int source, int destination);
+    Q_REVISION(6, 8) Q_INVOKABLE void moveRow(int source, int destination);
+    Q_REVISION(6, 8) Q_INVOKABLE void clearColumnReordering();
+    Q_REVISION(6, 8) Q_INVOKABLE void clearRowReordering();
+
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 
 Q_SIGNALS:
@@ -264,6 +269,9 @@ Q_SIGNALS:
     Q_REVISION(6, 5) void editTriggersChanged();
     Q_REVISION(6, 5) void layoutChanged();
     Q_REVISION(6, 6) void selectionModeChanged();
+    Q_REVISION(6, 8) void rowMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
+    Q_REVISION(6, 8) void columnMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
+
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;

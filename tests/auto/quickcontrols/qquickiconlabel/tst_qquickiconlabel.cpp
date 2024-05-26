@@ -336,7 +336,7 @@ void tst_qquickiconlabel::iconSourceContext()
         QVERIFY(image);
         QQuickImagePrivate *imagePrivate
                 = static_cast<QQuickImagePrivate *>(QQuickItemPrivate::get(image));
-        QCOMPARE(imagePrivate->pix.url(), testFileUrl("a.png"));
+        QCOMPARE(imagePrivate->pix1.url(), testFileUrl("a.png"));
     }
 #endif
 }

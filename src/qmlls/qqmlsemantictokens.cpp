@@ -404,11 +404,10 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
         m_highlights.addHighlight(loc, int(SemanticTokenTypes::Type));
         return;
     case JavaScriptIdentifier: {
-        const auto name = expression->name;
-        const auto scope = expression->semanticScope;
         SemanticTokenTypes tokenType = SemanticTokenTypes::Variable;
         int modifier = 0;
-        if (const auto jsIdentifier = scope->jsIdentifier(name.value())) {
+        if (const auto jsIdentifier
+                = expression->semanticScope->jsIdentifier(expression->name.value())) {
             switch (jsIdentifier.value().kind) {
             case QQmlJSScope::JavaScriptIdentifier::Parameter:
                 tokenType = SemanticTokenTypes::Parameter;
@@ -430,8 +429,7 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
     }
     case PropertyIdentifier: {
         if (const auto scope = expression->semanticScope) {
-            const auto name = expression->name;
-            const auto property = scope->property(name.value());
+            const auto property = scope->property(expression->name.value());
             int modifier = 0;
             if (!property.isWritable()) {
                 HighlightingUtils::addModifier(SemanticTokenModifiers::Readonly,
@@ -730,7 +728,7 @@ QList<SemanticTokensEdit> HighlightingUtils::computeDiff(const QList<int> &oldDa
     if (newStart >= newData.cbegin() && newEnd <= newData.cend() && newStart < newEnd)
         edit.data.emplace(newStart, newEnd);
 
-    return { edit };
+    return { std::move(edit) };
 }
 
 
@@ -742,7 +740,7 @@ void Highlights::addHighlight(const QQmlJS::SourceLocation &loc, int tokenType, 
     }
 
     if (!m_highlights.contains(loc.offset))
-        m_highlights.insert(loc.offset, Token(loc, tokenType, tokenModifier));
+        m_highlights.insert(loc.offset, QT_PREPEND_NAMESPACE(Token)(loc, tokenType, tokenModifier));
 }
 
 void Highlights::addHighlight(const QMap<FileLocationRegion, QQmlJS::SourceLocation> &regions,

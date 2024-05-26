@@ -161,7 +161,7 @@ void tst_QQuickAccessible::quickAttachedProperties()
     // Attaching to non-item
     {
         QObject parent;
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML QtObject: Accessible must be attached to an Item");
+        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML QtObject: Accessible must be attached to an Item or an Action");
         QQuickAccessibleAttached *attachedObj = new QQuickAccessibleAttached(&parent);
 
         QCOMPARE(attachedObj->ignored(), false);

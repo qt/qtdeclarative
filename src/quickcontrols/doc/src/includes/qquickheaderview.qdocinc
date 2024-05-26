@@ -84,3 +84,21 @@ The warning can be silenced by setting the \l textRole.
 
 \sa QAbstractItemModel::roleNames()
 //! [textRole]
+
+//! [movableColumns]
+This property allows the user to move columns in the view. The default value is
+\c false.
+
+\note If this property is set, the HorizontalHeaderView allows the user to drag
+and drop columns at the required position. When syncView is enabled,
+any change will be applied to the corresponding view item.
+//! [movableColumns]
+
+//! [movableRows]
+This property allows the user to move rows in the view. The default value is \c
+false.
+
+\note If this property is set, the VerticalHeaderView allows the user to drag
+and drop rows at the required position. When syncView is enabled,
+any change will be applied to the corresponding view item.
+//! [movableRows]

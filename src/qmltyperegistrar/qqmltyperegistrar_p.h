@@ -35,6 +35,7 @@ class QmlTypeRegistrar
     QVector<MetaType> m_types;
     QVector<MetaType> m_foreignTypes;
     QList<QAnyStringView> m_referencedTypes;
+    QList<UsingDeclaration> m_usingDeclarations;
 
     MetaType findType(QAnyStringView name) const;
     MetaType findTypeForeign(QAnyStringView name) const;
@@ -48,6 +49,7 @@ public:
     void setIncludes(const QList<QString> &includes);
     void setTypes(const QVector<MetaType> &types, const QVector<MetaType> &foreignTypes);
     void setReferencedTypes(const QList<QAnyStringView> &referencedTypes);
+    void setUsingDeclarations(const QList<UsingDeclaration> &usingDeclarations);
 
     static bool argumentsFromCommandLineAndFile(QStringList &allArguments,
                                                 const QStringList &arguments);

@@ -135,41 +135,49 @@ void tst_qquickimage::imageSource_data()
     QTest::addColumn<bool>("async");
     QTest::addColumn<bool>("cache");
     QTest::addColumn<QString>("error");
+    QTest::addColumn<bool>("retainWhileLoading");
 
-    QTest::newRow("local") << testFileUrl("colors.png").toString() << 120.0 << 120.0 << false << false << true << "";
-    QTest::newRow("local no cache") << testFileUrl("colors.png").toString() << 120.0 << 120.0 << false << false << false << "";
-    QTest::newRow("local async") << testFileUrl("colors1.png").toString() << 120.0 << 120.0 << false << true << true << "";
+    QTest::newRow("local") << testFileUrl("colors.png").toString() << 120.0 << 120.0 << false << false << true << "" << false;
+    QTest::newRow("local no cache") << testFileUrl("colors.png").toString() << 120.0 << 120.0 << false << false << false << "" << false;
+    QTest::newRow("local async") << testFileUrl("colors1.png").toString() << 120.0 << 120.0 << false << true << true << "" << false;
+    QTest::newRow("local async retain") << testFileUrl("colors1.png").toString() << 120.0 << 120.0 << false << true << true << "" << true;
     QTest::newRow("local not found") << testFileUrl("no-such-file.png").toString() << 0.0 << 0.0 << false
-        << false << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file.png").toString();
+        << false << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file.png").toString() << false;
     QTest::newRow("local async not found") << testFileUrl("no-such-file-1.png").toString() << 0.0 << 0.0 << false
-        << true << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file-1.png").toString();
-    QTest::newRow("remote") << "/colors.png" << 120.0 << 120.0 << true << false << true << "";
-    QTest::newRow("remote redirected") << "/oldcolors.png" << 120.0 << 120.0 << true << false << false << "";
+        << true << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file-1.png").toString() << false;
+    QTest::newRow("local async retain not found") << testFileUrl("no-such-file-1.png").toString() << 0.0 << 0.0 << false
+                                           << true << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file-1.png").toString() << true;
+    QTest::newRow("remote") << "/colors.png" << 120.0 << 120.0 << true << false << true << "" << false;
+    QTest::newRow("remote retain") << "/colors.png" << 120.0 << 120.0 << true << false << true << "" << true;
+    QTest::newRow("remote redirected") << "/oldcolors.png" << 120.0 << 120.0 << true << false << false << "" << false;
     if (QImageReader::supportedImageFormats().contains("svg"))
-        QTest::newRow("remote svg") << "/heart.svg" << 595.0 << 841.0 << true << false << false << "";
+        QTest::newRow("remote svg") << "/heart.svg" << 595.0 << 841.0 << true << false << false << "" << false;
     if (QImageReader::supportedImageFormats().contains("svgz"))
-        QTest::newRow("remote svgz") << "/heart.svgz" << 595.0 << 841.0 << true << false << false << "";
+        QTest::newRow("remote svgz") << "/heart.svgz" << 595.0 << 841.0 << true << false << false << "" << false;
     if (graphicsApi != QSGRendererInterface::Software) {
-        QTest::newRow("texturefile pkm format") << testFileUrl("logo.pkm").toString() << 256.0 << 256.0 << false << false << true << "";
-        QTest::newRow("texturefile ktx format") << testFileUrl("car.ktx").toString() << 146.0 << 80.0 << false << false << true << "";
-        QTest::newRow("texturefile async") << testFileUrl("logo.pkm").toString() << 256.0 << 256.0 << false << true << true << "";
-        QTest::newRow("texturefile remote") << "/logo.pkm" << 256.0 << 256.0 << true << false << true << "";
+        QTest::newRow("texturefile pkm format") << testFileUrl("logo.pkm").toString() << 256.0 << 256.0 << false << false << true << "" << false;
+        QTest::newRow("texturefile ktx format") << testFileUrl("car.ktx").toString() << 146.0 << 80.0 << false << false << true << "" << false;
+        QTest::newRow("texturefile async") << testFileUrl("logo.pkm").toString() << 256.0 << 256.0 << false << true << true << "" << false;
+        QTest::newRow("texturefile async retain") << testFileUrl("logo.pkm").toString() << 256.0 << 256.0 << false << true << true << "" << true;
+        QTest::newRow("texturefile remote") << "/logo.pkm" << 256.0 << 256.0 << true << false << true << "" << false;
+        QTest::newRow("texturefile remote retain") << "/logo.pkm" << 256.0 << 256.0 << true << false << true << "" << true;
     }
     QTest::newRow("remote not found") << "/no-such-file.png" << 0.0 << 0.0 << true
-        << false << true << "<Unknown File>:2:1: QML Image: Error transferring {{ServerBaseUrl}}/no-such-file.png - server replied: Not found";
-    QTest::newRow("extless") << testFileUrl("colors").toString() << 120.0 << 120.0 << false << false << true << "";
-    QTest::newRow("extless no cache") << testFileUrl("colors").toString() << 120.0 << 120.0 << false << false << false << "";
-    QTest::newRow("extless async") << testFileUrl("colors1").toString() << 120.0 << 120.0 << false << true << true << "";
+        << false << true << "<Unknown File>:2:1: QML Image: Error transferring {{ServerBaseUrl}}/no-such-file.png - server replied: Not found" << false;
+    QTest::newRow("extless") << testFileUrl("colors").toString() << 120.0 << 120.0 << false << false << true << "" << false;
+    QTest::newRow("extless no cache") << testFileUrl("colors").toString() << 120.0 << 120.0 << false << false << false << "" << false;
+    QTest::newRow("extless async") << testFileUrl("colors1").toString() << 120.0 << 120.0 << false << true << true << "" << false;
+    QTest::newRow("extless async retain") << testFileUrl("colors1").toString() << 120.0 << 120.0 << false << true << true << "" << true;
     QTest::newRow("extless not found") << testFileUrl("no-such-file").toString() << 0.0 << 0.0 << false
-        << false << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file").toString();
+        << false << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file").toString() << false;
     // Test that texture file is preferred over image file, when supported.
     // Since pattern.pkm has different size than pattern.png, these tests verify that the right file has been loaded
     if (graphicsApi != QSGRendererInterface::Software) {
-        QTest::newRow("extless prefer-tex") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << false << true << "";
-        QTest::newRow("extless prefer-tex async") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << true << true << "";
+        QTest::newRow("extless prefer-tex") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << false << true << "" << false;
+        QTest::newRow("extless prefer-tex async") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << true << true << "" << false;
     } else {
-        QTest::newRow("extless ignore-tex") << testFileUrl("pattern").toString() << 200.0 << 200.0 << false << false << true << "";
-        QTest::newRow("extless ignore-tex async") << testFileUrl("pattern").toString() << 200.0 << 200.0 << false << true << true << "";
+        QTest::newRow("extless ignore-tex") << testFileUrl("pattern").toString() << 200.0 << 200.0 << false << false << true << "" << false;
+        QTest::newRow("extless ignore-tex async") << testFileUrl("pattern").toString() << 200.0 << 200.0 << false << true << true << "" << false;
     }
 
 }
@@ -183,6 +191,7 @@ void tst_qquickimage::imageSource()
     QFETCH(bool, async);
     QFETCH(bool, cache);
     QFETCH(QString, error);
+    QFETCH(bool, retainWhileLoading);
 
     TestHTTPServer server;
     if (remote) {
@@ -196,9 +205,10 @@ void tst_qquickimage::imageSource()
     if (!error.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, error.toUtf8());
 
-    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + source + "\"; asynchronous: "
+    QString componentStr = "import QtQuick\nImage { source: \"" + source + "\"; asynchronous: "
         + (async ? QLatin1String("true") : QLatin1String("false")) + "; cache: "
-        + (cache ? QLatin1String("true") : QLatin1String("false")) + " }";
+        + (cache ? QLatin1String("true") : QLatin1String("false")) + "; retainWhileLoading: "
+                           + (retainWhileLoading ? QLatin1String("true") : QLatin1String("false")) + " }";
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
@@ -208,6 +218,8 @@ void tst_qquickimage::imageSource()
         QVERIFY(obj->asynchronous());
     else
         QVERIFY(!obj->asynchronous());
+
+    QCOMPARE(obj->retainWhileLoading(), retainWhileLoading);
 
     if (cache)
         QVERIFY(obj->cache());
@@ -1208,6 +1220,7 @@ void tst_qquickimage::multiFrame_data()
 
     QTest::addRow("default") << "multiframe.qml" << false;
     QTest::addRow("async") << "multiframeAsync.qml" << true;
+    QTest::addRow("async retain") << "multiframeAsyncRetain.qml" << true;
 }
 
 void tst_qquickimage::multiFrame()

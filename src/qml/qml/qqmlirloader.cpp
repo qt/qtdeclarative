@@ -85,6 +85,8 @@ void QQmlIRLoader::load()
         valueTypeBehavior |= Pragma::Copy;
     if (unit->flags & QV4::CompiledData::Unit::ValueTypesAddressable)
         valueTypeBehavior |= Pragma::Addressable;
+    if (unit->flags & QV4::CompiledData::Unit::ValueTypesAssertable)
+        valueTypeBehavior |= Pragma::Assertable;
     if (valueTypeBehavior)
         createValueTypePragma(Pragma::ValueTypeBehavior, valueTypeBehavior);
 

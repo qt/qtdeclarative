@@ -236,9 +236,9 @@ const TypedArrayOperations operations[NTypedArrayTypes] = {
 };
 
 
-void Heap::TypedArrayCtor::init(QV4::ExecutionContext *scope, TypedArray::Type t)
+void Heap::TypedArrayCtor::init(QV4::ExecutionEngine *engine, TypedArray::Type t)
 {
-    Heap::FunctionObject::init(scope, QLatin1String(operations[t].name));
+    Heap::FunctionObject::init(engine, QLatin1String(operations[t].name));
     type = t;
 }
 
@@ -762,14 +762,20 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_fill(const FunctionObject *b,
         fin = static_cast<uint>(std::min(relativeEnd, dlen));
     }
 
-    double val = argc ? argv[0].toNumber() : std::numeric_limits<double>::quiet_NaN();
-    Value value = Value::fromDouble(val);
     if (scope.hasException() || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     char *data = v->arrayData();
     uint bytesPerElement = v->bytesPerElement();
     uint byteOffset = v->byteOffset();
+
+    Value value;
+    if (!argc)
+        value.setDouble(std::numeric_limits<double>::quiet_NaN());
+    else if (argv[0].isNumber())
+        value = argv[0];
+    else
+        value.setDouble(argv[0].toNumber());
 
     while (k < fin) {
         v->d()->type->write(data + byteOffset + k * bytesPerElement, value);

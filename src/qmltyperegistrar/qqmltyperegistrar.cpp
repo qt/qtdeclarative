@@ -504,6 +504,7 @@ bool QmlTypeRegistrar::generatePluginTypes(const QString &pluginTypesFile)
     creator.setOwnTypes(m_types);
     creator.setForeignTypes(m_foreignTypes);
     creator.setReferencedTypes(m_referencedTypes);
+    creator.setUsingDeclarations(m_usingDeclarations);
     creator.setModule(m_module.toUtf8());
     creator.setVersion(QTypeRevision::fromVersion(m_moduleVersion.majorVersion(), 0));
 
@@ -537,6 +538,11 @@ void QmlTypeRegistrar::setTypes(
 void QmlTypeRegistrar::setReferencedTypes(const QList<QAnyStringView> &referencedTypes)
 {
     m_referencedTypes = referencedTypes;
+}
+
+void QmlTypeRegistrar::setUsingDeclarations(const QList<UsingDeclaration> &usingDeclarations)
+{
+    m_usingDeclarations = usingDeclarations;
 }
 
 QT_END_NAMESPACE

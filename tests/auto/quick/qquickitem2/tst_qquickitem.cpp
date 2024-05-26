@@ -140,6 +140,7 @@ private slots:
     void focusInScopeChanges();
 
 #ifdef QT_WIDGETS_LIB
+    void embeddedInWidgetsFocus_data();
     void embeddedInWidgetsFocus();
 #endif
 
@@ -4441,8 +4442,16 @@ void tst_QQuickItem::focusInScopeChanges()
 }
 
 #ifdef QT_WIDGETS_LIB
+void tst_QQuickItem::embeddedInWidgetsFocus_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::newRow("Embedded") << testFileUrl("embedded.qml");
+    QTest::newRow("Embedded Focus Scope") << testFileUrl("embedded_FocusScope.qml");
+}
+
 void tst_QQuickItem::embeddedInWidgetsFocus()
 {
+    QFETCH(QUrl, source);
     QWidget root;
     QVBoxLayout *layout = new QVBoxLayout(&root);
 
@@ -4450,7 +4459,7 @@ void tst_QQuickItem::embeddedInWidgetsFocus()
     lineEdit1->setFocusPolicy(Qt::FocusPolicy::TabFocus);
 
     QQuickView *quickView = new QQuickView;
-    quickView->setSource(testFileUrl("embedded.qml"));
+    quickView->setSource(source);
     QWidget *container = QWidget::createWindowContainer(quickView, &root);
     container->setMinimumSize(quickView->size());
     container->setFocusPolicy(Qt::TabFocus);

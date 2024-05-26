@@ -78,6 +78,7 @@ private slots:
     void writeBackOnFunctionCall();
     void valueTypeConversions();
     void readReferenceOnGetOwnProperty();
+    void constructors();
 
 private:
     QQmlEngine engine;
@@ -1830,6 +1831,28 @@ void tst_qqmlvaluetypes::readReferenceOnGetOwnProperty()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QVERIFY(o->property("allo").toBool());
+}
+
+void tst_qqmlvaluetypes::constructors()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("constructors.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("point"), QVariant(QPointF()));
+    QCOMPARE(o->property("size"), QVariant(QSizeF()));
+    QCOMPARE(o->property("rect"), QVariant(QRectF()));
+    QCOMPARE(o->property("color"), QVariant(QColor()));
+    QCOMPARE(o->property("vector2d"), QVariant(QVector2D()));
+    QCOMPARE(o->property("vector3d"), QVariant(QVector3D()));
+    QCOMPARE(o->property("vector4d"), QVariant(QVector4D()));
+    QCOMPARE(o->property("quaternion"), QVariant(QQuaternion()));
+    QCOMPARE(o->property("matrix4x4"), QVariant(QMatrix4x4()));
+    QCOMPARE(o->property("font"), QVariant(QFont()));
+
 }
 
 #undef CHECK_TYPE_IS_NOT_VALUETYPE

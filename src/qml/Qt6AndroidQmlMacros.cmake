@@ -135,5 +135,9 @@ function(_qt_internal_generate_android_qml_deployment_settings out_var target)
     _qt_internal_add_tool_to_android_deployment_settings(${out_var} qmlimportscanner
         "qml-importscanner-binary" ${target})
 
+    # Add qml-dom-binary binary path
+    _qt_internal_add_tool_to_android_deployment_settings(${out_var} qmldom "qml-dom-binary"
+        "${target}")
+
     set(${out_var} "${${out_var}}" PARENT_SCOPE)
 endfunction()

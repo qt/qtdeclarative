@@ -547,8 +547,8 @@ void QQuickShapePath::resetFillGradient()
         This implies \c PathNonIntersecting.
 
     Not all hints are logically independent, but the dependencies are not enforced.
-    For example, \c PathIsLinear implies \c PathIsQuadratic, but it is valid to have \c PathIsLinear
-    without \c PathIsQuadratic.
+    For example, \c PathLinear implies \c PathQuadratic, but it is valid to have \c PathLinear
+    without \c PathQuadratic.
 
     The pathHints property describes a set of statements known to be true; the absence of a hint
     does not necessarily mean that the corresponding statement is false.
@@ -567,6 +567,32 @@ void QQuickShapePath::setPathHints(PathHints newPathHints)
         return;
     d->pathHints = newPathHints;
     emit pathHintsChanged();
+}
+
+/*!
+    \qmlproperty matrix4x4 QtQuick.Shapes::ShapePath::fillTransform
+    \since 6.8
+
+    This property defines a transform to be applied to the path's fill pattern (gradient). It has
+    no effect if the fill is a solid color or transparent. By default no fill transform is enabled
+    and the value of this property is the \c identity matrix.
+*/
+
+QMatrix4x4 QQuickShapePath::fillTransform() const
+{
+    Q_D(const QQuickShapePath);
+    return d->sfp.fillTransform.matrix();
+}
+
+void QQuickShapePath::setFillTransform(const QMatrix4x4 &matrix)
+{
+    Q_D(QQuickShapePath);
+    if (d->sfp.fillTransform != matrix) {
+        d->sfp.fillTransform.setMatrix(matrix);
+        d->dirty |= QQuickShapePathPrivate::DirtyFillTransform;
+        emit fillTransformChanged();
+        emit shapePathChanged();
+    }
 }
 
 /*!
@@ -1368,6 +1394,8 @@ void QQuickShapePrivate::sync()
             renderer->setStrokeStyle(i, p->strokeStyle(), p->dashOffset(), p->dashPattern());
         if (dirty & QQuickShapePathPrivate::DirtyFillGradient)
             renderer->setFillGradient(i, p->fillGradient());
+        if (dirty & QQuickShapePathPrivate::DirtyFillTransform)
+            renderer->setFillTransform(i, QQuickShapePathPrivate::get(p)->sfp.fillTransform);
 
         dirty = 0;
     }

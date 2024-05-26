@@ -5,6 +5,8 @@
 ## qtquickcontrols2iosstyleplugin Plugin:
 #####################################################################
 
+add_subdirectory(impl)
+
 set(qml_files
     "Slider.qml"
     "RangeSlider.qml"
@@ -107,8 +109,6 @@ qt_internal_add_resource(qtquickcontrols2iosstyleplugin "qmake_qtquickcontrols2i
     FILES
         ${qmake_qtquickcontrols2iosstyleplugin_resource_files}
 )
-
-add_subdirectory(impl)
 
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2iosstyleplugin
                                               qtquickcontrols2iosstyleimplplugin)

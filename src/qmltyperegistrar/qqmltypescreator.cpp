@@ -163,7 +163,7 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
 
 void QmlTypesCreator::writeType(QAnyStringView type)
 {
-    ResolvedTypeAlias resolved(type);
+    ResolvedTypeAlias resolved(type, m_usingDeclarations);
     if (resolved.type.isEmpty())
         return;
 

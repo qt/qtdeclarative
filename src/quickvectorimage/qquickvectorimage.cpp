@@ -7,6 +7,8 @@
 #include <QtQuickVectorImageGenerator/private/qquickvectorimageglobal_p.h>
 #include <QtCore/qloggingcategory.h>
 
+#include <private/qquicktranslate_p.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -75,6 +77,9 @@ void QQuickVectorImagePrivate::loadSvg()
     svgItem->setParentItem(q);
     q->setImplicitWidth(svgItem->width());
     q->setImplicitHeight(svgItem->height());
+
+    q->updateSvgItemScale();
+
     q->update();
 }
 
@@ -111,6 +116,10 @@ QQuickVectorImage::QQuickVectorImage(QQuickItem *parent)
     : QQuickItem(*(new QQuickVectorImagePrivate), parent)
 {
     setFlag(QQuickItem::ItemHasContents, true);
+
+    QObject::connect(this, &QQuickItem::widthChanged, this, &QQuickVectorImage::updateSvgItemScale);
+    QObject::connect(this, &QQuickItem::heightChanged, this, &QQuickVectorImage::updateSvgItemScale);
+    QObject::connect(this, &QQuickVectorImage::fillModeChanged, this, &QQuickVectorImage::updateSvgItemScale);
 }
 
 /*!
@@ -132,4 +141,84 @@ void QQuickVectorImage::setSource(const QUrl &source)
     d->setSource(source);
 }
 
+void QQuickVectorImage::updateSvgItemScale()
+{
+    Q_D(QQuickVectorImage);
+
+    if (d->svgItem == nullptr
+        || qFuzzyIsNull(d->svgItem->width())
+        || qFuzzyIsNull(d->svgItem->height())) {
+        return;
+    }
+
+    auto xformProp = d->svgItem->transform();
+    QQuickScale *scaleTransform = nullptr;
+    if (xformProp.count(&xformProp) == 0) {
+        scaleTransform = new QQuickScale;
+        scaleTransform->setParent(d->svgItem);
+        xformProp.append(&xformProp, scaleTransform);
+    } else {
+        scaleTransform = qobject_cast<QQuickScale *>(xformProp.at(&xformProp, 0));
+    }
+
+    if (scaleTransform != nullptr) {
+        qreal xScale = width() / d->svgItem->width();
+        qreal yScale = height() / d->svgItem->height();
+
+        switch (d->fillMode) {
+        case QQuickVectorImage::NoResize:
+            xScale = yScale = 1.0;
+            break;
+        case QQuickVectorImage::PreserveAspectFit:
+            xScale = yScale = qMin(xScale, yScale);
+            break;
+        case QQuickVectorImage::PreserveAspectCrop:
+            xScale = yScale = qMax(xScale, yScale);
+            break;
+        case QQuickVectorImage::Stretch:
+            // Already correct
+            break;
+        };
+
+        scaleTransform->setXScale(xScale);
+        scaleTransform->setYScale(yScale);
+    }
+}
+
+/*!
+    \qmlproperty enumeration QtQuick.VectorImage::VectorImage::fillMode
+
+    This property defines what happens if the width and height of the VectorImage differs from
+    the implicit size of its contents.
+
+    \value VectorImage.NoResize             The contents are still rendered at the size provided by
+                                            the input.
+    \value VectorImage.Stretch              The contents are scaled to match the width and height of
+                                            the \c{VectorImage}. (This is the default.)
+    \value VectorImage.PreserveAspectFit    The contents are scaled to fit inside the bounds of the
+                                            \c VectorImage, while preserving aspect ratio. The
+                                            actual bounding rect of the contents will sometimes be
+                                            smaller than the \c VectorImage item.
+    \value VectorImage.PreserveAspectCrop   The contents are scaled to fill the \c VectorImage item,
+                                            while preserving the aspect ratio. The actual bounds of
+                                            the contents will sometimes be larger than the
+                                            \c VectorImage item.
+*/
+
+QQuickVectorImage::FillMode QQuickVectorImage::fillMode() const
+{
+    Q_D(const QQuickVectorImage);
+    return d->fillMode;
+}
+
+void QQuickVectorImage::setFillMode(FillMode newFillMode)
+{
+    Q_D(QQuickVectorImage);
+    if (d->fillMode == newFillMode)
+        return;
+    d->fillMode = newFillMode;
+    emit fillModeChanged();
+}
+
 QT_END_NAMESPACE
+

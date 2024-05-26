@@ -54,6 +54,7 @@ class Q_QUICK_EXPORT QQuickColorValueType
 public:
     static QVariant create(const QJSValue &params);
 
+    Q_INVOKABLE QQuickColorValueType() = default;
     Q_INVOKABLE QQuickColorValueType(const QString &string);
     Q_INVOKABLE QString toString() const;
 
@@ -102,6 +103,7 @@ class Q_QUICK_EXPORT QQuickVector2DValueType
 public:
     static QVariant create(const QJSValue &params);
 
+    Q_INVOKABLE QQuickVector2DValueType() = default;
     Q_INVOKABLE QString toString() const;
 
     qreal x() const;
@@ -140,6 +142,7 @@ class Q_QUICK_EXPORT QQuickVector3DValueType
 public:
     static QVariant create(const QJSValue &params);
 
+    Q_INVOKABLE QQuickVector3DValueType() = default;
     Q_INVOKABLE QString toString() const;
 
     qreal x() const;
@@ -183,6 +186,7 @@ class Q_QUICK_EXPORT QQuickVector4DValueType
 public:
     static QVariant create(const QJSValue &params);
 
+    Q_INVOKABLE QQuickVector4DValueType() = default;
     Q_INVOKABLE QString toString() const;
 
     qreal x() const;
@@ -227,6 +231,7 @@ class Q_QUICK_EXPORT QQuickQuaternionValueType
 public:
     static QVariant create(const QJSValue &params);
 
+    Q_INVOKABLE QQuickQuaternionValueType() = default;
     Q_INVOKABLE QString toString() const;
 
     qreal scalar() const;
@@ -287,6 +292,8 @@ class Q_QUICK_EXPORT QQuickMatrix4x4ValueType
 
 public:
     static QVariant create(const QJSValue &params);
+
+    Q_INVOKABLE QQuickMatrix4x4ValueType() = default;
 
     qreal m11() const { return v(0, 0); }
     qreal m12() const { return v(0, 1); }
@@ -351,6 +358,27 @@ public:
     Q_INVOKABLE bool fuzzyEquals(const QMatrix4x4 &m) const;
 
     operator QMatrix4x4() const { return v; }
+};
+
+class Q_QUICK_EXPORT QQuickPlanarTransform : public QObject
+{
+    Q_OBJECT
+    QML_SINGLETON
+    QML_NAMED_ELEMENT(PlanarTransform)
+    QML_ADDED_IN_VERSION(6, 8)
+
+public:
+    explicit QQuickPlanarTransform(QObject *parent = nullptr);
+
+    Q_INVOKABLE static QMatrix4x4 fromAffineMatrix(float scaleX, float shearY,
+                                                   float shearX, float scaleY,
+                                                   float translateX, float translateY);
+    Q_INVOKABLE static QMatrix4x4 fromTranslate(float translateX, float translateY);
+    Q_INVOKABLE static QMatrix4x4 fromScale(float scaleX, float scaleY,
+                                            float originX = 0, float originY = 0);
+    Q_INVOKABLE static QMatrix4x4 fromRotate(float angle,float originX = 0, float originY = 0);
+    Q_INVOKABLE static QMatrix4x4 fromShear(float shearX, float shearY,
+                                            float originX = 0, float originY = 0);
 };
 
 namespace QQuickFontEnums
@@ -420,6 +448,7 @@ class Q_QUICK_EXPORT QQuickFontValueType
 public:
     static QVariant create(const QJSValue &value);
 
+    Q_INVOKABLE QQuickFontValueType() = default;
     Q_INVOKABLE QString toString() const;
 
     QString family() const;

@@ -5,6 +5,8 @@
 ## qtquickcontrols2macosstyleplugin Plugin:
 #####################################################################
 
+add_subdirectory(impl)
+
 set(qml_files
     "BusyIndicator.qml"
     "Button.qml"
@@ -84,8 +86,6 @@ qt_internal_add_qml_module(qtquickcontrols2macosstyleplugin
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
 )
-
-add_subdirectory(impl)
 
 # Native style is a dependency of the macOS style.
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2macosstyleplugin

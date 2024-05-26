@@ -533,7 +533,8 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
         delayedError()->setErrorDescription(QLatin1String("Unable to assign [undefined] to ")
                                             + typeName);
         return false;
-    } else if (const QV4::FunctionObject *f = result.as<QV4::FunctionObject>()) {
+    } else if (const QV4::FunctionObject *f = result.as<QV4::FunctionObject>();
+               f && !f->as<QV4::QQmlTypeWrapper>()) {
         if (f->isBinding())
             delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
         else

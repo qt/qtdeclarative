@@ -128,4 +128,58 @@ void tst_qmlls_qqmlcodemodel::fileNamesToWatch()
     QVERIFY(fileNames.contains(u"helloworld.h"_s));
 }
 
+QString tst_qmlls_qqmlcodemodel::readFile(const QString &filename) const
+{
+    QFile f(testFile(filename));
+    if (!f.open(QFile::ReadOnly)) {
+        QTest::qFail("Can't read test file", __FILE__, __LINE__);
+        return {};
+    }
+    return f.readAll();
+}
+
+void tst_qmlls_qqmlcodemodel::openFiles()
+{
+    QmlLsp::QQmlCodeModel model;
+
+    const QByteArray fileAUrl = testFileUrl(u"FileA.qml"_s).toEncoded();
+    const QString fileAPath = testFile(u"FileA.qml"_s);
+
+    // open file A
+    model.newOpenFile(fileAUrl, 0, readFile(u"FileA.qml"_s));
+
+    QTRY_VERIFY_WITH_TIMEOUT(model.validEnv().field(Fields::qmlFileWithPath).key(fileAPath), 3000);
+
+    {
+        const DomItem fileAComponents = model.validEnv()
+                                                .field(Fields::qmlFileWithPath)
+                                                .key(fileAPath)
+                                                .field(Fields::currentItem)
+                                                .field(Fields::components);
+        // if there is no component then the lazy qml file was not loaded correctly.
+        QCOMPARE(fileAComponents.size(), 1);
+    }
+
+    model.newDocForOpenFile(fileAUrl, 1, readFile(u"FileA2.qml"_s));
+
+    {
+        const DomItem fileAComponents = model.validEnv()
+                                                .field(Fields::qmlFileWithPath)
+                                                .key(fileAPath)
+                                                .field(Fields::currentItem)
+                                                .field(Fields::components);
+        // if there is no component then the lazy qml file was not loaded correctly.
+        QCOMPARE(fileAComponents.size(), 1);
+
+        // also check if the property is there
+        const DomItem properties = fileAComponents.key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::propertyDefs);
+        QVERIFY(properties);
+        QVERIFY(properties.key(u"helloProperty"_s));
+    }
+}
+
 QTEST_MAIN(tst_qmlls_qqmlcodemodel)

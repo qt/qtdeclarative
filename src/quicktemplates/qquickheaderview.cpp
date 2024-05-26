@@ -64,6 +64,20 @@
     \include qquickheaderview.qdocinc {textRole}
 */
 
+/*!
+    \qmlproperty bool QtQuick.Controls::HorizontalHeaderView::movableColumns
+    \since 6.8
+
+    \include qquickheaderview.qdocinc {movableColumns}
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Controls::VerticalHeaderView::movableRows
+    \since 6.8
+
+    \include qquickheaderview.qdocinc {movableRows}
+*/
+
 QT_BEGIN_NAMESPACE
 
 QQuickHeaderViewBasePrivate::QQuickHeaderViewBasePrivate()
@@ -171,6 +185,26 @@ QAbstractItemModel *QQuickHeaderViewBasePrivate::selectionSourceModel()
     // modelIndex(cell) and cellAtIndex(index) have not been overridden either).
     // Instead, we set the internal proxy model as selection source model.
     return &m_headerDataProxyModel;
+}
+
+int QQuickHeaderViewBasePrivate::logicalRowIndex(const int visualIndex) const
+{
+    return (m_headerDataProxyModel.orientation() == Qt::Horizontal) ? visualIndex : QQuickTableViewPrivate::logicalRowIndex(visualIndex);
+}
+
+int QQuickHeaderViewBasePrivate::logicalColumnIndex(const int visualIndex) const
+{
+    return (m_headerDataProxyModel.orientation() == Qt::Vertical) ? visualIndex : QQuickTableViewPrivate::logicalColumnIndex(visualIndex);
+}
+
+int QQuickHeaderViewBasePrivate::visualRowIndex(const int logicalIndex) const
+{
+    return (m_headerDataProxyModel.orientation() == Qt::Horizontal) ? logicalIndex : QQuickTableViewPrivate::visualRowIndex(logicalIndex);
+}
+
+int QQuickHeaderViewBasePrivate::visualColumnIndex(const int logicalIndex) const
+{
+    return (m_headerDataProxyModel.orientation() == Qt::Vertical) ? logicalIndex : QQuickTableViewPrivate::visualColumnIndex(logicalIndex);
 }
 
 QQuickHeaderViewBase::QQuickHeaderViewBase(Qt::Orientation orient, QQuickItem *parent)
@@ -417,6 +451,22 @@ QQuickHorizontalHeaderView::~QQuickHorizontalHeaderView()
 {
 }
 
+bool QQuickHorizontalHeaderView::movableColumns() const
+{
+    Q_D(const QQuickHorizontalHeaderView);
+    return d->m_movableColumns;
+}
+
+void QQuickHorizontalHeaderView::setMovableColumns(bool movableColumns)
+{
+    Q_D(QQuickHorizontalHeaderView);
+    if (d->m_movableColumns == movableColumns)
+        return;
+
+    d->m_movableColumns = movableColumns;
+    emit movableColumnsChanged();
+}
+
 QQuickVerticalHeaderView::QQuickVerticalHeaderView(QQuickItem *parent)
     : QQuickHeaderViewBase(Qt::Vertical, parent)
 {
@@ -426,6 +476,22 @@ QQuickVerticalHeaderView::QQuickVerticalHeaderView(QQuickItem *parent)
 
 QQuickVerticalHeaderView::~QQuickVerticalHeaderView()
 {
+}
+
+bool QQuickVerticalHeaderView::movableRows() const
+{
+    Q_D(const QQuickVerticalHeaderView);
+    return d->m_movableRows ;
+}
+
+void QQuickVerticalHeaderView::setMovableRows(bool movableRows)
+{
+    Q_D(QQuickVerticalHeaderView);
+    if (d->m_movableRows == movableRows)
+        return;
+
+    d->m_movableRows = movableRows;
+    emit movableRowsChanged();
 }
 
 QQuickHorizontalHeaderViewPrivate::QQuickHorizontalHeaderViewPrivate() = default;

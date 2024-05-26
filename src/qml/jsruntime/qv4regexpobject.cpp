@@ -195,9 +195,9 @@ ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *s
 
 DEFINE_OBJECT_VTABLE(RegExpCtor);
 
-void Heap::RegExpCtor::init(QV4::ExecutionContext *scope)
+void Heap::RegExpCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("RegExp"));
+    Heap::FunctionObject::init(engine, QStringLiteral("RegExp"));
     clearLastMatch();
 }
 

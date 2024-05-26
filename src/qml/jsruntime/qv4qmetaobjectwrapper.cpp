@@ -16,37 +16,14 @@ namespace QV4 {
 void Heap::QMetaObjectWrapper::init(const QMetaObject *metaObject)
 {
     FunctionObject::init();
-    this->metaObject = metaObject;
-    constructors = nullptr;
-    constructorCount = 0;
+    m_metaObject = metaObject;
 }
 
 void Heap::QMetaObjectWrapper::destroy()
 {
-    delete[] constructors;
+    delete[] m_constructors;
+    FunctionObject::destroy();
 }
-
-void Heap::QMetaObjectWrapper::ensureConstructorsCache() {
-
-    const int count = metaObject->constructorCount();
-    if (constructorCount != count) {
-        delete[] constructors;
-        constructorCount = count;
-        if (count == 0) {
-            constructors = nullptr;
-            return;
-        }
-        constructors = new QQmlPropertyData[count];
-
-        for (int i = 0; i < count; ++i) {
-            QMetaMethod method = metaObject->constructor(i);
-            QQmlPropertyData &d = constructors[i];
-            d.load(method);
-            d.setCoreIndex(i);
-        }
-    }
-}
-
 
 ReturnedValue QMetaObjectWrapper::create(ExecutionEngine *engine, const QMetaObject* metaObject) {
 
@@ -57,7 +34,7 @@ ReturnedValue QMetaObjectWrapper::create(ExecutionEngine *engine, const QMetaObj
 }
 
 void QMetaObjectWrapper::init(ExecutionEngine *) {
-    const QMetaObject & mo = *d()->metaObject;
+    const QMetaObject &mo = *d()->metaObject();
 
     for (int i = 0; i < mo.enumeratorCount(); i++) {
         QMetaEnum Enum = mo.enumerator(i);
@@ -71,41 +48,49 @@ void QMetaObjectWrapper::init(ExecutionEngine *) {
 
 ReturnedValue QMetaObjectWrapper::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 {
-    const QMetaObjectWrapper *This = static_cast<const QMetaObjectWrapper*>(f);
-    return This->constructInternal(argv, argc);
+    Q_ASSERT(f->as<QMetaObjectWrapper>());
+    return construct(static_cast<const QMetaObjectWrapper*>(f)->d(), argv, argc);
 }
 
-ReturnedValue QMetaObjectWrapper::constructInternal(const Value *argv, int argc) const
+ReturnedValue QMetaObjectWrapper::constructInternal(
+        const QMetaObject *mo, const QQmlPropertyData *constructors, Heap::FunctionObject *d,
+        const Value *argv, int argc)
 {
+    ExecutionEngine *v4 = d->internalClass->engine;
 
-    d()->ensureConstructorsCache();
-
-    ExecutionEngine *v4 = engine();
-    const QMetaObject* mo = d()->metaObject;
-    if (d()->constructorCount == 0) {
+    if (!constructors) {
         return v4->throwTypeError(QLatin1String(mo->className())
                                   + QLatin1String(" has no invokable constructor"));
     }
 
     Scope scope(v4);
-    Scoped<QObjectWrapper> object(scope);
+    ScopedObject object(scope);
     JSCallData cData(nullptr, argv, argc);
     CallData *callData = cData.callData(scope);
 
     const QQmlObjectOrGadget objectOrGadget(mo);
 
-    if (d()->constructorCount == 1) {
+    const auto callType = [](QMetaType metaType) {
+        return metaType.flags() & QMetaType::PointerToQObject
+                ? QMetaObject::CreateInstance
+                : QMetaObject::ConstructInPlace;
+    };
+
+    const int constructorCount = mo->constructorCount();
+    if (constructorCount == 1) {
         object = QObjectMethod::callPrecise(
-                objectOrGadget, d()->constructors[0], v4, callData, QMetaObject::CreateInstance);
+                objectOrGadget, constructors[0], v4, callData,
+                callType(constructors[0].propType()));
     } else if (const QQmlPropertyData *ctor = QObjectMethod::resolveOverloaded(
-                    objectOrGadget, d()->constructors, d()->constructorCount, v4, callData)) {
+                       objectOrGadget, constructors, constructorCount, v4, callData)) {
         object = QObjectMethod::callPrecise(
-                objectOrGadget, *ctor, v4, callData, QMetaObject::CreateInstance);
+                objectOrGadget, *ctor, v4, callData, callType(ctor->propType()));
     }
+
     if (object) {
-        Scoped<QMetaObjectWrapper> metaObject(scope, this);
-        object->defineDefaultProperty(v4->id_constructor(), metaObject);
-        object->setPrototypeOf(const_cast<QMetaObjectWrapper*>(this));
+        Scoped<FunctionObject> functionObject(scope, d);
+        object->defineDefaultProperty(v4->id_constructor(), functionObject);
+        object->setPrototypeOf(functionObject);
     }
 
     return object.asReturnedValue();

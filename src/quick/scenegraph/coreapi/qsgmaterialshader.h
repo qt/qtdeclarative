@@ -83,6 +83,14 @@ public:
             OneMinusSrc1Alpha
         };
 
+        enum BlendOp {
+            BlendOpAdd,
+            BlendOpSubtract,
+            BlendOpReverseSubtract,
+            BlendOpMin,
+            BlendOpMax
+        };
+
         enum ColorMaskComponent {
             R = 1 << 0,
             G = 1 << 1,
@@ -112,6 +120,9 @@ public:
         bool separateBlendFactors;
         BlendFactor srcAlpha;
         BlendFactor dstAlpha;
+        BlendOp opColor;
+        BlendOp opAlpha;
+
         // This struct is extensible while keeping BC since apps only ever get
         // a ptr to the struct, it is not created by them.
     };

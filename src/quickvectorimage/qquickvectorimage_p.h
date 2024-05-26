@@ -27,16 +27,32 @@ class Q_QUICKVECTORIMAGE_EXPORT QQuickVectorImage : public QQuickItem
     Q_OBJECT
 
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
+    Q_PROPERTY(FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged)
     QML_NAMED_ELEMENT(VectorImage)
 
 public:
+    enum FillMode {
+        NoResize,
+        PreserveAspectFit,
+        PreserveAspectCrop,
+        Stretch
+    };
+    Q_ENUM(FillMode)
+
     QQuickVectorImage(QQuickItem *parent = nullptr);
 
     QUrl source() const;
     void setSource(const QUrl &source);
 
+    FillMode fillMode() const;
+    void setFillMode(FillMode newFillMode);
+
 signals:
     void sourceChanged();
+    void fillModeChanged();
+
+private slots:
+    void updateSvgItemScale();
 
 private:
     Q_DISABLE_COPY(QQuickVectorImage)

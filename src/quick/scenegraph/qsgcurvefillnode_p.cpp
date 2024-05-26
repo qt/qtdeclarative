@@ -76,11 +76,11 @@ namespace {
             }
 
             matrixScale = qSqrt(qAbs(state.determinant()));
-            memcpy(buf->data() + offset + matrixCount * 64, &matrixScale, 4);
+            memcpy(buf->data() + offset + newEffect->viewCount() * 64, &matrixScale, 4);
 
             changed = true;
         }
-        offset += matrixCount * 64 + 4;
+        offset += newEffect->viewCount() * 64 + 4;
 
         if (state.isOpacityDirty()) {
             const float opacity = state.opacity();
@@ -125,7 +125,18 @@ namespace {
             }
 
             offset += 16;
-        } else if (newNode->gradientType() == QGradient::LinearGradient) {
+        } else {
+            Q_ASSERT(buf->size() >= offset + 64);
+
+            if (!oldNode || *oldNode->fillTransform() != *newNode->fillTransform()) {
+                memcpy(buf->data() + offset, newNode->fillTransform()->invertedData(), 64);
+                changed = true;
+            }
+
+            offset += 64;
+        }
+
+        if (newNode->gradientType() == QGradient::LinearGradient) {
             Q_ASSERT(buf->size() >= offset + 8 + 8);
 
             QVector2D newGradientStart = QVector2D(newNode->fillGradient()->a);
@@ -285,6 +296,9 @@ int QSGCurveFillMaterial::compare(const QSGMaterial *other) const
             if (int d = ga.stops[i].second.rgba() - gb.stops[i].second.rgba())
                 return d;
         }
+
+        if (int d = a->fillTransform()->compareTo(*b->fillTransform()))
+            return d;
     }
 
     return 0;

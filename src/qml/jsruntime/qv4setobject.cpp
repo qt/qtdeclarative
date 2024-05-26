@@ -14,14 +14,14 @@ DEFINE_OBJECT_VTABLE(SetCtor);
 DEFINE_OBJECT_VTABLE(WeakSetCtor);
 DEFINE_OBJECT_VTABLE(SetObject);
 
-void Heap::WeakSetCtor::init(QV4::ExecutionContext *scope)
+void Heap::WeakSetCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("WeakSet"));
+    Heap::FunctionObject::init(engine, QStringLiteral("WeakSet"));
 }
 
-void Heap::SetCtor::init(QV4::ExecutionContext *scope)
+void Heap::SetCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("Set"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Set"));
 }
 
 ReturnedValue WeakSetCtor::construct(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget, bool isWeak)

@@ -267,6 +267,13 @@ void QQuickShapeCurveRenderer::setFillGradient(int index, QQuickShapeGradient *g
     pd.m_dirty |= FillDirty;
 }
 
+void QQuickShapeCurveRenderer::setFillTransform(int index, const QSGTransform &transform)
+{
+    auto &pathData = m_paths[index];
+    pathData.fillTransform = transform;
+    pathData.m_dirty |= FillDirty;
+}
+
 void QQuickShapeCurveRenderer::setAsyncCallback(void (*callback)(void *), void *data)
 {
     m_asyncCallback = callback;
@@ -507,6 +514,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
     QVector<quint32> indices = node->uncookedIndexes();
     if (indices.size() > 0) {
         node->setColor(color);
+        node->setFillTransform(pathData.fillTransform);
         node->setFillGradient(pathData.gradient);
 
         node->cookGeometry();

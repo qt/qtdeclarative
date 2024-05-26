@@ -15,11 +15,12 @@
 #include <QLoggingCategory>
 
 #include <private/qqmlirbuilder_p.h>
-#include <private/qqmljsparser_p.h>
-#include <private/qqmljslexer_p.h>
-#include <private/qqmljsresourcefilemapper_p.h>
-#include <private/qqmljsloadergenerator_p.h>
 #include <private/qqmljscompiler_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsloadergenerator_p.h>
+#include <private/qqmljsparser_p.h>
+#include <private/qqmljsresourcefilemapper_p.h>
+#include <private/qqmljsutils_p.h>
 #include <private/qresourcerelocater_p.h>
 
 #include <algorithm>
@@ -257,7 +258,8 @@ int main(int argc, char **argv)
                 logger.setSilent(true);
 
             QQmlJSAotCompiler cppCodeGen(
-                        &importer, u':' + inputResourcePath, parser.values(importsOption), &logger);
+                    &importer, u':' + inputResourcePath,
+                    QQmlJSUtils::cleanPaths(parser.values(importsOption)), &logger);
 
             if (parser.isSet(validateBasicBlocksOption))
                 cppCodeGen.m_flags.setFlag(QQmlJSAotCompiler::ValidateBasicBlocks);

@@ -13,7 +13,7 @@ QT_USE_NAMESPACE
 using namespace Qt::StringLiterals;
 using namespace QQmlJS;
 
-class TestLineByLineLex : public QQmlDataTest
+class TestLineByLineLex : public QObject
 {
     Q_OBJECT
 
@@ -21,7 +21,7 @@ public:
     TestLineByLineLex();
 
 private Q_SLOTS:
-    void initTestCase() override;
+    void initTestCase();
 
     void testLineByLineLex_data();
     void testLineByLineLex();
@@ -34,17 +34,14 @@ private:
 
     QString m_qmljsrootgenPath;
     QString m_qmltyperegistrarPath;
-    QString m_baseDir;
 };
 
 TestLineByLineLex::TestLineByLineLex()
-    : QQmlDataTest(QT_QMLTEST_DATADIR), m_baseDir(QString::fromLocal8Bit(QT_QMLTEST_DATADIR))
 {
 }
 
 void TestLineByLineLex::initTestCase()
 {
-    QQmlDataTest::initTestCase();
 }
 
 void TestLineByLineLex::testLineByLineLex_data()
@@ -59,22 +56,18 @@ void TestLineByLineLex::testLineByLineLex()
 {
     QFETCH(QString, filename);
 
-    QString filePath = m_baseDir + u"/linebylinelex/data/"_s + filename;
+    QString filePath = QFINDTESTDATA("data/" + filename);
     runLex(filePath);
 }
 
 void TestLineByLineLex::testFormatter_data()
 {
     QTest::addColumn<QString>("filename");
-    QDir formatData(m_baseDir + u"/qmlformat/data"_s);
-    bool hasTestData = false; // ### TODO: fix test to always have data
+    QDir formatData(QFINDTESTDATA("qmlformat/data"));
     for (const QFileInfo &fInfo :
          formatData.entryInfoList(QStringList({ u"*.qml"_s, u"*.js"_s }), QDir::Files)) {
         QTest::newRow(qPrintable(fInfo.fileName())) << fInfo.absoluteFilePath();
-        hasTestData = true;
     }
-    if (!hasTestData)
-        QSKIP("No test data found!");
 }
 
 void TestLineByLineLex::testFormatter()

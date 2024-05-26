@@ -256,6 +256,7 @@ private slots:
     void voidConversion();
     void voidFunction();
     void writeBack();
+    void writeVariantMap();
 };
 
 static QByteArray arg1()
@@ -5105,6 +5106,22 @@ void tst_QmlCppCodegen::writeBack()
     QCOMPARE(shadowable->area(), QRectF(40, 50, 16, 17));
 
     QCOMPARE(person->property("ints"), QVariant::fromValue(QList<int>({12, 22, 2, 1, 0, 0, 33})));
+}
+
+void tst_QmlCppCodegen::writeVariantMap()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/StringBuilderTestTypes/writeVariantMap.qml"_s));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    const QVariantMap v = object->property("data").toMap();
+    QCOMPARE(v.size(), 1);
+    const QVariant textPlain = v[u"text/plain"_s];
+    QCOMPARE(textPlain.metaType(), QMetaType::fromType<QString>());
+    QCOMPARE(textPlain.toString(), u"%Drag Me%"_s);
+
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

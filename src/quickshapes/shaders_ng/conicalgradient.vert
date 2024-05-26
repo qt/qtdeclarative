@@ -11,6 +11,7 @@ layout(std140, binding = 0) uniform buf {
 #else
     mat4 matrix;
 #endif
+    mat4 gradientMatrix;
     vec2 translationPoint;
     float angle;
     float opacity;
@@ -18,7 +19,8 @@ layout(std140, binding = 0) uniform buf {
 
 void main()
 {
-    coord = vertexCoord.xy - ubuf.translationPoint;
+    vec2 gradVertexCoord = (ubuf.gradientMatrix * vertexCoord).xy;
+    coord = gradVertexCoord - ubuf.translationPoint;
 #if QSHADER_VIEW_COUNT >= 2
     gl_Position = ubuf.matrix[gl_ViewIndex] * vertexCoord;
 #else

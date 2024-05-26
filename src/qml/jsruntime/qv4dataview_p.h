@@ -24,7 +24,7 @@ namespace QV4 {
 namespace Heap {
 
 struct DataViewCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 #define DataViewMembers(class, Member) \

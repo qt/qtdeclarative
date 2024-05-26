@@ -1963,7 +1963,7 @@ std::optional<QQmlLSUtilsErrorMessage> QQmlLSUtils::checkNameForRename(
     if (moduleOfDefinition != moduleOfCurrentItem) {
         return QQmlLSUtilsErrorMessage{
             0,
-            u"Cannot rename items defined in the %1 module fromits usage in the %2 module."_s
+            u"Cannot rename items defined in the \"%1\" module from a usage in the \"%2\" module."_s
                     .arg(moduleOfDefinition, moduleOfCurrentItem),
         };
     }

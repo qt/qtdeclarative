@@ -42,6 +42,21 @@ qt_internal_add_test(tst_qmlls_highlighting
     TESTDATA ${test_data}
 )
 
+qt_internal_add_test(tst_qmlls_documentationHints
+    SOURCES
+    tst_qmlls_documentationHints.cpp
+    DEFINES
+        QT_QMLLS_DOCUMENTATION_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
+    LIBRARIES
+        Qt::Core
+        Qt::QmlDomPrivate
+        Qt::LanguageServerPrivate
+        Qt::Test
+        Qt::QuickTestUtilsPrivate
+        Qt::QmlLSPrivate
+    TESTDATA ${test_data}
+)
+
 qt_internal_extend_target(tst_qmlls_utils CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLLS_UTILS_DATADIR=":/domdata"

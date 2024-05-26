@@ -423,6 +423,11 @@ public:
 
     DomCreationOptions creationOptions() const { return lazyMembers().m_creationOptions; }
 
+    QQmlJSScope::ConstPtr handleForPopulation() const
+    {
+        return m_handleForPopulation;
+    }
+
     void setHandleForPopulation(const QQmlJSScope::ConstPtr &scope)
     {
         m_handleForPopulation = scope;

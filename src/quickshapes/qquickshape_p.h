@@ -197,6 +197,7 @@ class Q_QUICKSHAPES_EXPORT QQuickShapePath : public QQuickPath
     Q_PROPERTY(QQuickShapeGradient *fillGradient READ fillGradient WRITE setFillGradient RESET resetFillGradient)
     Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION(1, 14))
     Q_PROPERTY(PathHints pathHints READ pathHints WRITE setPathHints NOTIFY pathHintsChanged REVISION(6, 7) FINAL)
+    Q_PROPERTY(QMatrix4x4 fillTransform READ fillTransform WRITE setFillTransform NOTIFY fillTransformChanged REVISION(6, 8) FINAL)
     QML_NAMED_ELEMENT(ShapePath)
     QML_ADDED_IN_VERSION(1, 0)
 
@@ -279,6 +280,9 @@ public:
     PathHints pathHints() const;
     void setPathHints(PathHints newPathHints);
 
+    QMatrix4x4 fillTransform() const;
+    void setFillTransform(const QMatrix4x4 &matrix);
+
 Q_SIGNALS:
     void shapePathChanged();
     void strokeColorChanged();
@@ -293,6 +297,7 @@ Q_SIGNALS:
     void dashPatternChanged();
 
     Q_REVISION(6, 7) void pathHintsChanged();
+    Q_REVISION(6, 8) void fillTransformChanged();
 
 private:
     Q_DISABLE_COPY(QQuickShapePath)

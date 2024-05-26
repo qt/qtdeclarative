@@ -32,7 +32,7 @@ Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int b
     Heap::ExecutionContext *outer = static_cast<Heap::ExecutionContext *>(frame->context()->m());
     c->outer.set(v4, outer);
     if (frame->isJSTypesFrame()) {
-        c->function.set(v4, static_cast<Heap::FunctionObject *>(
+        c->function.set(v4, static_cast<Heap::JavaScriptFunctionObject *>(
                             Value::fromStaticValue(
                                 static_cast<JSTypesStackFrame *>(frame)->jsFrame->function).m()));
     } else {
@@ -74,7 +74,7 @@ Heap::CallContext *ExecutionContext::newCallContext(JSTypesStackFrame *frame)
     c->init();
 
     c->outer.set(v4, outer);
-    c->function.set(v4, static_cast<Heap::FunctionObject *>(
+    c->function.set(v4, static_cast<Heap::JavaScriptFunctionObject *>(
                                 Value::fromStaticValue(frame->jsFrame->function).m()));
 
     const CompiledData::Function *compiledFunction = function->compiledFunction;

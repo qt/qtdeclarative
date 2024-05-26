@@ -1023,4 +1023,18 @@ void tst_qmltyperegistrar::constReturnType()
     })"));
 }
 
+void tst_qmltyperegistrar::usingDeclaration()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "WithMyInt"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["QmlTypeRegistrarTest/WithMyInt 1.0"]
+        isCreatable: true
+        exportMetaObjectRevisions: [256]
+        Property { name: "a"; type: "int"; read: "a"; index: 0; isReadonly: true; isConstant: true }
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

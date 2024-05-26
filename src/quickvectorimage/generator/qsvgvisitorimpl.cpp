@@ -361,8 +361,8 @@ QString QSvgVisitorImpl::colorCssDescription(QColor color)
     QString cssDescription;
     cssDescription += QStringLiteral("rgba(");
     cssDescription += QString::number(color.red()) + QStringLiteral(",");
-    cssDescription += QString::number(color.blue()) + QStringLiteral(",");
     cssDescription += QString::number(color.green()) + QStringLiteral(",");
+    cssDescription += QString::number(color.blue()) + QStringLiteral(",");
     cssDescription += QString::number(color.alphaF()) + QStringLiteral(")");
 
     return cssDescription;
@@ -426,7 +426,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         QString strokeColor = colorCssDescription(styleResolver->currentStrokeColor());
         if (!strokeColor.isEmpty()) {
             styleTagContent += QStringLiteral("-qt-stroke-color:%1;").arg(strokeColor);
-            styleTagContent += QStringLiteral("-qt-stroke-width:%1;").arg(styleResolver->currentStrokeWidth());
+            styleTagContent += QStringLiteral("-qt-stroke-width:%1px;").arg(styleResolver->currentStrokeWidth());
 #if QT_CONFIG(texthtmlparser)
             needsPathNode = true;
 #endif

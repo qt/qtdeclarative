@@ -1143,12 +1143,27 @@ bool QQmlJSScope::Export::isValid() const
     return m_version.isValid() || !m_package.isEmpty() || !m_type.isEmpty();
 }
 
+QDeferredFactory<QQmlJSScope>::QDeferredFactory(QQmlJSImporter *importer, const QString &filePath,
+                                                const TypeReader &typeReader)
+    : m_filePath(filePath),
+      m_importer(importer),
+      m_typeReader(typeReader ? typeReader
+                              : [](QQmlJSImporter *importer, const QString &filePath,
+                                   const QSharedPointer<QQmlJSScope> &scopeToPopulate) {
+                                    QQmlJSTypeReader defaultTypeReader(importer, filePath);
+                                    defaultTypeReader(scopeToPopulate);
+                                    return defaultTypeReader.errors();
+                                })
+{
+}
+
 void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &scope) const
 {
     scope->setOwnModuleName(m_moduleName);
-    QQmlJSTypeReader typeReader(m_importer, m_filePath);
-    typeReader(scope);
-    m_importer->m_globalWarnings.append(typeReader.errors());
+
+    QList<QQmlJS::DiagnosticMessage> errors = m_typeReader(m_importer, m_filePath, scope);
+    m_importer->m_globalWarnings.append(errors);
+
     scope->setInternalName(internalName());
     QQmlJSScope::resolveEnums(scope, m_importer->builtinInternalNames());
     QQmlJSScope::resolveList(scope, m_importer->builtinInternalNames().arrayType());

@@ -641,11 +641,13 @@ template<>
 class Q_QMLCOMPILER_EXPORT QDeferredFactory<QQmlJSScope>
 {
 public:
+    using TypeReader = std::function<QList<QQmlJS::DiagnosticMessage>(
+            QQmlJSImporter *importer, const QString &filePath,
+            const QSharedPointer<QQmlJSScope> &scopeToPopulate)>;
     QDeferredFactory() = default;
 
-    QDeferredFactory(QQmlJSImporter *importer, const QString &filePath) :
-        m_filePath(filePath), m_importer(importer)
-    {}
+    QDeferredFactory(QQmlJSImporter *importer, const QString &filePath,
+                     const TypeReader &typeReader = {});
 
     bool isValid() const
     {
@@ -656,6 +658,10 @@ public:
     {
         return QFileInfo(m_filePath).baseName();
     }
+
+    QString filePath() const { return m_filePath; }
+
+    QQmlJSImporter* importer() const { return m_importer; }
 
     void setIsSingleton(bool isSingleton)
     {
@@ -677,6 +683,7 @@ private:
     QQmlJSImporter *m_importer = nullptr;
     bool m_isSingleton = false;
     QString m_moduleName;
+    TypeReader m_typeReader;
 };
 
 using QQmlJSExportedScope = QQmlJSScope::ExportedScope<QQmlJSScope::Ptr>;

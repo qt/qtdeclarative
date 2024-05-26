@@ -62,7 +62,8 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(const QObject *target, int 
 
     function += QLatin1String(") { ") + expression + QLatin1String(" })");
     QV4::Scope valueScope(v4);
-    QV4::ScopedFunctionObject f(valueScope, evalFunction(context(), scopeObject(), function, fileName, line));
+    QV4::Scoped<QV4::JavaScriptFunctionObject> f(
+            valueScope, evalFunction(context(), scopeObject(), function, fileName, line));
     QV4::ScopedContext context(valueScope, f->scope());
     setupFunction(context, f->function());
 }
@@ -107,7 +108,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(const QObject *target, int 
         // we need to run the outer function to get the nested one.
         if (function->isClosureWrapper()) {
             bool isUndefined = false;
-            QV4::ScopedFunctionObject result(
+            QV4::Scoped<QV4::JavaScriptFunctionObject> result(
                         valueScope, QQmlJavaScriptExpression::evaluate(&isUndefined));
 
             Q_ASSERT(!isUndefined);

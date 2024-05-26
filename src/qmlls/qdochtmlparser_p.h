@@ -15,35 +15,27 @@
 // We mean it.
 //
 
+#include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QString>
 
 QT_BEGIN_NAMESPACE
 
-class QDocHtmlExtractor
+class HtmlExtractor
 {
 public:
     enum class ExtractionMode : char { Simplified, Extended };
-    enum class ElementType : char {
-        QmlType,
-        QmlProperty,
-        QmlMethod,
-        QmlSignal
-    };
 
-    struct Element {
-        QString name;
-        ElementType type;
-    };
+    virtual QString extract(const QString &code, const QString &keyword, ExtractionMode mode) = 0;
+    virtual ~HtmlExtractor() = default;
+};
 
-    QDocHtmlExtractor(const QString &code);
-    QString extract(const Element &element, ExtractionMode extractionMode);
-
+class ExtractDocumentation
+{
+public:
+    ExtractDocumentation(QQmlJS::Dom::DomType domType);
+    QString execute(const QString &code, const QString &keyword, HtmlExtractor::ExtractionMode mode);
 private:
-    QString parseForQmlType(const QString &element, ExtractionMode mode);
-    QString parseForQmlProperty(const QString &element, ExtractionMode mode = ExtractionMode::Simplified);
-    QString parseForQmlMethodOrSignal(const QString &functionName, ExtractionMode mode);
-
-    const QString &m_code;
+    std::unique_ptr<HtmlExtractor> m_extractor;
 };
 
 QT_END_NAMESPACE

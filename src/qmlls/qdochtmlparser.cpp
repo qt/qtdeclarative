@@ -8,8 +8,6 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-namespace {  //anonymous
-
 // An emprical value to avoid too much content
 static constexpr qsizetype firstIndexOfParagraphTag = 400;
 
@@ -20,7 +18,7 @@ static constexpr auto lengthOfStartParagraphTag = qsizetype(std::char_traits<cha
 static constexpr auto lengthOfEndParagraphTag = qsizetype(std::char_traits<char>::length("</p>"));
 static constexpr auto lengthOfPeriod = qsizetype(std::char_traits<char>::length("."));
 
-QString getContentsByMarks(const QString &html, QString startMark, QString endMark)
+static QString getContentsByMarks(const QString &html, QString startMark, QString endMark)
 {
     startMark.prepend("$$$"_L1);
     endMark.prepend("<!-- @@@"_L1);
@@ -41,7 +39,7 @@ QString getContentsByMarks(const QString &html, QString startMark, QString endMa
 }
 
 
-void stripAllHtml(QString *html)
+static void stripAllHtml(QString *html)
 {
     Q_ASSERT(html);
     html->remove(QRegularExpression("<.*?>"_L1));
@@ -51,7 +49,7 @@ void stripAllHtml(QString *html)
     \brief Process the string obtained from start mark to end mark.
     This is duplicated from QtC's Utils::HtmlExtractor, modified on top of it.
 */
-void processOutput(QString *html)
+static void processOutput(QString *html)
 {
     Q_ASSERT(html);
     if (html->isEmpty())
@@ -95,43 +93,30 @@ void processOutput(QString *html)
     }
 }
 
-}
-
-QDocHtmlExtractor::QDocHtmlExtractor(const QString &code) : m_code{ code }
+class ExtractQmlType : public HtmlExtractor
 {
-}
+public:
+    QString extract(const QString &code, const QString &keyword, ExtractionMode mode) override;
+};
 
-QString QDocHtmlExtractor::extract(const QDocHtmlExtractor::Element &element, ExtractionMode mode)
+class ExtractQmlProperty : public HtmlExtractor
 {
-    QString result;
-    switch (element.type) {
-    case ElementType::QmlType:
-        result = parseForQmlType(element.name, mode);
-        break;
+public:
+    QString extract(const QString &code, const QString &keyword, ExtractionMode mode) override;
+};
 
-    case ElementType::QmlProperty:
-        result = parseForQmlProperty(element.name, mode);
-        break;
-    case ElementType::QmlMethod:
-    case ElementType::QmlSignal:
-        result = parseForQmlMethodOrSignal(element.name, mode);
-        break;
-    default:
-        return {};
-    }
+class ExtractQmlMethodOrSignal : public HtmlExtractor
+{
+public:
+    QString extract(const QString &code, const QString &keyword, ExtractionMode mode) override;
+};
 
-    stripAllHtml(&result);
-
-    // Also remove leading and trailing whitespaces
-    return result.trimmed();
-}
-
-QString QDocHtmlExtractor::parseForQmlType(const QString &element, ExtractionMode mode)
+QString ExtractQmlType::extract(const QString &code, const QString &element, ExtractionMode mode)
 {
     QString result;
     // Get brief description
-    if (mode == QDocHtmlExtractor::ExtractionMode::Simplified) {
-        result = getContentsByMarks(m_code, element + "-brief"_L1 , element);
+    if (mode == ExtractionMode::Simplified) {
+        result = getContentsByMarks(code, element + "-brief"_L1 , element);
         // Remove More...
         if (!result.isEmpty()) {
             const auto tailToRemove = "More..."_L1;
@@ -140,7 +125,7 @@ QString QDocHtmlExtractor::parseForQmlType(const QString &element, ExtractionMod
                 result.remove(lastIndex, tailToRemove.length());
         }
     } else {
-        result = getContentsByMarks(m_code, element + "-description"_L1, element);
+        result = getContentsByMarks(code, element + "-description"_L1, element);
         // Remove header
         if (!result.isEmpty()) {
             const auto headerToRemove = "Detailed Description"_L1;
@@ -150,25 +135,26 @@ QString QDocHtmlExtractor::parseForQmlType(const QString &element, ExtractionMod
         }
     }
 
-    return result;
+    stripAllHtml(&result);
+    return result.trimmed();
 }
 
-QString QDocHtmlExtractor::parseForQmlProperty(const QString &element, ExtractionMode mode)
+QString ExtractQmlProperty::extract(const QString &code, const QString &keyword, ExtractionMode mode)
 {
     // Qt 5.15 way of finding properties in doc
-    QString startMark = QString::fromLatin1("<a name=\"%1-prop\">").arg(element);
-    qsizetype startIndex = m_code.indexOf(startMark);
+    QString startMark = QString::fromLatin1("<a name=\"%1-prop\">").arg(keyword);
+    qsizetype startIndex = code.indexOf(startMark);
     if (startIndex == -1) {
         // if not found, try Qt6
         startMark = QString::fromLatin1(
                             "<td class=\"tblQmlPropNode\"><p>\n<span class=\"name\">%1</span>")
-                            .arg(element);
-        startIndex = m_code.indexOf(startMark);
+                            .arg(keyword);
+        startIndex = code.indexOf(startMark);
         if (startIndex == -1)
             return {};
     }
 
-    QString contents = m_code.mid(startIndex + startMark.size());
+    QString contents = code.mid(startIndex + startMark.size());
     startIndex = contents.indexOf(QLatin1String("<div class=\"qmldoc\"><p>"));
     if (startIndex == -1)
         return {};
@@ -176,39 +162,65 @@ QString QDocHtmlExtractor::parseForQmlProperty(const QString &element, Extractio
     contents = contents.mid(startIndex);
     if (mode == ExtractionMode::Simplified)
         processOutput(&contents);
-    return contents;
+    stripAllHtml(&contents);
+    return contents.trimmed();
 }
 
-QString QDocHtmlExtractor::parseForQmlMethodOrSignal(const QString &functionName, ExtractionMode mode)
+QString ExtractQmlMethodOrSignal::extract(const QString &code, const QString &keyword, ExtractionMode mode)
 {
     // the case with <!-- $$$childAt[overload1]$$$childAtrealreal -->
-    QString mark = QString::fromLatin1("$$$%1[overload1]$$$%1").arg(functionName);
-    qsizetype startIndex = m_code.indexOf(mark);
+    QString mark = QString::fromLatin1("$$$%1[overload1]$$$%1").arg(keyword);
+    qsizetype startIndex = code.indexOf(mark);
     if (startIndex != -1) {
-        startIndex = m_code.indexOf("-->"_L1, startIndex + mark.length());
+        startIndex = code.indexOf("-->"_L1, startIndex + mark.length());
         if (startIndex == -1)
             return {};
     } else {
         // it could be part of the method list
         mark = QString::fromLatin1("<span class=\"name\">%1</span>")
-                .arg(functionName);
-        startIndex = m_code.indexOf(mark);
+                .arg(keyword);
+        startIndex = code.indexOf(mark);
         if (startIndex != -1)
             startIndex += mark.length();
         else
             return {};
     }
 
-    startIndex = m_code.indexOf(QLatin1String("<div class=\"qmldoc\"><p>"), startIndex);
+    startIndex = code.indexOf(QLatin1String("<div class=\"qmldoc\"><p>"), startIndex);
     if (startIndex == -1)
         return {};
 
     QString endMark = QString::fromLatin1("<!-- @@@");
-    qsizetype endIndex = m_code.indexOf(endMark, startIndex);
-    QString contents = m_code.mid(startIndex, endIndex);
+    qsizetype endIndex = code.indexOf(endMark, startIndex);
+    QString contents = code.mid(startIndex, endIndex);
     if (mode == ExtractionMode::Simplified)
         processOutput(&contents);
-    return contents;
+    stripAllHtml(&contents);
+    return contents.trimmed();
+}
+
+ExtractDocumentation::ExtractDocumentation(QQmlJS::Dom::DomType domType)
+{
+    using namespace QQmlJS::Dom;
+    switch (domType) {
+    case DomType::QmlObject:
+        m_extractor = std::make_unique<ExtractQmlType>();
+        break;
+    case DomType::PropertyDefinition:
+        m_extractor = std::make_unique<ExtractQmlProperty>();
+        break;
+    case DomType::MethodInfo:
+        m_extractor = std::make_unique<ExtractQmlMethodOrSignal>();
+        break;
+    default:
+        break;
+    }
+}
+
+QString ExtractDocumentation::execute(const QString &code, const QString &keyword, HtmlExtractor::ExtractionMode mode)
+{
+    Q_ASSERT(m_extractor);
+    return m_extractor->extract(code, keyword, mode);
 }
 
 QT_END_NAMESPACE

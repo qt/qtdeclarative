@@ -33,7 +33,7 @@ enum class GeneratorState {
 namespace Heap {
 
 struct GeneratorFunctionCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct GeneratorFunction : ArrowFunction {

@@ -290,10 +290,10 @@ static QString decode(const QString &input, DecodeMode decodeMode, bool *ok)
 
 DEFINE_OBJECT_VTABLE(EvalFunction);
 
-void Heap::EvalFunction::init(QV4::ExecutionContext *scope)
+void Heap::EvalFunction::init(QV4::ExecutionEngine *engine)
 {
-    Scope s(scope);
-    Heap::FunctionObject::init(scope, s.engine->id_eval());
+    Scope s(engine);
+    Heap::FunctionObject::init(engine, s.engine->id_eval());
     ScopedFunctionObject f(s, this);
     f->defineReadonlyConfigurableProperty(s.engine->id_length(), Value::fromInt32(1));
 }

@@ -62,6 +62,7 @@ private slots:
     void multilineDataTypes_data();
     void multilineDataTypes();
     void multilineStronglyTyped();
+    void fillTransform();
 
 private:
     QVector<QPolygonF> m_lowPolyLogo;
@@ -247,6 +248,8 @@ void tst_QQuickShape::changeSignals()
     QCOMPARE(vpChangeSpy.size(), 15);
     qobject_cast<QQuickGradientStop *>(stopList.at(1))->setColor(Qt::black);
     QCOMPARE(vpChangeSpy.size(), 16);
+    vp->setFillTransform(QMatrix4x4(QTransform::fromScale(3, 0.14)));
+    QCOMPARE(vpChangeSpy.size(), 17);
 }
 
 void tst_QQuickShape::render()
@@ -672,6 +675,40 @@ void tst_QQuickShape::multilineStronglyTyped()
         }
         ++i;
     }
+}
+
+void tst_QQuickShape::fillTransform()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("filltransform.qml"));
+    qApp->processEvents();
+
+    QQuickShape *obj = findItem<QQuickShape>(window->rootObject(), "shape1");
+    QVERIFY(obj != nullptr);
+    QQmlListReference list(obj, "data");
+    QCOMPARE(list.count(), 2);
+
+    QQuickShapePath *p1 = qobject_cast<QQuickShapePath *>(list.at(0));
+    QVERIFY(p1 != nullptr);
+    QVERIFY(p1->objectName() == "path1");
+    QVERIFY(p1->fillTransform() == QMatrix4x4(2,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1));
+
+    QQuickShapePath *p2 = qobject_cast<QQuickShapePath *>(list.at(1));
+    QVERIFY(p2 != nullptr);
+    QVERIFY(p2->objectName() == "path2");
+    QVERIFY(p2->fillTransform().isIdentity());
+
+    QMatrix4x4 xf(QTransform::fromTranslate(-36, 0).shear(0.35, 0));
+    p1->setFillTransform(xf);
+    QVERIFY(p1->fillTransform() == xf);
+
+    QVERIFY(p2->fillTransform().isIdentity());
+    p2->setFillTransform(xf);
+    QVERIFY(p2->fillTransform() == xf);
+
+    p1->setFillTransform(QMatrix4x4{});
+    QVERIFY(p1->fillTransform().isIdentity());
 }
 
 QTEST_MAIN(tst_QQuickShape)

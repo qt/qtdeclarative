@@ -55,6 +55,7 @@ public:
     void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
+    void setFillTransform(int index, const QSGTransform &transform) override;
     void endSync(bool async) override;
     void setAsyncCallback(void (*)(void *), void *) override;
     Flags flags() const override { return SupportsAsync; }
@@ -94,6 +95,7 @@ private:
 
         QGradient::Type gradientType = QGradient::NoGradient;
         QSGGradientCache::GradientDesc gradient;
+        QSGTransform fillTransform;
         QColor fillColor;
         Qt::FillRule fillRule = Qt::OddEvenFill;
         QPen pen;

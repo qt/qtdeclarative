@@ -35,6 +35,7 @@ public:
     void setReferencedTypes(QList<QAnyStringView> referencedTypes) { m_referencedTypes = std::move(referencedTypes); }
     void setModule(QByteArray module) { m_module = std::move(module); }
     void setVersion(QTypeRevision version) { m_version = version; }
+    void setUsingDeclarations(QList<UsingDeclaration> usingDeclarations) { m_usingDeclarations = std::move(usingDeclarations);}
 
 private:
     void writeComponent(const QmlTypesClassDescription &collector);
@@ -54,6 +55,7 @@ private:
     QVector<MetaType> m_ownTypes;
     QVector<MetaType> m_foreignTypes;
     QList<QAnyStringView> m_referencedTypes;
+    QList<UsingDeclaration> m_usingDeclarations;
     QByteArray m_module;
     QTypeRevision m_version = QTypeRevision::zero();
 };

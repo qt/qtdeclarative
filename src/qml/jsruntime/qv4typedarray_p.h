@@ -90,7 +90,7 @@ struct IntrinsicTypedArrayCtor : FunctionObject {
 };
 
 struct TypedArrayCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope, TypedArray::Type t);
+    void init(ExecutionEngine *engine, TypedArray::Type t);
 
     TypedArray::Type type;
 };
@@ -140,8 +140,6 @@ struct Q_QML_EXPORT TypedArray : Object
 struct IntrinsicTypedArrayCtor: FunctionObject
 {
     V4_OBJECT2(IntrinsicTypedArrayCtor, FunctionObject)
-
-    static constexpr VTable::Call virtualCall = nullptr;
 
     static ReturnedValue method_of(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_from(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

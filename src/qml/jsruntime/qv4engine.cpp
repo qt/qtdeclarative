@@ -627,25 +627,23 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = newInternalClass(SequencePrototype::staticVTable(), SequencePrototype::defaultPrototype(this));
     jsObjects[SequenceProto] = ScopedValue(scope, memoryManager->allocObject<SequencePrototype>(ic->d()));
 
-    ExecutionContext *global = rootContext();
-
-    jsObjects[Object_Ctor] = memoryManager->allocate<ObjectCtor>(global);
-    jsObjects[String_Ctor] = memoryManager->allocate<StringCtor>(global);
-    jsObjects[Symbol_Ctor] = memoryManager->allocate<SymbolCtor>(global);
-    jsObjects[Number_Ctor] = memoryManager->allocate<NumberCtor>(global);
-    jsObjects[Boolean_Ctor] = memoryManager->allocate<BooleanCtor>(global);
-    jsObjects[Array_Ctor] = memoryManager->allocate<ArrayCtor>(global);
-    jsObjects[Function_Ctor] = memoryManager->allocate<FunctionCtor>(global);
-    jsObjects[GeneratorFunction_Ctor] = memoryManager->allocate<GeneratorFunctionCtor>(global);
-    jsObjects[Date_Ctor] = memoryManager->allocate<DateCtor>(global);
-    jsObjects[RegExp_Ctor] = memoryManager->allocate<RegExpCtor>(global);
-    jsObjects[Error_Ctor] = memoryManager->allocate<ErrorCtor>(global);
-    jsObjects[EvalError_Ctor] = memoryManager->allocate<EvalErrorCtor>(global);
-    jsObjects[RangeError_Ctor] = memoryManager->allocate<RangeErrorCtor>(global);
-    jsObjects[ReferenceError_Ctor] = memoryManager->allocate<ReferenceErrorCtor>(global);
-    jsObjects[SyntaxError_Ctor] = memoryManager->allocate<SyntaxErrorCtor>(global);
-    jsObjects[TypeError_Ctor] = memoryManager->allocate<TypeErrorCtor>(global);
-    jsObjects[URIError_Ctor] = memoryManager->allocate<URIErrorCtor>(global);
+    jsObjects[Object_Ctor] = memoryManager->allocate<ObjectCtor>(this);
+    jsObjects[String_Ctor] = memoryManager->allocate<StringCtor>(this);
+    jsObjects[Symbol_Ctor] = memoryManager->allocate<SymbolCtor>(this);
+    jsObjects[Number_Ctor] = memoryManager->allocate<NumberCtor>(this);
+    jsObjects[Boolean_Ctor] = memoryManager->allocate<BooleanCtor>(this);
+    jsObjects[Array_Ctor] = memoryManager->allocate<ArrayCtor>(this);
+    jsObjects[Function_Ctor] = memoryManager->allocate<FunctionCtor>(this);
+    jsObjects[GeneratorFunction_Ctor] = memoryManager->allocate<GeneratorFunctionCtor>(this);
+    jsObjects[Date_Ctor] = memoryManager->allocate<DateCtor>(this);
+    jsObjects[RegExp_Ctor] = memoryManager->allocate<RegExpCtor>(this);
+    jsObjects[Error_Ctor] = memoryManager->allocate<ErrorCtor>(this);
+    jsObjects[EvalError_Ctor] = memoryManager->allocate<EvalErrorCtor>(this);
+    jsObjects[RangeError_Ctor] = memoryManager->allocate<RangeErrorCtor>(this);
+    jsObjects[ReferenceError_Ctor] = memoryManager->allocate<ReferenceErrorCtor>(this);
+    jsObjects[SyntaxError_Ctor] = memoryManager->allocate<SyntaxErrorCtor>(this);
+    jsObjects[TypeError_Ctor] = memoryManager->allocate<TypeErrorCtor>(this);
+    jsObjects[URIError_Ctor] = memoryManager->allocate<URIErrorCtor>(this);
     jsObjects[IteratorProto] = memoryManager->allocate<IteratorPrototype>();
 
     ic = newInternalClass(ForInIteratorPrototype::staticVTable(), iteratorPrototype());
@@ -663,9 +661,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     // url
     //
 
-    jsObjects[Url_Ctor] = memoryManager->allocate<UrlCtor>(global);
+    jsObjects[Url_Ctor] = memoryManager->allocate<UrlCtor>(this);
     jsObjects[UrlProto] = memoryManager->allocate<UrlPrototype>();
-    jsObjects[UrlSearchParams_Ctor] = memoryManager->allocate<UrlSearchParamsCtor>(global);
+    jsObjects[UrlSearchParams_Ctor] = memoryManager->allocate<UrlSearchParamsCtor>(this);
     jsObjects[UrlSearchParamsProto] = memoryManager->allocate<UrlSearchParamsPrototype>();
 
     str = newString(QStringLiteral("get [Symbol.species]"));
@@ -703,19 +701,19 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     sequencePrototype()->cast<SequencePrototype>()->init();
 
-    jsObjects[WeakMap_Ctor] = memoryManager->allocate<WeakMapCtor>(global);
+    jsObjects[WeakMap_Ctor] = memoryManager->allocate<WeakMapCtor>(this);
     jsObjects[WeakMapProto] = memoryManager->allocate<WeakMapPrototype>();
     static_cast<WeakMapPrototype *>(weakMapPrototype())->init(this, weakMapCtor());
 
-    jsObjects[Map_Ctor] = memoryManager->allocate<MapCtor>(global);
+    jsObjects[Map_Ctor] = memoryManager->allocate<MapCtor>(this);
     jsObjects[MapProto] = memoryManager->allocate<MapPrototype>();
     static_cast<MapPrototype *>(mapPrototype())->init(this, mapCtor());
 
-    jsObjects[WeakSet_Ctor] = memoryManager->allocate<WeakSetCtor>(global);
+    jsObjects[WeakSet_Ctor] = memoryManager->allocate<WeakSetCtor>(this);
     jsObjects[WeakSetProto] = memoryManager->allocate<WeakSetPrototype>();
     static_cast<WeakSetPrototype *>(weakSetPrototype())->init(this, weakSetCtor());
 
-    jsObjects[Set_Ctor] = memoryManager->allocate<SetCtor>(global);
+    jsObjects[Set_Ctor] = memoryManager->allocate<SetCtor>(this);
     jsObjects[SetProto] = memoryManager->allocate<SetPrototype>();
     static_cast<SetPrototype *>(setPrototype())->init(this, setCtor());
 
@@ -723,33 +721,34 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     // promises
     //
 
-    jsObjects[Promise_Ctor] = memoryManager->allocate<PromiseCtor>(global);
+    jsObjects[Promise_Ctor] = memoryManager->allocate<PromiseCtor>(this);
     jsObjects[PromiseProto] = memoryManager->allocate<PromisePrototype>();
     static_cast<PromisePrototype *>(promisePrototype())->init(this, promiseCtor());
 
     // typed arrays
 
-    jsObjects[SharedArrayBuffer_Ctor] = memoryManager->allocate<SharedArrayBufferCtor>(global);
+    jsObjects[SharedArrayBuffer_Ctor] = memoryManager->allocate<SharedArrayBufferCtor>(this);
     jsObjects[SharedArrayBufferProto] = memoryManager->allocate<SharedArrayBufferPrototype>();
     static_cast<SharedArrayBufferPrototype *>(sharedArrayBufferPrototype())->init(this, sharedArrayBufferCtor());
 
-    jsObjects[ArrayBuffer_Ctor] = memoryManager->allocate<ArrayBufferCtor>(global);
+    jsObjects[ArrayBuffer_Ctor] = memoryManager->allocate<ArrayBufferCtor>(this);
     jsObjects[ArrayBufferProto] = memoryManager->allocate<ArrayBufferPrototype>();
     static_cast<ArrayBufferPrototype *>(arrayBufferPrototype())->init(this, arrayBufferCtor());
 
-    jsObjects[DataView_Ctor] = memoryManager->allocate<DataViewCtor>(global);
+    jsObjects[DataView_Ctor] = memoryManager->allocate<DataViewCtor>(this);
     jsObjects[DataViewProto] = memoryManager->allocate<DataViewPrototype>();
     static_cast<DataViewPrototype *>(dataViewPrototype())->init(this, dataViewCtor());
     jsObjects[ValueTypeProto] = (Heap::Base *) nullptr;
     jsObjects[SignalHandlerProto] = (Heap::Base *) nullptr;
+    jsObjects[TypeWrapperProto] = (Heap::Base *) nullptr;
 
-    jsObjects[IntrinsicTypedArray_Ctor] = memoryManager->allocate<IntrinsicTypedArrayCtor>(global);
+    jsObjects[IntrinsicTypedArray_Ctor] = memoryManager->allocate<IntrinsicTypedArrayCtor>(this);
     jsObjects[IntrinsicTypedArrayProto] = memoryManager->allocate<IntrinsicTypedArrayPrototype>();
     static_cast<IntrinsicTypedArrayPrototype *>(intrinsicTypedArrayPrototype())
             ->init(this, static_cast<IntrinsicTypedArrayCtor *>(intrinsicTypedArrayCtor()));
 
     for (int i = 0; i < NTypedArrayTypes; ++i) {
-        static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocate<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
+        static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocate<TypedArrayCtor>(this, Heap::TypedArray::Type(i));
         static_cast<Value &>(typedArrayPrototype[i]) = memoryManager->allocate<TypedArrayPrototype>(Heap::TypedArray::Type(i));
         typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].as<Object>()));
     }
@@ -796,14 +795,14 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->allocate<MathObject>()));
     globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->allocate<JsonObject>()));
     globalObject->defineDefaultProperty(QStringLiteral("Reflect"), (o = memoryManager->allocate<Reflect>()));
-    globalObject->defineDefaultProperty(QStringLiteral("Proxy"), (o = memoryManager->allocate<Proxy>(rootContext())));
+    globalObject->defineDefaultProperty(QStringLiteral("Proxy"), (o = memoryManager->allocate<Proxy>(this)));
 
     globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Value::undefinedValue());
     globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Value::fromDouble(std::numeric_limits<double>::quiet_NaN()));
     globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Value::fromDouble(Q_INFINITY));
 
 
-    jsObjects[Eval_Function] = memoryManager->allocate<EvalFunction>(global);
+    jsObjects[Eval_Function] = memoryManager->allocate<EvalFunction>(this);
     globalObject->defineDefaultProperty(QStringLiteral("eval"), *evalFunction());
 
     // ES6: 20.1.2.12 &  20.1.2.13:
@@ -832,7 +831,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("escape"), GlobalFunctions::method_escape, 1);
     globalObject->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
-    ScopedFunctionObject t(scope, memoryManager->allocate<FunctionObject>(rootContext(), nullptr, ::throwTypeError));
+    ScopedFunctionObject t(
+            scope,
+            memoryManager->allocate<DynamicFunctionObject>(this, nullptr, ::throwTypeError));
     t->defineReadonlyProperty(id_length(), Value::fromInt32(0));
     t->setInternalClass(t->internalClass()->cryopreserved());
     jsObjects[ThrowerObject] = t;

@@ -861,6 +861,15 @@ private:
                     return true;
                 }
 
+                if (value == "Inassertable"_L1) {
+                    setFlag(Pragma::Assertable, false);
+                    return true;
+                }
+                if (value == "Assertable"_L1) {
+                    setFlag(Pragma::Assertable, true);
+                    return true;
+                }
+
                 return false;
             });
         }
@@ -1717,6 +1726,10 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
                 if (Pragma::ValueTypeBehaviorValues(p->valueTypeBehavior)
                         .testFlag(Pragma::Addressable)) {
                     createdUnit->flags |= Unit::ValueTypesAddressable;
+                }
+                if (Pragma::ValueTypeBehaviorValues(p->valueTypeBehavior)
+                            .testFlag(Pragma::Assertable)) {
+                    createdUnit->flags |= Unit::ValueTypesAssertable;
                 }
                 break;
             case Pragma::Translator:

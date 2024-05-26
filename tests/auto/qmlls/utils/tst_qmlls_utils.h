@@ -80,9 +80,6 @@ private slots:
 
     void cmakeBuildCommand();
 
-    void qdochtmlparser_data();
-    void qdochtmlparser();
-
 private:
     using EnvironmentAndFile = std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>;
 

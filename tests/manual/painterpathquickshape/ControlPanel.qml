@@ -28,6 +28,7 @@ Item {
     property alias painterComparisonAlpha: painterComparisonColorAlpha.value
     property alias outlineEnabled: enableOutline.checked
     property alias gradientType: gradientType.currentIndex
+    property alias fillScaleX: fillTransformSlider.value
     property alias rendererName: rendererLabel.text
     property alias preferCurve: rendererLabel.preferCurve
 
@@ -252,6 +253,19 @@ Item {
                         style: ShapePath.OddEvenFill
                     }
                 }
+            }
+            Label {
+                text: "Fill transform (scale x: " + fillTransformSlider.value.toFixed(2) + "):"
+                color: "white"
+                visible: gradientType.currentIndex != 0
+            }
+            Slider {
+                id: fillTransformSlider
+                Layout.fillWidth: true
+                from: 0.2
+                to: 5.0
+                value: 1.0
+                visible: gradientType.currentIndex != 0
             }
             Label {
                 text: "Fill alpha(" + Math.round(alphaSlider.value*100)/100 + "):"

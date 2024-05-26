@@ -181,7 +181,7 @@ qt_internal_add_qml_module(Quick
         scenegraph/util/qsgvertexcolormaterial.cpp scenegraph/util/qsgvertexcolormaterial.h
         scenegraph/util/qquadpath.cpp scenegraph/util/qquadpath_p.h
         scenegraph/util/qsggradientcache.cpp scenegraph/util/qsggradientcache_p.h
-        util/qminimalflatset_p.h
+        scenegraph/util/qsgtransform.cpp scenegraph/util/qsgtransform_p.h
         util/qquickanimation.cpp util/qquickanimation_p.h
         util/qquickanimation_p_p.h
         util/qquickanimationcontroller.cpp util/qquickanimationcontroller_p.h
@@ -562,6 +562,9 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_metal
 qt_internal_extend_target(Quick CONDITION ANDROID
     SOURCES
         platform/android/qandroidquickviewembedding.cpp platform/android/qandroidquickviewembedding_p.h
+        platform/android/qandroidviewsignalmanager.cpp platform/android/qandroidviewsignalmanager_p.h
+        platform/android/qandroidtypes_p.h
+        platform/android/qandroidtypeconverter_p.h
 )
 if (ANDROID)
     add_subdirectory(jar)

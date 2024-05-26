@@ -25,11 +25,11 @@ namespace QV4 {
 namespace Heap {
 
 struct SharedArrayBufferCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionEngine *engine);
 };
 
 struct ArrayBufferCtor : SharedArrayBufferCtor {
-    void init(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionEngine *engine);
 };
 
 struct Q_QML_EXPORT SharedArrayBuffer : Object {

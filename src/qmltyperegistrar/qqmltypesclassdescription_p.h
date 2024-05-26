@@ -113,12 +113,18 @@ private:
 
 struct ResolvedTypeAlias
 {
-    ResolvedTypeAlias(QAnyStringView alias);
+    ResolvedTypeAlias(QAnyStringView alias, const QList<UsingDeclaration> &usingDeclarations);
 
     QAnyStringView type;
     bool isList = false;
     bool isPointer = false;
     bool isConstant = false;
+
+private:
+    void handleVoid();
+    void handleList();
+    void handlePointer();
+    void handleConst();
 };
 
 QT_END_NAMESPACE

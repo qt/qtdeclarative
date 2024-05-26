@@ -524,6 +524,15 @@ public:
 
     void throwRecursionDepthError() override;
 
+    bool stackHasScriptVariant() const
+    {
+        return !scriptNodeStack.isEmpty() && !scriptNodeStack.last().isList();
+    }
+    bool stackHasScriptList() const
+    {
+        return !scriptNodeStack.isEmpty() && scriptNodeStack.last().isList();
+    }
+
 public:
     friend class QQmlDomAstCreatorWithQQmlJSScope;
 };

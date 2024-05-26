@@ -52,6 +52,7 @@ qt_add_qml_module(shapesexample
         "tapableTriangle.qml"
         "tiger.qml"
         "zoomtiger.qml"
+        "fillTransform.qml"
 )
 
 install(TARGETS shapesexample

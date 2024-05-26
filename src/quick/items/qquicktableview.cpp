@@ -944,6 +944,48 @@
 */
 
 /*!
+    \qmlmethod QtQuick::TableView::moveColumn(int source, int destination)
+    \since 6.8
+
+    Moves a column from the \a source to the \a destination position.
+
+    \note If a syncView is set, the sync view will control the internal index mapping for
+    column reordering. Therefore, in that case, a call to this function will be forwarded to
+    the sync view instead.
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::clearColumnReordering()
+    \since 6.8
+
+    Resets any previously applied column reordering.
+
+    \note If a syncView is set, a call to this function will be forwarded to
+    corresponding view item and reset the column ordering.
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::moveRow(int source, int destination)
+    \since 6.8
+
+    Moves a row from the \a source to the \a destination position.
+
+    \note If a syncView is set, the sync view will control the internal index mapping for
+    row reordering. Therefore, in that case, a call to this function will be forwarded to
+    the sync view instead.
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::clearRowReordering()
+    \since 6.8
+
+    Resets any previously applied row reordering.
+
+    \note If a syncView is set, a call to this function will be forwarded to
+    the corresponding view item and reset the row ordering.
+*/
+
+/*!
     \qmlmethod Item QtQuick::TableView::itemAtCell(point cell)
 
     Returns the delegate item at \a cell if loaded, otherwise \c null.
@@ -1336,6 +1378,24 @@
     of overlays.
 
     \sa forceLayout(), {Overlays and underlays}
+*/
+
+/*!
+    \qmlsignal QtQuick::TableView::columnMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex)
+    \since 6.8
+
+    This signal is emitted when a column is moved. The column's logical index is specified by
+    \a logicalIndex, the old index by \a oldVisualIndex, and the new index position by
+    \a newVisualIndex.
+*/
+
+/*!
+    \qmlsignal QtQuick::TableView::rowMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex)
+    \since 6.8
+
+    This signal is emitted when a row is moved. The row's logical index is specified by
+    \a logicalIndex, the old index by \a oldVisualIndex, and the new index position by
+    \a newVisualIndex.
 */
 
 /*!
@@ -1849,28 +1909,43 @@ void QQuickTableViewPrivate::updateSelection(const QRect &oldSelection, const QR
     {
         const QModelIndex startIndex = qaim->index(newRect.y(), newRect.x());
         const QModelIndex endIndex = qaim->index(newRect.y() + newRect.height(), newRect.x() + newRect.width());
-        select = QItemSelection(startIndex, endIndex);
+        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
+            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
+            select.append(QItemSelection(logicalModelIndex, logicalModelIndex));
+        }
     }
 
     // Unselect cells in the new minus old rects
     if (oldRect.x() < newRect.x()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), oldRect.x());
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), newRect.x() - 1);
-        deselect.merge(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
+        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
+            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
+            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
+        }
     } else if (oldRect.x() + oldRect.width() > newRect.x() + newRect.width()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), newRect.x() + newRect.width() + 1);
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), oldRect.x() + oldRect.width());
-        deselect.merge(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
+        for (auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
+            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
+            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
+        }
     }
 
     if (oldRect.y() < newRect.y()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), oldRect.x());
         const QModelIndex endIndex = qaim->index(newRect.y() - 1, oldRect.x() + oldRect.width());
-        deselect.merge(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
+        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
+            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
+            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
+        }
     } else if (oldRect.y() + oldRect.height() > newRect.y() + newRect.height()) {
         const QModelIndex startIndex = qaim->index(newRect.y() + newRect.height() + 1, oldRect.x());
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), oldRect.x() + oldRect.width());
-        deselect.merge(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
+        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
+            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
+            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
+        }
     }
 
     if (selectionFlag == QItemSelectionModel::Select) {
@@ -2085,14 +2160,14 @@ QPoint QQuickTableViewPrivate::cellAtModelIndex(int modelIndex) const
     }
 }
 
-int QQuickTableViewPrivate::modelIndexToCellIndex(const QModelIndex &modelIndex) const
+int QQuickTableViewPrivate::modelIndexToCellIndex(const QModelIndex &modelIndex, bool visualIndex) const
 {
     // Convert QModelIndex to cell index. A cell index is just an
     // integer representation of a cell instead of using a QPoint.
     const QPoint cell = q_func()->cellAtIndex(modelIndex);
     if (!cellIsValid(cell))
         return -1;
-    return modelIndexAtCell(cell);
+    return modelIndexAtCell(visualIndex ? cell : QPoint(modelIndex.column(), modelIndex.row()));
 }
 
 int QQuickTableViewPrivate::edgeToArrayIndex(Qt::Edge edge) const
@@ -2647,7 +2722,9 @@ FxTableItem *QQuickTableViewPrivate::createFxTableItem(const QPoint &cell, QQmlI
     Q_Q(QQuickTableView);
 
     bool ownItem = false;
-    int modelIndex = modelIndexAtCell(cell);
+
+    int modelIndex = modelIndexAtCell(isTransposed ? QPoint(logicalRowIndex(cell.x()), logicalColumnIndex(cell.y())) :
+                                              QPoint(logicalColumnIndex(cell.x()), logicalRowIndex(cell.y())));
 
     QObject* object = model->object(modelIndex, incubationMode);
     if (!object) {
@@ -3000,7 +3077,7 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column) const
 
     const int noExplicitColumnWidth = -1;
 
-    if (cachedColumnWidth.startIndex == column)
+    if (cachedColumnWidth.startIndex == logicalColumnIndex(column))
         return cachedColumnWidth.size;
 
     if (syncHorizontally)
@@ -3019,7 +3096,7 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column) const
     qreal columnWidth = noExplicitColumnWidth;
 
     if (columnWidthProvider.isCallable()) {
-        auto const columnAsArgument = QJSValueList() << QJSValue(column);
+        auto const columnAsArgument = QJSValueList() << QJSValue(logicalColumnIndex(column));
         columnWidth = columnWidthProvider.call(columnAsArgument).toNumber();
         if (qIsNaN(columnWidth) || columnWidth < 0)
             columnWidth = noExplicitColumnWidth;
@@ -3031,7 +3108,7 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column) const
         columnWidth = noExplicitColumnWidth;
     }
 
-    cachedColumnWidth.startIndex = column;
+    cachedColumnWidth.startIndex = logicalColumnIndex(column);
     cachedColumnWidth.size = columnWidth;
     return columnWidth;
 }
@@ -3046,7 +3123,7 @@ qreal QQuickTableViewPrivate::getRowHeight(int row) const
 
     const int noExplicitRowHeight = -1;
 
-    if (cachedRowHeight.startIndex == row)
+    if (cachedRowHeight.startIndex == logicalRowIndex(row))
         return cachedRowHeight.size;
 
     if (syncVertically)
@@ -3065,7 +3142,7 @@ qreal QQuickTableViewPrivate::getRowHeight(int row) const
     qreal rowHeight = noExplicitRowHeight;
 
     if (rowHeightProvider.isCallable()) {
-        auto const rowAsArgument = QJSValueList() << QJSValue(row);
+        auto const rowAsArgument = QJSValueList() << QJSValue(logicalRowIndex(row));
         rowHeight = rowHeightProvider.call(rowAsArgument).toNumber();
         if (qIsNaN(rowHeight) || rowHeight < 0)
             rowHeight = noExplicitRowHeight;
@@ -3077,7 +3154,7 @@ qreal QQuickTableViewPrivate::getRowHeight(int row) const
         rowHeight = noExplicitRowHeight;
     }
 
-    cachedRowHeight.startIndex = row;
+    cachedRowHeight.startIndex = logicalRowIndex(row);
     cachedRowHeight.size = rowHeight;
     return rowHeight;
 }
@@ -4288,8 +4365,9 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
     item->setZ(1);
 
     const QPoint cell = cellAtModelIndex(modelIndex);
-    const bool current = currentInSelectionModel(cell);
-    const bool selected = selectedInSelectionModel(cell);
+    const QPoint visualCell = QPoint(visualColumnIndex(cell.x()), visualRowIndex(cell.y()));
+    const bool current = currentInSelectionModel(visualCell);
+    const bool selected = selectedInSelectionModel(visualCell);
     setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, true);
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, true);
     setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(false), modelIndex, item, true);
@@ -4309,8 +4387,9 @@ void QQuickTableViewPrivate::itemPooledCallback(int modelIndex, QObject *object)
 void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
 {
     const QPoint cell = cellAtModelIndex(modelIndex);
-    const bool current = currentInSelectionModel(cell);
-    const bool selected = selectedInSelectionModel(cell);
+    const QPoint visualCell = QPoint(visualColumnIndex(cell.x()), visualRowIndex(cell.y()));
+    const bool current = currentInSelectionModel(visualCell);
+    const bool selected = selectedInSelectionModel(visualCell);
     setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, false);
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, false);
     // Note: the edit item will never be reused, so no reason to set kRequiredProperty_editing
@@ -5668,6 +5747,10 @@ void QQuickTableView::setSyncView(QQuickTableView *view)
     if (d->assignedSyncView == view)
         return;
 
+    // Clear existing index mapping information maintained
+    // in the current view
+    d->clearIndexMapping();
+
     d->assignedSyncView = view;
     d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly);
 
@@ -6012,6 +6095,156 @@ void QQuickTableView::positionViewAtCell(int column, int row, PositionMode mode,
 }
 #endif
 
+void QQuickTableView::moveColumn(int source, int destination)
+{
+    Q_D(QQuickTableView);
+    d->moveSection(source, destination, Qt::Horizontal);
+}
+
+void QQuickTableView::moveRow(int source, int destination)
+{
+    Q_D(QQuickTableView);
+    d->moveSection(source, destination, Qt::Vertical);
+}
+
+void QQuickTableViewPrivate::moveSection(int source, int destination, Qt::Orientations orientation)
+{
+    Q_Q(QQuickTableView);
+
+    if (source < 0 || destination < 0 ||
+        (orientation == Qt::Horizontal &&
+         (source >= tableSize.width() || destination >= tableSize.width())) ||
+        (orientation == Qt::Vertical &&
+         (source >= tableSize.height() || destination >= tableSize.height())))
+        return;
+
+    if (source == destination)
+        return;
+
+    if (m_sectionState != SectionState::Moving) {
+        m_sectionState = SectionState::Moving;
+        if (syncView)
+            syncView->d_func()->moveSection(source, destination, orientation);
+        else {
+            // Initialize the visual and logical index mapping
+            initializeIndexMapping();
+
+            // Set current index mapping according to moving rows or columns
+            SectionData *visualIndex = nullptr;
+            SectionData *logicalIndex =  nullptr;
+
+            if (orientation == Qt::Horizontal) {
+                visualIndex = visualIndices[0].data();
+                logicalIndex = logicalIndices[0].data();
+            } else if (orientation == Qt::Vertical) {
+                visualIndex = visualIndices[1].data();
+                logicalIndex = logicalIndices[1].data();
+            }
+
+            const int logical = logicalIndex[source].index;
+            int visual = source;
+
+            if (destination > source) {
+                while (visual < destination) {
+                    SectionData &visualData = visualIndex[logicalIndex[visual + 1].index];
+                    SectionData &logicalData = logicalIndex[visual];
+                    visualData.prevIndex = visualData.index;
+                    visualData.index = visual;
+                    logicalData.prevIndex = logicalData.index;
+                    logicalData.index = logicalIndex[visual + 1].index;
+                    ++visual;
+                }
+            } else {
+                while (visual > destination) {
+                    SectionData &visualData = visualIndex[logicalIndex[visual - 1].index];
+                    SectionData &logicalData = logicalIndex[visual];
+                    visualData.prevIndex = visualData.index;
+                    visualData.index = visual;
+                    logicalData.prevIndex = logicalData.index;
+                    logicalData.index = logicalIndex[visual - 1].index;
+                    --visual;
+                }
+            }
+
+            visualIndex[logical].prevIndex = visualIndex[logical].index;
+            visualIndex[logical].index = destination;
+            logicalIndex[destination].prevIndex = logicalIndex[destination].index;
+            logicalIndex[destination].index = logical;
+
+            // Trigger section move for horizontal and vertical child views
+            // Used in a case where moveSection() triggered for table view
+            for (auto syncChild : std::as_const(syncChildren)) {
+                auto syncChild_d = syncChild->d_func();
+                if (syncChild_d->m_sectionState != SectionState::Moving &&
+                    ((syncChild_d->syncHorizontally && orientation == Qt::Horizontal) ||
+                     (syncChild_d->syncVertically && orientation == Qt::Vertical)))
+                    syncChild_d->moveSection(source, destination, orientation);
+            }
+        }
+
+        // Rebuild the view to reflect the section order
+        scheduleRebuildTable(RebuildOption::ViewportOnly);
+        m_sectionState = SectionState::Idle;
+
+        // Emit section moved signal for the sections moved in the view
+        const int startIndex = (source > destination) ? destination : source;
+        const int endIndex = (source > destination) ? source : destination;
+        const int mapIndex = static_cast<int>(orientation) - 1;
+        for (int index = startIndex; index <= endIndex; index++) {
+            const SectionData *logicalDataIndices = (syncView ? syncView->d_func()->logicalIndices[mapIndex].constData() : logicalIndices[mapIndex].constData());
+            const SectionData *visualDataIndices = syncView ? syncView->d_func()->visualIndices[mapIndex].constData() : visualIndices[mapIndex].constData();
+            const int prevLogicalIndex = logicalDataIndices[index].prevIndex;
+            if (orientation == Qt::Horizontal)
+                emit q->columnMoved(prevLogicalIndex, visualDataIndices[prevLogicalIndex].prevIndex, visualDataIndices[prevLogicalIndex].index);
+            else
+                emit q->rowMoved(prevLogicalIndex, visualDataIndices[prevLogicalIndex].prevIndex, visualDataIndices[prevLogicalIndex].index);
+        }
+    }
+}
+
+void QQuickTableView::clearColumnReordering()
+{
+    Q_D(QQuickTableView);
+    d->clearSection(Qt::Horizontal);
+}
+
+void QQuickTableView::clearRowReordering()
+{
+    Q_D(QQuickTableView);
+    d->clearSection(Qt::Vertical);
+}
+
+void QQuickTableViewPrivate::clearSection(Qt::Orientations orientation)
+{
+    Q_Q(QQuickTableView);
+
+    const int mapIndex = static_cast<int>(orientation) - 1;
+    const QList<SectionData> oldLogicalIndices = syncView ? syncView->d_func()->logicalIndices[mapIndex] : logicalIndices[mapIndex];
+    const QList<SectionData> oldVisualIndices = syncView ? syncView->d_func()->visualIndices[mapIndex] : visualIndices[mapIndex];;
+
+    if (syncView)
+        syncView->d_func()->clearSection(orientation);
+    else {
+        // Clear the index mapping and rebuild the table
+        logicalIndices[mapIndex].clear();
+        visualIndices[mapIndex].clear();
+        scheduleRebuildTable(RebuildOption::ViewportOnly);
+    }
+
+    // Emit section moved signal for the sections moved in the view
+    for (int index = 0; index < oldLogicalIndices.size(); index++) {
+        const SectionData *logicalDataIndices = oldLogicalIndices.constData();
+        const SectionData *visualDataIndices = oldVisualIndices.constData();
+        if (logicalDataIndices[index].index != index) {
+            const int currentIndex = logicalDataIndices[index].index;
+            if (orientation == Qt::Horizontal)
+                emit q->columnMoved(currentIndex, visualDataIndices[currentIndex].index, index);
+            else
+                emit q->rowMoved(currentIndex, visualDataIndices[currentIndex].index, index);
+        }
+    }
+}
+
 QQuickItem *QQuickTableView::itemAtCell(const QPoint &cell) const
 {
     Q_D(const QQuickTableView);
@@ -6190,9 +6423,9 @@ void QQuickTableView::setColumnWidth(int column, qreal size)
         return;
 
     if (size < 0)
-        d->explicitColumnWidths.remove(column);
+        d->explicitColumnWidths.remove(d->logicalColumnIndex(column));
     else
-        d->explicitColumnWidths.insert(column, size);
+        d->explicitColumnWidths.insert(d->logicalColumnIndex(column), size);
 
     if (d->loadedItems.isEmpty())
         return;
@@ -6225,7 +6458,7 @@ qreal QQuickTableView::explicitColumnWidth(int column) const
     if (d->syncHorizontally)
         return d->syncView->explicitColumnWidth(column);
 
-    const auto it = d->explicitColumnWidths.constFind(column);
+    const auto it = d->explicitColumnWidths.constFind(d->logicalColumnIndex(column));
     if (it != d->explicitColumnWidths.constEnd())
         return *it;
     return -1;
@@ -6248,9 +6481,9 @@ void QQuickTableView::setRowHeight(int row, qreal size)
         return;
 
     if (size < 0)
-        d->explicitRowHeights.remove(row);
+        d->explicitRowHeights.remove(d->logicalRowIndex(row));
     else
-        d->explicitRowHeights.insert(row, size);
+        d->explicitRowHeights.insert(d->logicalRowIndex(row), size);
 
     if (d->loadedItems.isEmpty())
         return;
@@ -6283,7 +6516,7 @@ qreal QQuickTableView::explicitRowHeight(int row) const
     if (d->syncVertically)
         return d->syncView->explicitRowHeight(row);
 
-    const auto it = d->explicitRowHeights.constFind(row);
+    const auto it = d->explicitRowHeights.constFind(d->logicalRowIndex(row));
     if (it != d->explicitRowHeights.constEnd())
         return *it;
     return -1;
@@ -6299,14 +6532,15 @@ QModelIndex QQuickTableView::modelIndex(const QPoint &cell) const
     if (!qaim)
         return {};
 
-    return qaim->index(cell.y(), cell.x());
+    return qaim->index(d->logicalRowIndex(cell.y()), d->logicalColumnIndex(cell.x()));
 }
 
 QPoint QQuickTableView::cellAtIndex(const QModelIndex &index) const
 {
     if (!index.isValid() || index.parent().isValid())
         return {-1, -1};
-    return {index.column(), index.row()};
+    Q_D(const QQuickTableView);
+    return {d->visualColumnIndex(index.column()), d->visualRowIndex(index.row())};
 }
 
 #if QT_DEPRECATED_SINCE(6, 4)
@@ -6371,7 +6605,8 @@ void QQuickTableView::edit(const QModelIndex &index)
             // is currently dependent of the QQmlTableInstanceModel that was used to create the object
             // in order to initialize required properties, so we need to set the editItem variable
             // early on, so that we can use it in setRequiredProperty.
-            d->editIndex = modelIndex(d->cellAtModelIndex(serializedModelIndex));
+            const QPoint cell = d->cellAtModelIndex(serializedModelIndex);
+            d->editIndex = modelIndex({d->visualColumnIndex(cell.x()), d->visualRowIndex(cell.y())});
             d->editItem = qmlobject_cast<QQuickItem*>(object);
             if (!d->editItem)
                 return;
@@ -6400,7 +6635,7 @@ void QQuickTableView::edit(const QModelIndex &index)
     d->editModel->setModel(d->tableModel->model());
     d->editModel->setDelegate(attached->editDelegate());
 
-    const int cellIndex = d->modelIndexToCellIndex(index);
+    const int cellIndex = d->modelIndexToCellIndex(index, false);
     QObject* object = d->editModel->object(cellIndex, QQmlIncubator::Synchronous);
     if (!object) {
         d->editIndex = QModelIndex();
@@ -6451,7 +6686,7 @@ void QQuickTableView::closeEditor()
     d->editItem = nullptr;
 
     cellItem->setZ(1);
-    const int cellIndex = d->modelIndexToCellIndex(d->editIndex);
+    const int cellIndex = d->modelIndexToCellIndex(d->editIndex, false);
     d->setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(false), cellIndex, cellItem, false);
     // Remove the extra reference we sat on the cell item from edit()
     d->model->release(cellItem, QQmlInstanceModel::NotReusable);
@@ -6669,7 +6904,6 @@ void QQuickTableView::setResizableRows(bool enabled)
 }
 
 // ----------------------------------------------
-
 QQuickTableViewHoverHandler::QQuickTableViewHoverHandler(QQuickTableView *view)
     : QQuickHoverHandler(view->contentItem())
 {
@@ -6861,6 +7095,71 @@ void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint 
 #endif
         break; }
     }
+}
+
+void QQuickTableViewPrivate::initializeIndexMapping()
+{
+    auto initIndices = [](auto& visualIndex, auto& logicalIndex, int size) {
+        visualIndex.resize(size);
+        logicalIndex.resize(size);
+        for (int index = 0; index < size; ++index)
+            visualIndex[index].index = logicalIndex[index].index = index;
+    };
+
+    if (!tableSize.isEmpty()) {
+        if (visualIndices[0].size() != tableSize.width()
+            || logicalIndices[0].size() != tableSize.width())
+            initIndices(visualIndices[0], logicalIndices[0], tableSize.width());
+
+        if (visualIndices[1].size() != tableSize.height()
+            || logicalIndices[1].size() != tableSize.height())
+            initIndices(visualIndices[1], logicalIndices[1], tableSize.height());
+    }
+}
+
+void QQuickTableViewPrivate::clearIndexMapping()
+{
+    logicalIndices[0].clear();
+    visualIndices[0].clear();
+
+    logicalIndices[1].clear();
+    visualIndices[1].clear();
+}
+
+int QQuickTableViewPrivate::logicalRowIndex(const int visualIndex) const
+{
+    if (syncView)
+        return syncView->d_func()->logicalRowIndex(visualIndex);
+    if (logicalIndices[1].isEmpty() || visualIndex < 0)
+        return visualIndex;
+    return logicalIndices[1].constData()[visualIndex].index;
+}
+
+int QQuickTableViewPrivate::logicalColumnIndex(const int visualIndex) const
+{
+    if (syncView)
+        return syncView->d_func()->logicalColumnIndex(visualIndex);
+    if (logicalIndices[0].isEmpty() || visualIndex < 0)
+        return visualIndex;
+    return logicalIndices[0].constData()[visualIndex].index;
+}
+
+int QQuickTableViewPrivate::visualRowIndex(const int logicalIndex) const
+{
+    if (syncView)
+        return syncView->d_func()->visualRowIndex(logicalIndex);
+    if (visualIndices[1].isEmpty() || logicalIndex < 0)
+        return logicalIndex;
+    return visualIndices[1].constData()[logicalIndex].index;
+}
+
+int QQuickTableViewPrivate::visualColumnIndex(const int logicalIndex) const
+{
+    if (syncView)
+        return syncView->d_func()->visualColumnIndex(logicalIndex);
+    if (visualIndices[0].isEmpty() || logicalIndex < 0)
+        return logicalIndex;
+    return visualIndices[0].constData()[logicalIndex].index;
 }
 
 // ----------------------------------------------

@@ -8,9 +8,9 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(BooleanCtor);
 DEFINE_OBJECT_VTABLE(BooleanObject);
 
-void Heap::BooleanCtor::init(QV4::ExecutionContext *scope)
+void Heap::BooleanCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("Boolean"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Boolean"));
 }
 
 ReturnedValue BooleanCtor::virtualCallAsConstructor(const FunctionObject *that, const Value *argv, int argc, const Value *newTarget)

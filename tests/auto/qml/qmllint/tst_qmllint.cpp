@@ -105,6 +105,7 @@ private Q_SLOTS:
     void valueTypesFromString();
 
     void ignoreSettingsNotCommandLineOptions();
+    void backslashedQmldirPath();
 
     void environment_data();
     void environment();
@@ -113,6 +114,7 @@ private Q_SLOTS:
     void testPlugin();
     void quickPlugin();
 #endif
+
 private:
     enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
     enum ContainOption { StringNotContained, StringContained };
@@ -1346,6 +1348,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
     QTest::newRow("dontCheckJSTypes") << QStringLiteral("dontCheckJSTypes.qml");
     QTest::newRow("jsonObjectIsRecognized") << QStringLiteral("jsonObjectIsRecognized.qml");
+    QTest::newRow("jsonArrayIsRecognized") << QStringLiteral("jsonArrayIsRecognized.qml");
 }
 
 void TestQmllint::cleanQmlCode()
@@ -2121,7 +2124,7 @@ void TestQmllint::quickPlugin()
                       Message { u"SplitView attached property only works with Items"_s },
                       Message { u"ScrollIndicator must be attached to a Flickable"_s },
                       Message { u"ScrollBar must be attached to a Flickable or ScrollView"_s },
-                      Message { u"Accessible must be attached to an Item"_s },
+                      Message { u"Accessible must be attached to an Item or an Action"_s },
                       Message { u"EnterKey attached property only works with Items"_s },
                       Message {
                               u"LayoutDirection attached property only works with Items and Windows"_s },
@@ -2251,6 +2254,15 @@ void TestQmllint::ignoreSettingsNotCommandLineOptions()
                                       QStringList{ u"-I"_s, importPath }, true);
     // should not complain about not finding the module that is in importPath
     QCOMPARE(output, QString());
+}
+
+void TestQmllint::backslashedQmldirPath()
+{
+    const QString qmldirPath
+            = testFile(u"ImportPath/ModuleInImportPath/qmldir"_s).replace('/', QDir::separator());
+    const QString output = runQmllint(
+            testFile(u"something.qml"_s), true, QStringList{ u"-i"_s, qmldirPath });
+    QVERIFY(output.isEmpty());
 }
 
 QTEST_GUILESS_MAIN(TestQmllint)

@@ -163,9 +163,13 @@ available when you import \c QtQuick.
     \endlist
 
     Example:
-    \qml
-    Text { font.family: "Helvetica"; font.pointSize: 13; font.bold: true }
-    \endqml
+
+    \snippet qml/font.qml text
+
+    As \c font is a \l {QML_STRUCTURED_VALUE}{structured value} type, it can
+    also be constructed with a JavaScript object:
+
+    \snippet qml/font.qml structured-value-construction
 
     When integrating with C++, note that any QFont value
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically

@@ -80,6 +80,7 @@ namespace Heap {
     struct ArrayObject;
     struct DateObject;
     struct FunctionObject;
+    struct JavaScriptFunctionObject;
     struct ErrorObject;
     struct ArgumentsObject;
     struct QObjectWrapper;

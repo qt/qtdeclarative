@@ -40,7 +40,8 @@ public:
         DirtyStrokeGeom = 0x02,
         DirtyColor = 0x04,
         DirtyFillGradient = 0x08,
-        DirtyList = 0x10 // only for accDirty
+        DirtyFillTransform = 0x10,
+        DirtyList = 0x20 // only for accDirty
     };
 
     QQuickShapeGenericRenderer(QQuickItem *item)
@@ -64,6 +65,7 @@ public:
     void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
+    void setFillTransform(int index, const QSGTransform &transform) override;
     void setTriangulationScale(qreal scale) override;
     void endSync(bool async) override;
     void setAsyncCallback(void (*)(void *), void *) override;
@@ -103,6 +105,7 @@ private:
         QPainterPath path;
         FillGradientType fillGradientActive;
         QSGGradientCache::GradientDesc fillGradient;
+        QSGTransform fillTransform;
         VertexContainerType fillVertices;
         IndexContainerType fillIndices;
         QSGGeometry::Type indexType;
@@ -190,6 +193,7 @@ public:
 
     // shadow data for custom materials
     QSGGradientCache::GradientDesc m_fillGradient;
+    QSGTransform m_fillTransform;
 
 private:
     QScopedPointer<QSGMaterial> m_material;
@@ -225,6 +229,7 @@ public:
                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 
 private:
+    QSGTransform m_fillTransform;
     QVector2D m_gradA;
     QVector2D m_gradB;
 };
@@ -264,6 +269,7 @@ public:
                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 
 private:
+    QSGTransform m_fillTransform;
     QVector2D m_focalPoint;
     QVector2D m_focalToCenter;
     float m_centerRadius;
@@ -300,6 +306,7 @@ public:
                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 
 private:
+    QSGTransform m_fillTransform;
     QVector2D m_centerPoint;
     float m_angle;
 };

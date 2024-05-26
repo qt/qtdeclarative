@@ -1472,11 +1472,12 @@ use \l{QtQml::Qt::createQmlObject()}{Qt.createQmlObject()}.
 */
 
 /*!
+\since 6.5
 \qmlmethod Component Qt::createComponent(string moduleUri, string typeName, enumeration mode, QtObject parent)
 \overload
 Returns a \l Component object created for the type specified by \a moduleUri and \a typeName.
 \qml
-import QtQuick
+import QtQml
 QtObject {
     id: root
     property Component myComponent: Qt.createComponent("QtQuick", "Rectangle", Component.Asynchronous, root)
@@ -1616,12 +1617,19 @@ QLocale QtObject::locale(const QString &name) const
 }
 #endif
 
-void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *bindingFunction)
+void Heap::QQmlBindingFunction::init(const QV4::JavaScriptFunctionObject *bindingFunction)
 {
     Scope scope(bindingFunction->engine());
     ScopedContext context(scope, bindingFunction->scope());
-    FunctionObject::init(context, bindingFunction->function());
+    JavaScriptFunctionObject::init(context, bindingFunction->function());
     this->bindingFunction.set(internalClass->engine, bindingFunction->d());
+}
+
+ReturnedValue QQmlBindingFunction::virtualCall(
+        const FunctionObject *f, const Value *, const Value *, int)
+{
+    // Mark this as a callable object, so that we can perform the binding magic on it.
+    return f->engine()->throwTypeError(QStringLiteral("Bindings must not be called directly."));
 }
 
 QQmlSourceLocation QQmlBindingFunction::currentLocation() const
@@ -1678,7 +1686,8 @@ DEFINE_OBJECT_VTABLE(QQmlBindingFunction);
 */
 QJSValue QtObject::binding(const QJSValue &function) const
 {
-    const QV4::FunctionObject *f = QJSValuePrivate::asManagedType<FunctionObject>(&function);
+    const QV4::JavaScriptFunctionObject *f
+            = QJSValuePrivate::asManagedType<JavaScriptFunctionObject>(&function);
     QV4::ExecutionEngine *e = v4Engine();
     if (!f) {
         return QJSValuePrivate::fromReturnedValue(
@@ -2141,7 +2150,7 @@ ReturnedValue GlobalExtensions::method_qsTranslate(const FunctionObject *b, cons
 }
 
 /*!
-    \qmlmethod string Qt::qsTranslateNoOp(string context, string sourceText, string disambiguation)
+    \qmlmethod string Qt::QT_TRANSLATE_NOOP(string context, string sourceText, string disambiguation)
 
     Marks \a sourceText for dynamic translation in the given \a context; i.e, the stored \a sourceText
     will not be altered.
@@ -2256,7 +2265,7 @@ ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value
 }
 
 /*!
-    \qmlmethod string Qt::qsTrNoOp(string sourceText, string disambiguation)
+    \qmlmethod string Qt::QT_TR_NOOP(string sourceText, string disambiguation)
 
     Marks \a sourceText for dynamic translation; i.e, the stored \a sourceText
     will not be altered.
@@ -2337,7 +2346,7 @@ ReturnedValue GlobalExtensions::method_qsTrId(const FunctionObject *b, const Val
 }
 
 /*!
-    \qmlmethod string Qt::qsTrIdNoOp(string id)
+    \qmlmethod string Qt::QT_TRID_NOOP(string id)
 
     Marks \a id for dynamic translation.
 

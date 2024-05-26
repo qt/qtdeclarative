@@ -21,7 +21,6 @@ using namespace Qt::StringLiterals;
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \inherits Item
-    \instantiates QQuickItem
     \since 6.7
     \preliminary
 

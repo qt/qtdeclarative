@@ -12,14 +12,14 @@ DEFINE_OBJECT_VTABLE(WeakMapCtor);
 DEFINE_OBJECT_VTABLE(MapCtor);
 DEFINE_OBJECT_VTABLE(MapObject);
 
-void Heap::WeakMapCtor::init(QV4::ExecutionContext *scope)
+void Heap::WeakMapCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("WeakMap"));
+    Heap::FunctionObject::init(engine, QStringLiteral("WeakMap"));
 }
 
-void Heap::MapCtor::init(QV4::ExecutionContext *scope)
+void Heap::MapCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("Map"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Map"));
 }
 
 ReturnedValue WeakMapCtor::construct(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget, bool weakMap)

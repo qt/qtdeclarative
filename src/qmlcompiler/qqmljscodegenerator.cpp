@@ -3639,9 +3639,13 @@ void QQmlJSCodeGenerator::generateArithmeticOperation(
     const QQmlJSRegisterContent originalOut = m_typeResolver->original(m_state.accumulatorOut());
     m_body += m_state.accumulatorVariableOut;
     m_body += u" = "_s;
+    const QString explicitCast
+            = m_typeResolver->equals(originalOut.storedType(), m_typeResolver->stringType())
+                ? originalOut.storedType()->internalName()
+                : QString();
     m_body += conversion(
                 originalOut, m_state.accumulatorOut(),
-                u'(' + lhs + u' ' + cppOperator + u' ' + rhs + u')');
+                explicitCast + u'(' + lhs + u' ' + cppOperator + u' ' + rhs + u')');
     m_body += u";\n"_s;
 }
 

@@ -15,6 +15,8 @@
 // We mean it.
 //
 
+#include <QtQuick/private/qandroidviewsignalmanager_p.h>
+
 #include <QtCore/qjnienvironment.h>
 #include <QtCore/qjnitypes.h>
 #include <QtQuick/qquickview.h>
@@ -42,38 +44,17 @@ namespace QtAndroidQuickViewEmbedding
                                        jint signalListenerId);
     Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(removeRootObjectSignalListener)
 
-    class SignalHelper : public QObject
+    class QAndroidQuickView : public QQuickView
     {
         Q_OBJECT
+        std::unique_ptr<QAndroidViewSignalManager> m_signalManager;
+
     public:
-        struct ListenerInfo
+        explicit QAndroidQuickView(QWindow *parent)
+            : QQuickView(parent), m_signalManager(new QAndroidViewSignalManager())
         {
-            ListenerInfo() : propertyIndex(-1) { }
-            int id;
-            QJniObject listener;
-            QByteArray javaArgType;
-            QByteArray signalSignature;
-            int propertyIndex;
-        };
-
-        int connectionHandleCounter;
-        explicit SignalHelper(QQuickView *parent) : QObject(parent), connectionHandleCounter(0) { }
-        QMultiMap<QByteArray, ListenerInfo> listenersMap;
-        QHash<int, QMetaObject::Connection> connections;
-        void invokeListener(QObject *sender, int senderSignalIndex, QVariant signalValue);
-
-        template<typename JT, typename T>
-        inline QJniObject qVariantToJniObject(const QVariant& v) {
-            return QJniObject(QtJniTypes::Traits<JT>::className(), get<T>(std::move(v)));
-        };
-
-    public slots:
-        void forwardSignal();
-        void forwardSignal(int);
-        void forwardSignal(double);
-        void forwardSignal(float);
-        void forwardSignal(bool);
-        void forwardSignal(QString);
+        }
+        inline QAndroidViewSignalManager *signalManager() const { return m_signalManager.get(); };
     };
 };
 

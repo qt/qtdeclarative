@@ -957,9 +957,21 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     // or to cancel the closing.
     \endcode
 
-    \note If using \l {Qt Quick Controls}, it's recommended to use
-        \l ApplicationWindow instead of Window, as it has better styling
-        support.
+    \section1 Styling
+
+    As with all visual types in Qt Quick, Window supports
+    \l {palette}{palettes}. However, as with types like \l Text, Window does
+    not use palettes by default. For example, to change the background color
+    of the window when the operating system's theme changes, the \l color must
+    be set:
+
+    \snippet qml/windowPalette.qml declaration-and-color
+    \codeline
+    \snippet qml/windowPalette.qml text-item
+    \snippet qml/windowPalette.qml closing-brace
+
+    Use \l {ApplicationWindow} (and \l {Label}) from \l {Qt Quick Controls}
+    instead of Window to get automatic styling.
 */
 
 /*!
@@ -1859,31 +1871,37 @@ void QQuickWindowPrivate::clearFocusObject()
 
 void QQuickWindowPrivate::setFocusToTarget(FocusTarget target, Qt::FocusReason reason)
 {
+    if (!contentItem)
+        return;
+
     QQuickItem *newFocusItem = nullptr;
-    if (contentItem) {
-        switch (target) {
-        case FocusTarget::First:
-            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(contentItem, true);
-            break;
-        case FocusTarget::Last:
-            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(contentItem, false);
-            break;
-        case FocusTarget::Next:
-        case FocusTarget::Prev: {
-            auto da = deliveryAgentPrivate();
-            Q_ASSERT(da);
-            QQuickItem *focusItem = da->focusTargetItem() ? da->focusTargetItem() : contentItem;
-            bool forward = (target == FocusTarget::Next);
-            newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(focusItem, forward);
-            break;
+    switch (target) {
+    case FocusTarget::First:
+    case FocusTarget::Last: {
+        const bool forward = (target == FocusTarget::First);
+        newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(contentItem, forward);
+        if (newFocusItem) {
+            const auto *itemPriv = QQuickItemPrivate::get(newFocusItem);
+            if (itemPriv->subFocusItem && itemPriv->flags & QQuickItem::ItemIsFocusScope)
+                clearFocusInScope(newFocusItem, itemPriv->subFocusItem, reason);
         }
-        default:
-            break;
-        }
+        break;
+    }
+    case FocusTarget::Next:
+    case FocusTarget::Prev: {
+        const auto da = deliveryAgentPrivate();
+        Q_ASSERT(da);
+        QQuickItem *focusItem = da->focusTargetItem() ? da->focusTargetItem() : contentItem;
+        bool forward = (target == FocusTarget::Next);
+        newFocusItem = QQuickItemPrivate::nextPrevItemInTabFocusChain(focusItem, forward);
+        break;
+    }
+    default:
+        break;
     }
 
     if (newFocusItem)
-        newFocusItem->setFocus(true, reason);
+        newFocusItem->forceActiveFocus(reason);
 }
 
 /*!

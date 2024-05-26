@@ -15,6 +15,8 @@
 // We mean it.
 //
 
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQuick/private/qquickitem_p.h>
 
@@ -225,6 +227,10 @@ namespace QQuickVisualTestUtils
 
 #define QQUICK_VERIFY_POLISH(item) \
     QTRY_COMPARE(QQuickItemPrivate::get(item)->polishScheduled, false)
+
+#define SKIP_IF_NO_WINDOW_ACTIVATION \
+if (!(QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation))) \
+    QSKIP("Window activation is not supported on this platform");
 
 QT_END_NAMESPACE
 

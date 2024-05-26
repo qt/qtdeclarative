@@ -47,7 +47,7 @@ DECLARE_HEAP_OBJECT(UrlObject, Object)
 
 struct UrlCtor : FunctionObject
 {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 // clang-format off
@@ -66,7 +66,7 @@ DECLARE_HEAP_OBJECT(UrlSearchParamsObject, Object)
 
 struct UrlSearchParamsCtor : FunctionObject
 {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 }
 

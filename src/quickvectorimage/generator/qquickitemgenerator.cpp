@@ -75,7 +75,7 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
 
     auto *imageItem = new QQuickImage;
     auto *imagePriv = static_cast<QQuickImageBasePrivate*>(QQuickItemPrivate::get(imageItem));
-    imagePriv->pix.setImage(info.image);
+    imagePriv->currentPix->setImage(info.image);
 
     imageItem->setX(info.rect.x());
     imageItem->setY(info.rect.y());

@@ -59,7 +59,7 @@ struct Token
     int tokenModifier;
 };
 
-using HighlightsContainer = QMap<int, Token>;
+using HighlightsContainer = QMap<int, QT_PREPEND_NAMESPACE(Token)>;
 
 /*!
 \internal
@@ -74,7 +74,6 @@ struct HighlightsRange
 class Highlights
 {
 public:
-    using HighlightsContainer = QMap<int, Token>;
     void addHighlight(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier = 0);
     void addHighlight(const QMap<QQmlJS::Dom::FileLocationRegion, QQmlJS::SourceLocation> &regions,
                       QQmlJS::Dom::FileLocationRegion region, int tokenModifier = 0);

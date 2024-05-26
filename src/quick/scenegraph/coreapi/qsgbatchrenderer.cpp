@@ -2710,6 +2710,8 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     blend.dstColor = m_gstate.dstColor;
     blend.srcAlpha = m_gstate.srcAlpha;
     blend.dstAlpha = m_gstate.dstAlpha;
+    blend.opColor = m_gstate.opColor;
+    blend.opAlpha = m_gstate.opAlpha;
     ps->setTargetBlends({ blend });
 
     ps->setDepthTest(m_gstate.depthTest);
@@ -2841,6 +2843,7 @@ static void rendererToMaterialGraphicsState(QSGMaterialShader::GraphicsPipelineS
 
     // the enum values should match, sanity check it
     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::OneMinusSrc1Alpha) == int(QRhiGraphicsPipeline::OneMinusSrc1Alpha));
+    Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::BlendOpMax) == int(QRhiGraphicsPipeline::Max));
     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::A) == int(QRhiGraphicsPipeline::A));
     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::CullBack) == int(QRhiGraphicsPipeline::Back));
     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::Line) == int(QRhiGraphicsPipeline::Line));
@@ -2857,6 +2860,9 @@ static void rendererToMaterialGraphicsState(QSGMaterialShader::GraphicsPipelineS
 
     dst->srcAlpha = QSGMaterialShader::GraphicsPipelineState::BlendFactor(src->srcAlpha);
     dst->dstAlpha = QSGMaterialShader::GraphicsPipelineState::BlendFactor(src->dstAlpha);
+
+    dst->opColor = QSGMaterialShader::GraphicsPipelineState::BlendOp(src->opColor);
+    dst->opAlpha = QSGMaterialShader::GraphicsPipelineState::BlendOp(src->opAlpha);
 
     dst->colorWrite = QSGMaterialShader::GraphicsPipelineState::ColorMask(int(src->colorWrite));
 
@@ -2877,6 +2883,8 @@ static void materialToRendererGraphicsState(GraphicsState *dst,
         dst->srcAlpha = dst->srcColor;
         dst->dstAlpha = dst->dstColor;
     }
+    dst->opColor = QRhiGraphicsPipeline::BlendOp(src->opColor);
+    dst->opAlpha = QRhiGraphicsPipeline::BlendOp(src->opAlpha);
     dst->colorWrite = QRhiGraphicsPipeline::ColorMask(int(src->colorWrite));
     dst->cullMode = QRhiGraphicsPipeline::CullMode(src->cullMode);
     dst->polygonMode = QRhiGraphicsPipeline::PolygonMode(src->polygonMode);
@@ -4141,6 +4149,8 @@ bool operator==(const GraphicsState &a, const GraphicsState &b) noexcept
             && a.dstColor == b.dstColor
             && a.srcAlpha == b.srcAlpha
             && a.dstAlpha == b.dstAlpha
+            && a.opColor == b.opColor
+            && a.opAlpha == b.opAlpha
             && a.colorWrite == b.colorWrite
             && a.cullMode == b.cullMode
             && a.usesScissor == b.usesScissor

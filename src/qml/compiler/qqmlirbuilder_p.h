@@ -443,6 +443,7 @@ struct Q_QML_COMPILER_EXPORT Pragma
     {
         Copy        = 0x1,
         Addressable = 0x2,
+        Assertable  = 0x4,
     };
     Q_DECLARE_FLAGS(ValueTypeBehaviorValues, ValueTypeBehaviorValue);
 

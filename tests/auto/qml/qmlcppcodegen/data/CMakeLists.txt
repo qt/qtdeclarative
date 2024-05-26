@@ -346,6 +346,33 @@ add_dependencies(codegen_test_hidden Qt::Quick)
 
 qt_autogen_tools_initial_setup(codegen_test_hiddenplugin)
 
+qt_policy(SET QTP0004 NEW)
+
+qt_add_library(codegen_test_stringbuilder STATIC)
+qt_autogen_tools_initial_setup(codegen_test_stringbuilder)
+
+set_target_properties(codegen_test_stringbuilder PROPERTIES
+    # We really want qmlcachegen here, even if qmlsc is available
+    QT_QMLCACHEGEN_EXECUTABLE qmlcachegen
+    QT_QMLCACHEGEN_ARGUMENTS --validate-basic-blocks
+)
+
+target_compile_definitions(codegen_test_stringbuilder PRIVATE
+    -DGENERATED_CPP_FOLDER="${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache"
+    QT_USE_QSTRINGBUILDER
+)
+
+qt6_add_qml_module(codegen_test_stringbuilder
+    URI StringBuilderTestTypes
+    SOURCES
+        writableVariantMap.h
+    QML_FILES
+        writeVariantMap.qml
+    OUTPUT_DIRECTORY stringbuilderTestTypes
+    __QT_INTERNAL_DISAMBIGUATE_QMLDIR_RESOURCE
+)
+
+qt_autogen_tools_initial_setup(codegen_test_stringbuilderplugin)
 
 qt_add_library(codegen_test_module STATIC)
 qt_autogen_tools_initial_setup(codegen_test_module)
@@ -356,7 +383,7 @@ set_target_properties(codegen_test_module PROPERTIES
     QT_QMLCACHEGEN_ARGUMENTS --validate-basic-blocks
 )
 
-qt_policy(SET QTP0004 NEW)
+
 
 target_compile_definitions(codegen_test_module PUBLIC
     -DGENERATED_CPP_FOLDER="${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache"

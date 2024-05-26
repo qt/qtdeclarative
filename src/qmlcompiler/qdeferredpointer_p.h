@@ -155,6 +155,14 @@ public:
         return (m_factory && m_factory->isValid()) ? m_factory.data() : nullptr;
     }
 
+    void resetFactory(const Factory& newFactory) const
+    {
+        const bool wasAlreadyLoaded = !factory();
+        *m_factory = newFactory;
+        if (wasAlreadyLoaded)
+            lazyLoad();
+    }
+
 private:
     friend class QDeferredWeakPointer<T>;
 

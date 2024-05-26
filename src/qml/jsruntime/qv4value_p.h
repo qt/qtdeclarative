@@ -309,7 +309,10 @@ inline bool Value::isObject() const
 inline bool Value::isFunctionObject() const
 {
     HeapBasePtr b = heapObject();
-    return b && b->internalClass->vtable->isFunctionObject;
+    if (!b)
+        return false;
+    const VTable *vtable = b->internalClass->vtable;
+    return vtable->call || vtable->callAsConstructor;
 }
 
 inline bool Value::isPrimitive() const

@@ -355,11 +355,16 @@ public:
                     return leftInt % rightInt;
                 Q_FALLTHROUGH();
             }
-            default:
+            case Undefined:
+            case Null:
+            case Double:
+            case String:
                 break;
             }
             Q_FALLTHROUGH();
-        default:
+        case Undefined:
+        case Double:
+        case String:
             break;
         }
 
@@ -706,9 +711,18 @@ private:
     {
         switch (type()) {
         case Undefined: return true;
+        case Null:      return false;
+        case Boolean:   return false;
+        case Integer:   return false;
         case Double:    return std::isnan(asDouble());
-        default:        return false;
+        case String:    return false;
         }
+        // GCC 8.x does not treat __builtin_unreachable() as constexpr
+    #if !defined(Q_CC_GNU_ONLY) || (Q_CC_GNU >= 900)
+        Q_UNREACHABLE_RETURN(false);
+    #else
+        return false;
+    #endif
     }
 
     struct QJSPrimitiveValuePrivate

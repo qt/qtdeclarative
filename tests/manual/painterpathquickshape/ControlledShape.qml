@@ -89,6 +89,7 @@ Item {
                 strokeStyle: controlPanel.outlineStyle
                 joinStyle: controlPanel.joinStyle
                 capStyle: controlPanel.capStyle
+                fillTransform: Qt.matrix4x4(controlPanel.fillScaleX,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1)
             }
 
             Repeater {
