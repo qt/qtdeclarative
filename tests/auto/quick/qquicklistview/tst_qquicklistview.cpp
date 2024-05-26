@@ -7979,7 +7979,7 @@ void tst_QQuickListView::flickBeyondBounds()
 
     // Flick view up beyond bounds
     flick(window.data(), QPoint(10, 10), QPoint(10, -2000), 180);
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     QSKIP("Disabled due to flaky behavior on CI system (QTBUG-44493)");
     QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 0);
 #endif

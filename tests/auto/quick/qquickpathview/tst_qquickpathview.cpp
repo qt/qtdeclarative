@@ -1379,7 +1379,7 @@ void tst_QQuickPathView::package()
     QQuickPathView *pathView = window->rootObject()->findChild<QQuickPathView*>("photoPathView");
     QVERIFY(pathView);
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     QSKIP("QTBUG-27170 view does not reliably receive polish without a running animation");
 #endif
 

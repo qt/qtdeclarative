@@ -2029,7 +2029,7 @@ static inline QString shellNormalizeFileName(const QString &name)
 
 bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 {
-#if defined(Q_OS_MAC) || defined(Q_OS_WIN)
+#if defined(Q_OS_DARWIN) || defined(Q_OS_WIN)
     QFileInfo info(fileName);
     const QString absolute = info.absoluteFilePath();
 
