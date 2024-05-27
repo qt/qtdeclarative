@@ -102,7 +102,9 @@ QT_BEGIN_NAMESPACE
     \code
     ButtonGroup {
         buttons: column.children
-        onClicked: console.log("clicked:", button.text)
+        onClicked: button => {
+            console.log("clicked:", button.text)
+        }
     }
 
     Column {
