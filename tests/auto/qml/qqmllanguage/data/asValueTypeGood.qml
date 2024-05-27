@@ -25,4 +25,11 @@ Q.QtObject {
     property var m: "something" as Q.var
     property var n: 1 as Q.bool
     property var o: Infinity as Q.int
+
+    property var p: b as Q.size;
+    property var q: this as Q.size;
+    property var r: ({}) as Q.size;
+    property var s: 11 as Q.size;
+    property var t: Q.Component as Q.size;
+    property var u: Q.Qt as Q.size;
 }

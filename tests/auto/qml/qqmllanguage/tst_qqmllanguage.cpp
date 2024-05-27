@@ -8085,8 +8085,36 @@ void tst_qqmllanguage::asValueType()
 
     QTest::ignoreMessage(
             QtWarningMsg,
+            qPrintable(url.toString() + ":14: Coercing between incompatible value types mistakenly "
+                                        "yields null rather than undefined. Add 'pragma "
+                                        "ValueTypeBehavior: Assertable' to prevent this."_L1));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + ":16: Coercing a value to QtQml.Base/size using a type "
+                                        "assertion. This behavior is deprecated. Add 'pragma "
+                                        "ValueTypeBehavior: Assertable' to prevent it."_L1));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
             qPrintable(url.toString() + ":11: Coercing a value to StaticTest/withString using a "
                                         "type assertion. This behavior is deprecated. Add 'pragma "
+                                        "ValueTypeBehavior: Assertable' to prevent it."_L1));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "Could not find any constructor for value type QQmlSizeFValueType to call "
+            "with value 11");
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + ":18: Coercing a value to QtQml.Base/size using a type "
+                                        "assertion. This behavior is deprecated. Add 'pragma "
+                                        "ValueTypeBehavior: Assertable' to prevent it."_L1));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + ":19: Coercing a value to QtQml.Base/size using a type "
+                                        "assertion. This behavior is deprecated. Add 'pragma "
                                         "ValueTypeBehavior: Assertable' to prevent it."_L1));
 
     QScopedPointer<QObject> o(c.create());
@@ -8111,6 +8139,27 @@ void tst_qqmllanguage::asValueType()
     const QVariant string = o->property("g");
     QCOMPARE(string.metaType(), QMetaType::fromType<QString>());
     QCOMPARE(string.toString(), u"green");
+
+    const QVariant p = o->property("p");
+    QCOMPARE(p.metaType(), QMetaType::fromType<std::nullptr_t>());
+
+    const QVariant q = o->property("q");
+    QCOMPARE(q.metaType(), QMetaType::fromType<std::nullptr_t>());
+
+    const QVariant r = o->property("r");
+    QCOMPARE(r.metaType(), QMetaType::fromType<QSizeF>());
+    QCOMPARE(r.value<QSizeF>(), QSizeF());
+
+    const QVariant s = o->property("s");
+    QCOMPARE(s.metaType(), QMetaType());
+
+    const QVariant t = o->property("t");
+    QCOMPARE(t.metaType(), QMetaType::fromType<QSizeF>());
+    QCOMPARE(t.value<QSizeF>(), QSizeF());
+
+    const QVariant u = o->property("u");
+    QCOMPARE(u.metaType(), QMetaType::fromType<QSizeF>());
+    QCOMPARE(u.value<QSizeF>(), QSizeF());
 }
 
 void tst_qqmllanguage::asValueTypeGood()
@@ -8162,6 +8211,13 @@ void tst_qqmllanguage::asValueTypeGood()
 
     QVERIFY(!o->property("n").isValid());
     QVERIFY(!o->property("o").isValid());
+    QVERIFY(!o->property("p").isValid());
+    QEXPECT_FAIL("", "Needs proper handling of object types", Continue);
+    QVERIFY(!o->property("q").isValid());
+    QVERIFY(!o->property("r").isValid());
+    QVERIFY(!o->property("s").isValid());
+    QVERIFY(!o->property("t").isValid());
+    QVERIFY(!o->property("u").isValid());
 }
 
 void tst_qqmllanguage::typedEnums_data()

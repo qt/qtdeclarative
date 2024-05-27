@@ -390,11 +390,28 @@ QV4::ReturnedValue Runtime::As::call(ExecutionEngine *engine, const Value &lval,
     if (!typeWrapper)
         return Encode::undefined();
 
+    const auto *stackFrame = engine->currentStackFrame;
+    if (lval.as<QQmlValueTypeWrapper>()) {
+        qCWarning(lcCoercingTypeAssertion).nospace().noquote()
+                << stackFrame->source() << ':' << stackFrame->lineNumber() << ':'
+                << " Coercing between incompatible value types mistakenly yields null rather than"
+                << " undefined. Add 'pragma ValueTypeBehavior: Assertable' to prevent this.";
+        return Encode::null();
+    }
+
+    if (lval.as<QV4::QObjectWrapper>()) {
+        qCWarning(lcCoercingTypeAssertion).nospace().noquote()
+                << stackFrame->source() << ':' << stackFrame->lineNumber() << ':'
+                << " Coercing from instances of object types to value types mistakenly yields null"
+                << " rather than undefined. Add 'pragma ValueTypeBehavior: Assertable' to prevent"
+                << " this.";
+        return Encode::null();
+    }
+
     result = coerce(engine, lval, typeWrapper->d()->type(), false);
     if (result->isUndefined())
         return Encode::undefined();
 
-    const auto *stackFrame = engine->currentStackFrame;
     qCWarning(lcCoercingTypeAssertion).nospace().noquote()
             << stackFrame->source() << ':' << stackFrame->lineNumber() << ':'
             << " Coercing a value to " << typeWrapper->toQStringNoThrow()
