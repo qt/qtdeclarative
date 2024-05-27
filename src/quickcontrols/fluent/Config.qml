@@ -4309,6 +4309,452 @@ QtObject {
 
             }
 
+            readonly property QtObject textarea: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 3
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17226;2554:13608;2554:13585"
+                        readonly property string filePath: "dark/images/textarea-background-disabled.png"
+                        readonly property real height: 50
+                        readonly property real leftOffset: 3
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textarea-background-disabled"
+                        readonly property real rightOffset: 3
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 3
+                        readonly property real topShadow: 1
+                        readonly property real width: 200
+                        readonly property real x: 30417.5
+                        readonly property real y: 2590
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17226;2554:13608"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 11
+                        readonly property string name: "textarea-contentItem-disabled"
+                        readonly property real rightPadding: 11
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17226;2554:13608;2554:13582"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textarea-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 178
+                        readonly property real x: 30428.5
+                        readonly property real y: 2595
+                    }
+
+                    readonly property real leftPadding: 11
+                    readonly property real rightPadding: 11
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject focused: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 3
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2654:6248;2654:5963;2554:13585"
+                        readonly property string filePath: "dark/images/textarea-background-focused.png"
+                        readonly property real height: 50
+                        readonly property real leftOffset: 3
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textarea-background-focused"
+                        readonly property real rightOffset: 3
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 3
+                        readonly property real topShadow: 1
+                        readonly property real width: 200
+                        readonly property real x: 30417.5
+                        readonly property real y: 2667
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2654:6248;2654:5963"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 11
+                        readonly property string name: "textarea-contentItem-focused"
+                        readonly property real rightPadding: 11
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2654:6248;2654:5963;2554:13582"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textarea-label-focused"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 178
+                        readonly property real x: 30428.5
+                        readonly property real y: 2672
+                    }
+
+                    readonly property real leftPadding: 11
+                    readonly property real rightPadding: 11
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 3
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17224;2554:13603;2554:13585"
+                        readonly property string filePath: "dark/images/textarea-background-hovered.png"
+                        readonly property real height: 50
+                        readonly property real leftOffset: 3
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textarea-background-hovered"
+                        readonly property real rightOffset: 3
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 3
+                        readonly property real topShadow: 1
+                        readonly property real width: 200
+                        readonly property real x: 30417.5
+                        readonly property real y: 2513
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17224;2554:13603"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 11
+                        readonly property string name: "textarea-contentItem-hovered"
+                        readonly property real rightPadding: 11
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17224;2554:13603;2554:13582"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textarea-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 178
+                        readonly property real x: 30428.5
+                        readonly property real y: 2518
+                    }
+
+                    readonly property real leftPadding: 11
+                    readonly property real rightPadding: 11
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 3
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17222;2554:13588;2554:13585"
+                        readonly property string filePath: "dark/images/textarea-background.png"
+                        readonly property real height: 50
+                        readonly property real leftOffset: 3
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textarea-background"
+                        readonly property real rightOffset: 3
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 3
+                        readonly property real topShadow: 1
+                        readonly property real width: 200
+                        readonly property real x: 30417.5
+                        readonly property real y: 2436
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17222;2554:13588"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 11
+                        readonly property string name: "textarea-contentItem"
+                        readonly property real rightPadding: 11
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17222;2554:13588;2554:13582"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textarea-label"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 178
+                        readonly property real x: 30428.5
+                        readonly property real y: 2441
+                    }
+
+                    readonly property real leftPadding: 11
+                    readonly property real rightPadding: 11
+                    readonly property real topPadding: 5
+                }
+
+            }
+
+            readonly property QtObject textfield: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17219;2537:15922;2537:15894"
+                        readonly property string filePath: "dark/images/textfield-background-disabled.png"
+                        readonly property real height: 30
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textfield-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 1
+                        readonly property real width: 158
+                        readonly property real x: 29552
+                        readonly property real y: 1873.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17219;2537:15922"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "textfield-contentItem-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17219;2537:15922;2537:15892"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 16
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textfield-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 28
+                        readonly property real x: 29564
+                        readonly property real y: 1878.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject focused: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2644:5979;2644:5955;2537:15894"
+                        readonly property string filePath: "dark/images/textfield-background-focused.png"
+                        readonly property real height: 30
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textfield-background-focused"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 1
+                        readonly property real width: 158
+                        readonly property real x: 29552
+                        readonly property real y: 1942.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2644:5979;2644:5955"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "textfield-contentItem-focused"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2644:5979;2644:5955;2537:15892"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 16
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textfield-label-focused"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 28
+                        readonly property real x: 29564
+                        readonly property real y: 1947.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17217;2537:15917;2537:15894"
+                        readonly property string filePath: "dark/images/textfield-background-hovered.png"
+                        readonly property real height: 30
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textfield-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 1
+                        readonly property real width: 158
+                        readonly property real x: 29552
+                        readonly property real y: 1804.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17217;2537:15917"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "textfield-contentItem-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17217;2537:15917;2537:15892"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 16
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textfield-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 28
+                        readonly property real x: 29564
+                        readonly property real y: 1809.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17215;2537:15912;2537:15894"
+                        readonly property string filePath: "dark/images/textfield-background.png"
+                        readonly property real height: 30
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textfield-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 1
+                        readonly property real width: 158
+                        readonly property real x: 29552
+                        readonly property real y: 1735.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17215;2537:15912"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "textfield-contentItem"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17215;2537:15912;2537:15892"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 16
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textfield-label"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 28
+                        readonly property real x: 29564
+                        readonly property real y: 1740.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 5
+                }
+
+            }
+
         }
     }
     readonly property QtObject light: QtObject {
@@ -8609,6 +9055,452 @@ QtObject {
                     readonly property real rightPadding: 10
                     readonly property real spacing: 12
                     readonly property real topPadding: 6
+                }
+
+            }
+
+            readonly property QtObject textarea: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 3
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15602;2554:13608;2554:13585"
+                        readonly property string filePath: "light/images/textarea-background-disabled.png"
+                        readonly property real height: 50
+                        readonly property real leftOffset: 3
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textarea-background-disabled"
+                        readonly property real rightOffset: 3
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 3
+                        readonly property real topShadow: 1
+                        readonly property real width: 200
+                        readonly property real x: 30156
+                        readonly property real y: 2590
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15602;2554:13608"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 11
+                        readonly property string name: "textarea-contentItem-disabled"
+                        readonly property real rightPadding: 11
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15602;2554:13608;2554:13582"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textarea-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 178
+                        readonly property real x: 30167
+                        readonly property real y: 2595
+                    }
+
+                    readonly property real leftPadding: 11
+                    readonly property real rightPadding: 11
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject focused: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 3
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2654:6236;2654:5963;2554:13585"
+                        readonly property string filePath: "light/images/textarea-background-focused.png"
+                        readonly property real height: 50
+                        readonly property real leftOffset: 3
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textarea-background-focused"
+                        readonly property real rightOffset: 3
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 3
+                        readonly property real topShadow: 1
+                        readonly property real width: 200
+                        readonly property real x: 30156
+                        readonly property real y: 2667
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2654:6236;2654:5963"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 11
+                        readonly property string name: "textarea-contentItem-focused"
+                        readonly property real rightPadding: 11
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2654:6236;2654:5963;2554:13582"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textarea-label-focused"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 178
+                        readonly property real x: 30167
+                        readonly property real y: 2672
+                    }
+
+                    readonly property real leftPadding: 11
+                    readonly property real rightPadding: 11
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 3
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15600;2554:13603;2554:13585"
+                        readonly property string filePath: "light/images/textarea-background-hovered.png"
+                        readonly property real height: 50
+                        readonly property real leftOffset: 3
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textarea-background-hovered"
+                        readonly property real rightOffset: 3
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 3
+                        readonly property real topShadow: 1
+                        readonly property real width: 200
+                        readonly property real x: 30156
+                        readonly property real y: 2513
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15600;2554:13603"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 11
+                        readonly property string name: "textarea-contentItem-hovered"
+                        readonly property real rightPadding: 11
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15600;2554:13603;2554:13582"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textarea-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 178
+                        readonly property real x: 30167
+                        readonly property real y: 2518
+                    }
+
+                    readonly property real leftPadding: 11
+                    readonly property real rightPadding: 11
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 3
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15598;2554:13588;2554:13585"
+                        readonly property string filePath: "light/images/textarea-background.png"
+                        readonly property real height: 50
+                        readonly property real leftOffset: 3
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textarea-background"
+                        readonly property real rightOffset: 3
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 3
+                        readonly property real topShadow: 1
+                        readonly property real width: 200
+                        readonly property real x: 30156
+                        readonly property real y: 2436
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15598;2554:13588"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 11
+                        readonly property string name: "textarea-contentItem"
+                        readonly property real rightPadding: 11
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15598;2554:13588;2554:13582"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textarea-label"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 178
+                        readonly property real x: 30167
+                        readonly property real y: 2441
+                    }
+
+                    readonly property real leftPadding: 11
+                    readonly property real rightPadding: 11
+                    readonly property real topPadding: 5
+                }
+
+            }
+
+            readonly property QtObject textfield: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15595;2537:15922;2537:15894"
+                        readonly property string filePath: "light/images/textfield-background-disabled.png"
+                        readonly property real height: 30
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textfield-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 1
+                        readonly property real width: 158
+                        readonly property real x: 29362
+                        readonly property real y: 1873.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15595;2537:15922"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "textfield-contentItem-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15595;2537:15922;2537:15892"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 16
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textfield-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 28
+                        readonly property real x: 29374
+                        readonly property real y: 1878.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject focused: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2644:5967;2644:5955;2537:15894"
+                        readonly property string filePath: "light/images/textfield-background-focused.png"
+                        readonly property real height: 30
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textfield-background-focused"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 1
+                        readonly property real width: 158
+                        readonly property real x: 29362
+                        readonly property real y: 1942.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2644:5967;2644:5955"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "textfield-contentItem-focused"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2644:5967;2644:5955;2537:15892"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 16
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textfield-label-focused"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 28
+                        readonly property real x: 29374
+                        readonly property real y: 1947.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15593;2537:15917;2537:15894"
+                        readonly property string filePath: "light/images/textfield-background-hovered.png"
+                        readonly property real height: 30
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textfield-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 1
+                        readonly property real width: 158
+                        readonly property real x: 29362
+                        readonly property real y: 1804.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15593;2537:15917"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "textfield-contentItem-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15593;2537:15917;2537:15892"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 16
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textfield-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 28
+                        readonly property real x: 29374
+                        readonly property real y: 1809.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 1
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15591;2537:15912;2537:15894"
+                        readonly property string filePath: "light/images/textfield-background.png"
+                        readonly property real height: 30
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 1
+                        readonly property string name: "textfield-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 1
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 1
+                        readonly property real width: 158
+                        readonly property real x: 29362
+                        readonly property real y: 1735.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15591;2537:15912"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "textfield-contentItem"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15591;2537:15912;2537:15892"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 16
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "textfield-label"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 28
+                        readonly property real x: 29374
+                        readonly property real y: 1740.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 5
                 }
 
             }

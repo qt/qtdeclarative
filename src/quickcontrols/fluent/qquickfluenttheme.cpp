@@ -85,6 +85,9 @@ static void populateSystemPalette(QPalette &palette)
     palette.setColor(QPalette::All, QPalette::Text, WINUI3Colors[colorSchemeIndex][textPrimary]);
     palette.setColor(QPalette::Disabled, QPalette::Text, WINUI3Colors[colorSchemeIndex][textDisabled]);
 
+    palette.setColor(QPalette::All, QPalette::PlaceholderText, WINUI3Colors[colorSchemeIndex][textSecondary]);
+    palette.setColor(QPalette::Disabled, QPalette::PlaceholderText, WINUI3Colors[colorSchemeIndex][textDisabled]);
+
     palette.setColor(QPalette::All, QPalette::Button, WINUI3Colors[colorSchemeIndex][controlDefault]);
     palette.setColor(QPalette::Disabled, QPalette::Button, WINUI3Colors[colorSchemeIndex][controlDisabled]);
     palette.setColor(QPalette::All, QPalette::ButtonText, WINUI3Colors[colorSchemeIndex][textPrimary]);
