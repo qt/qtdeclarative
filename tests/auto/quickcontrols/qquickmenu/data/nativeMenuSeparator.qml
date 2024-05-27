@@ -13,6 +13,7 @@ ApplicationWindow {
     Menu {
         id: contextMenu
         objectName: "menu"
+        popupType: Popup.Native
 
         Action {
             objectName: text
@@ -24,6 +25,7 @@ ApplicationWindow {
         Menu {
             id: subMenu
             objectName: "subMenu"
+            popupType: Popup.Native
 
             Action {
                 objectName: text

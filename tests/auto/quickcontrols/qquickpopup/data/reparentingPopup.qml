@@ -16,6 +16,7 @@ Window {
     Popup {
         id: simplepopup
         visible: true
+        popupType: Popup.Window
         x: 10
         y: 10
         width: 200

@@ -13,6 +13,7 @@ Window {
     Popup {
         id: simplepopup
         anchors.centerIn: parent
+        popupType: Popup.Window
 
         Text {
             text: "I am a centered popup"

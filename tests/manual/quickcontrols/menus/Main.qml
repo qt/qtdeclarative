@@ -35,6 +35,7 @@ ApplicationWindow {
             id: fileMenu
             objectName: "file"
             title: qsTr("&File")
+            popupType: popupTypeCombo.currentIndex
             ContextAction { text: qsTr("&New...") }
             ContextMenuItem { text: "menuItem" }
             ContextAction { text: qsTr("&Open...") }
@@ -60,6 +61,7 @@ ApplicationWindow {
             id: editMenu
             objectName: "edit"
             title: qsTr("&Edit")
+            popupType: popupTypeCombo.currentIndex
             ContextAction {
                 id: cutAction
                 text: qsTr("Cut")
@@ -104,6 +106,7 @@ ApplicationWindow {
                 id: menuBarItemMenu
                 objectName: "MenuBarItem"
                 title: "MenuBarItem"
+                popupType: popupTypeCombo.currentIndex
                 ContextAction { text: qsTr("Action") }
                 Action {
                     text: qsTr("Remove menu")

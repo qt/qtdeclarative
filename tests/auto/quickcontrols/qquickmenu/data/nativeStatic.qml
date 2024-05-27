@@ -14,6 +14,7 @@ ApplicationWindow {
     Menu {
         id: contextMenu
         objectName: "menu"
+        popupType: Popup.Native
 
         Action {
             objectName: text
@@ -34,6 +35,7 @@ ApplicationWindow {
             id: subMenu
             title: "subMenu"
             objectName: title
+            popupType: Popup.Native
             // TODO: remove me when the defaults are true
 
             Action {

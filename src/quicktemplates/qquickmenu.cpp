@@ -309,7 +309,7 @@ bool QQuickMenuPrivate::useNativeMenu() const
     QQuickMenu *root = rootMenu();
     if (auto menuBar = QQuickMenuPrivate::get(root)->menuBar.get())
         return QQuickMenuBarPrivate::get(menuBar)->useNativeMenu(q_func());
-    return !QCoreApplication::testAttribute(Qt::AA_DontUseNativeMenuWindows);
+    return m_popupType == QQuickPopup::Native;
 }
 
 QPlatformMenu *QQuickMenuPrivate::nativeHandle()

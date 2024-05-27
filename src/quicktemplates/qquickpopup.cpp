@@ -123,16 +123,20 @@ Q_LOGGING_CATEGORY(lcPopup, "qt.quick.controls.popup")
     \section1 Popup Windows
 
     Popup can behave in two different ways. Depending on the platform,
-    and whether the \l Qt::AA_DontUsePopupWindows application attribute is set or not.
+    and what the value of the \l popupType property is.
 
-    By default, on desktop systems, the popup will create a special popup window,
+    Showing a popup as a separate top-level window is currently under tech-preview,
+    and therefore disabled by default. You can enable popup windows explicitly by
+    setting \l popupType to \c Popup.Window.
+
+    This will cause a separate popup window to be created,
     which contains the \l contentItem and \l background items.
 
     \section1 Popup Items
 
-    If the \l Qt::AA_DontUsePopupWindows application attribute is set,
+    If the \l popupType property is set to \c Item,
     or the platform doesn't support multiple windows,
-    the popup will instead create a special item, which gets parented to the
+    the popup will instead create a item, which gets parented to the
     \l{Overlay::overlay}{overlay} in the scene of the existing window.
 
     In order to ensure that a popup is displayed above other items in the
@@ -897,11 +901,9 @@ QPalette QQuickPopupPrivate::defaultPalette() const
 
 bool QQuickPopupPrivate::usePopupWindow() const
 {
-    // TODO: fix later
-    return false;
-    // return QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows)
-    //         && !QCoreApplication::testAttribute(Qt::AA_DontUsePopupWindows)
-    //         && popupWindowType() != Qt::Widget; // We use Qt::Widget here, to allow some popup derived types, like drawer, to opt out of using separate windows.
+    return QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows)
+            && m_popupType == QQuickPopup::PopupType::Window
+            && popupWindowType() != Qt::Widget; // We use Qt::Widget here, to allow some popup derived types, like drawer, to opt out of using separate windows.
 }
 
 void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
@@ -2725,6 +2727,47 @@ void QQuickPopup::resetBottomInset()
 {
     Q_D(QQuickPopup);
     d->popupItem->resetBottomInset();
+}
+
+
+/*!
+    \qmlproperty enumeration QtQuick.Controls::Popup::popupType
+    \since 6.8
+    \preliminary
+
+    This property determines the type of popup that will be created.
+
+    Available options:
+    \value Default      Let Qt decide the optimal popup type, depending on the system. This is the default value.
+                        While \c Popup.Window is in tech-preview, \c Popup.Default will be equal to \c Popup.Item.
+                        But this is likely to change in a future release.
+    \value Item         The popup will be embedded into the \l{Popup Items}{same scene as the parent}, without the use of a separate window.
+    \value Window       The popup will be presented in a \l {Popup Windows}{separate window}. If the platform doesn't support multiple windows,
+                        \c Popup.Item will be used instead. This option is currently under tech-preview.
+    \value Native       The popup will be native to the platform. If the platform doesn't support native popups,
+                        \c Popup.Window will be used instead. This option is currently under tech-preview.
+    \sa {Popup Windows}, {Popup Items}
+*/
+QQuickPopup::PopupType QQuickPopup::popupType() const
+{
+    Q_D(const QQuickPopup);
+    return d->m_popupType;
+}
+
+void QQuickPopup::setPopupType(PopupType popupType)
+{
+    Q_D(QQuickPopup);
+    if (d->m_popupType == popupType)
+        return;
+
+    d->m_popupType = popupType;
+
+    emit popupTypeChanged();
+}
+
+void QQuickPopup::resetPopupType()
+{
+    setPopupType(PopupType::Default);
 }
 
 /*!

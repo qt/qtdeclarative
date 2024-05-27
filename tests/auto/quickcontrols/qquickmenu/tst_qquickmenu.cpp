@@ -2191,7 +2191,6 @@ void tst_QQuickMenu::invalidUrlInImgTag()
 
 void tst_QQuickMenu::nativeStatic()
 {
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeStatic.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2235,7 +2234,6 @@ void tst_QQuickMenu::nativeStatic()
 
 void tst_QQuickMenu::nativeDynamicActions()
 {
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeEmptyMenu.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2295,7 +2293,6 @@ void tst_QQuickMenu::nativeDynamicActions()
 
 void tst_QQuickMenu::nativeDynamicSubmenus()
 {
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeDynamicSubmenus.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2403,7 +2400,6 @@ void tst_QQuickMenu::nativeDynamicSubmenus()
 
 void tst_QQuickMenu::nativeMenuSeparator()
 {
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeMenuSeparator.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2443,6 +2439,8 @@ void tst_QQuickMenu::nativeMenuSeparator()
 
 void tst_QQuickMenu::dontUseNativeMenuWindowsChanges()
 {
+    QSKIP("QTBUG-125967 This test will need to be fixed, by using popupType: Popup.Native instead of AA_DontUseNativeMenuWindows.");
+
     if (QSysInfo::productType() == QLatin1String("b2qt"))
         QSKIP("b2qt doesn't support native menus");
 
@@ -2630,7 +2628,6 @@ void tst_QQuickMenu::textPadding()
     // Check that you can set implicitTextPadding on each MenuItem, and that
     // textPadding will end up as the maximum implicitTextPadding among all the
     // MenuItems in the same Menu.
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeMixedItems.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -2640,6 +2637,7 @@ void tst_QQuickMenu::textPadding()
 
     QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
     QVERIFY(contextMenu);
+    contextMenu->setPopupType(QQuickPopup::Item);
 
     contextMenu->setVisible(true);
 

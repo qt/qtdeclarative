@@ -30,12 +30,14 @@ ApplicationWindow {
 
         Menu {
             objectName: title
+            popupType: contextMenu.popupType
         }
     }
 
     Menu {
         id: contextMenu
         objectName: "menu"
+        popupType: contextMenu.popupType
 
         Action {
             objectName: text
@@ -51,6 +53,7 @@ ApplicationWindow {
             id: subMenu
             title: "subMenu"
             objectName: title
+            popupType: contextMenu.popupType
 
             Action {
                 objectName: text

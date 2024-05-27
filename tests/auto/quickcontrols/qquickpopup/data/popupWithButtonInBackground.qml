@@ -16,6 +16,7 @@ Window {
 
     Popup {
         id: simplepopup
+        popupType: Popup.Window
 
         x: 50
         y: 50
