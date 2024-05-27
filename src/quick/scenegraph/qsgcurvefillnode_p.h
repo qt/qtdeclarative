@@ -37,10 +37,8 @@ public:
 
     void setColor(QColor col) override
     {
-        if (m_color == col)
-            return;
         m_color = col;
-        updateMaterial();
+        markDirty(DirtyMaterial);
     }
 
     QColor color() const
@@ -50,6 +48,9 @@ public:
 
     void setFillTextureProvider(QSGTextureProvider *provider)
     {
+        if (provider == m_textureProvider)
+            return;
+
         if (m_textureProvider != nullptr) {
             disconnect(m_textureProvider, &QSGTextureProvider::textureChanged,
                        this, &QSGCurveFillNode::handleTextureChanged);
@@ -58,6 +59,7 @@ public:
         }
 
         m_textureProvider = provider;
+        markDirty(DirtyMaterial);
 
         if (m_textureProvider != nullptr) {
             connect(m_textureProvider, &QSGTextureProvider::textureChanged,
@@ -67,6 +69,7 @@ public:
         }
     }
 
+
     QSGTextureProvider *fillTextureProvider() const
     {
         return m_textureProvider;
@@ -75,6 +78,7 @@ public:
     void setFillGradient(const QSGGradientCache::GradientDesc &fillGradient)
     {
         m_fillGradient = fillGradient;
+        markDirty(DirtyMaterial);
     }
 
     const QSGGradientCache::GradientDesc *fillGradient() const
@@ -84,10 +88,8 @@ public:
 
     void setGradientType(QGradient::Type type)
     {
-        if (m_gradientType != type) {
-            m_gradientType = type;
-            updateMaterial();
-        }
+        m_gradientType = type;
+        markDirty(DirtyMaterial);
     }
 
     QGradient::Type gradientType() const
@@ -98,6 +100,7 @@ public:
     void setFillTransform(const QSGTransform &transform)
     {
         m_fillTransform = transform;
+        markDirty(DirtyMaterial);
     }
 
     const QSGTransform *fillTransform() const
@@ -251,18 +254,18 @@ private:
     void updateMaterial();
     static const QSGGeometry::AttributeSet &attributes();
 
-    QColor m_color = Qt::white;
-    float m_debug = 0.0f;
-    QSGGradientCache::GradientDesc m_fillGradient;
-    QGradient::Type m_gradientType = QGradient::NoGradient;
-    QSGTransform m_fillTransform;
-
     QScopedPointer<QSGMaterial> m_material;
 
     QVector<CurveNodeVertex> m_uncookedVertexes;
     QVector<quint32> m_uncookedIndexes;
+
+    QSGGradientCache::GradientDesc m_fillGradient;
     QSGTextureProvider *m_textureProvider = nullptr;
     QVector2D m_boundsSize;
+    QSGTransform m_fillTransform;
+    QColor m_color = Qt::white;
+    QGradient::Type m_gradientType = QGradient::NoGradient;
+    float m_debug = 0.0f;
 };
 
 QT_END_NAMESPACE

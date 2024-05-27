@@ -88,7 +88,12 @@ public:
 private:
     struct PathData {
 
-        bool isFillVisible() const { return fillColor.alpha() > 0 || gradientType != QGradient::NoGradient; }
+        bool isFillVisible() const
+        {
+            return gradientType != QGradient::NoGradient
+                    || fillTextureProviderItem != nullptr
+                    || fillColor.alpha() > 0;
+        }
 
         bool isStrokeVisible() const
         {
@@ -121,7 +126,7 @@ private:
     void maybeUpdateAsyncItem();
 
     static void processPath(PathData *pathData);
-    static NodeList addFillNodes(const PathData &pathData);
+    static NodeList addFillNodes(const QQuadPath &path);
     static NodeList addTriangulatingStrokerNodes(const PathData &pathData);
     static NodeList addCurveStrokeNodes(const PathData &pathData);
 

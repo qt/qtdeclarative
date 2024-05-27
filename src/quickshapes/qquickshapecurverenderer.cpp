@@ -233,6 +233,7 @@ void QQuickShapeCurveRenderer::setStrokeStyle(int index,
 void QQuickShapeCurveRenderer::setFillGradient(int index, QQuickShapeGradient *gradient)
 {
     PathData &pd(m_paths[index]);
+    const bool wasVisible = pd.isFillVisible();
     pd.gradientType = QGradient::NoGradient;
     if (QQuickShapeLinearGradient *g  = qobject_cast<QQuickShapeLinearGradient *>(gradient)) {
         pd.gradientType = QGradient::LinearGradient;
@@ -250,8 +251,7 @@ void QQuickShapeCurveRenderer::setFillGradient(int index, QQuickShapeGradient *g
         pd.gradientType = QGradient::ConicalGradient;
         pd.gradient.a = QPointF(g->centerX(), g->centerY());
         pd.gradient.v0 = g->angle();
-    } else
-    if (gradient != nullptr) {
+    } else if (gradient != nullptr) {
         static bool warned = false;
         if (!warned) {
             warned = true;
@@ -264,27 +264,26 @@ void QQuickShapeCurveRenderer::setFillGradient(int index, QQuickShapeGradient *g
         pd.gradient.spread = QGradient::Spread(gradient->spread());
     }
 
-    pd.m_dirty |= FillDirty;
+    pd.m_dirty |= (pd.isFillVisible() != wasVisible) ? FillDirty : UniformsDirty;
 }
 
 void QQuickShapeCurveRenderer::setFillTransform(int index, const QSGTransform &transform)
 {
     auto &pathData = m_paths[index];
     pathData.fillTransform = transform;
-    pathData.m_dirty |= FillDirty | UniformsDirty;
+    pathData.m_dirty |= UniformsDirty;
 }
 
 void QQuickShapeCurveRenderer::setFillTextureProvider(int index, QQuickItem *textureProviderItem)
 {
     auto &pathData = m_paths[index];
-    if ((pathData.fillTextureProviderItem == nullptr) != (textureProviderItem == nullptr))
-        pathData.m_dirty |= FillDirty;
+    const bool wasVisible = pathData.isFillVisible();
     if (pathData.fillTextureProviderItem != nullptr)
         QQuickItemPrivate::get(pathData.fillTextureProviderItem)->derefWindow();
     pathData.fillTextureProviderItem = textureProviderItem;
     if (pathData.fillTextureProviderItem != nullptr)
         QQuickItemPrivate::get(pathData.fillTextureProviderItem)->refWindow(m_item->window());
-    pathData.m_dirty |= UniformsDirty;
+    pathData.m_dirty |= (pathData.isFillVisible() != wasVisible) ? FillDirty : UniformsDirty;
 }
 
 void QQuickShapeCurveRenderer::handleSceneChange(QQuickWindow *window)
@@ -390,21 +389,14 @@ void QQuickShapeCurveRenderer::updateNode()
 
     auto updateUniforms = [](const PathData &pathData) {
         for (auto &pathNode : std::as_const(pathData.fillNodes)) {
-            pathNode->setColor(pathData.fillColor);
-
             QSGCurveFillNode *fillNode = static_cast<QSGCurveFillNode *>(pathNode);
-            bool needsUpdate = pathData.fillTextureProviderItem == nullptr && fillNode->fillTextureProvider() != nullptr;
-            if (!needsUpdate
-                && pathData.fillTextureProviderItem != nullptr
-                && fillNode->fillTextureProvider() != pathData.fillTextureProviderItem->textureProvider()) {
-                needsUpdate = true;
-            }
-
-            if (needsUpdate) {
-                fillNode->setFillTextureProvider(pathData.fillTextureProviderItem != nullptr
-                                                 ? pathData.fillTextureProviderItem->textureProvider()
-                                                 : nullptr);
-            }
+            fillNode->setColor(pathData.fillColor);
+            fillNode->setGradientType(pathData.gradientType);
+            fillNode->setFillGradient(pathData.gradient);
+            fillNode->setFillTransform(pathData.fillTransform);
+            fillNode->setFillTextureProvider(pathData.fillTextureProviderItem != nullptr
+                                             ? pathData.fillTextureProviderItem->textureProvider()
+                                             : nullptr);
         }
         for (auto &strokeNode : std::as_const(pathData.strokeNodes))
             strokeNode->setColor(pathData.pen.color());
@@ -498,8 +490,8 @@ void QQuickShapeCurveRenderer::processPath(PathData *pathData)
                 if (doOverlapSolving)
                     QSGCurveProcessor::solveOverlaps(pathData->fillPath);
             }
-            pathData->fillNodes = addFillNodes(*pathData);
-            dirtyFlags |= StrokeDirty;
+            pathData->fillNodes = addFillNodes(pathData->fillPath);
+            dirtyFlags |= (StrokeDirty | UniformsDirty);
         }
     }
 
@@ -519,17 +511,15 @@ void QQuickShapeCurveRenderer::processPath(PathData *pathData)
     }
 }
 
-QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const PathData &pathData)
+QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const QQuadPath &path)
 {
     auto *node = new QSGCurveFillNode;
-    node->setGradientType(pathData.gradientType);
-    const qsizetype approxDataCount = 20 * pathData.fillPath.elementCount();
+    const qsizetype approxDataCount = 20 * path.elementCount();
     node->reserve(approxDataCount);
 
     NodeList ret;
-    const QColor &color = pathData.fillColor;
     QPainterPath internalHull;
-    internalHull.setFillRule(pathData.fillPath.fillRule());
+    internalHull.setFillRule(path.fillRule());
 
     bool visualizeDebug = debugVisualization() & DebugCurves;
     const float dbg = visualizeDebug  ? 0.5f : 0.0f;
@@ -538,8 +528,8 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
     QVector<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
     wfVertices.reserve(approxDataCount);
 
-    QSGCurveProcessor::processFill(pathData.fillPath,
-                                   pathData.fillRule,
+    QSGCurveProcessor::processFill(path,
+                                   path.fillRule(),
                                    [&wfVertices, &node](const std::array<QVector2D, 3> &v,
                                                         const std::array<QVector2D, 3> &n,
                                                         QSGCurveProcessor::uvForPointCallback uvForPoint)
@@ -553,10 +543,6 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
 
     QVector<quint32> indices = node->uncookedIndexes();
     if (indices.size() > 0) {
-        node->setColor(color);
-        node->setFillTransform(pathData.fillTransform);
-        node->setFillGradient(pathData.gradient);
-
         node->cookGeometry();
         ret.append(node);
     }
