@@ -8,6 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.util.Log;
 
+import java.lang.IllegalArgumentException;
+import java.lang.ref.WeakReference;
 import java.security.InvalidParameterException;
 
 /**
@@ -32,58 +34,10 @@ import java.security.InvalidParameterException;
 public class QtQuickView extends QtView {
     private final static String TAG = "QtQuickView";
 
-    /**
-     * A callback that notifies clients when a signal is emitted from the QML root object.
-     **/
-    @FunctionalInterface
-    public interface SignalListener<T>
-    {
-        /**
-        * Called on the Android UI thread when the signal has been emitted.
-        * @param signalName literal signal name
-        * @param value the value delivered by the signal or null if the signal is parameterless
-        **/
-        void onSignalEmitted(String signalName, T value);
-    }
-
-    /**
-    * A callback that notifies clients about the status of QML loading.
-    **/
-    public interface StatusChangeListener
-    {
-        /**
-        * Called on the Android UI thread when the QML component status has changed.
-        * @param status The current status. The status can be STATUS_NULL, STATUS_READY,
-        *        STATUS_LOADING or STATUS_ERROR.
-        **/
-        void onStatusChanged(int status);
-    }
-
-    /**
-     * QML loading status: No source is set or the root object has not been created yet.
-     **/
-    public static final int STATUS_NULL = 0;
-    /**
-     * QML loading status: The QML view is loaded and the root object is available.
-     * Invoking methods that operate on the QML root object, i.e.
-     * {@link QtQuickView#setProperty() setProperty}, {@link QtQuickView#getProperty() getProperty},
-     * and {@link QtQuickView#addSignalListener() addSignalListener} would succeed <b>only<b> if
-     * the current status is ready.
-     **/
-    public static final int STATUS_READY = 1;
-    /**
-    * QML loading status: The QML view is loading the root object from network.
-    **/
-    public static final int STATUS_LOADING = 2;
-    /**
-    * QML loading status: One or more errors has occurred.
-    **/
-    public static final int STATUS_ERROR = 3;
-
     private String m_qmlUri;
     private String[] m_qmlImportPaths = null;
-    private StatusChangeListener m_statusChangeListener = null;
-    private int m_lastStatus = STATUS_NULL;
+    private QtQmlStatusChangeListener m_statusChangeListener = null;
+    private QtQmlStatus m_lastStatus = QtQmlStatus.NULL;
     private boolean m_hasQueuedStatus = false;
 
     native void createQuickView(String qmlUri, int width, int height, long parentWindowReference,
@@ -190,13 +144,13 @@ public class QtQuickView extends QtView {
      * <p>
      * @param signalName the name of the root object signal
      * @param argType    the Class type of the signal argument
-     * @param listener   an instance of the SignalListener interface
+     * @param listener   an instance of the QtSignalListener interface
      * @return a connection id between signal and listener or the existing connection id if there is
      *         an existing connection between the same signal and listener. Return a negative value
      *         if the signal does not exists on the QML root object.
      **/
     public <T> int connectSignalListener(String signalName, Class<T> argType,
-                                    SignalListener<T> listener)
+                                         QtSignalListener<T> listener)
     {
         int signalListenerId =
                 addRootObjectSignalListener(windowReference(), signalName, argType, listener);
@@ -224,25 +178,25 @@ public class QtQuickView extends QtView {
     /**
      * Gets the status of the QML component.
      * <p>
-     * @return Returns STATUS_READY when the QML component is ready. Invoking methods that operate
-     *         on the QML root object ({@link QtQuickView#setProperty() setProperty},
+     * @return Returns QtQmlStatus.READY when the QML component is ready. Invoking methods that
+     *         operate on the QML root object ({@link QtQuickView#setProperty() setProperty},
      *         {@link QtQuickView#getProperty() getProperty}, and
      *         {@link QtQuickView#addSignalListener() addSignalListener}) would succeed <b>only</b>
-     *         if the current STATUS_READY. It can also return STATUS_NULL, STATUS_LOADING, or
-     *         STATUS_ERROR based on the status of see underlaying
+     *         if the current status is QtQmlStatus.READY. It can also return QtQmlStatus.NULL,
+     *         QtQmlStatus.LOADING, or QtQmlStatus.ERROR based on the status of the underlaying
      *         @see <a href="https://doc.qt.io/qt-6/qquickview.html">QQuickView</a> instance.
      **/
-    public int getStatus()
+    public QtQmlStatus getStatus()
     {
         return m_lastStatus;
     }
 
     /**
-     * Sets a StatusChangeListener to listen to status changes.
+     * Sets a QtQmlStatusChangeListener to listen to status changes.
      * <p>
-     * @param listener an instance of a StatusChangeListener interface
+     * @param listener an instance of a QtQmlStatusChangeListener interface
      **/
-    public void setStatusChangeListener(StatusChangeListener listener)
+    public void setStatusChangeListener(QtQmlStatusChangeListener listener)
     {
         m_statusChangeListener = listener;
 
@@ -254,10 +208,17 @@ public class QtQuickView extends QtView {
 
     private void handleStatusChange(int status)
     {
-        m_lastStatus = status;
+        try {
+            m_lastStatus = QtQmlStatus.fromInt(status);
+        } catch (IllegalArgumentException e) {
+            m_lastStatus = QtQmlStatus.NULL;
+            e.printStackTrace();
+        }
 
         if (m_statusChangeListener != null)
-            QtNative.runAction(() -> { m_statusChangeListener.onStatusChanged(status); });
+            QtNative.runAction(() -> {
+                m_statusChangeListener.onStatusChanged(QtQmlStatus.fromInt(status));
+            });
         else
             m_hasQueuedStatus = true;
     }
