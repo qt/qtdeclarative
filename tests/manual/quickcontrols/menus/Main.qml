@@ -5,6 +5,7 @@ import QtCore
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Dialogs
 
 ApplicationWindow {
     id: window
@@ -213,6 +214,12 @@ ApplicationWindow {
             }
         }
 
+        MessageDialog {
+            id: restartNeededDialog
+            buttons: MessageDialog.Ok
+            text: "Your current changes requires a restart to take effect!"
+        }
+
         GroupBox {
             title: qsTr("MenuBar")
 
@@ -226,7 +233,10 @@ ApplicationWindow {
                         text: qsTr("Don't use native menu bar")
                         checked: CppSettings.dontUseNativeMenuBar
 
-                        onClicked: CppSettings.dontUseNativeMenuBar = checked
+                        onClicked: {
+                            CppSettings.dontUseNativeMenuBar = checked
+                            restartNeededDialog.open()
+                        }
                     }
                     Switch {
                         id: menuBarVisibleSwitch
