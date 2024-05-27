@@ -273,7 +273,7 @@ MetaTypesJsonProcessor::PreProcessResult MetaTypesJsonProcessor::preProcess(
     }
 
     return PreProcessResult {
-        primitiveAliases,
+        std::move(primitiveAliases),
         usingDeclaration,
         (!isRootObject && (isSequence || isSelfExtendingValueType || hasJavaScriptExtension))
                 ? usingDeclaration.alias

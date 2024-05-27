@@ -2008,7 +2008,7 @@ bool DomEnvironment::commitToBase(
     if (m_lastValidBase) {
         QMutexLocker lValid(
                 m_lastValidBase->mutex()); // be more careful about makeCopy calls with lock?
-        m_lastValidBase->m_semanticAnalysis = my_semanticAnalysis;
+        m_lastValidBase->m_semanticAnalysis = std::move(my_semanticAnalysis);
         m_lastValidBase->m_globalScopeWithName.insert(my_globalScopeWithName);
         m_lastValidBase->m_qmlDirectoryWithPath.insert(my_qmlDirectoryWithPath);
         m_lastValidBase->m_qmldirFileWithPath.insert(my_qmldirFileWithPath);
