@@ -490,15 +490,16 @@ bool QQmlTypeWrapper::virtualIsEqualTo(Managed *a, Managed *b)
     return false;
 }
 
-static ReturnedValue instanceOfQObject(const QV4::QQmlTypeWrapper *typeWrapper, const QObjectWrapper *objectWrapper)
+static ReturnedValue instanceOfQObject(
+        const QV4::QQmlTypeWrapper *typeWrapper, QObject *wrapperObject)
 {
     QV4::ExecutionEngine *engine = typeWrapper->internalClass()->engine;
     // in case the wrapper outlived the QObject*
-    const QObject *wrapperObject = objectWrapper->object();
     if (!wrapperObject)
         return engine->throwTypeError();
 
-    const QMetaType myTypeId = typeWrapper->d()->type().typeId();
+    const QQmlType type = typeWrapper->d()->type();
+    const QMetaType myTypeId = type.typeId();
     QQmlMetaObject myQmlType;
     if (!myTypeId.isValid()) {
         // we're a composite type; a composite type cannot be equal to a
@@ -523,7 +524,12 @@ static ReturnedValue instanceOfQObject(const QV4::QQmlTypeWrapper *typeWrapper, 
 
     const QMetaObject *theirType = wrapperObject->metaObject();
 
-    return QV4::Encode(QQmlMetaObject::canConvert(theirType, myQmlType));
+    if (QQmlMetaObject::canConvert(theirType, myQmlType))
+        return Encode(true);
+    else if (type.isValueType())
+        return Encode::undefined();
+    else
+        return Encode(false);
 }
 
 ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const Value &var)
@@ -532,7 +538,13 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
     const QV4::QQmlTypeWrapper *typeWrapper = static_cast<const QV4::QQmlTypeWrapper *>(typeObject);
 
     if (const QObjectWrapper *objectWrapper = var.as<QObjectWrapper>())
-        return instanceOfQObject(typeWrapper, objectWrapper);
+        return instanceOfQObject(typeWrapper, objectWrapper->object());
+
+    if (const QQmlTypeWrapper *varTypeWrapper = var.as<QQmlTypeWrapper>()) {
+        // Singleton or attachment
+        if (QObject *varObject = varTypeWrapper->object())
+            return instanceOfQObject(typeWrapper, varObject);
+    }
 
     const QQmlType type = typeWrapper->d()->type();
 

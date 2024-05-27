@@ -8091,6 +8091,13 @@ void tst_qqmllanguage::asValueType()
 
     QTest::ignoreMessage(
             QtWarningMsg,
+            qPrintable(url.toString() + ":15: Coercing from instances of object types to value "
+                                        "types mistakenly yields null rather than undefined. Add "
+                                        "'pragma ValueTypeBehavior: Assertable' to prevent "
+                                        "this."_L1));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
             qPrintable(url.toString() + ":16: Coercing a value to QtQml.Base/size using a type "
                                         "assertion. This behavior is deprecated. Add 'pragma "
                                         "ValueTypeBehavior: Assertable' to prevent it."_L1));
@@ -8212,7 +8219,6 @@ void tst_qqmllanguage::asValueTypeGood()
     QVERIFY(!o->property("n").isValid());
     QVERIFY(!o->property("o").isValid());
     QVERIFY(!o->property("p").isValid());
-    QEXPECT_FAIL("", "Needs proper handling of object types", Continue);
     QVERIFY(!o->property("q").isValid());
     QVERIFY(!o->property("r").isValid());
     QVERIFY(!o->property("s").isValid());
