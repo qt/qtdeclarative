@@ -180,6 +180,9 @@ The following functions are also on the Qt object.
         \li \c "wasm" - WebAssembly
     \endlist
 
+    \note The property's value on \macos is "osx", regardless of Apple naming convention.
+    The returned value will be updated to "macos" for Qt 7.
+
     \row
     \li \c platform.pluginName
     \li This is the name of the platform set on the QGuiApplication instance
