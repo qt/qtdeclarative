@@ -23,7 +23,6 @@ class Q_QML_EXPORT QQmlProperty
 {
     Q_GADGET
     QML_ANONYMOUS
-    QML_ADDED_IN_VERSION(2, 15)
 
     Q_PROPERTY(QObject *object READ object CONSTANT FINAL)
     Q_PROPERTY(QString name READ name CONSTANT FINAL)

@@ -46,7 +46,6 @@ class Q_QML_EXPORT QtObject : public QObject
     QML_NAMED_ELEMENT(Qt)
     QML_SINGLETON
     QML_EXTENDED_NAMESPACE(Qt)
-    QML_ADDED_IN_VERSION(2, 0)
 
     Q_CLASSINFO("QML.StrictArguments", "true")
 

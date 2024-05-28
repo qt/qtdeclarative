@@ -8,7 +8,7 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldelayedcallqueue_p.h>
 #include <private/qqmlengine_p.h>
-#include <private/qqmlloggingcategory_p.h>
+#include <private/qqmlloggingcategorybase_p.h>
 #include <private/qqmlplatform_p.h>
 #include <private/qqmlstringconverters_p.h>
 
@@ -1816,7 +1816,8 @@ static ReturnedValue writeToConsole(const FunctionObject *b, const Value *argv, 
     int start = 0;
     if (argc > 0) {
         if (const QObjectWrapper* wrapper = argv[0].as<QObjectWrapper>()) {
-            if (QQmlLoggingCategory* category = qobject_cast<QQmlLoggingCategory*>(wrapper->object())) {
+            if (QQmlLoggingCategoryBase *category
+                    = qobject_cast<QQmlLoggingCategoryBase *>(wrapper->object())) {
                 if (category->category())
                     loggingCategory = category->category();
                 else

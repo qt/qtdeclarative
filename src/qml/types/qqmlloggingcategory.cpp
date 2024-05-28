@@ -83,7 +83,7 @@
 */
 
 QQmlLoggingCategory::QQmlLoggingCategory(QObject *parent)
-    : QObject(parent)
+    : QQmlLoggingCategoryBase(parent)
     , m_initialized(false)
 {
 }
@@ -102,11 +102,6 @@ QQmlLoggingCategory::DefaultLogLevel QQmlLoggingCategory::defaultLogLevel() cons
     return m_defaultLogLevel;
 }
 
-QLoggingCategory *QQmlLoggingCategory::category() const
-{
-    return m_category.get();
-}
-
 void QQmlLoggingCategory::classBegin()
 {
 }
@@ -114,12 +109,10 @@ void QQmlLoggingCategory::classBegin()
 void QQmlLoggingCategory::componentComplete()
 {
     m_initialized = true;
-    if (m_name.isNull()) {
+    if (m_name.isNull())
         qmlWarning(this) << QLatin1String("Declaring the name of a LoggingCategory is mandatory and cannot be changed later");
-    } else {
-        auto category = std::make_unique<QLoggingCategory>(m_name.constData(), QtMsgType(m_defaultLogLevel));
-        m_category.swap(category);
-    }
+    else
+        setCategory(m_name.constData(), QtMsgType(m_defaultLogLevel));
 }
 
 void QQmlLoggingCategory::setDefaultLogLevel(DefaultLogLevel defaultLogLevel)

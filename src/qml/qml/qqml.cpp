@@ -10,7 +10,7 @@
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlfinalizer_p.h>
-#include <private/qqmlloggingcategory_p.h>
+#include <private/qqmlloggingcategorybase_p.h>
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlmetatypedata_p.h>
 #include <private/qqmltype_p_p.h>
@@ -1677,10 +1677,10 @@ const QLoggingCategory *AOTCompiledContext::resolveLoggingCategory(QObject *wrap
 {
     if (wrapper) {
         // We have to check this here because you may pass a plain QObject that only
-        // turns out to be a QQmlLoggingCategory at run time.
-        if (QQmlLoggingCategory *qQmlLoggingCategory
-                = qobject_cast<QQmlLoggingCategory *>(wrapper)) {
-            QLoggingCategory *loggingCategory = qQmlLoggingCategory->category();
+        // turns out to be a QQmlLoggingCategoryBase at run time.
+        if (QQmlLoggingCategoryBase *qQmlLoggingCategory
+                = qobject_cast<QQmlLoggingCategoryBase *>(wrapper)) {
+            const QLoggingCategory *loggingCategory = qQmlLoggingCategory->category();
             *ok = true;
             if (!loggingCategory) {
                 engine->handle()->throwError(

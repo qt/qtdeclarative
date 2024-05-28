@@ -54,13 +54,14 @@ private:
     static QV4::ReturnedValue method_toLocaleCurrencyString(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 };
 
-
-namespace QQmlLocale
+// This needs to be a struct so that we can derive from QLocale and inherit its enums. Then we can
+// use it as extension in QQmlLocaleEnums and expose all the enums in one go, without duplicating
+// any in different qmltypes files.
+struct Q_QML_EXPORT QQmlLocale : public QLocale
 {
-    Q_NAMESPACE_EXPORT(Q_QML_EXPORT)
-    QML_NAMED_ELEMENT(Locale)
-    QML_ADDED_IN_VERSION(2, 2)
-    QML_NAMESPACE_EXTENDED(QLocale)
+    Q_GADGET
+    QML_ANONYMOUS
+public:
 
     // Qt defines Sunday as 7, but JS Date assigns Sunday 0
     enum DayOfWeek {
@@ -72,11 +73,13 @@ namespace QQmlLocale
         Friday = Qt::Friday,
         Saturday = Qt::Saturday
     };
-    Q_ENUM_NS(DayOfWeek)
+    Q_ENUM(DayOfWeek)
 
-    Q_QML_EXPORT QV4::ReturnedValue locale(QV4::ExecutionEngine *engine, const QString &localeName);
-    Q_QML_EXPORT void registerStringLocaleCompare(QV4::ExecutionEngine *engine);
-    Q_QML_EXPORT QV4::ReturnedValue method_localeCompare(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+    static QV4::ReturnedValue locale(QV4::ExecutionEngine *engine, const QString &localeName);
+    static void registerStringLocaleCompare(QV4::ExecutionEngine *engine);
+    static QV4::ReturnedValue method_localeCompare(
+            const QV4::FunctionObject *, const QV4::Value *thisObject,
+            const QV4::Value *argv, int argc);
 };
 
 struct DayOfWeekList

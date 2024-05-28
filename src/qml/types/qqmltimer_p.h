@@ -15,18 +15,18 @@
 // We mean it.
 //
 
-#include <qqml.h>
-
-#include <QtCore/qobject.h>
-
 #include <private/qtqmlglobal_p.h>
+
+#include <QtQmlMeta/qtqmlmetaexports.h>
+#include <QtQml/qqml.h>
+#include <QtCore/qobject.h>
 
 QT_REQUIRE_CONFIG(qml_animation);
 
 QT_BEGIN_NAMESPACE
 
 class QQmlTimerPrivate;
-class Q_QML_EXPORT QQmlTimer : public QObject, public QQmlParserStatus
+class Q_QMLMETA_EXPORT QQmlTimer : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlTimer)

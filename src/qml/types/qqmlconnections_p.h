@@ -15,8 +15,10 @@
 // We mean it.
 //
 
-#include <qqml.h>
 #include <private/qqmlcustomparser_p.h>
+
+#include <QtQmlMeta/qtqmlmetaexports.h>
+#include <QtQml/qqml.h>
 
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
@@ -26,7 +28,7 @@ QT_BEGIN_NAMESPACE
 class QQmlBoundSignal;
 class QQmlContext;
 class QQmlConnectionsPrivate;
-class Q_QML_EXPORT QQmlConnections : public QObject, public QQmlParserStatus
+class Q_QMLMETA_EXPORT QQmlConnections : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlConnections)

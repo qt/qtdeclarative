@@ -2062,11 +2062,9 @@ bool QQmlJSCodeGenerator::inlineConsoleMethod(const QString &name, int argc, int
     m_body += u"    bool firstArgIsCategory = false;\n";
     const QQmlJSRegisterContent firstArg = argc > 0 ? registerType(argv) : QQmlJSRegisterContent();
 
-    // We could check for internalName == "QQmlLoggingCategory" here, but we don't want to
-    // because QQmlLoggingCategory is not a builtin. Tying the specific internal name and
-    // intheritance hierarchy in here would be fragile.
-    // TODO: We could drop the check for firstArg in some cases if we made some base class
-    //       of QQmlLoggingCategory a builtin.
+    // We could check whether the first argument is a QQmlLoggingCategoryBase here, and we should
+    // because QQmlLoggingCategoryBase is now a builtin.
+    // TODO: The run time check for firstArg is obsolete.
     const bool firstArgIsReference = argc > 0
             && m_typeResolver->containedType(firstArg)->isReferenceType();
 

@@ -31,65 +31,13 @@ if(ANDROID)
         "${INSTALL_CMAKE_NAMESPACE}AndroidQmlMacros.cmake")
 endif()
 
-set_source_files_properties(
-        qml/qqmlcomponent.h qml/qqmlcomponent.cpp qml/qqmlcomponent_p.h
-        qml/qqmlcomponentattached_p.h
-        qml/qqmlscriptstring.h qml/qqmlscriptstring_p.h qml/qqmlscriptstring.cpp
-    PROPERTIES
-        SKIP_AUTOMOC TRUE
-)
-
-set(extra_manual_moc_deps "")
-if(QT_FEATURE_qml_network)
-    list(APPEND extra_manual_moc_deps Qt6::Network)
-endif()
-# We want QQmlComponent, QQmlComponentAttached, and QQmlScriptString to be available as metatypes in
-# the builtins, but without depending on QtQml and without duplicating the metaobjects.
-qt_manual_moc(extra_builtins_moc_files
-    OUTPUT_MOC_JSON_FILES extra_builtins_json_list
-    qml/qqmlcomponent.h
-    qml/qqmlcomponentattached_p.h
-    qml/qqmlscriptstring.h
-    TARGETS Qt6::Qml Qt6::Core ${extra_manual_moc_deps}
-)
-
-# The moc files are included directly by qqmlcomponent.cpp and qqmlscriptstring.cpp
-set_source_files_properties(${extra_builtins_moc_files} PROPERTIES HEADER_FILE_ONLY ON)
-
-qt_internal_add_module(QmlBuiltins
-    STATIC
-    NO_GENERATE_METATYPES # we do that manually below
-    SOURCES
-        qqmlbuiltins_p.h
-)
-
-add_custom_target(ExtraBuiltinsJson DEPENDS ${extra_builtins_json_list})
-add_custom_target(ExtraBuiltinsMocs DEPENDS ${extra_builtins_moc_files})
-
-target_link_libraries(QmlBuiltins PRIVATE Qt::Core Qt::QmlIntegration)
-
-# We generally need to copy the files into the build directory,
-# so that they are located together with the QML modules
-qt_path_join(qml_build_dir "${QT_BUILD_DIR}" "${INSTALL_QMLDIR}")
-
-# Simulate conditions that qt6_add_qml_module() would normally set up for us
-set_target_properties(QmlBuiltins PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI QML
-    QT_QML_MODULE_TYPEINFO builtins.qmltypes
-    QT_QML_MODULE_OUTPUT_DIRECTORY ${qml_build_dir}
-)
-
 qt_internal_add_qml_module(Qml
-    URI "QtQml.Base"
-    VERSION "${PROJECT_VERSION}"
+    URI "QML"
+    VERSION "1.0"
     DESIGNER_SUPPORTED
     __QT_INTERNAL_SYSTEM_MODULE
-    PLUGIN_TARGET qmlplugin
-    CLASS_NAME QtQmlPlugin
     PLUGIN_TYPES qmltooling
-    IMPORTS
-        QML/1.0
+    NO_PLUGIN
     SOURCES
         ../3rdparty/masm/assembler/ARM64Assembler.h
         ../3rdparty/masm/assembler/ARMv7Assembler.cpp ../3rdparty/masm/assembler/ARMv7Assembler.h
@@ -173,13 +121,13 @@ qt_internal_add_qml_module(Qml
         common/qqmljsfixedpoolarray_p.h
         common/qqmljsmemorypool_p.h
         common/qqmljssourcelocation_p.h
+        common/qqmlsignalnames_p.h common/qqmlsignalnames.cpp
+        common/qqmltranslation.cpp common/qqmltranslation_p.h
         common/qv4alloca_p.h
         common/qv4calldata_p.h
         common/qv4compileddata.cpp common/qv4compileddata_p.h
         common/qv4staticvalue_p.h
         common/qv4stringtoarrayindex_p.h
-        common/qqmltranslation.cpp common/qqmltranslation_p.h
-        common/qqmlsignalnames_p.h common/qqmlsignalnames.cpp
         compat/removed_api.cpp
         compiler/qqmlirbuilder.cpp compiler/qqmlirbuilder_p.h
         compiler/qv4bytecodegenerator.cpp compiler/qv4bytecodegenerator_p.h
@@ -258,6 +206,7 @@ qt_internal_add_qml_module(Qml
         jsruntime/qv4qmetaobjectwrapper.cpp jsruntime/qv4qmetaobjectwrapper_p.h
         jsruntime/qv4qmlcontext.cpp jsruntime/qv4qmlcontext_p.h
         jsruntime/qv4qobjectwrapper.cpp jsruntime/qv4qobjectwrapper_p.h
+        jsruntime/qv4referenceobject.cpp jsruntime/qv4referenceobject_p.h
         jsruntime/qv4reflect.cpp jsruntime/qv4reflect_p.h
         jsruntime/qv4regexp.cpp jsruntime/qv4regexp_p.h
         jsruntime/qv4regexpobject.cpp jsruntime/qv4regexpobject_p.h
@@ -267,6 +216,7 @@ qt_internal_add_qml_module(Qml
         jsruntime/qv4runtimecodegen.cpp jsruntime/qv4runtimecodegen_p.h
         jsruntime/qv4scopedvalue_p.h
         jsruntime/qv4script.cpp jsruntime/qv4script_p.h
+        jsruntime/qv4sequenceobject.cpp jsruntime/qv4sequenceobject_p.h
         jsruntime/qv4setiterator.cpp jsruntime/qv4setiterator_p.h
         jsruntime/qv4setobject.cpp jsruntime/qv4setobject_p.h
         jsruntime/qv4sparsearray.cpp jsruntime/qv4sparsearray_p.h
@@ -281,9 +231,7 @@ qt_internal_add_qml_module(Qml
         jsruntime/qv4value.cpp jsruntime/qv4value_p.h
         jsruntime/qv4variantobject.cpp jsruntime/qv4variantobject_p.h
         jsruntime/qv4vme_moth.cpp jsruntime/qv4vme_moth_p.h
-        jsruntime/qv4sequenceobject.cpp jsruntime/qv4sequenceobject_p.h
         jsruntime/qv4vtable_p.h
-        jsruntime/qv4referenceobject.cpp jsruntime/qv4referenceobject_p.h
         memory/qv4heap_p.h
         memory/qv4mm.cpp memory/qv4mm_p.h
         memory/qv4mmdefs_p.h
@@ -296,10 +244,10 @@ qt_internal_add_qml_module(Qml
         parser/qqmljsglobal_p.h
         parser/qqmljskeywords_p.h
         parser/qqmljslexer.cpp parser/qqmljslexer_p.h
+        qml/ftw/qbipointer_p.h
         qml/ftw/qdoubleendedlist_p.h
         qml/ftw/qfieldlist_p.h
         qml/ftw/qfinitestack_p.h
-        qml/ftw/qbipointer_p.h
         qml/ftw/qhashedstring.cpp qml/ftw/qhashedstring_p.h
         qml/ftw/qintrusivelist.cpp qml/ftw/qintrusivelist_p.h
         qml/ftw/qlazilyallocated_p.h
@@ -312,10 +260,10 @@ qt_internal_add_qml_module(Qml
         qml/ftw/qrecursionwatcher_p.h
         qml/ftw/qrecyclepool_p.h
         qml/ftw/qstringhash_p.h
-        qml/qqmlregistration.h
         qml/qqml.cpp qml/qqml.h
         qml/qqmlabstractbinding.cpp qml/qqmlabstractbinding_p.h
         qml/qqmlabstracturlinterceptor.cpp qml/qqmlabstracturlinterceptor.h
+        qml/qqmlanybinding_p.h
         qml/qqmlapplicationengine.cpp qml/qqmlapplicationengine.h qml/qqmlapplicationengine_p.h
         qml/qqmlbinding.cpp qml/qqmlbinding_p.h
         qml/qqmlboundsignal.cpp qml/qqmlboundsignal_p.h
@@ -339,6 +287,7 @@ qt_internal_add_qml_module(Qml
         qml/qqmlextensionplugin.cpp qml/qqmlextensionplugin.h qml/qqmlextensionplugin_p.h
         qml/qqmlfile.cpp qml/qqmlfile.h
         qml/qqmlfileselector.cpp qml/qqmlfileselector.h qml/qqmlfileselector_p.h
+        qml/qqmlfinalizer.cpp qml/qqmlfinalizer_p.h
         qml/qqmlglobal.cpp qml/qqmlglobal_p.h
         qml/qqmlguard_p.h
         qml/qqmlguardedcontextdata_p.h
@@ -349,8 +298,7 @@ qt_internal_add_qml_module(Qml
         qml/qqmljavascriptexpression.cpp qml/qqmljavascriptexpression_p.h
         qml/qqmllist.cpp qml/qqmllist.h qml/qqmllist_p.h
         qml/qqmllistwrapper.cpp qml/qqmllistwrapper_p.h
-        qml/qqmlloggingcategory.cpp qml/qqmlloggingcategory_p.h
-        qml/qqmlmetamoduleregistration.cpp
+        qml/qqmlloggingcategorybase_p.h
         qml/qqmlmetaobject.cpp qml/qqmlmetaobject_p.h
         qml/qqmlmetatype.cpp qml/qqmlmetatype_p.h
         qml/qqmlmetatypedata.cpp qml/qqmlmetatypedata_p.h
@@ -366,7 +314,6 @@ qt_internal_add_qml_module(Qml
         qml/qqmlprivate.h
         qml/qqmlproperty.cpp qml/qqmlproperty.h qml/qqmlproperty_p.h
         qml/qqmlpropertybinding.cpp qml/qqmlpropertybinding_p.h
-        qml/qqmlanybinding_p.h
         qml/qqmlpropertycache.cpp qml/qqmlpropertycache_p.h
         qml/qqmlpropertycachecreator.cpp qml/qqmlpropertycachecreator_p.h
         qml/qqmlpropertycachemethodarguments_p.h
@@ -377,9 +324,9 @@ qt_internal_add_qml_module(Qml
         qml/qqmlpropertytopropertybinding.cpp qml/qqmlpropertytopropertybinding_p.h
         qml/qqmlpropertyvalidator.cpp qml/qqmlpropertyvalidator_p.h
         qml/qqmlpropertyvalueinterceptor.cpp qml/qqmlpropertyvalueinterceptor_p.h
-        qml/qqmlfinalizer.cpp qml/qqmlfinalizer_p.h
         qml/qqmlpropertyvaluesource.cpp qml/qqmlpropertyvaluesource.h
         qml/qqmlproxymetaobject.cpp qml/qqmlproxymetaobject_p.h
+        qml/qqmlregistration.h
         qml/qqmlscriptblob.cpp qml/qqmlscriptblob_p.h
         qml/qqmlscriptdata.cpp qml/qqmlscriptdata_p.h
         qml/qqmlscriptstring.cpp qml/qqmlscriptstring.h qml/qqmlscriptstring_p.h
@@ -403,10 +350,9 @@ qt_internal_add_qml_module(Qml
         qml/qqmlvmemetaobject.cpp qml/qqmlvmemetaobject_p.h
         qmldirparser/qqmldirparser.cpp qmldirparser/qqmldirparser_p.h
         qmldirparser/qqmlimportresolver.cpp qmldirparser/qqmlimportresolver_p.h
+        qqmlbuiltins_p.h
         qtqmlcompilerglobal.h qtqmlcompilerglobal_p.h
         qtqmlglobal.h qtqmlglobal_p.h
-        types/qqmlbind.cpp types/qqmlbind_p.h
-        types/qqmlconnections.cpp types/qqmlconnections_p.h
         util/qqmlpropertymap.cpp util/qqmlpropertymap.h
 
         qmltc/qqmltcobjectcreationhelper_p.h
@@ -440,7 +386,6 @@ qt_internal_add_qml_module(Qml
         jsruntime/qv4module.cpp       # QV4::Compiler::Module vs. QV4::Module
         jsruntime/qv4vme_moth.cpp     # 'MOTH_BEGIN_INSTR' macro redefined (from qv4instr_moth.cpp)
         qml/qqmltypecompiler.cpp      # 'COMPILE_EXCEPTION' macro redefined (from qqmlirbuilder.cpp)
-        qml/qqmlmetamoduleregistration.cpp # declares 'registration' clashing with qml_* files
     DEFINES
         BUILDING_QT__
         ENABLE_ASSEMBLER_WX_EXCLUSIVE=1
@@ -486,10 +431,8 @@ qt_internal_add_qml_module(Qml
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::QmlIntegration
-        Qt::QmlBuiltins
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
-        Qt::QmlBuiltinsPrivate
     EXTRA_CMAKE_FILES
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}qmldirTemplate.cmake.in"
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}qt.conf.in"
@@ -511,58 +454,39 @@ qt_internal_add_qml_module(Qml
 
 _qt_internal_add_qml_deploy_info_finalizer(Qml)
 
-target_include_directories(QmlBuiltins PRIVATE
-    $<TARGET_PROPERTY:${QT_CMAKE_EXPORT_NAMESPACE}::QmlPrivate,INTERFACE_INCLUDE_DIRECTORIES>
-)
-
-set(builtins_typeregistration_args
-    MANUAL_MOC_JSON_FILES ${extra_builtins_json_list}
-    REGISTRATIONS_TARGET Qml
-)
-
-get_target_property(qt_namespace ${QT_CMAKE_EXPORT_NAMESPACE}::Core _qt_namespace)
-if(qt_namespace)
-    list(APPEND builtins_typeregistration_args NAMESPACE ${qt_namespace})
-endif()
-
-_qt_internal_qml_type_registration(QmlBuiltins ${builtins_typeregistration_args})
-add_dependencies(QmlBuiltins ExtraBuiltinsJson)
+qt_path_join(qml_root_dir "${QT_BUILD_DIR}" "${INSTALL_QMLDIR}")
+get_target_property(qml_build_dir Qml QT_QML_MODULE_OUTPUT_DIRECTORY)
 
 _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
 add_custom_command(
     OUTPUT
-        "${qml_build_dir}/jsroot.qmltypes"
+        "${qml_root_dir}/jsroot.qmltypes"
     DEPENDS
         ${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar
     COMMAND
         ${tool_wrapper}
         $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
-        --jsroot --generate-qmltypes "${qml_build_dir}/jsroot.qmltypes"
+        --jsroot --generate-qmltypes "${qml_root_dir}/jsroot.qmltypes"
     COMMENT "Generating jsroot.qmltypes"
     VERBATIM
 )
 
-get_target_property(builtins_metatypes_file "QmlBuiltins" INTERFACE_QT_META_TYPES_BUILD_FILE)
-
-_qt_internal_get_metatypes_install_dir(
-    ""
-    "${INSTALL_ARCHDATADIR}"
-    metatypes_install_dir
-)
-
-_qt_internal_assign_install_metatypes_files_and_properties(
-    QmlBuiltins
-    INSTALL_DIR "${metatypes_install_dir}"
-)
-
-qt_install(
-    FILES "${builtins_metatypes_file}"
-    DESTINATION "${metatypes_install_dir}"
+add_custom_command(
+    OUTPUT
+        "${qml_root_dir}/builtins.qmltypes"
+    DEPENDS
+        "${qml_build_dir}/plugins.qmltypes"
+    COMMAND
+        ${CMAKE_COMMAND} -E copy_if_different
+        "${qml_build_dir}/plugins.qmltypes"
+        "${qml_root_dir}/builtins.qmltypes"
+    COMMENT "Copying builtins.qmltypes"
+    VERBATIM
 )
 
 set(builtins_output_files "")
-list(APPEND builtins_output_files "${qml_build_dir}/builtins.qmltypes")
-list(APPEND builtins_output_files "${qml_build_dir}/jsroot.qmltypes")
+list(APPEND builtins_output_files "${qml_root_dir}/builtins.qmltypes")
+list(APPEND builtins_output_files "${qml_root_dir}/jsroot.qmltypes")
 
 add_custom_target(BuiltinsOutput DEPENDS ${builtins_output_files})
 
@@ -570,9 +494,6 @@ qt_install(
     FILES ${builtins_output_files}
     DESTINATION "${INSTALL_QMLDIR}"
 )
-
-add_dependencies(Qml ExtraBuiltinsMocs)
-add_dependencies(Qml BuiltinsOutput)
 
 qt_update_ignore_pch_source(Qml "compat/removed_api.cpp")
 
@@ -585,30 +506,24 @@ qt_internal_add_qml_module(QmlMeta
     URI "QtQml"
     VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
-    CLASS_NAME QtQmlMetaPlugin
-    PLUGIN_TARGET QmlMeta
-
-    # Prevent type registration
-    NO_GENERATE_QMLTYPES
-
+    __QT_INTERNAL_SYSTEM_MODULE
+    PLUGIN_TARGET qmlplugin
+    CLASS_NAME QtQmlPlugin
     PAST_MAJOR_VERSIONS 2
     IMPORTS
-        QtQml.Base/auto
+        QML/1.0
         ${module_dynamic_qml_imports}
+    SOURCES
+        types/qqmlbind.cpp types/qqmlbind_p.h
+        types/qqmlconnections.cpp types/qqmlconnections_p.h
+        types/qqmlloggingcategory.cpp types/qqmlloggingcategory_p.h
+    LIBRARIES
+        Qml
+        QmlModels
+    GENERATE_CPP_EXPORTS
 )
 
-# Add the QtQml qmldir to libQtQml, too.
-# Since we also provide the (bare bones) type  registration in libQtQml,
-# this makes the complete module reside in libQtQml. There is no need to
-# load the QmlMeta plugin, then.
-# Se still provide the plugin so that static linking works.
-get_target_property(qtqml_out_dir QmlMeta QT_QML_MODULE_OUTPUT_DIRECTORY)
-qt_internal_add_resource(Qml "qmlMetaQmldir"
-    PREFIX
-        "/qt-project.org/imports/QtQml"
-    FILES
-        ${qtqml_out_dir}/qmldir
-)
+add_dependencies(QmlMeta BuiltinsOutput)
 
 # Linking to the static qml plugin should also automatically link to the worker script
 # static plugin otherwise you get errors like
@@ -616,14 +531,15 @@ qt_internal_add_resource(Qml "qmlMetaQmldir"
 #     import QtQuick 2.0
 #     ^
 if(QT_FEATURE_qml_worker_script)
+    target_link_libraries(QmlMeta PRIVATE QmlWorkerScript)
     _qt_internal_add_qml_static_plugin_dependency(qmlplugin workerscriptplugin)
 endif()
-# Same for the QmlMeta qml plugin, otherwise you get
+# Same for the QmlModels qml plugin, otherwise you get
 #  module "QtQuick" version 6.6 cannot be imported because:
-#  module "QtQml" plugin "qmlmetaplugin" not found
+#  module "QtQml.Models" plugin "modelsplugin" not found
 #     import QtQuick
 #     ^
-_qt_internal_add_qml_static_plugin_dependency(qmlplugin QmlMeta)
+_qt_internal_add_qml_static_plugin_dependency(qmlplugin modelsplugin)
 
 # special case begin remove the block, handled manually
 # QLALR Grammars:
@@ -716,6 +632,12 @@ qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_animation
         animations/qparallelanimationgroupjob.cpp animations/qparallelanimationgroupjob_p.h
         animations/qpauseanimationjob.cpp animations/qpauseanimationjob_p.h
         animations/qsequentialanimationgroupjob.cpp animations/qsequentialanimationgroupjob_p.h
+    INCLUDE_DIRECTORIES
+        animations
+)
+
+qt_internal_extend_target(QmlMeta CONDITION QT_FEATURE_qml_animation
+    SOURCES
         types/qqmltimer.cpp types/qqmltimer_p.h
     INCLUDE_DIRECTORIES
         animations
@@ -778,6 +700,11 @@ qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_xml_http_request
 qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_locale
     SOURCES
         qml/qqmllocale.cpp qml/qqmllocale_p.h
+)
+
+qt_internal_extend_target(QmlMeta CONDITION QT_FEATURE_qml_locale
+    SOURCES
+        types/qqmllocaleenums_p.h
 )
 
 qt_internal_extend_target(Qml CONDITION ANDROID
@@ -877,10 +804,8 @@ endif()
 # "unknown IID" issue when moc processes plugin sources, because of missing header aliases.
 # Qml_sync_headers target is created later by the finalizer in the directory scope so we add this
 # dependency manually instead of relying on qt_internal_add_qml_module logic. Same is applicable
-# for the QmlMeta and the QmlBuiltins target.
+# for the QmlMeta target.
 set_property(TARGET qmlplugin APPEND PROPERTY AUTOGEN_TARGET_DEPENDS
     Qml_sync_headers)
 set_property(TARGET QmlMeta APPEND PROPERTY AUTOGEN_TARGET_DEPENDS
-    Qml_sync_headers)
-set_property(TARGET QmlBuiltins APPEND PROPERTY AUTOGEN_TARGET_DEPENDS
     Qml_sync_headers)
