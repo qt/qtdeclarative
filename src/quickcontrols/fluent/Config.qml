@@ -2025,6 +2025,211 @@ QtObject {
 
             }
 
+            readonly property QtObject progressbar: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9378;4304:9328"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "progressbar-contentItem-disabled"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject groove: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9378;4304:9328;4413:23724"
+                        readonly property string filePath: "dark/images/progressbar-groove-disabled.png"
+                        readonly property real height: 1
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-groove-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 180
+                        readonly property real x: 15842
+                        readonly property real y: 2059
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property real rightPadding: 0
+                    readonly property real topPadding: 0
+                    readonly property QtObject track: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9378;4304:9328;4267:14564"
+                        readonly property real height: 3
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-track-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 48
+                        readonly property real x: 15842
+                        readonly property real y: 2058
+                    }
+
+                }
+
+                readonly property QtObject disabled_indeterminate: QtObject {
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9380;4304:9355"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "progressbar-contentItem-disabled-indeterminate"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject groove: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9380;4304:9355;4350:35746"
+                        readonly property string filePath: ""
+                        readonly property real height: 1
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-groove-disabled-indeterminate"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 180
+                        readonly property real x: 15842
+                        readonly property real y: 2132
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property real rightPadding: 0
+                    readonly property real topPadding: 0
+                    readonly property QtObject track: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9380;4304:9355;4403:22724"
+                        readonly property real height: 3
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-track-disabled-indeterminate"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 48
+                        readonly property real x: 15908
+                        readonly property real y: 2131
+                    }
+
+                }
+
+                readonly property QtObject indeterminate: QtObject {
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9376;2450:12847"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "progressbar-contentItem-indeterminate"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject groove: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9376;2450:12847;4350:35746"
+                        readonly property string filePath: ""
+                        readonly property real height: 1
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-groove-indeterminate"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 180
+                        readonly property real x: 15842
+                        readonly property real y: 1986
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property real rightPadding: 0
+                    readonly property real topPadding: 0
+                    readonly property QtObject track: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9376;2450:12847;4403:22724"
+                        readonly property real height: 3
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-track-indeterminate"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 48
+                        readonly property real x: 15908
+                        readonly property real y: 1985
+                    }
+
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9374;2450:12841"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "progressbar-contentItem"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject groove: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9374;2450:12841;4413:23724"
+                        readonly property string filePath: "dark/images/progressbar-groove.png"
+                        readonly property real height: 1
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-groove"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 180
+                        readonly property real x: 15842
+                        readonly property real y: 1913
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property real rightPadding: 0
+                    readonly property real topPadding: 0
+                    readonly property QtObject track: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9374;2450:12841;4267:14564"
+                        readonly property real height: 3
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-track"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 48
+                        readonly property real x: 15842
+                        readonly property real y: 1912
+                    }
+
+                }
+
+            }
+
             readonly property QtObject radiobutton: QtObject {
                 readonly property QtObject checked: QtObject {
                     readonly property QtObject background: QtObject {
@@ -6771,6 +6976,211 @@ QtObject {
                     readonly property real rightPadding: 12
                     readonly property real spacing: 8
                     readonly property real topPadding: 5
+                }
+
+            }
+
+            readonly property QtObject progressbar: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9316;4304:9328"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "progressbar-contentItem-disabled"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject groove: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9316;4304:9328;4413:23724"
+                        readonly property string filePath: "light/images/progressbar-groove-disabled.png"
+                        readonly property real height: 1
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-groove-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 180
+                        readonly property real x: 15598
+                        readonly property real y: 2059
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property real rightPadding: 0
+                    readonly property real topPadding: 0
+                    readonly property QtObject track: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9316;4304:9328;4267:14564"
+                        readonly property real height: 3
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-track-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 48
+                        readonly property real x: 15598
+                        readonly property real y: 2058
+                    }
+
+                }
+
+                readonly property QtObject disabled_indeterminate: QtObject {
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9318;4304:9355"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "progressbar-contentItem-disabled-indeterminate"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject groove: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9318;4304:9355;4350:35746"
+                        readonly property string filePath: ""
+                        readonly property real height: 1
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-groove-disabled-indeterminate"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 180
+                        readonly property real x: 15598
+                        readonly property real y: 2132
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property real rightPadding: 0
+                    readonly property real topPadding: 0
+                    readonly property QtObject track: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9318;4304:9355;4403:22724"
+                        readonly property real height: 3
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-track-disabled-indeterminate"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 48
+                        readonly property real x: 15664
+                        readonly property real y: 2131
+                    }
+
+                }
+
+                readonly property QtObject indeterminate: QtObject {
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9317;2450:12847"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "progressbar-contentItem-indeterminate"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject groove: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9317;2450:12847;4350:35746"
+                        readonly property string filePath: ""
+                        readonly property real height: 1
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-groove-indeterminate"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 180
+                        readonly property real x: 15598
+                        readonly property real y: 1986
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property real rightPadding: 0
+                    readonly property real topPadding: 0
+                    readonly property QtObject track: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9317;2450:12847;4403:22724"
+                        readonly property real height: 3
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-track-indeterminate"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 48
+                        readonly property real x: 15664
+                        readonly property real y: 1985
+                    }
+
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9315;2450:12841"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "progressbar-contentItem"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject groove: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9315;2450:12841;4413:23724"
+                        readonly property string filePath: "light/images/progressbar-groove.png"
+                        readonly property real height: 1
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-groove"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 180
+                        readonly property real x: 15598
+                        readonly property real y: 1913
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property real rightPadding: 0
+                    readonly property real topPadding: 0
+                    readonly property QtObject track: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9315;2450:12841;4267:14564"
+                        readonly property real height: 3
+                        readonly property real leftShadow: 0
+                        readonly property string name: "progressbar-track"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 48
+                        readonly property real x: 15598
+                        readonly property real y: 1912
+                    }
+
                 }
 
             }

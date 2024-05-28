@@ -9,6 +9,7 @@ set(qml_files
     "ApplicationWindow.qml"
     "Button.qml"
     "CheckBox.qml"
+    "ProgressBar.qml"
     "RadioButton.qml"
     "RangeSlider.qml"
     "Slider.qml"
