@@ -140,20 +140,20 @@ T.RangeSlider {
                 imageConfig: control.config.groove
                 horizontal: control.horizontal
 
-                property Item track: StyleImage {
+                property Rectangle track: Rectangle {
                     parent: control.background._background.groove
-                    x: horizontal ? parent.width * control.first.position : 0
-                    y: horizontal ? 0 : parent.height - (parent.height * control.second.position)
-                    width: horizontal
+                    x: control.horizontal ? parent.width * control.first.position : 0
+                    y: control.horizontal ? 0 : parent.height - (parent.height * control.second.position)
+                    implicitWidth: control.horizontal ? control.config.track.width : control.config.track.height
+                    implicitHeight: control.horizontal ? control.config.track.height : control.config.track.width
+                    width: control.horizontal
                         ? parent.width * (control.second.position - control.first.position)
                         : parent.width
-                    height: horizontal
+                    height: control.horizontal
                         ? parent.height
                         : parent.height * (control.second.position - control.first.position)
-                    imageConfig: control.config.track
-                    horizontal: control.horizontal
-                    minimumWidth: 0
-                    minimumHeight: 0
+                    radius: control.config.track.height * 0.5
+                    color: control.palette.accent
                 }
             }
 
