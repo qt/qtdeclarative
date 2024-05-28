@@ -80,6 +80,8 @@ QQuickLayoutAttached::QQuickLayoutAttached(QObject *parent)
       m_fillHeight(false),
       m_isFillWidthSet(false),
       m_isFillHeightSet(false),
+      m_isUseDefaultSizePolicySet(false),
+      m_useDefaultSizePolicy(QQuickLayout::SizePolicyExplicit),
       m_isMinimumWidthSet(false),
       m_isMinimumHeightSet(false),
       m_isMaximumWidthSet(false),
@@ -336,6 +338,30 @@ void QQuickLayoutAttached::setFillHeight(bool fill)
     if (oldFillHeight != fill) {
         invalidateItem();
         emit fillHeightChanged();
+    }
+}
+
+/*!
+    \qmlattachedproperty enumeration Layout::useDefaultSizePolicy
+    \since 6.8
+
+    This property allows the user to configure the layout size policy at the component
+    level.
+
+    The default value will be inherited by querying the application attribute
+    \l Qt::AA_QtQuickUseDefaultSizePolicy. You can use this property to override that value.
+
+    \value Layout.SizePolicyImplicit
+        The item in the layout uses implicit or built-in size policy
+    \value Layout.SizePolicyExplicit
+        The item in the layout don't use implicit size policies.
+*/
+void QQuickLayoutAttached::setUseDefaultSizePolicy(QQuickLayout::SizePolicy sizePolicy)
+{
+    m_isUseDefaultSizePolicySet = true;
+    if (m_useDefaultSizePolicy != sizePolicy) {
+        m_useDefaultSizePolicy = sizePolicy;
+        emit useDefaultSizePolicyChanged();
     }
 }
 
@@ -1267,9 +1293,13 @@ QLayoutPolicy::Policy QQuickLayout::effectiveSizePolicy_helper(QQuickItem *item,
         }
     }
     if (!isSet && item) {
+        auto effectiveUseDefaultSizePolicy = [info]() {
+            return info ? info->useDefaultSizePolicy() == QQuickLayout::SizePolicyImplicit
+                        : QGuiApplication::testAttribute(Qt::AA_QtQuickUseDefaultSizePolicy);
+        };
         if (qobject_cast<QQuickLayout*>(item)) {
             pol = QLayoutPolicy::Preferred;
-        } else if (QGuiApplication::testAttribute(Qt::AA_QtQuickUseDefaultSizePolicy)) {
+        } else if (effectiveUseDefaultSizePolicy()) {
             QLayoutPolicy sizePolicy = QQuickItemPrivate::get(item)->sizePolicy();
             pol = (orientation == Qt::Horizontal) ? sizePolicy.horizontalPolicy() : sizePolicy.verticalPolicy();
         }
