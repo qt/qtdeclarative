@@ -2025,6 +2025,46 @@ QtObject {
 
             }
 
+            readonly property QtObject popup: QtObject {
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 7
+                        readonly property real bottomShadow: 25
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17074;2308:11133;2313:11247"
+                        readonly property string filePath: "dark/images/popup-background.png"
+                        readonly property real height: 104
+                        readonly property real leftOffset: 7
+                        readonly property real leftShadow: 17
+                        readonly property string name: "popup-background"
+                        readonly property real rightOffset: 7
+                        readonly property real rightShadow: 17
+                        readonly property real topOffset: 7
+                        readonly property real topShadow: 9
+                        readonly property real width: 116
+                        readonly property real x: 7148
+                        readonly property real y: 2195
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:17074;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "popup-contentItem"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
+                }
+
+            }
+
             readonly property QtObject progressbar: QtObject {
                 readonly property QtObject disabled: QtObject {
                     readonly property real bottomPadding: 0
@@ -6976,6 +7016,46 @@ QtObject {
                     readonly property real rightPadding: 12
                     readonly property real spacing: 8
                     readonly property real topPadding: 5
+                }
+
+            }
+
+            readonly property QtObject popup: QtObject {
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 7
+                        readonly property real bottomShadow: 9
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15450;2308:11133;2313:11247"
+                        readonly property string filePath: "light/images/popup-background.png"
+                        readonly property real height: 104
+                        readonly property real leftOffset: 7
+                        readonly property real leftShadow: 5
+                        readonly property string name: "popup-background"
+                        readonly property real rightOffset: 7
+                        readonly property real rightShadow: 5
+                        readonly property real topOffset: 7
+                        readonly property real topShadow: 1
+                        readonly property real width: 116
+                        readonly property real x: 6928
+                        readonly property real y: 2195
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:15450;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "popup-contentItem"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
                 }
 
             }
