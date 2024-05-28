@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 #####################################################################
-## qtquickcontrols2fluentstyleplugin Plugin:
+## qtquickcontrols2fluentwinui3styleplugin Plugin:
 #####################################################################
 
 set(qml_files
@@ -29,19 +29,19 @@ file(GLOB dark_theme_resources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "dark/imag
 
 add_subdirectory(impl)
 
-qt_internal_add_qml_module(qtquickcontrols2fluentstyleplugin
-    URI "QtQuick.Controls.Fluent"
+qt_internal_add_qml_module(qtquickcontrols2fluentwinui3styleplugin
+    URI "QtQuick.Controls.FluentWinUI3"
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
-    CLASS_NAME QtQuickControls2FluentStylePlugin
+    CLASS_NAME QtQuickControls2FluentWinUI3StylePlugin
     IMPORTS
         QtQuick.Controls.Fusion/auto
-    PLUGIN_TARGET qtquickcontrols2fluentstyleplugin
+    PLUGIN_TARGET qtquickcontrols2fluentwinui3styleplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
     SOURCES
-        qtquickcontrols2fluentstyleplugin.cpp
-        qquickfluenttheme_p.h qquickfluenttheme.cpp
+        qtquickcontrols2fluentwinui3styleplugin.cpp
+        qquickfluentwinui3theme_p.h qquickfluentwinui3theme.cpp
     QML_FILES
         ${qml_files}
     RESOURCES
@@ -54,16 +54,16 @@ qt_internal_add_qml_module(qtquickcontrols2fluentstyleplugin
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
-        Qt::QuickControls2FluentStyleImpl
+        Qt::QuickControls2FluentWinUI3StyleImpl
         Qt::QuickControls2ImplPrivate
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
 )
 
-_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2fluentstyleplugin
-                                              qtquickcontrols2fluentstyleimplplugin)
+_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2fluentwinui3styleplugin
+                                              qtquickcontrols2fluentwinui3styleimplplugin)
 
 # Fusion style is the required fallback style.
-_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2fluentstyleplugin
+_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2fluentwinui3styleplugin
                                               qtquickcontrols2fusionstyleplugin)

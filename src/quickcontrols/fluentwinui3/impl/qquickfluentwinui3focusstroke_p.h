@@ -1,8 +1,8 @@
 
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
-#ifndef QQUICKFLUENTFOCUSSTROKE_P_H
-#define QQUICKFLUENTFOCUSSTROKE_P_H
+#ifndef QQUICKFLUENTWINUI3FOCUSSTROKE_P_H
+#define QQUICKFLUENTWINUI3FOCUSSTROKE_P_H
 //
 //  W A R N I N G
 //  -------------
@@ -17,7 +17,7 @@
 #include <QtQuick/qquickpainteditem.h>
 #include <QtCore/private/qglobal_p.h>
 QT_BEGIN_NAMESPACE
-class QQuickFluentFocusStroke : public QQuickPaintedItem
+class QQuickFluentWinUI3FocusStroke : public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
@@ -25,7 +25,7 @@ class QQuickFluentFocusStroke : public QQuickPaintedItem
     QML_NAMED_ELEMENT(FocusStroke)
     QML_ADDED_IN_VERSION(6, 8)
 public:
-    explicit QQuickFluentFocusStroke(QQuickItem *parent = nullptr);
+    explicit QQuickFluentWinUI3FocusStroke(QQuickItem *parent = nullptr);
     int radius() const;
     void setRadius(int radius);
     QColor color() const;
@@ -36,4 +36,4 @@ private:
     int m_radius;
 };
 QT_END_NAMESPACE
-#endif // QQUICKFLUENTFOCUSSTROKE_P_H
+#endif // QQUICKFLUENTWINUI3FOCUSSTROKE_P_H

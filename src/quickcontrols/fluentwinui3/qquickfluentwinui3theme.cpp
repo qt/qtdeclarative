@@ -1,7 +1,7 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qquickfluenttheme_p.h"
+#include "qquickfluentwinui3theme_p.h"
 
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
@@ -115,12 +115,12 @@ static void populateSystemFont(QFont &systemFont)
     systemFont.setPixelSize(14);
 }
 
-void QQuickFluentTheme::updatePalette(QPalette &palette)
+void QQuickFluentWinUI3Theme::updatePalette(QPalette &palette)
 {
     populateSystemPalette(palette);
 }
 
-void QQuickFluentTheme::initialize(QQuickTheme *theme)
+void QQuickFluentWinUI3Theme::initialize(QQuickTheme *theme)
 {
     QFont systemFont;
     populateSystemFont(systemFont);

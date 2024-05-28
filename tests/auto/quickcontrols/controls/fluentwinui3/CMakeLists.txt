@@ -3,7 +3,7 @@
 
 if (NOT QT_BUILD_STANDALONE_TESTS AND NOT QT_BUILDING_QT)
     cmake_minimum_required(VERSION 3.16)
-    project(tst_fluent LANGUAGES C CXX ASM)
+    project(tst_fluentwinui3 LANGUAGES C CXX ASM)
     find_package(Qt6BuildInternals REQUIRED COMPONENTS STANDALONE_TEST)
 endif()
 
@@ -13,11 +13,11 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/../data/tst_*)
 list(APPEND test_data ${test_data_glob})
 
-qt_internal_add_test(tst_fluent
+qt_internal_add_test(tst_fluentwinui3
     GUI
     QMLTEST
     SOURCES
-        tst_fluent.cpp
+        tst_fluentwinui3.cpp
     DEFINES
         TST_CONTROLS_DATA="${CMAKE_CURRENT_SOURCE_DIR}/../data"
     LIBRARIES
@@ -27,7 +27,7 @@ qt_internal_add_test(tst_fluent
 )
 
 # Make the QML files available to Creator's locator.
-target_sources(tst_fluent
+target_sources(tst_fluentwinui3
     PRIVATE
         ${test_data}
 )

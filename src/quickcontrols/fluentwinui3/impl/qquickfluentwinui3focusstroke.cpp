@@ -1,16 +1,16 @@
 
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
-#include "qquickfluentfocusstroke_p.h"
+#include "qquickfluentwinui3focusstroke_p.h"
 #include <QtGui/qpainter.h>
 #include <QtGui/qpainterpath.h>
 #include <QtQuick/private/qquickitem_p.h>
 QT_BEGIN_NAMESPACE
-QQuickFluentFocusStroke::QQuickFluentFocusStroke(QQuickItem *parent)
+QQuickFluentWinUI3FocusStroke::QQuickFluentWinUI3FocusStroke(QQuickItem *parent)
     : QQuickPaintedItem(parent)
 {
 }
-void QQuickFluentFocusStroke::paint(QPainter *painter)
+void QQuickFluentWinUI3FocusStroke::paint(QPainter *painter)
 {
     painter->setRenderHint(QPainter::Antialiasing);
     QPainterPath path;
@@ -26,22 +26,22 @@ void QQuickFluentFocusStroke::paint(QPainter *painter)
     path.lineTo(rect.left(), rect.top());
     painter->fillPath(path, m_color);
 }
-QColor QQuickFluentFocusStroke::color() const
+QColor QQuickFluentWinUI3FocusStroke::color() const
 {
     return m_color;
 }
-void QQuickFluentFocusStroke::setColor(const QColor &color)
+void QQuickFluentWinUI3FocusStroke::setColor(const QColor &color)
 {
     if (color == m_color)
         return;
     m_color = color;
     update();
 }
-int QQuickFluentFocusStroke::radius() const
+int QQuickFluentWinUI3FocusStroke::radius() const
 {
     return m_radius;
 }
-void QQuickFluentFocusStroke::setRadius(int radius)
+void QQuickFluentWinUI3FocusStroke::setRadius(int radius)
 {
     if (m_radius == radius)
         return;
@@ -49,4 +49,4 @@ void QQuickFluentFocusStroke::setRadius(int radius)
     update();
 }
 QT_END_NAMESPACE
-#include "moc_qquickfluentfocusstroke_p.cpp"
+#include "moc_qquickfluentwinui3focusstroke_p.cpp"

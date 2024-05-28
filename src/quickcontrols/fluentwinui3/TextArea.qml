@@ -4,9 +4,9 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.Fluent.impl
+import QtQuick.Controls.FluentWinUI3.impl
 
-T.TextField {
+T.TextArea {
     id: control
 
     implicitWidth: implicitBackgroundWidth + leftInset + rightInset
@@ -14,13 +14,6 @@ T.TextField {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding,
                              placeholder.implicitHeight + topPadding + bottomPadding)
-
-    readonly property string __currentState: [
-        !enabled && "disabled",
-        activeFocus && "focused",
-        enabled && !activeFocus && hovered && "hovered",
-    ].filter(Boolean).join("_") || "normal"
-    readonly property var config: Config.controls.textfield[__currentState] || {}
 
     topPadding: config.topPadding || 0
     bottomPadding: config.bottomPadding || 0
@@ -37,6 +30,13 @@ T.TextField {
     selectedTextColor: control.palette.highlightedText
     placeholderTextColor: control.palette.placeholderText
     verticalAlignment: Text.AlignVCenter
+
+    readonly property string __currentState: [
+        !enabled && "disabled",
+        activeFocus && "focused",
+        enabled && !activeFocus && hovered && "hovered",
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.textarea[__currentState] || {}
 
     PlaceholderText {
         id: placeholder

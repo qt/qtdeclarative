@@ -8,6 +8,6 @@ int main(int argc, char *argv[])
 {
     QTEST_SET_MAIN_SOURCE_PATH
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
-    QQuickStyle::setStyle("Fluent");
-    return quick_test_main(argc, argv, "tst_controls::Fluent", TST_CONTROLS_DATA);
+    QQuickStyle::setStyle("FluentWinUI3");
+    return quick_test_main(argc, argv, "tst_controls::FluentWinUI3", TST_CONTROLS_DATA);
 }

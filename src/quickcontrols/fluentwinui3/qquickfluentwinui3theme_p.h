@@ -1,8 +1,8 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#ifndef QQUICKFLUENTTHEME_P_H
-#define QQUICKFLUENTTHEME_P_H
+#ifndef QQUICKFLUENTWINUI3THEME_P_H
+#define QQUICKFLUENTWINUI3THEME_P_H
 
 //
 //  W A R N I N G
@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTheme;
 class QPalette;
-class QQuickFluentTheme
+class QQuickFluentWinUI3Theme
 {
 public:
     static void initialize(QQuickTheme *theme);
@@ -30,4 +30,4 @@ public:
 
 QT_END_NAMESPACE
 
-#endif // QQUICKFLUENTTHEME_P_H
+#endif // QQUICKFLUENTWINUI3THEME_P_H

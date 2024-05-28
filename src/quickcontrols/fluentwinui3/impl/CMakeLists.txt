@@ -2,19 +2,19 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 #####################################################################
-## qtquickcontrols2fluentstyleimplplugin Plugin:
+## qtquickcontrols2fluentwinui3styleimplplugin Plugin:
 #####################################################################
 
-qt_internal_add_qml_module(QuickControls2FluentStyleImpl
-    URI "QtQuick.Controls.Fluent.impl"
+qt_internal_add_qml_module(QuickControls2FluentWinUI3StyleImpl
+    URI "QtQuick.Controls.FluentWinUI3.impl"
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
-    CLASS_NAME QtQuickControls2FluentStyleImplPlugin
+    CLASS_NAME QtQuickControls2FluentWinUI3StyleImplPlugin
     DEPENDENCIES
         QtQuick/auto
-    PLUGIN_TARGET qtquickcontrols2fluentstyleimplplugin
+    PLUGIN_TARGET qtquickcontrols2fluentwinui3styleimplplugin
     SOURCES
-        qquickfluentfocusstroke_p.h qquickfluentfocusstroke.cpp
+        qquickfluentwinui3focusstroke_p.h qquickfluentwinui3focusstroke.cpp
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
