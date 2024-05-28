@@ -30,7 +30,7 @@ struct QQmlNullableValue
     {}
 
     QQmlNullableValue(QQmlNullableValue<T> &&o) noexcept
-        : m_value(std::move(o.value))
+        : m_value(std::move(o.m_value))
         , m_isNull(std::exchange(o.m_isNull, true))
     {}
 
