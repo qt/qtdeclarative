@@ -15,10 +15,8 @@
 // We mean it.
 //
 
-// QmlBuiltins does not link QtQml - rather the other way around. Still, we can use the QtQml
-// headers here. This works because we explicitly include the QtQml include directories in the
-// manual moc call.
 #include <private/qqmlcomponentattached_p.h>
+
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlscriptstring.h>

@@ -12,7 +12,7 @@ qt_internal_add_qml_module(QmlWorkerScript
     PLUGIN_TARGET workerscriptplugin
     CLASS_NAME QtQmlWorkerScriptPlugin
     DEPENDENCIES
-        QtQml.Base/auto
+        QML/1.0
     SOURCES
         qquickworkerscript.cpp qquickworkerscript_p.h
         qtqmlworkerscriptglobal.h qtqmlworkerscriptglobal_p.h

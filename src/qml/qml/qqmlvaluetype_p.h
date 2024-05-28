@@ -111,7 +111,6 @@ struct Q_QML_EXPORT QQmlPointFValueType
     Q_GADGET
     QML_VALUE_TYPE(point)
     QML_FOREIGN(QPointF)
-    QML_ADDED_IN_VERSION(2, 0)
     QML_EXTENDED(QQmlPointFValueType)
     QML_STRUCTURED_VALUE
 
@@ -135,7 +134,6 @@ struct Q_QML_EXPORT QQmlPointValueType
     Q_GADGET
     QML_ANONYMOUS
     QML_FOREIGN(QPoint)
-    QML_ADDED_IN_VERSION(2, 0)
     QML_EXTENDED(QQmlPointValueType)
     QML_STRUCTURED_VALUE
 
@@ -159,7 +157,6 @@ struct Q_QML_EXPORT QQmlSizeFValueType
     Q_GADGET
     QML_VALUE_TYPE(size)
     QML_FOREIGN(QSizeF)
-    QML_ADDED_IN_VERSION(2, 0)
     QML_EXTENDED(QQmlSizeFValueType)
     QML_STRUCTURED_VALUE
 
@@ -183,7 +180,6 @@ struct Q_QML_EXPORT QQmlSizeValueType
     Q_GADGET
     QML_ANONYMOUS
     QML_FOREIGN(QSize)
-    QML_ADDED_IN_VERSION(2, 0)
     QML_EXTENDED(QQmlSizeValueType)
     QML_STRUCTURED_VALUE
 
@@ -213,7 +209,6 @@ struct Q_QML_EXPORT QQmlRectFValueType
     Q_GADGET
     QML_VALUE_TYPE(rect)
     QML_FOREIGN(QRectF)
-    QML_ADDED_IN_VERSION(2, 0)
     QML_EXTENDED(QQmlRectFValueType)
     QML_STRUCTURED_VALUE
 
@@ -253,7 +248,6 @@ struct Q_QML_EXPORT QQmlRectValueType
     Q_GADGET
     QML_ANONYMOUS
     QML_FOREIGN(QRect)
-    QML_ADDED_IN_VERSION(2, 0)
     QML_EXTENDED(QQmlRectValueType)
     QML_STRUCTURED_VALUE
 
@@ -284,7 +278,6 @@ namespace QQmlEasingEnums
 {
 Q_NAMESPACE_EXPORT(Q_QML_EXPORT)
 QML_NAMED_ELEMENT(Easing)
-QML_ADDED_IN_VERSION(2, 0)
 
 enum Type {
     Linear = QEasingCurve::Linear,
@@ -323,7 +316,6 @@ struct Q_QML_EXPORT QQmlEasingValueType
     Q_GADGET
     QML_ANONYMOUS
     QML_FOREIGN(QEasingCurve)
-    QML_ADDED_IN_VERSION(2, 0)
     QML_EXTENDED(QQmlEasingValueType)
     QML_STRUCTURED_VALUE
 

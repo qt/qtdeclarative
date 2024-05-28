@@ -30,7 +30,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcBindingRemoval)
+Q_DECLARE_LOGGING_CATEGORY(lcBuiltinsBindingRemoval)
 
 DEFINE_OBJECT_VTABLE(QV4::QQmlValueTypeWrapper);
 
@@ -789,12 +789,12 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
             QQmlPropertyPrivate::setBinding(newBinding);
             return true;
         } else if (referenceObject) {
-            if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
+            if (Q_UNLIKELY(lcBuiltinsBindingRemoval().isInfoEnabled())) {
                 if (auto binding = QQmlPropertyPrivate::binding(referenceObject, QQmlPropertyIndex(referencePropertyIndex, pd.coreIndex()))) {
                     Q_ASSERT(binding->kind() == QQmlAbstractBinding::QmlBinding);
                     const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
                     const auto stackFrame = v4->currentStackFrame;
-                    qCInfo(lcBindingRemoval,
+                    qCInfo(lcBuiltinsBindingRemoval,
                            "Overwriting binding on %s::%s which was initially bound at %s by setting \"%s\" at %s:%d",
                            referenceObject->metaObject()->className(), referenceObject->metaObject()->property(referencePropertyIndex).name(),
                            qPrintable(qmlBinding->expressionIdentifier()),

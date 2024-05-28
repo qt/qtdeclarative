@@ -8082,7 +8082,7 @@ void tst_qqmllanguage::asValueType()
 
     QTest::ignoreMessage(
             QtWarningMsg,
-            qPrintable(url.toString() + ":10: Coercing a value to QtQml.Base/point using a type "
+            qPrintable(url.toString() + ":10: Coercing a value to QML/point using a type "
                                         "assertion. This behavior is deprecated. Add 'pragma "
                                         "ValueTypeBehavior: Assertable' to prevent it."_L1));
 
@@ -8101,7 +8101,7 @@ void tst_qqmllanguage::asValueType()
 
     QTest::ignoreMessage(
             QtWarningMsg,
-            qPrintable(url.toString() + ":16: Coercing a value to QtQml.Base/size using a type "
+            qPrintable(url.toString() + ":16: Coercing a value to QML/size using a type "
                                         "assertion. This behavior is deprecated. Add 'pragma "
                                         "ValueTypeBehavior: Assertable' to prevent it."_L1));
 
@@ -8117,13 +8117,13 @@ void tst_qqmllanguage::asValueType()
 
     QTest::ignoreMessage(
             QtWarningMsg,
-            qPrintable(url.toString() + ":18: Coercing a value to QtQml.Base/size using a type "
+            qPrintable(url.toString() + ":18: Coercing a value to QML/size using a type "
                                         "assertion. This behavior is deprecated. Add 'pragma "
                                         "ValueTypeBehavior: Assertable' to prevent it."_L1));
 
     QTest::ignoreMessage(
             QtWarningMsg,
-            qPrintable(url.toString() + ":19: Coercing a value to QtQml.Base/size using a type "
+            qPrintable(url.toString() + ":19: Coercing a value to QML/size using a type "
                                         "assertion. This behavior is deprecated. Add 'pragma "
                                         "ValueTypeBehavior: Assertable' to prevent it."_L1));
 

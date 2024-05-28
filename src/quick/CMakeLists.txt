@@ -237,16 +237,19 @@ qt_internal_add_qml_module(Quick
         Qt::GuiPrivate
         Qt::QmlModelsPrivate
         Qt::QmlPrivate
+        Qt::QmlMetaPrivate
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
         Qt::Qml
+        Qt::QmlMeta
         Qt::QmlModels
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlModelsPrivate
         Qt::QmlPrivate
+        Qt::QmlMetaPrivate
     GENERATE_CPP_EXPORTS
     )
 

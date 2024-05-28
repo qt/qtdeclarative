@@ -30,7 +30,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcBindingRemoval)
+Q_LOGGING_CATEGORY(lcQtQmlBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
 
 enum class QQmlBindEntryKind: quint8 {
     V4Value,
@@ -686,7 +686,7 @@ void QQmlBind::setTarget(const QQmlProperty &p)
 
 void QQmlBindEntry::setTarget(QQmlBind *q, const QQmlProperty &p)
 {
-    if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
+    if (Q_UNLIKELY(lcQtQmlBindingRemoval().isInfoEnabled())) {
         if (QObject *oldObject = prop.object()) {
             QMetaProperty metaProp = oldObject->metaObject()->property(prop.index());
             if (metaProp.hasNotifySignal()) {
@@ -1126,7 +1126,7 @@ void QQmlBind::targetValueChanged()
         line = ddata->lineNumber;
     }
 
-    qCInfo(lcBindingRemoval,
+    qCInfo(lcQtQmlBindingRemoval,
            "The target property of the Binding element created at %s:%d was changed from "
            "elsewhere. This does not overwrite the binding. The target property will still be "
            "updated when the value of the Binding element changes.",

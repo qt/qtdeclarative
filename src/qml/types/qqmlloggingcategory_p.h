@@ -15,19 +15,21 @@
 // We mean it.
 //
 
+#include <private/qqmlloggingcategorybase_p.h>
+
+#include <QtQmlMeta/qtqmlmetaexports.h>
+
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlparserstatus.h>
+
+#include <QtCore/private/qglobal_p.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
-#include <QtCore/qloggingcategory.h>
-
-#include <QtQml/qqmlparserstatus.h>
-#include <QtQml/qqml.h>
-#include <QtCore/private/qglobal_p.h>
-
-#include <memory>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlLoggingCategory : public QObject, public QQmlParserStatus
+class Q_QMLMETA_EXPORT QQmlLoggingCategory : public QQmlLoggingCategoryBase, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
@@ -55,14 +57,11 @@ public:
     QString name() const;
     void setName(const QString &name);
 
-    QLoggingCategory *category() const;
-
     void classBegin() override;
     void componentComplete() override;
 
 private:
     QByteArray m_name;
-    std::unique_ptr<QLoggingCategory> m_category;
     DefaultLogLevel m_defaultLogLevel = Debug;
     bool m_initialized;
 };

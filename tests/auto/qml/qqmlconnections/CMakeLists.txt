@@ -27,6 +27,7 @@ qt_internal_add_test(tst_qqmlconnections
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
+        Qt::QmlMetaPrivate
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}

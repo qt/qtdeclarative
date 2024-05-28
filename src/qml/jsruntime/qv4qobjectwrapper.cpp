@@ -49,7 +49,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
+Q_LOGGING_CATEGORY(lcBuiltinsBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcObjectConnect, "qt.qml.object.connect", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcOverloadResolution, "qt.qml.overloadresolution", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcMethodBehavior, "qt.qml.method.behavior")
@@ -664,13 +664,13 @@ void QObjectWrapper::setProperty(
         }
     }
 
-    if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
+    if (Q_UNLIKELY(lcBuiltinsBindingRemoval().isInfoEnabled())) {
         if (auto binding = QQmlPropertyPrivate::binding(object, QQmlPropertyIndex(property->coreIndex()))) {
             const auto stackFrame = engine->currentStackFrame;
             switch (binding->kind()) {
             case QQmlAbstractBinding::QmlBinding: {
                 const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
-                qCInfo(lcBindingRemoval,
+                qCInfo(lcBuiltinsBindingRemoval,
                        "Overwriting binding on %s::%s at %s:%d that was initially bound at %s",
                        object->metaObject()->className(), qPrintable(property->name(object)),
                        qPrintable(stackFrame->source()), stackFrame->lineNumber(),
@@ -679,7 +679,7 @@ void QObjectWrapper::setProperty(
             }
             case QQmlAbstractBinding::ValueTypeProxy:
             case QQmlAbstractBinding::PropertyToPropertyBinding: {
-                qCInfo(lcBindingRemoval,
+                qCInfo(lcBuiltinsBindingRemoval,
                        "Overwriting binding on %s::%s at %s:%d",
                        object->metaObject()->className(), qPrintable(property->name(object)),
                        qPrintable(stackFrame->source()), stackFrame->lineNumber());
