@@ -162,6 +162,7 @@ void tst_QQuickFontDialogImpl::changingWritingSystem()
     // Open the dialog.
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     const QQuickTextEdit *sampleEdit =
             dialogHelper.quickDialog->findChild<QQuickTextEdit *>("sampleEdit");
@@ -179,7 +180,7 @@ void tst_QQuickFontDialogImpl::changingWritingSystem()
     const QQuickComboBox *writingSystemComboBox = dialogHelper.quickDialog->findChild<QQuickComboBox*>();
     QVERIFY(writingSystemComboBox);
     const QPoint comboBoxCenterPos = writingSystemComboBox->mapToScene({ writingSystemComboBox->width() / 2, writingSystemComboBox->height() / 2 }).toPoint();
-    QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, comboBoxCenterPos);
+    QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, comboBoxCenterPos);
     QTRY_VERIFY(writingSystemComboBox->popup()->isOpened());
 
     // "Any" should be selected by default.
@@ -223,6 +224,7 @@ void tst_QQuickFontDialogImpl::clickAroundInTheFamilyListView()
     // Open the dialog.
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     QQuickListView *fontFamilyListView =
             dialogHelper.quickDialog->findChild<QQuickListView *>("familyListView");
@@ -292,6 +294,7 @@ void tst_QQuickFontDialogImpl::settingUnderlineAndStrikeoutEffects()
     // Open the dialog.
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     QSignalSpy selectedFontSpy(dialogHelper.dialog, SIGNAL(selectedFontChanged()));
 
@@ -312,20 +315,21 @@ void tst_QQuickFontDialogImpl::settingUnderlineAndStrikeoutEffects()
     QVERIFY(dialogHelper.dialog->selectedFont().underline());
     QVERIFY(!dialogHelper.dialog->selectedFont().strikeOut());
 
-    QVERIFY(QQuickTest::qWaitForPolish(dialogHelper.window()));
-
+    QVERIFY(QQuickTest::qWaitForPolish(dialogHelper.popupWindow()));
     QVERIFY(clickButton(underlineCheckBox));
 
     QCOMPARE(selectedFontSpy.size(), 2);
     QVERIFY(!dialogHelper.dialog->selectedFont().underline());
     QVERIFY(!dialogHelper.dialog->selectedFont().strikeOut());
 
+    QVERIFY(QQuickTest::qWaitForPolish(dialogHelper.popupWindow()));
     QVERIFY(clickButton(strikeoutCheckBox));
 
     QCOMPARE(selectedFontSpy.size(), 3);
     QVERIFY(!dialogHelper.dialog->selectedFont().underline());
     QVERIFY(dialogHelper.dialog->selectedFont().strikeOut());
 
+    QVERIFY(QQuickTest::qWaitForPolish(dialogHelper.popupWindow()));
     QVERIFY(clickButton(strikeoutCheckBox));
 
     QCOMPARE(selectedFontSpy.size(), 4);
@@ -343,6 +347,7 @@ void tst_QQuickFontDialogImpl::changeFontSize()
     // Open the dialog.
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     QQuickTextField *sizeEdit = dialogHelper.quickDialog->findChild<QQuickTextField *>("sizeEdit");
     QVERIFY(sizeEdit);
@@ -467,6 +472,7 @@ void tst_QQuickFontDialogImpl::searchFamily()
     // Open the dialog.
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     const QQuickTextField *familyEdit =
             dialogHelper.quickDialog->findChild<QQuickTextField *>("familyEdit");
@@ -478,7 +484,7 @@ void tst_QQuickFontDialogImpl::searchFamily()
 
     const QPoint familyEditCenterPos =
             familyEdit->mapToScene({ familyEdit->width() / 2, familyEdit->height() / 2 }).toPoint();
-    QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, familyEditCenterPos);
+    QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, familyEditCenterPos);
     QVERIFY(familyEdit->hasActiveFocus());
 
     QSignalSpy familyListViewCurrentIndexSpy(fontFamilyListView, SIGNAL(currentIndexChanged()));
@@ -496,7 +502,7 @@ void tst_QQuickFontDialogImpl::searchFamily()
         const int previousIndex = fontFamilyListView->currentIndex();
 
         const char keyEntered = alphabet_it->toLatin1();
-        QTest::keyClick(dialogHelper.window(), keyEntered);
+        QTest::keyClick(dialogHelper.popupWindow(), keyEntered);
 
         int expectedListViewIndex = listSearchHelper.expectedCurrentIndexForSearch(QString(keyEntered));
         if (expectedListViewIndex == -1) {

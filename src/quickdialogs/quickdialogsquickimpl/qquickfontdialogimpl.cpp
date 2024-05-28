@@ -43,6 +43,7 @@ void QQuickFontDialogImplPrivate::handleClick(QQuickAbstractButton *button)
 QQuickFontDialogImpl::QQuickFontDialogImpl(QObject *parent)
     : QQuickDialog(*(new QQuickFontDialogImplPrivate), parent)
 {
+    setPopupType(QQuickPopup::Window);
 }
 
 QQuickFontDialogImplAttached *QQuickFontDialogImpl::qmlAttachedProperties(QObject *object)
@@ -127,9 +128,9 @@ void QQuickFontDialogImpl::keyReleaseEvent(QKeyEvent *event)
     // The family and style text edits are read-only so that they
     // can show the current selection but also allow key input to "search".
     // This is why we handle just the release event, and don't accept it.
-    if (window()->activeFocusItem() == attached->familyEdit())
+    if (attached->familyEdit()->hasFocus())
         attached->searchFamily(event->text());
-    else if (window()->activeFocusItem() == attached->styleEdit())
+    else if (attached->styleEdit()->hasFocus())
         attached->searchStyle(event->text());
 }
 

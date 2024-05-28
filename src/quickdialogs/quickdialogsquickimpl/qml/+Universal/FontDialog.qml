@@ -57,6 +57,7 @@ FontDialogImpl {
         rightPadding: 24
         topPadding: 18
         height: control.title.length > 0 ? implicitHeight : 0
+        visible: content.parent?.parent === Overlay.overlay
 
         background: Rectangle {
             x: 1; y: 1 // // FlyoutBorderThemeThickness

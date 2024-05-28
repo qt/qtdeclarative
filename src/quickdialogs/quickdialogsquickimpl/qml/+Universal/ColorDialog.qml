@@ -52,6 +52,7 @@ ColorDialogImpl {
             elide: Label.ElideRight
             // TODO: QPlatformTheme::TitleBarFont
             font.pixelSize: 20
+            visible: parent.parent?.parent === Overlay.overlay
             background: Rectangle {
                 x: 1; y: 1 // // FlyoutBorderThemeThickness
                 color: control.Universal.chromeMediumLowColor

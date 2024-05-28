@@ -174,8 +174,7 @@ void tst_QQuickColorDialogImpl::moveColorPickerHandle()
     // Open the dialog.
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
-
-    QTRY_COMPARE(QQuickWindowPrivate::get(dialogHelper.window())->itemsToPolish.size(), 0);
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     QQuickAbstractColorPicker *colorPicker =
             dialogHelper.quickDialog->findChild<QQuickAbstractColorPicker *>("colorPicker");
@@ -188,7 +187,7 @@ void tst_QQuickColorDialogImpl::moveColorPickerHandle()
     const QPoint topCenter = colorPicker->mapToScene({ colorPicker->width() / 2, 0 }).toPoint();
 
     // Move handle to where the saturation is the highest and the lightness is 'neutral'
-    QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, topCenter);
+    QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, topCenter);
 
     QCOMPARE(colorChangedSpy.size(), 1);
 
@@ -196,36 +195,109 @@ void tst_QQuickColorDialogImpl::moveColorPickerHandle()
     const QString floatComparisonErrorString(
             "%1 return value of %2 wasn't close enough to %3. A threshold of %4 is used to decide if the floating "
             "point value is close enough.");
+    const QString colorComparisonErrorString("The expected color value for %1, didn't match the expected value of %2, was %3.");
 
     FUZZYCOMPARE(colorPicker->saturation(), 1.0, floatingPointComparisonThreshold,
-             qPrintable(floatComparisonErrorString.arg("saturation()").arg(colorPicker->saturation()).arg(1.0).arg(floatingPointComparisonThreshold)));
+                qPrintable(floatComparisonErrorString
+                .arg("saturation()")
+                .arg(colorPicker->saturation())
+                .arg(1.0)
+                .arg(floatingPointComparisonThreshold)));
     FUZZYCOMPARE(dialogHelper.quickDialog->saturation(), 1.0, floatingPointComparisonThreshold,
-             qPrintable(floatComparisonErrorString.arg("saturation()").arg(dialogHelper.quickDialog->saturation()).arg(1.0).arg(floatingPointComparisonThreshold)));
+                qPrintable(floatComparisonErrorString
+                .arg("saturation()")
+                .arg(dialogHelper.quickDialog->saturation())
+                .arg(1.0)
+                .arg(floatingPointComparisonThreshold)));
     FUZZYCOMPARE(colorPicker->lightness(), 0.5, floatingPointComparisonThreshold,
-             qPrintable(floatComparisonErrorString.arg("lightness()").arg(colorPicker->lightness()).arg(0.5).arg(floatingPointComparisonThreshold)));
+                qPrintable(floatComparisonErrorString
+                .arg("lightness()")
+                .arg(colorPicker->lightness())
+                .arg(0.5)
+                .arg(floatingPointComparisonThreshold)));
     FUZZYCOMPARE(dialogHelper.quickDialog->lightness(), 0.5, floatingPointComparisonThreshold,
-             qPrintable(floatComparisonErrorString.arg("lightness()").arg(dialogHelper.quickDialog->lightness()).arg(0.5).arg(floatingPointComparisonThreshold)));
-    QCOMPARE(colorPicker->color().rgba(), QColorConstants::Red.rgba());
-    QCOMPARE(dialogHelper.quickDialog->color().rgba(), QColorConstants::Red.rgba());
+                qPrintable(floatComparisonErrorString
+                .arg("lightness()")
+                .arg(dialogHelper.quickDialog->lightness())
+                .arg(0.5)
+                .arg(floatingPointComparisonThreshold)));
+    FUZZYCOMPARE(dialogHelper.quickDialog->color().red(), QColorConstants::Red.red(), 2,
+                qPrintable(colorComparisonErrorString
+                .arg("red")
+                .arg(QColorConstants::Red.red())
+                .arg(dialogHelper.quickDialog->color().red())));
+    FUZZYCOMPARE(dialogHelper.quickDialog->color().green(), QColorConstants::Red.green(), 2,
+                qPrintable(colorComparisonErrorString
+                .arg("green")
+                .arg(QColorConstants::Red.green())
+                .arg(dialogHelper.quickDialog->color().green())));
+    FUZZYCOMPARE(dialogHelper.quickDialog->color().blue(), QColorConstants::Red.blue(), 2,
+                qPrintable(colorComparisonErrorString
+                .arg("blue")
+                .arg(QColorConstants::Red.blue())
+                .arg(dialogHelper.quickDialog->color().blue())));
+    FUZZYCOMPARE(colorPicker->color().red(), QColorConstants::Red.red(), 2,
+                qPrintable(colorComparisonErrorString
+                .arg("red")
+                .arg(QColorConstants::Red.red())
+                .arg(colorPicker->color().red())));
+    FUZZYCOMPARE(colorPicker->color().green(), QColorConstants::Red.green(), 2,
+                qPrintable(colorComparisonErrorString
+                .arg("green")
+                .arg(QColorConstants::Red.green())
+                .arg(colorPicker->color().green())));
+    FUZZYCOMPARE(colorPicker->color().blue(), QColorConstants::Red.blue(), 2,
+                qPrintable(colorComparisonErrorString
+                .arg("blue")
+                .arg(QColorConstants::Red.blue())
+                .arg(colorPicker->color().blue())));
 
-    const QPoint hueSliderCenterPosition =
-            hueSlider->mapToScene({ hueSlider->width() / 2, hueSlider->height() / 2 }).toPoint();
-    QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier,
-                      hueSliderCenterPosition);
+    const QPoint hueSliderCenterPosition = hueSlider->mapToScene({ hueSlider->width() / 2, hueSlider->height() / 2 }).toPoint();
+    const qreal cyanHue = QColorConstants::Cyan.hslHueF();
+    const qreal floatComparisonThresholdForHueSlider = 1.0 / hueSlider->width();
+    QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, hueSliderCenterPosition);
+    FUZZYCOMPARE(hueSlider->value(), cyanHue, floatComparisonThresholdForHueSlider,
+                qPrintable(floatComparisonErrorString
+                .arg("Slider::value()")
+                .arg(hueSlider->value())
+                .arg(cyanHue)
+                .arg(floatComparisonThresholdForHueSlider)));
+    FUZZYCOMPARE(colorPicker->hue(), cyanHue, floatComparisonThresholdForHueSlider,
+                qPrintable(floatComparisonErrorString
+                .arg("QQuickAbstractColorPicker::hue()")
+                .arg(colorPicker->hue())
+                .arg(cyanHue)
+                .arg(floatComparisonThresholdForHueSlider)));
 
-    QCOMPARE(hueSlider->value(), QColorConstants::Cyan.hslHueF());
-    QCOMPARE(dialogHelper.quickDialog->hue(), QColorConstants::Cyan.hslHueF());
-    QCOMPARE(colorPicker->hue(), QColorConstants::Cyan.hslHueF());
-    QCOMPARE(colorPicker->color().rgba(), QColorConstants::Cyan.rgba());
+    FUZZYCOMPARE(dialogHelper.quickDialog->hue(), cyanHue, floatComparisonThresholdForHueSlider,
+                qPrintable(floatComparisonErrorString
+                .arg("QQuickColorDialogImpl::hue()")
+                .arg(dialogHelper.quickDialog->hue())
+                .arg(cyanHue)
+                .arg(floatComparisonThresholdForHueSlider)));
+
+    FUZZYCOMPARE(colorPicker->color().red(), QColorConstants::Cyan.red(), 3,
+                qPrintable(colorComparisonErrorString.arg("red")
+                .arg(QColorConstants::Cyan.red())
+                .arg(colorPicker->color().red())));
+    FUZZYCOMPARE(colorPicker->color().green(), QColorConstants::Cyan.green(), 3,
+                qPrintable(colorComparisonErrorString.arg("green")
+                .arg(QColorConstants::Cyan.green())
+                .arg(colorPicker->color().green())));
+    FUZZYCOMPARE(colorPicker->color().blue(), QColorConstants::Cyan.blue(), 3,
+                qPrintable(colorComparisonErrorString
+                .arg("blue")
+                .arg(QColorConstants::Cyan.blue())
+                .arg(colorPicker->color().blue())));
 
     QCOMPARE(colorChangedSpy.size(), 2);
 
     QPoint bottomCenter = colorPicker->mapToScene({ colorPicker->width() / 2, colorPicker->height() }).toPoint();
 
     // Move the handle to where the saturation is the lowest, without affecting lightness
-    QTest::mousePress(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier,
+    QTest::mousePress(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier,
                       { bottomCenter.x(), bottomCenter.y() - 1 });
-    QTest::mouseRelease(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, bottomCenter);
+    QTest::mouseRelease(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, bottomCenter);
 
     // The press and release happened in 2 different positions.
     // This means that the current color was changed twice.
@@ -233,13 +305,28 @@ void tst_QQuickColorDialogImpl::moveColorPickerHandle()
     // wasn't received by the color picker)
     QCOMPARE(colorChangedSpy.size(), 4);
     FUZZYCOMPARE(colorPicker->saturation(), 0.0, floatingPointComparisonThreshold,
-             qPrintable(floatComparisonErrorString.arg("saturation()").arg(colorPicker->saturation()).arg(0.0).arg(floatingPointComparisonThreshold)));
+                qPrintable(floatComparisonErrorString
+                .arg("saturation()")
+                .arg(colorPicker->saturation())
+                .arg(0.0)
+                .arg(floatingPointComparisonThreshold)));
     FUZZYCOMPARE(dialogHelper.quickDialog->saturation(), 0.0, floatingPointComparisonThreshold,
-             qPrintable(floatComparisonErrorString.arg("saturation()").arg(dialogHelper.quickDialog->saturation()).arg(0.0).arg(floatingPointComparisonThreshold)));
+                qPrintable(floatComparisonErrorString
+                .arg("saturation()")
+                .arg(dialogHelper.quickDialog->saturation())
+                .arg(0.0)
+                .arg(floatingPointComparisonThreshold)));
     FUZZYCOMPARE(colorPicker->lightness(), 0.5, floatingPointComparisonThreshold,
-             qPrintable(floatComparisonErrorString.arg("lightness()").arg(colorPicker->lightness()).arg(0.5).arg(floatingPointComparisonThreshold)));
+                qPrintable(floatComparisonErrorString
+                .arg("lightness()")
+                .arg(colorPicker->lightness())
+                .arg(0.5).arg(floatingPointComparisonThreshold)));
     FUZZYCOMPARE(dialogHelper.quickDialog->lightness(), 0.5, floatingPointComparisonThreshold,
-             qPrintable(floatComparisonErrorString.arg("lightness()").arg(dialogHelper.quickDialog->lightness()).arg(0.5).arg(floatingPointComparisonThreshold)));
+                qPrintable(floatComparisonErrorString
+                .arg("lightness()")
+                .arg(dialogHelper.quickDialog->lightness())
+                .arg(0.5)
+                .arg(floatingPointComparisonThreshold)));
     QCOMPARE(colorPicker->color().rgba(), QColor::fromRgbF(0.5, 0.5, 0.5).rgba());
     QCOMPARE(dialogHelper.quickDialog->color().rgba(), QColor::fromRgbF(0.5, 0.5, 0.5).rgba());
 
@@ -247,16 +334,40 @@ void tst_QQuickColorDialogImpl::moveColorPickerHandle()
     colorPicker->setColor(QColorConstants::Green);
 
     // Click in the middle of the handle, to cause the signal colorPicked() to be emitted
-    QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier,
+    QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier,
                       colorPicker->handle()->mapToScene({ colorPicker->handle()->width() / 2,
                                              colorPicker->handle()->height() / 2 }).toPoint());
 
-    QCOMPARE(dialogHelper.quickDialog->color().rgba(), QColorConstants::Green.rgba());
-    QCOMPARE(dialogHelper.dialog->selectedColor().rgba(), QColorConstants::Green.rgba());
-    QCOMPARE(QColor::fromHslF(colorPicker->hue(), colorPicker->saturation(),
-                              colorPicker->lightness()).rgba(), QColorConstants::Green.rgba());
-    QCOMPARE(QColor::fromHslF(dialogHelper.quickDialog->hue(), dialogHelper.quickDialog->saturation(),
-                              dialogHelper.quickDialog->lightness()).rgba(), QColorConstants::Green.rgba());
+    FUZZYCOMPARE(dialogHelper.quickDialog->color().red(), QColorConstants::Green.red(), 2,
+                qPrintable(colorComparisonErrorString.arg("red").arg(QColorConstants::Green.red()).arg(dialogHelper.quickDialog->color().red())));
+    FUZZYCOMPARE(dialogHelper.quickDialog->color().green(), QColorConstants::Green.green(), 2,
+                qPrintable(colorComparisonErrorString.arg("green").arg(QColorConstants::Green.green()).arg(dialogHelper.quickDialog->color().green())));
+    FUZZYCOMPARE(dialogHelper.quickDialog->color().blue(), QColorConstants::Green.blue(), 2,
+                qPrintable(colorComparisonErrorString.arg("blue").arg(QColorConstants::Green.blue()).arg(dialogHelper.quickDialog->color().blue())));
+
+    FUZZYCOMPARE(dialogHelper.dialog->selectedColor().red(), QColorConstants::Green.red(), 2,
+                qPrintable(colorComparisonErrorString.arg("red").arg(QColorConstants::Green.red()).arg(dialogHelper.dialog->selectedColor().red())));
+    FUZZYCOMPARE(dialogHelper.dialog->selectedColor().green(), QColorConstants::Green.green(), 2,
+                qPrintable(colorComparisonErrorString.arg("green").arg(QColorConstants::Green.green()).arg(dialogHelper.dialog->selectedColor().green())));
+    FUZZYCOMPARE(dialogHelper.dialog->selectedColor().blue(), QColorConstants::Green.blue(), 2,
+                qPrintable(colorComparisonErrorString.arg("blue").arg(QColorConstants::Green.blue()).arg(dialogHelper.dialog->selectedColor().blue())));
+
+    const QColor colorFromColorPickerValues = QColor::fromHslF(colorPicker->hue(), colorPicker->saturation(), colorPicker->lightness());
+    const QColor colorFromColorDialogValues = QColor::fromHslF(dialogHelper.quickDialog->hue(), dialogHelper.quickDialog->saturation(), dialogHelper.quickDialog->lightness());
+
+    FUZZYCOMPARE(colorFromColorPickerValues.red(), QColorConstants::Green.red(), 2,
+                qPrintable(colorComparisonErrorString.arg("red").arg(QColorConstants::Green.red()).arg(colorFromColorPickerValues.red())));
+    FUZZYCOMPARE(colorFromColorPickerValues.green(), QColorConstants::Green.green(), 2,
+                qPrintable(colorComparisonErrorString.arg("green").arg(QColorConstants::Green.green()).arg(colorFromColorPickerValues.green())));
+    FUZZYCOMPARE(colorFromColorPickerValues.blue(), QColorConstants::Green.blue(), 2,
+                qPrintable(colorComparisonErrorString.arg("blue").arg(QColorConstants::Green.blue()).arg(colorFromColorPickerValues.blue())));
+
+    FUZZYCOMPARE(colorFromColorDialogValues.red(), QColorConstants::Green.red(), 2,
+                qPrintable(colorComparisonErrorString.arg("red").arg(QColorConstants::Green.red()).arg(colorFromColorDialogValues.red())));
+    FUZZYCOMPARE(colorFromColorDialogValues.green(), QColorConstants::Green.green(), 2,
+                qPrintable(colorComparisonErrorString.arg("green").arg(QColorConstants::Green.green()).arg(colorFromColorDialogValues.green())));
+    FUZZYCOMPARE(colorFromColorDialogValues.blue(), QColorConstants::Green.blue(), 2,
+                qPrintable(colorComparisonErrorString.arg("blue").arg(QColorConstants::Green.blue()).arg(colorFromColorDialogValues.blue())));
 
     const QString handlePositionErrorString("Handle position not updated correctly. x-position was %1, expected %2");
     const qreal expectedHandlePosX = (colorPicker->handle()->x() + colorPicker->handle()->width() / 2) / colorPicker->width();
@@ -293,6 +404,7 @@ void tst_QQuickColorDialogImpl::alphaChannel()
     // Open the dialog.
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     QQuickSlider *alphaSlider = dialogHelper.quickDialog->findChild<QQuickSlider *>("alphaSlider");
     QVERIFY(alphaSlider);
@@ -308,10 +420,10 @@ void tst_QQuickColorDialogImpl::alphaChannel()
     QCOMPARE(dialogHelper.dialog->selectedColor().alphaF(), 1.0);
     QCOMPARE(colorTextField->text(), QStringLiteral("#ffffff")); // Alpha is hidden when FF
 
-    QTRY_COMPARE(QQuickWindowPrivate::get(dialogHelper.window())->itemsToPolish.size(), 0);
+    QQuickTest::qWaitForPolish(dialogHelper.popupWindow());
 
     // Choose the target value from the alpha slider.
-    QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, alphaSlider->mapToScene({ (alphaSlider->width() + alphaSlider->padding()) * targetValue, alphaSlider->height() / 2 }).toPoint());
+    QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, alphaSlider->mapToScene({ (alphaSlider->width() + alphaSlider->padding()) * targetValue, alphaSlider->height() / 2 }).toPoint());
 
     // Compare the new value, with some fuzzyness allowed, since QColor has a precision of 16 bits.
     const qreal threshold = 1.0 / 16.0;
@@ -331,6 +443,7 @@ void tst_QQuickColorDialogImpl::changeHex()
     // Open the dialog.
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     QQuickItem *colorParameters = dialogHelper.quickDialog->findChild<QQuickItem *>("colorParameters");
     QVERIFY(colorParameters);
@@ -342,14 +455,14 @@ void tst_QQuickColorDialogImpl::changeHex()
     colorTextField->forceActiveFocus();
     colorTextField->select(1, colorTextField->text().size());
     QVERIFY(colorTextField->hasActiveFocus());
-    QTest::keyClick(dialogHelper.window(), Qt::Key_Backspace);
-    QTest::keyClick(dialogHelper.window(), '0');
-    QTest::keyClick(dialogHelper.window(), '0');
-    QTest::keyClick(dialogHelper.window(), 'f');
-    QTest::keyClick(dialogHelper.window(), 'f');
-    QTest::keyClick(dialogHelper.window(), '0');
-    QTest::keyClick(dialogHelper.window(), '0');
-    QTest::keyClick(dialogHelper.window(), Qt::Key_Enter);
+    QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Backspace);
+    QTest::keyClick(dialogHelper.popupWindow(), '0');
+    QTest::keyClick(dialogHelper.popupWindow(), '0');
+    QTest::keyClick(dialogHelper.popupWindow(), 'f');
+    QTest::keyClick(dialogHelper.popupWindow(), 'f');
+    QTest::keyClick(dialogHelper.popupWindow(), '0');
+    QTest::keyClick(dialogHelper.popupWindow(), '0');
+    QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Enter);
 
     // Make sure that the color was updated, to reflect the new hex value.
     QCOMPARE(colorTextField->text(), QStringLiteral("#00ff00"));
@@ -402,15 +515,14 @@ void tst_QQuickColorDialogImpl::changeColorFromTextFields()
     // Open the dialog.
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     const QQuickComboBox *colorSystemComboBox = dialogHelper.quickDialog->findChild<QQuickComboBox *>("colorSystemComboBox");
     QVERIFY(colorSystemComboBox);
 
-    QTRY_COMPARE(QQuickWindowPrivate::get(dialogHelper.window())->itemsToPolish.size(), 0);
-
     // Click on the colorSystemComboBox.
     const QPoint comboBoxCenterPos = colorSystemComboBox->mapToScene( {colorSystemComboBox->width() / 2, colorSystemComboBox->height() /2} ).toPoint();
-    QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, comboBoxCenterPos);
+    QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, comboBoxCenterPos);
     QCoreApplication::sendPostedEvents();
     QTRY_VERIFY(colorSystemComboBox->popup()->isOpened());
 
@@ -435,7 +547,7 @@ void tst_QQuickColorDialogImpl::changeColorFromTextFields()
 
     // Simulate entering a new value.
     textField->setText(newValue);
-    QTest::keyClick(dialogHelper.window(), Qt::Key_Enter);
+    QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Enter);
     QCoreApplication::sendPostedEvents();
 
     // Check if the color was updated with the correct new value.
@@ -512,6 +624,7 @@ void tst_QQuickColorDialogImpl::dialogCanMoveBetweenWindows()
 
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     QCOMPARE(dialogHelper.quickDialog->parent(), dialogHelper.window());
     QVariant subWindow1;

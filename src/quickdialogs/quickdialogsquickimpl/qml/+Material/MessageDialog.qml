@@ -42,7 +42,7 @@ MessageDialogImpl {
 
     header: Label {
         text: control.title
-        visible: control.title.length > 0
+        visible: parent?.parent === Overlay.overlay && control.title.length > 0
         elide: Label.ElideRight
         font.bold: true
         font.pixelSize: 16
@@ -55,6 +55,7 @@ MessageDialogImpl {
 
     contentItem: Column {
         spacing: 24
+        topPadding: control.parent !== Overlay.overlay ? 24 : 0
 
         Label {
             id: textLabel

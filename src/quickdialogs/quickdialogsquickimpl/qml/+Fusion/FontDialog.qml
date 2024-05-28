@@ -73,6 +73,7 @@ FontDialogImpl {
 
     header: Label {
         text: control.title
+        visible: content.parent?.parent === Overlay.overlay
         horizontalAlignment: Label.AlignHCenter
         elide: Label.ElideRight
         font.bold: true

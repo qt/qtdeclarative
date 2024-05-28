@@ -36,6 +36,7 @@ QQuickMessageDialogImplAttached *QQuickMessageDialogImplPrivate::attachedOrWarn(
 QQuickMessageDialogImpl::QQuickMessageDialogImpl(QObject *parent)
     : QQuickDialog(*(new QQuickMessageDialogImplPrivate), parent)
 {
+    setPopupType(QQuickPopup::Window);
 }
 
 QSharedPointer<QMessageDialogOptions> QQuickMessageDialogImpl::options() const

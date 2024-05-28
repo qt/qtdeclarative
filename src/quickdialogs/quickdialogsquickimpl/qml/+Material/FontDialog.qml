@@ -63,7 +63,7 @@ FontDialogImpl {
 
     header: Label {
         text: control.title
-        visible: control.title.length > 0
+        visible: content.parent?.parent === Overlay.overlay && control.title.length > 0
         elide: Label.ElideRight
         font.bold: true
         font.pixelSize: 16
