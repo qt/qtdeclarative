@@ -17,6 +17,7 @@
 
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 
+#include <QtQuickTest/QtQuickTest>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 
@@ -122,6 +123,28 @@ public:
         }
 
         return true;
+    }
+
+    QQuickWindow *popupWindow() const
+    {
+        return quickDialog->contentItem()->window();
+    }
+
+    Q_REQUIRED_RESULT bool waitForPopupWindowActiveAndPolished()
+    {
+        if (!isQuickDialogOpen()) {
+            QByteArray msg("Dialog wasn't open, when {} was called");
+            msg.replace("{}", __func__);
+            appHelper.errorMessage = msg;
+            return false;
+        }
+        QQuickWindow *dialogPopupWindow = popupWindow();
+        if (!dialogPopupWindow)
+            return false;
+        dialogPopupWindow->requestActivate();
+        if (!QTest::qWaitForWindowActive(dialogPopupWindow))
+            return false;
+        return QQuickTest::qWaitForPolish(dialogPopupWindow);
     }
 
     bool isQuickDialogOpen() const

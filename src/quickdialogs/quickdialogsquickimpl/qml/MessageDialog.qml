@@ -40,6 +40,7 @@ MessageDialogImpl {
 
     header: Pane {
         palette.window: control.palette.light
+        visible: parent?.parent === Overlay.overlay
         padding: 20
 
         contentItem: Label {

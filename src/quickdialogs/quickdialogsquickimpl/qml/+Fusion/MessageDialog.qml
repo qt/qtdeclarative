@@ -47,6 +47,7 @@ MessageDialogImpl {
 
     header: Label {
         text: control.title
+        visible: parent?.parent === Overlay.overlay
         horizontalAlignment: Label.AlignHCenter
         elide: Label.ElideRight
         font.bold: true

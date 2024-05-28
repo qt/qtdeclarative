@@ -76,6 +76,7 @@ FileDialogImpl {
             elide: Label.ElideRight
             // TODO: QPlatformTheme::TitleBarFont
             font.pixelSize: 20
+            visible: parent.parent?.parent === Overlay.overlay
 
             Layout.leftMargin: 24
             Layout.rightMargin: 24
@@ -95,6 +96,7 @@ FileDialogImpl {
             id: breadcrumbBar
             dialog: control
 
+            Layout.topMargin: parent.parent?.parent !== Overlay.overlay ? 12 : 0
             Layout.leftMargin: 24
             Layout.rightMargin: 24
             Layout.fillWidth: true

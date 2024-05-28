@@ -55,7 +55,7 @@ FolderDialogImpl {
                 objectName: "dialogTitleBarLabel"
                 width: parent.width
                 text: control.title
-                visible: control.title.length > 0
+                visible: control.parent === Overlay.overlay && control.title.length > 0
                 horizontalAlignment: Label.AlignHCenter
                 elide: Label.ElideRight
                 font.bold: true

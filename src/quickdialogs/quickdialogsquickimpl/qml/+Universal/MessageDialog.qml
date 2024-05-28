@@ -38,7 +38,7 @@ MessageDialogImpl {
         elide: Label.ElideRight
         // TODO: QPlatformTheme::TitleBarFont
         font.pixelSize: 20
-        visible: control.title.length > 0
+        visible: parent?.parent === Overlay.overlay && control.title.length > 0
 
         leftPadding: 24
         rightPadding: 24

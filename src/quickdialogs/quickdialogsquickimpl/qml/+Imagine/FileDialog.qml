@@ -85,6 +85,7 @@ FileDialogImpl {
             text: control.title
             elide: Label.ElideRight
             font.bold: true
+            visible: parent.parent?.parent === Overlay.overlay
 
             Layout.leftMargin: 16
             Layout.rightMargin: 16
@@ -110,6 +111,7 @@ FileDialogImpl {
             id: breadcrumbBar
             dialog: control
 
+            Layout.topMargin: parent.parent?.parent !== Overlay.overlay ? 12 : 6
             Layout.leftMargin: 16
             Layout.rightMargin: 16
             Layout.fillWidth: true
