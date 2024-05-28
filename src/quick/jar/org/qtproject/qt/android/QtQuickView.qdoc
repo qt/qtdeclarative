@@ -93,8 +93,9 @@
     }
     \endcode
 
-    \note \b {Adding a QtQuickView from a Service context requires your application
-    to be signed with the platform key.}
+    \note Adding a QtQuickView from a Service context requires your application
+    to have the \l {Android: SYSTEM_ALERT_WINDOW}{SYSTEM_ALERT_WINDOW}
+    permission, and to be signed with the platform key.
 
     \note QML views embedded within a Service context do not
     support keyboard input or accessibility features.

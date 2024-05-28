@@ -73,4 +73,8 @@
     \externalpage https://developer.android.com/topic/libraries/view-binding
     \title Android: View binding
 */
+/*!
+    \externalpage https://developer.android.com/reference/android/Manifest.permission#SYSTEM_ALERT_WINDOW
+    \title Android: SYSTEM_ALERT_WINDOW
+*/
 
