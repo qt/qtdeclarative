@@ -2961,18 +2961,12 @@ QtObject {
                     readonly property real spacing: -154
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17152;2509:12481;4189:38505"
-                        readonly property string filePath: "dark/images/rangeslider-track-disabled.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "rangeslider-track-disabled"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 124
                         readonly property real x: 18002
@@ -3076,18 +3070,12 @@ QtObject {
                     readonly property real spacing: -154
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17150;8624:14531"
-                        readonly property string filePath: "dark/images/rangeslider-track-handle-pressed.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "rangeslider-track-handle-pressed"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 124
                         readonly property real x: 18002
@@ -3191,18 +3179,12 @@ QtObject {
                     readonly property real spacing: -154
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17148;8624:14402"
-                        readonly property string filePath: "dark/images/rangeslider-track-hovered.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "rangeslider-track-hovered"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 124
                         readonly property real x: 18002
@@ -3306,18 +3288,12 @@ QtObject {
                     readonly property real spacing: -154
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17146;2509:12436;4189:38505"
-                        readonly property string filePath: "dark/images/rangeslider-track.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "rangeslider-track"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 124
                         readonly property real x: 18002
@@ -3405,18 +3381,12 @@ QtObject {
                     readonly property real spacing: -208
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17178;2506:12695;4200:48597"
-                        readonly property string filePath: "dark/images/slider-track-disabled.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "slider-track-disabled"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 173
                         readonly property real x: 22960
@@ -3501,18 +3471,12 @@ QtObject {
                     readonly property real spacing: -208
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17174;8624:13855"
-                        readonly property string filePath: "dark/images/slider-track-hovered.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "slider-track-hovered"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 173
                         readonly property real x: 22960
@@ -3597,18 +3561,12 @@ QtObject {
                     readonly property real spacing: -208
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17172;2506:12656;4200:48597"
-                        readonly property string filePath: "dark/images/slider-track.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "slider-track"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 173
                         readonly property real x: 22960
@@ -3693,18 +3651,12 @@ QtObject {
                     readonly property real spacing: -208
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17176;8624:14652"
-                        readonly property string filePath: "dark/images/slider-track-pressed.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "slider-track-pressed"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 173
                         readonly property real x: 22960
@@ -7956,18 +7908,12 @@ QtObject {
                     readonly property real spacing: -154
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15528;2509:12481;4189:38505"
-                        readonly property string filePath: "light/images/rangeslider-track-disabled.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "rangeslider-track-disabled"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 124
                         readonly property real x: 17672
@@ -8071,18 +8017,12 @@ QtObject {
                     readonly property real spacing: -154
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15526;8624:14531"
-                        readonly property string filePath: "light/images/rangeslider-track-handle-pressed.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "rangeslider-track-handle-pressed"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 124
                         readonly property real x: 17672
@@ -8186,18 +8126,12 @@ QtObject {
                     readonly property real spacing: -154
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15524;8624:14402"
-                        readonly property string filePath: "light/images/rangeslider-track-hovered.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "rangeslider-track-hovered"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 124
                         readonly property real x: 17672
@@ -8301,18 +8235,12 @@ QtObject {
                     readonly property real spacing: -154
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15522;2509:12436;4189:38505"
-                        readonly property string filePath: "light/images/rangeslider-track.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "rangeslider-track"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 124
                         readonly property real x: 17672
@@ -8400,18 +8328,12 @@ QtObject {
                     readonly property real spacing: -208
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15554;2506:12695;4200:48597"
-                        readonly property string filePath: "light/images/slider-track-disabled.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "slider-track-disabled"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 173
                         readonly property real x: 22630
@@ -8496,18 +8418,12 @@ QtObject {
                     readonly property real spacing: -208
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15550;8624:13855"
-                        readonly property string filePath: "light/images/slider-track-hovered.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "slider-track-hovered"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 173
                         readonly property real x: 22630
@@ -8592,18 +8508,12 @@ QtObject {
                     readonly property real spacing: -208
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15548;2506:12656;4200:48597"
-                        readonly property string filePath: "light/images/slider-track.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "slider-track"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 173
                         readonly property real x: 22630
@@ -8688,18 +8598,12 @@ QtObject {
                     readonly property real spacing: -208
                     readonly property real topPadding: 2
                     readonly property QtObject track: QtObject {
-                        readonly property real bottomOffset: 1
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15552;8624:14652"
-                        readonly property string filePath: "light/images/slider-track-pressed.png"
                         readonly property real height: 4
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "slider-track-pressed"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 2
                         readonly property real topShadow: 0
                         readonly property real width: 173
                         readonly property real x: 22630
