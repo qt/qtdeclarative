@@ -49,6 +49,7 @@ enum IdentifierType : char {
     SignalIdentifier,
     SignalHandlerIdentifier,
     MethodIdentifier,
+    LambdaMethodIdentifier,
     QmlObjectIdIdentifier,
     SingletonIdentifier,
     EnumeratorIdentifier,

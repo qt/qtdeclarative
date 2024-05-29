@@ -73,4 +73,18 @@ Item {
     }
 
     property BaseType.MyBaseInlineComponent inlineCompFromDifferentFile
+    function helloLambda(x, y, z) {
+        let myLambda = function (a, b, c) {
+            let x = b * b - 4 * a * c;
+            let y = abc();
+            let recursion = myLambda(a + b, b - c, c * c + z);
+            let notRecursion = helloLambda(a + b, b - c, c * c + z);
+        }
+        let myLambda2 = (a, b, c) => {
+            let x = b * b - 4 * a * c;
+            let y = abc();
+            let recursion = myLambda(a + b, b - c, c * c + z);
+            let notRecursion = helloLambda(a + b, b - c, c * c + z);
+        }
+    }
 }
