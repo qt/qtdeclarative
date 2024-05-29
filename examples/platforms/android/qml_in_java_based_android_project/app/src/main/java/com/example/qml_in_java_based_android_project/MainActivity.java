@@ -12,6 +12,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -19,6 +20,7 @@ import org.qtproject.qt.android.QtQmlStatus;
 import org.qtproject.qt.android.QtQmlStatusChangeListener;
 import org.qtproject.qt.android.QtQuickView;
 import org.qtproject.example.qml_in_android_view.QmlModule.Main;
+import org.qtproject.example.qml_in_android_view.QmlModule.Second;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +40,10 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
     private LinearLayout m_mainLinear;
     private FrameLayout m_qmlFrameLayout;
     private QtQuickView m_qtQuickView;
-    private Main m_mainQmlComponent;
+    //! [qmlComponent]
+    private final Main m_mainQmlComponent = new Main();
+    //! [qmlComponent]
+    private final Second m_secondQmlComponent = new Second();
     private LinearLayout m_androidControlsLayout;
     private TextView m_getPropertyValueText;
     private TextView m_qmlStatus;
@@ -58,9 +63,6 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         m_box = findViewById(R.id.qmlColorBox);
         m_switch = findViewById(R.id.disconnectQmlListenerSwitch);
         m_switch.setOnClickListener(view -> switchListener());
-        //! [qmlComponent]
-        m_mainQmlComponent = new Main();
-        //! [qmlComponent]
         //! [m_qtQuickView]
         m_qtQuickView = new QtQuickView(this);
         //! [m_qtQuickView]
@@ -70,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         //! [setStatusChangeListener]
         m_mainQmlComponent.setStatusChangeListener(this);
         //! [setStatusChangeListener]
+        m_secondQmlComponent.setStatusChangeListener(this);
         //! [layoutParams]
         ViewGroup.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -80,7 +83,14 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         m_qtQuickView.loadComponent(m_mainQmlComponent);
         //! [loadComponent]
 
-        findViewById(R.id.changeQmlColorButton).setOnClickListener(view -> onClickListener());
+        Button m_changeColorButton = findViewById(R.id.changeQmlColorButton);
+        m_changeColorButton.setOnClickListener(view -> onClickListener());
+        Button m_loadMainQmlButton = findViewById(R.id.loadMainQml);
+        m_loadMainQmlButton.setOnClickListener(view -> loadMainQml());
+        Button m_loadSecondQmlButton = findViewById(R.id.loadSecondQml);
+        m_loadSecondQmlButton.setOnClickListener(view -> loadSecondQml());
+        Button m_rotateQmlGridButton = findViewById(R.id.rotateQmlGridButton);
+        m_rotateQmlGridButton.setOnClickListener(view -> rotateQmlGrid());
 
         // Check target device orientation on launch
         handleOrientationChanges();
@@ -125,12 +135,14 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         m_mainQmlComponent.setColorStringFormat(m_colors.getColor());
 
         String qmlBackgroundColor = m_mainQmlComponent.getColorStringFormat();
-
         // Display the QML View background color code
         m_getPropertyValueText.setText(qmlBackgroundColor);
 
         // Display the QML View background color in a view
-        m_box.setBackgroundColor(Color.parseColor(qmlBackgroundColor));
+        // if qmlBackGroundColor is not null
+        if (qmlBackgroundColor != null) {
+            m_box.setBackgroundColor(Color.parseColor(qmlBackgroundColor));
+        }
     }
     //! [onClickListener]
 
@@ -150,10 +162,13 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
             m_qmlButtonSignalListenerId = m_mainQmlComponent.connectOnClickedListener(
                     (String name, Void v) -> {
                         Log.i(TAG, "QML button clicked");
-                        m_androidControlsLayout.setBackgroundColor(Color.parseColor(m_colors.getColor()));
+                        m_androidControlsLayout.setBackgroundColor(Color.parseColor(
+                                m_colors.getColor()
+                        ));
                     });
         }
     }
+
     //! [onStatusChanged]
     @Override
     public void onStatusChanged(QtQmlStatus qtQmlStatus) {
@@ -172,12 +187,36 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
             m_qmlButtonSignalListenerId = m_mainQmlComponent.connectOnClickedListener(
                     (String name, Void v) -> {
                         Log.i(TAG, "QML button clicked");
-                        m_androidControlsLayout.setBackgroundColor(Color.parseColor(m_colors.getColor()));
+                        m_androidControlsLayout.setBackgroundColor(Color.parseColor(
+                                m_colors.getColor()
+                        ));
                     });
 
         }
         //! [qml signal listener]
     }
     //! [onStatusChanged]
+
+    private void loadSecondQml() {
+        m_qtQuickView.loadComponent(m_secondQmlComponent);
+
+        // Reset box color and color text after component reload
+        m_box.setBackgroundColor(Color.parseColor("#00ffffff"));
+        m_getPropertyValueText.setText("");
+    }
+
+    private void loadMainQml() {
+        m_qtQuickView.loadComponent(m_mainQmlComponent);
+
+        // Reset box color and color text after component reload
+        m_box.setBackgroundColor(Color.parseColor("#00ffffff"));
+        m_getPropertyValueText.setText("");
+    }
+    private void rotateQmlGrid() {
+        Integer previousGridRotation = m_secondQmlComponent.getGridRotation();
+        if (previousGridRotation != null) {
+            m_secondQmlComponent.setGridRotation(previousGridRotation + 45);
+        }
+    }
 }
 

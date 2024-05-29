@@ -15,12 +15,12 @@ Rectangle {
     Text {
         id: helloText
 
-        text: "QML"
+        text: "Main QML component"
         color: "white"
         font.pixelSize: 72
         fontSizeMode: Text.VerticalFit
         // Height is calculated based on display orientation
-        // from Screen height, dividing numbers are based on what what seem
+        // from Screen height, dividing numbers are based on what seem
         // to look good on most displays
         height: Screen.width > Screen.height ? Screen.height / 8 : (Screen.height / 2) / 8
         font.bold: true
@@ -52,6 +52,7 @@ Rectangle {
 
     Button {
         id: button
+
         // Width is calculated from changeColorText which is calculated from Screen size
         // dividing numbers are base on what seems to look good on most displays
         width: changeColorText.width / 1.6

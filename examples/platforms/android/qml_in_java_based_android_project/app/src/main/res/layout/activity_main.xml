@@ -121,7 +121,7 @@
         <LinearLayout
             android:id="@+id/qmlColorLinear"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp">
 
@@ -157,7 +157,42 @@
                 android:layout_gravity="center_horizontal"
                 android:background="@android:color/transparent"
                 android:layout_weight="0"/>
+
         </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal">
+
+            <Button
+                android:id="@+id/loadSecondQml"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="Load Second Qml"
+                android:textSize="14sp"
+                android:layout_marginRight="20dp"/>
+
+            <Button
+                android:id="@+id/loadMainQml"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="Load Main Qml"
+                android:textSize="14sp" />
+        </LinearLayout>
+        <Button
+            android:id="@+id/rotateQmlGridButton"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:text="Rotate Qml grid"
+            android:textSize="14sp" />
 
     </LinearLayout>
 
