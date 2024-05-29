@@ -3015,11 +3015,13 @@ void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomBeforeEndvisit()
                         // property definition has a binding, like `property int i: 45` for
                         // example), then the property definition scope is the parent of the current
                         // scope.
-                        e.setSemanticScope(scope->scopeType() == QQmlSA::ScopeType::JSFunctionScope
+                        const bool usePropertyDefinitionScopeInsteadOfTheBindingScope =
+                                scope->scopeType() == QQmlSA::ScopeType::JSFunctionScope
+                                && scope->parentScope()
+                                && scope->parentScope()->scopeType() == QQmlSA::ScopeType::QMLScope;
+                        e.setSemanticScope(usePropertyDefinitionScopeInsteadOfTheBindingScope
                                                    ? scope->parentScope()
                                                    : scope);
-                        Q_ASSERT(e.semanticScope()
-                                 && e.semanticScope()->scopeType() == QQmlSA::ScopeType::QMLScope);
                     }
                 },
                 m_domCreator.currentNodeEl(1).item.value);
