@@ -2025,6 +2025,385 @@ QtObject {
 
             }
 
+            readonly property QtObject itemdelegate: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17085;2319:9946;2399:11597"
+                        readonly property string filePath: ""
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5917
+                        readonly property real y: 2010.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:17085;2319:9946"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17085;2319:9946;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5924.5
+                        readonly property real y: 2018.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject highlighted: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17087;2319:9952;2399:11597"
+                        readonly property string filePath: "dark/images/itemdelegate-background-highlighted.png"
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-highlighted"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5917
+                        readonly property real y: 2077.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:17087;2319:9952"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-highlighted"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17087;2319:9952;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-highlighted"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5924.5
+                        readonly property real y: 2085.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject highlighted_hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17089;2319:9958;2399:11597"
+                        readonly property string filePath: "dark/images/itemdelegate-background-highlighted-hovered.png"
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-highlighted-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5917
+                        readonly property real y: 2137.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:17089;2319:9958"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-highlighted-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17089;2319:9958;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-highlighted-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5924.5
+                        readonly property real y: 2145.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject highlighted_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17091;2319:9970;2399:11597"
+                        readonly property string filePath: "dark/images/itemdelegate-background-highlighted-pressed.png"
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-highlighted-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5917
+                        readonly property real y: 2211.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:17091;2319:9970"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-highlighted-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17091;2319:9970;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-highlighted-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5924.5
+                        readonly property real y: 2219.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17081;2319:9922;2399:11597"
+                        readonly property string filePath: "dark/images/itemdelegate-background-hovered.png"
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5917
+                        readonly property real y: 1876.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:17081;2319:9922"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17081;2319:9922;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5924.5
+                        readonly property real y: 1884.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17079;2319:9916;2399:11597"
+                        readonly property string filePath: ""
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5917
+                        readonly property real y: 1809.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:17079;2319:9916"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17079;2319:9916;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5924.5
+                        readonly property real y: 1817.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17083;2319:9934;2399:11597"
+                        readonly property string filePath: "dark/images/itemdelegate-background-pressed.png"
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5917
+                        readonly property real y: 1943.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:17083;2319:9934"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17083;2319:9934;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5924.5
+                        readonly property real y: 1951.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+            }
+
             readonly property QtObject popup: QtObject {
                 readonly property QtObject normal: QtObject {
                     readonly property QtObject background: QtObject {
@@ -6968,6 +7347,385 @@ QtObject {
                     readonly property real rightPadding: 12
                     readonly property real spacing: 8
                     readonly property real topPadding: 5
+                }
+
+            }
+
+            readonly property QtObject itemdelegate: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15461;2319:9946;2399:11597"
+                        readonly property string filePath: ""
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5697
+                        readonly property real y: 2010.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:15461;2319:9946"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15461;2319:9946;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5704.5
+                        readonly property real y: 2018.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject highlighted: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15463;2319:9952;2399:11597"
+                        readonly property string filePath: "light/images/itemdelegate-background-highlighted.png"
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-highlighted"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5697
+                        readonly property real y: 2077.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:15463;2319:9952"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-highlighted"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15463;2319:9952;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-highlighted"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5704.5
+                        readonly property real y: 2085.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject highlighted_hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15465;2319:9958;2399:11597"
+                        readonly property string filePath: "light/images/itemdelegate-background-highlighted-hovered.png"
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-highlighted-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5697
+                        readonly property real y: 2137.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:15465;2319:9958"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-highlighted-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15465;2319:9958;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-highlighted-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5704.5
+                        readonly property real y: 2145.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject highlighted_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15467;2319:9970;2399:11597"
+                        readonly property string filePath: "light/images/itemdelegate-background-highlighted-pressed.png"
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-highlighted-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5697
+                        readonly property real y: 2211.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:15467;2319:9970"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-highlighted-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15467;2319:9970;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-highlighted-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5704.5
+                        readonly property real y: 2219.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15457;2319:9922;2399:11597"
+                        readonly property string filePath: "light/images/itemdelegate-background-hovered.png"
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5697
+                        readonly property real y: 1876.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:15457;2319:9922"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15457;2319:9922;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5704.5
+                        readonly property real y: 1884.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15455;2319:9916;2399:11597"
+                        readonly property string filePath: ""
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5697
+                        readonly property real y: 1810.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:15455;2319:9916"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15455;2319:9916;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5704.5
+                        readonly property real y: 1818.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
+                }
+
+                readonly property QtObject pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15459;2319:9934;2399:11597"
+                        readonly property string filePath: "light/images/itemdelegate-background-pressed.png"
+                        readonly property real height: 36
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-background-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 93
+                        readonly property real x: 5697
+                        readonly property real y: 1943.5
+                    }
+
+                    readonly property real bottomPadding: 8
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 8
+                        readonly property string figmaId: "I2557:15459;2319:9934"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "itemdelegate-contentItem-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 12
+                        readonly property real topPadding: 8
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15459;2319:9934;2411:10964"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "itemdelegate-label-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 5704.5
+                        readonly property real y: 1951.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property real rightPadding: 12
+                    readonly property real topPadding: 8
                 }
 
             }
