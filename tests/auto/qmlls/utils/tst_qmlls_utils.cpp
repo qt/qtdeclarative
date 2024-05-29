@@ -1902,6 +1902,7 @@ void tst_qmlls_utils::resolveExpressionType_data()
     // startline of the owners definition
     QTest::addColumn<int>("expectedLine");
     QTest::addColumn<QQmlLSUtils::IdentifierType>("expectedType");
+    QTest::addColumn<QString>("expectedName");
 
     using namespace QQmlLSUtils;
 
@@ -1914,31 +1915,38 @@ void tst_qmlls_utils::resolveExpressionType_data()
         const int childLine = 31;
 
         QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << ResolveOwnerType << JSDefinitionsQml
-                            << parentLine << QmlObjectIdIdentifier;
-        QTest::addRow("childIddInChild") << JSDefinitionsQml << 37 << 30 << ResolveOwnerType
-                                         << JSDefinitionsQml << childLine << QmlObjectIdIdentifier;
-        QTest::addRow("parentIdInChild") << JSDefinitionsQml << 37 << 43 << ResolveOwnerType
-                                         << JSDefinitionsQml << parentLine << QmlObjectIdIdentifier;
+                            << parentLine << QmlObjectIdIdentifier << u"rootId"_s;
+        QTest::addRow("childIddInChild")
+                << JSDefinitionsQml << 37 << 30 << ResolveOwnerType << JSDefinitionsQml << childLine
+                << QmlObjectIdIdentifier << u"nested"_s;
+        QTest::addRow("parentIdInChild")
+                << JSDefinitionsQml << 37 << 43 << ResolveOwnerType << JSDefinitionsQml
+                << parentLine << QmlObjectIdIdentifier << u"rootId"_s;
 
-        QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << ResolveOwnerType
-                                   << JSDefinitionsQml << parentLine << PropertyIdentifier;
-        QTest::addRow("qualifiedPropertyI") << JSDefinitionsQml << 15 << 21 << ResolveOwnerType
-                                            << JSDefinitionsQml << parentLine << PropertyIdentifier;
-        QTest::addRow("propertyIInChild") << JSDefinitionsQml << 37 << 21 << ResolveOwnerType
-                                          << JSDefinitionsQml << childLine << PropertyIdentifier;
+        QTest::addRow("propertyI")
+                << JSDefinitionsQml << 14 << 14 << ResolveOwnerType << JSDefinitionsQml
+                << parentLine << PropertyIdentifier << u"i"_s;
+        QTest::addRow("qualifiedPropertyI")
+                << JSDefinitionsQml << 15 << 21 << ResolveOwnerType << JSDefinitionsQml
+                << parentLine << PropertyIdentifier << u"i"_s;
+        QTest::addRow("propertyIInChild")
+                << JSDefinitionsQml << 37 << 21 << ResolveOwnerType << JSDefinitionsQml << childLine
+                << PropertyIdentifier << u"i"_s;
         QTest::addRow("qualifiedChildPropertyIInChild")
-                << JSDefinitionsQml << 37 << 35 << ResolveOwnerType << JSDefinitionsQml
-                << childLine << PropertyIdentifier;
+                << JSDefinitionsQml << 37 << 35 << ResolveOwnerType << JSDefinitionsQml << childLine
+                << PropertyIdentifier << u"i"_s;
         QTest::addRow("qualifiedParentPropertyIInChild")
                 << JSDefinitionsQml << 37 << 49 << ResolveOwnerType << JSDefinitionsQml
-                << parentLine << PropertyIdentifier;
+                << parentLine << PropertyIdentifier << u"i"_s;
 
         QTest::addRow("childMethod") << JSDefinitionsQml << 48 << 23 << ResolveOwnerType
-                                     << JSDefinitionsQml << childLine << MethodIdentifier;
-        QTest::addRow("childMethod2") << JSDefinitionsQml << 44 << 20 << ResolveOwnerType
-                                      << JSDefinitionsQml << childLine << MethodIdentifier;
-        QTest::addRow("parentMethod") << JSDefinitionsQml << 14 << 9 << ResolveOwnerType
-                                      << JSDefinitionsQml << parentLine << MethodIdentifier;
+                                     << JSDefinitionsQml << childLine << MethodIdentifier << u"f"_s;
+        QTest::addRow("childMethod2")
+                << JSDefinitionsQml << 44 << 20 << ResolveOwnerType << JSDefinitionsQml << childLine
+                << MethodIdentifier << u"f"_s;
+        QTest::addRow("parentMethod")
+                << JSDefinitionsQml << 14 << 9 << ResolveOwnerType << JSDefinitionsQml << parentLine
+                << MethodIdentifier << u"f"_s;
     }
 
     {
@@ -1946,17 +1954,18 @@ void tst_qmlls_utils::resolveExpressionType_data()
                 testFile(u"resolveExpressionType/BindingsOnDeferred.qml"_s);
         const QString qQuickControl = u"private/qquickcontrol_p.h"_s;
         const QString qQuickKeysAttachedType = u"private/qquickitem_p.h"_s;
-        QTest::addRow("bindingOnId") << bindingsOnDeferredQml << 12 << 14 << ResolveOwnerType
-                                     << bindingsOnDeferredQml << 8 << QmlObjectIdIdentifier;
+        QTest::addRow("bindingOnId")
+                << bindingsOnDeferredQml << 12 << 14 << ResolveOwnerType << bindingsOnDeferredQml
+                << 8 << QmlObjectIdIdentifier << u"inner"_s;
         QTest::addRow("bindingOnQualifiedDeferredProperty")
                 << bindingsOnDeferredQml << 12 << 24 << ResolveOwnerType << qQuickControl << noLine
-                << PropertyIdentifier;
+                << PropertyIdentifier << u"background"_s;
         QTest::addRow("groupedPropertyBindingOnId")
                 << bindingsOnDeferredQml << 14 << 14 << ResolveOwnerType << bindingsOnDeferredQml
-                << 8 << QmlObjectIdIdentifier;
+                << 8 << QmlObjectIdIdentifier << u"inner"_s;
         QTest::addRow("someDeferredProperty")
                 << bindingsOnDeferredQml << 15 << 22 << ResolveOwnerType << qQuickControl << noLine
-                << PropertyIdentifier;
+                << PropertyIdentifier << u"background"_s;
     }
 
     {
@@ -1965,22 +1974,25 @@ void tst_qmlls_utils::resolveExpressionType_data()
         const int nestedComponent2Line = 46;
         const int nestedComponent3Line = 51;
         const int nestedComponent4Line = 57;
-        QTest::addRow("propertyAccess:inner.inner") << JSUsagesQml << 68 << 34 << ResolveOwnerType
-                                                    << JSUsagesQml << nestedComponent2Line << PropertyIdentifier;
-        QTest::addRow("propertyAccess:inner.inner2") << JSUsagesQml << 69 << 34 << ResolveOwnerType
-                                                     << JSUsagesQml << nestedComponent2Line << PropertyIdentifier;
+        QTest::addRow("propertyAccess:inner.inner")
+                << JSUsagesQml << 68 << 34 << ResolveOwnerType << JSUsagesQml
+                << nestedComponent2Line << PropertyIdentifier << u"inner"_s;
+        QTest::addRow("propertyAccess:inner.inner2")
+                << JSUsagesQml << 69 << 34 << ResolveOwnerType << JSUsagesQml
+                << nestedComponent2Line << PropertyIdentifier << u"inner"_s;
         QTest::addRow("propertyAccess:inner.inner.inner")
                 << JSUsagesQml << 69 << 40 << ResolveOwnerType << JSUsagesQml
-                << nestedComponent3Line << PropertyIdentifier;
+                << nestedComponent3Line << PropertyIdentifier << u"inner"_s;
         QTest::addRow("propertyAccess:inner.inner.inner.p2")
                 << JSUsagesQml << 69 << 44 << ResolveOwnerType << JSUsagesQml
-                << nestedComponent4Line << PropertyIdentifier;
+                << nestedComponent4Line << PropertyIdentifier << u"p2"_s;
 
         QTest::addRow("propertyAccess:helloProperty")
-                << JSUsagesQml << 65 << 68 << ResolveOwnerType << JSUsagesQml << rootLine << PropertyIdentifier;
+                << JSUsagesQml << 65 << 68 << ResolveOwnerType << JSUsagesQml << rootLine
+                << PropertyIdentifier << u"helloProperty"_s;
         QTest::addRow("propertyAccess:nestedHelloProperty")
                 << JSUsagesQml << 65 << 46 << ResolveOwnerType << JSUsagesQml
-                << nestedComponent4Line << PropertyIdentifier;
+                << nestedComponent4Line << PropertyIdentifier << u"helloProperty"_s;
     }
 
     {
@@ -1994,55 +2006,65 @@ void tst_qmlls_utils::resolveExpressionType_data()
         const int derivedTypeLine = 6;
         const int keysLine = 29;
 
-        QTest::addRow("ownerOfMethod")
-                << derivedType << 9 << 13 << ResolveOwnerType << baseType << baseTypeLine << MethodIdentifier;
-        QTest::addRow("ownerOfMethod2")
-                << derivedType << 15 << 33 << ResolveOwnerType << baseType << baseTypeLine << MethodIdentifier;
+        QTest::addRow("ownerOfMethod") << derivedType << 9 << 13 << ResolveOwnerType << baseType
+                                       << baseTypeLine << MethodIdentifier << u"helloMethod"_s;
+        QTest::addRow("ownerOfMethod2") << derivedType << 15 << 33 << ResolveOwnerType << baseType
+                                        << baseTypeLine << MethodIdentifier << u"helloMethod"_s;
         QTest::addRow("ownerOfQualifiedMethod")
-                << derivedType << 22 << 46 << ResolveOwnerType << baseType << baseTypeLine << MethodIdentifier;
+                << derivedType << 22 << 46 << ResolveOwnerType << baseType << baseTypeLine
+                << MethodIdentifier << u"helloMethod"_s;
 
         QTest::addRow("ownerOfProperty")
-                << derivedType << 10 << 22 << ResolveOwnerType << baseType << baseTypeLine << PropertyIdentifier;
+                << derivedType << 10 << 22 << ResolveOwnerType << baseType << baseTypeLine
+                << PropertyIdentifier << u"helloProperty"_s;
         QTest::addRow("ownerOfProperty2")
-                << derivedType << 16 << 37 << ResolveOwnerType << baseType << baseTypeLine << PropertyIdentifier;
+                << derivedType << 16 << 37 << ResolveOwnerType << baseType << baseTypeLine
+                << PropertyIdentifier << u"helloProperty"_s;
         QTest::addRow("ownerOfQualifiedProperty")
-                << derivedType << 23 << 46 << ResolveOwnerType << baseType << baseTypeLine << PropertyIdentifier;
+                << derivedType << 23 << 46 << ResolveOwnerType << baseType << baseTypeLine
+                << PropertyIdentifier << u"helloProperty"_s;
 
         QTest::addRow("ownerOfOwnProperty")
-                << derivedType << 16 << 23 << ResolveOwnerType << derivedType << derivedTypeLine << PropertyIdentifier;
+                << derivedType << 16 << 23 << ResolveOwnerType << derivedType << derivedTypeLine
+                << PropertyIdentifier << u"someProperty"_s;
 
-        QTest::addRow("ownerOfSignal")
-                << derivedType << 11 << 13 << ResolveOwnerType << baseType << baseTypeLine << SignalIdentifier;
-        QTest::addRow("ownerOfSignal2")
-                << derivedType << 18 << 37 << ResolveOwnerType << baseType << baseTypeLine << SignalIdentifier;
+        QTest::addRow("ownerOfSignal") << derivedType << 11 << 13 << ResolveOwnerType << baseType
+                                       << baseTypeLine << SignalIdentifier << u"helloSignal"_s;
+        QTest::addRow("ownerOfSignal2") << derivedType << 18 << 37 << ResolveOwnerType << baseType
+                                        << baseTypeLine << SignalIdentifier << u"helloSignal"_s;
         QTest::addRow("ownerOfSignalHandler")
-                << derivedType << 19 << 10 << ResolveOwnerType << baseType << baseTypeLine << SignalHandlerIdentifier;
+                << derivedType << 19 << 10 << ResolveOwnerType << baseType << baseTypeLine
+                << SignalHandlerIdentifier << u"onHelloSignal"_s;
         QTest::addRow("ownerOfQualifiedSignal")
-                << derivedType << 25 << 22 << ResolveOwnerType << baseType << baseTypeLine << SignalIdentifier;
+                << derivedType << 25 << 22 << ResolveOwnerType << baseType << baseTypeLine
+                << SignalIdentifier << u"helloSignal"_s;
 
         QTest::addRow("ownerOfGroupedProperty")
-                << derivedType << 28 << 7 << ResolveOwnerType << baseType << baseTypeLine << GroupedPropertyIdentifier;
+                << derivedType << 28 << 7 << ResolveOwnerType << baseType << baseTypeLine
+                << GroupedPropertyIdentifier << u"helloFont"_s;
         QTest::addRow("ownerOfGroupedProperty2")
                 << derivedType << 28 << 17 << ResolveOwnerType << qQuickValueTypes << noLine
-                << PropertyIdentifier;
+                << PropertyIdentifier << u"family"_s;
 
         QTest::addRow("ownerOfAttachedProperty")
-                << derivedType << 29 << 6 << ResolveOwnerType << derivedType << keysLine << AttachedTypeIdentifier;
+                << derivedType << 29 << 6 << ResolveOwnerType << derivedType << keysLine
+                << AttachedTypeIdentifier << u"Keys"_s;
         QTest::addRow("ownerOfAttachedProperty2")
                 << derivedType << 29 << 14 << ResolveOwnerType << qQuickKeysAttachedType << noLine
-                << SignalHandlerIdentifier;
+                << SignalHandlerIdentifier << u"onBackPressed"_s;
 
         QTest::addRow("actualTypeOfAttachedProperty")
                 << derivedType << 29 << 14 << ResolveActualTypeForFieldMemberExpression << noFile
-                << noLine << SignalHandlerIdentifier;
+                << noLine << SignalHandlerIdentifier << u"onBackPressed"_s;
 
-        QTest::addRow("id")
-                << derivedType << 7 << 10 << ResolveOwnerType << derivedType << 6 << QmlObjectIdIdentifier;
+        QTest::addRow("id") << derivedType << 7 << 10 << ResolveOwnerType << derivedType << 6
+                            << QmlObjectIdIdentifier << u"self"_s;
         QTest::addRow("propertyBinding")
-                << derivedType << 31 << 13 << ResolveOwnerType << baseType << baseTypeLine << PropertyIdentifier;
+                << derivedType << 31 << 13 << ResolveOwnerType << baseType << baseTypeLine
+                << PropertyIdentifier << u"helloProperty"_s;
 
-        QTest::addRow("qmlObject")
-                << derivedType << 6 << 4 << ResolveOwnerType << derived2Type << 4 << QmlComponentIdentifier;
+        QTest::addRow("qmlObject") << derivedType << 6 << 4 << ResolveOwnerType << derived2Type << 4
+                                   << QmlComponentIdentifier << u"Derived2"_s;
     }
 }
 
@@ -2055,6 +2077,7 @@ void tst_qmlls_utils::resolveExpressionType()
     QFETCH(QString, expectedFile);
     QFETCH(int, expectedLine);
     QFETCH(QQmlLSUtils::IdentifierType, expectedType);
+    QFETCH(QString, expectedName);
 
     // they all start at 1.
     Q_ASSERT(line > 0);
@@ -2069,20 +2092,22 @@ void tst_qmlls_utils::resolveExpressionType()
     QCOMPARE(locations.size(), 1);
 
     auto definition = QQmlLSUtils::resolveExpressionType(locations.front().domItem, resolveOption);
-
     QVERIFY(definition);
-    if (!expectedFile.isEmpty()) {
-        QVERIFY(definition->semanticScope);
-        QCOMPARE(definition->semanticScope->filePath(), expectedFile);
-
-        if (expectedLine != -1) {
-            QQmlJS::SourceLocation location = definition->semanticScope->sourceLocation();
-            QCOMPARE((int)location.startLine, expectedLine);
-        }
-    } else {
-        QVERIFY(!definition->semanticScope);
-    }
     QCOMPARE(definition->type, expectedType);
+    QCOMPARE(definition->name, expectedName);
+
+    if (expectedFile.isEmpty()) {
+        QVERIFY(!definition->semanticScope);
+        return;
+    }
+
+    QVERIFY(definition->semanticScope);
+    QCOMPARE(definition->semanticScope->filePath(), expectedFile);
+
+    if (expectedLine != -1) {
+        QQmlJS::SourceLocation location = definition->semanticScope->sourceLocation();
+        QCOMPARE((int)location.startLine, expectedLine);
+    }
 }
 
 void tst_qmlls_utils::isValidEcmaScriptIdentifier_data()
