@@ -135,6 +135,7 @@ private:
     QList<ScriptStackElement> scriptNodeStack;
     QVector<int> arrayBindingLevels;
     FileLocations::Tree rootMap;
+    int m_nestedFunctionDepth = 0;
     bool m_enableScriptExpressions = false;
     bool m_loadFileLazily = false;
 
@@ -321,6 +322,13 @@ public:
     bool visit(AST::UiPublicMember *el) override;
     void endVisit(AST::UiPublicMember *el) override;
 
+private:
+    ScriptElementVariant prepareBodyForFunction(AST::FunctionExpression *fExpression);
+
+public:
+    bool visit(AST::FunctionExpression *el) override;
+    void endVisit(AST::FunctionExpression *) override;
+
     bool visit(AST::FunctionDeclaration *el) override;
     void endVisit(AST::FunctionDeclaration *) override;
 
@@ -363,6 +371,9 @@ public:
 
     bool visit(AST::Block *block) override;
     void endVisit(AST::Block *) override;
+
+    bool visit(AST::YieldExpression *block) override;
+    void endVisit(AST::YieldExpression *) override;
 
     bool visit(AST::ReturnStatement *block) override;
     void endVisit(AST::ReturnStatement *) override;
@@ -497,17 +508,20 @@ public:
     bool visit(AST::NestedExpression *) override;
     void endVisit(AST::NestedExpression *) override;
 
-    // lists of stuff whose children do not need a qqmljsscope: visitation order can be custom
-    bool visit(AST::ArgumentList *) override;
+
+    // lists of stuff whose children don't need a qqmljsscope: visitation order can be custom
     bool visit(AST::UiParameterList *) override;
-    bool visit(AST::PatternElementList *) override;
-    bool visit(AST::PatternPropertyList *) override;
-    bool visit(AST::VariableDeclarationList *vdl) override;
     bool visit(AST::Elision *elision) override;
 
+
     // lists of stuff whose children need a qqmljsscope: visitation order cannot be custom
-    bool visit(AST::StatementList *list) override;
     void endVisit(AST::StatementList *list) override;
+    void endVisit(AST::VariableDeclarationList *vdl) override;
+    void endVisit(AST::ArgumentList *) override;
+    void endVisit(AST::PatternElementList *) override;
+    void endVisit(AST::PatternPropertyList *) override;
+    void endVisit(AST::FormalParameterList *el) override;
+
 
     // literals and ids
     bool visit(AST::IdentifierExpression *expression) override;
@@ -532,6 +546,10 @@ public:
     {
         return !scriptNodeStack.isEmpty() && scriptNodeStack.last().isList();
     }
+
+private:
+    template<typename T>
+    void endVisitForLists(T *list, const std::function<int(T *)> &scriptElementsPerEntry = {});
 
 public:
     friend class QQmlDomAstCreatorWithQQmlJSScope;
@@ -576,8 +594,9 @@ private:
     template<typename U, typename... V>
     using IsInList = std::disjunction<std::is_same<U, V>...>;
     template<typename U>
-    using RequiresCustomIteration = IsInList<U, AST::PatternElementList, AST::PatternPropertyList,
-                                             AST::FormalParameterList>;
+    using RequiresCustomIteration =
+            IsInList<U, AST::PatternElementList, AST::PatternPropertyList, AST::FormalParameterList,
+                     AST::VariableDeclarationList>;
 
     enum VisitorKind : bool { DomCreator, ScopeCreator };
     /*! \internal
@@ -601,13 +620,20 @@ private:
     void customListIteration(T *t)
     {
         static_assert(RequiresCustomIteration<T>::value);
-        for (auto it = t; it; it = it->next) {
+        for (T* it = t; it; it = it->next) {
             if constexpr (std::is_same_v<T, AST::PatternElementList>) {
                 AST::Node::accept(it->elision, this);
                 AST::Node::accept(it->element, this);
             } else if constexpr (std::is_same_v<T, AST::PatternPropertyList>) {
                 AST::Node::accept(it->property, this);
             } else if constexpr (std::is_same_v<T, AST::FormalParameterList>) {
+                AST::Node::accept(it->element, this);
+            } else if constexpr (std::is_same_v<T, AST::VariableDeclarationList>) {
+                AST::Node::accept(it->declaration, this);
+            } else if constexpr (std::is_same_v<T, AST::ArgumentList>) {
+                AST::Node::accept(it->expression, this);
+            } else if constexpr (std::is_same_v<T, AST::PatternElementList>) {
+                AST::Node::accept(it->elision, this);
                 AST::Node::accept(it->element, this);
             } else {
                 Q_UNREACHABLE();

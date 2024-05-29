@@ -108,6 +108,9 @@ bool GenericScriptElement::iterateDirectSubpaths(const DomItem &self, DirectVisi
                 [&self, &visitor, &it](auto &&e) { return wrap(self, visitor, it->first, e); },
                 it->second);
     }
+    for (auto it = m_values.begin(); it != m_values.end(); ++it) {
+        cont &= self.dvValueField(visitor, it->first, it->second);
+    }
     return cont;
 }
 
