@@ -338,8 +338,17 @@ public:
     static Flags flagsForProperty(const QMetaProperty &);
     void load(const QMetaProperty &);
     void load(const QMetaMethod &);
-    QString name(QObject *) const;
-    QString name(const QMetaObject *) const;
+
+    QString name(QObject *object) const { return object ? name(object->metaObject()) : QString(); }
+    QString name(const QMetaObject *metaObject) const
+    {
+        if (!metaObject || m_coreIndex == -1)
+            return QString();
+
+        return QString::fromUtf8(isFunction()
+            ? metaObject->method(m_coreIndex).name().constData()
+            : metaObject->property(m_coreIndex).name());
+    }
 
     bool markAsOverrideOf(QQmlPropertyData *predecessor);
 

@@ -686,28 +686,9 @@ const QQmlPropertyData *QQmlPropertyCache::findProperty(
     return nullptr;
 }
 
-QString QQmlPropertyData::name(QObject *object) const
-{
-    if (!object)
-        return QString();
 
-    return name(object->metaObject());
-}
 
-QString QQmlPropertyData::name(const QMetaObject *metaObject) const
-{
-    if (!metaObject || coreIndex() == -1)
-        return QString();
 
-    if (isFunction()) {
-        QMetaMethod m = metaObject->method(coreIndex());
-
-        return QString::fromUtf8(m.name().constData());
-    } else {
-        QMetaProperty p = metaObject->property(coreIndex());
-        return QString::fromUtf8(p.name());
-    }
-}
 
 bool QQmlPropertyData::markAsOverrideOf(QQmlPropertyData *predecessor)
 {
