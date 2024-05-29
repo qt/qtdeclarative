@@ -546,7 +546,7 @@ std::optional<Location> findTypeDefinitionOf(const DomItem &object)
 
         auto scope = resolveExpressionType(
                 object, ResolveOptions::ResolveActualTypeForFieldMemberExpression);
-        if (!scope)
+        if (!scope || !scope->semanticScope)
             return {};
 
         if (scope->type == QmlObjectIdIdentifier) {
@@ -1399,14 +1399,13 @@ static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomIt
                     "QQmlLSUtils::findDefinitionOf",
                     "JS definition does not actually define the JS identifer. "
                     "It should be empty.");
-        auto scope = definitionOfItem.semanticScope();
-        auto jsIdentifier = scope->ownJSIdentifier(name);
-        if (jsIdentifier->scope) {
-            return ExpressionType{ name, jsIdentifier->scope.toStrongRef(),
-                                   IdentifierType::JavaScriptIdentifier };
-        } else {
-            return ExpressionType{ name, scope, IdentifierType::JavaScriptIdentifier };
-        }
+        const auto scope = definitionOfItem.semanticScope();
+        return ExpressionType{ name,
+                               options == ResolveOwnerType
+                                       ? scope
+                                       : QQmlJSScope::ConstPtr(
+                                               scope->ownJSIdentifier(name)->scope.toStrongRef()),
+                               IdentifierType::JavaScriptIdentifier };
     }
 
     const auto referrerScope = item.nearestSemanticScope();
@@ -1504,8 +1503,13 @@ resolveSignalOrPropertyExpressionType(const QString &name, const QQmlJSScope::Co
 
 /*!
    \internal
+    \brief
     Resolves the type of the given DomItem, when possible (e.g., when there are enough type
     annotations).
+
+    Might return an ExpressionType without(!) semantic scope when no type information is available, for
+    example resolving the type of x in someJSObject.x (where `let someJSObject = { x: 42 };`) then
+    the name and type of x is known but no semantic scope can be obtained.
 */
 std::optional<ExpressionType> resolveExpressionType(const QQmlJS::Dom::DomItem &item,
                                                     ResolveOptions options)
@@ -1814,12 +1818,12 @@ std::optional<Location> findDefinitionOf(const DomItem &item)
 
     switch (resolvedExpression->type) {
     case JavaScriptIdentifier: {
-        const QQmlJS::SourceLocation location =
-                resolvedExpression->semanticScope->ownJSIdentifier(*resolvedExpression->name)
-                        .value()
-                        .location;
+        const auto jsIdentifier =
+                resolvedExpression->semanticScope->ownJSIdentifier(*resolvedExpression->name);
+        if (!jsIdentifier)
+            return {};
 
-        return Location{ resolvedExpression->semanticScope->filePath(), location };
+        return Location{ resolvedExpression->semanticScope->filePath(), jsIdentifier->location };
     }
 
     case PropertyIdentifier: {

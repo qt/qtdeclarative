@@ -2109,6 +2109,22 @@ void tst_qmlls_utils::resolveExpressionType_data()
         QTest::addRow("qualifiedModule4") << file << 4 << 42 << ResolveOwnerType << noFile << noLine
                                           << QualifiedModuleIdentifier;
     }
+    {
+        const QString file = testFile(u"resolveExpressionType/JSObjects.qml"_s);
+        QTest::addRow("jsObject") << file << 11 << 17 << ResolveOwnerType << file << 4
+                                  << JavaScriptIdentifier;
+
+        QTest::addRow("jsObjectMember") << file << 11 << 23 << ResolveOwnerType << noFile << noLine
+                                        << JavaScriptIdentifier;
+
+        QTest::addRow("jsObjectForFieldMemberExpression")
+                << file << 11 << 17 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
+                << JavaScriptIdentifier;
+
+        QTest::addRow("jsObjectMemberForFieldMemberExpression")
+                << file << 11 << 23 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
+                << JavaScriptIdentifier;
+    }
 }
 
 void tst_qmlls_utils::resolveExpressionType()
