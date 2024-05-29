@@ -1,14 +1,18 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
-#include <QtTest/QSignalSpy>
-#include <qtest.h>
-#include <QtQml/qqmlengine.h>
-#include <QtQml/qqmlcomponent.h>
-#include <QtQml/private/qqmltimer_p.h>
-#include <QtQuick/qquickitem.h>
-#include <QDebug>
-#include <QtCore/QPauseAnimation>
+
 #include <private/qabstractanimation_p.h>
+#include <private/qqmltimer_p.h>
+
+#include <QtQuick/qquickitem.h>
+
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlengine.h>
+
+#include <QtTest/qsignalspy.h>
+#include <QtTest/qtest.h>
+
+#include <QtCore/qpauseanimation.h>
 
 void consistentWait(int ms)
 {

@@ -3,58 +3,50 @@
 
 #include "qv4qobjectwrapper_p.h"
 
-#include <private/qqmlobjectorgadget_p.h>
-#include <private/qqmlengine_p.h>
-#include <private/qqmlvmemetaobject_p.h>
-#include <private/qqmlbinding_p.h>
 #include <private/qjsvalue_p.h>
-#include <private/qqmlexpression_p.h>
-#include <private/qqmlglobal_p.h>
+
+#include <private/qqmlbinding_p.h>
+#include <private/qqmlbuiltinfunctions_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlobjectorgadget_p.h>
+#include <private/qqmlpropertybinding_p.h>
+#include <private/qqmlscriptstring_p.h>
+#include <private/qqmlsignalnames_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
-#include <private/qqmllistwrapper_p.h>
-#include <private/qqmlbuiltinfunctions_p.h>
-#if QT_CONFIG(qml_locale)
-#include <private/qqmllocale_p.h>
-#endif
+#include <private/qqmlvmemetaobject_p.h>
 
 #include <private/qv4arraybuffer_p.h>
-#include <private/qv4functionobject_p.h>
-#include <private/qv4runtime_p.h>
-#include <private/qv4variantobject_p.h>
-#include <private/qv4identifiertable_p.h>
-#include <private/qv4lookup_p.h>
-#include <private/qv4qmlcontext_p.h>
-#include <private/qv4sequenceobject_p.h>
-#include <private/qv4objectproto_p.h>
-#include <private/qv4jsonobject_p.h>
-#include <private/qv4regexpobject_p.h>
-#include <private/qv4dateobject_p.h>
-#include <private/qv4scopedvalue_p.h>
-#include <private/qv4jscall_p.h>
-#include <private/qv4mm_p.h>
-#include <private/qqmlscriptstring_p.h>
 #include <private/qv4compileddata_p.h>
-#include <private/qqmlpropertybinding_p.h>
-#include <private/qqmlpropertycachemethodarguments_p.h>
-#include <private/qqmlsignalnames_p.h>
+#include <private/qv4dateobject_p.h>
+#include <private/qv4functionobject_p.h>
+#include <private/qv4identifiertable_p.h>
+#include <private/qv4jscall_p.h>
+#include <private/qv4jsonobject_p.h>
+#include <private/qv4lookup_p.h>
+#include <private/qv4mm_p.h>
+#include <private/qv4regexpobject_p.h>
+#include <private/qv4runtime_p.h>
+#include <private/qv4scopedvalue_p.h>
+#include <private/qv4sequenceobject_p.h>
+#include <private/qv4variantobject_p.h>
 
-#include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
-#include <QtCore/qvarlengtharray.h>
-#include <QtCore/qtimer.h>
-#include <QtCore/qatomic.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qmetaobject.h>
+#include <QtCore/qqueue.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qtypes.h>
+#include <QtCore/qvarlengtharray.h>
+
+#include <vector>
+
 #if QT_CONFIG(qml_itemmodel)
 #include <QtCore/qabstractitemmodel.h>
 #endif
-#include <QtCore/qloggingcategory.h>
-#include <QtCore/qqueue.h>
-#include <QtCore/qtypes.h>
 
-#include <vector>
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)

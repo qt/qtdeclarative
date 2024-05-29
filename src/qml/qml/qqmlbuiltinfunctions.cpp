@@ -3,48 +3,35 @@
 
 #include "qqmlbuiltinfunctions_p.h"
 
-#include <QtQml/qqmlcomponent.h>
-#include <QtQml/qqmlfile.h>
-#include <private/qqmlengine_p.h>
 #include <private/qqmlcomponent_p.h>
-#include <private/qqmlloggingcategory_p.h>
-#include <private/qqmlstringconverters_p.h>
-#if QT_CONFIG(qml_locale)
-#include <private/qqmllocale_p.h>
-#endif
-#include <private/qqmldelayedcallqueue_p.h>
-#include <QFileInfo>
-
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
-#include <private/qqmlglobal_p.h>
-
+#include <private/qqmldelayedcallqueue_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlloggingcategory_p.h>
 #include <private/qqmlplatform_p.h>
+#include <private/qqmlstringconverters_p.h>
 
+#include <private/qv4dateobject_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4include_p.h>
-#include <private/qv4context_p.h>
-#include <private/qv4stringobject_p.h>
-#include <private/qv4dateobject_p.h>
 #include <private/qv4mm_p.h>
-#include <private/qv4jsonobject_p.h>
-#include <private/qv4objectproto_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4stackframe_p.h>
 
-#include <QtCore/qstring.h>
-#include <QtCore/qdatetime.h>
+#include <QtQml/qqmlfile.h>
+
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qcryptographichash.h>
+#include <QtCore/qdatetime.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qloggingcategory.h>
+#include <QtCore/qpoint.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qsize.h>
-#include <QtCore/qpoint.h>
+#include <QtCore/qstring.h>
 #include <QtCore/qurl.h>
-#include <QtCore/qfile.h>
-#include <QtCore/qcoreapplication.h>
-#include <QtCore/qloggingcategory.h>
-
-#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 

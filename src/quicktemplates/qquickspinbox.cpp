@@ -2,19 +2,14 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickspinbox_p.h"
-#include "qquickcontrol_p_p.h"
-#include "qquickindicatorbutton_p.h"
-#include "qquickdeferredexecute_p_p.h"
 
-#include <QtGui/qguiapplication.h>
-#include <QtGui/qstylehints.h>
+#include <private/qquickcontrol_p_p.h>
+#include <private/qquickindicatorbutton_p.h>
+#include <private/qquicktextinput_p.h>
+
+#include <private/qqmlengine_p.h>
 
 #include <QtQml/qqmlinfo.h>
-#if QT_CONFIG(qml_locale)
-#include <QtQml/private/qqmllocale_p.h>
-#endif
-#include <QtQml/private/qqmlengine_p.h>
-#include <QtQuick/private/qquicktextinput_p.h>
 
 QT_BEGIN_NAMESPACE
 

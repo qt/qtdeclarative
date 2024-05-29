@@ -1,20 +1,18 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qml/qqmlprivate.h"
 #include "qv4function_p.h"
-#include "qv4managed_p.h"
-#include "qv4string_p.h"
-#include "qv4value_p.h"
-#include "qv4engine_p.h"
-#include <private/qv4mm_p.h>
-#include <private/qv4identifiertable_p.h>
-#include <private/qv4functiontable_p.h>
-#include <assembler/MacroAssemblerCodeRef.h>
-#include <private/qv4vme_moth_p.h>
-#include <private/qqmlglobal_p.h>
-#include <private/qv4jscall_p.h>
+
 #include <private/qqmlpropertycachecreator_p.h>
+#include <private/qqmltype_p_p.h>
+
+#include <private/qv4engine_p.h>
+#include <private/qv4functiontable_p.h>
+#include <private/qv4identifiertable_p.h>
+#include <private/qv4jscall_p.h>
+#include <private/qv4vme_moth_p.h>
+
+#include <assembler/MacroAssemblerCodeRef.h>
 
 QT_BEGIN_NAMESPACE
 

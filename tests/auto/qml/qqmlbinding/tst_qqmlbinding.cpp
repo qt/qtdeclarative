@@ -1,13 +1,17 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
-#include <qtest.h>
+
+#include "WithBindableProperties.h"
+
+#include <private/qmlutils_p.h>
+#include <private/qqmlbind_p.h>
+#include <private/qqmlcomponentattached_p.h>
+#include <private/qquickrectangle_p.h>
+
+#include <QtTest/qtest.h>
+
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
-#include <QtQml/private/qqmlbind_p.h>
-#include <QtQml/private/qqmlcomponentattached_p.h>
-#include <QtQuick/private/qquickrectangle_p.h>
-#include <QtQuickTestUtils/private/qmlutils_p.h>
-#include "WithBindableProperties.h"
 
 class tst_qqmlbinding : public QQmlDataTest
 {

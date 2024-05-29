@@ -19,14 +19,6 @@
 #include <private/qtqmlglobal_p.h>
 
 #include <private/qv4referenceobject_p.h>
-#include <private/qqmlpropertycache_p.h>
-#include <private/qqmltype_p_p.h>
-#include <private/qqmltypewrapper_p.h>
-#include <private/qv4object_p.h>
-#include <private/qv4qobjectwrapper_p.h>
-#include <private/qv4sequenceobject_p.h>
-#include <private/qv4value_p.h>
-#include <private/qv4referenceobject_p.h>
 
 QT_BEGIN_NAMESPACE
 

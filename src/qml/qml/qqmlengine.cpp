@@ -4,57 +4,44 @@
 #include "qqmlengine_p.h"
 #include "qqmlengine.h"
 
-#include "qqmlcontext_p.h"
-#include "qqml.h"
-#include "qqmlcontext.h"
-#include "qqmlscriptstring.h"
-#include "qqmlglobal_p.h"
-#include "qqmlnotifier_p.h"
-#include "qqmlincubator.h"
-#include "qqmlabstracturlinterceptor.h"
-
-#include <private/qqmldirparser_p.h>
+#include <private/qqmlabstractbinding_p.h>
 #include <private/qqmlboundsignal_p.h>
-#include <private/qqmljsdiagnosticmessage_p.h>
-#include <private/qqmltype_p_p.h>
+#include <private/qqmlcontext_p.h>
+#include <private/qqmlnotifier_p.h>
 #include <private/qqmlpluginimporter_p.h>
-#include <QtCore/qstandardpaths.h>
-#include <QtCore/qmetaobject.h>
-#include <QDebug>
+#include <private/qqmlprofiler_p.h>
+#include <private/qqmlscriptdata_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
+#include <private/qqmltype_p.h>
+#include <private/qqmltypedata_p.h>
+#include <private/qqmlvmemetaobject_p.h>
+
+#include <private/qobject_p.h>
+#include <private/qthread_p.h>
+
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlincubator.h>
+#include <QtQml/qqmlscriptstring.h>
+
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qmetaobject.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qstandardpaths.h>
 #include <QtCore/qthread.h>
-#include <private/qthread_p.h>
-#include <private/qqmlscriptdata_p.h>
-#include <QtQml/private/qqmlcomponentattached_p.h>
-#include <QtQml/private/qqmlsourcecoordinate_p.h>
-#include <QtQml/private/qqmlcomponent_p.h>
 
 #if QT_CONFIG(qml_network)
-#include "qqmlnetworkaccessmanagerfactory.h"
-#include <QNetworkAccessManager>
+#include <QtQml/qqmlnetworkaccessmanagerfactory.h>
+#include <QtNetwork/qnetworkaccessmanager.h>
 #endif
-
-#include <private/qobject_p.h>
-#include <private/qmetaobject_p.h>
-#if QT_CONFIG(qml_locale)
-#include <private/qqmllocale_p.h>
-#endif
-#include <private/qqmlbind_p.h>
-#include <private/qqmlconnections_p.h>
-#if QT_CONFIG(qml_animation)
-#include <private/qqmltimer_p.h>
-#endif
-#include <private/qqmlplatform_p.h>
-#include <private/qqmlloggingcategory_p.h>
-#include <private/qv4sequenceobject_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #  include <qt_windows.h>
 #  include <shlobj.h>
-#  include <qlibrary.h>
+#  include <QtCore/qlibrary.h>
 #  ifndef CSIDL_APPDATA
 #    define CSIDL_APPDATA           0x001a  // <username>\Application Data
 #  endif

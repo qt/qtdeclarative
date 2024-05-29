@@ -1,28 +1,31 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
-#include <QtTest/QtTest>
+
+#include <private/qanimationgroupjob_p.h>
+#include <private/qmlutils_p.h>
+
+#include <private/qqmllistmodel_p.h>
+#include <private/qqmltimer_p.h>
+
+#include <private/qquickanimation_p_p.h>
+#include <private/qquickanimatorjob_p.h>
+#include <private/qquickflickable_p.h>
+#include <private/qquickframeanimation_p.h>
+#include <private/qquickitem_p.h>
+#include <private/qquickitemanimation_p.h>
+#include <private/qquickpathinterpolator_p.h>
+#include <private/qquickrectangle_p.h>
+#include <private/qquicktransition_p.h>
+
+#include <QtQuick/qquickview.h>
+
+#include <QtTest/qtest.h>
+#include <QtTest/qsignalspy.h>
+
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
-#include <QtQuick/qquickview.h>
-#include <QtQml/private/qqmltimer_p.h>
-#include <QtQmlModels/private/qqmllistmodel_p.h>
-#include <QtQml/private/qanimationgroupjob_p.h>
-#include <QtQuick/private/qquickrectangle_p.h>
-#include <QtQuick/private/qquickitemanimation_p.h>
-#include <QtQuick/private/qquickitemanimation_p_p.h>
-#include <QtQuick/private/qquicktransition_p.h>
-#include <QtQuick/private/qquickanimation_p.h>
-#include <QtQuick/private/qquickanimatorjob_p.h>
-#include <QtQuick/private/qquickpathinterpolator_p.h>
-#include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquicklistview_p.h>
-#include <QtQuick/private/qquickframeanimation_p.h>
-#include <QEasingCurve>
 
-#include <limits.h>
-#include <math.h>
-
-#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtCore/qeasingcurve.h>
 
 class tst_qquickanimations : public QQmlDataTest
 {

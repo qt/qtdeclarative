@@ -3,37 +3,30 @@
 
 #include "qqmlvaluetypewrapper_p.h"
 
-#include <private/qqmlvaluetype_p.h>
 #include <private/qqmlbinding_p.h>
-#include <private/qqmlglobal_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
+#include <private/qqmlvaluetype_p.h>
 
-#include <private/qv4engine_p.h>
-#include <private/qv4functionobject_p.h>
-#include <private/qv4variantobject_p.h>
 #include <private/qv4alloca_p.h>
-#include <private/qv4stackframe_p.h>
-#include <private/qv4objectiterator_p.h>
-#include <private/qv4qobjectwrapper_p.h>
-#include <private/qv4identifiertable_p.h>
-#include <private/qv4lookup_p.h>
-#include <private/qv4sequenceobject_p.h>
 #include <private/qv4arraybuffer_p.h>
 #include <private/qv4dateobject_p.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4functionobject_p.h>
+#include <private/qv4identifiertable_p.h>
 #include <private/qv4jsonobject_p.h>
+#include <private/qv4lookup_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4stackframe_p.h>
+#include <private/qv4variantobject_p.h>
+
+#include <QtCore/qline.h>
+#include <QtCore/qsize.h>
+#include <QtCore/qdatetime.h>
+#include <QtCore/qloggingcategory.h>
+
 #if QT_CONFIG(regularexpression)
 #include <private/qv4regexpobject_p.h>
 #endif
-#if QT_CONFIG(qml_locale)
-#include <private/qqmllocale_p.h>
-#endif
-#include <QtCore/qloggingcategory.h>
-#include <QtCore/qdatetime.h>
-#include <QtCore/QLine>
-#include <QtCore/QLineF>
-#include <QtCore/QSize>
-#include <QtCore/QSizeF>
-#include <QtCore/QTimeZone>
 
 QT_BEGIN_NAMESPACE
 

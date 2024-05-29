@@ -14,20 +14,17 @@
 // We mean it.
 //
 
-#include <private/qqmlengine_p.h>
 #include <private/qqmllistwrapper_p.h>
-#include <private/qqmlvaluetype_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
+
 #include <private/qv4alloca_p.h>
-#include <private/qv4context_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4functionobject_p.h>
-#include <private/qv4object_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4scopedvalue_p.h>
-#include <private/qv4stackframe_p.h>
+#include <private/qv4sequenceobject_p.h>
 #include <private/qv4urlobject_p.h>
 #include <private/qv4variantobject_p.h>
 
