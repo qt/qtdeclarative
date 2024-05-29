@@ -2874,6 +2874,9 @@ private slots:
 
         QTest::addRow("lambda")
                 << baseDir + u"/crashes/lambda.qml"_s;
+
+        QTest::addRow("bracketsInBinding")
+                << baseDir + u"/crashes/bracketsInBinding.qml"_s;
     }
     void crashes()
     {
