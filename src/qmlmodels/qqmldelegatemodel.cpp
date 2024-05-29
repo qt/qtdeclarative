@@ -1891,12 +1891,16 @@ void QQmlDelegateModelPrivate::emitChanges()
 
 void QQmlDelegateModel::_q_modelAboutToBeReset()
 {
-    auto aim = static_cast<QAbstractItemModel *>(sender());
+    Q_D(QQmlDelegateModel);
+    if (!d->m_adaptorModel.adaptsAim())
+        return;
+    auto aim = d->m_adaptorModel.aim();
     auto oldRoleNames = aim->roleNames();
     // this relies on the fact that modelAboutToBeReset must be followed
     // by a modelReset signal before any further modelAboutToBeReset can occur
-    QObject::connect(aim, &QAbstractItemModel::modelReset, this, [&, oldRoleNames](){
-        auto aim = static_cast<QAbstractItemModel *>(sender());
+    QObject::connect(aim, &QAbstractItemModel::modelReset, this, [this, d, oldRoleNames, aim](){
+        if (!d->m_adaptorModel.adaptsAim() || d->m_adaptorModel.aim() != aim)
+            return;
         if (oldRoleNames == aim->roleNames()) {
             // if the rolenames stayed the same (most common case), then we don't have
             // to throw away all the setup that we did
