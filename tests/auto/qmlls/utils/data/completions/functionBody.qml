@@ -9,5 +9,6 @@ Item {
     component IC: Item { property int helloProperty }
     function g(x: IC) {
         x.helloProperty
+        let f = () => x.helloProperty;
     }
 }

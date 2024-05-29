@@ -582,6 +582,15 @@ static DomItem findJSIdentifierDefinition(const DomItem &item, const QString &na
         }
     }
 
+    // lambda function parameters are defined in the FunctionExpression scope
+    if (DomItem res = item.filterUp(
+                [](DomType k, const DomItem &) { return k == DomType::ScriptFunctionExpression; },
+                FilterUpOptions::ReturnOuter)) {
+        if (findDefinitionFromItem(res, name)) {
+            return res;
+        }
+    }
+
     return definitionOfItem;
 }
 
@@ -966,9 +975,15 @@ static void findUsagesHelper(const DomItem &item, const QString &name, Usages &r
                     const QString fileName = item.canonicalFilePath();
                     result.appendUsage({ fileName, location });
                     return true;
-                } else if (const QQmlJSScope::ConstPtr scope = item.semanticScope();
-                           scope && scope->ownJSIdentifier(name)) {
-                    // current JS identifier has been redefined, do not visit children
+                }
+                QQmlJSScope::ConstPtr scope = item.semanticScope();
+                // Do not visit children if current JS identifier has been redefined.
+                if (scope && scope != item.directParent().semanticScope()
+                    && scope->ownJSIdentifier(name)) {
+                    // Note that if the current semantic scope == parent's semantic scope, then no
+                    // redefinition actually took place. This happens for example in
+                    // FunctionExpressions, where the body's semantic scope is the
+                    // FunctionExpression's semantic scope.
                     return false;
                 }
                 return true;
@@ -1538,6 +1553,9 @@ std::optional<ExpressionType> resolveExpressionType(const QQmlJS::Dom::DomItem &
         }
         Q_UNREACHABLE_RETURN({});
     }
+    case DomType::ScriptFunctionExpression: {
+        return ExpressionType{ {}, item.semanticScope(), LambdaMethodIdentifier };
+    }
     case DomType::MethodInfo: {
         const auto object = item.as<MethodInfo>();
         if (object && object->semanticScope()) {
@@ -1800,6 +1818,7 @@ std::optional<Location> findDefinitionOf(const DomItem &item)
     case EnumeratorValueIdentifier:
     case AttachedTypeIdentifier:
     case GroupedPropertyIdentifier:
+    case LambdaMethodIdentifier:
         qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::findDefinitionOf was not implemented for type"
                                 << resolvedExpression->type;
         return {};
@@ -1875,6 +1894,7 @@ static QQmlJSScope::ConstPtr expressionTypeWithDefinition(const ExpressionType &
     case AttachedTypeIdentifier:
     case GroupedPropertyIdentifier:
     case QmlComponentIdentifier:
+    case LambdaMethodIdentifier:
         return ownerType.semanticScope;
     }
     return {};

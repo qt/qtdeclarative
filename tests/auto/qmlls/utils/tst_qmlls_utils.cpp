@@ -392,6 +392,8 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
             << file1Qml << 49 << 11 << firstResult << outOfOne << file1Qml << 7 << 15;
     QTest::addRow("ICBindingUsage3")
             << file1Qml << 52 << 17 << firstResult << outOfOne << file1Qml << 7 << 15;
+    QTest::addRow("ICBindingUsageFromLambda")
+            << file1Qml << 58 << 23 << firstResult << outOfOne << file1Qml << 7 << 15;
 }
 
 void tst_qmlls_utils::findTypeDefinitionFromLocation()
@@ -1356,6 +1358,39 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
+        const auto testFileName = testFile("findUsages/lambdas/lambdas.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        {
+            QList<QQmlLSUtils::Location> expectedUsages;
+            expectedUsages << QQmlLSUtils::Location::from(testFileName, testFileContent, 6, 29,
+                                                          strlen("a"));
+            expectedUsages << QQmlLSUtils::Location::from(testFileName, testFileContent, 7, 17,
+                                                          strlen("a"));
+            expectedUsages << QQmlLSUtils::Location::from(testFileName, testFileContent, 8, 46,
+                                                          strlen("a"));
+            expectedUsages << QQmlLSUtils::Location::from(testFileName, testFileContent, 9, 21,
+                                                          strlen("a"));
+            expectedUsages << QQmlLSUtils::Location::from(testFileName, testFileContent, 10, 17,
+                                                          strlen("a"));
+
+            const auto usagesForTestFile = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("lambdaParameter") << 7 << 17 << usagesForTestFile;
+            QTest::addRow("lambdaParameter2") << 6 << 29 << usagesForTestFile;
+            QTest::addRow("lambdaParameterFromInnerArrow") << 8 << 46 << usagesForTestFile;
+        }
+        {
+            QList<QQmlLSUtils::Location> expectedUsages;
+            expectedUsages << QQmlLSUtils::Location::from(testFileName, testFileContent, 8, 28,
+                                                          strlen("x"));
+            expectedUsages << QQmlLSUtils::Location::from(testFileName, testFileContent, 8, 38,
+                                                          strlen("x"));
+
+            const auto usagesForTestFile = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("arrowParameter") << 8 << 28 << usagesForTestFile;
+            QTest::addRow("arrowParameter2") << 8 << 38 << usagesForTestFile;
+        }
+    }
+    {
         const auto testFileName = testFile("findUsages/inlineComponents/inlineComponents.qml");
         const auto testFileContent = readFileContent(testFileName);
         const auto providerFileName =
@@ -1843,6 +1878,24 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
             << JSDefinitionsQml << 68 << 28 << BaseTypeQml << 6 << 1 << strlen("Item");
     QTest::addRow("inlineComponentFromDifferentFile")
             << JSDefinitionsQml << 75 << 27 << BaseTypeQml << 9 << 38 << strlen("Item");
+
+    QTest::addRow("lambdaParameter")
+            << JSDefinitionsQml << 78 << 33 << JSDefinitionsQml << 77 << 34 << strlen("c");
+    QTest::addRow("callFromLambda")
+            << JSDefinitionsQml << 79 << 21 << JSDefinitionsQml << 47 << 14 << strlen("abc");
+    QTest::addRow("callFromLambda2")
+            << JSDefinitionsQml << 81 << 32 << JSDefinitionsQml << 76 << 14 << strlen("helloLambda");
+    QTest::addRow("lambdaRecursion")
+            << JSDefinitionsQml << 80 << 29 << JSDefinitionsQml << 77 << 24 << strlen("function");
+
+    QTest::addRow("arrowParameter")
+            << JSDefinitionsQml << 84 << 37 << JSDefinitionsQml << 83 << 32 << strlen("c");
+    QTest::addRow("callFromArrow")
+            << JSDefinitionsQml << 85 << 21 << JSDefinitionsQml << 47 << 14 << strlen("abc");
+    QTest::addRow("callFromArrow2")
+            << JSDefinitionsQml << 87 << 32 << JSDefinitionsQml << 76 << 14 << strlen("helloLambda");
+    QTest::addRow("arrowRecursion")
+            << JSDefinitionsQml << 86 << 29 << JSDefinitionsQml << 77 << 24 << strlen("function");
 }
 
 void tst_qmlls_utils::findDefinitionFromLocation()
@@ -1908,6 +1961,7 @@ void tst_qmlls_utils::resolveExpressionType_data()
 
     const int noLine = -1;
     const QString noFile;
+    const QString unnamed;
 
     {
         const QString JSDefinitionsQml = testFile(u"JSDefinitions.qml"_s);
@@ -2082,6 +2136,19 @@ void tst_qmlls_utils::resolveExpressionType_data()
                 << file << 11 << 23 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
                 << JavaScriptIdentifier << u"a"_s;
     }
+    {
+        const QString file = testFile(u"resolveExpressionType/lambdas.qml"_s);
+        QTest::addRow("lambda") << file << 6 << 24 << ResolveOwnerType << file << 6
+                                << LambdaMethodIdentifier << unnamed;
+        QTest::addRow("lambdaParameter") << file << 7 << 28 << ResolveOwnerType << file << 6
+                                         << JavaScriptIdentifier << u"b"_s;
+        QTest::addRow("arrow") << file << 8 << 36 << ResolveOwnerType << file << 8
+                               << LambdaMethodIdentifier << unnamed;
+        QTest::addRow("arrowParameter")
+                << file << 8 << 42 << ResolveOwnerType << file << 8 << JavaScriptIdentifier << u"y"_s;
+        QTest::addRow("letWithLambda")
+                << file << 9 << 13 << ResolveOwnerType << file << 6 << JavaScriptIdentifier << u"moreLambdas"_s;
+    }
 }
 
 void tst_qmlls_utils::resolveExpressionType()
@@ -2110,7 +2177,10 @@ void tst_qmlls_utils::resolveExpressionType()
     auto definition = QQmlLSUtils::resolveExpressionType(locations.front().domItem, resolveOption);
     QVERIFY(definition);
     QCOMPARE(definition->type, expectedType);
-    QCOMPARE(definition->name, expectedName);
+    if (expectedName.isEmpty())
+        QVERIFY(!definition->name);
+    else
+        QCOMPARE(definition->name, expectedName);
 
     if (expectedFile.isEmpty()) {
         QVERIFY(!definition->semanticScope);
@@ -3751,6 +3821,16 @@ void tst_qmlls_utils::completions_data()
 
     QTest::newRow("insideMethodBody2")
             << testFile(u"completions/functionBody.qml"_s) << 11 << 11
+            << ExpectedCompletions{ { u"helloProperty"_s, CompletionItemKind::Property }, }
+            << QStringList{ u"badProperty"_s, forStatementCompletion };
+
+    QTest::newRow("insideArrow")
+            << testFile(u"completions/functionBody.qml"_s) << 12 << 22
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable }, }
+            << QStringList{ propertyCompletion, forStatementCompletion };
+
+    QTest::newRow("insideArrow2")
+            << testFile(u"completions/functionBody.qml"_s) << 12 << 26
             << ExpectedCompletions{ { u"helloProperty"_s, CompletionItemKind::Property }, }
             << QStringList{ u"badProperty"_s, forStatementCompletion };
 
