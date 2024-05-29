@@ -9,24 +9,7 @@ CppSettings::CppSettings(QObject *parent) :
     QObject(parent),
     mSettings("QtProject", "menus")
 {
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, dontUseNativeMenuWindows());
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, dontUseNativeMenuBar());
-}
-
-bool CppSettings::dontUseNativeMenuWindows() const
-{
-    return mSettings.value("dontUseNativeMenuWindows").toBool();
-}
-
-void CppSettings::setDontUseNativeMenuWindows(bool dontUseNativeMenuWindows)
-{
-    const bool oldValue = this->dontUseNativeMenuWindows();
-    if (dontUseNativeMenuWindows == oldValue)
-        return;
-
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, dontUseNativeMenuWindows);
-    mSettings.setValue("dontUseNativeMenuWindows", dontUseNativeMenuWindows);
-    emit dontUseNativeMenuWindowsChanged();
 }
 
 bool CppSettings::dontUseNativeMenuBar() const
@@ -43,4 +26,18 @@ void CppSettings::setDontUseNativeMenuBar(bool dontUseNativeMenuBar)
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, dontUseNativeMenuBar);
     mSettings.setValue("dontUseNativeMenuBar", dontUseNativeMenuBar);
     emit dontUseNativeMenuBarChanged();
+}
+
+int CppSettings::popupType() const
+{
+    return mSettings.value("popupType").toInt();
+}
+
+void CppSettings::setPopupType(int newPopupType)
+{
+    const int oldValue = popupType();
+    if (oldValue == newPopupType)
+        return;
+    mSettings.setValue("popupType", newPopupType);
+    emit popupTypeChanged();
 }

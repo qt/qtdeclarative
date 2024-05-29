@@ -160,11 +160,17 @@ ApplicationWindow {
             ColumnLayout {
                 anchors.fill: parent
 
-                Switch {
-                    text: qsTr("Don't use native menu windows")
-                    checked: CppSettings.dontUseNativeMenuWindows
+                RowLayout {
+                    Label {
+                        text: qsTr("Popup type")
+                    }
 
-                    onClicked: CppSettings.dontUseNativeMenuWindows = checked
+                    ComboBox {
+                        id: popupTypeCombo
+                        model: ["Default", "Item", "Window", "Native"]
+                        onCurrentIndexChanged: CppSettings.popupType = currentIndex
+                        currentIndex: CppSettings.popupType
+                    }
                 }
 
                 Row {
@@ -314,6 +320,7 @@ ApplicationWindow {
     Menu {
         id: backgroundContextMenu
         objectName: "backgroundContextMenu"
+        popupType: popupTypeCombo.currentIndex
 
         function appendAction() {
             let action = actionComponent.createObject(null, { text: qsTr("Extra context menu item") })
@@ -380,6 +387,7 @@ ApplicationWindow {
             id: subMenu
             title: qsTr("Sub-menu")
             objectName: title
+            popupType: backgroundContextMenu.popupType
 
             function appendAction() {
                 let action = actionComponent.createObject(null, { text: qsTr("Extra sub-menu item") })
