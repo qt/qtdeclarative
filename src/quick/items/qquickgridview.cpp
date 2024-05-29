@@ -43,6 +43,7 @@
 
 #include <private/qqmlobjectmodel_p.h>
 #include <private/qquicksmoothedanimation_p_p.h>
+#include <private/qmemory_p.h>
 
 #include <QtGui/qevent.h>
 #include <QtCore/qmath.h>
@@ -720,7 +721,7 @@ void QQuickGridViewPrivate::createHighlight(bool onDestruction)
         QQuickItem *item = createHighlightItem();
         if (item) {
             std::unique_ptr<FxGridItemSG> newHighlight
-                    = std::make_unique<FxGridItemSG>(item, q, true);
+                    = qt_make_unique<FxGridItemSG>(item, q, true);
             newHighlight->trackGeometry(true);
             if (autoHighlight)
                 resetHighlightPosition();
