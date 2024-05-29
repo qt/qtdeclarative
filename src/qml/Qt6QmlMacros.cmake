@@ -90,7 +90,7 @@ function(_qt_internal_parse_qml_module_dependency dependency was_marked_as_targe
         endif()
     endif()
     if (arg_OUTPUT_MODULE_TARGET AND was_marked_as_target)
-        set(${arg_OUTPUT_MODULE_TARGET} "${dep_targetOrName}" PARENT_SCOPE)
+        set(${arg_OUTPUT_MODULE_TARGET} "${dep_target_or_uri}" PARENT_SCOPE)
     else()
         set(${arg_OUTPUT_MODULE_TARGET} "" PARENT_SCOPE)
     endif()
