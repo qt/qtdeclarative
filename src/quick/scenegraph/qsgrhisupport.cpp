@@ -985,10 +985,12 @@ static inline bool isAutomaticPipelineCacheSaveSkippedForWindow(Qt::WindowFlags 
     return wflags.testFlag(Qt::Dialog) || wflags.testFlag(Qt::Popup);
 }
 
+#if !QT_CONFIG(temporaryfile)
 static inline QString pipelineCacheLockFileName(const QString &name)
 {
     return name + QLatin1String(".lck");
 }
+#endif
 
 void QSGRhiSupport::preparePipelineCache(QRhi *rhi, QQuickWindow *window)
 {
@@ -1007,12 +1009,14 @@ void QSGRhiSupport::preparePipelineCache(QRhi *rhi, QQuickWindow *window)
     if (pipelineCacheLoad.isEmpty())
         return;
 
+#if !QT_CONFIG(temporaryfile)
     QLockFile lock(pipelineCacheLockFileName(pipelineCacheLoad));
     if (!lock.lock()) {
         qWarning("Could not create pipeline cache lock file '%s'",
                  qPrintable(lock.fileName()));
         return;
     }
+#endif
 
     QFile f(pipelineCacheLoad);
     if (!f.open(QIODevice::ReadOnly)) {
@@ -1065,16 +1069,16 @@ void QSGRhiSupport::finalizePipelineCache(QRhi *rhi, const QQuickGraphicsConfigu
         return;
     }
 
+
+#if QT_CONFIG(temporaryfile)
+    QSaveFile f(pipelineCacheSave);
+#else
     QLockFile lock(pipelineCacheLockFileName(pipelineCacheSave));
     if (!lock.lock()) {
         qWarning("Could not create pipeline cache lock file '%s'",
                  qPrintable(lock.fileName()));
         return;
     }
-
-#if QT_CONFIG(temporaryfile)
-    QSaveFile f(pipelineCacheSave);
-#else
     QFile f(pipelineCacheSave);
 #endif
     if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
