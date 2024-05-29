@@ -3599,6 +3599,314 @@ private slots:
         QCOMPARE(locs, expctedCommentLocations);
     }
 
+    void lambdas()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/lambdas.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem mainObject = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0);
+        {
+            const DomItem lambda = mainObject.field(Fields::methods)
+                                           .key(u"method"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements)
+                                           .index(1)
+                                           .field(Fields::declarations)
+                                           .index(0)
+                                           .field(Fields::initializer);
+            QVERIFY(lambda);
+            QCOMPARE(lambda.internalKind(), DomType::ScriptFunctionExpression);
+            QCOMPARE(lambda.field(Fields::name).value().toString(), u"myLambda"_s);
+            QCOMPARE(lambda.field(Fields::parameters).indexes(), 2);
+            QCOMPARE(lambda.field(Fields::parameters).index(0).field(Fields::identifier).value().toString(), u"a");
+            QCOMPARE(lambda.field(Fields::parameters).index(1).field(Fields::identifier).value().toString(), u"b");
+
+            auto scope = lambda.semanticScope();
+            QVERIFY(scope);
+            QVERIFY(scope->jsIdentifier(u"b"_s));
+
+            const DomItem body = lambda.field(Fields::body);
+            QCOMPARE(body.internalKind(), DomType::ScriptBlockStatement);
+        }
+    }
+    void arrow()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/lambdas.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem mainObject = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0);
+        {
+            const DomItem arrow = mainObject.field(Fields::methods)
+                                          .key(u"method"_s)
+                                          .index(0)
+                                          .field(Fields::body)
+                                          .field(Fields::scriptElement)
+                                          .field(Fields::statements)
+                                          .index(2)
+                                          .field(Fields::declarations)
+                                          .index(0)
+                                          .field(Fields::initializer);
+            QVERIFY(arrow);
+            QCOMPARE(arrow.internalKind(), DomType::ScriptFunctionExpression);
+            QCOMPARE(arrow.field(Fields::name).value().toString(), u"myArrow"_s);
+            QCOMPARE(arrow.field(Fields::parameters).indexes(), 2);
+            QCOMPARE(arrow.field(Fields::parameters)
+                             .index(0)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"v");
+            QCOMPARE(arrow.field(Fields::parameters)
+                             .index(1)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"w");
+
+            auto scope = arrow.semanticScope();
+            QVERIFY(scope);
+            QVERIFY(scope->jsIdentifier(u"w"_s));
+
+            const DomItem body = arrow.field(Fields::body);
+            QCOMPARE(body.internalKind(), DomType::ScriptBlockStatement);
+            QCOMPARE(body.field(Fields::statements).indexes(), 1);
+            QCOMPARE(body.field(Fields::statements).index(0).internalKind(),
+                     DomType::ScriptReturnStatement);
+        }
+    }
+    void lamdbaInBinding()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/lambdas.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem mainObject = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0);
+        {
+            const DomItem lambda = mainObject.field(Fields::bindings)
+                                           .key(u"onHelloSignal"_s)
+                                           .index(0)
+                                           .field(Fields::value)
+                                           .field(Fields::scriptElement);
+            QVERIFY(lambda);
+            QCOMPARE(lambda.internalKind(), DomType::ScriptFunctionExpression);
+            QCOMPARE(lambda.field(Fields::name).value().toString(), QString());
+            QCOMPARE(lambda.field(Fields::parameters).indexes(), 3);
+            QCOMPARE(lambda.field(Fields::parameters).index(0).field(Fields::identifier).value().toString(), u"x");
+            QCOMPARE(lambda.field(Fields::parameters).index(2).field(Fields::identifier).value().toString(), u"z");
+            auto scope = lambda.semanticScope();
+            QVERIFY(scope);
+            QVERIFY(scope->jsIdentifier(u"z"_s));
+            const DomItem body = lambda.field(Fields::body);
+            QCOMPARE(body.internalKind(), DomType::ScriptBlockStatement);
+        }
+    }
+    void nestedFunction()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/lambdas.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem mainObject = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0);
+        {
+            const DomItem nested = mainObject.field(Fields::methods)
+                                           .key(u"testNestedFunctions"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements)
+                                           .index(0);
+            QVERIFY(nested);
+            QCOMPARE(nested.internalKind(), DomType::ScriptFunctionExpression);
+            QCOMPARE(nested.field(Fields::name).value().toString(), u"nested"_s);
+            QCOMPARE(nested.field(Fields::parameters).indexes(), 3);
+            QCOMPARE(nested.field(Fields::parameters)
+                             .index(0)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"tic");
+            QCOMPARE(nested.field(Fields::parameters)
+                             .index(2)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"toe");
+            const DomItem body = nested.field(Fields::body);
+            QCOMPARE(body.internalKind(), DomType::ScriptBlockStatement);
+            auto scope = nested.semanticScope();
+            QVERIFY(scope);
+            QVERIFY(scope->jsIdentifier(u"toe"_s));
+        }
+    }
+    void generatorDeclaration()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/lambdas.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem mainObject = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0);
+        {
+            const DomItem generator = mainObject.field(Fields::methods)
+                                              .key(u"generators"_s)
+                                              .index(0)
+                                              .field(Fields::body)
+                                              .field(Fields::scriptElement)
+                                              .field(Fields::statements)
+                                              .index(0);
+            QVERIFY(generator);
+            QCOMPARE(generator.internalKind(), DomType::ScriptFunctionExpression);
+            QCOMPARE(generator.field(Fields::name).value().toString(), u"myGeneratorDeclaration"_s);
+            QCOMPARE(generator.field(Fields::parameters).indexes(), 2);
+            QCOMPARE(generator.field(Fields::parameters)
+                             .index(0)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"a");
+            QCOMPARE(generator.field(Fields::parameters)
+                             .index(1)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"b");
+            const DomItem body = generator.field(Fields::body);
+            QCOMPARE(body.internalKind(), DomType::ScriptBlockStatement);
+            auto scope = generator.semanticScope();
+            QVERIFY(scope);
+            QVERIFY(scope->jsIdentifier(u"b"_s));
+
+            const DomItem yieldExpression =
+                    generator.field(Fields::body).field(Fields::statements).index(0);
+            QCOMPARE(yieldExpression.internalKind(), DomType::ScriptYieldExpression);
+            QCOMPARE(yieldExpression.field(Fields::expression).value().toInteger(), 5);
+        }
+    }
+    void generatorExpression()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/lambdas.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem mainObject = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0);
+        {
+            const DomItem generator = mainObject.field(Fields::methods)
+                                              .key(u"generators"_s)
+                                              .index(0)
+                                              .field(Fields::body)
+                                              .field(Fields::scriptElement)
+                                              .field(Fields::statements)
+                                              .index(1)
+                                              .field(Fields::declarations)
+                                              .index(0)
+                                              .field(Fields::initializer);
+            QVERIFY(generator);
+            QCOMPARE(generator.internalKind(), DomType::ScriptFunctionExpression);
+            QCOMPARE(generator.field(Fields::name).value().toString(), u"myGenerator"_s);
+            QCOMPARE(generator.field(Fields::parameters).indexes(), 3);
+            QCOMPARE(generator.field(Fields::parameters)
+                             .index(0)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"tic");
+            QCOMPARE(generator.field(Fields::parameters)
+                             .index(2)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"toe");
+            const DomItem body = generator.field(Fields::body);
+            QCOMPARE(body.internalKind(), DomType::ScriptBlockStatement);
+            auto scope = generator.semanticScope();
+            QVERIFY(scope);
+            QVERIFY(scope->jsIdentifier(u"toe"_s));
+        }
+    }
+    void generatorDeclarationInQmlObject()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/lambdas.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"generatorInQmlObject"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+        {
+            const DomItem nested = statements.index(0);
+            QVERIFY(nested);
+            QCOMPARE(nested.internalKind(), DomType::ScriptFunctionExpression);
+
+            const DomItem nested2 = statements.index(1);
+            QVERIFY(nested2);
+            QCOMPARE(nested2.internalKind(), DomType::ScriptFunctionExpression);
+
+            const DomItem yield = statements.index(2);
+            QVERIFY(yield);
+            QCOMPARE(yield.internalKind(), DomType::ScriptYieldExpression);
+
+            const DomItem yieldStar = statements.index(3);
+            QVERIFY(yieldStar);
+            QCOMPARE(yieldStar.internalKind(), DomType::ScriptYieldExpression);
+
+        }
+    }
+    void traditionalLambda()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/lambdas.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem initializer = fileObject.field(Fields::components)
+                                            .key(QString())
+                                            .index(0)
+                                            .field(Fields::objects)
+                                            .index(0)
+                                            .field(Fields::methods)
+                                            .key(u"traditionalLambda"_s)
+                                            .index(0)
+                                            .field(Fields::body)
+                                            .field(Fields::scriptElement)
+                                            .field(Fields::statements)
+                                            .index(0)
+                                            .field(Fields::declarations)
+                                            .index(0)
+                                            .field(Fields::initializer);
+        QVERIFY(initializer);
+        QCOMPARE(initializer.internalKind(), DomType::ScriptParenthesizedExpression);
+        const DomItem lambda = initializer.field(Fields::expression);
+        QVERIFY(lambda);
+        QCOMPARE(lambda.internalKind(), DomType::ScriptFunctionExpression);
+    }
+
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

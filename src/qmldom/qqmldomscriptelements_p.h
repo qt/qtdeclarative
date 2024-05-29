@@ -16,6 +16,7 @@
 //
 
 #include "qqmldomitem_p.h"
+#include "qqmldomelements_p.h"
 #include "qqmldomattachedinfo_p.h"
 #include "qqmldompath_p.h"
 #include <algorithm>
@@ -181,6 +182,21 @@ public:
         return m_children.insert(std::make_pair(name, v));
     }
 
+    ScriptElementVariant elementChild(const QQmlJS::Dom::FieldType &field)
+    {
+        auto it = m_children.find(field);
+        if (it == m_children.end())
+            return {};
+        if (!std::holds_alternative<ScriptElementVariant>(it->second))
+            return {};
+        return std::get<ScriptElementVariant>(it->second);
+    }
+
+    void insertValue(QStringView name, const QCborValue &v)
+    {
+        m_values.insert(std::make_pair(name, v));
+    }
+
 private:
     /*!
        \internal
@@ -189,6 +205,8 @@ private:
        a sorted map to always iterate the children in the same order.
      */
     std::map<QQmlJS::Dom::FieldType, VariantT> m_children;
+    // value fields
+    std::map<QQmlJS::Dom::FieldType, QCborValue> m_values;
     DomType m_kind = DomType::Empty;
 };
 

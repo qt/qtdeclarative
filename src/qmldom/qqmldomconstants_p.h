@@ -227,6 +227,8 @@ enum class DomType {
     ScriptConditionalExpression,
     ScriptEmptyStatement,
     ScriptParenthesizedExpression,
+    ScriptFunctionExpression,
+    ScriptYieldExpression,
 
     ScriptElementStop, // marker to check if a DomType is a scriptelement or not
 };
@@ -394,6 +396,7 @@ enum FileLocationRegion : int {
     TypeIdentifierRegion,
     VersionRegion,
     WhileKeywordRegion,
+    YieldKeywordRegion,
 };
 Q_ENUM_NS(FileLocationRegion);
 
