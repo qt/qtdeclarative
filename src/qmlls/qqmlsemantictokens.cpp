@@ -406,22 +406,13 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
     case QQmlLSUtils::JavaScriptIdentifier: {
         SemanticTokenTypes tokenType = SemanticTokenTypes::Variable;
         int modifier = 0;
-        if (const auto jsIdentifier
-                = expression->semanticScope->jsIdentifier(expression->name.value())) {
-            switch (jsIdentifier.value().kind) {
-            case QQmlJSScope::JavaScriptIdentifier::Parameter:
-                tokenType = SemanticTokenTypes::Parameter;
-                break;
-            case QQmlJSScope::JavaScriptIdentifier::LexicalScoped: // let or const
-            case QQmlJSScope::JavaScriptIdentifier::FunctionScoped: // var
-            case QQmlJSScope::JavaScriptIdentifier::Injected:
-            default:
-                tokenType = SemanticTokenTypes::Variable;
-                break;
-            }
-            if (jsIdentifier.value().isConst) {
-                HighlightingUtils::addModifier(SemanticTokenModifiers::Readonly,
-                                                        &modifier);
+        if (const auto scope = expression->semanticScope) {
+            if (const auto jsIdentifier = scope->jsIdentifier(*expression->name)) {
+                if (jsIdentifier->kind == QQmlJSScope::JavaScriptIdentifier::Parameter)
+                    tokenType = SemanticTokenTypes::Parameter;
+                if (jsIdentifier->isConst) {
+                    HighlightingUtils::addModifier(SemanticTokenModifiers::Readonly, &modifier);
+                }
             }
         }
         m_highlights.addHighlight(loc, int(tokenType), modifier);

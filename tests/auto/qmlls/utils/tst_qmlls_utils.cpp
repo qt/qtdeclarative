@@ -2066,6 +2066,22 @@ void tst_qmlls_utils::resolveExpressionType_data()
         QTest::addRow("qmlObject") << derivedType << 6 << 4 << ResolveOwnerType << derived2Type << 4
                                    << QmlComponentIdentifier << u"Derived2"_s;
     }
+    {
+        const QString file = testFile(u"resolveExpressionType/JSObjects.qml"_s);
+        QTest::addRow("jsObject") << file << 11 << 17 << ResolveOwnerType << file << 4
+                                  << JavaScriptIdentifier << u"object"_s;
+
+        QTest::addRow("jsObjectMember") << file << 11 << 23 << ResolveOwnerType << noFile << noLine
+                                        << JavaScriptIdentifier << u"a"_s;
+
+        QTest::addRow("jsObjectForFieldMemberExpression")
+                << file << 11 << 17 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
+                << JavaScriptIdentifier << u"object"_s;
+
+        QTest::addRow("jsObjectMemberForFieldMemberExpression")
+                << file << 11 << 23 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
+                << JavaScriptIdentifier << u"a"_s;
+    }
 }
 
 void tst_qmlls_utils::resolveExpressionType()
