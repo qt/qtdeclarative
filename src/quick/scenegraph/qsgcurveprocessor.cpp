@@ -1379,7 +1379,7 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool removeNestedPat
                 // For winding fill we take the left most path forward, so the inside stays on the right side
                 // For odd even fill we take the right most path forward so we cut of the smallest area.
                 // We come back at the intersection and add the missing pieces as subpaths later on.
-                if (t2 != 0 && t2 != 1) {
+                if (t1 !=0 && t1 != 1 && t2 != 0 && t2 != 1) {
                     QVector2D tangent1 = elem1.tangentAtFraction(t1);
                     if (!forward)
                         tangent1 = -tangent1;
