@@ -938,6 +938,7 @@ QVariant QQuickFontValueType::create(const QJSValue &params)
     setFontProperty(ret, &QFont::setPixelSize, QStringLiteral("pixelSize"), params, &ok);
     setFontProperty(ret, &QFont::setPointSize, QStringLiteral("pointSize"), params, &ok);
     setFontProperty(ret, &QFont::setStrikeOut, QStringLiteral("strikeout"), params, &ok);
+    setFontProperty(ret, &QFont::setStyleName, QStringLiteral("styleName"), params, &ok);
     setFontProperty(ret, &QFont::setUnderline, QStringLiteral("underline"), params, &ok);
     setFontProperty(ret, &QFont::setWeight, QStringLiteral("weight"), params, &ok);
     setFontProperty(ret, &QFont::setWordSpacing, QStringLiteral("wordSpacing"), params, &ok);
