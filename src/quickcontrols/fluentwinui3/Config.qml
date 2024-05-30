@@ -1463,6 +1463,1925 @@ QtObject {
 
             }
 
+            readonly property QtObject combobox: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17071;2407:10440;2397:10728"
+                        readonly property string filePath: "dark/images/combobox-background-disabled.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4817
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17071;2407:10440"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17071;2407:10440;2397:10731"
+                        readonly property string filePath: "dark/images/combobox-indicator-disabled.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8219
+                        readonly property real y: 4825
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17071;2407:10440;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 8135
+                        readonly property real y: 4823
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17071;2407:10440;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-disabled"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:17071;2407:10440;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-disabled"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17071;2407:10440;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-disabled"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4849
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17071;2407:10440;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-disabled"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject focused: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4677:11470;4606:28948;2397:10728"
+                        readonly property string filePath: "dark/images/combobox-background-focused.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-focused"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4884
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4677:11470;4606:28948"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-focused"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4677:11470;4606:28948;2397:10731"
+                        readonly property string filePath: "dark/images/combobox-indicator-focused.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-focused"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8219
+                        readonly property real y: 4892
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11470;4606:28948;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-focused"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 8135
+                        readonly property real y: 4890
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4677:11470;4606:28948;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-focused"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4677:11470;4606:28948;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-focused"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11470;4606:28948;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-focused"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4916
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4677:11470;4606:28948;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-focused"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17061;2397:10784;2397:10728"
+                        readonly property string filePath: "dark/images/combobox-background-hovered.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8098.5
+                        readonly property real y: 3996
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17061;2397:10784"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17061;2397:10784;2397:10731"
+                        readonly property string filePath: "dark/images/combobox-indicator-hovered.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8195.5
+                        readonly property real y: 4004
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17061;2397:10784;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 8111.5
+                        readonly property real y: 4002
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17061;2397:10784;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-hovered"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:17061;2397:10784;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-hovered"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17061;2397:10784;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-hovered"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8098.5
+                        readonly property real y: 4028
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17061;2397:10784;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-hovered"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered_open: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17067;2407:10424;2397:10728"
+                        readonly property string filePath: "dark/images/combobox-background-hovered-open.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-hovered-open"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4359
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17067;2407:10424"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-hovered-open"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17067;2407:10424;2397:10731"
+                        readonly property string filePath: "dark/images/combobox-indicator-hovered-open.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-hovered-open"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8219
+                        readonly property real y: 4367
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17067;2407:10424;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-hovered-open"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 8135
+                        readonly property real y: 4365
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17067;2407:10424;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-hovered-open"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:17067;2407:10424;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-hovered-open"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17067;2407:10424;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-hovered-open"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4391
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17067;2407:10424;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-hovered-open"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17059;2397:10736;2397:10728"
+                        readonly property string filePath: "dark/images/combobox-background.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8098.5
+                        readonly property real y: 3929
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17059;2397:10736"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17059;2397:10736;2397:10731"
+                        readonly property string filePath: "dark/images/combobox-indicator.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8195.5
+                        readonly property real y: 3937
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17059;2397:10736;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 8111.5
+                        readonly property real y: 3935
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17059;2397:10736;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:17059;2397:10736;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17059;2397:10736;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8098.5
+                        readonly property real y: 3961
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17059;2397:10736;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject open: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17065;2399:10706;2397:10728"
+                        readonly property string filePath: "dark/images/combobox-background-open.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-open"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4130
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17065;2399:10706"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-open"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17065;2399:10706;2397:10731"
+                        readonly property string filePath: "dark/images/combobox-indicator-open.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-open"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8219
+                        readonly property real y: 4138
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17065;2399:10706;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-open"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 8135
+                        readonly property real y: 4136
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17065;2399:10706;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-open"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:17065;2399:10706;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-open"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17065;2399:10706;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-open"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4162
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17065;2399:10706;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-open"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject open_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17069;2407:10432;2397:10728"
+                        readonly property string filePath: "dark/images/combobox-background-open-pressed.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-open-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4585
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17069;2407:10432"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-open-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17069;2407:10432;2397:10731"
+                        readonly property string filePath: "dark/images/combobox-indicator-open-pressed.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-open-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8219
+                        readonly property real y: 4593
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17069;2407:10432;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-open-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 8135
+                        readonly property real y: 4591
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17069;2407:10432;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-open-pressed"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:17069;2407:10432;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-open-pressed"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17069;2407:10432;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-open-pressed"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4617
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17069;2407:10432;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-open-pressed"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17063;2397:10792;2397:10728"
+                        readonly property string filePath: "dark/images/combobox-background-pressed.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4063
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17063;2397:10792"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17063;2397:10792;2397:10731"
+                        readonly property string filePath: "dark/images/combobox-indicator-pressed.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8219
+                        readonly property real y: 4071
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17063;2397:10792;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 8135
+                        readonly property real y: 4069
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17063;2397:10792;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-pressed"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:17063;2397:10792;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-pressed"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17063;2397:10792;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-pressed"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8122
+                        readonly property real y: 4095
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17063;2397:10792;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-pressed"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+            }
+
+            readonly property QtObject editablecombobox: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 5
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9461;4610:29709;4610:29350"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-disabled"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8858
+                        readonly property real y: 4817.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9461;4610:29709"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9461;4610:29709;4610:29356"
+                        readonly property string filePath: ""
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8954
+                        readonly property real y: 4825
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9461;4610:29709;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8872
+                        readonly property real y: 4822
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9461;4610:29709;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-disabled"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9461;4610:29709;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-disabled"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9461;4610:29709;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-popup-background-disabled"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8859
+                        readonly property real y: 4848.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9461;4610:29709;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-disabled"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject focused: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 5
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11669;4610:29759;4610:29350"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-focused"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8858
+                        readonly property real y: 4884.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4677:11669;4610:29759"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-focused"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11669;4610:29759;4610:29356"
+                        readonly property string filePath: ""
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-focused"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8954
+                        readonly property real y: 4892
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11669;4610:29759;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-focused"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8872
+                        readonly property real y: 4889
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4677:11669;4610:29759;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-focused"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4677:11669;4610:29759;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-focused"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11669;4610:29759;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-popup-background-focused"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8859
+                        readonly property real y: 4915.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4677:11669;4610:29759;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-focused"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 5
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9451;4610:29459;4610:29350"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-hovered"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8858
+                        readonly property real y: 3996.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9451;4610:29459"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9451;4610:29459;4610:29356"
+                        readonly property string filePath: ""
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8954
+                        readonly property real y: 4004
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9451;4610:29459;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8872
+                        readonly property real y: 4001
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9451;4610:29459;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-hovered"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9451;4610:29459;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-hovered"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9451;4610:29459;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-popup-background-hovered"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8859
+                        readonly property real y: 4027.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9451;4610:29459;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-hovered"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered_open: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9457;4610:29609;4610:29350"
+                        readonly property string filePath: "dark/images/editablecombobox-background-hovered-open.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-hovered-open"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8858
+                        readonly property real y: 4359.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9457;4610:29609"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-hovered-open"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9457;4610:29609;4610:29356"
+                        readonly property string filePath: "dark/images/editablecombobox-indicator-hovered-open.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-hovered-open"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8954
+                        readonly property real y: 4367
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9457;4610:29609;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-hovered-open"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8872
+                        readonly property real y: 4364
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9457;4610:29609;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-hovered-open"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9457;4610:29609;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-hovered-open"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 8
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9457;4610:29609;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: "dark/images/editablecombobox-popup-background-hovered-open.png"
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 4
+                        readonly property string name: "editablecombobox-popup-background-hovered-open"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 4
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8859
+                        readonly property real y: 4390.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9457;4610:29609;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-hovered-open"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 5
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9449;4610:29409;4610:29350"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8858
+                        readonly property real y: 3929.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9449;4610:29409"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9449;4610:29409;4610:29356"
+                        readonly property string filePath: ""
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8954
+                        readonly property real y: 3937
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9449;4610:29409;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8872
+                        readonly property real y: 3934
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9449;4610:29409;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9449;4610:29409;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9449;4610:29409;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-popup-background"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8859
+                        readonly property real y: 3960.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9449;4610:29409;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject open: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9455;4610:29559;4610:29350"
+                        readonly property string filePath: "dark/images/editablecombobox-background-open.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-open"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8858
+                        readonly property real y: 4130.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9455;4610:29559"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-open"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9455;4610:29559;4610:29356"
+                        readonly property string filePath: "dark/images/editablecombobox-indicator-open.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-open"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8954
+                        readonly property real y: 4138
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9455;4610:29559;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-open"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8872
+                        readonly property real y: 4135
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9455;4610:29559;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-open"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9455;4610:29559;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-open"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 8
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9455;4610:29559;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: "dark/images/editablecombobox-popup-background-open.png"
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 4
+                        readonly property string name: "editablecombobox-popup-background-open"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 4
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8859
+                        readonly property real y: 4161.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9455;4610:29559;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-open"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject open_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9459;4610:29659;4610:29350"
+                        readonly property string filePath: "dark/images/editablecombobox-background-open-pressed.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-open-pressed"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8858
+                        readonly property real y: 4585.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9459;4610:29659"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-open-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9459;4610:29659;4610:29356"
+                        readonly property string filePath: "dark/images/editablecombobox-indicator-open-pressed.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-open-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8954
+                        readonly property real y: 4593
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9459;4610:29659;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-open-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8872
+                        readonly property real y: 4590
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9459;4610:29659;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-open-pressed"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9459;4610:29659;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-open-pressed"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 8
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9459;4610:29659;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: "dark/images/editablecombobox-popup-background-open-pressed.png"
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 4
+                        readonly property string name: "editablecombobox-popup-background-open-pressed"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 4
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8859
+                        readonly property real y: 4616.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9459;4610:29659;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-open-pressed"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 5
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9453;4610:29509;4610:29350"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-pressed"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8858
+                        readonly property real y: 4063.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9453;4610:29509"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9453;4610:29509;4610:29356"
+                        readonly property string filePath: ""
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8954
+                        readonly property real y: 4071
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9453;4610:29509;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8872
+                        readonly property real y: 4068
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9453;4610:29509;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-pressed"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9453;4610:29509;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-pressed"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9453;4610:29509;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-popup-background-pressed"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8859
+                        readonly property real y: 4094.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9453;4610:29509;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-pressed"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+            }
+
             readonly property QtObject flatbutton: QtObject {
                 readonly property QtObject checked: QtObject {
                     readonly property QtObject background: QtObject {
@@ -7982,6 +9901,1925 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 8
                     readonly property real spacing: 8
+                    readonly property real topPadding: 5
+                }
+
+            }
+
+            readonly property QtObject combobox: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15447;2407:10440;2397:10728"
+                        readonly property string filePath: "light/images/combobox-background-disabled.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4817
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15447;2407:10440"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15447;2407:10440;2397:10731"
+                        readonly property string filePath: "light/images/combobox-indicator-disabled.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 7672
+                        readonly property real y: 4825
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15447;2407:10440;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 7588
+                        readonly property real y: 4823
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15447;2407:10440;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-disabled"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:15447;2407:10440;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-disabled"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15447;2407:10440;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-disabled"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4849
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15447;2407:10440;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-disabled"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject focused: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4677:11371;4606:28948;2397:10728"
+                        readonly property string filePath: "light/images/combobox-background-focused.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-focused"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4884
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4677:11371;4606:28948"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-focused"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4677:11371;4606:28948;2397:10731"
+                        readonly property string filePath: "light/images/combobox-indicator-focused.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-focused"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 7672
+                        readonly property real y: 4892
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11371;4606:28948;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-focused"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 7588
+                        readonly property real y: 4890
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4677:11371;4606:28948;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-focused"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4677:11371;4606:28948;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-focused"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11371;4606:28948;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-focused"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4916
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4677:11371;4606:28948;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-focused"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15437;2397:10784;2397:10728"
+                        readonly property string filePath: "light/images/combobox-background-hovered.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7551.5
+                        readonly property real y: 3996
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15437;2397:10784"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15437;2397:10784;2397:10731"
+                        readonly property string filePath: "light/images/combobox-indicator-hovered.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 7648.5
+                        readonly property real y: 4004
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15437;2397:10784;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 7564.5
+                        readonly property real y: 4002
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15437;2397:10784;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-hovered"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:15437;2397:10784;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-hovered"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15437;2397:10784;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-hovered"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7551.5
+                        readonly property real y: 4028
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15437;2397:10784;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-hovered"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered_open: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15443;2407:10424;2397:10728"
+                        readonly property string filePath: "light/images/combobox-background-hovered-open.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-hovered-open"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4359
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15443;2407:10424"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-hovered-open"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15443;2407:10424;2397:10731"
+                        readonly property string filePath: "light/images/combobox-indicator-hovered-open.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-hovered-open"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 7672
+                        readonly property real y: 4367
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15443;2407:10424;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-hovered-open"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 7588
+                        readonly property real y: 4365
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15443;2407:10424;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-hovered-open"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:15443;2407:10424;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-hovered-open"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15443;2407:10424;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-hovered-open"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4391
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15443;2407:10424;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-hovered-open"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15435;2397:10736;2397:10728"
+                        readonly property string filePath: "light/images/combobox-background.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7551.5
+                        readonly property real y: 3929
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15435;2397:10736"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15435;2397:10736;2397:10731"
+                        readonly property string filePath: "light/images/combobox-indicator.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 7648.5
+                        readonly property real y: 3937
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15435;2397:10736;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 7564.5
+                        readonly property real y: 3935
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15435;2397:10736;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:15435;2397:10736;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15435;2397:10736;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7551.5
+                        readonly property real y: 3961
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15435;2397:10736;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject open: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15441;2399:10706;2397:10728"
+                        readonly property string filePath: "light/images/combobox-background-open.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-open"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4130
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15441;2399:10706"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-open"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15441;2399:10706;2397:10731"
+                        readonly property string filePath: "light/images/combobox-indicator-open.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-open"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 7672
+                        readonly property real y: 4138
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15441;2399:10706;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-open"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 7588
+                        readonly property real y: 4136
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15441;2399:10706;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-open"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:15441;2399:10706;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-open"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15441;2399:10706;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-open"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4162
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15441;2399:10706;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-open"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject open_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15445;2407:10432;2397:10728"
+                        readonly property string filePath: "light/images/combobox-background-open-pressed.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-open-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4585
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15445;2407:10432"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-open-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15445;2407:10432;2397:10731"
+                        readonly property string filePath: "light/images/combobox-indicator-open-pressed.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-open-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 7672
+                        readonly property real y: 4593
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15445;2407:10432;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-open-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 7588
+                        readonly property real y: 4591
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15445;2407:10432;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-open-pressed"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:15445;2407:10432;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-open-pressed"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15445;2407:10432;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-open-pressed"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4617
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15445;2407:10432;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-open-pressed"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15439;2397:10792;2397:10728"
+                        readonly property string filePath: "light/images/combobox-background-pressed.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-background-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4063
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15439;2397:10792"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "combobox-contentItem-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15439;2397:10792;2397:10731"
+                        readonly property string filePath: "light/images/combobox-indicator-pressed.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-indicator-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 7672
+                        readonly property real y: 4071
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15439;2397:10792;4606:26776;4606:10833"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-label-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 7588
+                        readonly property real y: 4069
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15439;2397:10792;4606:26776;4606:10833"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "combobox-label-contentItem-pressed"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:15439;2397:10792;4606:26776;4606:10837"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "combobox-label-text-pressed"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15439;2397:10792;2422:10283;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "combobox-popup-background-pressed"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 7575
+                        readonly property real y: 4095
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15439;2397:10792;2422:10283;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "combobox-popup-contentItem-pressed"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 51
+                    readonly property real topPadding: 5
+                }
+
+            }
+
+            readonly property QtObject editablecombobox: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 5
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9446;4610:29709;4610:29350"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-disabled"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8638
+                        readonly property real y: 4817.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9446;4610:29709"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9446;4610:29709;4610:29356"
+                        readonly property string filePath: ""
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8734
+                        readonly property real y: 4825
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9446;4610:29709;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8652
+                        readonly property real y: 4822
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9446;4610:29709;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-disabled"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9446;4610:29709;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-disabled"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9446;4610:29709;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-popup-background-disabled"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8639
+                        readonly property real y: 4848.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9446;4610:29709;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-disabled"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject focused: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 5
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11569;4610:29759;4610:29350"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-focused"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8638
+                        readonly property real y: 4884.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4677:11569;4610:29759"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-focused"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11569;4610:29759;4610:29356"
+                        readonly property string filePath: ""
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-focused"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8734
+                        readonly property real y: 4892
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11569;4610:29759;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-focused"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8652
+                        readonly property real y: 4889
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4677:11569;4610:29759;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-focused"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4677:11569;4610:29759;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-focused"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4677:11569;4610:29759;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-popup-background-focused"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8639
+                        readonly property real y: 4915.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4677:11569;4610:29759;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-focused"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 5
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9436;4610:29459;4610:29350"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-hovered"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8638
+                        readonly property real y: 3996.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9436;4610:29459"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9436;4610:29459;4610:29356"
+                        readonly property string filePath: ""
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8734
+                        readonly property real y: 4004
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9436;4610:29459;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8652
+                        readonly property real y: 4001
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9436;4610:29459;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-hovered"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9436;4610:29459;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-hovered"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9436;4610:29459;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-popup-background-hovered"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8639
+                        readonly property real y: 4027.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9436;4610:29459;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-hovered"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered_open: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9442;4610:29609;4610:29350"
+                        readonly property string filePath: "light/images/editablecombobox-background-hovered-open.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-hovered-open"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8638
+                        readonly property real y: 4359.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9442;4610:29609"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-hovered-open"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9442;4610:29609;4610:29356"
+                        readonly property string filePath: "light/images/editablecombobox-indicator-hovered-open.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-hovered-open"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8734
+                        readonly property real y: 4367
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9442;4610:29609;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-hovered-open"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8652
+                        readonly property real y: 4364
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9442;4610:29609;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-hovered-open"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9442;4610:29609;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-hovered-open"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 8
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9442;4610:29609;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: "light/images/editablecombobox-popup-background-hovered-open.png"
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 4
+                        readonly property string name: "editablecombobox-popup-background-hovered-open"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 4
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8639
+                        readonly property real y: 4390.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9442;4610:29609;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-hovered-open"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 5
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9434;4610:29409;4610:29350"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8638
+                        readonly property real y: 3929.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9434;4610:29409"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9434;4610:29409;4610:29356"
+                        readonly property string filePath: ""
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8734
+                        readonly property real y: 3937
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9434;4610:29409;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8652
+                        readonly property real y: 3934
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9434;4610:29409;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9434;4610:29409;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9434;4610:29409;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-popup-background"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8639
+                        readonly property real y: 3960.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9434;4610:29409;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject open: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9440;4610:29559;4610:29350"
+                        readonly property string filePath: "light/images/editablecombobox-background-open.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-open"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8638
+                        readonly property real y: 4130.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9440;4610:29559"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-open"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9440;4610:29559;4610:29356"
+                        readonly property string filePath: "light/images/editablecombobox-indicator-open.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-open"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8734
+                        readonly property real y: 4138
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9440;4610:29559;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-open"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8652
+                        readonly property real y: 4135
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9440;4610:29559;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-open"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9440;4610:29559;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-open"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 8
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9440;4610:29559;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: "light/images/editablecombobox-popup-background-open.png"
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 4
+                        readonly property string name: "editablecombobox-popup-background-open"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 4
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8639
+                        readonly property real y: 4161.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9440;4610:29559;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-open"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject open_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9444;4610:29659;4610:29350"
+                        readonly property string filePath: "light/images/editablecombobox-background-open-pressed.png"
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-open-pressed"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8638
+                        readonly property real y: 4585.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9444;4610:29659"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-open-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9444;4610:29659;4610:29356"
+                        readonly property string filePath: "light/images/editablecombobox-indicator-open-pressed.png"
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-open-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8734
+                        readonly property real y: 4593
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9444;4610:29659;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-open-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8652
+                        readonly property real y: 4590
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9444;4610:29659;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-open-pressed"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9444;4610:29659;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-open-pressed"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 8
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I4435:9444;4610:29659;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: "light/images/editablecombobox-popup-background-open-pressed.png"
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 4
+                        readonly property string name: "editablecombobox-popup-background-open-pressed"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 4
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8639
+                        readonly property real y: 4616.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9444;4610:29659;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-open-pressed"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 5
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9438;4610:29509;4610:29350"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 5
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-background-pressed"
+                        readonly property real rightOffset: 5
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 5
+                        readonly property real topShadow: 0
+                        readonly property real width: 128
+                        readonly property real x: 8638
+                        readonly property real y: 4063.17
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9438;4610:29509"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "editablecombobox-contentItem-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9438;4610:29509;4610:29356"
+                        readonly property string filePath: ""
+                        readonly property real height: 16
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-indicator-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 8734
+                        readonly property real y: 4071
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9438;4610:29509;4435:10776;4435:10687"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-label-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 8652
+                        readonly property real y: 4068
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I4435:9438;4610:29509;4435:10776;4435:10687"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "editablecombobox-label-contentItem-pressed"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I4435:9438;4610:29509;4435:10776;4435:10690"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "editablecombobox-label-text-pressed"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property QtObject popup_background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I4435:9438;4610:29509;4435:10720;3079:5526;2308:11133;2313:11247"
+                        readonly property string filePath: ""
+                        readonly property real height: 118
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "editablecombobox-popup-background-pressed"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 126
+                        readonly property real x: 8639
+                        readonly property real y: 4094.24
+                    }
+
+                    readonly property QtObject popup_contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I4435:9438;4610:29509;4435:10720;3079:5526;2308:11133"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 1
+                        readonly property string name: "editablecombobox-popup-contentItem-pressed"
+                        readonly property real rightPadding: 1
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 57
                     readonly property real topPadding: 5
                 }
 
