@@ -4885,6 +4885,824 @@ QtObject {
 
             }
 
+            readonly property QtObject tabbar: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17270;2556:17466;2556:17413"
+                        readonly property string filePath: ""
+                        readonly property real height: 48
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-background-disabled"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 462
+                        readonly property real x: 26623.5
+                        readonly property real y: 2847
+                    }
+
+                    readonly property real bottomPadding: 4
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 4
+                        readonly property string figmaId: "I2557:17270;2556:17466"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "tabbar-contentItem-disabled"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 4
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 0
+                    readonly property real spacing: 0
+                    readonly property QtObject tabButton1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17270;2556:17466;2556:17415"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton1-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26623.5
+                        readonly property real y: 2851
+                    }
+
+                    readonly property QtObject tabButton2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17270;2556:17466;2556:17421"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton2-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26700.5
+                        readonly property real y: 2851
+                    }
+
+                    readonly property real topPadding: 4
+                }
+
+                readonly property QtObject disabled_footer: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17274;2556:17577;2556:17534"
+                        readonly property string filePath: ""
+                        readonly property real height: 48
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-background-disabled-footer"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 462
+                        readonly property real x: 26624
+                        readonly property real y: 2977
+                    }
+
+                    readonly property real bottomPadding: 4
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 4
+                        readonly property string figmaId: "I2557:17274;2556:17577"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "tabbar-contentItem-disabled-footer"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 4
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 0
+                    readonly property real spacing: 0
+                    readonly property QtObject tabButton1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17274;2556:17577;2556:17536"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton1-disabled-footer"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26624
+                        readonly property real y: 2981
+                    }
+
+                    readonly property QtObject tabButton2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17274;2556:17577;2556:17537"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton2-disabled-footer"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26701
+                        readonly property real y: 2981
+                    }
+
+                    readonly property real topPadding: 4
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17268;2556:17439;2556:17413"
+                        readonly property string filePath: ""
+                        readonly property real height: 48
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-background"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 462
+                        readonly property real x: 26624
+                        readonly property real y: 2776
+                    }
+
+                    readonly property real bottomPadding: 4
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 4
+                        readonly property string figmaId: "I2557:17268;2556:17439"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "tabbar-contentItem"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 4
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 0
+                    readonly property real spacing: 0
+                    readonly property QtObject tabButton1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17268;2556:17439;2556:17415"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton1"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26624
+                        readonly property real y: 2780
+                    }
+
+                    readonly property QtObject tabButton2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17268;2556:17439;2556:17421"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton2"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26701
+                        readonly property real y: 2780
+                    }
+
+                    readonly property real topPadding: 4
+                }
+
+                readonly property QtObject normal_footer: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17272;2556:17555;2556:17534"
+                        readonly property string filePath: ""
+                        readonly property real height: 48
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-background-normal-footer"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 462
+                        readonly property real x: 26624
+                        readonly property real y: 2910
+                    }
+
+                    readonly property real bottomPadding: 4
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 4
+                        readonly property string figmaId: "I2557:17272;2556:17555"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "tabbar-contentItem-normal-footer"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 4
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 0
+                    readonly property real spacing: 0
+                    readonly property QtObject tabButton1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17272;2556:17555;2556:17536"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton1-normal-footer"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26624
+                        readonly property real y: 2914
+                    }
+
+                    readonly property QtObject tabButton2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17272;2556:17555;2556:17537"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton2-normal-footer"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26701
+                        readonly property real y: 2914
+                    }
+
+                    readonly property real topPadding: 4
+                }
+
+            }
+
+            readonly property QtObject tabbutton: QtObject {
+                readonly property QtObject checked: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17257;2556:16919;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-checked"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28285
+                        readonly property real y: 1952
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:17257;2556:16919"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-checked"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17257;2556:16919;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-checked"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28297
+                        readonly property real y: 1962
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17257;2556:16919;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-checked"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28325
+                        readonly property real y: 1962
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject checked_disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17263;2556:16934;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-checked-disabled"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28285
+                        readonly property real y: 2153
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:17263;2556:16934"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-checked-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17263;2556:16934;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-checked-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28297
+                        readonly property real y: 2163
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17263;2556:16934;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-checked-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28325
+                        readonly property real y: 2163
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject checked_hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17261;2556:16929;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-checked-hovered"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28285
+                        readonly property real y: 2086
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:17261;2556:16929"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-checked-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17261;2556:16929;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-checked-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28297
+                        readonly property real y: 2096
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17261;2556:16929;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-checked-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28325
+                        readonly property real y: 2096
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject checked_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17265;2556:16939;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-checked-pressed"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28285
+                        readonly property real y: 2220
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:17265;2556:16939"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-checked-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17265;2556:16939;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-checked-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28297
+                        readonly property real y: 2230
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17265;2556:16939;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-checked-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28325
+                        readonly property real y: 2230
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17259;2556:16924;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-disabled"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28285
+                        readonly property real y: 2023.24
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:17259;2556:16924"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17259;2556:16924;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28297
+                        readonly property real y: 2033.24
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17259;2556:16924;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28325
+                        readonly property real y: 2033.24
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17253;2556:16909;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-hovered"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28285
+                        readonly property real y: 1818
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:17253;2556:16909"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17253;2556:16909;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28297
+                        readonly property real y: 1828
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17253;2556:16909;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28325
+                        readonly property real y: 1828
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17251;2556:16904;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28285
+                        readonly property real y: 1751
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:17251;2556:16904"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17251;2556:16904;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28297
+                        readonly property real y: 1761
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17251;2556:16904;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28325
+                        readonly property real y: 1761
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17255;2556:16914;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-pressed"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28285
+                        readonly property real y: 1885
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:17255;2556:16914"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17255;2556:16914;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28297
+                        readonly property real y: 1895
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17255;2556:16914;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28325
+                        readonly property real y: 1895
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+            }
+
             readonly property QtObject textarea: QtObject {
                 readonly property QtObject disabled: QtObject {
                     readonly property QtObject background: QtObject {
@@ -10207,6 +11025,824 @@ QtObject {
                     readonly property real rightPadding: 10
                     readonly property real spacing: 12
                     readonly property real topPadding: 6
+                }
+
+            }
+
+            readonly property QtObject tabbar: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15646;2556:17466;2556:17413"
+                        readonly property string filePath: ""
+                        readonly property real height: 48
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-background-disabled"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 462
+                        readonly property real x: 26270.5
+                        readonly property real y: 2847
+                    }
+
+                    readonly property real bottomPadding: 4
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 4
+                        readonly property string figmaId: "I2557:15646;2556:17466"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "tabbar-contentItem-disabled"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 4
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 0
+                    readonly property real spacing: 0
+                    readonly property QtObject tabButton1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15646;2556:17466;2556:17415"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton1-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26270.5
+                        readonly property real y: 2851
+                    }
+
+                    readonly property QtObject tabButton2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15646;2556:17466;2556:17421"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton2-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26347.5
+                        readonly property real y: 2851
+                    }
+
+                    readonly property real topPadding: 4
+                }
+
+                readonly property QtObject disabled_footer: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15650;2556:17577;2556:17534"
+                        readonly property string filePath: ""
+                        readonly property real height: 48
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-background-disabled-footer"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 462
+                        readonly property real x: 26271
+                        readonly property real y: 2977
+                    }
+
+                    readonly property real bottomPadding: 4
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 4
+                        readonly property string figmaId: "I2557:15650;2556:17577"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "tabbar-contentItem-disabled-footer"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 4
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 0
+                    readonly property real spacing: 0
+                    readonly property QtObject tabButton1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15650;2556:17577;2556:17536"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton1-disabled-footer"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26271
+                        readonly property real y: 2981
+                    }
+
+                    readonly property QtObject tabButton2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15650;2556:17577;2556:17537"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton2-disabled-footer"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26348
+                        readonly property real y: 2981
+                    }
+
+                    readonly property real topPadding: 4
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15644;2556:17439;2556:17413"
+                        readonly property string filePath: ""
+                        readonly property real height: 48
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-background"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 462
+                        readonly property real x: 26271
+                        readonly property real y: 2776
+                    }
+
+                    readonly property real bottomPadding: 4
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 4
+                        readonly property string figmaId: "I2557:15644;2556:17439"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "tabbar-contentItem"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 4
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 0
+                    readonly property real spacing: 0
+                    readonly property QtObject tabButton1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15644;2556:17439;2556:17415"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton1"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26271
+                        readonly property real y: 2780
+                    }
+
+                    readonly property QtObject tabButton2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15644;2556:17439;2556:17421"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton2"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26348
+                        readonly property real y: 2780
+                    }
+
+                    readonly property real topPadding: 4
+                }
+
+                readonly property QtObject normal_footer: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15648;2556:17555;2556:17534"
+                        readonly property string filePath: ""
+                        readonly property real height: 48
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-background-normal-footer"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 462
+                        readonly property real x: 26271
+                        readonly property real y: 2910
+                    }
+
+                    readonly property real bottomPadding: 4
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 4
+                        readonly property string figmaId: "I2557:15648;2556:17555"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "tabbar-contentItem-normal-footer"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 4
+                    }
+
+                    readonly property real leftPadding: 0
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 0
+                    readonly property real spacing: 0
+                    readonly property QtObject tabButton1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15648;2556:17555;2556:17536"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton1-normal-footer"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26271
+                        readonly property real y: 2914
+                    }
+
+                    readonly property QtObject tabButton2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15648;2556:17555;2556:17537"
+                        readonly property real height: 40
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbar-tabButton2-normal-footer"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 26348
+                        readonly property real y: 2914
+                    }
+
+                    readonly property real topPadding: 4
+                }
+
+            }
+
+            readonly property QtObject tabbutton: QtObject {
+                readonly property QtObject checked: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15633;2556:16919;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-checked"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28142
+                        readonly property real y: 1948.5
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:15633;2556:16919"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-checked"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15633;2556:16919;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-checked"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28154
+                        readonly property real y: 1958.5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15633;2556:16919;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-checked"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28182
+                        readonly property real y: 1958.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject checked_disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15639;2556:16934;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-checked-disabled"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28142
+                        readonly property real y: 2149.5
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:15639;2556:16934"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-checked-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15639;2556:16934;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-checked-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28154
+                        readonly property real y: 2159.5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15639;2556:16934;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-checked-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28182
+                        readonly property real y: 2159.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject checked_hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15637;2556:16929;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-checked-hovered"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28142
+                        readonly property real y: 2082.5
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:15637;2556:16929"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-checked-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15637;2556:16929;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-checked-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28154
+                        readonly property real y: 2092.5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15637;2556:16929;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-checked-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28182
+                        readonly property real y: 2092.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject checked_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15641;2556:16939;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-checked-pressed"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28142
+                        readonly property real y: 2216.5
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:15641;2556:16939"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-checked-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15641;2556:16939;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-checked-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28154
+                        readonly property real y: 2226.5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15641;2556:16939;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-checked-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28182
+                        readonly property real y: 2226.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15635;2556:16924;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-disabled"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28142
+                        readonly property real y: 2023.24
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:15635;2556:16924"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-disabled"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15635;2556:16924;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28154
+                        readonly property real y: 2033.24
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15635;2556:16924;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28182
+                        readonly property real y: 2033.24
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15629;2556:16909;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-hovered"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28142
+                        readonly property real y: 1814.5
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:15629;2556:16909"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-hovered"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15629;2556:16909;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28154
+                        readonly property real y: 1824.5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15629;2556:16909;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28182
+                        readonly property real y: 1824.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15627;2556:16904;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28142
+                        readonly property real y: 1747.5
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:15627;2556:16904"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15627;2556:16904;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28154
+                        readonly property real y: 1757.5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15627;2556:16904;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28182
+                        readonly property real y: 1757.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
+                }
+
+                readonly property QtObject pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 0
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15631;2556:16914;2556:16901"
+                        readonly property string filePath: ""
+                        readonly property real height: 40
+                        readonly property real leftOffset: 0
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-background-pressed"
+                        readonly property real rightOffset: 0
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 77
+                        readonly property real x: 28142
+                        readonly property real y: 1881.5
+                    }
+
+                    readonly property real bottomPadding: 10
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 10
+                        readonly property string figmaId: "I2557:15631;2556:16914"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "tabbutton-contentItem-pressed"
+                        readonly property real rightPadding: 12
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 10
+                    }
+
+                    readonly property QtObject icon: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15631;2556:16914;6815:11841"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-icon-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 20
+                        readonly property real x: 28154
+                        readonly property real y: 1891.5
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15631;2556:16914;2556:16898"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "tabbutton-label-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 128
+                        readonly property real topShadow: 0
+                        readonly property real width: 25
+                        readonly property real x: 28182
+                        readonly property real y: 1891.5
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 12
+                    readonly property real spacing: 8
+                    readonly property real topPadding: 10
                 }
 
             }

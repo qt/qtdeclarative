@@ -20,7 +20,12 @@ TestCase {
 
     Component {
         id: tabBar
-        TabBar { }
+        TabBar {
+            topPadding: 0
+            bottomPadding: 0
+            leftPadding: 0
+            rightPadding: 0
+        }
     }
 
     Component {
@@ -533,7 +538,8 @@ TestCase {
         compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
         compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
 
-        let expectedWidth = tab3.contentItem.implicitWidth + tab3.leftPadding + tab3.rightPadding
+        let expectedWidth = Math.max(tab3.implicitBackgroundWidth + tab3.leftInset + tab3.rightInset,
+                                     tab3.implicitContentWidth + tab3.leftPadding + tab3.rightPadding)
         tab3.width = tab3.implicitWidth
         tab3.height = tab3.implicitHeight
         tryCompare(tab1, "width", (control.width - 2 * data.spacing - expectedWidth) / 2)
