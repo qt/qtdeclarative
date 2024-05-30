@@ -16,17 +16,16 @@ Rectangle {
 
         clip: true
 
-        Window {
-            id: redWindow
-            flags: Qt.WindowTransparentForInput
-            color: "lightgray"
-            visible: true
+        WindowContainer {
             width: 200; height: 200
-            parent: flickable.contentItem
+            window: Window {
+                flags: Qt.WindowTransparentForInput
+                color: "lightgray"
 
-            Image {
-                source: "https://placedog.net/500/500?random"
-                anchors.fill: parent
+                Image {
+                    source: "https://placedog.net/500/500?random"
+                    anchors.fill: parent
+                }
             }
         }
     }

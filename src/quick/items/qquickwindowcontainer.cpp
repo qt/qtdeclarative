@@ -40,10 +40,11 @@ using namespace Qt::StringLiterals;
         WindowContainer {
             window: foreignWindow
         }
-        Window {
-            parent: someItem
-            Item {
-                id: siblingItem
+        WindowContainer {
+            window: Window {
+                Item {
+                    id: siblingItem
+                }
             }
         }
     }
@@ -59,26 +60,11 @@ using namespace Qt::StringLiterals;
         WindowContainer {
             id: windowContainer
             window: foreignWindow
-            Window {
-                parent: windowContainer
-                Item {
-                    id: childItem
-                }
-            }
-        }
-    }
-    \endcode
-
-    If positioning and sizing of a Window via anchors is required,
-    the Window can be wrapped in a window container:
-
-    \code
-    Item {
-        id: someItem
-        WindowContainer {
-            anchors.fill: parent
-            window: Window {
-                Item {
+            WindowContainer {
+                window: Window {
+                    Item {
+                        id: childItem
+                    }
                 }
             }
         }
