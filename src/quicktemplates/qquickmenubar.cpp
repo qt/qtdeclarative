@@ -42,7 +42,9 @@ QT_BEGIN_NAMESPACE
     \l {removeMenu}{remove}, and \l {takeMenu}{take} menus dynamically. The
     menus in a menu bar can be accessed using \l menuAt().
 
-    \note Since Qt 6.8, MenuBar is implemented as a native menu bar on \macos. As a
+    \section1 Native menu bars
+
+    Since Qt 6.8, a MenuBar is implemented as a native menu bar on \macos. As a
     result, all Menus, MenuItems and MenuBarItems within a MenuBar will also be native.
     While this has the advantage that everything will look native, it also comes with the
     disadvantage that the delegates set on the mentioned controls will not be used
