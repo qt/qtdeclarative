@@ -120,28 +120,56 @@ Q_LOGGING_CATEGORY(lcQuickPopup, "qt.quick.controls.popup")
     }
     \endcode
 
-    \section1 Popup Windows
+    \section1 Popup type
 
-    Popup can behave in two different ways. Depending on the platform,
-    and what the value of the \l popupType property is.
+    Since Qt 6.8, some popups, such as \l Menu, offer three different implementations,
+    depending on the platform. You can choose which one you prefer by setting \l popupType.
 
-    Showing a popup as a separate top-level window is disabled by default.
-    You can enable popup windows explicitly by
-    setting \l popupType to \c Popup.Window.
+    Whether a popup will be able to use the preferred type depends on the platform.
+    \c Popup.Item is supported on all platforms, but \c Popup.Window and \c Popup.Native
+    are normally only supported on desktop platforms. Additionally, if a popup is a
+    \l Menu inside a \l {Native menu bars}{native menubar}, the menu will be native as
+    well. And if the menu is a sub-menu inside another menu, the parent (or root) menu
+    will decide the type.
 
-    This will cause a separate popup window to be created,
-    which contains the \l contentItem and \l background items.
+    \section2 Showing a popup as an item
 
-    \section1 Popup Items
+    By setting \l popupType to \c Popup.Item, the popup will \e not be shown as a separate
+    window, but as an item inside the same scene as the parent. This item is parented
+    to that scene's \l{Overlay::overlay}{overlay}, and styled to look like an actual window.
 
-    If the \l popupType property is set to \c Item,
-    or the platform doesn't support multiple windows,
-    the popup will instead create a item, which gets parented to the
-    \l{Overlay::overlay}{overlay} in the scene of the existing window.
+    This option is especially useful on platforms that doesn't support multiple windows.
+    This was also the only option before Qt 6.8.
 
     In order to ensure that a popup is displayed above other items in the
     scene, it is recommended to use ApplicationWindow. ApplicationWindow also
     provides background dimming effects.
+
+    \section2 Showing a popup as a separate window
+
+    By setting \l popupType to \c Popup.Window, the popup will be shown inside a top-level
+    \l {QQuickWindow}{window} configured with the \l Qt::Popup flag. Using a window to show a
+    popup has the advantage that the popup will float on top of the parent window, and
+    can be placed outside of its geometry. The popup will otherwise look the same as when
+    using \c Popup.Item, that is, it will use the same QML delegates and styling as
+    when using \c Popup.Item.
+
+    \note If the platform doesn't support \c Popup.Window, \c Popup.Item will be used as fallback.
+
+    \section2 Showing a native popup
+
+    By setting \l popupType to \c Popup.Native, the popup will be shown using a platform
+    native popup window. This window, and all its contents, will be rendered by the
+    platform, and not by QML. This means that the QML delegates assigned to the popup
+    will \e not be used for rendering. If you for example
+    use this option on a \l Menu, it will be implemented using platform-specific
+    menu APIs. This will normally make the popup look and feel more native than for example
+    \c Popup.Window, but at the same time, suffer from platform limitations and differences
+    related to appearance and behavior. Such limitations are documented in more detail
+    in the subclasses that are affected, such as for a
+    \l {Limitations when using native menus}{Menu}).
+
+    \note If the platform doesn't support \c Popup.Native, \c Popup.Window will be used as fallback.
 
     \section1 Popup Sizing
 
@@ -243,9 +271,8 @@ Q_LOGGING_CATEGORY(lcQuickPopup, "qt.quick.controls.popup")
 
     \section1 Showing Non-Child Items in Front of Popup
 
-
-    In cases where \l {Popup Windows} are not being used, Popup sets its contentItem's
-    \l{qtquick-visualcanvas-visualparent.html}{visual parent}
+    In cases where \l {Showing a popup as an item}{popup windows} are not being used,
+    Popup sets its contentItem's \l{qtquick-visualcanvas-visualparent.html}{visual parent}
     to be the window's \l{Overlay::overlay}{overlay}, in order to ensure that
     the popup appears in front of everything else in the scene.
     In some cases, it might be useful to put an item in front of a popup,
@@ -2779,16 +2806,29 @@ void QQuickPopup::resetBottomInset()
     \qmlproperty enumeration QtQuick.Controls::Popup::popupType
     \since 6.8
 
-    This property determines the type of popup that will be created.
+    This property determines the type of popup that is preferred.
 
     Available options:
-    \value Default      Let Qt decide the optimal popup type, depending on the system. This is the default value.
     \value Item         The popup will be embedded into the \l{Popup Items}{same scene as the parent}, without the use of a separate window.
     \value Window       The popup will be presented in a \l {Popup Windows}{separate window}. If the platform doesn't support multiple windows,
                         \c Popup.Item will be used instead.
     \value Native       The popup will be native to the platform. If the platform doesn't support native popups,
                         \c Popup.Window will be used instead.
-    \sa {Popup Windows}, {Popup Items}
+
+    Whether a popup will be able to use the preferred type depends on the platform.
+    \c Popup.Item is supported on all platforms, but \c Popup.Window and \c Popup.Native
+    are normally only supported on desktop platforms. Additionally, if a popup is a
+    \l Menu inside a \l {Native menu bars}{native menubar}, the menu will be native as
+    well. And if the menu is a sub-menu inside another menu, the parent (or root) menu
+    will decide the type.
+
+    \note The default value is platform dependent, and can change in future versions of Qt.
+    Therefore, if you want to make sure that for example \c Popup.Item is always used on all
+    platforms, you should set it explicitly.
+
+    You can set this property to \c undefined, to restore its value back to its default type.
+
+    \sa {Popup type}
 */
 QQuickPopup::PopupType QQuickPopup::popupType() const
 {

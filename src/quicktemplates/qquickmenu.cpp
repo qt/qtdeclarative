@@ -201,23 +201,29 @@ static const int SUBMENU_DELAY = 225;
     \sa {Customizing Menu}, MenuItem, {Menu Controls}, {Popup Controls},
         {Dynamic QML Object Creation from JavaScript}
 
-    \section1 Native Menus
+    \section1 Menu types
 
-    Since Qt 6.8, Menu is backed by a native menu by default, on platforms
-    where it is supported:
-    \list
-    \li Android
-    \li iOS
-    \li Linux (only available as a stand-alone context menu when running with the GTK+ platform theme)
-    \li macOS
-    \li Windows
-    \endlist
+    Since Qt 6.8, a menu offers three different implementations, depending on the
+    platform. You can choose which one should be preferred by setting
+    \l popupType. This will let you control if a menu should be shown as a separate
+    window, as an item inside the parent window, or as a native menu. You can read
+    more about these options \l{Popup type}{here.}
 
-    To use non-native menus by default, set \l {Qt::ApplicationAttribute}
-    {Qt::AA_DontUseNativeMenuWindows} to \c true.
+    Whether a menu will be able to use the preferred type depends on the platform.
+    \c Popup.Item is supported on all platforms, but \c Popup.Window and \c Popup.Native
+    are normally only supported on desktop platforms. Additionally, if the menu is inside
+    a \l {Native menu bars}{native menubar}, the menu will be native as well. And if
+    the menu is a sub-menu inside another menu, the parent (or root) menu will decide the type.
 
-    As not all platforms support the full set of Menu's API, only a common
-    subset of it is supported when using a native menu:
+    \section2 Limitations when using native menus
+
+    When setting \l popupType to \c Popup.Native, there are some limitations and
+    differences compared to using \c Popup.Item and \c Popup.Window.
+
+    \section3 API differences
+
+    When using native menus, only a subset of the Menu API is supported on all platforms:
+
     \list
     \li \l {Popup::}{x}
     \li \l {Popup::}{y}
@@ -229,6 +235,7 @@ static const int SUBMENU_DELAY = 225;
     \li \l {Popup::}{contentChildren} (visual children will not be visible)
     \li \l contentModel
     \li \l {Popup::}{open()}
+    \li \l {Popup::}{popup()}
     \li \l {Popup::}{close()}
     \li \l {Popup::}{opened()}
     \li \l {Popup::}{closed()}
@@ -236,9 +243,39 @@ static const int SUBMENU_DELAY = 225;
     \li \l {Popup::}{aboutToHide()}
     \endlist
 
+    In addition, showing a popup (using for example \l {Popup::}{open()} or \l {Popup::}{popup()}
+    will, on some platforms, be a blocking call. This means that the call will not return
+    before the menu is closed again, which can affect the logic in your application. This is
+    especially important to take into consideration if your application is targeting multiple
+    platforms, and as such, sometimes run on platforms where native menus are not supported.
+    In that case the popupType will fall back to \c Popup.Item, for example, and calls to
+    \l {Popup::}{open()} will not be blocking.
+
     Items like \l MenuItem will still react to clicks in the corresponding
     native menu item by emitting signals, for example, but will be replaced by
     their native counterpart.
+
+    \section3 Rendering differences
+
+    Native menus are implemented using the available native menu APIs on the platform.
+    Those menus, and all of their contents, will therefore be rendered by the platform, and
+    not by QML. This means that the \l delegate will \e not be used for rendering. It will,
+    however, always be instantiated (but hidden), so that functions such as
+    \l {Component.onCompleted()} execute regardless of platform and \l popupType.
+
+    \section3 Supported platforms
+
+    Native menus are currently supported on the following platforms:
+
+    \list
+    \li Android
+    \li iOS
+    \li Linux (only available as a stand-alone context menu when running with the GTK+ platform theme)
+    \li macOS
+    \li Windows
+    \endlist
+
+    \sa {Popup type}, popupType
 */
 
 /*!
