@@ -1803,7 +1803,7 @@ void TestQmllint::settingsFile()
                                       .arg(testFile("settings/unusedImportWarning/unused.qml"))));
     QVERIFY(runQmllint("settings/bare/bare.qml", false, {}, false, false)
                     .contains(QStringLiteral("Failed to find the following builtins: "
-                                             "builtins.qmltypes, jsroot.qmltypes")));
+                                             "jsroot.qmltypes, builtins.qmltypes")));
     QVERIFY(runQmllint("settings/qmltypes/qmltypes.qml", false, QStringList(), false)
                     .contains(QStringLiteral("not a qmldir file. Assuming qmltypes.")));
     QVERIFY(runQmllint("settings/qmlimports/qmlimports.qml", true, QStringList(), false).isEmpty());
@@ -1911,7 +1911,7 @@ void TestQmllint::missingBuiltinsNoCrash()
 
     checkResult(warnings,
                 Result { { Message { QStringLiteral("Failed to find the following builtins: "
-                                                    "builtins.qmltypes, jsroot.qmltypes") } } });
+                                                    "jsroot.qmltypes, builtins.qmltypes") } } });
 }
 
 void TestQmllint::absolutePath()

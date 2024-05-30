@@ -616,24 +616,30 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
     Import result;
     result.name = QStringLiteral("QML");
 
-    QStringList qmltypesFiles = { QStringLiteral("builtins.qmltypes"),
-                                  QStringLiteral("jsroot.qmltypes") };
-    const auto importBuiltins = [&](const QStringList &imports) {
+    const auto importBuiltins = [&](const QString &qmltypesFile, const QStringList &imports) {
         for (auto const &dir : imports) {
-            QDirIterator it { dir, qmltypesFiles, QDir::NoFilter };
-            while (it.hasNext() && !qmltypesFiles.isEmpty()) {
-                readQmltypes(it.next(), &result.objects, &result.dependencies);
-                qmltypesFiles.removeOne(it.fileName());
-            }
+            const QDir importDir(dir);
+            if (!importDir.exists(qmltypesFile))
+                continue;
+
+            readQmltypes(
+                    importDir.filePath(qmltypesFile), &result.objects, &result.dependencies);
             setQualifiedNamesOn(result);
             importDependencies(result, &builtins);
-
-            if (qmltypesFiles.isEmpty())
-                return;
+            return true;
         }
+
+        return false;
     };
 
-    importBuiltins(m_importPaths);
+    // If the same name (such as "Qt") appears in the JS root and in the builtins,
+    // we want the builtins to override the JS root. Therefore, process jsroot first.
+    QStringList qmltypesFiles;
+    for (QString qmltypesFile : { "jsroot.qmltypes"_L1, "builtins.qmltypes"_L1 }) {
+        if (!importBuiltins(qmltypesFile, m_importPaths))
+            qmltypesFiles.append(std::move(qmltypesFile));
+    }
+
     if (!qmltypesFiles.isEmpty()) {
         const QString pathsString =
                 m_importPaths.isEmpty() ? u"<empty>"_s : m_importPaths.join(u"\n\t");
@@ -641,9 +647,13 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
                                            "qrc). Import paths used:\n\t%2")
                                     .arg(qmltypesFiles.join(u", "), pathsString),
                             QtWarningMsg, QQmlJS::SourceLocation() });
-        importBuiltins({ u":/qt-project.org/qml/builtins"_s }); // use qrc as a "last resort"
+
+        // use qrc as a "last resort"
+        for (const QString &qmltypesFile : std::as_const(qmltypesFiles)) {
+            const bool found = importBuiltins(qmltypesFile, { u":/qt-project.org/qml/builtins"_s });
+            Q_ASSERT(found); // since qrc must cover it in all the bad cases
+        }
     }
-    Q_ASSERT(qmltypesFiles.isEmpty()); // since qrc must cover it in all the bad cases
 
     // Process them together since there they have interdependencies that wouldn't get resolved
     // otherwise

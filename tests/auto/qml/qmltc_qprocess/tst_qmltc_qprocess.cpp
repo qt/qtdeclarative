@@ -153,7 +153,7 @@ void tst_qmltc_qprocess::noBuiltins()
         QVERIFY(file.rename(original));
     };
 
-    for (QString builtin : { u"builtins.qmltypes"_s, u"jsroot.qmltypes"_s }) {
+    for (QString builtin : { u"jsroot.qmltypes"_s, u"builtins.qmltypes"_s }) {
         const auto path = QLibraryInfo::path(QLibraryInfo::QmlImportsPath) + u"/"_s + builtin;
 
         QScopeGuard scope(std::bind(renameBack, path));
