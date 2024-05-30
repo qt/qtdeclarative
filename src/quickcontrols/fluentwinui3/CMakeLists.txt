@@ -16,6 +16,8 @@ set(qml_files
     "RangeSlider.qml"
     "Slider.qml"
     "Switch.qml"
+    "TabBar.qml"
+    "TabButton.qml"
     "TextField.qml"
     "TextArea.qml"
     "Config.qml" # TODO: move to impl module
