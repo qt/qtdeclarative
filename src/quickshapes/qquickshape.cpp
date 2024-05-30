@@ -1213,7 +1213,10 @@ QSGNode *QQuickShape::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
                 ty = (height() - h) / 2;
             fillModeTransform.translate(tx / xScale, ty / yScale);
         }
-        static_cast<QSGTransformNode *>(node)->setMatrix(fillModeTransform);
+
+        QSGTransformNode *transformNode = static_cast<QSGTransformNode *>(node);
+        if (fillModeTransform != transformNode->matrix())
+            transformNode->setMatrix(fillModeTransform);
     }
     return node;
 }
