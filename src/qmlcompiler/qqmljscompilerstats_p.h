@@ -50,8 +50,8 @@ public:
         return m_entries;
     }
 
-    void addEntry(const QString &moduleId, const QString &filepath, AotStatsEntry entry);
-    void insert(AotStats other);
+    void addEntry(const QString &moduleId, const QString &filepath, const AotStatsEntry &entry);
+    void insert(const AotStats &other);
 
     bool saveToDisk(const QString &filepath) const;
 
@@ -74,10 +74,10 @@ public:
     static bool recordAotStats() { return s_recordAotStats; }
     static void setRecordAotStats(bool recordAotStats) { s_recordAotStats = recordAotStats; }
 
-    static const QString &moduleId() { return s_moduleId; }
-    static void setModuleId(QString moduleId) { s_moduleId = moduleId; }
+    static QString moduleId() { return s_moduleId; }
+    static void setModuleId(const QString &moduleId) { s_moduleId = moduleId; }
 
-    static void addEntry(QString filepath, QQmlJS::AotStatsEntry entry);
+    static void addEntry(const QString &filepath, const QQmlJS::AotStatsEntry &entry);
 
 private:
     static std::unique_ptr<AotStats> s_instance;

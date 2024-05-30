@@ -791,7 +791,7 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompileAndRecordAotStats(
         QQmlJS::DiagnosticMessage *error, const QString &name, QQmlJS::SourceLocation location)
 {
     auto t1 = std::chrono::high_resolution_clock::now();
-    auto &&result = doCompile(context, function, error);
+    QQmlJSAotFunction result = doCompile(context, function, error);
     auto t2 = std::chrono::high_resolution_clock::now();
 
     if (QQmlJS::QQmlJSAotCompilerStats::recordAotStats()) {

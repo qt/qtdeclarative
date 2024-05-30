@@ -202,7 +202,7 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSUtils
                                       const AliasResolutionVisitor &visitor);
 
     template<typename QQmlJSScopePtr, typename Action>
-    static bool searchBaseAndExtensionTypes(QQmlJSScopePtr type, const Action &check)
+    static bool searchBaseAndExtensionTypes(const QQmlJSScopePtr &type, const Action &check)
     {
         if (!type)
             return false;

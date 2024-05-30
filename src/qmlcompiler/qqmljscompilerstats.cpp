@@ -26,7 +26,7 @@ bool QQmlJS::AotStatsEntry::operator<(const AotStatsEntry &other) const
     return line < other.line;
 }
 
-void AotStats::insert(AotStats other)
+void AotStats::insert(const AotStats &other)
 {
     for (const auto &[moduleUri, moduleStats] : other.m_entries.asKeyValueRange()) {
         m_entries[moduleUri].insert(moduleStats);
@@ -111,10 +111,10 @@ AotStats AotStats::fromJsonDocument(const QJsonDocument &document)
             }
 
             std::sort(stats.begin(), stats.end());
-            files[filepath] = stats;
+            files[filepath] = std::move(stats);
         }
 
-        result.m_entries[moduleId] = files;
+        result.m_entries[moduleId] = std::move(files);
     }
 
     return result;
@@ -160,7 +160,8 @@ QJsonDocument AotStats::toJsonDocument() const
     return QJsonDocument(modulesArray);
 }
 
-void AotStats::addEntry(const QString &moduleId, const QString &filepath, AotStatsEntry entry)
+void AotStats::addEntry(
+        const QString &moduleId, const QString &filepath, const AotStatsEntry &entry)
 {
     m_entries[moduleId][filepath].append(entry);
 }
@@ -177,10 +178,9 @@ bool AotStats::saveToDisk(const QString &filepath) const
     return true;
 }
 
-void QQmlJSAotCompilerStats::addEntry(QString filepath, QQmlJS::AotStatsEntry entry)
+void QQmlJSAotCompilerStats::addEntry(const QString &filepath, const QQmlJS::AotStatsEntry &entry)
 {
-    auto *aotstats = QQmlJSAotCompilerStats::instance();
-    aotstats->addEntry(s_moduleId, filepath, entry);
+    QQmlJSAotCompilerStats::instance()->addEntry(s_moduleId, filepath, entry);
 }
 
 } // namespace QQmlJS
