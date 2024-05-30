@@ -19,22 +19,21 @@ Rectangle {
         ]
         scale: 1.5
 
-        Window {
-            id: childWindow
-            objectName: "childWindow"
-            visible: true
-            parent: rectangle
+        WindowContainer {
             width: 200; height: 200
+            window: Window {
+                color: "lightgray"
 
-            Image {
-                source: "https://placedog.net/500/500?random"
-                anchors.fill: parent
-            }
+                Image {
+                    source: "https://placedog.net/500/500?random"
+                    anchors.fill: parent
+                }
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    rectangle.scale += 0.1
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        rectangle.scale += 0.1
+                    }
                 }
             }
         }

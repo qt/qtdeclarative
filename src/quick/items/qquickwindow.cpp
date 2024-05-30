@@ -3718,9 +3718,6 @@ void QQuickWindow::endExternalCommands()
     the \l Window::flags property with a suitable \l Qt::WindowType (such as
     \c Qt::Dialog).
 
-    If a \l{QtQuick::Window::parent}{visual parent} is set on the Window
-    the visual parent will take precedence over the transientParent.
-
     \sa QtQuick::Window::parent
 */
 

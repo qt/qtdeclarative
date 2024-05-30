@@ -17,19 +17,19 @@ QtObject {
             color: "red"
         }
 
-        Window {
-            objectName: "childWindow"
-            parent: windowA
+        WindowContainer {
             x: 100; y: 100
             width: 100; height: 100
-            visible: true
-            color: "blue"
+            window: Window {
+                objectName: "childWindow"
+                color: "blue"
 
-            Rectangle {
-                objectName: "childItemInChildWindow"
-                x: 30; y: 30
-                width: 50; height: 50
-                color: "orange"
+                Rectangle {
+                    objectName: "childItemInChildWindow"
+                    x: 30; y: 30
+                    width: 50; height: 50
+                    color: "orange"
+                }
             }
         }
     }

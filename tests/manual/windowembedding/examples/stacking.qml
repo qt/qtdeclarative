@@ -10,41 +10,41 @@ Rectangle {
 
     property int windowZ: 0
 
-    Window {
+    WindowContainer {
         id: redWindow
-        color: "red"
-        visible: true
-        parent: rootItem
+        window: Window {
+            color: "red"
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: redWindow.z = ++rootItem.windowZ
+            MouseArea {
+                anchors.fill: parent
+                onClicked: redWindow.z = ++rootItem.windowZ
+            }
         }
     }
 
-    Window {
+    WindowContainer {
         id: greenWindow
-        color: "green"
-        visible: true
-        parent: rootItem
         x: 100; y: 100
+        window: Window {
+            color: "green"
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: greenWindow.z = ++rootItem.windowZ
+            MouseArea {
+                anchors.fill: parent
+                onClicked: greenWindow.z = ++rootItem.windowZ
+            }
         }
     }
 
-    Window {
+    WindowContainer {
         id: blueWindow
-        color: "blue"
-        visible: true
-        parent: rootItem
         x: 200; y: 200
+        window: Window {
+            color: "blue"
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: blueWindow.z = ++rootItem.windowZ
+            MouseArea {
+                anchors.fill: parent
+                onClicked: blueWindow.z = ++rootItem.windowZ
+            }
         }
     }
 }

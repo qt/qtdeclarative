@@ -286,7 +286,7 @@ bool QQuickWindowQmlImpl::transientParentVisible()
 /*!
     \qmlproperty var QtQuick::Window::parent
     \since 6.7
-    \preliminary
+    \internal
 
     This property holds the visual parent of the window.
 
@@ -492,7 +492,7 @@ int QQuickWindowQmlImpl::y() const
 
 /*!
     \qmlproperty real QtQuick::Window::z
-    \preliminary
+    \internal
 
     Sets the stacking order of sibling windows.
 

@@ -17,6 +17,8 @@
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickwindowcontainer_p.h>
 
+#define TEST_WINDOW_PARENT 0
+
 class tst_QQuickWindowContainer : public QQmlDataTest
 {
     Q_OBJECT
@@ -35,8 +37,10 @@ private slots:
 
     void windowDestroyed();
     void windowLifetimeFollowsContainer();
+#if TEST_WINDOW_PARENT
     void deferredVisibilityWithoutWindow();
     void windowComponent();
+#endif
 
     void updateStackingOrderPerformance();
 
@@ -69,8 +73,10 @@ void tst_QQuickWindowContainer::basicFunctionality_data()
 {
     QTest::addColumn<QPoint>("position");
 
+#if TEST_WINDOW_PARENT
     QTest::newRow("window") << QPoint(100, 100);
     QTest::newRow("item") << QPoint(200, 200);
+#endif
     QTest::newRow("container") << QPoint(100, 100);
 }
 
@@ -132,6 +138,7 @@ void tst_QQuickWindowContainer::windowLifetimeFollowsContainer()
     QVERIFY(windowGuard);
 }
 
+#if TEST_WINDOW_PARENT
 void tst_QQuickWindowContainer::deferredVisibilityWithoutWindow()
 {
     auto *topLevelWindow = qobject_cast<QQuickWindow*>(m_engine->rootObjects().first());
@@ -189,6 +196,7 @@ void tst_QQuickWindowContainer::windowComponent()
     QCOMPARE(qobject_cast<QQuickWindow *>(window_item_parent)->parent(), root);
     QCOMPARE(qobject_cast<QQuickWindow *>(window_window_parent)->parent(), windowParent);
 }
+#endif // TEST_WINDOW_PARENT
 
 void tst_QQuickWindowContainer::updateStackingOrderPerformance()
 {
