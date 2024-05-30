@@ -23,6 +23,8 @@
 #include <QtQml/private/qv4object_p.h>
 #include <QtQml/private/qqmlanybinding_p.h>
 
+#include <QtQml/qqmlextensionplugin.h>
+
 #include <QtCore/qiterable.h>
 #include <QtCore/qpointer.h>
 
@@ -307,8 +309,15 @@ static QQuickGuiProvider *getGuiProvider()
     return &guiProvider;
 }
 
+// Don't let the linker remove the dependency on libQtQmlMeta
+void qml_register_types_QtQml();
+Q_GHS_KEEP_REFERENCE(qml_register_types_QtQml);
+
 void QQuick_initializeModule()
 {
+    volatile auto qtqml = &qml_register_types_QtQml;
+    Q_ASSERT(qtqml);
+
     // This is used by QQuickPath, and on macOS it fails to automatically register.
     qRegisterMetaType<QVector<QVector<QPointF>>>();
 

@@ -1,13 +1,30 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
-set(module_dynamic_qml_imports
+set(qmlmeta_imports
+    QML/1.0
     QtQml.Models/auto
 )
 
+set(qmlmeta_public_dependencies
+    Qt::Qml
+    Qt::QmlModels
+)
+
+set(qmlmeta_private_dependencies
+    Qt::QmlPrivate
+    Qt::QmlModelsPrivate
+)
+
 if (QT_FEATURE_qml_worker_script)
-    list(APPEND module_dynamic_qml_imports
+    list(APPEND qmlmeta_imports
         QtQml.WorkerScript/auto
+    )
+    list(APPEND qmlmeta_public_dependencies
+        Qt::QmlWorkerScript
+    )
+    list(APPEND qmlmeta_private_dependencies
+        Qt::QmlWorkerScriptPrivate
     )
 endif()
 
@@ -20,21 +37,18 @@ qt_internal_add_qml_module(QmlMeta
     CLASS_NAME QtQmlPlugin
     PAST_MAJOR_VERSIONS 2
     IMPORTS
-        QML/1.0
-        ${module_dynamic_qml_imports}
+        ${qmlmeta_imports}
     SOURCES
+        types/qqmlmetadependencies.cpp types/qqmlmetadependencies_p.h
         types/qqmlbind.cpp types/qqmlbind_p.h
         types/qqmlconnections.cpp types/qqmlconnections_p.h
         types/qqmlloggingcategory.cpp types/qqmlloggingcategory_p.h
     LIBRARIES
-        Qt::QmlPrivate
-        Qt::QmlModelsPrivate
+        ${qmlmeta_private_dependencies}
     PUBLIC_LIBRARIES
-        Qt::Qml
-        Qt::QmlModels
+        ${qmlmeta_public_dependencies}
     PRIVATE_MODULE_INTERFACE
-        Qt::QmlPrivate
-        Qt::QmlModelsPrivate
+        ${qmlmeta_private_dependencies}
 )
 
 add_dependencies(QmlMeta BuiltinsOutput)
@@ -45,10 +59,6 @@ add_dependencies(QmlMeta BuiltinsOutput)
 #     import QtQuick 2.0
 #     ^
 if(QT_FEATURE_qml_worker_script)
-    qt_internal_extend_target(QmlMeta
-        LIBRARIES
-            Qt::QmlWorkerScript
-    )
     _qt_internal_add_qml_static_plugin_dependency(qmlplugin workerscriptplugin)
 endif()
 
