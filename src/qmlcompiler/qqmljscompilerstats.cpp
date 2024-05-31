@@ -26,6 +26,60 @@ bool QQmlJS::AotStatsEntry::operator<(const AotStatsEntry &other) const
     return line < other.line;
 }
 
+void AotStats::insert(AotStats other)
+{
+    for (const auto &[moduleUri, moduleStats] : other.m_entries.asKeyValueRange()) {
+        m_entries[moduleUri].insert(moduleStats);
+    }
+}
+
+std::optional<QList<QString>> extractAotstatsFilesList(const QString &aotstatsListPath)
+{
+    QFile aotstatsListFile(aotstatsListPath);
+    if (!aotstatsListFile.open(QIODevice::ReadOnly | QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug().noquote() << u"Could not open \"%1\" for reading"_s.arg(aotstatsListFile.fileName());
+        return std::nullopt;
+    }
+
+    QStringList aotstatsFiles;
+    QTextStream stream(&aotstatsListFile);
+    while (!stream.atEnd())
+        aotstatsFiles.append(stream.readLine());
+
+    return aotstatsFiles;
+}
+
+std::optional<AotStats> AotStats::parseAotstatsFile(const QString &aotstatsPath)
+{
+    QFile file(aotstatsPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug().noquote() << u"Could not open \"%1\""_s.arg(aotstatsPath);
+        return std::nullopt;
+    }
+
+    return AotStats::fromJsonDocument(QJsonDocument::fromJson(file.readAll()));
+}
+
+std::optional<AotStats> AotStats::aggregateAotstatsList(const QString &aotstatsListPath)
+{
+    const auto aotstatsFiles = extractAotstatsFilesList(aotstatsListPath);
+    if (!aotstatsFiles.has_value())
+        return std::nullopt;
+
+    AotStats aggregated;
+    if (aotstatsFiles->empty())
+        return aggregated;
+
+    for (const auto &aotstatsFile : aotstatsFiles.value()) {
+        auto parsed = parseAotstatsFile(aotstatsFile);
+        if (!parsed.has_value())
+            return std::nullopt;
+        aggregated.insert(parsed.value());
+    }
+
+    return aggregated;
+}
+
 AotStats AotStats::fromJsonDocument(const QJsonDocument &document)
 {
     QJsonArray modulesArray = document.array();

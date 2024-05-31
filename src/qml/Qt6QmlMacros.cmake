@@ -945,6 +945,67 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
             ")
         endif()
     endif()
+
+    if("${CMAKE_VERSION}" VERSION_GREATER_EQUAL "3.19.0" AND NOT CMAKE_GENERATOR STREQUAL "Xcode")
+        set(id qmlaotstats_aggregation)
+        cmake_language(DEFER DIRECTORY ${PROJECT_BINARY_DIR} GET_CALL ${id} call)
+
+        if("${call}" STREQUAL "")
+            cmake_language(EVAL CODE "cmake_language(DEFER DIRECTORY ${PROJECT_BINARY_DIR} "
+                "ID ${id} CALL _qt_internal_deferred_aggregate_aotstats_files ${target})")
+        endif()
+    else()
+        if(NOT TARGET all_aotstats)
+            if(CMAKE_GENERATOR STREQUAL "Xcode") #TODO: QTBUG-125995
+                add_custom_target(
+                    all_aotstats
+                    ${CMAKE_COMMAND} -E echo "aotstats is not supported on Xcode"
+                )
+            else()
+                add_custom_target(
+                    all_aotstats
+                    ${CMAKE_COMMAND} -E echo "aotstats is not supported on CMake versions < 3.19"
+                )
+            endif()
+        endif()
+    endif()
+endfunction()
+
+function(_qt_internal_deferred_aggregate_aotstats_files target)
+    get_property(module_aotstats_files GLOBAL PROPERTY "module_aotstats_files")
+    list(JOIN module_aotstats_files "\n" lines)
+    set(aotstats_list_file "${PROJECT_BINARY_DIR}/.rcc/qmlcache/all_aotstats.aotstatslist")
+    file(WRITE ${aotstats_list_file} ${lines})
+
+    set(all_aotstats_file ${PROJECT_BINARY_DIR}/.rcc/qmlcache/all_aotstats.aotstats)
+    set(formatted_stats_file ${PROJECT_BINARY_DIR}/.rcc/qmlcache/all_aotstats.txt)
+
+    _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
+    add_custom_command(
+        OUTPUT
+            ${all_aotstats_file}
+            ${formatted_stats_file}
+        DEPENDS ${module_aotstats_files}
+        COMMAND
+            ${tool_wrapper}
+            $<TARGET_FILE:Qt6::qmlaotstats>
+            aggregate
+            ${aotstats_list_file}
+            ${all_aotstats_file}
+        COMMAND
+            ${tool_wrapper}
+            $<TARGET_FILE:Qt6::qmlaotstats>
+            format
+            ${all_aotstats_file}
+            ${formatted_stats_file}
+    )
+
+    if(NOT TARGET all_aotstats)
+        add_custom_target(all_aotstats
+            DEPENDS ${formatted_stats_file}
+            COMMAND ${CMAKE_COMMAND} -E cat ${formatted_stats_file}
+        )
+    endif()
 endfunction()
 
 function(_qt_internal_write_deferred_qmlls_ini_file)
@@ -2843,6 +2904,7 @@ function(qt6_target_qml_sources target)
             set(aotstats_file "")
             if("${qml_file_src}" MATCHES ".+\\.qml")
                 set(aotstats_file "${compiled_file}.aotstats")
+                list(APPEND aotstats_files ${aotstats_file})
             endif()
 
             _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
@@ -2892,6 +2954,29 @@ function(qt6_target_qml_sources target)
             endif()
         endif()
     endforeach()
+
+    if(NOT "${arg_URI}" STREQUAL "")
+        list(JOIN aotstats_files "\n" aotstats_files_lines)
+        set(module_aotstats_list_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/module_${arg_URI}.aotstatslist")
+        file(WRITE ${module_aotstats_list_file} ${aotstats_files_lines})
+
+        # Aggregate qml file aotstats into module-level aotstats
+        _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
+        set(output "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/module_${arg_URI}.aotstats")
+        add_custom_command(
+            OUTPUT ${output}
+            DEPENDS ${aotstats_files}
+            COMMAND
+                ${tool_wrapper}
+                $<TARGET_FILE:Qt6::qmlaotstats>
+                aggregate
+                ${module_aotstats_list_file}
+                ${output}
+        )
+
+        # Collect module-level aotstats files for later aggregation at the project level
+        set_property(GLOBAL APPEND PROPERTY "module_aotstats_files" ${output})
+    endif()
 
     if(ANDROID)
         _qt_internal_collect_qml_root_paths("${target}" ${arg_QML_FILES})

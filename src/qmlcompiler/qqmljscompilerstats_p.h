@@ -51,8 +51,12 @@ public:
     }
 
     void addEntry(const QString &moduleId, const QString &filepath, AotStatsEntry entry);
+    void insert(AotStats other);
 
     bool saveToDisk(const QString &filepath) const;
+
+    static std::optional<AotStats> parseAotstatsFile(const QString &aotstatsPath);
+    static std::optional<AotStats> aggregateAotstatsList(const QString &aotstatsListPath);
 
     static AotStats fromJsonDocument(const QJsonDocument &);
     QJsonDocument toJsonDocument() const;

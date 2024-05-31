@@ -95,6 +95,7 @@ add_subdirectory(qmldom)
 
 # Build qmlcachegen now, so that we can use it in src/imports.
 if(QT_FEATURE_xmlstreamwriter)
+    add_subdirectory(../tools/qmlaotstats qmlaotstats)
     add_subdirectory(../tools/qmlcachegen qmlcachegen)
 endif()
 
