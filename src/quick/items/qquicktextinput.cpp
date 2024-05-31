@@ -405,10 +405,17 @@ QString QQuickTextInputPrivate::realText() const
 */
 
 /*!
-    \qmlproperty object QtQuick::TextInput::font.contextFontMerging
+    \qmlproperty bool QtQuick::TextInput::font.contextFontMerging
     \since 6.8
 
     \include qquicktext.cpp qml-font-context-font-merging
+*/
+
+/*!
+    \qmlproperty bool QtQuick::TextInput::font.preferTypoLineMetrics
+    \since 6.8
+
+    \include qquicktext.cpp qml-font-prefer-typo-line-metrics
 */
 QFont QQuickTextInput::font() const
 {

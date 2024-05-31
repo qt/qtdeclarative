@@ -439,6 +439,7 @@ class Q_QUICK_EXPORT QQuickFontValueType
     Q_PROPERTY(QVariantMap features READ features WRITE setFeatures FINAL)
     Q_PROPERTY(QVariantMap variableAxes READ variableAxes WRITE setVariableAxes FINAL)
     Q_PROPERTY(bool contextFontMerging READ contextFontMerging WRITE setContextFontMerging FINAL)
+    Q_PROPERTY(bool preferTypoLineMetrics READ preferTypoLineMetrics WRITE setPreferTypoLineMetrics FINAL)
 
     QML_VALUE_TYPE(font)
     QML_FOREIGN(QFont)
@@ -508,6 +509,9 @@ public:
 
     bool contextFontMerging() const;
     void setContextFontMerging(bool b);
+
+    bool preferTypoLineMetrics() const;
+    void setPreferTypoLineMetrics(bool b);
 
     operator QFont() const { return v; }
 };

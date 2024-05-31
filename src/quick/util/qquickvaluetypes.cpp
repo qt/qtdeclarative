@@ -944,21 +944,38 @@ QVariant QQuickFontValueType::create(const QJSValue &params)
     setFontProperty(ret, &QFont::setHintingPreference, QStringLiteral("hintingPreference"), params, &ok);
     setFontProperty(ret, &QFont::setKerning, QStringLiteral("kerning"), params, &ok);
 
-    const QJSValue vlspac = params.property(QStringLiteral("letterSpacing"));
-    if (vlspac.isNumber()) {
-        ret.setLetterSpacing(QFont::AbsoluteSpacing, vlspac.toNumber());
-        ok = true;
+    {
+        const QJSValue vlspac = params.property(QStringLiteral("letterSpacing"));
+        if (vlspac.isNumber()) {
+            ret.setLetterSpacing(QFont::AbsoluteSpacing, vlspac.toNumber());
+            ok = true;
+        }
     }
 
-    const QJSValue vshaping = params.property(QStringLiteral("preferShaping"));
-    if (vshaping.isBool()) {
-        const bool enable = vshaping.toBool();
-        const QFont::StyleStrategy strategy = ret.styleStrategy();
-        if (enable)
-            ret.setStyleStrategy(QFont::StyleStrategy(strategy & ~QFont::PreferNoShaping));
-        else
-            ret.setStyleStrategy(QFont::StyleStrategy(strategy | QFont::PreferNoShaping));
-        ok = true;
+    {
+        const QJSValue vshaping = params.property(QStringLiteral("preferShaping"));
+        if (vshaping.isBool()) {
+            const bool enable = vshaping.toBool();
+            const QFont::StyleStrategy strategy = ret.styleStrategy();
+            if (enable)
+                ret.setStyleStrategy(QFont::StyleStrategy(strategy & ~QFont::PreferNoShaping));
+            else
+                ret.setStyleStrategy(QFont::StyleStrategy(strategy | QFont::PreferNoShaping));
+            ok = true;
+        }
+    }
+
+    {
+        const QJSValue typoMetrics = params.property(QStringLiteral("preferTypoLineMetrics"));
+        if (typoMetrics.isBool()) {
+            const bool enable = typoMetrics.toBool();
+            const QFont::StyleStrategy strategy = ret.styleStrategy();
+            if (enable)
+                ret.setStyleStrategy(QFont::StyleStrategy(strategy & ~QFont::PreferTypoLineMetrics));
+            else
+                ret.setStyleStrategy(QFont::StyleStrategy(strategy | QFont::PreferTypoLineMetrics));
+            ok = true;
+        }
     }
 
     return ok ? ret : QVariant();
@@ -1220,6 +1237,19 @@ void QQuickFontValueType::setContextFontMerging(bool enable)
         v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() | QFont::ContextFontMerging));
     else
         v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() & ~QFont::ContextFontMerging));
+}
+
+bool QQuickFontValueType::preferTypoLineMetrics() const
+{
+    return (v.styleStrategy() & QFont::PreferTypoLineMetrics) != 0;
+}
+
+void QQuickFontValueType::setPreferTypoLineMetrics(bool enable)
+{
+    if (enable)
+        v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() | QFont::PreferTypoLineMetrics));
+    else
+        v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() & ~QFont::PreferTypoLineMetrics));
 }
 
 QVariant QQuickColorSpaceValueType::create(const QJSValue &params)

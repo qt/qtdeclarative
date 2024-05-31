@@ -3079,10 +3079,17 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 */
 
 /*!
-    \qmlproperty object QtQuick::PathText::font.contextFontMerging
+    \qmlproperty bool QtQuick::PathText::font.contextFontMerging
     \since 6.8
 
     \include qquicktext.cpp qml-font-context-font-merging
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PathText::font.preferTypoLineMetrics
+    \since 6.8
+
+    \include qquicktext.cpp qml-font-prefer-typo-line-metrics
 */
 void QQuickPathText::updatePath() const
 {
