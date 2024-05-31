@@ -714,7 +714,30 @@ private:
 
     void exportGeometry(const QJsonObject &atom, QJsonObject &outputConfig)
     {
-        const QRectF geometry = getFigmaBoundingBox(atom);
+        // we first try to check the geometry of the fillAndStroke child
+        // if the stroke is drawn outside the shape of the control,
+        // we need to account for that in the geometry of the control
+        QRectF fillAndStrokeGeometry;
+        try {
+            const auto fillAndStroke = JsonTools::findNamedChild({"fillAndStroke"}, atom, m_bridge->m_sanity);
+            fillAndStrokeGeometry = getFigmaBoundingBox(atom);
+            const QString strokeAlign = fillAndStroke["strokeAlign"].toString();
+            qreal strokeWeight = fillAndStroke["strokeWeight"].toDouble(0);
+            if (strokeAlign == "CENTER")
+                strokeWeight *= 0.5;
+            else if (strokeAlign == "INSIDE")
+                strokeWeight = .0;
+
+            fillAndStrokeGeometry.adjust(-strokeWeight, -strokeWeight, strokeWeight, strokeWeight);
+        } catch (std::exception &e) {
+            Q_UNUSED(e);
+        }
+
+        // Get the final geometry from the bounding rect of the atom and its fillAndStroke
+        // Most of the times these will be the same, but we should account in case they're not
+        const QRectF atomGeometry = getFigmaBoundingBox(atom);
+        const QRectF geometry = atomGeometry.united(fillAndStrokeGeometry);
+
         QRectF geometryIncludingShadow = getFigmaRenderBounds(atom);
         if (geometryIncludingShadow.isEmpty())
             geometryIncludingShadow = geometry;
@@ -873,19 +896,29 @@ private:
 
     void exportLayout(const QJsonObject &atom, QJsonObject &outputConfig)
     {
-        const auto leftPadding = atom["paddingLeft"];
-        const auto topPadding = atom["paddingTop"];
-        const auto rightPadding = atom["paddingRight"];
-        const auto bottomPadding = atom["paddingBottom"];
+        // If the stroke is not inside of the control, account for it in the paddings
+        qreal strokeWeight = .0;
+        try {
+            const auto fillAndStroke = JsonTools::findNamedChild({"fillAndStroke"}, atom, m_bridge->m_sanity);
+            const QString strokeAlign = fillAndStroke["strokeAlign"].toString();
+            if (strokeAlign == "CENTER")
+                strokeWeight = fillAndStroke["strokeWeight"].toDouble(0) * 0.5;
+            else if (strokeAlign == "OUTSIDE")
+                strokeWeight = fillAndStroke["strokeWeight"].toDouble(0);;
+        } catch (std::exception &e) {
+            Q_UNUSED(e);
+        }
+
+        const auto leftPadding = atom["paddingLeft"].toDouble() + strokeWeight;
+        const auto topPadding = atom["paddingTop"].toDouble() + strokeWeight;
+        const auto rightPadding = atom["paddingRight"].toDouble() + strokeWeight;
+        const auto bottomPadding = atom["paddingBottom"].toDouble() + strokeWeight;
         const auto spacing = atom["itemSpacing"];
 
-        // If padding are left unmodified in Figma (all values are zero)
-        // the the following keys will be missing in the atom. When that's
-        // the case, we just set them to zero.
-        outputConfig.insert("leftPadding", leftPadding.isUndefined() ? 0 : leftPadding);
-        outputConfig.insert("topPadding", topPadding.isUndefined() ? 0 : topPadding);
-        outputConfig.insert("rightPadding", rightPadding.isUndefined() ? 0 : rightPadding);
-        outputConfig.insert("bottomPadding", bottomPadding.isUndefined() ? 0 : bottomPadding);
+        outputConfig.insert("leftPadding", leftPadding);
+        outputConfig.insert("topPadding", topPadding);
+        outputConfig.insert("rightPadding", rightPadding);
+        outputConfig.insert("bottomPadding", bottomPadding);
         outputConfig.insert("spacing", spacing.isUndefined() ? 0 : spacing);
 
         outputConfig.insert("layoutMode", atom["layoutMode"]);
@@ -926,14 +959,30 @@ private:
     {
         // Use radii and border width of the obj to determine the offsets.
         // The biggest of them wins.
-        const qreal borderWidth = obj["strokeWeight"].toDouble(0);
-        const Radii radii = getRadii(obj);
+        const qreal strokeWeight = obj["strokeWeight"].toDouble(0);
+        const QString strokeAlign = obj["strokeAlign"].toString();
 
         BorderImageOffset offset;
-        offset.left = qCeil(qMax(borderWidth, qMax(radii.topLeft, radii.bottomLeft)));
-        offset.right = qCeil(qMax(borderWidth, qMax(radii.topRight, radii.bottomRight)));
-        offset.top = qCeil(qMax(borderWidth, qMax(radii.topLeft, radii.topRight)));
-        offset.bottom = qCeil(qMax(borderWidth, qMax(radii.bottomLeft, radii.bottomRight)));
+        Radii radii = getRadii(obj);
+
+        // if the stroke is not inside of the control, we need to include it in the offsets
+        if (strokeAlign == "OUTSIDE" || strokeAlign == "CENTERED") {
+            const auto borderWidth = strokeAlign == "CENTERED" ? strokeWeight/2 : strokeWeight;
+            radii.topLeft += borderWidth;
+            radii.topRight += borderWidth;
+            radii.bottomLeft += borderWidth;
+            radii.bottomRight += borderWidth;
+
+            offset.left = qCeil(qMax(radii.topLeft, radii.bottomLeft));
+            offset.right = qCeil(qMax(radii.topRight, radii.bottomRight));
+            offset.top = qCeil(qMax(radii.topLeft, radii.topRight));
+            offset.bottom = qCeil(qMax(radii.bottomLeft, radii.bottomRight));
+        } else {
+            offset.left = qCeil(qMax(strokeWeight, qMax(radii.topLeft, radii.bottomLeft)));
+            offset.right = qCeil(qMax(strokeWeight, qMax(radii.topRight, radii.bottomRight)));
+            offset.top = qCeil(qMax(strokeWeight, qMax(radii.topLeft, radii.topRight)));
+            offset.bottom = qCeil(qMax(strokeWeight, qMax(radii.bottomLeft, radii.bottomRight)));
+        }
 
         return offset;
     }
