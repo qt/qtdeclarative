@@ -9,12 +9,14 @@
 #endif
 #include <QtGui/qstylehints.h>
 #include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
@@ -26,11 +28,15 @@
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
+#include <QtQuickTemplates2/private/qquickmenu_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
 #include <QtQuickTemplates2/private/qquickmenuseparator_p.h>
+#include <QtQuickTemplates2/private/qquicknativemenuitem_p.h>
 
 using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
+
+// Native menu tests are in "nativemenus".
 
 class tst_QQuickMenu : public QQmlDataTest
 {
@@ -40,6 +46,8 @@ public:
     tst_QQuickMenu();
 
 private slots:
+    void init();
+
     void defaults();
     void count();
     void mouse();
@@ -55,6 +63,7 @@ private slots:
 #if QT_CONFIG(cursor)
     void popup();
 #endif
+    void openParentlessMenu();
     void actions();
 #if QT_CONFIG(shortcut)
     void actionShortcuts();
@@ -87,11 +96,42 @@ private slots:
     void customMenuCullItems();
     void customMenuUseRepeaterAsTheContentItem();
     void invalidUrlInImgTag();
+    void nativeStatic();
+    void nativeDynamicActions();
+    void nativeDynamicSubmenus();
+    void nativeMenuSeparator();
+    void dontUseNativeMenuWindowsChanges();
+    void nativeMixedItems();
+    void textPadding();
+
+private:
+    bool nativeMenuSupported = false;
 };
+
+// This allows us to use QQuickMenuItem's more descriptive operator<< output
+// for the QCOMPARE failure message. It doesn't seem possible to use toString
+// overloads or template specialization when types declared in QML are involved,
+// as is the case for the MenuItems created from Menu's delegate.
+#define COMPARE_MENUITEMS(actualMenuItem, expectedMenuItem) \
+QVERIFY2(actualMenuItem == expectedMenuItem, \
+    qPrintable(QString::fromLatin1("\n   Actual:    %1\n   Expected:  %2") \
+        .arg(QDebug::toString(actualMenuItem), QDebug::toString(expectedMenuItem))));
 
 tst_QQuickMenu::tst_QQuickMenu()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
+    std::unique_ptr<QPlatformMenu> platformMenu(QGuiApplicationPrivate::platformTheme()->createPlatformMenu());
+    nativeMenuSupported = platformMenu != nullptr;
+}
+
+void tst_QQuickMenu::init()
+{
+    QQmlDataTest::init();
+
+    // By default we don't want to use native menus, as the majority of the tests
+    // were written before they were a thing. We instead explicitly set it where necessary.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
 }
 
 void tst_QQuickMenu::defaults()
@@ -151,6 +191,7 @@ void tst_QQuickMenu::mouse()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -643,6 +684,7 @@ void tst_QQuickMenu::menuSeparator()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -951,6 +993,29 @@ void tst_QQuickMenu::popup()
 }
 #endif // QT_CONFIG(cursor)
 
+void tst_QQuickMenu::openParentlessMenu()
+{
+    // Check that we don't get a crash if the application sets a menu's parentItem
+    // to null. This will also result in the menu not showing at all, since it's
+    // no longer a part of the scene. Even if this limitiation is technically only
+    // relevant for non-native menus, we enforce it also for native menus to ensure
+    // that an application works the same on all platforms.
+    QQuickControlsApplicationHelper helper(this, QLatin1String("popup.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    centerOnScreen(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot show menu: parent is null"));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->setParentItem(nullptr);
+    menu->popup();
+    QVERIFY(!menu->isVisible());
+}
+
 void tst_QQuickMenu::actions()
 {
     QQuickControlsApplicationHelper helper(this, QLatin1String("actions.qml"));
@@ -1029,6 +1094,7 @@ void tst_QQuickMenu::actionShortcuts()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     // Try the menu's shortcut.
@@ -1328,6 +1394,7 @@ void tst_QQuickMenu::subMenuKeyboard()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     if (mirrored) {
@@ -1456,6 +1523,7 @@ void tst_QQuickMenu::subMenuDisabledKeyboard()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     if (mirrored) {
@@ -2039,6 +2107,7 @@ void tst_QQuickMenu::giveMenuItemFocusOnButtonPress()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     // Press enter on the button to open the menu.
@@ -2118,6 +2187,501 @@ void tst_QQuickMenu::invalidUrlInImgTag()
 
     QQuickMenuItem *menuItemFirst = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
     QVERIFY(menuItemFirst);
+}
+
+void tst_QQuickMenu::nativeStatic()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeStatic.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(contextMenu);
+    auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
+    QVERIFY(contextMenuPrivate->useNativeMenu());
+
+    // Check that the actions of the parent menu can be accessed
+    // and are in the appropriate places in contentModel and contentData.
+    auto *action1 = contextMenu->actionAt(0);
+    QVERIFY(action1);
+    auto *action1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+    QVERIFY(action1MenuItem);
+    QCOMPARE(action1MenuItem->action(), action1);
+    COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(0)),
+        action1MenuItem);
+
+    auto *menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(1));
+    QVERIFY(menuItem);
+    QVERIFY(menuItem->action());
+    QCOMPARE(menuItem->action()->text(), "menuItemAction");
+    COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(1)), menuItem);
+
+    // Check that the sub-menu can be accessed and is in the
+    // appropriate place in contentData.
+    auto *subMenu = contextMenu->menuAt(2);
+    QVERIFY(subMenu);
+    auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
+    auto *subMenuAction1 = subMenu->actionAt(0);
+    QVERIFY(subMenuAction1);
+    auto *subMenuAction1MenuItem = qobject_cast<QQuickMenuItem *>(subMenu->itemAt(0));
+    QVERIFY(subMenuAction1MenuItem);
+    QCOMPARE(subMenuAction1MenuItem->action(), subMenuAction1);
+    COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(subMenuPrivate->contentData.at(0)),
+        subMenuAction1MenuItem);
+}
+
+void tst_QQuickMenu::nativeDynamicActions()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeEmptyMenu.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(contextMenu);
+    auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
+
+    // Check that items can be appended to an empty menu.
+    QCOMPARE(contextMenu->actionAt(0), nullptr);
+    QVERIFY(QMetaObject::invokeMethod(window, "addAction",
+        Q_ARG(QQuickMenu *, contextMenu), Q_ARG(QString, "action1")));
+    {
+        auto action1 = contextMenu->actionAt(0);
+        QVERIFY(action1);
+        QCOMPARE(action1->text(), "action1");
+        auto *action1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+        QVERIFY(action1MenuItem);
+        QCOMPARE(action1MenuItem->action(), action1);
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(0)),
+            action1MenuItem);
+    }
+
+    // Check that actions can be appended after existing items in the parent menu.
+    QCOMPARE(contextMenu->actionAt(1), nullptr);
+    QVERIFY(QMetaObject::invokeMethod(window, "addAction",
+        Q_ARG(QQuickMenu *, contextMenu), Q_ARG(QString, "action2")));
+    {
+        auto action2 = contextMenu->actionAt(1);
+        QVERIFY(action2);
+        QCOMPARE(action2->text(), "action2");
+        auto *action2MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(1));
+        QVERIFY(action2MenuItem);
+        QCOMPARE(action2MenuItem->action(), action2);
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(1)),
+            action2MenuItem);
+    }
+
+    // Check that actions can be inserted before existing items in the parent menu.
+    QVERIFY(QMetaObject::invokeMethod(window, "insertAction",
+        Q_ARG(QQuickMenu *, contextMenu), Q_ARG(int, 0), Q_ARG(QString, "action0")));
+    {
+        auto action0 = contextMenu->actionAt(0);
+        QVERIFY(action0);
+        QCOMPARE(action0->text(), "action0");
+        auto *action0MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+        QVERIFY(action0MenuItem);
+        QCOMPARE(action0MenuItem->action(), action0);
+        // New items are always appended to contentData, regardless of the actual insertion index
+        // in contentModel.
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(2)),
+            action0MenuItem);
+    }
+}
+
+void tst_QQuickMenu::nativeDynamicSubmenus()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeDynamicSubmenus.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(contextMenu);
+    auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
+
+    // We construct the sub-menu first in QML. At least on Windows, menu items
+    // added to an empty sub-menu won't show up (tested with Widgets): QTBUG-120494.
+    // So, this adds an already-populated menu as a sub-menu.
+    QVERIFY(QMetaObject::invokeMethod(window, "addSubMenu", Q_ARG(QString, "subMenu1")));
+    auto subMenu1 = contextMenu->menuAt(0);
+    QVERIFY(subMenu1);
+    QCOMPARE(subMenu1->title(), "subMenu1");
+    auto *subMenu1Private = QQuickMenuPrivate::get(subMenu1);
+    if (nativeMenuSupported) {
+        QVERIFY(subMenu1Private->handle);
+        QCOMPARE(subMenu1Private->nativeItems.size(), 1);
+    }
+    auto *subMenu1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+    QVERIFY(subMenu1MenuItem);
+    COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(contextMenuPrivate->contentData.at(0)),
+        subMenu1MenuItem);
+    QCOMPARE(contextMenuPrivate->contentData.size(), 1);
+    {
+        auto subMenuAction1 = subMenu1->actionAt(0);
+        QVERIFY(subMenuAction1);
+        QCOMPARE(subMenuAction1->text(), "subMenu1Action1");
+        auto *subMenuAction1MenuItem = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
+        QVERIFY(subMenuAction1MenuItem);
+        QCOMPARE(subMenuAction1MenuItem->action(), subMenuAction1);
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(subMenu1Private->contentData.at(0)),
+            subMenuAction1MenuItem);
+        if (nativeMenuSupported)
+            QCOMPARE(subMenu1Private->nativeItems.size(), 1);
+    }
+
+    // Check that actions can be appended after existing items in the sub-menu.
+    QCOMPARE(subMenu1->actionAt(1), nullptr);
+    QVERIFY(QMetaObject::invokeMethod(window, "addAction",
+        Q_ARG(QQuickMenu *, subMenu1), Q_ARG(QString, "subMenu1Action2")));
+    {
+        auto subMenu1Action2 = subMenu1->actionAt(1);
+        QVERIFY(subMenu1Action2);
+        QCOMPARE(subMenu1Action2->text(), "subMenu1Action2");
+        auto *subMenu1Action2MenuItem = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(1));
+        QVERIFY(subMenu1Action2MenuItem);
+        QCOMPARE(subMenu1Action2MenuItem->action(), subMenu1Action2);
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(subMenu1Private->contentData.at(1)),
+            subMenu1Action2MenuItem);
+        QCOMPARE(subMenu1Private->contentData.size(), 2);
+    }
+
+    // Check that actions can be inserted before existing items in the sub-menu.
+    QVERIFY(QMetaObject::invokeMethod(window, "insertAction",
+        Q_ARG(QQuickMenu *, subMenu1), Q_ARG(int, 0), Q_ARG(QString, "subMenu1Action0")));
+    {
+        auto subMenu1Action0 = subMenu1->actionAt(0);
+        QVERIFY(subMenu1Action0);
+        QCOMPARE(subMenu1Action0->text(), "subMenu1Action0");
+        auto *subMenu1Action0MenuItem = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
+        QVERIFY(subMenu1Action0MenuItem);
+        QCOMPARE(subMenu1Action0MenuItem->action(), subMenu1Action0);
+        // New items are always appended to contentData, regardless of the actual insertion index
+        // in contentModel.
+        COMPARE_MENUITEMS(qobject_cast<QQuickMenuItem *>(subMenu1Private->contentData.at(2)),
+            subMenu1Action0MenuItem);
+        QCOMPARE(subMenu1Private->contentData.size(), 3);
+    }
+
+    {
+        // Check that takeMenu works.
+        auto *takenSubMenu = contextMenu->takeMenu(0);
+        QCOMPARE(takenSubMenu, subMenu1);
+        QCOMPARE(contextMenuPrivate->contentData.size(), 0);
+        if (nativeMenuSupported) {
+            QVERIFY(!subMenu1Private->handle);
+            QCOMPARE(subMenu1Private->nativeItems.size(), 0);
+        }
+
+        // Check that the sub-menu can be added back in to the menu.
+        contextMenu->addMenu(takenSubMenu);
+        QCOMPARE(contextMenuPrivate->contentData.size(), 1);
+        auto *subMenu1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+        QVERIFY(subMenu1MenuItem);
+        QCOMPARE(subMenu1MenuItem->text(), "subMenu1");
+        if (nativeMenuSupported) {
+            QVERIFY(subMenu1Private->handle);
+            QCOMPARE(subMenu1Private->nativeItems.size(), 3);
+        }
+        QCOMPARE(subMenu1Private->contentData.size(), 3);
+
+        auto *subMenu1Action0MenuItem = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
+        QVERIFY(subMenu1Action0MenuItem);
+    }
+
+    // Check that removeMenu works.
+    QVERIFY(contextMenu->menuAt(0));
+    contextMenu->removeMenu(contextMenu->menuAt(0));
+    QCOMPARE(contextMenuPrivate->contentData.size(), 0);
+}
+
+void tst_QQuickMenu::nativeMenuSeparator()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeMenuSeparator.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    // Check that separators in menus are where we expect them to be.
+    QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(contextMenu);
+    auto *contextMenuSeparatorAsItem = contextMenu->itemAt(1);
+    QVERIFY(contextMenuSeparatorAsItem);
+    auto *contextMenuSeparator = qobject_cast<QQuickMenuSeparator *>(contextMenuSeparatorAsItem);
+    QVERIFY(contextMenuSeparator);
+    if (nativeMenuSupported) {
+        auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
+        QCOMPARE(contextMenuPrivate->nativeItems.size(), 3);
+        auto *contextMenuSeparatorNativeItem = contextMenuPrivate->nativeItems.at(1);
+        QVERIFY(contextMenuSeparatorNativeItem);
+        QVERIFY(contextMenuSeparatorNativeItem->separator());
+    }
+
+    // Check that separators in sub-menus are where we expect them to be.
+    QQuickMenu *subMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(subMenu);
+    auto *subMenuSeparatorAsItem = subMenu->itemAt(1);
+    QVERIFY(subMenuSeparatorAsItem);
+    auto *subMenuSeparator = qobject_cast<QQuickMenuSeparator *>(subMenuSeparatorAsItem);
+    QVERIFY(subMenuSeparator);
+    if (nativeMenuSupported) {
+        auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
+        QCOMPARE(subMenuPrivate->nativeItems.size(), 3);
+        auto *subMenuSeparatorNativeItem = subMenuPrivate->nativeItems.at(1);
+        QVERIFY(subMenuSeparatorNativeItem);
+        QVERIFY(subMenuSeparatorNativeItem->separator());
+    }
+}
+
+void tst_QQuickMenu::dontUseNativeMenuWindowsChanges()
+{
+    QSKIP("QTBUG-125967 This test will need to be fixed, by using popupType: Popup.Native instead of AA_DontUseNativeMenuWindows.");
+
+    if (QSysInfo::productType() == QLatin1String("b2qt"))
+        QSKIP("b2qt doesn't support native menus");
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
+    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeStatic.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(contextMenu);
+    QCOMPARE(contextMenu->count(), 3);
+    // Sub-menus should respect the native-ness of their parents.
+    auto *subMenu = contextMenu->menuAt(2);
+    auto *subMenuPrivate = QQuickMenuPrivate::get(subMenu);
+    QVERIFY(subMenuPrivate->useNativeMenu());
+    if (nativeMenuSupported)
+        QVERIFY(subMenuPrivate->handle);
+    else
+        QVERIFY(!subMenuPrivate->handle);
+
+    // Ensure that the menu and its sub-menu have enough room to open.
+    if (window->width() / 2 <= contextMenu->width())
+        window->setWidth(contextMenu->width() * 2 + 1);
+    if (window->height() <= contextMenu->height())
+        window->setHeight(contextMenu->height() + 1);
+    QTRY_COMPARE(window->contentItem()->size(), window->size());
+
+    // We can't test that aboutToShow/aboutToHide is emitted for native menus
+    // because when they are shown, the event loop is blocked until they are closed.
+    // So we just check that a native menu is actually in use before going on to test
+    // non-native menus.
+    auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
+    if (nativeMenuSupported)
+        QVERIFY(contextMenuPrivate->handle);
+    else
+        QVERIFY(!contextMenuPrivate->handle);
+
+    // We need to wait until the menu is opened before it picks up the changes,
+    // which is why we don't check the native handle here yet.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    QVERIFY(!contextMenuPrivate->useNativeMenu());
+    QVERIFY(!subMenuPrivate->useNativeMenu());
+
+    // Check that we can open the menu by right-clicking (or just open it manually
+    // if the platform doesn't support (moving) QCursor).
+    QSignalSpy aboutToShowSpy(contextMenu, &QQuickMenu::aboutToShow);
+    QVERIFY(aboutToShowSpy.isValid());
+    bool couldMoveCursorPos = false;
+    const QPoint cursorPos(1, 1);
+#if QT_CONFIG(cursor)
+    // Try moving the cursor from the current position to test if the platform
+    // supports moving the cursor.
+    const QPoint point = QCursor::pos() + QPoint(1, 1);
+    QCursor::setPos(point);
+    if (QTest::qWaitFor([point]{ return QCursor::pos() == point; })) {
+        couldMoveCursorPos = true;
+        const QPoint globalCursorPos = window->mapToGlobal(cursorPos);
+        QCursor::setPos(globalCursorPos);
+        QTest::mouseClick(window, Qt::RightButton, Qt::NoModifier, cursorPos);
+    }
+#endif
+    if (!couldMoveCursorPos) {
+        contextMenu->setX(cursorPos.x());
+        contextMenu->setY(cursorPos.y());
+        contextMenu->open();
+    }
+    QVERIFY(contextMenu->isVisible());
+    QTRY_VERIFY(contextMenu->isOpened());
+    QCOMPARE(aboutToShowSpy.size(), 1);
+    // Now that it's open and has picked up the changes to Qt::AA_DontUseNativeMenuWindows, we can check it.
+    QVERIFY(!contextMenuPrivate->handle);
+    QVERIFY(!subMenuPrivate->handle);
+    // Check that it opened at the mouse cursor and actually has menu items.
+    QCOMPARE(contextMenu->x(), cursorPos.x());
+    QCOMPARE(contextMenu->y(), cursorPos.y());
+    auto *action1MenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+    QVERIFY(action1MenuItem);
+    QCOMPARE(action1MenuItem->text(), "action1");
+
+    // Test setting Qt::AA_DontUseNativeMenuWindows while visible has no effect
+    // (until it's re-opened, which we can't test because we can't test opening native menus).
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
+    QVERIFY(contextMenuPrivate->useNativeMenu());
+    QVERIFY(!contextMenuPrivate->handle);
+    QVERIFY(!subMenuPrivate->handle);
+
+    // Also check the submenu.
+    auto *subAction1MenuItem = qobject_cast<QQuickMenuItem *>(subMenu->itemAt(0));
+    QVERIFY(subAction1MenuItem);
+    QCOMPARE(subAction1MenuItem->text(), "subAction1");
+
+    // Test closing the non-native menu by clicking on an item.
+    QSignalSpy aboutToHideSpy(contextMenu, &QQuickMenu::aboutToHide);
+    QVERIFY(aboutToHideSpy.isValid());
+    QVERIFY(clickButton(action1MenuItem));
+    QVERIFY(!contextMenu->isOpened());
+    QTRY_VERIFY(!contextMenu->isVisible());
+    QCOMPARE(aboutToShowSpy.size(), 1);
+
+    // Although we can't open the native menu, we can at least check that
+    // attempting (the changes won't come into effect until it's re-opened)
+    // to make the menu native again doesn't e.g. crash.
+    QVERIFY(contextMenuPrivate->useNativeMenu());
+    QVERIFY(subMenuPrivate->useNativeMenu());
+    QVERIFY(!contextMenuPrivate->handle);
+    QVERIFY(!subMenuPrivate->handle);
+}
+
+// Check that non-menu items (e.g. Rectangles) can be inserted between menu items without issues.
+void tst_QQuickMenu::nativeMixedItems()
+{
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
+    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeMixedItems.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(contextMenu);
+
+    // Insert a Rectangle between the Action and MenuItem in the top-level menu.
+    QVERIFY(QMetaObject::invokeMethod(window, "insertRectangle",
+        Q_ARG(QQuickMenu *, contextMenu), Q_ARG(int, 1), Q_ARG(QColor, QColorConstants::Red)));
+    {
+        auto *action = contextMenu->actionAt(0);
+        QVERIFY(action);
+        QCOMPARE(action->text(), "action");
+        auto *rectangle = qobject_cast<QQuickRectangle *>(contextMenu->itemAt(1));
+        QVERIFY(rectangle);
+        QCOMPARE(rectangle->color(), QColorConstants::Red);
+        auto *menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(2));
+        QVERIFY(menuItem);
+        QCOMPARE(menuItem->text(), "menuItem");
+        auto *subMenu = contextMenu->menuAt(3);
+        QVERIFY(subMenu);
+        QCOMPARE(subMenu->title(), "subMenu");
+    }
+
+    // Insert a Rectangle at the end of all of the items (which were: {Action, Rectangle, MenuItem, Menu}).
+    QVERIFY(QMetaObject::invokeMethod(window, "insertRectangle",
+        Q_ARG(QQuickMenu *, contextMenu), Q_ARG(int, 4), Q_ARG(QColor, QColorConstants::Blue)));
+    {
+        auto *action = contextMenu->actionAt(0);
+        QVERIFY(action);
+        QCOMPARE(action->text(), "action");
+        auto *rectangle1 = qobject_cast<QQuickRectangle *>(contextMenu->itemAt(1));
+        QVERIFY(rectangle1);
+        QCOMPARE(rectangle1->color(), QColorConstants::Red);
+        auto *menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(2));
+        QVERIFY(menuItem);
+        QCOMPARE(menuItem->text(), "menuItem");
+        auto *subMenu = contextMenu->menuAt(3);
+        QVERIFY(subMenu);
+        QCOMPARE(subMenu->title(), "subMenu");
+        auto *rectangle2 = qobject_cast<QQuickRectangle *>(contextMenu->itemAt(4));
+        QVERIFY(rectangle2);
+        QCOMPARE(rectangle2->color(), QColorConstants::Blue);
+    }
+
+    // Check that the sub-menu can be accessed and is in the
+    // appropriate place in contentData.
+    auto *subMenu = contextMenu->menuAt(3);
+    QVERIFY(subMenu);
+    // Insert a Rectangle between the Action and MenuItem in the top-level menu.
+    QVERIFY(QMetaObject::invokeMethod(window, "insertRectangle",
+        Q_ARG(QQuickMenu *, subMenu), Q_ARG(int, 1), Q_ARG(QColor, QColorConstants::Green)));
+    {
+        auto *action1 = subMenu->actionAt(0);
+        QVERIFY(action1);
+        QCOMPARE(action1->text(), "subAction1");
+        auto *rectangle = qobject_cast<QQuickRectangle *>(subMenu->itemAt(1));
+        QVERIFY(rectangle);
+        QCOMPARE(rectangle->color(), QColorConstants::Green);
+        auto *action2 = subMenu->actionAt(2);
+        QVERIFY(action2);
+        QCOMPARE(action2->text(), "subAction2");
+    }
+}
+
+void tst_QQuickMenu::textPadding()
+{
+    // Check that you can set implicitTextPadding on each MenuItem, and that
+    // textPadding will end up as the maximum implicitTextPadding among all the
+    // MenuItems in the same Menu.
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("nativeMixedItems.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
+    QVERIFY(contextMenu);
+    contextMenu->setPopupType(QQuickPopup::Item);
+
+    contextMenu->setVisible(true);
+
+    // Go through all MenuItems, and give them an implicitTextPadding of 0
+    for (int i = 0; i < contextMenu->count(); ++i) {
+        auto menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(i));
+        QVERIFY(menuItem);
+        menuItem->setImplicitTextPadding(0);
+        QCOMPARE(menuItem->implicitTextPadding(), 0);
+    }
+
+    // Check that all MenuItems now has a textPadding of 0
+    for (int i = 0; i < contextMenu->count(); ++i) {
+        auto menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(i));
+        QCOMPARE(menuItem->textPadding(), 0);
+    }
+
+    // Let the first MenuItem get a implicitTextPadding of 100. This will
+    // make all MenuItems get a textPadding of 100.
+    auto firstItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(0));
+    firstItem->setImplicitTextPadding(100);
+    QCOMPARE(firstItem->implicitTextPadding(), 100);
+    QCOMPARE(firstItem->textPadding(), 100);
+    for (int i = 1; i < contextMenu->count(); ++i) {
+        auto menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(i));
+        QCOMPARE(menuItem->implicitTextPadding(), 0);
+        QCOMPARE(menuItem->textPadding(), 100);
+    }
+
+    // Hide the MenuItem with implicitTextPadding set to 100. This
+    // should make all the MenuItems get a textPadding of 0 again.
+    firstItem->setVisible(false);
+    QCOMPARE(firstItem->implicitTextPadding(), 100);
+    for (int i = 0; i < contextMenu->count(); ++i) {
+        auto menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(i));
+        QCOMPARE(menuItem->textPadding(), 0);
+    }
+
+    // Show it again
+    firstItem->setVisible(true);
+    for (int i = 0; i < contextMenu->count(); ++i) {
+        auto menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(i));
+        QCOMPARE(menuItem->textPadding(), 100);
+    }
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)

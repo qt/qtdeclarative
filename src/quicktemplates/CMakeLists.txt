@@ -46,6 +46,12 @@ qt_internal_add_qml_module(QuickTemplates2
         qquicklabel.cpp qquicklabel_p.h
         qquicklabel_p_p.h
         qquickmenuseparator.cpp qquickmenuseparator_p.h
+        qquicknativeicon_p.h
+        qquicknativeicon.cpp
+        qquicknativeiconloader_p.h
+        qquicknativeiconloader.cpp
+        qquicknativemenuitem_p.h
+        qquicknativemenuitem.cpp
         qquickoverlay.cpp qquickoverlay_p.h
         qquickoverlay_p_p.h
         qquickpage.cpp qquickpage_p.h
@@ -61,6 +67,8 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickpopupitem_p_p.h
         qquickpopuppositioner.cpp
         qquickpopuppositioner_p_p.h
+        qquickpopupwindow.cpp
+        qquickpopupwindow_p_p.h
         qquickpresshandler.cpp
         qquickpresshandler_p_p.h
         qquickprogressbar.cpp qquickprogressbar_p.h

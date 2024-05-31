@@ -54,6 +54,8 @@ public:
     bool prepareEnterTransition() override;
     bool prepareExitTransition() override;
 
+    Qt::WindowFlags popupWindowType() const override;
+
     bool setEdge(Qt::Edge edge);
     Qt::Edge effectiveEdge() const;
     bool isWithinDragMargin(const QPointF &point) const;

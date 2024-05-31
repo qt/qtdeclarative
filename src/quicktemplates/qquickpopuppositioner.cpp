@@ -5,6 +5,7 @@
 #include "qquickpopuppositioner_p_p.h"
 #include "qquickpopupanchors_p.h"
 #include "qquickpopupitem_p_p.h"
+#include "qquickpopupwindow_p_p.h"
 #include "qquickpopup_p_p.h"
 
 #include <QtCore/qloggingcategory.h>
@@ -72,7 +73,44 @@ void QQuickPopupPositioner::setParentItem(QQuickItem *parent)
 
 void QQuickPopupPositioner::reposition()
 {
-    QQuickItem *popupItem = m_popup->popupItem();
+    auto p = QQuickPopupPrivate::get(popup());
+    QQuickPopupItem *popupItem = static_cast<QQuickPopupItem *>(m_popup->popupItem());
+
+    if (p->usePopupWindow()) {
+        // If the popup has insets, it means that it could have a drop shadow. At least
+        // that's the use case insets are documented to solve. And then we align the
+        // window so that the corner of the background, rather than the drop shadow,
+        // ends up at the requested position. We only do that for positive insets, since
+        // negative insets means that the background is already at the correct position.
+        // Note that this might move the popup out of the window again, but only the shadow.
+        QPoint pos(p->x, p->y);
+        if (popupItem->leftInset() > 0)
+            pos.rx() -= popupItem->leftInset();
+        if (popupItem->topInset() > 0)
+            pos.ry() -= popupItem->topInset();
+
+        if (!p->popupWindow || !p->parentItem) {
+            p->effectiveX = pos.x();
+            p->effectiveY = pos.y();
+            return;
+        }
+
+        const QQuickItem *centerInParent = p->anchors ? p->getAnchors()->centerIn() : nullptr;
+        const QQuickOverlay *centerInOverlay = qobject_cast<const QQuickOverlay *>(centerInParent);
+
+        if (centerInParent == p->parentItem || centerInOverlay) {
+            pos = centerInOverlay ? QPoint(qRound(centerInOverlay->width() / 2.0), qRound(centerInOverlay->height() / 2.0))
+                                  : QPoint(qRound(p->parentItem->width() / 2.0), qRound(p->parentItem->height() / 2.0));
+            pos -= QPoint(qRound(p->popupItem->width() / 2.0), qRound(p->popupItem->height() / 2.0));
+
+        } else if (centerInParent)
+            qmlWarning(popup()) << "Popup can only be centered within its immediate parent or Overlay.overlay";
+
+        const QPointF globalCoords = p->parentItem->mapToGlobal(pos.x(), pos.y());
+        p->popupWindow->setPosition(globalCoords.x(), globalCoords.y());
+        return;
+    }
+
     if (!popupItem->isVisible())
         return;
 
@@ -90,14 +128,12 @@ void QQuickPopupPositioner::reposition()
 
     bool widthAdjusted = false;
     bool heightAdjusted = false;
-    QQuickPopupPrivate *p = QQuickPopupPrivate::get(m_popup);
 
     const QQuickItem *centerInParent = p->anchors ? p->getAnchors()->centerIn() : nullptr;
     const QQuickOverlay *centerInOverlay = qobject_cast<const QQuickOverlay*>(centerInParent);
     QRectF rect(!centerInParent ? p->allowHorizontalMove ? p->x : popupItem->x() : 0,
                 !centerInParent ? p->allowVerticalMove ? p->y : popupItem->y() : 0,
-                !p->hasWidth && iw > 0 ? iw : w,
-                !p->hasHeight && ih > 0 ? ih : h);
+                !p->hasWidth && iw > 0 ? iw : w, !p->hasHeight && ih > 0 ? ih : h);
     bool relaxEdgeConstraint = p->relaxEdgeConstraint;
     if (m_parentItem) {
         // m_parentItem is the parent that the popup should open in,
@@ -230,12 +266,21 @@ void QQuickPopupPositioner::reposition()
 
     m_positioning = true;
 
+    // Ensure that the corner of the background item is placed at the
+    // designated location, even if this means that visual effects like
+    // drop shadows end up outside the window.
+    if (popupItem->leftInset() > 0)
+        rect.translate(-popupItem->leftInset(), 0);
+    if (popupItem->topInset() > 0)
+        rect.translate(0, -popupItem->topInset());
+
     popupItem->setPosition(rect.topLeft());
 
     // If the popup was assigned a parent, rect will be in scene coordinates,
     // so we need to map its top left back to item coordinates.
     // However, if centering within the overlay, the coordinates will be relative
     // to the window, so we don't need to do anything.
+    // The same applies to popups that are in their own dedicated window.
     const QPointF effectivePos = m_parentItem && !centerInOverlay ? m_parentItem->mapFromScene(rect.topLeft()) : rect.topLeft();
     if (!qFuzzyCompare(p->effectiveX, effectivePos.x())) {
         p->effectiveX = effectivePos.x();

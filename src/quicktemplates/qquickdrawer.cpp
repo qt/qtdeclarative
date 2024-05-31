@@ -596,6 +596,11 @@ bool QQuickDrawerPrivate::prepareExitTransition()
     return QQuickPopupPrivate::prepareExitTransition();
 }
 
+Qt::WindowFlags QQuickDrawerPrivate::popupWindowType() const
+{
+    return Qt::Widget;
+}
+
 bool QQuickDrawerPrivate::setEdge(Qt::Edge e)
 {
     Q_Q(QQuickDrawer);
