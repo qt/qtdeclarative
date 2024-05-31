@@ -158,7 +158,7 @@ void QQuickPopupWindowPrivate::forwardEventToParentMenuOrMenuBar(QEvent *event)
             // A QQuickPopupWindow can be bigger than the Popup itself, to make room
             // for a drop-shadow. Close all popups if the user clicks either on the
             // shadow or outside the window.
-            // QGuiApplicationPrivate::closeAllPopups(); // TODO as soon as dependency update is done
+            QGuiApplicationPrivate::closeAllPopups();
             return;
         }
     }
