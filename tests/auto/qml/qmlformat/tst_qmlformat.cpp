@@ -366,6 +366,9 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("javascriptBlock")
             << "javascriptBlock.qml"
             << "javascriptBlock.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("enumWithValues")
+            << "enumWithValues.qml"
+            << "enumWithValues.formatted.qml" << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()

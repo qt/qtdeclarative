@@ -2012,19 +2012,8 @@ void EnumItem::writeOut(const DomItem &self, OutWriter &ow) const
 {
     ow.ensureNewline();
     ow.writeRegion(IdentifierRegion, name());
-    bool hasDefaultValue = false;
     index_type myIndex = self.pathFromOwner().last().headIndex();
-    if (myIndex == 0)
-        hasDefaultValue = value() == 0;
-    else if (myIndex > 0)
-        hasDefaultValue = value()
-                == self.container()
-                                .index(myIndex - 1)
-                                .field(Fields::value)
-                                .value()
-                                .toDouble(value())
-                        + 1;
-    if (!hasDefaultValue) {
+    if (m_valueKind == ValueKind::ExplicitValue) {
         QString v = QString::number(value(), 'f', 0);
         if (abs(value() - v.toDouble()) > 1.e-10)
             v = QString::number(value());
