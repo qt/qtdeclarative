@@ -1850,7 +1850,7 @@ QQuickText::~QQuickText()
 */
 
 /*!
-    \qmlproperty object QtQuick::Text::font.contextFontMerging
+    \qmlproperty bool QtQuick::Text::font.contextFontMerging
     \since 6.8
 
 //! [qml-font-context-font-merging]
@@ -1866,6 +1866,32 @@ QQuickText::~QQuickText()
 
     \sa QFont::StyleStrategy
 //! [qml-font-context-font-merging]
+*/
+
+/*!
+    \qmlproperty bool QtQuick::Text::font.preferTypoLineMetrics
+    \since 6.8
+
+//! [qml-font-prefer-typo-line-metrics] For compatibility reasons, OpenType fonts contain two
+    competing sets of the vertical line metrics that provide the \l{QFontMetricsF::ascent()}{ascent},
+    \l{QFontMetricsF::descent()}{descent} and \l{QFontMetricsF::leading()}{leading} of the font. These
+    are often referred to as the
+    \l{https://learn.microsoft.com/en-us/typography/opentype/spec/os2#uswinascent}{win} (Windows)
+    metrics and the \l{https://learn.microsoft.com/en-us/typography/opentype/spec/os2#sta}{typo}
+    (typographical) metrics. While the specification recommends using the \c typo metrics for line
+    spacing, many applications prefer the \c win metrics unless the \c{USE_TYPO_METRICS} flag is set in
+    the \l{https://learn.microsoft.com/en-us/typography/opentype/spec/os2#fsselection}{fsSelection}
+    field of the font. For backwards-compatibility reasons, this is also the case for Qt applications.
+    This is not an issue for fonts that set the \c{USE_TYPO_METRICS} flag to indicate that the \c{typo}
+    metrics are valid, nor for fonts where the \c{win} metrics and \c{typo} metrics match up. However,
+    for certain fonts the \c{win} metrics may be larger than the preferable line spacing and the
+    \c{USE_TYPO_METRICS} flag may be unset by mistake. For such fonts, setting
+    \c{font.preferTypoLineMetrics} may give superior results.
+
+    By default, \c preferTypoLineMetrics is \c{false}.
+
+    \sa QFont::StyleStrategy
+//! [qml-font-prefer-typo-line-metrics]
 */
 
 

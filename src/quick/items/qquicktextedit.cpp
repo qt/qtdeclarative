@@ -376,10 +376,17 @@ QString QQuickTextEdit::text() const
 */
 
 /*!
-    \qmlproperty object QtQuick::TextEdit::font.contextFontMerging
+    \qmlproperty bool QtQuick::TextEdit::font.contextFontMerging
     \since 6.8
 
     \include qquicktext.cpp qml-font-context-font-merging
+*/
+
+/*!
+    \qmlproperty bool QtQuick::TextEdit::font.preferTypoLineMetrics
+    \since 6.8
+
+    \include qquicktext.cpp qml-font-prefer-typo-line-metrics
 */
 
 /*!
