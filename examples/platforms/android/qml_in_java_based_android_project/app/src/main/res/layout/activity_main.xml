@@ -40,7 +40,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/qmlStatus"
+            android:id="@+id/qmlStatusText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
@@ -76,7 +76,7 @@
                     android:textColor="@color/white" />
 
                 <Button
-                    android:id="@+id/button"
+                    android:id="@+id/changeQmlColorButton"
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
@@ -103,7 +103,7 @@
                     android:textColor="@color/white" />
 
                 <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switch1"
+                    android:id="@+id/disconnectQmlListenerSwitch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
@@ -151,7 +151,7 @@
             </LinearLayout>
 
             <View
-                android:id="@+id/box"
+                android:id="@+id/qmlColorBox"
                 android:layout_width="100dp"
                 android:layout_height="50dp"
                 android:layout_gravity="center_horizontal"

@@ -53,10 +53,10 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
 
         m_mainLinear = findViewById(R.id.mainLinear);
         m_getPropertyValueText = findViewById(R.id.getPropertyValueText);
-        m_qmlStatus = findViewById(R.id.qmlStatus);
+        m_qmlStatus = findViewById(R.id.qmlStatusText);
         m_androidControlsLayout = findViewById(R.id.javaLinear);
-        m_box = findViewById(R.id.box);
-        m_switch = findViewById(R.id.switch1);
+        m_box = findViewById(R.id.qmlColorBox);
+        m_switch = findViewById(R.id.disconnectQmlListenerSwitch);
         m_switch.setOnClickListener(view -> switchListener());
         m_mainQmlComponent = new Main();
         //! [m_qmlView]
@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         //! [layoutParams]
         m_qtQuickView.loadComponent(m_mainQmlComponent);
 
-        findViewById(R.id.button).setOnClickListener(view -> onClickListener());
+        findViewById(R.id.changeQmlColorButton).setOnClickListener(view -> onClickListener());
 
         // Check target device orientation on launch
         handleOrientationChanges();
