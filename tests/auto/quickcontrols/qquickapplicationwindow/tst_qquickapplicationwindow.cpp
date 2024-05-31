@@ -58,6 +58,8 @@ private slots:
 tst_QQuickApplicationWindow::tst_QQuickApplicationWindow()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QQuickStyle::setStyle("Basic");
 }
 

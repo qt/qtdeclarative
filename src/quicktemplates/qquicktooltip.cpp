@@ -102,6 +102,8 @@ public:
 
     void opened() override;
 
+    Qt::WindowFlags popupWindowType() const override;
+
     QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ToolTip); }
 
     int delay = 0;
@@ -139,6 +141,11 @@ void QQuickToolTipPrivate::opened()
 {
     QQuickPopupPrivate::opened();
     startTimeout();
+}
+
+Qt::WindowFlags QQuickToolTipPrivate::popupWindowType() const
+{
+    return Qt::ToolTip;
 }
 
 QQuickToolTip::QQuickToolTip(QQuickItem *parent)

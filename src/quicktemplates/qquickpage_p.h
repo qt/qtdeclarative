@@ -25,7 +25,7 @@ class QQuickPagePrivate;
 class Q_QUICKTEMPLATES2_EXPORT QQuickPage : public QQuickPane
 {
     Q_OBJECT
-    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
+    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged RESET resetTitle FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
     // 2.5 (Qt 5.12)
@@ -42,6 +42,7 @@ public:
 
     QString title() const;
     void setTitle(const QString &title);
+    void resetTitle();
 
     QQuickItem *header() const;
     void setHeader(QQuickItem *header);

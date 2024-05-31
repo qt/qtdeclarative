@@ -20,11 +20,17 @@ set(qml_files
     "Frame.qml"
     "GroupBox.qml"
     "ItemDelegate.qml"
+    "Menu.qml"
+    "MenuBar.qml"
+    "MenuBarItem.qml"
+    "MenuItem.qml"
+    "MenuSeparator.qml"
     "ProgressBar.qml"
     "RadioButton.qml"
     "RadioDelegate.qml"
     "RangeSlider.qml"
     "ScrollBar.qml"
+    "ScrollIndicator.qml"
     "ScrollView.qml"
     "SelectionRectangle.qml"
     "Slider.qml"
@@ -62,6 +68,12 @@ qt_internal_add_qml_module(qtquickcontrols2macosstyleplugin
         images/busyindicator-light.webp
         images/busyindicator-light@2x.webp
         images/busyindicator-light@3x.webp
+        images/checkmark.png
+        images/checkmark@2x.png
+        images/checkmark@3x.png
+        images/menuarrow.png
+        images/menuarrow@2x.png
+        images/menuarrow@3x.png
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII

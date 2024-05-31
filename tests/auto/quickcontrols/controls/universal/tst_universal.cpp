@@ -8,6 +8,9 @@ int main(int argc, char *argv[])
 {
     QTEST_SET_MAIN_SOURCE_PATH
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
+    // The tests were originally written before native menus existed,
+    // and some of them try to open menus, which we can't test natively.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     QQuickStyle::setStyle("Universal");
     return quick_test_main(argc, argv, "tst_controls::Universal", TST_CONTROLS_DATA);
 }

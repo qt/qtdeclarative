@@ -119,6 +119,8 @@ public:
 
 public Q_SLOTS:
     void toggle();
+    Q_REVISION(6, 8) void click();
+    Q_REVISION(6, 8) void animateClick();
 
 Q_SIGNALS:
     void pressed();

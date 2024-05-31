@@ -74,6 +74,8 @@ public:
     qreal implicitFooterWidth() const;
     qreal implicitFooterHeight() const;
 
+    void setOpacity(qreal opacity) override;
+
 public Q_SLOTS:
     virtual void accept();
     virtual void reject();

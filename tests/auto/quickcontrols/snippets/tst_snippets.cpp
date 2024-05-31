@@ -39,6 +39,9 @@ static QMap<QString, QStringPair> findSnippets(const QDir &inputDir, const QDir 
 
 void tst_Snippets::initTestCase()
 {
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+
     qInfo() << "Snippets are taken from" << QQC2_SNIPPETS_PATH;
 
     QDir snippetsDir(QQC2_SNIPPETS_PATH);

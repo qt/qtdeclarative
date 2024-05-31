@@ -2,4 +2,18 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtQuickTest/quicktest.h>
-QUICK_TEST_MAIN(tst_qquickmaterialstyle)
+
+class Setup : public QObject
+{
+    Q_OBJECT
+
+public slots:
+    void applicationAvailable()
+    {
+        QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    }
+};
+
+QUICK_TEST_MAIN_WITH_SETUP(tst_qquickmaterialstyle, Setup)
+
+#include "tst_qquickmaterialstyle.moc"

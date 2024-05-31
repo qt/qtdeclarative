@@ -17,6 +17,9 @@ int main(int argc, char *argv[])
     // issued when default-constructing controls. For that we have
     // tst_customization::noCustomizationWarningsForDefaultControls.
     qputenv("QT_QUICK_CONTROLS_IGNORE_CUSTOMIZATION_WARNINGS", "1");
+    // The tests were originally written before native menus existed,
+    // and some of them try to open menus, which we can't test natively.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     QQuickStyle::setStyle("Windows");
     return quick_test_main(argc, argv, "tst_controls::Windows", TST_CONTROLS_DATA);
 }

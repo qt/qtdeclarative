@@ -5,16 +5,20 @@ import QtQuick
 import QtQuick.Controls
 
 ApplicationWindow {
+    id: root
     readonly property Button oopsButton: oopsButton
+    property alias fileMenu: fileMenu
 
     width: 400
     height: 400
     visible: true
 
-    header: MenuBar {
+    menuBar: MenuBar {
         MenuBarItem {
             menu: Menu {
+                id: fileMenu
                 title: "&File"
+                objectName: title
                 MenuItem { text: "&Open..." }
                 MenuItem { text: "&Save" }
                 MenuItem { text: "Save &As..." }
@@ -25,6 +29,7 @@ ApplicationWindow {
         MenuBarItem {
             menu: Menu {
                 title: "&Edit"
+                objectName: title
                 MenuItem { text: "&Cut" }
                 MenuItem { text: "&Copy" }
                 MenuItem { text: "&Paste" }
@@ -35,14 +40,17 @@ ApplicationWindow {
                 title: "&View"
                 Menu {
                     title: "&Alignment"
+                    objectName: title
                     Menu {
                         title: "&Horizontal"
+                        objectName: title
                         MenuItem { text: "&Left" }
                         MenuItem { text: "&Center" }
                         MenuItem { text: "&Right" }
                     }
                     Menu {
                         title: "&Vertical"
+                        objectName: title
                         MenuItem { text: "&Top" }
                         MenuItem { text: "&Center" }
                         MenuItem { text: "&Bottom" }
@@ -54,6 +62,7 @@ ApplicationWindow {
         MenuBarItem {
             menu: Menu {
                 title: "&Help"
+                objectName: title
                 MenuItem { text: "&About" }
             }
         }

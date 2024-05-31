@@ -280,6 +280,11 @@ void QQuickPage::setTitle(const QString &title)
     emit titleChanged();
 }
 
+void QQuickPage::resetTitle()
+{
+    setTitle(QString());
+}
+
 /*!
     \qmlproperty Item QtQuick.Controls::Page::header
 

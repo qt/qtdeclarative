@@ -97,6 +97,9 @@ public:
     Q_REVISION(2, 3) Q_INVOKABLE void removeAction(QQuickAction *action);
     Q_REVISION(2, 3) Q_INVOKABLE QQuickAction *takeAction(int index);
 
+    bool isVisible() const override;
+    void setVisible(bool visible) override;
+
     void popup(QQuickItem *menuItem = nullptr);
     void popup(const QPointF &pos, QQuickItem *menuItem = nullptr);
 

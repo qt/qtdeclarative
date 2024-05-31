@@ -59,6 +59,7 @@ void tst_focus::init()
 void tst_focus::initTestCase()
 {
     SKIP_IF_NO_WINDOW_ACTIVATION
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     QQuickStyle::setStyle("Basic");
     QQmlDataTest::initTestCase();
 }

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 set(qml_files
+    "CheckIndicator.qml"
     "SwitchIndicator.qml"
 )
 

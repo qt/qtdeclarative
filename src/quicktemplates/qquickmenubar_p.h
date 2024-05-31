@@ -35,6 +35,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickMenuBar : public QQuickContainer
 
 public:
     explicit QQuickMenuBar(QQuickItem *parent = nullptr);
+    ~QQuickMenuBar() override;
 
     QQmlComponent *delegate() const;
     void setDelegate(QQmlComponent *delegate);
@@ -60,6 +61,8 @@ protected:
     void itemAdded(int index, QQuickItem *item) override;
     void itemMoved(int index, QQuickItem *item) override;
     void itemRemoved(int index, QQuickItem *item) override;
+
+    void componentComplete() override;
 
     QFont defaultFont() const override;
 

@@ -40,6 +40,8 @@ public:
     virtual void handleReject();
     virtual void handleClick(QQuickAbstractButton *button);
 
+    Qt::WindowFlags popupWindowType() const override;
+
     int result = 0;
     QString title;
     QQuickDialogButtonBox *buttonBox = nullptr;
