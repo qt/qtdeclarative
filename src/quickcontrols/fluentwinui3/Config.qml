@@ -2025,6 +2025,386 @@ QtObject {
 
             }
 
+            readonly property QtObject frame: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17105;2439:15806;2439:15811"
+                        readonly property string filePath: "dark/images/frame-background-disabled.png"
+                        readonly property real height: 52
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "frame-background-disabled"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 65
+                        readonly property real x: 11761.5
+                        readonly property real y: 3009
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:17105;2439:15806"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "frame-contentItem-disabled"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17105;2439:15806;2439:15788"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "frame-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 11777.5
+                        readonly property real y: 3025
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17103;2439:15801;2439:15811"
+                        readonly property string filePath: "dark/images/frame-background.png"
+                        readonly property real height: 52
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "frame-background"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 65
+                        readonly property real x: 11761.5
+                        readonly property real y: 2797
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:17103;2439:15801"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "frame-contentItem"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17103;2439:15801;2439:15788"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "frame-label"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 11777.5
+                        readonly property real y: 2813
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
+                }
+
+            }
+
+            readonly property QtObject groupbox: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17233;2556:14470;2554:14173"
+                        readonly property string filePath: ""
+                        readonly property real height: 52
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-background-disabled"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 13007.5
+                        readonly property real y: 3721
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:17233;2556:14470;4176:22635"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "groupbox-contentItem-disabled"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17233;2556:14470;4330:10056"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 13007.5
+                        readonly property real y: 3693
+                    }
+
+                    readonly property QtObject label_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17233;2556:14470;4330:10056;4330:10044"
+                        readonly property string filePath: ""
+                        readonly property real height: 20
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 13007.5
+                        readonly property real y: 3693
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property string alignItems: "MAX"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17233;2556:14470;4330:10056"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "groupbox-label-contentItem-disabled"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:17233;2556:14470;4330:10056;4330:9505"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "groupbox-label-text-disabled"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17231;2556:14430;2554:14173"
+                        readonly property string filePath: ""
+                        readonly property real height: 52
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-background-hovered"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 13007.5
+                        readonly property real y: 3508
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:17231;2556:14430;4176:22635"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "groupbox-contentItem-hovered"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17231;2556:14430;4330:10056"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 13007.5
+                        readonly property real y: 3480
+                    }
+
+                    readonly property QtObject label_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17231;2556:14430;4330:10056;4330:10044"
+                        readonly property string filePath: ""
+                        readonly property real height: 20
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 13007.5
+                        readonly property real y: 3480
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property string alignItems: "MAX"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17231;2556:14430;4330:10056"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "groupbox-label-contentItem-hovered"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:17231;2556:14430;4330:10056;4330:9505"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "groupbox-label-text-hovered"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17229;2556:14390;2554:14173"
+                        readonly property string filePath: ""
+                        readonly property real height: 52
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-background"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 13007
+                        readonly property real y: 3296
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:17229;2556:14390;4176:22635"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "groupbox-contentItem"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17229;2556:14390;4330:10056"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 13007
+                        readonly property real y: 3268
+                    }
+
+                    readonly property QtObject label_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17229;2556:14390;4330:10056;4330:10044"
+                        readonly property string filePath: ""
+                        readonly property real height: 20
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 13007
+                        readonly property real y: 3268
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property string alignItems: "MAX"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17229;2556:14390;4330:10056"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "groupbox-label-contentItem"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:17229;2556:14390;4330:10056;4330:9505"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "groupbox-label-text"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
+                }
+
+            }
+
             readonly property QtObject itemdelegate: QtObject {
                 readonly property QtObject disabled: QtObject {
                     readonly property QtObject background: QtObject {
@@ -8165,6 +8545,386 @@ QtObject {
                     readonly property real rightPadding: 12
                     readonly property real spacing: 8
                     readonly property real topPadding: 5
+                }
+
+            }
+
+            readonly property QtObject frame: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15481;2439:15806;2439:15811"
+                        readonly property string filePath: "light/images/frame-background-disabled.png"
+                        readonly property real height: 52
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "frame-background-disabled"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 65
+                        readonly property real x: 11481.5
+                        readonly property real y: 3009
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:15481;2439:15806"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "frame-contentItem-disabled"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15481;2439:15806;2439:15788"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "frame-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 11497.5
+                        readonly property real y: 3025
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15479;2439:15801;2439:15811"
+                        readonly property string filePath: "light/images/frame-background.png"
+                        readonly property real height: 52
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "frame-background"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 65
+                        readonly property real x: 11481.5
+                        readonly property real y: 2797
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:15479;2439:15801"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "frame-contentItem"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15479;2439:15801;2439:15788"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "frame-label"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 33
+                        readonly property real x: 11497.5
+                        readonly property real y: 2813
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
+                }
+
+            }
+
+            readonly property QtObject groupbox: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15609;2556:14470;2554:14173"
+                        readonly property string filePath: ""
+                        readonly property real height: 52
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-background-disabled"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 12727.5
+                        readonly property real y: 3721
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:15609;2556:14470;4176:22635"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "groupbox-contentItem-disabled"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15609;2556:14470;4330:10056"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 12727.5
+                        readonly property real y: 3693
+                    }
+
+                    readonly property QtObject label_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15609;2556:14470;4330:10056;4330:10044"
+                        readonly property string filePath: ""
+                        readonly property real height: 20
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 12727.5
+                        readonly property real y: 3693
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property string alignItems: "MAX"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15609;2556:14470;4330:10056"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "groupbox-label-contentItem-disabled"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:15609;2556:14470;4330:10056;4330:9505"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "groupbox-label-text-disabled"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15607;2556:14430;2554:14173"
+                        readonly property string filePath: ""
+                        readonly property real height: 52
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-background-hovered"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 12727.5
+                        readonly property real y: 3508
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:15607;2556:14430;4176:22635"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "groupbox-contentItem-hovered"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15607;2556:14430;4330:10056"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 12727.5
+                        readonly property real y: 3480
+                    }
+
+                    readonly property QtObject label_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15607;2556:14430;4330:10056;4330:10044"
+                        readonly property string filePath: ""
+                        readonly property real height: 20
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 12727.5
+                        readonly property real y: 3480
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property string alignItems: "MAX"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15607;2556:14430;4330:10056"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "groupbox-label-contentItem-hovered"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:15607;2556:14430;4330:10056;4330:9505"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "groupbox-label-text-hovered"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 8
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15605;2556:14390;2554:14173"
+                        readonly property string filePath: ""
+                        readonly property real height: 52
+                        readonly property real leftOffset: 8
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-background"
+                        readonly property real rightOffset: 8
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 8
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 12727
+                        readonly property real y: 3296
+                    }
+
+                    readonly property real bottomPadding: 16
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 16
+                        readonly property string figmaId: "I2557:15605;2556:14390;4176:22635"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 16
+                        readonly property string name: "groupbox-contentItem"
+                        readonly property real rightPadding: 16
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 16
+                    }
+
+                    readonly property QtObject label: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15605;2556:14390;4330:10056"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 12727
+                        readonly property real y: 3268
+                    }
+
+                    readonly property QtObject label_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15605;2556:14390;4330:10056;4330:10044"
+                        readonly property string filePath: ""
+                        readonly property real height: 20
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "groupbox-label-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 72
+                        readonly property real x: 12727
+                        readonly property real y: 3268
+                    }
+
+                    readonly property QtObject label_contentItem: QtObject {
+                        readonly property string alignItems: "MAX"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15605;2556:14390;4330:10056"
+                        readonly property string layoutMode: "VERTICAL"
+                        readonly property real leftPadding: 0
+                        readonly property string name: "groupbox-label-contentItem"
+                        readonly property real rightPadding: 0
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject label_text: QtObject {
+                        readonly property string figmaId: "I2557:15605;2556:14390;4330:10056;4330:9505"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property string name: "groupbox-label-text"
+                        readonly property real textHAlignment: 1
+                        readonly property real textVAlignment: 128
+                    }
+
+                    readonly property real leftPadding: 16
+                    readonly property real rightPadding: 16
+                    readonly property real topPadding: 16
                 }
 
             }
