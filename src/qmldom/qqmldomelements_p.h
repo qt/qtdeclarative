@@ -712,8 +712,14 @@ class QMLDOM_EXPORT EnumItem
 {
 public:
     constexpr static DomType kindValue = DomType::EnumItem;
-
-    EnumItem(QString name = QString(), int value = 0) : m_name(name), m_value(value) { }
+    enum class ValueKind : quint8 {
+        ImplicitValue,
+        ExplicitValue
+    };
+    EnumItem(const QString &name = QString(), int value = 0, ValueKind valueKind = ValueKind::ImplicitValue)
+        : m_name(name), m_value(value), m_valueKind(valueKind)
+    {
+    }
 
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor);
 
@@ -726,6 +732,7 @@ public:
 private:
     QString m_name;
     double m_value;
+    ValueKind m_valueKind;
     RegionComments m_comments;
 };
 
