@@ -10,116 +10,102 @@ Dialog {
     modal: true
     standardButtons: Dialog.Ok
 
-    contentItem: GridLayout {
-        columns: 3
-        columnSpacing: 10
+    component SectionHelpInfo: Item {
+        property alias sectionText: section.text
+        property alias sectionDescription: sectionDesc.text
 
-        Label {
-            Layout.columnSpan: 3
-            text: qsTr("A formula starts with `=` follows with the operator and arguments.\n" +
-                       "Formula could be")
-        }
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 20
 
-        Label {
-            Layout.leftMargin: 20
-            text: qsTr("Cell assignment")
-        }
-        Rectangle {
-            implicitWidth: 90
-            implicitHeight: 30
-            color: palette.base
-            border.width: 1
-            border.color: Qt.styleHints.colorScheme === Qt.Light ? palette.dark : palette.light
-            Label {
-                anchors.verticalCenter: parent.verticalCenter
-                text: qsTr("=A1")
+            Item {
+                implicitWidth: 40
+                Layout.fillHeight: true
+
+                Label {
+                    id: section
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+
+            Rectangle {
+                implicitWidth: 90
+                color: palette.base
+                border.width: 1
+                border.color: Qt.styleHints.colorScheme === Qt.Light ? palette.dark : palette.light
+                Layout.fillHeight: true
+
+                Label {
+                    id: sectionDesc
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
         }
-        Item { Layout.fillWidth: true }
+    }
 
-        Label {
+    contentItem: ColumnLayout {
+        spacing: 10
+
+        Item {
+            Layout.topMargin: 20
             Layout.leftMargin: 20
-            text: qsTr("Addition")
-        }
-        Rectangle {
-            implicitWidth: 90
-            implicitHeight: 30
-            color: palette.base
-            border.width: 1
-            border.color: Qt.styleHints.colorScheme === Qt.Light ? palette.dark : palette.light
+            Layout.rightMargin: 20
+            implicitWidth: infoLabel.width
+            implicitHeight: infoLabel.height
+
             Label {
-                anchors.verticalCenter: parent.verticalCenter
-                text: qsTr("=A1+A2")
+                id: infoLabel
+                text: qsTr("A formula starts with `=` follows with the operator and arguments.\n" +
+                           "Formula could be")
             }
         }
-        Item { Layout.fillWidth: true }
 
-        Label {
-            Layout.leftMargin: 20
-            text: qsTr("Subtraction")
-        }
-        Rectangle {
-            implicitWidth: 90
+        SectionHelpInfo {
             implicitHeight: 30
-            color: palette.base
-            border.width: 1
-            border.color: Qt.styleHints.colorScheme === Qt.Light ? palette.dark : palette.light
-            Label {
-                anchors.verticalCenter: parent.verticalCenter
-                text: qsTr("=A1-A2")
-            }
+            Layout.fillWidth: true
+            Layout.leftMargin: 40
+            sectionText: "Cell assignment"
+            sectionDescription: "=A1"
         }
-        Item { Layout.fillWidth: true }
 
-        Label {
-            Layout.leftMargin: 20
-            text: qsTr("Division")
-        }
-        Rectangle {
-            implicitWidth: 90
+        SectionHelpInfo {
             implicitHeight: 30
-            color: palette.base
-            border.width: 1
-            border.color: Qt.styleHints.colorScheme === Qt.Light ? palette.dark : palette.light
-            Label {
-                anchors.verticalCenter: parent.verticalCenter
-                text: qsTr("=A1/A2")
-            }
+            Layout.fillWidth: true
+            Layout.leftMargin: 40
+            sectionText: "Addition"
+            sectionDescription: "=A1+A2"
         }
-        Item { Layout.fillWidth: true }
 
-        Label {
-            Layout.leftMargin: 20
-            text: qsTr("Multiplication")
-        }
-        Rectangle {
-            implicitWidth: 90
+        SectionHelpInfo {
             implicitHeight: 30
-            color: palette.base
-            border.width: 1
-            border.color: Qt.styleHints.colorScheme === Qt.Light ? palette.dark : palette.light
-            Label {
-                anchors.verticalCenter: parent.verticalCenter
-                text: qsTr("=A1*A2")
-            }
+            Layout.fillWidth: true
+            Layout.leftMargin: 40
+            sectionText: "Subtraction"
+            sectionDescription: "=A1-A2"
         }
-        Item { Layout.fillWidth: true }
 
-        Label {
-            Layout.leftMargin: 20
-            text: qsTr("Summation")
-        }
-        Rectangle {
-            implicitWidth: 90
+        SectionHelpInfo {
             implicitHeight: 30
-            color: palette.base
-            border.width: 1
-            border.color: Qt.styleHints.colorScheme === Qt.Light ? palette.dark : palette.light
-            Label {
-                anchors.verticalCenter: parent.verticalCenter
-                text: qsTr("=SUM A1:A2")
-            }
+            Layout.fillWidth: true
+            Layout.leftMargin: 40
+            sectionText: "Division"
+            sectionDescription: "=A1/A2"
         }
-        Item { Layout.fillWidth: true }
+
+        SectionHelpInfo {
+            implicitHeight: 30
+            Layout.fillWidth: true
+            Layout.leftMargin: 40
+            sectionText: "Multiplication"
+            sectionDescription: "=A1*A2"
+        }
+
+        SectionHelpInfo {
+            implicitHeight: 30
+            Layout.fillWidth: true
+            Layout.leftMargin: 40
+            sectionText: "Summation"
+            sectionDescription: "=SUM A1:A2"
+        }
     }
 }
