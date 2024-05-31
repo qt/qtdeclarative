@@ -125,8 +125,8 @@ Q_LOGGING_CATEGORY(lcQuickPopup, "qt.quick.controls.popup")
     Popup can behave in two different ways. Depending on the platform,
     and what the value of the \l popupType property is.
 
-    Showing a popup as a separate top-level window is currently under tech-preview,
-    and therefore disabled by default. You can enable popup windows explicitly by
+    Showing a popup as a separate top-level window is disabled by default.
+    You can enable popup windows explicitly by
     setting \l popupType to \c Popup.Window.
 
     This will cause a separate popup window to be created,
@@ -2733,19 +2733,16 @@ void QQuickPopup::resetBottomInset()
 /*!
     \qmlproperty enumeration QtQuick.Controls::Popup::popupType
     \since 6.8
-    \preliminary
 
     This property determines the type of popup that will be created.
 
     Available options:
     \value Default      Let Qt decide the optimal popup type, depending on the system. This is the default value.
-                        While \c Popup.Window is in tech-preview, \c Popup.Default will be equal to \c Popup.Item.
-                        But this is likely to change in a future release.
     \value Item         The popup will be embedded into the \l{Popup Items}{same scene as the parent}, without the use of a separate window.
     \value Window       The popup will be presented in a \l {Popup Windows}{separate window}. If the platform doesn't support multiple windows,
-                        \c Popup.Item will be used instead. This option is currently under tech-preview.
+                        \c Popup.Item will be used instead.
     \value Native       The popup will be native to the platform. If the platform doesn't support native popups,
-                        \c Popup.Window will be used instead. This option is currently under tech-preview.
+                        \c Popup.Window will be used instead.
     \sa {Popup Windows}, {Popup Items}
 */
 QQuickPopup::PopupType QQuickPopup::popupType() const
