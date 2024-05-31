@@ -3101,7 +3101,7 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column) const
     qreal columnWidth = noExplicitColumnWidth;
 
     if (columnWidthProvider.isCallable()) {
-        auto const columnAsArgument = QJSValueList() << QJSValue(logicalColumnIndex(column));
+        auto const columnAsArgument = QJSValueList() << QJSValue(column);
         columnWidth = columnWidthProvider.call(columnAsArgument).toNumber();
         if (qIsNaN(columnWidth) || columnWidth < 0)
             columnWidth = noExplicitColumnWidth;
@@ -3147,7 +3147,7 @@ qreal QQuickTableViewPrivate::getRowHeight(int row) const
     qreal rowHeight = noExplicitRowHeight;
 
     if (rowHeightProvider.isCallable()) {
-        auto const rowAsArgument = QJSValueList() << QJSValue(logicalRowIndex(row));
+        auto const rowAsArgument = QJSValueList() << QJSValue(row);
         rowHeight = rowHeightProvider.call(rowAsArgument).toNumber();
         if (qIsNaN(rowHeight) || rowHeight < 0)
             rowHeight = noExplicitRowHeight;
