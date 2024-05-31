@@ -1150,13 +1150,11 @@ propertyBindingFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, con
         if (!resolverForIds)
             return {};
 
-        QQmlJSRegisterContent fromId = resolverForIds->scopedType(
-                referrerScope, name, QQmlJSRegisterContent::InvalidLookupIndex,
-                AssumeComponentsAreBound);
-        if (fromId.variant() == QQmlJSRegisterContent::ObjectById)
-            return ExpressionType{ name, fromId.type(), QmlObjectIdIdentifier };
-
-        return ExpressionType{ name, {}, QmlObjectIdIdentifier };
+        return ExpressionType {
+            name,
+            resolverForIds->typeForId(referrerScope, name, AssumeComponentsAreBound),
+            QmlObjectIdIdentifier
+        };
     }
 
     const auto typeIdentifier =
@@ -1236,7 +1234,7 @@ static QQmlJSScope::ConstPtr findScopeOfSpecialItems(
             return {};
 
         // Note: It does not have to be an ID. It can be a property.
-        return resolver->containedType(resolver->scopedType(scope, targetName));
+        return resolver->scopedType(scope, targetName);
     } else {
         if (item.internalKind() == DomType::Binding &&
             item.field(Fields::bindingType).value().toInteger() == int(BindingType::OnBinding)) {
@@ -1360,11 +1358,10 @@ static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomIt
     }
 
     // check if its an id
-    const QQmlJSRegisterContent fromId =
-            resolver->scopedType(referrerScope, name, QQmlJSRegisterContent::InvalidLookupIndex,
-                                 AssumeComponentsAreBound);
-    if (fromId.variant() == QQmlJSRegisterContent::ObjectById)
-        return ExpressionType{ name, fromId.type(), QmlObjectIdIdentifier };
+    if (const QQmlJSScope::ConstPtr fromId
+            = resolver->typeForId(referrerScope, name, AssumeComponentsAreBound)) {
+        return ExpressionType{ name, fromId, QmlObjectIdIdentifier };
+    }
 
     const QQmlJSScope::ConstPtr jsGlobal = resolver->jsGlobalObject();
     // check if its a JS global method

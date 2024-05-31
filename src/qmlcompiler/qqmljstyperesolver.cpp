@@ -490,6 +490,28 @@ QQmlJSRegisterContent QQmlJSTypeResolver::transformed(
     Q_UNREACHABLE_RETURN({});
 }
 
+QQmlJSScope::ConstPtr QQmlJSTypeResolver::containedTypeForName(const QString &name) const
+{
+    QQmlJSScope::ConstPtr type = typeForName(name);
+
+    if (!type || type->isSingleton() || type->isScript())
+        return type;
+
+    switch (type->accessSemantics()) {
+    case QQmlJSScope::AccessSemantics::Reference:
+        if (const auto attached = type->attachedType())
+            return genericType(attached) ? attached : QQmlJSScope::ConstPtr();
+        return metaObjectType();
+    case QQmlJSScope::AccessSemantics::None:
+        return metaObjectType();
+    case QQmlJSScope::AccessSemantics::Sequence:
+    case QQmlJSScope::AccessSemantics::Value:
+        return canAddressValueTypes() ?  metaObjectType() : QQmlJSScope::ConstPtr();
+    }
+
+    Q_UNREACHABLE_RETURN(QQmlJSScope::ConstPtr());
+}
+
 QQmlJSRegisterContent QQmlJSTypeResolver::registerContentForName(
         const QString &name, const QQmlJSScope::ConstPtr &scopeType,
         bool hasObjectModulePrefix) const
@@ -1024,76 +1046,170 @@ static bool isRevisionAllowed(int memberRevision, const QQmlJSScope::ConstPtr &s
     return typeRevision.isValid() && typeRevision >= revision;
 }
 
-QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr &scope,
+QQmlJSScope::ConstPtr QQmlJSTypeResolver::resolveParentProperty(
+        const QString &name, const QQmlJSScope::ConstPtr &base,
+        const QQmlJSScope::ConstPtr &propType) const
+{
+    if (m_parentMode != UseDocumentParent || name != base->parentPropertyName())
+        return propType;
+
+    const QQmlJSScope::ConstPtr baseParent = base->parentScope();
+    if (!baseParent || !baseParent->inherits(propType))
+        return propType;
+
+    const QString defaultPropertyName = baseParent->defaultPropertyName();
+    if (defaultPropertyName.isEmpty()) // no reason to search for bindings
+        return propType;
+
+    const QList<QQmlJSMetaPropertyBinding> defaultPropBindings
+            = baseParent->propertyBindings(defaultPropertyName);
+    for (const QQmlJSMetaPropertyBinding &binding : defaultPropBindings) {
+        if (binding.bindingType() == QQmlSA::BindingType::Object
+                && equals(binding.objectType(), base)) {
+            return baseParent;
+        }
+    }
+
+    return propType;
+}
+
+/*!
+ * \internal
+ *
+ * Retrieves the type of whatever \a name signifies in the given \a scope.
+ * \a name can be an ID, a property of the scope, a singleton, an attachment,
+ * a plain type reference or a JavaScript global.
+ *
+ * TODO: The lookup is actually wrong. We cannot really retrieve JavaScript
+ *       globals here because any runtime-inserted context property would
+ *       override them. We still do because we don't have a better solution for
+ *       identifying e.g. the console object, yet.
+ *
+ * \a options tells us whether to consider components as bound. If components
+ * are bound we can retrieve objects identified by ID in outer contexts.
+ *
+ * TODO: This is also wrong because we should alternate scopes and contexts when
+ *       traveling the scope/context hierarchy. Currently we have IDs from any
+ *       context override all scope properties if components are considered
+ *       bound. This is mostly because we don't care about outer scopes at all;
+ *       so we cannot determine with certainty whether an ID from a far outer
+ *       context is overridden by a property of a near outer scope. To
+ *       complicate this further, user context properties can also be inserted
+ *       in outer contexts at run time, shadowing names in further removed outer
+ *       scopes and contexts. What we need to do is determine where exactly what
+ *       kind of property can show up and defend against that with additional
+ *       pragmas.
+ *
+ * Note: It probably takes at least 3 nested bound components in one document to
+ *       trigger the misbehavior.
+ */
+QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopedType(
+        const QQmlJSScope::ConstPtr &scope, const QString &name,
+        QQmlJSScopesByIdOptions options) const
+{
+    if (QQmlJSScope::ConstPtr identified = m_objectsById.scope(name, scope, options))
+        return identified;
+
+    if (QQmlJSScope::ConstPtr base = QQmlJSScope::findCurrentQMLScope(scope)) {
+        QQmlJSScope::ConstPtr result;
+        if (QQmlJSUtils::searchBaseAndExtensionTypes(
+                    base, [&](const QQmlJSScope::ConstPtr &found, QQmlJSScope::ExtensionKind mode) {
+            if (mode == QQmlJSScope::ExtensionNamespace) // no use for it here
+                return false;
+
+            if (found->hasOwnProperty(name)) {
+                const QQmlJSMetaProperty prop = found->ownProperty(name);
+                if (!isRevisionAllowed(prop.revision(), scope))
+                    return false;
+
+                result = resolveParentProperty(name, base, prop.type());
+                return true;
+            }
+
+            if (found->hasOwnMethod(name)) {
+                const auto methods = found->ownMethods(name);
+                for (const auto &method : methods) {
+                    if (isRevisionAllowed(method.revision(), scope)) {
+                        result = jsValueType();
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        })) {
+            return result;
+        }
+    }
+
+    if (QQmlJSScope::ConstPtr result = containedTypeForName(name))
+        return result;
+
+    if (m_jsGlobalObject->hasProperty(name))
+        return m_jsGlobalObject->property(name).type();
+
+    if (m_jsGlobalObject->hasMethod(name))
+        return jsValueType();
+
+    return {};
+}
+
+/*!
+ * \internal
+ *
+ * Same as the other scopedType method, but accepts a QQmlJSRegisterContent and
+ * also returns one. This way you not only get the type, but also the content
+ * variant and various meta info.
+ */
+QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSRegisterContent &scope,
                                                      const QString &name, int lookupIndex,
                                                      QQmlJSScopesByIdOptions options) const
 {
-    const auto isAssignedToDefaultProperty = [this](const QQmlJSScope::ConstPtr &parent,
-                                                    const QQmlJSScope::ConstPtr &child) {
-        const QString defaultPropertyName = parent->defaultPropertyName();
-        if (defaultPropertyName.isEmpty()) // no reason to search for bindings
-            return false;
-
-        const QList<QQmlJSMetaPropertyBinding> defaultPropBindings =
-                parent->propertyBindings(defaultPropertyName);
-        for (const QQmlJSMetaPropertyBinding &binding : defaultPropBindings) {
-            if (binding.bindingType() == QQmlSA::BindingType::Object
-                && equals(binding.objectType(), child)) {
-                return true;
-            }
-        }
-        return false;
-    };
-
-    if (QQmlJSScope::ConstPtr identified = m_objectsById.scope(name, scope, options)) {
+    const QQmlJSScope::ConstPtr contained = containedType(scope);
+    if (QQmlJSScope::ConstPtr identified = m_objectsById.scope(name, contained, options)) {
         return QQmlJSRegisterContent::create(storedType(identified), identified, lookupIndex,
-                                             QQmlJSRegisterContent::ObjectById, scope);
+                                             QQmlJSRegisterContent::ObjectById, contained);
     }
 
-    if (QQmlJSScope::ConstPtr base = QQmlJSScope::findCurrentQMLScope(scope)) {
+    if (QQmlJSScope::ConstPtr base = QQmlJSScope::findCurrentQMLScope(contained)) {
         QQmlJSRegisterContent result;
         if (QQmlJSUtils::searchBaseAndExtensionTypes(
                     base, [&](const QQmlJSScope::ConstPtr &found, QQmlJSScope::ExtensionKind mode) {
-                        if (mode == QQmlJSScope::ExtensionNamespace) // no use for it here
-                            return false;
-                        if (found->hasOwnProperty(name)) {
-                            QQmlJSMetaProperty prop = found->ownProperty(name);
-                            if (!isRevisionAllowed(prop.revision(), scope))
-                                return false;
-                            if (m_parentMode == UseDocumentParent
-                                    && name == base->parentPropertyName()) {
-                                QQmlJSScope::ConstPtr baseParent = base->parentScope();
-                                if (baseParent && baseParent->inherits(prop.type())
-                                        && isAssignedToDefaultProperty(baseParent, base)) {
-                                    prop.setType(baseParent);
-                                }
-                            }
-                            result = QQmlJSRegisterContent::create(
-                                    storedType(prop.type()), prop,
-                                    QQmlJSRegisterContent::InvalidLookupIndex, lookupIndex,
-                                    scopeContentVariant(mode, false), scope);
-                            return true;
-                        }
+            if (mode == QQmlJSScope::ExtensionNamespace) // no use for it here
+                return false;
 
-                        if (found->hasOwnMethod(name)) {
-                            auto methods = found->ownMethods(name);
-                            for (auto it = methods.begin(); it != methods.end();) {
-                                if (!isRevisionAllowed(it->revision(), scope))
-                                    it = methods.erase(it);
-                                else
-                                    ++it;
-                            }
-                            if (methods.isEmpty())
-                                return false;
-                            result = QQmlJSRegisterContent::create(
-                                    jsValueType(), methods, scopeContentVariant(mode, true), scope);
-                            return true;
-                        }
+            if (found->hasOwnProperty(name)) {
+                QQmlJSMetaProperty prop = found->ownProperty(name);
+                if (!isRevisionAllowed(prop.revision(), contained))
+                    return false;
 
-                        // Unqualified enums are not allowed
+                prop.setType(resolveParentProperty(name, base, prop.type()));
+                result = QQmlJSRegisterContent::create(
+                        storedType(prop.type()), prop,
+                        QQmlJSRegisterContent::InvalidLookupIndex, lookupIndex,
+                        scopeContentVariant(mode, false), contained);
+                return true;
+            }
 
-                        return false;
-                    })) {
+            if (found->hasOwnMethod(name)) {
+                auto methods = found->ownMethods(name);
+                for (auto it = methods.begin(); it != methods.end();) {
+                    if (!isRevisionAllowed(it->revision(), contained))
+                        it = methods.erase(it);
+                    else
+                        ++it;
+                }
+                if (methods.isEmpty())
+                    return false;
+                result = QQmlJSRegisterContent::create(
+                        jsValueType(), methods, scopeContentVariant(mode, true),
+                        contained);
+                return true;
+            }
+
+            // Unqualified enums are not allowed
+            return false;
+        })) {
             return result;
         }
     }
@@ -1116,6 +1232,19 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
 
     return {};
 }
+
+/*!
+ * \fn QQmlJSScope::ConstPtr typeForId(const QQmlJSScope::ConstPtr &scope, const QString &name, QQmlJSScopesByIdOptions options) const
+ *
+ * \internal
+ *
+ * Same as scopedType(), but assumes that the \a name is an ID and only searches
+ * the context.
+ *
+ * TODO: This is just as wrong as scopedType() in that it disregards both scope
+ *       properties overriding context properties and run time context
+ *       properties.
+ */
 
 bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QString &name,
                                     QQmlJSRegisterContent *result,

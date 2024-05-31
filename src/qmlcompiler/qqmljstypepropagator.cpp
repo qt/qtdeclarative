@@ -78,7 +78,8 @@ void QQmlJSTypePropagator::generate_ret_SAcheck()
     if (!m_function->isProperty)
         return;
     QQmlSA::PassManagerPrivate::get(m_passManager)
-            ->analyzeBinding(QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
+            ->analyzeBinding(QQmlJSScope::createQQmlSAElement(
+                                     m_typeResolver->containedType(m_function->qmlScope)),
                              QQmlJSScope::createQQmlSAElement(
                                      m_typeResolver->containedType(m_state.accumulatorIn())),
                              QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
@@ -296,27 +297,28 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
 {
     auto location = getCurrentSourceLocation();
 
-    if (m_function->qmlScope->isInCustomParserParent()) {
+    const auto qmlScopeContained = m_typeResolver->containedType(m_function->qmlScope);
+    if (qmlScopeContained->isInCustomParserParent()) {
         // Only ignore custom parser based elements if it's not Connections.
-        if (m_function->qmlScope->baseType().isNull()
-            || m_function->qmlScope->baseType()->internalName() != u"QQmlConnections"_s)
+        if (qmlScopeContained->baseType().isNull()
+                || qmlScopeContained->baseType()->internalName() != u"QQmlConnections"_s)
             return;
     }
 
     if (isMethod) {
-        if (isCallingProperty(m_function->qmlScope, name))
+        if (isCallingProperty(qmlScopeContained, name))
             return;
-    } else if (propertyResolution(m_function->qmlScope, name) != PropertyMissing) {
+    } else if (propertyResolution(qmlScopeContained, name) != PropertyMissing) {
         return;
     }
 
     std::optional<QQmlJSFixSuggestion> suggestion;
 
-    auto childScopes = m_function->qmlScope->childScopes();
-    for (qsizetype i = 0; i < m_function->qmlScope->childScopes().size(); i++) {
+    const auto childScopes = m_typeResolver->containedType(m_function->qmlScope)->childScopes();
+    for (qsizetype i = 0, end = childScopes.size(); i < end; i++) {
         auto &scope = childScopes[i];
         if (location.offset > scope->sourceLocation().offset) {
-            if (i + 1 < childScopes.size()
+            if (i + 1 < end
                 && childScopes.at(i + 1)->sourceLocation().offset < location.offset)
                 continue;
             if (scope->childScopes().size() == 0)
@@ -361,18 +363,19 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
     // This heuristic does not recognize all instances of this occurring but should be sufficient
     // protection against wrongly suggesting to add an id to the view to access the model that way
     // which is very misleading
+    const auto qmlScope = m_typeResolver->containedType(m_function->qmlScope);
     if (name == u"model" || name == u"index") {
-        if (QQmlJSScope::ConstPtr parent = m_function->qmlScope->parentScope(); !parent.isNull()) {
+        if (const QQmlJSScope::ConstPtr parent = qmlScope->parentScope(); !parent.isNull()) {
             const auto bindings = parent->ownPropertyBindings(u"delegate"_s);
 
             for (auto it = bindings.first; it != bindings.second; it++) {
                 if (!it->hasObject())
                     continue;
-                if (it->objectType() == m_function->qmlScope) {
+                if (it->objectType() == qmlScope) {
                     suggestion = QQmlJSFixSuggestion {
                         name + " is implicitly injected into this delegate."
                                " Add a required property instead."_L1,
-                        m_function->qmlScope->sourceLocation()
+                        qmlScope->sourceLocation()
                     };
                 };
 
@@ -382,10 +385,9 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
     }
 
     if (!suggestion.has_value()) {
-        for (QQmlJSScope::ConstPtr scope = m_function->qmlScope; !scope.isNull();
-             scope = scope->parentScope()) {
+        for (QQmlJSScope::ConstPtr scope = qmlScope; !scope.isNull(); scope = scope->parentScope()) {
             if (scope->hasProperty(name)) {
-                const QString id = m_function->addressableScopes.id(scope, m_function->qmlScope);
+                const QString id = m_function->addressableScopes.id(scope, qmlScope);
 
                 QQmlJS::SourceLocation fixLocation = location;
                 fixLocation.length = 0;
@@ -419,10 +421,9 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
 
     if (!suggestion.has_value()) {
         if (auto didYouMean =
-                    QQmlJSUtils::didYouMean(name,
-                                            m_function->qmlScope->properties().keys()
-                                                    + m_function->qmlScope->methods().keys(),
-                                            location);
+                    QQmlJSUtils::didYouMean(
+                            name, qmlScope->properties().keys() + qmlScope->methods().keys(),
+                            location);
             didYouMean.has_value()) {
             suggestion = didYouMean;
         }
@@ -551,9 +552,10 @@ bool QQmlJSTypePropagator::isCallingProperty(QQmlJSScope::ConstPtr scope, const 
 
 void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup_SAcheck(const QString &name)
 {
+    const auto qmlScope = m_typeResolver->containedType(m_function->qmlScope);
     QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeRead(
-            QQmlJSScope::createQQmlSAElement(m_function->qmlScope), name,
-            QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
+            QQmlJSScope::createQQmlSAElement(qmlScope), name,
+            QQmlJSScope::createQQmlSAElement(qmlScope),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                     getCurrentBindingSourceLocation()));
 }
@@ -569,15 +571,16 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 
     setAccumulator(m_typeResolver->scopedType(m_function->qmlScope, name, index));
 
+    const auto qmlScope = m_typeResolver->containedType(m_function->qmlScope);
     if (!m_state.accumulatorOut().isValid() && m_typeResolver->isPrefix(name)) {
-        const QQmlJSRegisterContent inType = m_typeResolver->globalType(m_function->qmlScope);
+        const QQmlJSRegisterContent inType = m_typeResolver->globalType(qmlScope);
         setAccumulator(QQmlJSRegisterContent::create(
                     m_typeResolver->voidType(), nameIndex, QQmlJSRegisterContent::ScopeModulePrefix,
                     m_typeResolver->containedType(inType)));
         return;
     }
 
-    checkDeprecated(m_function->qmlScope, name, false);
+    checkDeprecated(qmlScope, name, false);
 
     if (!m_state.accumulatorOut().isValid()) {
         setError(u"Cannot access value for name "_s + name);
@@ -610,10 +613,11 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 
 void QQmlJSTypePropagator::generate_StoreNameCommon_SAcheck(const QQmlJSRegisterContent &in, const QString &name)
 {
+    const auto qmlScope = m_typeResolver->containedType(m_function->qmlScope);
     QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeWrite(
-            QQmlJSScope::createQQmlSAElement(m_function->qmlScope), name,
+            QQmlJSScope::createQQmlSAElement(qmlScope), name,
             QQmlJSScope::createQQmlSAElement(m_typeResolver->containedType(in)),
-            QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
+            QQmlJSScope::createQQmlSAElement(qmlScope),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                     getCurrentBindingSourceLocation()));
 }
@@ -807,8 +811,9 @@ void QQmlJSTypePropagator::propagatePropertyLookup_SAcheck(const QString &proper
             QQmlJSScope::createQQmlSAElement(
                     m_typeResolver->containedType(m_state.accumulatorIn())),
             propertyName,
-            QQmlJSScope::createQQmlSAElement(isAttached ? m_attachedContext
-                                                        : m_function->qmlScope),
+            QQmlJSScope::createQQmlSAElement(isAttached
+                    ? m_attachedContext
+                    : m_typeResolver->containedType(m_function->qmlScope)),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                     getCurrentBindingSourceLocation()));
 }
@@ -999,8 +1004,9 @@ void QQmlJSTypePropagator::generate_StoreProperty_SAcheck(const QString property
             propertyName,
             QQmlJSScope::createQQmlSAElement(
                     m_typeResolver->containedType(m_state.accumulatorIn())),
-            QQmlJSScope::createQQmlSAElement(isAttached ? m_attachedContext
-                                                        : m_function->qmlScope),
+            QQmlJSScope::createQQmlSAElement(isAttached
+                    ? m_attachedContext
+                    : m_typeResolver->containedType(m_function->qmlScope)),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                     getCurrentBindingSourceLocation()));
 }
@@ -1185,7 +1191,7 @@ void QQmlJSTypePropagator::generate_callProperty_SAcheck(const QString propertyN
     // TODO: Should there be an analyzeCall() in the future? (w. corresponding onCall in Pass)
     QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeRead(
             QQmlJSScope::createQQmlSAElement(baseType), propertyName,
-            QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
+            QQmlJSScope::createQQmlSAElement(m_typeResolver->containedType(m_function->qmlScope)),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                     getCurrentBindingSourceLocation()));
 }
@@ -1827,7 +1833,7 @@ void QQmlJSTypePropagator::generate_CallQmlContextPropertyLookup(int index, int 
 {
     const QString name = m_jsUnitGenerator->lookupName(index);
     propagateScopeLookupCall(name, argc, argv);
-    checkDeprecated(m_function->qmlScope, name, true);
+    checkDeprecated(m_typeResolver->containedType(m_function->qmlScope), name, true);
 }
 
 void QQmlJSTypePropagator::generate_CallWithSpread(int func, int thisObject, int argc, int argv)

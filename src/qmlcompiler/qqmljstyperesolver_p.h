@@ -107,6 +107,13 @@ public:
                                                  const QQmlJSRegisterContent &left,
                                                  const QQmlJSRegisterContent &right) const;
 
+    QQmlJSScope::ConstPtr typeForId(
+            const QQmlJSScope::ConstPtr &scope, const QString &name,
+            QQmlJSScopesByIdOptions options = Default) const
+    {
+        return m_objectsById.scope(name, scope, options);
+    }
+
     enum class UnaryOperator { Not, Plus, Minus, Increment, Decrement, Complement };
     QQmlJSRegisterContent typeForArithmeticUnaryOperation(
             UnaryOperator op, const QQmlJSRegisterContent &operand) const;
@@ -129,9 +136,15 @@ public:
 
     QQmlJSRegisterContent builtinType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSRegisterContent globalType(const QQmlJSScope::ConstPtr &type) const;
-    QQmlJSRegisterContent scopedType(const QQmlJSScope::ConstPtr &scope, const QString &name,
-                                     int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex,
-                                     QQmlJSScopesByIdOptions options = Default) const;
+    QQmlJSScope::ConstPtr scopedType(
+            const QQmlJSScope::ConstPtr &scope, const QString &name,
+            QQmlJSScopesByIdOptions options = Default) const;
+
+    QQmlJSRegisterContent scopedType(
+            const QQmlJSRegisterContent &scope, const QString &name,
+            int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex,
+            QQmlJSScopesByIdOptions options = Default) const;
+
     QQmlJSRegisterContent memberType(
             const QQmlJSRegisterContent &type, const QString &name,
             int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex) const;
@@ -241,11 +254,15 @@ protected:
             const QQmlJSRegisterContent &origin,
             QQmlJSScope::ConstPtr (QQmlJSTypeResolver::*op)(const QQmlJSScope::ConstPtr &) const) const;
 
+    QQmlJSScope::ConstPtr containedTypeForName(const QString &name) const;
     QQmlJSRegisterContent registerContentForName(
             const QString &name,
             const QQmlJSScope::ConstPtr &scopeType = QQmlJSScope::ConstPtr(),
             bool hasObjectModuelPrefix = false) const;
 
+    QQmlJSScope::ConstPtr resolveParentProperty(
+            const QString &name, const QQmlJSScope::ConstPtr &base,
+            const QQmlJSScope::ConstPtr &propType) const;
 
     QQmlJSScope::ConstPtr m_voidType;
     QQmlJSScope::ConstPtr m_emptyType;

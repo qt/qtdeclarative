@@ -95,7 +95,7 @@ public:
         QList<QQmlJSRegisterContent> argumentTypes;
         QList<QQmlJSRegisterContent> registerTypes;
         QQmlJSRegisterContent returnType;
-        QQmlJSScope::ConstPtr qmlScope;
+        QQmlJSRegisterContent qmlScope;
         QByteArray code;
         const SourceLocationTable *sourceLocations = nullptr;
         bool isSignalHandler = false;

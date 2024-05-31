@@ -802,7 +802,8 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompileAndRecordAotStats(
         entry.line = location.startLine;
         entry.column = location.startColumn;
         entry.codegenSuccessful = !error->isValid();
-        QQmlJS::QQmlJSAotCompilerStats::addEntry(function->qmlScope->filePath(), entry);
+        QQmlJS::QQmlJSAotCompilerStats::addEntry(
+                m_typeResolver.containedType(function->qmlScope)->filePath(), entry);
     }
 
     return result;
