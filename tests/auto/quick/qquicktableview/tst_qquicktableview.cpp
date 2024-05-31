@@ -283,6 +283,7 @@ private slots:
     // Row and column reordering
     void checkVisualRowColumnAfterReorder();
     void checkColumnRowSizeAfterReorder();
+    void checkColumnRowResizeAfterReorder();
     void checkCellModelIdxAfterReorder();
     void checkEditAfterReorder();
     void checkSelectionAfterReorder();
@@ -7619,6 +7620,73 @@ void tst_QQuickTableView::checkColumnRowSizeAfterReorder()
     QCOMPARE(tableView->rowHeight(0), 20);
     QCOMPARE(tableView->rowHeight(1), 30);
     QCOMPARE(tableView->rowHeight(2), 10);
+}
+
+void tst_QQuickTableView::checkColumnRowResizeAfterReorder()
+{
+    LOAD_TABLEVIEW("reordertableview.qml"); // gives us 'tableView' variable
+
+    const int sectionCount = 6;
+    QJSEngine *engine = qmlEngine(tableView);
+    QJSValue tableViewObj = engine->newQObject(tableView);
+    engine->globalObject().setProperty("tableView", tableViewObj);
+    QJSValue getSectionSize = engine->evaluate("( function(column) { "
+                                               "const explicitWidth = tableView.explicitColumnWidth(column);"
+                                               "if (explicitWidth === 0)"
+                                               "    return 0;"
+                                               "else if (explicitWidth > 0)"
+                                               "    return Math.max(explicitWidth, 30);"
+                                               "return tableView.implicitColumnWidth(column);"
+                                               "} )");
+
+    tableView->setColumnWidthProvider(getSectionSize);
+    tableView->setRowHeightProvider(getSectionSize);
+
+    auto model = TestModelAsVariant(sectionCount, sectionCount);
+
+    tableView->setModel(model);
+    tableView->setResizableColumns(true);
+    tableView->setResizableRows(true);
+
+    WAIT_UNTIL_POLISHED;
+
+    const QSignalSpy columMovedSpy(tableView, &QQuickTableView::columnMoved);
+    const QSignalSpy rowMovedSpy(tableView, &QQuickTableView::rowMoved);
+
+    const int moveIndex = 2;
+
+    // Move row and column
+    tableView->moveColumn(0, moveIndex);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(columMovedSpy.size(), 3);
+
+    tableView->moveRow(0, moveIndex);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(rowMovedSpy.size(), 3);
+
+    const auto item = tableView->itemAtIndex(tableView->index(moveIndex, moveIndex));
+    QVERIFY(item);
+
+    const qreal columnStartWidth = tableView->columnWidth(moveIndex);
+    const qreal rowStartHeight = tableView->rowHeight(moveIndex);
+
+    const QPoint dragLength(100, 100);
+    QQuickWindow *window = item->window();
+
+    const QPoint localPos = QPoint(item->width(), item->height());
+    const QPoint startPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+    const qreal startDist = qApp->styleHints()->startDragDistance();
+    const QPoint startDragDist = QPoint(startDist + 1, startDist + 1);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos);
+    QTest::mouseMove(window, startPos + startDragDist);
+    QTest::mouseMove(window, startPos + dragLength);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitColumnWidth(moveIndex), columnStartWidth + dragLength.x() - startDragDist.x());
+    QCOMPARE(tableView->explicitRowHeight(moveIndex), rowStartHeight + dragLength.y() - startDragDist.y());
 }
 
 void tst_QQuickTableView::checkCellModelIdxAfterReorder()
