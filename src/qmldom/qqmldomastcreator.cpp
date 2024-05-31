@@ -1320,7 +1320,9 @@ void QQmlDomAstCreator::endVisit(AST::UiEnumDeclaration *)
 
 bool QQmlDomAstCreator::visit(AST::UiEnumMemberList *el)
 {
-    EnumItem it(el->member.toString(), el->value);
+    EnumItem it(el->member.toString(), el->value,
+                el->valueToken.isValid() ? EnumItem::ValueKind::ExplicitValue
+                                         : EnumItem::ValueKind::ImplicitValue);
     EnumDecl &eDecl = std::get<EnumDecl>(currentNode().value);
     Path itPathFromDecl = eDecl.addValue(it);
     const auto map = createMap(DomType::EnumItem, itPathFromDecl, nullptr);
