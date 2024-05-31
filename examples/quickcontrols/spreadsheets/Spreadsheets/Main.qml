@@ -62,15 +62,15 @@ ApplicationWindow {
 
                 required property var index
                 required property bool selected
-                required property bool current
                 required property bool containsDrag
                 readonly property real cellPadding: 8
+                readonly property bool containsMenu: columnMenu.column === column
 
                 implicitWidth: horizontalTitle.implicitWidth + (cellPadding * 2)
                 implicitHeight: Math.max(horizontalHeaderView.height,
                                          horizontalTitle.implicitHeight + (cellPadding * 2))
                 border {
-                    width: containsDrag || current ? 1 : 0
+                    width: containsDrag || containsMenu ? 1 : 0
                     color: palette.highlight
                 }
                 color: selected ? palette.highlight : palette.button
@@ -96,7 +96,8 @@ ApplicationWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    anchors.margins: horizontalHeaderDelegate.cellPadding / 2
+                    anchors.leftMargin: horizontalHeaderDelegate.cellPadding / 2
+                    anchors.rightMargin: horizontalHeaderDelegate.cellPadding / 2
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
 
                     onPressed: function(event) {
@@ -288,7 +289,8 @@ ApplicationWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    anchors.margins: verticalHeaderDelegate.cellPadding / 2
+                    anchors.topMargin: verticalHeaderDelegate.cellPadding / 2
+                    anchors.bottomMargin: verticalHeaderDelegate.cellPadding / 2
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
 
                     onPressed: function(event) {
@@ -511,30 +513,37 @@ ApplicationWindow {
                     visibleCellsConnection.blockConnection(true)
                     const current_index = selectionModel.currentIndex
                     const current_cell = cellAtIndex(current_index)
+
+                    let target_cells = new Set()
                     if (mimeDataProvider.size() === 1) {
                         if (selectionModel.hasSelection) {
-                            for (let i in selectionModel.selectedIndexes)
-                                mimeDataProvider.saveDataToModel(0, selectionModel.selectedIndexes[i], model)
+                            for (let i in selectionModel.selectedIndexes) {
+                                const selected_index = selectionModel.selectedIndexes[i]
+                                mimeDataProvider.saveDataToModel(0, selected_index, model)
+                                target_cells.add(tableView.cellAtIndex(selected_index))
+                            }
                         } else {
                             const old_cell = mimeDataProvider.cellAt(0)
-                            const old_index = tableView.index(old_cell.y, old_cell.x)
-                            const new_x = old_cell.x + current_cell.x - mimeDataProvider.sourceCell.x
-                            const new_y = old_cell.y + current_cell.y - mimeDataProvider.sourceCell.y
-                            mimeDataProvider.saveDataToModel(0, index(new_y, new_x), model)
+                            let new_cell = Qt.point(old_cell.x, old_cell.y)
+                            new_cell.x += current_cell.x - mimeDataProvider.sourceCell.x
+                            new_cell.y += current_cell.y - mimeDataProvider.sourceCell.y
+                            mimeDataProvider.saveDataToModel(0, index(new_cell.y, new_cell.x), model)
+                            target_cells.add(new_cell)
                         }
                     } else if (mimeDataProvider.size() > 1) {
                         for (let i = 0; i < mimeDataProvider.size(); ++i) {
                             let cell_i = mimeDataProvider.cellAt(i)
                             cell_i.x += current_cell.x - mimeDataProvider.sourceCell.x
                             cell_i.y += current_cell.y - mimeDataProvider.sourceCell.y
-                            const index_i = index(cell_i.y, cell_i.x)
-                            mimeDataProvider.saveDataToModel(i, index_i, model)
+                            mimeDataProvider.saveDataToModel(i, index(cell_i.y, cell_i.x), model)
+                            target_cells.add(cell_i)
                         }
                     }
                     if (mimeDataProvider.includeCutData) {
                         for (let i = 0; i < mimeDataProvider.size(); ++i) {
                             const cell_i = mimeDataProvider.cellAt(i)
-                            model.clearItemData(index(cell_i.y, cell_i.x))
+                            if (!target_cells.has(cell_i))
+                                model.clearItemData(index(cell_i.y, cell_i.x))
                         }
                         mimeDataProvider.includeCutData = false
                     }
