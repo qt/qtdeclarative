@@ -1912,6 +1912,9 @@ void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
 
     if (menuItem)
         d->setCurrentIndex(d->contentModel->indexOf(menuItem, nullptr), Qt::PopupFocusReason);
+    else
+        d->setCurrentIndex(-1, Qt::PopupFocusReason);
+
     open();
 }
 
@@ -1923,7 +1926,9 @@ void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
     Opens the menu at the mouse cursor on desktop platforms that have a mouse cursor
     available, and otherwise centers the menu over its \a parent item.
 
-    The menu can be optionally aligned to a specific menu \a item.
+    The menu can be optionally aligned to a specific menu \a item. This item will
+    then become \l {currentIndex}{current.} If no \a item is specified, \l currentIndex
+    will be set to \c -1.
 
     \sa Popup::open()
 */
@@ -1936,7 +1941,9 @@ void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
     Opens the menu at the specified position \a pos in the popups coordinate system,
     that is, a coordinate relative to its \a parent item.
 
-    The menu can be optionally aligned to a specific menu \a item.
+    The menu can be optionally aligned to a specific menu \a item. This item will
+    then become \l {currentIndex}{current.} If no \a item is specified, \l currentIndex
+    will be set to \c -1.
 
     \sa Popup::open()
 */
@@ -1949,7 +1956,9 @@ void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
     Opens the menu at the specified position \a x, \a y in the popups coordinate system,
     that is, a coordinate relative to its \a parent item.
 
-    The menu can be optionally aligned to a specific menu \a item.
+    The menu can be optionally aligned to a specific menu \a item. This item will
+    then become \l {currentIndex}{current.} If no \a item is specified, \l currentIndex
+    will be set to \c -1.
 
     \sa dismiss(), Popup::open()
 */
