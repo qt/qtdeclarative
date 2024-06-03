@@ -627,7 +627,7 @@ private:
 
         if (!objectName.isEmpty()) {
             qml += indent + "readonly property QtObject " + objectName + ": QtObject {\n";
-            indent += "\t";
+            indent += "    ";
         }
 
         for (auto it = object.begin(); it != object.end(); ++it) {
@@ -649,7 +649,7 @@ private:
         }
 
         if (!objectName.isEmpty()) {
-            indent.chop(1);
+            indent.chop(4);
             qml += indent + "}\n";
         }
 
@@ -1127,12 +1127,12 @@ private:
                 "import QtQml\n"
                 "\n"
                 "QtObject {\n"
-                "\treadonly property QtObject controls: Qt.styleHints.colorScheme === Qt.Light ? light.controls : dark.controls\n\n";
+                "    readonly property QtObject controls: Qt.styleHints.colorScheme === Qt.Light ? light.controls : dark.controls\n\n";
         for (const QString &theme : std::as_const(m_outputConfig).keys()) {
-            result.append("\treadonly property QtObject " + theme.toLower() + ": QtObject {\n");
-            QString indent = "\t\t";
+            result.append("    readonly property QtObject " + theme.toLower() + ": QtObject {\n");
+            QString indent = "        ";
             QString qml = generateQMLForJsonObject(m_outputConfig[theme], "controls", indent);
-            indent.chop(1);
+            indent.chop(4);
             result.append(qml + indent + "}\n");
         }
         result.append("}\n");
