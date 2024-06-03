@@ -61,7 +61,7 @@ T.TextArea {
             visible: control.activeFocus
             width: parent.width
             height: 2
-            y: parent.height
+            y: parent.height - height
             FocusStroke {
                 width: parent.width
                 height: parent.height
