@@ -323,17 +323,17 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
         // We want all related metatypes to be registered by name, so that we can look them up
         // without including the C++ headers. That's the reason for the QMetaType(foo).id() calls.
 
+        const QList<QAnyStringView> namespaces
+                = MetaTypesJsonProcessor::namespaces(classDef);
+
+        const FoundType target = QmlTypesClassDescription::findType(
+                m_types, m_foreignTypes, targetName, namespaces);
+
         if (targetIsNamespace) {
             // We need to figure out if the _target_ is a namespace. If not, it already has a
             // QMetaType and we don't need to generate one.
 
             QString targetTypeName = targetName;
-
-            const QList<QAnyStringView> namespaces
-                    = MetaTypesJsonProcessor::namespaces(classDef);
-
-            const FoundType target = QmlTypesClassDescription::findType(
-                    m_types, m_foreignTypes, targetName, namespaces);
 
             if (!target.javaScript.isEmpty() && target.native.isEmpty())
                 warning(target.javaScript) << "JavaScript type cannot be used as namespace";
@@ -449,6 +449,18 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
                 output << uR"(
     QMetaType::fromType<%1%2>().id();)"_s.arg(
                         className, classDef.kind() == MetaType::Kind::Object ? u" *" : u"");
+            }
+        }
+
+        const auto enums = target.native.enums();
+        for (const auto &enumerator : enums) {
+            output << uR"(
+    QMetaType::fromType<%1::%2>().id();)"_s.arg(
+                    targetName, enumerator.name.toString());
+            if (!enumerator.alias.isEmpty()) {
+                output << uR"(
+    QMetaType::fromType<%1::%2>().id();)"_s.arg(
+                        targetName, enumerator.alias.toString());
             }
         }
     }
