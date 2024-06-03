@@ -35,6 +35,7 @@ private slots:
     void delegateModelRefresh();
     void wheelSnap();
     void wheelSnap_data();
+    void nestedWheelSnap();
 
     void sectionsNoOverlap();
     void metaSequenceAsModel();
@@ -868,6 +869,67 @@ void tst_QQuickListView2::wheelSnap_data()
             << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom
             << QQuickItemView::ApplyRange << QPoint(240, 20) << -390.0 << -800.0 << -200.0 << 10.0
             << 210.0;
+}
+
+void tst_QQuickListView2::nestedWheelSnap()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("nestedSnap.qml")));
+
+    quint64 timestamp = 10;
+    auto sendWheelEvent = [&timestamp, &window](const QPoint &pixelDelta, Qt::ScrollPhase phase) {
+        const QPoint pos(100, 100);
+        QWheelEvent event(pos, window.mapToGlobal(pos), pixelDelta, pixelDelta, Qt::NoButton,
+                          Qt::NoModifier, phase, false, Qt::MouseEventSynthesizedBySystem);
+        event.setAccepted(false);
+        event.setTimestamp(timestamp);
+        QGuiApplication::sendEvent(&window, &event);
+        timestamp += 50;
+    };
+
+    QQuickListView *outerListView = qobject_cast<QQuickListView *>(window.rootObject());
+    QTRY_VERIFY(outerListView);
+    QSignalSpy outerCurrentIndexSpy(outerListView, &QQuickListView::currentIndexChanged);
+    int movingAtIndex = -1;
+
+    // send horizontal pixel-delta wheel events with phases; confirm that ListView hits the next item boundary
+    sendWheelEvent({}, Qt::ScrollBegin);
+    for (int i = 1; i < 4; ++i) {
+        sendWheelEvent({-50, 0}, Qt::ScrollUpdate);
+        if (movingAtIndex < 0 && outerListView->isMoving())
+            movingAtIndex = i;
+    }
+    QVERIFY(outerListView->isDragging());
+    sendWheelEvent({}, Qt::ScrollEnd);
+    QCOMPARE(outerListView->isDragging(), false);
+    QTRY_COMPARE(outerListView->isMoving(), false); // wait until it stops
+    qCDebug(lcTests) << "outer got moving after" << movingAtIndex
+                     << "horizontal events; stopped at" << outerListView->contentX() << outerListView->currentIndex();
+    QCOMPARE_GT(movingAtIndex, 0);
+    QCOMPARE(outerListView->contentX(), 300);
+    QCOMPARE(outerCurrentIndexSpy.size(), 1);
+
+    movingAtIndex = -1;
+    QQuickListView *innerListView = qobject_cast<QQuickListView *>(outerListView->currentItem());
+    QTRY_VERIFY(innerListView);
+    QSignalSpy innerCurrentIndexSpy(innerListView, &QQuickListView::currentIndexChanged);
+
+    // send vertical pixel-delta wheel events with phases; confirm that ListView hits the next item boundary
+    sendWheelEvent({}, Qt::ScrollBegin);
+    for (int i = 1; i < 4; ++i) {
+        sendWheelEvent({0, -50}, Qt::ScrollUpdate);
+        if (movingAtIndex < 0 && innerListView->isMoving())
+            movingAtIndex = i;
+    }
+    QVERIFY(innerListView->isDragging());
+    sendWheelEvent({}, Qt::ScrollEnd);
+    QCOMPARE(innerListView->isDragging(), false);
+    QTRY_COMPARE(innerListView->isMoving(), false); // wait until it stops
+    qCDebug(lcTests) << "inner got moving after" << movingAtIndex
+                     << "vertical events; stopped at" << innerListView->contentY() << innerListView->currentIndex();
+    QCOMPARE_GT(movingAtIndex, 0);
+    QCOMPARE(innerListView->contentY(), 300);
+    QCOMPARE(innerCurrentIndexSpy.size(), 1);
 }
 
 class FriendlyItemView : public QQuickItemView
