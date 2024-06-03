@@ -446,6 +446,10 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
                     }
             } else {
                 Q_ASSERT(!className.isEmpty());
+
+                // Since we don't have a QML name for this type, it can't refer to another type.
+                Q_ASSERT(className == targetName);
+
                 output << uR"(
     QMetaType::fromType<%1%2>().id();)"_s.arg(
                         className, classDef.kind() == MetaType::Kind::Object ? u" *" : u"");
