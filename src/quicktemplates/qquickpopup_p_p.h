@@ -94,6 +94,8 @@ public:
     bool handleTouchEvent(QQuickItem *item, QTouchEvent *event);
 #endif
 
+    QPointF dropShadowOffset() const;
+    void setEffectivePosFromWindowPos(const QPointF &windowPos);
     void reposition();
 
     bool usePopupWindow() const;
@@ -167,8 +169,7 @@ public:
     int touchId = -1;
     qreal x = 0;
     qreal y = 0;
-    qreal effectiveX = 0;
-    qreal effectiveY = 0;
+    QPointF effectivePos;
     qreal margins = -1;
     qreal topMargin = 0;
     qreal leftMargin = 0;

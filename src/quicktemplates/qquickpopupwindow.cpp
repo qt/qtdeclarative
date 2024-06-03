@@ -243,20 +243,9 @@ void QQuickPopupWindow::handlePopupPositionChangeFromWindowSystem(const QPoint &
         return;
     QQuickPopupPrivate *popupPrivate = QQuickPopupPrivate::get(popup);
 
-    const auto localPos = global2Local(pos);
-
-    const qreal oldX = popup->x();
-    const qreal oldY = popup->y();
-
-    qCDebug(lcPopupWindow) << "A window system event changed the popup's position to be " << localPos;
-
-    popupPrivate->x = popupPrivate->effectiveX = localPos.x();
-    popupPrivate->y = popupPrivate->effectiveY = localPos.y();
-
-    if (!qFuzzyCompare(oldX, localPos.x()))
-        emit popup->xChanged();
-    if (!qFuzzyCompare(oldY, localPos.y()))
-        emit popup->yChanged();
+    const auto windowPos = global2Local(pos);
+    qCDebug(lcPopupWindow) << "A window system event changed the popup's position to be " << windowPos;
+    popupPrivate->setEffectivePosFromWindowPos(windowPos);
 }
 
 void QQuickPopupWindow::implicitWidthChanged()
