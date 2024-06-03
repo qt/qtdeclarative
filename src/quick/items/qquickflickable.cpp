@@ -1646,7 +1646,6 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         d->pressed = false;
         d->scrollingPhase = false;
         d->draggingEnding();
-        event->accept();
         returnToBounds();
         d->lastPosTime = -1;
         d->stealMouse = false;
