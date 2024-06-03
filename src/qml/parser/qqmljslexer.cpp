@@ -1007,7 +1007,7 @@ again:
 
 int Lexer::scanString(ScanStringMode mode)
 {
-    QChar quote = (mode == TemplateContinuation) ? QChar(TemplateHead) : QChar(mode);
+    const char16_t quote = mode == TemplateContinuation ? TemplateHead : mode;
     // we actually use T_STRING_LITERAL also for multiline strings, should we want to
     // change that we should set it to:
     //     _state.tokenKind == T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL ||
