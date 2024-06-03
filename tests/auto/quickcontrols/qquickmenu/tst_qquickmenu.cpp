@@ -103,6 +103,8 @@ private slots:
     void dontUseNativeMenuWindowsChanges();
     void nativeMixedItems();
     void textPadding();
+    void resetCurrentIndexUponPopup_data();
+    void resetCurrentIndexUponPopup();
 
 private:
     bool nativeMenuSupported = false;
@@ -2682,6 +2684,62 @@ void tst_QQuickMenu::textPadding()
         auto menuItem = qobject_cast<QQuickMenuItem *>(contextMenu->itemAt(i));
         QCOMPARE(menuItem->textPadding(), 100);
     }
+}
+
+void tst_QQuickMenu::resetCurrentIndexUponPopup_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+
+    QTest::newRow("Item") << QQuickPopup::Item;
+    QTest::newRow("Window") << QQuickPopup::Window;
+
+    // Note: a call to Menu.popup() will be a blocking call on many platforms
+    // when using native menus (e.g macOS and Windows). We can therefore not
+    // check a Menus internal state, nor make a MenuItem current, while it's visible.
+    // QTest::newRow("Native") << QQuickPopup::Native;
+}
+
+void tst_QQuickMenu::resetCurrentIndexUponPopup()
+{
+    // Check that currentIndex is reset back to -1 when
+    // a menu is repopened using the popup() function without
+    // providing a MenuItem as argument.
+    QFETCH(QQuickPopup::PopupType, popupType);
+    SKIP_IF_NO_WINDOW_ACTIVATION
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    centerOnScreen(window);
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+
+    menu->setPopupType(popupType);
+
+    QCOMPARE(menu->currentIndex(), -1);
+    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
+
+    menu->popup();
+    QTRY_VERIFY(menu->isOpened());
+    QCOMPARE(menu->currentIndex(), -1);
+    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
+
+    menu->setCurrentIndex(1);
+    QCOMPARE(menu->currentIndex(), 1);
+    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(1));
+
+    menu->close();
+    QTRY_VERIFY(!menu->isVisible());
+
+    menu->popup();
+    QTRY_VERIFY(menu->isOpened());
+    QCOMPARE(menu->currentIndex(), -1);
+    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)
