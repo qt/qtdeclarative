@@ -80,10 +80,16 @@ QQuickQmlGenerator::QQuickQmlGenerator(const QString fileName, QQuickVectorImage
 QQuickQmlGenerator::~QQuickQmlGenerator()
 {
     if (!outputFileName.isEmpty()) {
-        QFile outFile(outputFileName);
-        outFile.open(QIODevice::WriteOnly);
-        outFile.write(result);
-        outFile.close();
+        QFileInfo fileInfo(outputFileName);
+        QDir dir(fileInfo.absolutePath());
+        if (!dir.exists() && !dir.mkpath(QStringLiteral("."))) {
+            qCWarning(lcQuickVectorImage) << "Failed to create path" << dir.absolutePath();
+        } else {
+            QFile outFile(outputFileName);
+            outFile.open(QIODevice::WriteOnly);
+            outFile.write(result);
+            outFile.close();
+        }
     }
 
     if (lcQuickVectorImage().isDebugEnabled()) {
