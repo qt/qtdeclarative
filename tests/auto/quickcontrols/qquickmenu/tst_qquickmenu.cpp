@@ -102,6 +102,8 @@ private slots:
     void nativeMenuSeparator();
     void dontUseNativeMenuWindowsChanges();
     void nativeMixedItems();
+    void effectivePosition_data();
+    void effectivePosition();
     void textPadding();
     void resetCurrentIndexUponPopup_data();
     void resetCurrentIndexUponPopup();
@@ -2623,6 +2625,64 @@ void tst_QQuickMenu::nativeMixedItems()
         QVERIFY(action2);
         QCOMPARE(action2->text(), "subAction2");
     }
+}
+void tst_QQuickMenu::effectivePosition_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+
+    QTest::newRow("Item") << QQuickPopup::Item;
+    QTest::newRow("Window") << QQuickPopup::Window;
+}
+
+void tst_QQuickMenu::effectivePosition()
+{
+    // Check that the top-left corner of the background delegate
+    // is placed at the requested menu position. For this test to make
+    // sense, the background delegate needs to be responsible for drawing
+    // the window frame (if any), which Qt::FramelessWindowHint implies.
+    QFETCH(QQuickPopup::PopupType, popupType);
+    SKIP_IF_NO_WINDOW_ACTIVATION
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    centerOnScreen(window);
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+
+    // This test only makes sense when QQuickMenu is supposed to draw the
+    // window frame. If that changes, then this test will no longer be needed.
+    QVERIFY(QQuickMenuPrivate::get(menu)->popupWindowType() & Qt::FramelessWindowHint);
+
+    menu->setPopupType(popupType);
+
+    // Move the background delegate a bit into the popup, to simulate using a drop-shadow.
+    const QPointF insets = QPointF{20, 10};
+    menu->setLeftInset(insets.x());
+    menu->setTopInset(insets.y());
+
+    const QPointF requestedPos{100, 100};
+    menu->popup(requestedPos);
+    QTRY_VERIFY(menu->isOpened());
+
+    // Unless the popup was moved to fit inside the window (which should not
+    // be the case in this test), we report back to the application that it's
+    // placed at the requested position.
+    QTRY_COMPARE(menu->position(), requestedPos);
+    QCOMPARE(menu->x(), requestedPos.x());
+    QCOMPARE(menu->y(), requestedPos.y());
+
+    // But in reality, it's the background delegate that is placed at the
+    // requested position.
+    const auto background = menu->background();
+    QVERIFY(background);
+    const QPointF actualBgPos = background->mapToItem(menu->parentItem(), {0, 0});
+    QCOMPARE(actualBgPos, requestedPos);
 }
 
 void tst_QQuickMenu::textPadding()

@@ -573,6 +573,54 @@ bool QQuickPopupPrivate::handleHoverEvent(QQuickItem *item, QHoverEvent *event)
     }
 }
 
+QPointF QQuickPopupPrivate::dropShadowOffset() const
+{
+    // If the popupWindowType has Qt::FramelessWindowHint set, it means
+    // that the background delegate is responsible for drawing the window
+    // frame. And to make room for a drop-shadow in that case, the delegate
+    // can be shifted into the popup using insets, to allow the shadow to
+    // be drawn between the edge of the window and the edge of the frame.
+    // This function will report the size of that shadow, to ensure that we
+    // place the popup such that the top-left corner of the background
+    // frame ends up at the requested position, rather then the top-left
+    // corner of the drop-shadow. If the insets are negative, the shadow
+    // is drawn on the outside of the popup, and the corner of the frame
+    // should already be at 0, 0.
+    if (popupWindowType() & Qt::FramelessWindowHint) {
+        return {
+            popupItem->leftInset() > 0 ? popupItem->leftInset() : 0,
+            popupItem->topInset() > 0 ? popupItem->topInset() : 0
+        };
+    }
+
+    return {0, 0};
+}
+
+void QQuickPopupPrivate::setEffectivePosFromWindowPos(const QPointF &windowPos)
+{
+    // Popup operates internally with three different positions; requested
+    // position, effective position, and window position. The first is the
+    // position requested by the application, and the second is where the popup
+    // is actually placed. The reason for placing it on a different position than
+    // the one requested, is to keep it inside the window (in case of Popup.Item),
+    // or the screen (in case of Popup.Window).
+    // Additionally, since a popup can set Qt::FramelessWindowHint and draw the
+    // window frame from the background delegate, the effective position in that
+    // case is adjusted to be the top-left corner of the background delegate, rather
+    // than the top-left corner of the window. This allowes the background delegate
+    // to render a drop-shadow between the edge of the window and the background frame.
+    // Finally, the window position is the actual position of the window, including
+    // any drop-shadow effects. This posision can be calculated by taking
+    // the effective position and subtract the dropShadowOffset().
+    Q_Q(QQuickPopup);
+    const QPointF oldEffectivePos = effectivePos;
+    effectivePos = windowPos + dropShadowOffset();
+    if (!qFuzzyCompare(oldEffectivePos.x(), effectivePos.x()))
+        emit q->xChanged();
+    if (!qFuzzyCompare(oldEffectivePos.y(), effectivePos.y()))
+        emit q->yChanged();
+}
+
 #if QT_CONFIG(quicktemplates2_multitouch)
 bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
 {
@@ -1202,8 +1250,7 @@ void QQuickPopup::close()
 */
 qreal QQuickPopup::x() const
 {
-    Q_D(const QQuickPopup);
-    return d->effectiveX;
+    return d_func()->effectivePos.x();
 }
 
 void QQuickPopup::setX(qreal x)
@@ -1221,8 +1268,7 @@ void QQuickPopup::setX(qreal x)
 */
 qreal QQuickPopup::y() const
 {
-    Q_D(const QQuickPopup);
-    return d->effectiveY;
+    return d_func()->effectivePos.y();
 }
 
 void QQuickPopup::setY(qreal y)
@@ -1233,8 +1279,7 @@ void QQuickPopup::setY(qreal y)
 
 QPointF QQuickPopup::position() const
 {
-    Q_D(const QQuickPopup);
-    return QPointF(d->effectiveX, d->effectiveY);
+    return d_func()->effectivePos;
 }
 
 void QQuickPopup::setPosition(const QPointF &pos)
