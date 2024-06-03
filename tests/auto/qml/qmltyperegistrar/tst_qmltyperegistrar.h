@@ -884,6 +884,7 @@ private slots:
     void constReturnType();
 
     void usingDeclaration();
+    void enumsRegistered();
 
 private:
     QByteArray qmltypesData;

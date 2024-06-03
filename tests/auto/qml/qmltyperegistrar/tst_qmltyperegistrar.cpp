@@ -1037,4 +1037,31 @@ void tst_qmltyperegistrar::usingDeclaration()
     })"));
 }
 
+void tst_qmltyperegistrar::enumsRegistered()
+{
+    QCOMPARE(QMetaType::fromName("SizeEnums::Unit"), QMetaType::fromType<SizeEnums::Unit>());
+    QCOMPARE(QMetaType::fromName("Local::Flag"), QMetaType::fromType<Local::Flag>());
+    QCOMPARE(QMetaType::fromName("Local::Flags"), QMetaType::fromType<Local::Flags>());
+    QCOMPARE(QMetaType::fromName("ValueTypeWithEnum1::Quality"),
+             QMetaType::fromType<ValueTypeWithEnum1::Quality>());
+    QCOMPARE(QMetaType::fromName("ValueTypeWithEnum2::Quality"),
+             QMetaType::fromType<ValueTypeWithEnum2::Quality>());
+    QCOMPARE(QMetaType::fromName("BaseNamespace::BBB"), QMetaType::fromType<BaseNamespace::BBB>());
+    QCOMPARE(QMetaType::fromName("ExtensionValueType::EEE"),
+             QMetaType::fromType<ExtensionValueType::EEE>());
+    QCOMPARE(QMetaType::fromName("TypedEnum::UChar"), QMetaType::fromType<TypedEnum::UChar>());
+    QCOMPARE(QMetaType::fromName("TypedEnum::Int8_T"), QMetaType::fromType<TypedEnum::Int8_T>());
+    QCOMPARE(QMetaType::fromName("TypedEnum::UInt8_T"), QMetaType::fromType<TypedEnum::UInt8_T>());
+    QCOMPARE(QMetaType::fromName("TypedEnum::Int16_T"), QMetaType::fromType<TypedEnum::Int16_T>());
+    QCOMPARE(QMetaType::fromName("TypedEnum::UInt16_T"), QMetaType::fromType<TypedEnum::UInt16_T>());
+    QCOMPARE(QMetaType::fromName("TypedEnum::Int32_T"), QMetaType::fromType<TypedEnum::Int32_T>());
+    QCOMPARE(QMetaType::fromName("TypedEnum::UInt32_T"), QMetaType::fromType<TypedEnum::UInt32_T>());
+    QCOMPARE(QMetaType::fromName("TypedEnum::S"), QMetaType::fromType<TypedEnum::S>());
+    QCOMPARE(QMetaType::fromName("TypedEnum::T"), QMetaType::fromType<TypedEnum::T>());
+    QCOMPARE(QMetaType::fromName("TypedEnum::U"), QMetaType::fromType<TypedEnum::U>());
+    QCOMPARE(QMetaType::fromName("TypedEnum::V"), QMetaType::fromType<TypedEnum::V>());
+    QCOMPARE(QMetaType::fromName("NetworkManager::NM"), QMetaType::fromType<NetworkManager::NM>());
+    QCOMPARE(QMetaType::fromName("NotNamespace::Abc"), QMetaType::fromType<NotNamespace::Abc>());
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)
