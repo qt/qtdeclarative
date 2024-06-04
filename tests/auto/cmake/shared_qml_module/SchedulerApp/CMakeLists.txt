@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Quick)
 
+qt_standard_project_setup(REQUIRES 6.8)
+
 qt_add_executable(schedulerapp
     main.cpp
 )
