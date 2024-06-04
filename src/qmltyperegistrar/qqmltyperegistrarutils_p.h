@@ -29,6 +29,8 @@ QDebug warning(QAnyStringView fileName, int lineNumber = 0);
 
 QDebug error(QAnyStringView fileName, int lineNumber = 0);
 
+int mergeQtConfFiles(const QString &pathToList);
+
 QT_END_NAMESPACE
 
 #endif // QQMLTYPEREGISTRAR_UTILS_P_H

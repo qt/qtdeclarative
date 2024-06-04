@@ -107,6 +107,11 @@ int main(int argc, char **argv)
             u"Extract QML types from a module and use QML_FOREIGN to register them"_s);
     parser.addOption(extract);
 
+    QCommandLineOption mergeQtConf("merge-qt-conf"_L1);
+    mergeQtConf.setValueName("qtconf list"_L1);
+    mergeQtConf.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOption(mergeQtConf);
+
     parser.addPositionalArgument(QStringLiteral("[MOC generated json file]"),
                                  QStringLiteral("MOC generated json output."));
 
@@ -115,6 +120,10 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
 
     parser.process(arguments);
+
+    if (parser.isSet(mergeQtConf)) {
+        return mergeQtConfFiles(parser.value(mergeQtConf));
+    }
 
     const QString module = parser.value(importNameOption);
 

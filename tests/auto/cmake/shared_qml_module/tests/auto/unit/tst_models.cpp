@@ -31,10 +31,12 @@ void tst_models::qtconf()
 {
     auto importPaths = QLibraryInfo::paths(QLibraryInfo::QmlImportsPath);
     QCOMPARE_GE(importPaths.size(), 2);
-    if (importPaths.at(0).endsWith("shared_qml_module")) {
-        QVERIFY(importPaths.at(1).endsWith("external/nested"));
-    } else if (importPaths.at(0).endsWith("external/nested")) {
-        QVERIFY(importPaths.at(1).endsWith("shared_qml_module"));
+    if (importPaths.at(0).endsWith("nested")) {
+        QDir dir(importPaths.at(1));
+        QVERIFY(dir.exists("Scheduler"));
+    } else if (importPaths.at(1).endsWith("nested")) {
+        QDir dir(importPaths.at(0));
+        QVERIFY(dir.exists("Scheduler"));
     } else {
         QFAIL("Expected import paths were not found");
     }
