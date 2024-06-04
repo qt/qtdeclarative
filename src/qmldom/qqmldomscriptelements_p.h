@@ -197,6 +197,15 @@ public:
         m_values.insert(std::make_pair(name, v));
     }
 
+    QCborValue value() const override
+    {
+        auto it = m_values.find(Fields::value);
+        if (it == m_values.cend())
+            return {};
+
+        return it->second;
+    }
+
 private:
     /*!
        \internal

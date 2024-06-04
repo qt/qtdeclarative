@@ -4050,6 +4050,11 @@ void tst_qmlls_utils::completions_data()
             << testFile("completions/boundComponents.qml") << 14 << 40
             << ExpectedCompletions{ { u"inRoot"_s, CompletionItemKind::Property } }
             << QStringList{ u"root"_s };
+
+    QTest::newRow("insideTemplate")
+            << testFile("completions/templateLiterals.qml") << 8 << 49
+            << ExpectedCompletions{ { u"helloProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ forStatementCompletion };
 }
 
 void tst_qmlls_utils::completions()

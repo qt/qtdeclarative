@@ -440,8 +440,6 @@ public:
     bool visit(AST::ClassExpression *) override;
     void endVisit(AST::ClassExpression *) override;
 
-    bool visit(AST::TemplateLiteral *) override;
-
     bool visit(AST::TryStatement *) override;
     void endVisit(AST::TryStatement *) override;
 
@@ -521,6 +519,8 @@ public:
     void endVisit(AST::PatternElementList *) override;
     void endVisit(AST::PatternPropertyList *) override;
     void endVisit(AST::FormalParameterList *el) override;
+    void endVisit(AST::TemplateLiteral *) override;
+    void endVisit(AST::TaggedTemplate *) override;
 
 
     // literals and ids
@@ -596,7 +596,7 @@ private:
     template<typename U>
     using RequiresCustomIteration =
             IsInList<U, AST::PatternElementList, AST::PatternPropertyList, AST::FormalParameterList,
-                     AST::VariableDeclarationList>;
+                     AST::VariableDeclarationList, AST::TemplateLiteral>;
 
     enum VisitorKind : bool { DomCreator, ScopeCreator };
     /*! \internal
@@ -635,6 +635,8 @@ private:
             } else if constexpr (std::is_same_v<T, AST::PatternElementList>) {
                 AST::Node::accept(it->elision, this);
                 AST::Node::accept(it->element, this);
+            } else if constexpr (std::is_same_v<T, AST::TemplateLiteral>) {
+                AST::Node::accept(it->expression, this);
             } else {
                 Q_UNREACHABLE();
             }

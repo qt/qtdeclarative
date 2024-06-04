@@ -565,6 +565,7 @@ QMLDOM_FIELD(symbol);
 QMLDOM_FIELD(symbols);
 QMLDOM_FIELD(target);
 QMLDOM_FIELD(targetPropertyName);
+QMLDOM_FIELD(templateLiteral);
 QMLDOM_FIELD(text);
 QMLDOM_FIELD(type);
 QMLDOM_FIELD(typeArgument);
