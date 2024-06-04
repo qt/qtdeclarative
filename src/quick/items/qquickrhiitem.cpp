@@ -114,8 +114,22 @@ QT_BEGIN_NAMESPACE
     \snippet qquickrhiitem/qquickrhiitem_intro.cpp 0
 
     It is notable that this simple class is almost exactly the same as the code
-    shown in the \l QRhiWidget introduction. The vertex and fragment shaders
-    are the same as shown there.
+    shown in the \l QRhiWidget introduction. The vertex and fragment shaders are
+    the same as well. These are provided as Vulkan-style GLSL source code and
+    must be processed first by the Qt shader infrastructure first. This is
+    achieved either by running the \c qsb command-line tool manually, or by
+    using the \l{Qt Shader Tools Build System Integration}{qt_add_shaders()}
+    function in CMake. The QQuickRhiItem loads these pre-processed \c{.qsb}
+    files that are shipped with the application. See \l{Qt Shader Tools} for
+    more information about Qt's shader translation infrastructure.
+
+    \c{color.vert}
+
+    \snippet qquickrhiitem/qquickrhiitem_intro.vert 0
+
+    \c{color.frag}
+
+    \snippet qquickrhiitem/qquickrhiitem_intro.frag 0
 
     Once exposed to QML (note the \c QML_NAMED_ELEMENT), our custom item can be
     instantiated in any scene. (after importing the appropriate \c URI specified
@@ -125,7 +139,7 @@ QT_BEGIN_NAMESPACE
     ExampleRhiItem {
         anchors.fill: parent
         anchors.margins: 10
-        NumberAnimation on angle { from: 0; to: 360: duration: 5000; loops: Animation.Infinite }
+        NumberAnimation on angle { from: 0; to: 360; duration: 5000; loops: Animation.Infinite }
     }
     \endcode
 
