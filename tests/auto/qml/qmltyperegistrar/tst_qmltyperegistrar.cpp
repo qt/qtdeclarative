@@ -1064,4 +1064,9 @@ void tst_qmltyperegistrar::enumsRegistered()
     QCOMPARE(QMetaType::fromName("NotNamespace::Abc"), QMetaType::fromType<NotNamespace::Abc>());
 }
 
+void tst_qmltyperegistrar::doNotDuplicateQtNamespace()
+{
+    QVERIFY(!qmltypesData.contains(R"(file: "qnamespace.h")"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

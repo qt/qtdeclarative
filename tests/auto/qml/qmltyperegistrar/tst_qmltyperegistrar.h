@@ -17,6 +17,7 @@
 #include <QtQml/qqmlcomponent.h>
 
 #include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qnamespace.h>
 #include <QtCore/qproperty.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qtemporaryfile.h>
@@ -810,6 +811,15 @@ public:
     myint a() const { return 10; }
 };
 
+class UsesQtNamespace : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(Qt::Key key READ key CONSTANT)
+public:
+    Qt::Key key() const { return Qt::Key_Escape; }
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -885,6 +895,7 @@ private slots:
 
     void usingDeclaration();
     void enumsRegistered();
+    void doNotDuplicateQtNamespace();
 
 private:
     QByteArray qmltypesData;

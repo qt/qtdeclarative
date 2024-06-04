@@ -357,10 +357,13 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 addRelatedType(foreignType);
                 seenQmlPrefix = true;
             }
-            if (name == S_FOREIGN) {
-                const QAnyStringView foreign = obj.value;
-                if (!addRelatedName(foreign, namespaces(foreignType)))
-                    unresolvedForeignNames.insert(foreign);
+            if (name == S_FOREIGN
+                    || name == S_EXTENDED
+                    || name == S_ATTACHED
+                    || name == S_SEQUENCE) {
+                ResolvedTypeAlias foreign(obj.value, m_usingDeclarations);
+                if (!addRelatedName(foreign.type, namespaces(foreignType)))
+                    unresolvedForeignNames.insert(foreign.type);
                 break;
             }
         }
