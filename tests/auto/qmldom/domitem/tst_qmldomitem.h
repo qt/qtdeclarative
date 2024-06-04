@@ -3558,6 +3558,20 @@ private slots:
         QVERIFY(comments.contains(u"/*Ast Comment*/ "_s));
     }
 
+    void doNotCrashOnMissingLogger()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = QDir::cleanPath(baseDir + u"/astComments.qml"_s);
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        auto filePtr = fileObject.as<QmlFile>();
+        QVERIFY(filePtr);
+        auto typeResolver = filePtr->typeResolver();
+        QVERIFY(typeResolver);
+        auto logger = typeResolver->logger();
+        // make sure that the logger is not use-after-free by checking its content
+        QCOMPARE(logger->fileName(), testFile);
+    }
+
     void commentLocations()
     {
         auto envPtr = DomEnvironment::create(

@@ -224,6 +224,7 @@ public:
     bool isTriviallyCopyable(const QQmlJSScope::ConstPtr &type) const;
 
     bool inherits(const QQmlJSScope::ConstPtr &derived, const QQmlJSScope::ConstPtr &base) const;
+    QQmlJSLogger *logger() const { return m_logger; }
 
 protected:
 
@@ -317,11 +318,14 @@ protected:
 QQmlJSTypeResolver expects to be outlived by its importer and mapper. It crashes when its importer
 or mapper gets destructed. Therefore, you can use this struct to extend the lifetime of its
 dependencies in case you need to store the resolver as a class member.
+QQmlJSTypeResolver also expects to be outlived by the logger used by the importvisitor, while the
+importvisitor actually does not and will not outlive the QQmlJSTypeResolver.
 */
 struct QQmlJSTypeResolverDependencies
 {
     std::shared_ptr<QQmlJSImporter> importer;
     std::shared_ptr<QQmlJSResourceFileMapper> mapper;
+    std::shared_ptr<QQmlJSLogger> logger;
 };
 
 QT_END_NAMESPACE

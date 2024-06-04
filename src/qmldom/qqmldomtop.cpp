@@ -2208,10 +2208,10 @@ void DomEnvironment::clearReferenceCache()
 void DomEnvironment::populateFromQmlFile(MutableDomItem &&qmlFile)
 {
     if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>()) {
-        QQmlJSLogger logger;
-        logger.setFileName(qmlFile.canonicalFilePath());
-        logger.setCode(qmlFilePtr->code());
-        logger.setSilent(true);
+        auto logger = std::make_shared<QQmlJSLogger>();
+        logger->setFileName(qmlFile.canonicalFilePath());
+        logger->setCode(qmlFilePtr->code());
+        logger->setSilent(true);
 
         auto setupFile = [&qmlFilePtr, &qmlFile, this](auto &&visitor) {
             Q_UNUSED(this); // note: integrity requires "this" to be in the capture list, while
@@ -2224,8 +2224,8 @@ void DomEnvironment::populateFromQmlFile(MutableDomItem &&qmlFile)
         if (m_domCreationOptions.testFlag(DomCreationOption::WithSemanticAnalysis)) {
             auto &analysis = semanticAnalysis();
             auto scope = analysis.m_importer->importFile(qmlFile.canonicalFilePath());
-            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(scope, qmlFile, &logger,
-                                                                        analysis.m_importer.get());
+            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(
+                    scope, qmlFile, logger.get(), analysis.m_importer.get());
             v->enableLoadFileLazily(true);
             v->enableScriptExpressions(m_domCreationOptions.testFlag(DomCreationOption::WithScriptExpressions));
 
@@ -2234,8 +2234,8 @@ void DomEnvironment::populateFromQmlFile(MutableDomItem &&qmlFile)
             auto typeResolver =
                     std::make_shared<QQmlJSTypeResolver>(analysis.m_importer.get());
             typeResolver->init(&v->scopeCreator(), nullptr);
-            qmlFilePtr->setTypeResolverWithDependencies(typeResolver,
-                                                        { analysis.m_importer, analysis.m_mapper });
+            qmlFilePtr->setTypeResolverWithDependencies(
+                    typeResolver, { analysis.m_importer, analysis.m_mapper, std::move(logger) });
         } else {
             auto v = std::make_unique<QQmlDomAstCreator>(qmlFile);
             v->enableScriptExpressions(
