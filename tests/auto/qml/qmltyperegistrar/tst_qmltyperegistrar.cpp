@@ -1069,4 +1069,17 @@ void tst_qmltyperegistrar::doNotDuplicateQtNamespace()
     QVERIFY(!qmltypesData.contains(R"(file: "qnamespace.h")"));
 }
 
+void tst_qmltyperegistrar::slotsBeforeInvokables()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "SlotsBeforeInvokables"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Method { name: "bar" }
+        Method { name: "foo" }
+        Method { name: "baz" }
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)
