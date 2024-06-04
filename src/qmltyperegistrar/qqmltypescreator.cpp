@@ -144,7 +144,9 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         exportStrings.append(QUtf8StringView(entry));
 
     m_qml.writeStringListBinding(S_EXPORTS, exportStrings);
-    m_qml.writeBooleanBinding(S_IS_CREATABLE, collector.isCreatable && !collector.isSingleton);
+
+    if (!collector.isCreatable || collector.isSingleton)
+        m_qml.writeBooleanBinding(S_IS_CREATABLE, false);
 
     if (collector.isStructured)
         m_qml.writeBooleanBinding(S_IS_STRUCTURED, true);
