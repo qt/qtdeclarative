@@ -86,6 +86,7 @@ private slots:
     void timeRoundtrip();
 
     void fontSetsStyleName();
+    void fontSetsProperties();
 
 private:
     QQmlEngine engine;
@@ -1481,6 +1482,20 @@ void tst_qqmlqt::fontSetsStyleName() {
     f.setStyleName("Some Style");
 
     QCOMPARE(qvariant_cast<QFont>(object->property("fontProperty")), f);
+}
+
+void tst_qqmlqt::fontSetsProperties() {
+    QQmlComponent component(&engine, testFileUrl("fontProperties.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
+
+    QFont fontProperty = qvariant_cast<QFont>(object->property("fontProperty"));
+    QVERIFY(fontProperty.styleStrategy() & QFont::ContextFontMerging);
+    QCOMPARE(fontProperty.variableAxisTags().size(), 1);
+    QCOMPARE(fontProperty.variableAxisValue("abcd"), 23.0625);
+    QCOMPARE(fontProperty.featureTags().size(), 1);
+    QCOMPARE(fontProperty.featureValue("abcd"), 23);
 }
 
 QTEST_MAIN(tst_qqmlqt)
