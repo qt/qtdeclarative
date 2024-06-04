@@ -36,7 +36,7 @@ void AotStats::insert(const AotStats &other)
 std::optional<QList<QString>> extractAotstatsFilesList(const QString &aotstatsListPath)
 {
     QFile aotstatsListFile(aotstatsListPath);
-    if (!aotstatsListFile.open(QIODevice::ReadOnly | QIODevice::ReadOnly | QIODevice::Text)) {
+    if (!aotstatsListFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qDebug().noquote() << u"Could not open \"%1\" for reading"_s.arg(aotstatsListFile.fileName());
         return std::nullopt;
     }
