@@ -104,6 +104,12 @@ ReturnedValue WeakSetPrototype::method_add(const FunctionObject *b, const Value 
         (!argc || !argv[0].isObject()))
         return scope.engine->throwTypeError();
 
+    QV4::WriteBarrier::markCustom(scope.engine, [&](QV4::MarkStack *ms) {
+        if (scope.engine->memoryManager->gcStateMachine->state <= GCState::FreeWeakSets)
+            return;
+        argv[0].heapObject()->mark(ms);
+    });
+
     that->d()->esTable->set(argv[0], Value::undefinedValue());
     return that.asReturnedValue();
 }
@@ -191,6 +197,10 @@ ReturnedValue SetPrototype::method_add(const FunctionObject *b, const Value *thi
     Scoped<SetObject> that(scope, thisObject);
     if (!that || that->d()->isWeakSet)
         return scope.engine->throwTypeError();
+
+    QV4::WriteBarrier::markCustom(scope.engine, [&](QV4::MarkStack *ms) {
+        argv[0].heapObject()->mark(ms);
+    });
 
     that->d()->esTable->set(argv[0], Value::undefinedValue());
     return that.asReturnedValue();

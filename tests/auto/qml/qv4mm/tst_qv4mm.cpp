@@ -13,6 +13,8 @@
 #include <private/qv4identifiertable_p.h>
 #include <private/qv4arraydata_p.h>
 #include <private/qqmlcomponentattached_p.h>
+#include <private/qv4mapobject_p.h>
+#include <private/qv4setobject_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -37,6 +39,7 @@ private slots:
     void sharedInternalClassDataMarking();
     void gcTriggeredInOnDestroyed();
     void weakValuesAssignedAfterThePhaseThatShouldHandleWeakValues();
+    void mapAndSetKeepValuesAlive();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -500,6 +503,149 @@ void tst_qv4mm::weakValuesAssignedAfterThePhaseThatShouldHandleWeakValues()
         return;
     }
     QVERIFY(ddata->jsWrapper.valueRef()->heapObject()->inUse());
+}
+
+void tst_qv4mm::mapAndSetKeepValuesAlive()
+{
+    {
+        QJSEngine jsEngine;
+        QV4::ExecutionEngine &engine = *jsEngine.handle();
+
+        QV4::Scope scope(&engine);
+        auto map = jsEngine.evaluate("new Map()");
+        QV4::ScopedFunctionObject afunction(scope, engine.memoryManager->alloc<QV4::FunctionObject>()); // hack, we just need about any function object
+        QV4::Value thisObject = QJSValuePrivate::asReturnedValue(&map);
+
+        QVERIFY(!engine.memoryManager->gcBlocked);
+        // no scoped classes, as that would defeat the point of the test
+        // we block the gc instead so that the allocation can't trigger the gc
+        engine.memoryManager->gcBlocked = QV4::MemoryManager::InCriticalSection;
+        QV4::Heap::String *key = engine.newString(QString::fromLatin1("key"));
+        QV4::Heap::String *value = engine.newString(QString::fromLatin1("value"));
+        QV4::Value values[2] = { QV4::Value::fromHeapObject(key), QV4::Value::fromHeapObject(value) };
+        engine.memoryManager->gcBlocked = QV4::MemoryManager::Unblocked;
+        QVERIFY(!key->isMarked());
+        QVERIFY(!value->isMarked());
+
+        auto sm = engine.memoryManager->gcStateMachine.get();
+        sm->reset();
+        while (sm->state != QV4::GCState::HandleQObjectWrappers) {
+            QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+            sm->state = stateInfo.execute(sm, sm->stateData);
+        }
+        QV4::MapPrototype::method_set(afunction.getPointer(), &thisObject, values, 2);
+        QVERIFY(key->isMarked());
+        QVERIFY(value->isMarked());
+        bool gcComplete = engine.memoryManager->tryForceGCCompletion();
+        QVERIFY(gcComplete);
+        QVERIFY(key->inUse());
+        QVERIFY(value->inUse());
+        gc(engine);
+        QCOMPARE(map.property("size").toInt(), 1);
+    }
+    {
+        QJSEngine jsEngine;
+        QV4::ExecutionEngine &engine = *jsEngine.handle();
+
+        QV4::Scope scope(&engine);
+        auto map = jsEngine.evaluate("new WeakMap()");
+        QV4::ScopedFunctionObject afunction(scope, engine.memoryManager->alloc<QV4::FunctionObject>()); // hack, we just need about any function object
+        QV4::Value thisObject = QJSValuePrivate::asReturnedValue(&map);
+
+        QVERIFY(!engine.memoryManager->gcBlocked);
+        // no scoped classes, as that would defeat the point of the test
+        // we block the gc instead so that the allocation can't trigger the gc
+        engine.memoryManager->gcBlocked = QV4::MemoryManager::InCriticalSection;
+        QV4::Heap::Object *key = engine.newObject();
+        QV4::Heap::String *value = engine.newString(QString::fromLatin1("value"));
+        QV4::Value values[2] = { QV4::Value::fromHeapObject(key), QV4::Value::fromHeapObject(value) };
+        engine.memoryManager->gcBlocked = QV4::MemoryManager::Unblocked;
+        QVERIFY(!key->isMarked());
+        QVERIFY(!value->isMarked());
+
+        auto sm = engine.memoryManager->gcStateMachine.get();
+        sm->reset();
+        while (sm->state != QV4::GCState::HandleQObjectWrappers) {
+            QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+            sm->state = stateInfo.execute(sm, sm->stateData);
+        }
+        QV4::WeakMapPrototype::method_set(afunction.getPointer(), &thisObject, values, 2);
+        QVERIFY(!engine.hasException);
+        QVERIFY(key->isMarked());
+        QVERIFY(value->isMarked());
+        bool gcComplete = engine.memoryManager->tryForceGCCompletion();
+        QVERIFY(gcComplete);
+        QVERIFY(key->inUse());
+        QVERIFY(value->inUse());
+        gc(engine);
+        QCOMPARE(map.property("size").toInt(), 0);
+    }
+    {
+        QJSEngine jsEngine;
+        QV4::ExecutionEngine &engine = *jsEngine.handle();
+
+        QV4::Scope scope(&engine);
+        auto map = jsEngine.evaluate("new Set()");
+        QV4::ScopedFunctionObject afunction(scope, engine.memoryManager->alloc<QV4::FunctionObject>()); // hack, we just need about any function object
+        QV4::Value thisObject = QJSValuePrivate::asReturnedValue(&map);
+
+        QVERIFY(!engine.memoryManager->gcBlocked);
+        // no scoped classes, as that would defeat the point of the test
+        // we block the gc instead so that the allocation can't trigger the gc
+        engine.memoryManager->gcBlocked = QV4::MemoryManager::InCriticalSection;
+        QV4::Heap::Object *key = engine.newObject();
+        QV4::Value values[1] = { QV4::Value::fromHeapObject(key) };
+        engine.memoryManager->gcBlocked = QV4::MemoryManager::Unblocked;
+        QVERIFY(!key->isMarked());
+
+        auto sm = engine.memoryManager->gcStateMachine.get();
+        sm->reset();
+        while (sm->state != QV4::GCState::HandleQObjectWrappers) {
+            QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+            sm->state = stateInfo.execute(sm, sm->stateData);
+        }
+        QV4::SetPrototype::method_add(afunction.getPointer(), &thisObject, values, 1);
+        QVERIFY(!engine.hasException);
+        QVERIFY(key->isMarked());
+        bool gcComplete = engine.memoryManager->tryForceGCCompletion();
+        QVERIFY(gcComplete);
+        QVERIFY(key->inUse());
+        gc(engine);
+        QCOMPARE(map.property("size").toInt(), 1);
+    }
+    {
+        QJSEngine jsEngine;
+        QV4::ExecutionEngine &engine = *jsEngine.handle();
+
+        QV4::Scope scope(&engine);
+        auto map = jsEngine.evaluate("new WeakSet()");
+        QV4::ScopedFunctionObject afunction(scope, engine.memoryManager->alloc<QV4::FunctionObject>()); // hack, we just need about any function object
+        QV4::Value thisObject = QJSValuePrivate::asReturnedValue(&map);
+
+        QVERIFY(!engine.memoryManager->gcBlocked);
+        // no scoped classes, as that would defeat the point of the test
+        // we block the gc instead so that the allocation can't trigger the gc
+        engine.memoryManager->gcBlocked = QV4::MemoryManager::InCriticalSection;
+        QV4::Heap::Object *key = engine.newObject();
+        QV4::Value values[1] = { QV4::Value::fromHeapObject(key) };
+        engine.memoryManager->gcBlocked = QV4::MemoryManager::Unblocked;
+        QVERIFY(!key->isMarked());
+
+        auto sm = engine.memoryManager->gcStateMachine.get();
+        sm->reset();
+        while (sm->state != QV4::GCState::HandleQObjectWrappers) {
+            QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+            sm->state = stateInfo.execute(sm, sm->stateData);
+        }
+        QV4::WeakSetPrototype::method_add(afunction.getPointer(), &thisObject, values, 1);
+        QVERIFY(!engine.hasException);
+        QVERIFY(key->isMarked());
+        bool gcComplete = engine.memoryManager->tryForceGCCompletion();
+        QVERIFY(gcComplete);
+        QVERIFY(key->inUse());
+        gc(engine);
+        QCOMPARE(map.property("size").toInt(), 0);
+    }
 }
 
 QTEST_MAIN(tst_qv4mm)

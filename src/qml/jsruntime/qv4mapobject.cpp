@@ -214,6 +214,16 @@ ReturnedValue WeakMapPrototype::method_set(const FunctionObject *b, const Value 
         (!argc || !argv[0].isObject()))
         return scope.engine->throwTypeError();
 
+    QV4::WriteBarrier::markCustom(scope.engine, [&](QV4::MarkStack *ms) {
+        if (scope.engine->memoryManager->gcStateMachine->state <= GCState::FreeWeakMaps)
+            return;
+        argv[0].heapObject()->mark(ms);
+        if (argc > 1) {
+            if (auto *h = argv[1].heapObject())
+                h->mark(ms);
+        }
+    });
+
     that->d()->esTable->set(argv[0], argc > 1 ? argv[1] : Value::undefinedValue());
     return that.asReturnedValue();
 }
@@ -316,6 +326,14 @@ ReturnedValue MapPrototype::method_set(const FunctionObject *b, const Value *thi
     Scoped<MapObject> that(scope, thisObject);
     if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
+
+    QV4::WriteBarrier::markCustom(scope.engine, [&](QV4::MarkStack *ms) {
+        argv[0].heapObject()->mark(ms);
+        if (argc > 1) {
+            if (auto *h = argv[1].heapObject())
+                h->mark(ms);
+        }
+    });
 
     that->d()->esTable->set(argc ? argv[0] : Value::undefinedValue(), argc > 1 ? argv[1] : Value::undefinedValue());
     return that.asReturnedValue();

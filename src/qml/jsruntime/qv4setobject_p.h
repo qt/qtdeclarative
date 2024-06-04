@@ -79,7 +79,7 @@ struct WeakSetPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_add(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    Q_AUTOTEST_EXPORT static ReturnedValue method_add(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_delete(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_has(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
@@ -89,7 +89,7 @@ struct SetPrototype : WeakSetPrototype
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_add(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    Q_AUTOTEST_EXPORT static ReturnedValue method_add(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_clear(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_delete(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_entries(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
