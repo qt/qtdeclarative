@@ -25,6 +25,7 @@ private slots:
     void rectangle_data();
     void rectangle();
     void rectangleRadii();
+    void appendRemove();
 
 private:
     void arc(QSizeF scale);
@@ -419,6 +420,28 @@ void tst_QuickPath::rectangleRadii()
     pathRectangle.setTopLeftRadius(200);
     quickRectangle->setTopLeftRadius(200);
     COMPARE_RADII(pathRectangle, quickRectangle);
+}
+
+void tst_QuickPath::appendRemove()
+{
+    QQuickPath *path = new QQuickPath();
+    QQmlListReference pathElements(path, "pathElements");
+    QSignalSpy changedSpy(path, SIGNAL(changed()));
+
+    QCOMPARE(pathElements.count(), 0);
+    QCOMPARE(changedSpy.count(), 0);
+
+    pathElements.append(new QQuickPathElement(path));
+    pathElements.append(new QQuickPathElement(path));
+    pathElements.append(new QQuickPathElement(path));
+
+    QCOMPARE(pathElements.count(), 3);
+    QCOMPARE(changedSpy.count(), 3);
+
+    pathElements.clear();
+
+    QCOMPARE(pathElements.count(), 0);
+    QCOMPARE(changedSpy.count(), 4);
 }
 
 QTEST_MAIN(tst_QuickPath)

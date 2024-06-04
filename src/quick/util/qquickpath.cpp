@@ -290,6 +290,8 @@ void QQuickPath::pathElements_clear(QQmlListProperty<QQuickPathElement> *propert
     d->_pathCurves.clear();
     d->_pointCache.clear();
     d->_pathTexts.clear();
+    d->_path.clear();
+    emit path->changed();
 }
 
 void QQuickPath::interpolate(int idx, const QString &name, qreal value)
