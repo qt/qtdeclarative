@@ -618,6 +618,19 @@ bool ScriptFormatter::visit(ReturnStatement *ast)
     return false;
 }
 
+bool ScriptFormatter::visit(YieldExpression *ast)
+{
+    out(ast->yieldToken);
+    if (ast->isYieldStar)
+        out("*");
+    if (ast->expression) {
+        if (ast->yieldToken.isValid())
+            out(" ");
+        accept(ast->expression);
+    }
+    return false;
+}
+
 bool ScriptFormatter::visit(ThrowStatement *ast)
 {
     out(ast->throwToken);

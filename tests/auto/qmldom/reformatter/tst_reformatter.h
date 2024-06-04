@@ -461,6 +461,13 @@ private slots:
                 << QStringLiteral(u"function *g(a,b){}") << QStringLiteral(u"function* g(a, b) {}");
         QTest::newRow("AnonymousGenerator") << QStringLiteral(u"let g=function * (a,b){}")
                                             << QStringLiteral(u"let g = function* (a, b) {}");
+        QTest::newRow("yield") << QStringLiteral(u"let g=function*(a,b){yield a;}")
+                               << QStringLiteral(u"let g = function* (a, b) {\nyield a;\n}");
+        QTest::newRow("yield*") << QStringLiteral(u"let g=function*(a,b){yield*a;}")
+                                << QStringLiteral(u"let g = function* (a, b) {\nyield* a;\n}");
+        QTest::newRow("yield*NoSemicolon")
+                << QStringLiteral(u"let g=function*(a,b){yield*a}")
+                << QStringLiteral(u"let g = function* (a, b) {\nyield* a;\n}");
     }
 
     // https://262.ecma-international.org/7.0/#prod-HoistableDeclaration

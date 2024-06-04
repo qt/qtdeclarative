@@ -134,6 +134,7 @@ protected:
     bool visit(AST::BreakStatement *ast) override;
 
     bool visit(AST::ReturnStatement *ast) override;
+    bool visit(AST::YieldExpression *ast) override;
     bool visit(AST::ThrowStatement *ast) override;
     bool visit(AST::WithStatement *ast) override;
 
