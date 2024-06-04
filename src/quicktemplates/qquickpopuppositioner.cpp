@@ -103,6 +103,7 @@ void QQuickPopupPositioner::reposition()
 
         const QPointF globalCoords = p->parentItem->mapToGlobal(windowPos.x(), windowPos.y());
         p->popupWindow->setPosition(globalCoords.x(), globalCoords.y());
+        p->popupItem->setPosition({0, 0});
         return;
     }
 

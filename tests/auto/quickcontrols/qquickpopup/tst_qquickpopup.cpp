@@ -121,10 +121,12 @@ private slots:
     void popupWindowClosesOnParentWindowClosing();
     void popupWindowChangingParent();
     void popupWindowFocus();
-    void popupWindowChangeFromWindowToInScene();
+    void popupTypeChangeFromWindowToItem();
+    void popupTypeChangeFromItemToWindow();
 
 private:
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
+    bool popupWindowsSupported = false;
 };
 
 using namespace Qt::StringLiterals;
@@ -132,6 +134,8 @@ using namespace Qt::StringLiterals;
 tst_QQuickPopup::tst_QQuickPopup()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
+    popupWindowsSupported = QGuiApplicationPrivate::platformIntegration()
+                                ->hasCapability(QPlatformIntegration::Capability::MultipleWindows);
 }
 
 void tst_QQuickPopup::initTestCase()
@@ -2395,6 +2399,9 @@ void tst_QQuickPopup::noDimmer()
 
 void tst_QQuickPopup::popupWindowPositioning()
 {
+    if (!popupWindowsSupported)
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
     QQuickApplicationHelper helper(this, "simplepopup.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
@@ -2407,8 +2414,7 @@ void tst_QQuickPopup::popupWindowPositioning()
     auto *popupPrivate = QQuickPopupPrivate::get(popup);
     QVERIFY(popupPrivate);
 
-    if (!popupPrivate->usePopupWindow())
-        QSKIP("The platform doesn't support native popup windows. Skipping test.");
+    popup->setPopupType(QQuickPopup::Window);
 
     popup->open();
     QTRY_VERIFY(popup->isVisible());
@@ -2468,6 +2474,9 @@ void tst_QQuickPopup::popupWindowAnchorsCenterIn()
 {
     QFETCH(bool, centerInParent);
 
+    if (!popupWindowsSupported)
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
     QQuickApplicationHelper helper(this, "popupCenterIn.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
@@ -2479,9 +2488,6 @@ void tst_QQuickPopup::popupWindowAnchorsCenterIn()
     QVERIFY(popup);
     auto *popupPrivate = QQuickPopupPrivate::get(popup);
     QVERIFY(popupPrivate);
-
-    if (!popupPrivate->usePopupWindow())
-        QSKIP("The platform doesn't support native popup windows. Skipping test.");
 
     popupPrivate->getAnchors()->setCenterIn(centerInParent ? window->contentItem() : QQuickOverlay::overlay(window));
 
@@ -2501,6 +2507,9 @@ void tst_QQuickPopup::popupWindowModality()
 {
     QSKIP("The behavior isn't correctly implemented yet. Waiting for patch in qtbase");
 
+    if (!popupWindowsSupported)
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
     QQuickApplicationHelper helper(this, "popupWithButtonInBackground.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
@@ -2513,9 +2522,6 @@ void tst_QQuickPopup::popupWindowModality()
 
     auto *popupPrivate = QQuickPopupPrivate::get(popup);
     QVERIFY(popupPrivate);
-
-    if (!popupPrivate->usePopupWindow())
-        QSKIP("The platform doesn't support native popup windows. Skipping test.");
 
     auto *button = window->findChild<QQuickButton *>();
     QVERIFY(button);
@@ -2555,6 +2561,9 @@ void tst_QQuickPopup::popupWindowModality()
 void tst_QQuickPopup::popupWindowClosesOnParentWindowClosing()
 {
     QSKIP("The behavior isn't correctly implemented yet. Waiting for patch in qtbase");
+    if (!popupWindowsSupported)
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
     QQuickApplicationHelper helper(this, "simplepopup.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
@@ -2567,8 +2576,7 @@ void tst_QQuickPopup::popupWindowClosesOnParentWindowClosing()
     auto *popupPrivate = QQuickPopupPrivate::get(popup);
     QVERIFY(popupPrivate);
 
-    if (!popupPrivate->usePopupWindow())
-        QSKIP("The platform doesn't support native popup windows. Skipping test.");
+    popup->setPopupType(QQuickPopup::Window);
 
     popup->open();
     QTRY_VERIFY(popup->isVisible());
@@ -2586,6 +2594,9 @@ void tst_QQuickPopup::popupWindowClosesOnParentWindowClosing()
 
 void tst_QQuickPopup::popupWindowChangingParent()
 {
+    if (!popupWindowsSupported)
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
     QQuickApplicationHelper helper(this, "reparentingPopup.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
@@ -2606,9 +2617,6 @@ void tst_QQuickPopup::popupWindowChangingParent()
 
     QQuickItem *item3 = window->property("rectangle3").value<QQuickItem *>();
     QVERIFY(item3);
-
-    if (!popupPrivate->usePopupWindow())
-        QSKIP("The platform doesn't support native popup windows. Skipping test.");
 
     popup->open();
     QTRY_VERIFY(popup->isVisible());
@@ -2640,6 +2648,9 @@ void tst_QQuickPopup::popupWindowChangingParent()
 
 void tst_QQuickPopup::popupWindowFocus()
 {
+    if (!popupWindowsSupported)
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
     QQuickApplicationHelper helper(this, "popupWindowFocusHandling.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
@@ -2652,8 +2663,6 @@ void tst_QQuickPopup::popupWindowFocus()
     QVERIFY(textField1);
     QQuickTextInput *textField2 = window->property("textField2").value<QQuickTextInput *>();
     QVERIFY(textField2);
-    if (!popupPrivate->usePopupWindow())
-        QSKIP("The platform doesn't support native popup windows. Skipping test.");
 
     window->show();
     QVERIFY(QTest::qWaitForWindowFocused(window));
@@ -2676,8 +2685,11 @@ void tst_QQuickPopup::popupWindowFocus()
     QVERIFY(QGuiApplication::focusObject() == textField1);
 }
 
-void tst_QQuickPopup::popupWindowChangeFromWindowToInScene()
+void tst_QQuickPopup::popupTypeChangeFromWindowToItem()
 {
+    if (!popupWindowsSupported)
+        QSKIP("The platform doesn't support native popup windows. Skipping test.");
+
     QQuickApplicationHelper helper(this, "simplepopup.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
@@ -2687,23 +2699,74 @@ void tst_QQuickPopup::popupWindowChangeFromWindowToInScene()
     QVERIFY(popup);
     auto *popupPrivate = QQuickPopupPrivate::get(popup);
     QVERIFY(popupPrivate);
-    if (!popupPrivate->usePopupWindow())
-        QSKIP("The platform doesn't support native popup windows. Skipping test.");
 
-    popup->open();
-    QTRY_VERIFY(popup->isVisible());
-    const QWindow *popupWindow = popupPrivate->popupWindow;
-    QVERIFY(popupWindow);
-    QVERIFY(popupWindow->isVisible());
-    popup->close();
-    QTRY_VERIFY(!popupWindow->isVisible());
-    QVERIFY(!popup->isVisible());
-    popup->setPopupType(QQuickPopup::Item);
-    popup->open();
-    QTRY_VERIFY(popup->isVisible());
     QQuickOverlay *overlay = QQuickOverlay::overlay(window);
     QVERIFY(overlay);
+
+    popup->setPopupType(QQuickPopup::Window);
+
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+    const QWindow *popupWindow = popupPrivate->popupWindow;
+    QVERIFY(popupWindow);
+    QTRY_VERIFY(popupWindow->isVisible());
+    QCOMPARE(popupPrivate->popupItem->position(), QPointF(0, 0));
+    QVERIFY(!overlay->childItems().contains(popup->popupItem()));
+
+    popup->close();
+    QTRY_VERIFY(!popup->isVisible());
+    QVERIFY(!popupWindow->isVisible());
+
+    popup->setPopupType(QQuickPopup::Item);
+
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+    QVERIFY(!popupWindow || !popupWindow->isVisible());
+    QCOMPARE(popupPrivate->popupItem->position(), QPointF(50, 50));
     QVERIFY(overlay->childItems().contains(popup->popupItem()));
+
+    popup->close();
+}
+
+void tst_QQuickPopup::popupTypeChangeFromItemToWindow()
+{
+    if (!popupWindowsSupported)
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
+    QQuickApplicationHelper helper(this, "simplepopup.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    auto *popup = window->contentItem()->findChild<QQuickPopup *>();
+    QVERIFY(popup);
+    auto *popupPrivate = QQuickPopupPrivate::get(popup);
+    QVERIFY(popupPrivate);
+
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    QVERIFY(overlay);
+
+    popup->setPopupType(QQuickPopup::Item);
+
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+    QVERIFY(!popupPrivate->popupWindow);
+    QCOMPARE(popupPrivate->popupItem->position(), QPointF(50, 50));
+    QVERIFY(overlay->childItems().contains(popup->popupItem()));
+
+    popup->close();
+    QTRY_VERIFY(!popup->isVisible());
+
+    popup->setPopupType(QQuickPopup::Window);
+
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+    const QWindow *popupWindow = popupPrivate->popupWindow;
+    QVERIFY(popupWindow);
+    QTRY_VERIFY(popupWindow->isVisible());
+    QCOMPARE(popupPrivate->popupItem->position(), QPointF(0, 0));
+    QVERIFY(!overlay->childItems().contains(popup->popupItem()));
+
     popup->close();
 }
 
