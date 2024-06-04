@@ -5,15 +5,18 @@ import android.graphics.Color
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
+import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.example.qml_in_kotlin_based_android_project.databinding.ActivityMainBinding
 import org.qtproject.example.qml_in_android_view.QmlModule.Main
+import org.qtproject.example.qml_in_android_view.QmlModule.Second
 import org.qtproject.qt.android.QtQmlStatus
 import org.qtproject.qt.android.QtQmlStatusChangeListener
 import org.qtproject.qt.android.QtQuickView
+
 
 class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
 
@@ -25,6 +28,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
     //! [qmlComponent]
     private var m_mainQmlComponent: Main = Main()
     //! [qmlComponent]
+    private val m_secondQmlComponent: Second = Second()
     private val m_statusNames = hashMapOf(
         QtQmlStatus.READY to "READY",
         QtQmlStatus.LOADING to "LOADING",
@@ -51,6 +55,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         //! [setStatusChangeListener]
         m_mainQmlComponent.setStatusChangeListener(this)
         //! [setStatusChangeListener]
+        m_secondQmlComponent.setStatusChangeListener(this)
 
         //! [layoutParams]
         val params: ViewGroup.LayoutParams = FrameLayout.LayoutParams(
@@ -63,6 +68,9 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         //! [loadComponent]
 
         m_binding.changeColorButton.setOnClickListener { onClickListener() }
+        m_binding.loadMainQml.setOnClickListener { loadMainQml() }
+        m_binding.loadSecondQml.setOnClickListener { loadSecondQml() }
+        m_binding.rotateQmlGridButton.setOnClickListener { rotateQmlGrid() }
 
         // Check target device orientation on launch
         handleOrientationChanges()
@@ -110,7 +118,10 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         m_binding.getPropertyValueText.text = qmlBackgroundColor
 
         // Display the QML View background color in a view
-        m_binding.colorBox.setBackgroundColor(Color.parseColor(qmlBackgroundColor))
+        // if qmlBackgroundColor is not null
+        if (qmlBackgroundColor != null) {
+            m_binding.colorBox.setBackgroundColor(Color.parseColor(qmlBackgroundColor))
+        }
     }
     //! [onClickListener]
 
@@ -165,4 +176,27 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         //! [qml signal listener]
     }
     //! [onStatusChanged]
+
+    private fun loadSecondQml() {
+        m_qtQuickView!!.loadComponent(m_secondQmlComponent)
+
+        // Reset box color and color text after component reload
+        m_binding.colorBox.setBackgroundColor(Color.parseColor("#00ffffff"))
+        m_binding.getPropertyValueText.text = ""
+    }
+
+    private fun loadMainQml() {
+        m_qtQuickView!!.loadComponent(m_mainQmlComponent)
+
+        // Reset box color and color text after component reload
+        m_binding.colorBox.setBackgroundColor(Color.parseColor("#00ffffff"))
+        m_binding.getPropertyValueText.text = ""
+    }
+
+    private fun rotateQmlGrid() {
+        val previousGridRotation = m_secondQmlComponent.gridRotation
+        if (previousGridRotation != null) {
+            m_secondQmlComponent.gridRotation = previousGridRotation + 45
+        }
+    }
 }
