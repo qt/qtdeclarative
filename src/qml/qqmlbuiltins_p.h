@@ -120,14 +120,24 @@ struct QQmlIntForeign
     QML_VALUE_TYPE(int)
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(int)
-    QML_PRIMITIVE_ALIAS(qint32)
-    QML_PRIMITIVE_ALIAS(int32_t)
 #ifdef QML_SIZE_IS_32BIT
+    // Keep qsizetype as primitive alias. We want it as separate type.
     QML_PRIMITIVE_ALIAS(qsizetype)
 #endif
-#ifdef QML_LONG_IS_32BIT
-    QML_PRIMITIVE_ALIAS(long)
-#endif
+};
+
+struct QQmlQint32Foreign
+{
+    Q_GADGET
+    QML_FOREIGN(qint32)
+    QML_USING(int)
+};
+
+struct QQmlInt32TForeign
+{
+    Q_GADGET
+    QML_FOREIGN(int32_t)
+    QML_USING(int)
 };
 
 struct QQmlDoubleForeign
@@ -137,9 +147,6 @@ struct QQmlDoubleForeign
     QML_VALUE_TYPE(double)
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(double)
-#if !defined(QT_COORD_TYPE) || defined(QT_COORD_TYPE_IS_DOUBLE)
-    QML_PRIMITIVE_ALIAS(qreal)
-#endif
 };
 
 struct QQmlStringForeign
@@ -214,10 +221,13 @@ struct QQmlQint8Foreign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(qint8)
-    QML_PRIMITIVE_ALIAS(int8_t)
-#if CHAR_MAX == SCHAR_MAX
-    QML_PRIMITIVE_ALIAS(char)
-#endif
+};
+
+struct QQmlInt8TForeign
+{
+    Q_GADGET
+    QML_FOREIGN(int8_t)
+    QML_USING(qint8)
 };
 
 struct QQmlQuint8Foreign
@@ -226,10 +236,32 @@ struct QQmlQuint8Foreign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(quint8)
-    QML_PRIMITIVE_ALIAS(uint8_t)
-    QML_PRIMITIVE_ALIAS(uchar)
+};
+
+struct QQmlUint8TForeign
+{
+    Q_GADGET
+    QML_FOREIGN(uint8_t)
+    QML_USING(quint8)
+};
+
+struct QQmlUcharForeign
+{
+    Q_GADGET
+    QML_FOREIGN(uchar)
+    QML_USING(quint8)
+};
+
+struct QQmlCharForeign
+{
+    Q_GADGET
+    QML_FOREIGN(char)
 #if CHAR_MAX == UCHAR_MAX
-    QML_PRIMITIVE_ALIAS(char)
+    QML_USING(quint8)
+#elif CHAR_MAX == SCHAR_MAX
+    QML_USING(qint8)
+#else
+#   error char is neither quint8 nor qint8
 #endif
 };
 
@@ -239,8 +271,20 @@ struct QQmlShortForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(short)
-    QML_PRIMITIVE_ALIAS(qint16)
-    QML_PRIMITIVE_ALIAS(int16_t)
+};
+
+struct QQmlQint16Foreign
+{
+    Q_GADGET
+    QML_FOREIGN(qint16)
+    QML_USING(short)
+};
+
+struct QQmlInt16TForeign
+{
+    Q_GADGET
+    QML_FOREIGN(int16_t)
+    QML_USING(short)
 };
 
 struct QQmlUshortForeign
@@ -249,8 +293,20 @@ struct QQmlUshortForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(ushort)
-    QML_PRIMITIVE_ALIAS(quint16)
-    QML_PRIMITIVE_ALIAS(uint16_t)
+};
+
+struct QQmlQuint16Foreign
+{
+    Q_GADGET
+    QML_FOREIGN(quint16)
+    QML_USING(ushort)
+};
+
+struct QQmlUint16TForeign
+{
+    Q_GADGET
+    QML_FOREIGN(uint16_t)
+    QML_USING(ushort)
 };
 
 struct QQmlUintForeign
@@ -259,11 +315,20 @@ struct QQmlUintForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(uint)
-    QML_PRIMITIVE_ALIAS(quint32)
-    QML_PRIMITIVE_ALIAS(uint32_t)
-#ifdef QML_LONG_IS_32BIT
-    QML_PRIMITIVE_ALIAS(ulong)
-#endif
+};
+
+struct QQmlQuint32Foreign
+{
+    Q_GADGET
+    QML_FOREIGN(quint32)
+    QML_USING(uint)
+};
+
+struct QQmlUint32TForeign
+{
+    Q_GADGET
+    QML_FOREIGN(uint32_t)
+    QML_USING(uint)
 };
 
 struct QQmlQlonglongForeign
@@ -272,13 +337,36 @@ struct QQmlQlonglongForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(qlonglong)
-    QML_PRIMITIVE_ALIAS(qint64)
-    QML_PRIMITIVE_ALIAS(int64_t)
-#ifdef QML_LONG_IS_64BIT
-    QML_PRIMITIVE_ALIAS(long)
-#endif
 #ifdef QML_SIZE_IS_64BIT
+    // Keep qsizetype as primitive alias. We want it as separate type.
     QML_PRIMITIVE_ALIAS(qsizetype)
+#endif
+};
+
+struct QQmlQint64Foreign
+{
+    Q_GADGET
+    QML_FOREIGN(qint64)
+    QML_USING(qlonglong)
+};
+
+struct QQmlInt64TForeign
+{
+    Q_GADGET
+    QML_FOREIGN(int64_t)
+    QML_USING(qlonglong)
+};
+
+struct QQmlLongForeign
+{
+    Q_GADGET
+    QML_FOREIGN(long)
+#if defined QML_LONG_IS_32BIT
+    QML_USING(int)
+#elif defined QML_LONG_IS_64BIT
+    QML_USING(qlonglong)
+#else
+#   error long is neither 32bit nor 64bit
 #endif
 };
 
@@ -288,10 +376,32 @@ struct QQmlQulonglongForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(qulonglong)
-    QML_PRIMITIVE_ALIAS(quint64)
-    QML_PRIMITIVE_ALIAS(uint64_t)
-#ifdef QML_LONG_IS_64BIT
-    QML_PRIMITIVE_ALIAS(ulong)
+};
+
+struct QQmlQuint64Foreign
+{
+    Q_GADGET
+    QML_FOREIGN(quint64)
+    QML_USING(qulonglong)
+};
+
+struct QQmlUint64TForeign
+{
+    Q_GADGET
+    QML_FOREIGN(uint64_t)
+    QML_USING(qulonglong)
+};
+
+struct QQmlUlongForeign
+{
+    Q_GADGET
+    QML_FOREIGN(ulong)
+#if defined QML_LONG_IS_32BIT
+    QML_USING(uint)
+#elif defined QML_LONG_IS_64BIT
+    QML_USING(qulonglong)
+#else
+#   error ulong is neither 32bit nor 64bit
 #endif
 };
 
@@ -301,8 +411,18 @@ struct QQmlFloatForeign
     QML_ANONYMOUS
     QML_EXTENDED_JAVASCRIPT(Number)
     QML_FOREIGN(float)
-#if defined(QT_COORD_TYPE) && defined(QT_COORD_TYPE_IS_FLOAT)
-    QML_PRIMITIVE_ALIAS(qreal)
+};
+
+struct QQmlQRealForeign
+{
+    Q_GADGET
+    QML_FOREIGN(qreal)
+#if !defined(QT_COORD_TYPE) || defined(QT_COORD_TYPE_IS_DOUBLE)
+    QML_USING(double)
+#elif defined(QT_COORD_TYPE_IS_FLOAT)
+    QML_USING(float)
+#else
+#   error qreal is neither float nor double
 #endif
 };
 
@@ -368,7 +488,13 @@ struct QQmlQObjectListForeign
     QML_ANONYMOUS
     QML_FOREIGN(QObjectList)
     QML_SEQUENTIAL_CONTAINER(QObject*)
-    QML_PRIMITIVE_ALIAS(QList<QObject*>)
+};
+
+struct QQmlQListQObjectForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QList<QObject*>)
+    QML_USING(QObjectList)
 };
 
 struct QQmlQJSValueForeign

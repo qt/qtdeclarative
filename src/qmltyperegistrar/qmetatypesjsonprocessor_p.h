@@ -214,6 +214,20 @@ struct UsingDeclaration {
     QAnyStringView original;
 
     bool isValid() const { return !alias.isEmpty() && !original.isEmpty(); }
+private:
+    friend bool comparesEqual(const UsingDeclaration &a, const UsingDeclaration &b) noexcept
+    {
+        return std::tie(a.alias, a.original) == std::tie(b.alias, b.original);
+    }
+
+    friend Qt::strong_ordering compareThreeWay(
+            const UsingDeclaration &a, const UsingDeclaration &b) noexcept
+    {
+        return a.alias != b.alias
+                ? compareThreeWay(a.alias, b.alias)
+                : compareThreeWay(a.original, b.original);
+    }
+    Q_DECLARE_STRONGLY_ORDERED(UsingDeclaration);
 };
 
 class MetaTypesJsonProcessor

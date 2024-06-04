@@ -152,6 +152,7 @@ void MetaTypesJsonProcessor::postProcessForeignTypes()
 {
     sortTypes(m_foreignTypes);
     sortStringList(&m_primitiveTypes);
+    sortStringList(&m_usingDeclarations);
     addRelatedTypes();
     sortStringList(&m_referencedTypes);
     sortStringList(&m_includes);
