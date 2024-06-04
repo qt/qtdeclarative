@@ -820,6 +820,18 @@ public:
     Qt::Key key() const { return Qt::Key_Escape; }
 };
 
+class SlotsBeforeInvokables : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+public:
+    Q_INVOKABLE void foo() {}
+public Q_SLOTS:
+    void bar() {}
+public:
+    Q_INVOKABLE void baz() {}
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -896,6 +908,7 @@ private slots:
     void usingDeclaration();
     void enumsRegistered();
     void doNotDuplicateQtNamespace();
+    void slotsBeforeInvokables();
 
 private:
     QByteArray qmltypesData;

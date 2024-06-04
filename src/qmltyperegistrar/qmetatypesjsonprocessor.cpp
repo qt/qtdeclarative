@@ -828,7 +828,7 @@ MetaTypePrivate::MetaTypePrivate(const QCborMap &cbor, const QString &inputFile)
     for (const QCborValue &property : cborProperties)
         properties.emplace_back(property.toMap());
 
-    for (const QCborArray &cborMethods : { cbor[S_METHODS].toArray(), cbor[S_SLOTS].toArray() }) {
+    for (const QCborArray &cborMethods : { cbor[S_SLOTS].toArray(), cbor[S_METHODS].toArray() }) {
         for (const QCborValue &method : cborMethods)
             methods.emplace_back(method.toMap(), false);
     }
