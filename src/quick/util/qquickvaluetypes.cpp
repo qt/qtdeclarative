@@ -859,6 +859,54 @@ QVariant QQuickFontValueType::create(const QJSValue &params)
         ok = true;
     }
 
+    {
+        const QJSValue variableAxes = params.property(QStringLiteral("variableAxes"));
+        if (variableAxes.isObject()) {
+            QVariantMap variantMap = variableAxes.toVariant().toMap();
+            for (auto [variableAxisName, variableAxisValue] : variantMap.asKeyValueRange()) {
+                const auto maybeTag = QFont::Tag::fromString(variableAxisName);
+                if (!maybeTag) {
+                    qWarning() << "Invalid variable axis" << variableAxisName << "ignored";
+                    continue;
+                }
+
+                bool valueOk;
+                float value = variableAxisValue.toFloat(&valueOk);
+                if (!valueOk) {
+                    qWarning() << "Variable axis" << variableAxisName << "value" << variableAxisValue << "is not a floating point value.";
+                    continue;
+                }
+
+                ret.setVariableAxis(*maybeTag, value);
+                ok = true;
+            }
+        }
+    }
+
+    {
+        const QJSValue features = params.property(QStringLiteral("features"));
+        if (features.isObject()) {
+            QVariantMap variantMap = features.toVariant().toMap();
+            for (auto [featureName, featureValue] : variantMap.asKeyValueRange()) {
+                const auto maybeTag = QFont::Tag::fromString(featureName);
+                if (!maybeTag) {
+                    qWarning() << "Invalid font feature" << featureName << "ignored";
+                    continue;
+                }
+
+                bool valueOk;
+                quint32 value = featureValue.toUInt(&valueOk);
+                if (!valueOk) {
+                    qWarning() << "Font feature" << featureName << "value" << featureValue << "is not an integer.";
+                    continue;
+                }
+
+                ret.setFeature(*maybeTag, value);
+                ok = true;
+            }
+        }
+    }
+
     return ok ? ret : QVariant();
 }
 

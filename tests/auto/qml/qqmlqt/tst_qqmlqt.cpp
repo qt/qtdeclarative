@@ -82,6 +82,8 @@ private slots:
     void timeRoundtrip_data();
     void timeRoundtrip();
 
+    void fontSetsProperties();
+
 private:
     QQmlEngine engine;
 };
@@ -1461,6 +1463,19 @@ void tst_qqmlqt::timeRoundtrip()
     // any perturbation (e.g. by DST effects) from converting from QTime to V4's Date and back
     // again.
     QCOMPARE(tp.m_getTime, tp.m_putTime);
+}
+
+void tst_qqmlqt::fontSetsProperties() {
+    QQmlComponent component(&engine, testFileUrl("fontProperties.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
+
+    QFont fontProperty = qvariant_cast<QFont>(object->property("fontProperty"));
+    QCOMPARE(fontProperty.variableAxisTags().size(), 1);
+    QCOMPARE(fontProperty.variableAxisValue("abcd"), 23.0625);
+    QCOMPARE(fontProperty.featureTags().size(), 1);
+    QCOMPARE(fontProperty.featureValue("abcd"), 23);
 }
 
 QTEST_MAIN(tst_qqmlqt)
