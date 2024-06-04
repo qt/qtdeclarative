@@ -2429,13 +2429,51 @@ void QQmlDomAstCreator::endVisit(AST::ClassExpression *)
 {
 }
 
-bool QQmlDomAstCreator::visit(AST::TemplateLiteral *)
+void QQmlDomAstCreator::endVisit(AST::TaggedTemplate *literal)
 {
-    // TODO: Add support for template literals
-    // For now, turning off explicitly to avoid unwanted problems
-    if (m_enableScriptExpressions)
-        Q_SCRIPTELEMENT_DISABLE();
-    return true;
+    if (!m_enableScriptExpressions)
+        return;
+    auto current = makeGenericScriptElement(literal, DomType::ScriptTaggedTemplate);
+    Q_SCRIPTELEMENT_EXIT_IF(!stackHasScriptVariant());
+    current->insertChild(Fields::templateLiteral, scriptNodeStack.takeLast().takeVariant());
+    Q_SCRIPTELEMENT_EXIT_IF(!stackHasScriptVariant());
+    current->insertChild(Fields::callee, scriptNodeStack.takeLast().takeVariant());
+    pushScriptElement(current);
+}
+
+void QQmlDomAstCreator::endVisit(AST::TemplateLiteral *literal)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    // AST::TemplateLiteral is a list and a TemplateLiteral at the same time:
+    // in the Dom representation wrap the list into a separate TemplateLiteral Item.
+    auto currentList = makeScriptList(literal);
+
+    const auto children = [&literal]() {
+        std::vector<AST::TemplateLiteral *> result;
+        for (auto it = literal; it; it = it->next) {
+            result.push_back(it);
+        }
+        return result;
+    }();
+    for (auto it = children.crbegin(); it != children.crend(); ++it) {
+        if ((*it)->expression) {
+            Q_SCRIPTELEMENT_EXIT_IF(!stackHasScriptVariant());
+            currentList.append(scriptNodeStack.takeLast().takeVariant());
+        }
+        if (!(*it)->rawValue.isEmpty()) {
+            auto currentExpression = makeGenericScriptElement(
+                    (*it)->literalToken, DomType::ScriptTemplateStringPart);
+            currentExpression->insertValue(Fields::value, (*it)->rawValue);
+            currentList.append(ScriptElementVariant::fromElement(currentExpression));
+        }
+    }
+    currentList.reverse();
+
+    auto current = makeGenericScriptElement(literal, DomType::ScriptTemplateLiteral);
+    current->insertChild(Fields::components, currentList);
+    pushScriptElement(current);
 }
 
 bool QQmlDomAstCreator::visit(AST::TryStatement *)
