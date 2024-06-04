@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.qml_in_kotlin_based_android_project"
-        minSdk 26
+        minSdk 28
         targetSdk 34
         versionCode 1
         versionName "1.0"
