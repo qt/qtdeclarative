@@ -1686,6 +1686,19 @@ bool QQmlDomAstCreator::visit(AST::TypeAnnotation *)
     return true;
 }
 
+bool QQmlDomAstCreator::visit(AST::RegExpLiteral *literal)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto current = makeGenericScriptElement(literal, DomType::ScriptRegExpLiteral);
+    current->insertValue(Fields::regExpPattern, literal->pattern);
+    current->insertValue(Fields::regExpFlags, literal->flags);
+    pushScriptElement(current);
+
+    return true;
+}
+
 bool QQmlDomAstCreator::visit(AST::NumericLiteralPropertyName *expression)
 {
     if (!m_enableScriptExpressions)

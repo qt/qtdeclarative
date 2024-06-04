@@ -3920,6 +3920,63 @@ private slots:
         QCOMPARE(lambda.internalKind(), DomType::ScriptFunctionExpression);
     }
 
+    void regexpLiteral()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/regexpLiterals.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+
+        const DomItem noFlag =
+                statements.index(0).field(Fields::declarations).index(0).field(Fields::initializer);
+        QVERIFY(noFlag);
+        QCOMPARE(noFlag.internalKind(), DomType::ScriptRegExpLiteral);
+        const DomItem pattern = noFlag.field(Fields::regExpPattern);
+        QVERIFY(pattern);
+        QCOMPARE(pattern.value().toString(), u"HelloWorld"_s);
+        const DomItem flags = noFlag.field(Fields::regExpFlags);
+        QVERIFY(flags);
+        QCOMPARE(flags.value().toInteger(42), 0);
+    }
+
+    void regexpLiteralWithFlag()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/regexpLiterals.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+        const DomItem withFlag =
+                statements.index(1).field(Fields::declarations).index(0).field(Fields::initializer);
+        QVERIFY(withFlag);
+        QCOMPARE(withFlag.internalKind(), DomType::ScriptRegExpLiteral);
+        const DomItem pattern = withFlag.field(Fields::regExpPattern);
+        QVERIFY(pattern);
+        QCOMPARE(pattern.value().toString(), u"H?ello.*[^s]+"_s);
+        const DomItem flags = withFlag.field(Fields::regExpFlags);
+        QVERIFY(flags);
+        QCOMPARE(flags.value().toInteger(), 1);
+    }
+
     void templateLiteral()
     {
         using namespace Qt::StringLiterals;

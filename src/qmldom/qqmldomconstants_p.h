@@ -194,6 +194,7 @@ enum class DomType {
     ScriptBlockStatement = ScriptElementStart,
     ScriptIdentifierExpression,
     ScriptLiteral,
+    ScriptRegExpLiteral,
     ScriptForStatement,
     ScriptIfStatement,
     ScriptPostExpression,
