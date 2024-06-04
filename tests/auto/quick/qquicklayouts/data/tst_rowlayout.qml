@@ -1513,6 +1513,44 @@ Item {
         }
 
         Component {
+            id: rearrangeInvalidatedChildInNestedLayout
+            ColumnLayout {
+                anchors.fill: parent
+                RowLayout {
+                    spacing: 0
+                    Text {
+                        Layout.preferredWidth: 50
+                        text: "Text Text Text"
+                        wrapMode: Text.WordWrap
+                    }
+                    Rectangle {
+                        color: "red";
+                        Layout.preferredWidth: 50
+                        Layout.preferredHeight: 20
+                    }
+                    Rectangle {
+                        color: "green"
+                        Layout.preferredHeight: 20
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+        }
+
+        function test_rearrangeInvalidatedChildInNestedLayout() {
+            let layout = rearrangeInvalidatedChildInNestedLayout.createObject(container)
+            waitForRendering(layout)
+
+            let item1 = layout.children[0].children[0]
+            let item2 = layout.children[0].children[1]
+            let item3 = layout.children[0].children[2]
+
+            compare(item1.width, 50)
+            compare(item2.width, 50)
+            compare(item3.width, 100)
+        }
+
+        Component {
             id: changeChildrenOfHiddenLayout_Component
             RowLayout {
                 property int childCount: 1
