@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Window
 import QtTest
 import QtQuick.Controls
+import Qt.test.controls
 import QtQuick.NativeStyle as NativeStyle
 
 TestCase {
@@ -869,22 +870,27 @@ TestCase {
         // Account for when a transition of a scale from 0.9-1.0 that it is placed above right away and not below
         // first just because there is room at the 0.9 scale
         if (control.popup.enter !== null) {
-            // hide
-            mouseClick(control)
-            compare(control.pressed, false)
-            tryCompare(control.popup, "visible", false)
-            control.y = control.Window.height - (control.popup.contentItem.height * 0.99)
-            var popupYSpy = createTemporaryObject(signalSpy, testCase, {target: control.popup, signalName: "yChanged"})
-            verify(popupYSpy.valid)
-            mousePress(control)
-            compare(control.pressed, true)
-            compare(control.popup.visible, false)
-            mouseRelease(control)
-            compare(control.pressed, false)
-            compare(control.popup.visible, true)
-            tryCompare(control.popup.enter, "running", false)
-            verify(control.popup.contentItem.y < control.y)
-            verify(popupYSpy.count === 1)
+            // test only if there is a scale animation
+            let scaleAnimation = control.popup.enter.animations.some((animation) => {
+                return (animation instanceof PropertyAnimation && animation.property === "scale")
+            });
+            if (scaleAnimation) {
+                // hide
+                mouseClick(control)
+                compare(control.pressed, false)
+                tryCompare(control.popup, "visible", false)
+                control.y = control.Window.height - (control.popup.contentItem.height * 0.99)
+                var popupYSpy = createTemporaryObject(signalSpy, testCase, {target: control.popup, signalName: "yChanged"})
+                verify(popupYSpy.valid)
+                mousePress(control)
+                compare(control.pressed, true)
+                compare(control.popup.visible, false)
+                mouseRelease(control)
+                compare(control.pressed, false)
+                tryCompare(control.popup, "opened", true)
+                verify(control.popup.contentItem.y < control.y)
+                verify(popupYSpy.count === 1)
+            }
         }
 
         var leftLayoutMargin = control.background.layoutMargins === undefined ? 0 : control.popup.layoutMargins.left
@@ -940,7 +946,8 @@ TestCase {
             // Check on the second opening that it has the same y position as before
             if (i !== 0) {
                 // y should not have changed again
-                verify(popupYSpy.count === 0)
+                if (StyleInfo.styleName !== "FluentWinUI3") // the popup y in FluentWinUI3 depends on the implicitHeight
+                    verify(popupYSpy.count === 0)
                 verify(y === control.innerCombo.popup.y)
             } else {
                 // In some cases on the initial show, y changes more than once
@@ -1015,6 +1022,7 @@ TestCase {
         compare(activatedSpy.count, 0)
         compare(highlightedSpy.count, 0)
         compare(control.popup.visible, true)
+        tryCompare(control.popup, "opened", true)
 
         // press - move - release inside - activated - closed
         touch.press(0, content).commit()
@@ -1778,7 +1786,7 @@ TestCase {
 
         // Ensure that it's open so that the popup's implicitHeight changes when we increase the model count.
         control.popup.open()
-        tryCompare(control.popup, "visible", true)
+        tryCompare(control.popup, "opened", true)
 
         // Add lots of items to the model. The popup should take up the entire height of the window.
         control.model = 100
@@ -1790,6 +1798,8 @@ TestCase {
         control.model = 0
         control.popup.open()
         tryCompare(control.popup, "visible", true)
+        if (control.popup.enter !== null)
+            tryCompare(control.popup.enter, "running", false)
         compare(control.popup.height, control.popup.topPadding + control.popup.bottomPadding)
     }
 
