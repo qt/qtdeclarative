@@ -682,7 +682,6 @@ void tst_qmltyperegistrar::constructibleValueType()
         name: "Constructible"
         accessSemantics: "value"
         exports: ["QmlTypeRegistrarTest/constructible 1.0"]
-        isCreatable: true
         exportMetaObjectRevisions: [256]
         Method {
             name: "Constructible"
@@ -701,7 +700,6 @@ void tst_qmltyperegistrar::structuredValueType()
         name: "Structured"
         accessSemantics: "value"
         exports: ["QmlTypeRegistrarTest/structured 1.0"]
-        isCreatable: true
         isStructured: true
         exportMetaObjectRevisions: [256]
         Property { name: "i"; type: "int"; index: 0; isFinal: true }
@@ -735,7 +733,6 @@ void tst_qmltyperegistrar::typedEnum()
         accessSemantics: "reference"
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/TypedEnum 1.0"]
-        isCreatable: true
         exportMetaObjectRevisions: [256]
         Enum {
             name: "UChar"
@@ -833,7 +830,6 @@ void tst_qmltyperegistrar::withNamespace()
         accessSemantics: "reference"
         prototype: "Testing::Foo"
         exports: ["QmlTypeRegistrarTest/Bar 1.0"]
-        isCreatable: true
         exportMetaObjectRevisions: [256]
         Property { name: "barProp"; type: "int"; read: "bar"; index: 0; isReadonly: true; isConstant: true }
     })"));
@@ -853,7 +849,6 @@ void tst_qmltyperegistrar::withNamespace()
         prototype: "Testing::Bar"
         extension: "Bar"
         exports: ["QmlTypeRegistrarTest/Baz 1.0"]
-        isCreatable: true
         exportMetaObjectRevisions: [256]
         attachedType: "Testing::Foo"
     })"));
@@ -937,7 +932,6 @@ void tst_qmltyperegistrar::nameExplosion()
             "QmlTypeRegistrarTest/Name2 1.0",
             "QmlTypeRegistrarTest/NameExplosion 1.0"
         ]
-        isCreatable: true
         exportMetaObjectRevisions: [256]
     })"));
 
@@ -962,7 +956,6 @@ void tst_qmltyperegistrar::javaScriptExtension()
         extension: "SymbolPrototype"
         extensionIsJavaScript: true
         exports: ["QmlTypeRegistrarTest/JavaScriptExtension 1.0"]
-        isCreatable: true
         exportMetaObjectRevisions: [256]
     })"));
 }
@@ -978,7 +971,6 @@ void tst_qmltyperegistrar::relatedAddedInVersion()
             "QmlTypeRegistrarTest/AddedIn1_0 1.0",
             "QmlTypeRegistrarTest/AddedIn1_0 1.5"
         ]
-        isCreatable: true
         exportMetaObjectRevisions: [256, 261]
     })"));
 }
@@ -991,7 +983,6 @@ void tst_qmltyperegistrar::longNumberTypes()
         accessSemantics: "reference"
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/LongNumberTypes 1.0"]
-        isCreatable: true
         exportMetaObjectRevisions: [256]
         Property { name: "a"; type: "qint64"; index: 0 }
         Property { name: "b"; type: "int64_t"; index: 1 }
@@ -1017,7 +1008,6 @@ void tst_qmltyperegistrar::constReturnType()
         accessSemantics: "reference"
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/ConstInvokable 1.0"]
-        isCreatable: true
         exportMetaObjectRevisions: [256]
         Method { name: "getObject"; type: "QObject"; isPointer: true; isConstant: true }
     })"));
@@ -1031,7 +1021,6 @@ void tst_qmltyperegistrar::usingDeclaration()
         accessSemantics: "reference"
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/WithMyInt 1.0"]
-        isCreatable: true
         exportMetaObjectRevisions: [256]
         Property { name: "a"; type: "int"; read: "a"; index: 0; isReadonly: true; isConstant: true }
     })"));
