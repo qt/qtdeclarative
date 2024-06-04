@@ -44,7 +44,8 @@ static constexpr QLatin1StringView S_IMMEDIATE_NAMES              { "immediateNa
 static constexpr QLatin1StringView S_INDEX                        { "index" };
 static constexpr QLatin1StringView S_INTERFACES                   { "interfaces" };
 static constexpr QLatin1StringView S_IS_CLONED                    { "isCloned" };
-static constexpr QLatin1StringView S_IS_CONSTANT                  { "isConstant" };
+static constexpr QLatin1StringView S_IS_TYPE_CONSTANT             { "isTypeConstant" };
+static constexpr QLatin1StringView S_IS_PROPERTY_CONSTANT         { "isPropertyConstant" };
 static constexpr QLatin1StringView S_IS_CONSTRUCTOR               { "isConstructor" };
 static constexpr QLatin1StringView S_IS_CREATABLE                 { "isCreatable" };
 static constexpr QLatin1StringView S_IS_FINAL                     { "isFinal" };

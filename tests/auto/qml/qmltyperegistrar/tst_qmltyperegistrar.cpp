@@ -498,17 +498,17 @@ void tst_qmltyperegistrar::hasIsConstantInParameters()
     QVERIFY(qmltypesData.contains(R"(        Signal {
             name: "mySignal"
             Parameter { name: "myObject"; type: "QObject"; isPointer: true }
-            Parameter { name: "myConstObject"; type: "QObject"; isPointer: true; isConstant: true }
-            Parameter { name: "myConstObject2"; type: "QObject"; isPointer: true; isConstant: true }
+            Parameter { name: "myConstObject"; type: "QObject"; isPointer: true; isTypeConstant: true }
+            Parameter { name: "myConstObject2"; type: "QObject"; isPointer: true; isTypeConstant: true }
             Parameter { name: "myObject2"; type: "QObject"; isPointer: true }
-            Parameter { name: "myConstObject3"; type: "QObject"; isPointer: true; isConstant: true }
+            Parameter { name: "myConstObject3"; type: "QObject"; isPointer: true; isTypeConstant: true }
         }
 )"));
 
     QVERIFY(qmltypesData.contains(R"(Signal {
             name: "myVolatileSignal"
-            Parameter { name: "a"; type: "volatile QObject"; isPointer: true; isConstant: true }
-            Parameter { name: "b"; type: "volatile QObject"; isPointer: true; isConstant: true }
+            Parameter { name: "a"; type: "volatile QObject"; isPointer: true; isTypeConstant: true }
+            Parameter { name: "b"; type: "volatile QObject"; isPointer: true; isTypeConstant: true }
             Parameter { name: "nonConst"; type: "volatile QObject"; isPointer: true }
         }
 )"));
@@ -820,7 +820,7 @@ void tst_qmltyperegistrar::withNamespace()
             read: "bar"
             index: 0
             isReadonly: true
-            isConstant: true
+            isPropertyConstant: true
         }
     })"));
 
@@ -831,7 +831,14 @@ void tst_qmltyperegistrar::withNamespace()
         prototype: "Testing::Foo"
         exports: ["QmlTypeRegistrarTest/Bar 1.0"]
         exportMetaObjectRevisions: [256]
-        Property { name: "barProp"; type: "int"; read: "bar"; index: 0; isReadonly: true; isConstant: true }
+        Property {
+            name: "barProp"
+            type: "int"
+            read: "bar"
+            index: 0
+            isReadonly: true
+            isPropertyConstant: true
+        }
     })"));
 
     QVERIFY(qmltypesData.contains(R"(Component {
@@ -839,7 +846,14 @@ void tst_qmltyperegistrar::withNamespace()
         name: "Testing::Foo"
         accessSemantics: "reference"
         prototype: "QObject"
-        Property { name: "fooProp"; type: "int"; read: "foo"; index: 0; isReadonly: true; isConstant: true }
+        Property {
+            name: "fooProp"
+            type: "int"
+            read: "foo"
+            index: 0
+            isReadonly: true
+            isPropertyConstant: true
+        }
     })"));
 
     QVERIFY(qmltypesData.contains(R"(Component {
@@ -1009,7 +1023,7 @@ void tst_qmltyperegistrar::constReturnType()
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/ConstInvokable 1.0"]
         exportMetaObjectRevisions: [256]
-        Method { name: "getObject"; type: "QObject"; isPointer: true; isConstant: true }
+        Method { name: "getObject"; type: "QObject"; isPointer: true; isTypeConstant: true }
     })"));
 }
 
@@ -1022,7 +1036,7 @@ void tst_qmltyperegistrar::usingDeclaration()
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/WithMyInt 1.0"]
         exportMetaObjectRevisions: [256]
-        Property { name: "a"; type: "int"; read: "a"; index: 0; isReadonly: true; isConstant: true }
+        Property { name: "a"; type: "int"; read: "a"; index: 0; isReadonly: true; isPropertyConstant: true }
     })"));
 }
 

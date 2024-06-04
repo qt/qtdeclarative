@@ -373,8 +373,9 @@ class QQmlJSMetaProperty
     bool m_isList = false;
     bool m_isWritable = false;
     bool m_isPointer = false;
+    bool m_isTypeConstant = false;
     bool m_isFinal = false;
-    bool m_isConstant = false;
+    bool m_isPropertyConstant = false;
     int m_revision = 0;
     int m_index = -1; // relative property index within owning QQmlJSScope
 
@@ -421,6 +422,9 @@ public:
     void setIsPointer(bool isPointer) { m_isPointer = isPointer; }
     bool isPointer() const { return m_isPointer; }
 
+    void setIsTypeConstant(bool isTypeConstant) { m_isTypeConstant = isTypeConstant; }
+    bool isTypeConstant() const { return m_isTypeConstant; }
+
     void setAliasExpression(const QString &aliasString) { m_aliasExpr = aliasString; }
     QString aliasExpression() const { return m_aliasExpr; }
     bool isAlias() const { return !m_aliasExpr.isEmpty(); } // exists for convenience
@@ -428,8 +432,8 @@ public:
     void setIsFinal(bool isFinal) { m_isFinal = isFinal; }
     bool isFinal() const { return m_isFinal; }
 
-    void setIsConstant(bool isConstant) { m_isConstant = isConstant; }
-    bool isConstant() const { return m_isConstant; }
+    void setIsConstant(bool isPropertyConstant) { m_isPropertyConstant = isPropertyConstant; }
+    bool isConstant() const { return m_isPropertyConstant; }
 
     void setRevision(int revision) { m_revision = revision; }
     int revision() const { return m_revision; }

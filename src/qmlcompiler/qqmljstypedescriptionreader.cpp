@@ -324,7 +324,7 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(
                 auto metaReturnType = metaMethod.returnValue();
                 metaReturnType.setIsPointer(readBoolBinding(script));
                 metaMethod.setReturnValue(metaReturnType);
-            } else if (name == QLatin1String("isConstant")) {
+            } else if (name == QLatin1String("isTypeConstant")) {
                 auto metaReturnType = metaMethod.returnValue();
                 metaReturnType.setTypeQualifier(readBoolBinding(script)
                                                         ? QQmlJSMetaParameter::Const
@@ -332,7 +332,7 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(
                 metaMethod.setReturnValue(metaReturnType);
             } else {
                 addWarning(script->firstSourceLocation(),
-                           tr("Expected only name, type, revision, isPointer, isConstant, "
+                           tr("Expected only name, type, revision, isPointer, isTypeConstant, "
                               "isList, isCloned, isConstructor, and isJavaScriptFunction "
                               "in script bindings."));
             }
@@ -380,7 +380,9 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             property.setIsList(readBoolBinding(script));
         } else if (id == QLatin1String("isFinal")) {
             property.setIsFinal(readBoolBinding(script));
-        } else if (id == QLatin1String("isConstant")) {
+        } else if (id == QLatin1String("isTypeConstant")) {
+            property.setIsTypeConstant(readBoolBinding(script));
+        } else if (id == QLatin1String("isPropertyConstant")) {
             property.setIsConstant(readBoolBinding(script));
         } else if (id == QLatin1String("revision")) {
             property.setRevision(readIntBinding(script));
@@ -400,8 +402,8 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             property.setPrivateClass(readStringBinding(script));
         } else {
             addWarning(script->firstSourceLocation(),
-                       tr("Expected only type, name, revision, isPointer, isReadonly, isRequired, "
-                          "isFinal, isList, bindable, read, write, reset, notify, index, and "
+                       tr("Expected only type, name, revision, isPointer, isTypeConstant, isReadonly, isRequired, "
+                          "isFinal, isList, bindable, read, write, isPropertyConstant, reset, notify, index, and "
                           "privateClass and script bindings."));
         }
     }
@@ -474,7 +476,7 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
             type = readStringBinding(script);
         } else if (id == QLatin1String("isPointer")) {
             isPointer = readBoolBinding(script);
-        } else if (id == QLatin1String("isConstant")) {
+        } else if (id == QLatin1String("isTypeConstant")) {
             isConstant = readBoolBinding(script);
         } else if (id == QLatin1String("isReadonly")) {
             // ### unhandled
@@ -482,7 +484,7 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
             isList = readBoolBinding(script);
         } else {
             addWarning(script->firstSourceLocation(),
-                       tr("Expected only name, type, isPointer, isConstant, isReadonly, "
+                       tr("Expected only name, type, isPointer, isTypeConstant, isReadonly, "
                           "or IsList script bindings."));
         }
     }

@@ -112,6 +112,6 @@ Module {
         prototype: "QObject"
         exports: ["Things/ConstInvokable 1.0"]
         exportMetaObjectRevisions: [256]
-        Method { name: "getObject"; type: "QObject"; isPointer: true; isConstant: true }
+        Method { name: "getObject"; type: "QObject"; isPointer: true; isTypeConstant: true }
     }
 }

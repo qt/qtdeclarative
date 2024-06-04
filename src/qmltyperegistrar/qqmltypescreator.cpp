@@ -175,7 +175,7 @@ void QmlTypesCreator::writeType(QAnyStringView type)
     if (resolved.isPointer)
         m_qml.writeBooleanBinding(S_IS_POINTER, true);
     if (resolved.isConstant)
-        m_qml.writeBooleanBinding(S_IS_CONSTANT, true);
+        m_qml.writeBooleanBinding(S_IS_TYPE_CONSTANT, true);
 }
 
 void QmlTypesCreator::writeProperties(const Property::Container &properties)
@@ -221,7 +221,7 @@ void QmlTypesCreator::writeProperties(const Property::Container &properties)
             m_qml.writeBooleanBinding(S_IS_FINAL, true);
 
         if (obj.isConstant)
-            m_qml.writeBooleanBinding(S_IS_CONSTANT, true);
+            m_qml.writeBooleanBinding(S_IS_PROPERTY_CONSTANT, true);
 
         if (obj.isRequired)
             m_qml.writeBooleanBinding(S_IS_REQUIRED, true);
