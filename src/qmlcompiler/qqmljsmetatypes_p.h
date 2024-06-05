@@ -432,8 +432,8 @@ public:
     void setIsFinal(bool isFinal) { m_isFinal = isFinal; }
     bool isFinal() const { return m_isFinal; }
 
-    void setIsConstant(bool isPropertyConstant) { m_isPropertyConstant = isPropertyConstant; }
-    bool isConstant() const { return m_isPropertyConstant; }
+    void setIsPropertyConstant(bool isPropertyConstant) { m_isPropertyConstant = isPropertyConstant; }
+    bool isPropertyConstant() const { return m_isPropertyConstant; }
 
     void setRevision(int revision) { m_revision = revision; }
     int revision() const { return m_revision; }
