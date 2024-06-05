@@ -28,6 +28,7 @@ class Q_QUICKVECTORIMAGE_EXPORT QQuickVectorImage : public QQuickItem
 
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged)
+    Q_PROPERTY(RendererType preferredRendererType READ preferredRendererType WRITE setPreferredRendererType NOTIFY preferredRendererTypeChanged)
     QML_NAMED_ELEMENT(VectorImage)
 
 public:
@@ -39,6 +40,12 @@ public:
     };
     Q_ENUM(FillMode)
 
+    enum RendererType {
+        GeometryRenderer,
+        CurveRenderer
+    };
+    Q_ENUM(RendererType)
+
     QQuickVectorImage(QQuickItem *parent = nullptr);
 
     QUrl source() const;
@@ -47,9 +54,14 @@ public:
     FillMode fillMode() const;
     void setFillMode(FillMode newFillMode);
 
+    RendererType preferredRendererType() const;
+    void setPreferredRendererType(RendererType newPreferredRendererType);
+
 signals:
     void sourceChanged();
     void fillModeChanged();
+
+    void preferredRendererTypeChanged();
 
 private slots:
     void updateSvgItemScale();

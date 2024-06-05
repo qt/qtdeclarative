@@ -70,7 +70,8 @@ void QQuickVectorImagePrivate::loadSvg()
     svgItem = new QQuickItem(q);
 
     QQuickVectorImageGenerator::GeneratorFlags flags;
-    flags.setFlag(QQuickVectorImageGenerator::CurveRenderer);
+    if (preferredRendererType == QQuickVectorImage::CurveRenderer)
+        flags.setFlag(QQuickVectorImageGenerator::CurveRenderer);
     QQuickItemGenerator generator(localFile, flags, svgItem);
     generator.generate();
 
@@ -220,5 +221,35 @@ void QQuickVectorImage::setFillMode(FillMode newFillMode)
     emit fillModeChanged();
 }
 
-QT_END_NAMESPACE
+/*!
+    \qmlproperty enumeration QtQuick.VectorImage::VectorImage::preferredRendererType
 
+    Requests a specific backend to use for rendering shapes in the \c VectorImage.
+
+    \value VectorImage.GeometryRenderer Equivalent to Shape.GeometryRenderer. This backend flattens
+    curves and triangulates the result. It will give aliased results unless multi-sampling is
+    enabled, and curve flattening may be visible when the item is scaled.
+    \value VectorImage.CurveRenderer Equivalent to Shape.CurveRenderer. With this backend, curves
+    are rendered on the GPU and anti-aliasing is built in. Will typically give better visual
+    results, but at some extra cost to performance.
+
+    The default is \c{VectorImage.GeometryRenderer}.
+*/
+
+QQuickVectorImage::RendererType QQuickVectorImage::preferredRendererType() const
+{
+    Q_D(const QQuickVectorImage);
+    return d->preferredRendererType;
+}
+
+void QQuickVectorImage::setPreferredRendererType(RendererType newPreferredRendererType)
+{
+    Q_D(QQuickVectorImage);
+    if (d->preferredRendererType == newPreferredRendererType)
+        return;
+    d->preferredRendererType = newPreferredRendererType;
+    d->loadSvg();
+    emit preferredRendererTypeChanged();
+}
+
+QT_END_NAMESPACE
