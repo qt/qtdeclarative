@@ -911,6 +911,19 @@ void QQuickControlPrivate::itemFocusChanged(QQuickItem *item, Qt::FocusReason re
         setLastFocusChangeReason(reason);
 }
 
+bool QQuickControlPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
+{
+    Q_Q(QQuickControl);
+    Qt::FocusReason oldReason = static_cast<Qt::FocusReason>(focusReason);
+    const auto focusReasonChanged = QQuickItemPrivate::setLastFocusChangeReason(reason);
+    if (focusReasonChanged)
+        emit q->focusReasonChanged();
+    if (isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
+        emit q->visualFocusChanged();
+
+    return focusReasonChanged;
+}
+
 QQuickControl::QQuickControl(QQuickItem *parent)
     : QQuickItem(*(new QQuickControlPrivate), parent)
 {
@@ -1384,11 +1397,7 @@ Qt::FocusReason QQuickControl::focusReason() const
 void QQuickControl::setFocusReason(Qt::FocusReason reason)
 {
     Q_D(QQuickControl);
-    Qt::FocusReason oldReason = static_cast<Qt::FocusReason>(d->focusReason);
     d->setLastFocusChangeReason(reason);
-    emit focusReasonChanged();
-    if (isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
-        emit visualFocusChanged();
 }
 
 /*!
@@ -1403,7 +1412,7 @@ void QQuickControl::setFocusReason(Qt::FocusReason reason)
     \l Item::activeFocus. This ensures that key focus is only visualized when
     interacting with keys - not when interacting via touch or mouse.
 
-    \sa Item::focusReason, Item::activeFocus
+    \sa focusReason, Item::activeFocus
 */
 bool QQuickControl::hasVisualFocus() const
 {
@@ -1969,22 +1978,12 @@ QFont QQuickControl::defaultFont() const
 
 void QQuickControl::focusInEvent(QFocusEvent *event)
 {
-    Q_D(QQuickControl);
-    Qt::FocusReason oldReason = static_cast<Qt::FocusReason>(d->focusReason);
     QQuickItem::focusInEvent(event);
-    Qt::FocusReason reason = event->reason();
-    if (isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
-        emit visualFocusChanged();
 }
 
 void QQuickControl::focusOutEvent(QFocusEvent *event)
 {
-    Q_D(QQuickControl);
-    Qt::FocusReason oldReason = static_cast<Qt::FocusReason>(d->focusReason);
     QQuickItem::focusOutEvent(event);
-    Qt::FocusReason reason = event->reason();
-    if (isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
-        emit visualFocusChanged();
 }
 
 #if QT_CONFIG(quicktemplates2_hover)

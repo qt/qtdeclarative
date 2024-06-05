@@ -155,6 +155,8 @@ public:
     void itemDestroyed(QQuickItem *item) override;
     void itemFocusChanged(QQuickItem *item, Qt::FocusReason reason) override;
 
+    bool setLastFocusChangeReason(Qt::FocusReason) override;
+
     virtual qreal getContentWidth() const;
     virtual qreal getContentHeight() const;
 

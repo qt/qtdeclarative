@@ -364,6 +364,16 @@ QPalette QQuickTextFieldPrivate::defaultPalette() const
     return QQuickTheme::palette(QQuickTheme::TextField);
 }
 
+bool QQuickTextFieldPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
+{
+    Q_Q(QQuickTextField);
+    const auto focusReasonChanged = QQuickItemPrivate::setLastFocusChangeReason(reason);
+    if (focusReasonChanged)
+        emit q->focusReasonChanged();
+
+    return focusReasonChanged;
+}
+
 QQuickTextField::QQuickTextField(QQuickItem *parent)
     : QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
@@ -549,7 +559,6 @@ void QQuickTextField::setFocusReason(Qt::FocusReason reason)
 {
     Q_D(QQuickTextField);
     d->setLastFocusChangeReason(reason);
-    emit focusReasonChanged();
 }
 
 /*!
