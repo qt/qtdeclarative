@@ -423,8 +423,9 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 #endif
         }
 
-        QString strokeColor = colorCssDescription(styleResolver->currentStrokeColor());
-        if (!strokeColor.isEmpty()) {
+        const QColor currentStrokeColor = styleResolver->currentStrokeColor();
+        if (currentStrokeColor.alpha() > 0) {
+            QString strokeColor = colorCssDescription(currentStrokeColor);
             styleTagContent += QStringLiteral("-qt-stroke-color:%1;").arg(strokeColor);
             styleTagContent += QStringLiteral("-qt-stroke-width:%1px;").arg(styleResolver->currentStrokeWidth());
 #if QT_CONFIG(texthtmlparser)
