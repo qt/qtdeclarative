@@ -3,9 +3,9 @@
 
 /*!
 \qmlmodule QtQml
-\title Qt QML QML Types
+\title Qt Qml QML Types
 \ingroup qmlmodules
-\brief List of QML types provided by the Qt QML module
+\brief List of QML types provided by the Qt Qml module.
 
 The \l{Qt Qml} module provides the definition and implementation of various
 convenience types that can be used with the QML language. This includes

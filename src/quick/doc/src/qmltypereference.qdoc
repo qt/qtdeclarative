@@ -52,7 +52,7 @@ In addition, the \c QtQuick import provides the following value types:
 \section1 Object Types
 
 Most object types provided by the \c QtQuick import are based on the \l{Item}
-type, which itself derives from \l{QtQml::QtObject}{QtObject}. \l{Qt QML QML
+type, which itself derives from \l{QtQml::QtObject}{QtObject}. \l{Qt Qml QML
 Types#Object Types} {QML object types} provided by the Qt QML module (such as
 \l{QtQml::QtObject}{QtObject} and \l{QtQml::Component}{Component}) are also
 available when you import \c QtQuick.
