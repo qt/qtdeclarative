@@ -56,7 +56,7 @@ namespace Dom {
 
 class Path;
 
-Q_DECLARE_LOGGING_CATEGORY(writeOutLog);
+QT_DECLARE_EXPORTED_QT_LOGGING_CATEGORY(writeOutLog, QMLDOM_EXPORT);
 
 constexpr bool domTypeIsObjWrap(DomType k);
 constexpr bool domTypeIsValueWrap(DomType k);

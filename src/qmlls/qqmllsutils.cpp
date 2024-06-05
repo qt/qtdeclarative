@@ -25,12 +25,12 @@
 #include <utility>
 #include <variant>
 
-using namespace QQmlJS::Dom;
-using namespace Qt::StringLiterals;
-
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(QQmlLSUtilsLog, "qt.languageserver.utils")
+
+using namespace QQmlJS::Dom;
+using namespace Qt::StringLiterals;
 
 namespace QQmlLSUtils {
 QString qualifiersFrom(const DomItem &el)

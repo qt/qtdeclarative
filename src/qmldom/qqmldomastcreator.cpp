@@ -28,7 +28,7 @@
 #include <variant>
 #include <vector>
 
-static Q_LOGGING_CATEGORY(creatorLog, "qt.qmldom.astcreator", QtWarningMsg);
+Q_STATIC_LOGGING_CATEGORY(creatorLog, "qt.qmldom.astcreator", QtWarningMsg);
 
 /*
    Avoid crashing on files with JS-elements that are not implemented yet.

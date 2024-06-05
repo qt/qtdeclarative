@@ -3,13 +3,13 @@
 
 #include "qqmllscompletion_p.h"
 
-using namespace QLspSpecification;
-using namespace QQmlJS::Dom;
-using namespace Qt::StringLiterals;
-
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(QQmlLSCompletionLog, "qt.languageserver.completions")
+
+using namespace QLspSpecification;
+using namespace QQmlJS::Dom;
+using namespace Qt::StringLiterals;
 
 /*!
 \class QQmlLSCompletion

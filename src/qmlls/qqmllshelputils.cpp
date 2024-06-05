@@ -13,7 +13,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(QQmlLSHelpUtilsLog, "qt.languageserver.helpUtils")
+Q_STATIC_LOGGING_CATEGORY(QQmlLSHelpUtilsLog, "qt.languageserver.helpUtils")
 
 using namespace QQmlJS::Dom;
 

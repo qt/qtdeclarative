@@ -8,10 +8,10 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lspServerLog, "qt.languageserver.server")
+
 using namespace QLspSpecification;
 using namespace Qt::StringLiterals;
-
-Q_LOGGING_CATEGORY(lspServerLog, "qt.languageserver.server")
 
 QLanguageServerPrivate::QLanguageServerPrivate(const QJsonRpcTransport::DataHandler &h)
     : protocol(h)

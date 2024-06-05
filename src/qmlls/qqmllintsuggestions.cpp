@@ -16,13 +16,14 @@
 #include <QtCore/qxpfunctional.h>
 #include <chrono>
 
+QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lintLog, "qt.languageserver.lint")
+
 using namespace QLspSpecification;
 using namespace QQmlJS::Dom;
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(lintLog, "qt.languageserver.lint")
-
-QT_BEGIN_NAMESPACE
 namespace QmlLsp {
 
 static DiagnosticSeverity severityFromMsgType(QtMsgType t)

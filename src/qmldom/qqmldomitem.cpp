@@ -47,7 +47,7 @@ namespace QQmlJS {
 namespace Dom {
 
 Q_LOGGING_CATEGORY(writeOutLog, "qt.qmldom.writeOut", QtWarningMsg);
-static Q_LOGGING_CATEGORY(refLog, "qt.qmldom.ref", QtWarningMsg);
+Q_STATIC_LOGGING_CATEGORY(refLog, "qt.qmldom.ref", QtWarningMsg);
 
 template<class... TypeList>
 struct CheckDomElementT;

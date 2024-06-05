@@ -26,24 +26,22 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(QQmlLSHelpUtilsLog);
-
-using namespace QQmlJS::Dom;
-
 class HelpManager final
 {
 public:
     HelpManager();
     void setDocumentationRootPath(const QString &path);
     [[nodiscard]] QString documentationRootPath() const;
-    [[nodiscard]] std::optional<QByteArray> documentationForItem(const DomItem &file,
-                                                                 QLspSpecification::Position position) const;
+    [[nodiscard]] std::optional<QByteArray> documentationForItem(
+            const QQmlJS::Dom::DomItem &file, QLspSpecification::Position position) const;
 
 private:
-    [[nodiscard]] std::optional<QByteArray> extractDocumentationForIdentifiers(const DomItem &item,
-                                                                              QQmlLSUtils::ExpressionType) const;
-    [[nodiscard]] std::optional<QByteArray> extractDocumentationForDomElements(const DomItem &item) const;
-    [[nodiscard]] std::optional<QByteArray> extractDocumentation(const DomItem &item) const;
+    [[nodiscard]] std::optional<QByteArray> extractDocumentationForIdentifiers(
+            const QQmlJS::Dom::DomItem &item, QQmlLSUtils::ExpressionType) const;
+    [[nodiscard]] std::optional<QByteArray> extractDocumentationForDomElements(
+            const QQmlJS::Dom::DomItem &item) const;
+    [[nodiscard]] std::optional<QByteArray> extractDocumentation(
+            const QQmlJS::Dom::DomItem &item) const;
     [[nodiscard]] std::optional<QByteArray> tryExtract(ExtractDocumentation &extractor,
                                                        const std::vector<QQmlLSHelpProviderBase::DocumentLink> &links,
                                                        const QString &name) const;

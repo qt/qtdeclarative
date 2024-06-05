@@ -17,7 +17,7 @@
 
 #include <variant>
 
-static Q_LOGGING_CATEGORY(commentsLog, "qt.qmldom.comments", QtWarningMsg);
+Q_STATIC_LOGGING_CATEGORY(commentsLog, "qt.qmldom.comments", QtWarningMsg);
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {

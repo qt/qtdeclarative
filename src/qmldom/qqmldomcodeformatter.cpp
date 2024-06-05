@@ -6,7 +6,7 @@
 #include <QLoggingCategory>
 #include <QMetaEnum>
 
-static Q_LOGGING_CATEGORY(formatterLog, "qt.qmldom.formatter", QtWarningMsg);
+Q_STATIC_LOGGING_CATEGORY(formatterLog, "qt.qmldom.formatter", QtWarningMsg);
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {
