@@ -534,7 +534,7 @@ TestCase {
 
      // Escape special Regexp characters with a '\' (backslash) prefix so that \a str can be
      // used as a Regexp pattern.
-    function escapeRegExp(str: string) {
+    function escapeRegExp(str: string): string {
         // "$&" is the last matched substring
         return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     }
