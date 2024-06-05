@@ -199,7 +199,8 @@ ReturnedValue SetPrototype::method_add(const FunctionObject *b, const Value *thi
         return scope.engine->throwTypeError();
 
     QV4::WriteBarrier::markCustom(scope.engine, [&](QV4::MarkStack *ms) {
-        argv[0].heapObject()->mark(ms);
+        if (auto *h = argv[0].heapObject())
+            h->mark(ms);
     });
 
     that->d()->esTable->set(argv[0], Value::undefinedValue());
