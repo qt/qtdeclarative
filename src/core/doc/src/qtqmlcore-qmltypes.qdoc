@@ -3,11 +3,11 @@
 
 /*!
     \qmlmodule QtCore
-    \title Qt QML Core QML Types
+    \title Qt Qml Core QML Types
     \ingroup qmlmodules
     \brief Provides core system functionality in QML.
 
-    The Qt QML Core module provides core system functionality in QML.
+    The Qt Qml Core module provides core system functionality in QML.
 
     The QML types can be imported into your application using the
     following import statement in your .qml file:
@@ -24,7 +24,7 @@
 
     \list
         \li \l {Qt Core}
-        \li \l {Qt QML QML Types}{Base QML Types}
+        \li \l {Qt Qml QML Types}{Base QML Types}
     \endlist
 
     \noautolist

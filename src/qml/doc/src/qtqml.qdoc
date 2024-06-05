@@ -12,7 +12,7 @@ with the \l{The QML Reference}{QML language}. It defines and implements the
 language and engine infrastructure, and provides an API to enable application
 developers to \l{Registering QML Types and QML Modules}{register} custom QML types
 and modules and integrate QML code with JavaScript and C++. The Qt Qml module
-provides both a \l{Qt QML QML Types}{QML API} and a
+provides both a \l{Qt Qml QML Types}{QML API} and a
 \l{Qt Qml C++ Classes}{C++ API}.
 
 \section1 Using the Module
@@ -21,10 +21,10 @@ provides both a \l{Qt QML QML Types}{QML API} and a
 
 \include {module-use.qdocinc} {using the qml api} {QtQml}
 
-The Qt QML module contains the QML framework and important QML types used in
+The Qt Qml module contains the QML framework and important QML types used in
 applications. The constructs of QML are described in the \l{The QML Reference}.
 
-The \l{Qt QML QML Types}{QML API} of the Qt QML module provides a number of
+The \l{Qt Qml QML Types}{QML API} of the Qt Qml module provides a number of
 \l{qtqml-typesystem-objecttypes.html}{QML Object Types},
 \l{qtqml-typesystem-valuetypes.html}{QML Value Types} and namespaces.
 
@@ -33,7 +33,7 @@ The \l{Qt QML QML Types}{QML API} of the Qt QML module provides a number of
 \include {module-use.qdocinc} {using the c++ api}
 
 The C++ API contains some
-\l{Important C++ Classes Provided By The Qt QML Module}{important classes}
+\l{Important C++ Classes Provided By The Qt Qml Module}{important classes}
 you should get familiar with. It also provides
 \l{Integrating with JavaScript values from C++}{types} to hold JavaScript
 values.
@@ -83,20 +83,20 @@ These articles contain information about Qt Qml.
 \section1 Reference
 
 \list
-    \li \l {Qt QML C++ Classes} {C++ Classes}
-    \li \l {Qt QML QML Types} {QML Types}
+    \li \l {Qt Qml C++ Classes} {C++ Classes}
+    \li \l {Qt Qml QML Types} {QML Types}
 \endlist
 
 \section1 Licenses and Attributions
 
-Qt QML is available under commercial licenses from \l{The Qt Company}.
+Qt Qml is available under commercial licenses from \l{The Qt Company}.
 In addition, it is available under free software licenses. Since Qt 5.4,
 these free software licenses are
 \l{GNU Lesser General Public License, version 3}, or
 the \l{GNU General Public License, version 2}.
 See \l{Qt Licensing} for further details.
 
-Furthermore Qt QML in Qt \QtVersion may contain third party
+Furthermore Qt Qml in Qt \QtVersion may contain third party
 modules under following permissive licenses:
 
 \generatelist{groupsbymodule attributions-qtqml}

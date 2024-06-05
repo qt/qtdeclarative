@@ -98,7 +98,7 @@ See \l{qtqml-documents-scope.html}{Scope and Naming Resolution} for more details
 \section1 Defining Object Types from C++
 
 C++ plugin writers and application developers may register types defined in C++
-through API provided by the Qt QML module.  There are various registration
+through API provided by the Qt Qml module.  There are various registration
 functions which each allow different use-cases to be fulfilled.
 For more information about those registration functions, and the specifics of
 exposing custom C++ types to QML, see the documentation regarding
