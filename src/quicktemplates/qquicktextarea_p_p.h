@@ -96,6 +96,8 @@ public:
 
     QPalette defaultPalette() const override;
 
+    bool setLastFocusChangeReason(Qt::FocusReason reason) override;
+
 #if QT_CONFIG(quicktemplates2_hover)
     bool hovered = false;
     bool explicitHoverEnabled = false;

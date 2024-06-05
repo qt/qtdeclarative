@@ -472,6 +472,16 @@ QPalette QQuickTextAreaPrivate::defaultPalette() const
     return QQuickTheme::palette(QQuickTheme::TextArea);
 }
 
+bool QQuickTextAreaPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
+{
+    Q_Q(QQuickTextArea);
+    const auto focusReasonChanged = QQuickItemPrivate::setLastFocusChangeReason(reason);
+    if (focusReasonChanged)
+        emit q->focusReasonChanged();
+
+    return focusReasonChanged;
+}
+
 QQuickTextArea::QQuickTextArea(QQuickItem *parent)
     : QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
 {
@@ -663,7 +673,6 @@ void QQuickTextArea::setFocusReason(Qt::FocusReason reason)
 {
     Q_D(QQuickTextArea);
     d->setLastFocusChangeReason(reason);
-    emit focusReasonChanged();
 }
 
 
