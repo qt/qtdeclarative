@@ -25,7 +25,7 @@
 
     \list
         \li \l {Qt Network}
-        \li \l {Qt QML QML Types}{Base QML Types}
+        \li \l {Qt Qml QML Types}{Base QML Types}
     \endlist
 
     \noautolist

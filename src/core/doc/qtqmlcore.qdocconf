@@ -1,7 +1,7 @@
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
 project = QtQmlCore
-description = Qt QML Core Reference Documentation
+description = Qt Qml Core Reference Documentation
 version = $QT_VERSION
 
 qhp.projects = QtQmlCore
@@ -9,12 +9,12 @@ qhp.projects = QtQmlCore
 qhp.QtQmlCore.file = qtqmlcore.qhp
 qhp.QtQmlCore.namespace = org.qt-project.qtqmlcore.$QT_VERSION_TAG
 qhp.QtQmlCore.virtualFolder = qtqmlcore
-qhp.QtQmlCore.indexTitle = Qt QML Core
+qhp.QtQmlCore.indexTitle = Qt Qml Core
 qhp.QtQmlCore.indexRoot =
 
 qhp.QtQmlCore.subprojects = qmltypes
 qhp.QtQmlCore.subprojects.qmltypes.title = QML Types
-qhp.QtQmlCore.subprojects.qmltypes.indexTitle = Qt QML Core QML Types
+qhp.QtQmlCore.subprojects.qmltypes.indexTitle = Qt Qml Core QML Types
 qhp.QtQmlCore.subprojects.qmltypes.selectors = qmlclass
 qhp.QtQmlCore.subprojects.qmltypes.sortPages = true
 
@@ -28,8 +28,8 @@ sourcedirs += ../
 
 imagedirs += images
 
-navigation.landingpage = "Qt QML Core"
-navigation.qmltypespage = "Qt QML Core QML Types"
+navigation.landingpage = "Qt Qml Core"
+navigation.qmltypespage = "Qt Qml Core QML Types"
 
 tagfile = qtqmlcore.tags
 

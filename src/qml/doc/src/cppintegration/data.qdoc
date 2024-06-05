@@ -307,7 +307,7 @@ calling its \l {QDateTime::}{time()} method.
 \section2 Sequence Type to JavaScript Array
 
 See \l{QML Sequence Types} for a general description of sequence types. The
-\l{Qt QML QML Types}{QtQml module} contains a few sequence types
+\l{Qt Qml QML Types}{QtQml module} contains a few sequence types
 you may want to use.
 
 You can also create a list-like data structure by constructing a QJSValue using
