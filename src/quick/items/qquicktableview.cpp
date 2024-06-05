@@ -7205,7 +7205,6 @@ void QQuickTableViewSectionDragHandler::handleDrop(QQuickDragEvent *event)
     Q_UNUSED(event);
 
     if (m_state == Dragging) {
-        event->setAccepted(true);
         auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
         auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
         tableViewPrivate->moveSection(m_source, m_destination, m_sectionOrientation);
@@ -7271,14 +7270,19 @@ void QQuickTableViewSectionDragHandler::handleDragDropAction(Qt::DropAction acti
 
 void QQuickTableViewSectionDragHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
 {
+    QQuickSinglePointHandler::handleEventPoint(event, point);
+
     auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
     auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
     const auto *activeHandler = tableViewPrivate->activePointerHandler();
     if (activeHandler && !qobject_cast<const QQuickTableViewSectionDragHandler *>(activeHandler))
         return;
 
-    if (m_state == DraggingFinished)
-        resetDragData();
+    if (m_state == DraggingFinished) {
+       if (m_scrollTimer.isActive())
+           m_scrollTimer.stop();
+       resetDragData();
+    }
 
     if (point.state() == QEventPoint::Pressed) {
         // Reset the information in the drag handler
@@ -7293,6 +7297,8 @@ void QQuickTableViewSectionDragHandler::handleEventPoint(QPointerEvent *event, Q
         m_state = Tracking;
     } else if (point.state() == QEventPoint::Released) {
         // Reset the information in the drag handler
+        if (m_scrollTimer.isActive())
+            m_scrollTimer.stop();
         resetDragData();
     } else if (point.state() == QEventPoint::Updated) {
         // Check to see that the movement can be considered as dragging
