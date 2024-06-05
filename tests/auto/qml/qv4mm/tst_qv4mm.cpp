@@ -534,6 +534,14 @@ void tst_qv4mm::mapAndSetKeepValuesAlive()
             sm->state = stateInfo.execute(sm, sm->stateData);
         }
         QV4::MapPrototype::method_set(afunction.getPointer(), &thisObject, values, 2);
+
+        // check that we can still insert primitve values - they don't get marked
+        // but they also should not casue any corrpution - note that a weak map
+        // only accepts object keys
+        values[0] = QV4::Value::fromInt32(12);
+        values[1] = QV4::Value::fromInt32(13);
+        QV4::MapPrototype::method_set(afunction.getPointer(), &thisObject, values, 2);
+
         QVERIFY(key->isMarked());
         QVERIFY(value->isMarked());
         bool gcComplete = engine.memoryManager->tryForceGCCompletion();
@@ -541,7 +549,7 @@ void tst_qv4mm::mapAndSetKeepValuesAlive()
         QVERIFY(key->inUse());
         QVERIFY(value->inUse());
         gc(engine);
-        QCOMPARE(map.property("size").toInt(), 1);
+        QCOMPARE(map.property("size").toInt(), 2);
     }
     {
         QJSEngine jsEngine;
@@ -605,13 +613,15 @@ void tst_qv4mm::mapAndSetKeepValuesAlive()
             sm->state = stateInfo.execute(sm, sm->stateData);
         }
         QV4::SetPrototype::method_add(afunction.getPointer(), &thisObject, values, 1);
+        values[0] = QV4::Value::fromInt32(13);
+        QV4::SetPrototype::method_add(afunction.getPointer(), &thisObject, values, 1);
         QVERIFY(!engine.hasException);
         QVERIFY(key->isMarked());
         bool gcComplete = engine.memoryManager->tryForceGCCompletion();
         QVERIFY(gcComplete);
         QVERIFY(key->inUse());
         gc(engine);
-        QCOMPARE(map.property("size").toInt(), 1);
+        QCOMPARE(map.property("size").toInt(), 2);
     }
     {
         QJSEngine jsEngine;

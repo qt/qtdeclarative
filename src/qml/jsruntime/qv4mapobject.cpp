@@ -217,6 +217,7 @@ ReturnedValue WeakMapPrototype::method_set(const FunctionObject *b, const Value 
     QV4::WriteBarrier::markCustom(scope.engine, [&](QV4::MarkStack *ms) {
         if (scope.engine->memoryManager->gcStateMachine->state <= GCState::FreeWeakMaps)
             return;
+        Q_ASSERT(argv[0].heapObject());
         argv[0].heapObject()->mark(ms);
         if (argc > 1) {
             if (auto *h = argv[1].heapObject())
@@ -328,7 +329,8 @@ ReturnedValue MapPrototype::method_set(const FunctionObject *b, const Value *thi
         return scope.engine->throwTypeError();
 
     QV4::WriteBarrier::markCustom(scope.engine, [&](QV4::MarkStack *ms) {
-        argv[0].heapObject()->mark(ms);
+        if  (auto *h = argv[0].heapObject())
+            h->mark(ms);
         if (argc > 1) {
             if (auto *h = argv[1].heapObject())
                 h->mark(ms);
