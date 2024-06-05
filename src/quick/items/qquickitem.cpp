@@ -1744,12 +1744,13 @@ Qt::FocusReason QQuickItemPrivate::lastFocusChangeReason() const
     return static_cast<Qt::FocusReason>(focusReason);
 }
 
-void QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
+bool QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
 {
     if (focusReason == reason)
-        return;
+        return false;
 
     focusReason = reason;
+    return true;
 }
 
 /*!

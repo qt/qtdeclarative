@@ -564,7 +564,7 @@ public:
 
     bool setFocusIfNeeded(QEvent::Type);
     Qt::FocusReason lastFocusChangeReason() const;
-    void setLastFocusChangeReason(Qt::FocusReason reason);
+    virtual bool setLastFocusChangeReason(Qt::FocusReason reason);
 
     QTransform windowToItemTransform() const;
     QTransform itemToWindowTransform() const;

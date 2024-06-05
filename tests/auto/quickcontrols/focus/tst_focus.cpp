@@ -15,6 +15,7 @@
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquicktextfield_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 
@@ -241,7 +242,7 @@ void tst_focus::reason()
     QQuickControl *customText = view.findChild<QQuickControl *>("customText");
     QQuickControl *customItem = view.findChild<QQuickControl *>("customItem");
     // not a QQuickControl subclass
-    QQuickItem *textfield = view.findChild<QQuickItem *>("textfield");
+    QQuickTextField *textfield = view.findChild<QQuickTextField *>("textfield");
 
     // helper for clicking into a control
     const auto itemCenter = [](const QQuickItem *item) -> QPoint {
@@ -270,21 +271,35 @@ void tst_focus::reason()
     }
     QCOMPARE(control->focusReason(), Qt::ActiveWindowFocusReason);
 
+    QSignalSpy controlSpy(control, SIGNAL(focusReasonChanged()));
+    QSignalSpy textfieldSpy(textfield, SIGNAL(focusReasonChanged()));
+    QSignalSpy customItemSpy(customItem, SIGNAL(focusReasonChanged()));
+    int controlSpyCount = 0, textfieldSpyCount = 0, customItemSpyCount = 0;
+    QVERIFY(!controlSpy.count());
+    QVERIFY(!textfieldSpy.count());
+    QVERIFY(!customItemSpy.count());
+
     // test setter/getter
     control->setFocus(false, Qt::MouseFocusReason);
     QCOMPARE(control->focusReason(), Qt::MouseFocusReason);
+    QCOMPARE(controlSpy.count(), ++controlSpyCount);
     control->setFocus(true, Qt::TabFocusReason);
     QCOMPARE(control->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(controlSpy.count(), ++controlSpyCount);
     control->setFocus(false, Qt::BacktabFocusReason);
     QCOMPARE(control->focusReason(), Qt::BacktabFocusReason);
+    QCOMPARE(controlSpy.count(), ++controlSpyCount);
     control->forceActiveFocus(Qt::ShortcutFocusReason);
     QCOMPARE(control->focusReason(), Qt::ShortcutFocusReason);
+    QCOMPARE(controlSpy.count(), ++controlSpyCount);
     control->setFocusReason(Qt::PopupFocusReason);
     QCOMPARE(control->focusReason(), Qt::PopupFocusReason);
+    QCOMPARE(controlSpy.count(), ++controlSpyCount);
 
     // programmatic focus changes
     combobox->setFocus(true, Qt::OtherFocusReason);
     QCOMPARE(control->focusReason(), Qt::OtherFocusReason);
+    QCOMPARE(controlSpy.count(), ++controlSpyCount);
 
     QVERIFY(combobox->hasFocus());
     QVERIFY(combobox->hasActiveFocus());
@@ -321,27 +336,35 @@ void tst_focus::reason()
     QVERIFY(customItem->hasActiveFocus());
     QCOMPARE(customText->focusReason(), Qt::TabFocusReason);
     QCOMPARE(customItem->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(customItemSpy.count(),++customItemSpyCount);
     customItem->setFocusReason(Qt::NoFocusReason);
+    QCOMPARE(customItemSpy.count(),++customItemSpyCount);
 
     QTest::keyClick(&view, Qt::Key_Tab);
     QVERIFY(textfield->hasFocus());
     QVERIFY(textfield->hasActiveFocus());
     QCOMPARE(qApp->focusObject(), textfield);
     QCOMPARE(customItem->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(customItemSpy.count(),++customItemSpyCount);
+    QCOMPARE(textfieldSpy.count(), ++textfieldSpyCount);
 
     QTest::keyClick(&view, Qt::Key_Tab);
     QVERIFY(control->hasFocus());
     QVERIFY(control->hasActiveFocus());
     QCOMPARE(control->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(controlSpy.count(), ++controlSpyCount);
 
     // backtab -> BacktabFocusReason
     QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
     QVERIFY(textfield->hasFocus());
     QCOMPARE(control->focusReason(), Qt::BacktabFocusReason);
+    QCOMPARE(controlSpy.count(), ++controlSpyCount);
+    QCOMPARE(textfieldSpy.count(), ++textfieldSpyCount);
 
     QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
     QVERIFY(customItem->hasFocus());
     QCOMPARE(customItem->focusReason(), Qt::BacktabFocusReason);
+    QCOMPARE(customItemSpy.count(),++customItemSpyCount);
 
     QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
     QVERIFY(customText->hasFocus());
@@ -396,11 +419,15 @@ void tst_focus::reason()
     QVERIFY(customItem->hasActiveFocus());
     QCOMPARE(customText->focusReason(), Qt::MouseFocusReason);
     QCOMPARE(customItem->focusReason(), Qt::MouseFocusReason);
+    QCOMPARE(customItemSpy.count(),++customItemSpyCount);
     customItem->setFocusReason(Qt::NoFocusReason);
+    QCOMPARE(customItemSpy.count(),++customItemSpyCount);
 
     QTest::mouseClick(&view, Qt::LeftButton, {}, itemCenter(textfield));
     QCOMPARE(customItem->focusReason(), Qt::MouseFocusReason);
+    QCOMPARE(customItemSpy.count(),++customItemSpyCount);
     customItem->setFocusReason(Qt::NoFocusReason);
+    QCOMPARE(customItemSpy.count(),++customItemSpyCount);
     customText->setFocusReason(Qt::NoFocusReason);
 
     // Wheel focus -> MouseFocusReason
@@ -410,11 +437,13 @@ void tst_focus::reason()
     QGuiApplication::sendEvent(customItem, &wheelEvent);
     QVERIFY(customItem->hasActiveFocus());
     QCOMPARE(customItem->focusReason(), Qt::MouseFocusReason);
+    QCOMPARE(customItemSpy.count(),++customItemSpyCount);
 
     // Popup opens -> PopupFocusReason
     QTest::mouseClick(&view, Qt::RightButton, {}, itemCenter(control));
     QTRY_VERIFY(!customItem->hasActiveFocus());
     QCOMPARE(customItem->focusReason(), Qt::PopupFocusReason);
+    QCOMPARE(customItemSpy.count(),++customItemSpyCount);
     QTest::keyClick(&view, Qt::Key_Escape); // close the popup
 }
 
