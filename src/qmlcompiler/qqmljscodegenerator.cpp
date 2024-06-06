@@ -356,11 +356,16 @@ void QQmlJSCodeGenerator::generate_Ret()
     const auto stored = m_function->returnType.storedType();
     if (m_typeResolver->equals(contained, stored)
             || (contained->isReferenceType() && stored->isReferenceType())) {
+        // We can always std::move here, no matter what the optimization pass has detected. The
+        // function returns and nothing can access the accumulator register anymore afterwards.
         m_body += u"    *static_cast<"_s
                 + stored->augmentedInternalName()
                 + u" *>(argv[0]) = "_s
-                + conversion(m_state.accumulatorIn(), m_function->returnType,
-                             consumedAccumulatorVariableIn())
+                + conversion(
+                          m_state.accumulatorIn(), m_function->returnType,
+                          m_typeResolver->isTriviallyCopyable(m_state.accumulatorIn().storedType())
+                                  ? in
+                                  : u"std::move("_s + in + u')')
                 + u";\n"_s;
     } else if (m_typeResolver->registerContains(m_state.accumulatorIn(), contained)) {
         m_body += u"    const QMetaType returnType = "_s + contentType(m_state.accumulatorIn(), in)
