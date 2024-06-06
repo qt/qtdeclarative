@@ -8,7 +8,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
+Q_STATIC_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
 
 /*!
     \keyword Qt Quick Effects
