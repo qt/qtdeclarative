@@ -71,8 +71,6 @@ QT_BEGIN_NAMESPACE
     \sa Menu
 */
 
-Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformMenus)
-
 QQuickLabsPlatformMenuBar::QQuickLabsPlatformMenuBar(QObject *parent)
     : QObject(parent),
       m_complete(false),

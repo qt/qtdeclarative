@@ -11,7 +11,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcFolderListModel, "qt.labs.folderlistmodel")
+Q_STATIC_LOGGING_CATEGORY(lcFolderListModel, "qt.labs.folderlistmodel")
 
 class QQuickFolderListModelPrivate
 {

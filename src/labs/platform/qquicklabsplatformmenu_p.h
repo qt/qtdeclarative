@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qurl.h>
 #include <QtGui/qfont.h>
@@ -26,6 +27,8 @@
 #include "qquicklabsplatformicon_p.h"
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformMenus)
 
 class QIcon;
 class QWindow;

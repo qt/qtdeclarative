@@ -13,7 +13,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcBR, "qt.quick.boundaryrule")
+Q_STATIC_LOGGING_CATEGORY(lcBR, "qt.quick.boundaryrule")
 
 class QQuickBoundaryReturnJob;
 class QQuickBoundaryRulePrivate : public QObjectPrivate

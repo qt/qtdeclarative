@@ -9,7 +9,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTableModel, "qt.qml.tablemodel")
+Q_STATIC_LOGGING_CATEGORY(lcTableModel, "qt.qml.tablemodel")
 
 /*!
     \qmltype TableModel
