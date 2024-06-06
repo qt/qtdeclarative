@@ -54,6 +54,7 @@ int main()
 
     // trigger the load
     envPtr->loadPendingDependencies();
+    DomItem env(envPtr);
 
     // # Read only API: DomItem is a generic pointer for read only access to Dom Itmes :)
     {
@@ -229,7 +230,7 @@ int main()
         QString reformattedFilePath =
                 QDir(QDir::tempPath())
                         .filePath(QFileInfo(testFilePath).baseName() + QLatin1String(".qml"));
-        DomItem newFile = qmlFile.writeOut(reformattedFilePath);
+        qmlFile.writeOut(reformattedFilePath);
         qDebug() << "reformatted written at " << reformattedFilePath;
 
         // ## Jumping around
@@ -459,7 +460,12 @@ int main()
                 QDir(QDir::tempPath())
                         .filePath(QStringLiteral(u"edited") + QFileInfo(testFilePath).baseName()
                                   + QLatin1String(".qml"));
-        MutableDomItem reformattedEditedFile = myFile.writeOut(reformattedFilePath);
+        /* since this was the only usecase of the WriteOut call returning an item
+         * this API has been removed in
+         * https://codereview.qt-project.org/c/qt/qtdeclarative/+/523217
+
+        MutableDomItem
+        reformattedEditedFile = myFile.writeOut(reformattedFilePath);
         // the reformatted edited file might be different from the edited file
         // but the differences are just in file location/formatting
         Q_ASSERT(domCompareStrList(myFile, reformattedEditedFile, FieldFilter::noLocationFilter())
@@ -498,5 +504,6 @@ int main()
         Q_ASSERT(myFile.refreshed().ownerAs<QmlFile>() == reformattedEditedFile.ownerAs<QmlFile>());
         Q_ASSERT(tFile.fileObject().refreshed().ownerAs<QmlFile>()
                  == reformattedEditedFile.ownerAs<QmlFile>());
+        */
     }
 }
