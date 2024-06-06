@@ -586,6 +586,7 @@ TestCase {
         id: bindingToContentItemAndStandaloneFlickable
 
         Item {
+            objectName: "container"
             width: 200
             height: 200
 
@@ -624,7 +625,7 @@ TestCase {
         verify(verticalScrollBar.visible)
         verify(horizontalScrollBar.visible)
 
-        mouseDrag(verticalScrollBar, verticalScrollBar.width / 2, verticalScrollBar.height / 2, 0, 50)
+        mouseWheel(control, control.width / 2, control.height / 2, 0, -120)
         verify(verticalScrollBar.active)
         verify(horizontalScrollBar.active)
     }
@@ -633,6 +634,7 @@ TestCase {
         id: contentItemAssignedImperatively
 
         Item {
+            objectName: "container"
             width: 100
             height: 100
 
@@ -658,11 +660,28 @@ TestCase {
     }
 
     // Tests that a ListView declared before the ScrollView (as the QObject destruction order
-    // is relevant for the bug) and assigned imperatively to ScrollView does not cause a crash
-    // on exit.
+    // is relevant for the bug) and assigned imperatively to ScrollView does not cause:
+    // - a crash on exit
+    // - scroll bars that should be hidden to be visible
     function test_contentItemAssignedImperatively() {
         let root = createTemporaryObject(contentItemAssignedImperatively, testCase)
         verify(root)
+
+        let control = root.scrollView
+        let flickable = control.contentItem
+        compare(flickable.parent, control)
+
+        let horizontalScrollBar = control.ScrollBar.horizontal
+        let verticalScrollBar = control.ScrollBar.vertical
+        // The horizontal ScrollBar's policy is set to AlwaysOff, so it shouldn't ever be visible.
+        verify(!horizontalScrollBar.visible)
+        // The vertical ScrollBar should be visible...
+        verify(verticalScrollBar.visible)
+
+        // ... and it should become active when the ScrollView is scrolled.
+        mouseWheel(control, control.width / 2, control.height / 2, 0, -120)
+        verify(verticalScrollBar.active)
+
         // Shouldn't crash.
     }
 }

@@ -687,13 +687,12 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     For fine-grained control, see sizeTable and opacityTable.
 
     Acceptable values are
-    \list
-    \li ImageParticle.None: Particles just appear and disappear.
-    \li ImageParticle.Fade: Particles fade in from 0 opacity at the start of their life, and fade out to 0 at the end.
-    \li ImageParticle.Scale: Particles scale in from 0 size at the start of their life, and scale back to 0 at the end.
-    \endlist
 
-    Default value is Fade.
+    \value ImageParticle.None   Particles just appear and disappear.
+    \value ImageParticle.Fade   Particles fade in from 0 opacity at the start of their life, and fade out to 0 at the end.
+    \value ImageParticle.Scale  Particles scale in from 0 size at the start of their life, and scale back to 0 at the end.
+
+    The default value is \c ImageParticle.Fade.
 */
 /*!
     \qmlproperty bool QtQuick.Particles::ImageParticle::spritesInterpolate

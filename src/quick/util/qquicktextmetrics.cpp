@@ -130,12 +130,10 @@ void QQuickTextMetrics::setText(const QString &text)
     This property holds the elide mode of the text. This determines the
     position in which the string is elided. The possible values are:
 
-    \list
-        \li \c Qt::ElideNone - No eliding; this is the default value.
-        \li \c Qt::ElideLeft - For example: "...World"
-        \li \c Qt::ElideMiddle - For example: "He...ld"
-        \li \c Qt::ElideRight - For example: "Hello..."
-    \endlist
+    \value Qt::ElideNone    No eliding; this is the default value.
+    \value Qt::ElideLeft    For example: "...World"
+    \value Qt::ElideMiddle  For example: "He...ld"
+    \value Qt::ElideRight   For example: "Hello..."
 
     \sa elideWidth, QFontMetrics::elidedText
 */

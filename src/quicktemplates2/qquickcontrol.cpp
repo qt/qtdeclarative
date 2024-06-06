@@ -799,13 +799,25 @@ void QQuickControlPrivate::hideOldItem(QQuickItem *item)
     Named "unhide" because it's used for cases where an item
     that was previously hidden by \l hideOldItem() wants to be
     shown by a control again, such as a ScrollBar in ScrollView.
+
+    \a visibility controls the visibility of \a item, as there
+    may have been bindings that controlled visibility, such as
+    with a typical ScrollBar.qml implementation:
+
+    \code
+     visible: control.policy !== T.ScrollBar.AlwaysOff
+    \endcode
+
+    In the future we could try to save the binding for the visible
+    property (using e.g. QQmlAnyBinding::takeFrom), but for now we
+    keep it simple and just allow restoring an equivalent literal value.
 */
-void QQuickControlPrivate::unhideOldItem(QQuickControl *control, QQuickItem *item)
+void QQuickControlPrivate::unhideOldItem(QQuickControl *control, QQuickItem *item, UnhideVisibility visibility)
 {
     Q_ASSERT(item);
     qCDebug(lcItemManagement) << "unhiding old item" << item;
 
-    item->setVisible(true);
+    item->setVisible(visibility == UnhideVisibility::Show);
     item->setParentItem(control);
 
 #if QT_CONFIG(accessibility)
@@ -2175,12 +2187,13 @@ QAccessible::Role QQuickControl::accessibleRole() const
 
 void QQuickControl::accessibilityActiveChanged(bool active)
 {
+    Q_D(QQuickControl);
     if (!active)
         return;
 
     QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
     Q_ASSERT(accessibleAttached);
-    accessibleAttached->setRole(accessibleRole());
+    accessibleAttached->setRole(d->effectiveAccessibleRole());
 }
 #endif
 

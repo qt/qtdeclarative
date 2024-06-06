@@ -235,17 +235,16 @@ QString QQuickTextEdit::text() const
 
     The requested weight of the font. The weight requested must be an integer
     between 1 and 1000, or one of the predefined values:
-    \list
-    \li Font.Thin
-    \li Font.Light
-    \li Font.ExtraLight
-    \li Font.Normal - the default
-    \li Font.Medium
-    \li Font.DemiBold
-    \li Font.Bold
-    \li Font.ExtraBold
-    \li Font.Black
-    \endlist
+
+    \value Font.Thin        100
+    \value Font.ExtraLight  200
+    \value Font.Light       300
+    \value Font.Normal      400 (default)
+    \value Font.Medium      500
+    \value Font.DemiBold    600
+    \value Font.Bold        700
+    \value Font.ExtraBold   800
+    \value Font.Black       900
 
     \qml
     TextEdit { text: "Hello"; font.weight: Font.DemiBold }
@@ -310,13 +309,12 @@ QString QQuickTextEdit::text() const
 
     Sets the capitalization for the text.
 
-    \list
-    \li Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
-    \li Font.AllUppercase - This alters the text to be rendered in all uppercase type.
-    \li Font.AllLowercase - This alters the text to be rendered in all lowercase type.
-    \li Font.SmallCaps - This alters the text to be rendered in small-caps type.
-    \li Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
-    \endlist
+    \value Font.MixedCase       no capitalization change is applied
+    \value Font.AllUppercase    alters the text to be rendered in all uppercase type
+    \value Font.AllLowercase    alters the text to be rendered in all lowercase type
+    \value Font.SmallCaps       alters the text to be rendered in small-caps type
+    \value Font.Capitalize      alters the text to be rendered with the first character of
+                                each word as an uppercase character
 
     \qml
     TextEdit { text: "Hello"; font.capitalization: Font.AllLowercase }
@@ -333,23 +331,21 @@ QString QQuickTextEdit::text() const
 
     \note This property only has an effect when used together with render type TextEdit.NativeRendering.
 
-    \list
-    \value Font.PreferDefaultHinting - Use the default hinting level for the target platform.
-    \value Font.PreferNoHinting - If possible, render text without hinting the outlines
+    \value Font.PreferDefaultHinting    Use the default hinting level for the target platform.
+    \value Font.PreferNoHinting         If possible, render text without hinting the outlines
            of the glyphs. The text layout will be typographically accurate, using the same metrics
            as are used e.g. when printing.
-    \value Font.PreferVerticalHinting - If possible, render text with no horizontal hinting,
+    \value Font.PreferVerticalHinting   If possible, render text with no horizontal hinting,
            but align glyphs to the pixel grid in the vertical direction. The text will appear
            crisper on displays where the density is too low to give an accurate rendering
            of the glyphs. But since the horizontal metrics of the glyphs are unhinted, the text's
            layout will be scalable to higher density devices (such as printers) without impacting
            details such as line breaks.
-    \value Font.PreferFullHinting - If possible, render text with hinting in both horizontal and
+    \value Font.PreferFullHinting       If possible, render text with hinting in both horizontal and
            vertical directions. The text will be altered to optimize legibility on the target
            device, but since the metrics will depend on the target size of the text, the positions
            of glyphs, line breaks, and other typographical detail will not scale, meaning that a
            text layout may look different on devices with different pixel densities.
-    \endlist
 
     \qml
     TextEdit { text: "Hello"; renderType: TextEdit.NativeRendering; font.hintingPreference: Font.PreferVerticalHinting }
@@ -519,12 +515,11 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     Override the default rendering type for this component.
 
     Supported render types are:
-    \list
-    \li Text.QtRendering
-    \li Text.NativeRendering
-    \endlist
 
-    Select Text.NativeRendering if you prefer text to look native on the target platform and do
+    \value TextEdit.QtRendering     Text is rendered using a scalable distance field for each glyph.
+    \value TextEdit.NativeRendering Text is rendered using a platform-specific technique.
+
+    Select \c TextEdit.NativeRendering if you prefer text to look native on the target platform and do
     not require advanced features such as transformation of the text. Using such features in
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
@@ -674,19 +669,21 @@ void QQuickTextEdit::setSelectedTextColor(const QColor &color)
     the left.
 
     Valid values for \c horizontalAlignment are:
-    \list
-    \li TextEdit.AlignLeft (default)
-    \li TextEdit.AlignRight
-    \li TextEdit.AlignHCenter
-    \li TextEdit.AlignJustify
-    \endlist
+
+    \value TextEdit.AlignLeft
+        left alignment with ragged edges on the right (default)
+    \value TextEdit.AlignRight
+        align each line to the right with ragged edges on the left
+    \value TextEdit.AlignHCenter
+        align each line to the center
+    \value TextEdit.AlignJustify
+        align each line to both right and left, spreading out words as necessary
 
     Valid values for \c verticalAlignment are:
-    \list
-    \li TextEdit.AlignTop (default)
-    \li TextEdit.AlignBottom
-    \li TextEdit.AlignVCenter
-    \endlist
+
+    \value TextEdit.AlignTop        start at the top of the item (default)
+    \value TextEdit.AlignBottom     align the last line to the bottom and other lines above
+    \value TextEdit.AlignVCenter    align the center vertically
 
     When using the attached property LayoutMirroring::enabled to mirror application
     layouts, the horizontal alignment of text will also be mirrored. However, the property
@@ -901,20 +898,26 @@ void QQuickTextEdit::setVAlign(QQuickTextEdit::VAlignment alignment)
     moveCursorDelegate();
     emit verticalAlignmentChanged(d->vAlign);
 }
+
 /*!
     \qmlproperty enumeration QtQuick::TextEdit::wrapMode
 
     Set this property to wrap the text to the TextEdit item's width.
     The text will only wrap if an explicit width has been set.
 
-    \list
-    \li TextEdit.NoWrap - no wrapping will be performed. If the text contains insufficient newlines, then implicitWidth will exceed a set width.
-    \li TextEdit.WordWrap - wrapping is done on word boundaries only. If a word is too long, implicitWidth will exceed a set width.
-    \li TextEdit.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
-    \li TextEdit.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
-    \endlist
+    \value TextEdit.NoWrap
+        (default) no wrapping will be performed. If the text contains insufficient newlines,
+        \l {Item::}{implicitWidth} will exceed a set width.
+    \value TextEdit.WordWrap
+        wrapping is done on word boundaries only. If a word is too long,
+        \l {Item::}{implicitWidth} will exceed a set width.
+    \value TextEdit.WrapAnywhere
+        wrapping is done at any point on a line, even if it occurs in the middle of a word.
+    \value TextEdit.Wrap
+        if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate
+        point on the line, even in the middle of a word.
 
-    The default is TextEdit.NoWrap. If you set a width, consider using TextEdit.Wrap.
+    The default is \c TextEdit.NoWrap. If you set a width, consider using \c TextEdit.Wrap.
 */
 QQuickTextEdit::WrapMode QQuickTextEdit::wrapMode() const
 {
@@ -1091,13 +1094,12 @@ int QQuickTextEdit::positionAt(qreal x, qreal y) const
     The selection mode specifies whether the selection is updated on a per character or a per word
     basis. If not specified the selection mode will default to \c {TextEdit.SelectCharacters}.
 
-    \list
-    \li TextEdit.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
-    the previous cursor position) to the specified position.
-    \li TextEdit.SelectWords - Sets the selectionStart and selectionEnd to include all
-    words between the specified position and the previous cursor position.  Words partially in the
-    range are included.
-    \endlist
+    \value TextEdit.SelectCharacters
+        Sets either the selectionStart or selectionEnd (whichever was at the previous cursor position)
+        to the specified position.
+    \value TextEdit.SelectWords
+        Sets the selectionStart and selectionEnd to include all words between the specified position
+        and the previous cursor position. Words partially in the range are included.
 
     For example, take this sequence of calls:
 
@@ -1395,38 +1397,31 @@ void QQuickTextEdit::setTextMargin(qreal margin)
 
     Flags that alter behaviour are:
 
-    \list
-    \li Qt.ImhHiddenText - Characters should be hidden, as is typically used when entering passwords.
-    \li Qt.ImhSensitiveData - Typed text should not be stored by the active input method
-            in any persistent storage like predictive user dictionary.
-    \li Qt.ImhNoAutoUppercase - The input method should not try to automatically switch to upper case
-            when a sentence ends.
-    \li Qt.ImhPreferNumbers - Numbers are preferred (but not required).
-    \li Qt.ImhPreferUppercase - Upper case letters are preferred (but not required).
-    \li Qt.ImhPreferLowercase - Lower case letters are preferred (but not required).
-    \li Qt.ImhNoPredictiveText - Do not use predictive text (i.e. dictionary lookup) while typing.
-
-    \li Qt.ImhDate - The text editor functions as a date field.
-    \li Qt.ImhTime - The text editor functions as a time field.
-    \endlist
+    \value Qt.ImhHiddenText         Characters should be hidden, as is typically used when entering passwords.
+    \value Qt.ImhSensitiveData      Typed text should not be stored by the active input method
+                                    in any persistent storage like predictive user dictionary.
+    \value Qt.ImhNoAutoUppercase    The input method should not try to automatically switch to
+                                    upper case when a sentence ends.
+    \value Qt.ImhPreferNumbers      Numbers are preferred (but not required).
+    \value Qt.ImhPreferUppercase    Upper case letters are preferred (but not required).
+    \value Qt.ImhPreferLowercase    Lower case letters are preferred (but not required).
+    \value Qt.ImhNoPredictiveText   Do not use predictive text (i.e. dictionary lookup) while typing.
+    \value Qt.ImhDate               The text editor functions as a date field.
+    \value Qt.ImhTime               The text editor functions as a time field.
 
     Flags that restrict input (exclusive flags) are:
 
-    \list
-    \li Qt.ImhDigitsOnly - Only digits are allowed.
-    \li Qt.ImhFormattedNumbersOnly - Only number input is allowed. This includes decimal point and minus sign.
-    \li Qt.ImhUppercaseOnly - Only upper case letter input is allowed.
-    \li Qt.ImhLowercaseOnly - Only lower case letter input is allowed.
-    \li Qt.ImhDialableCharactersOnly - Only characters suitable for phone dialing are allowed.
-    \li Qt.ImhEmailCharactersOnly - Only characters suitable for email addresses are allowed.
-    \li Qt.ImhUrlCharactersOnly - Only characters suitable for URLs are allowed.
-    \endlist
+    \value Qt.ImhDigitsOnly         Only digits are allowed.
+    \value Qt.ImhFormattedNumbersOnly Only number input is allowed. This includes decimal point and minus sign.
+    \value Qt.ImhUppercaseOnly      Only upper case letter input is allowed.
+    \value Qt.ImhLowercaseOnly      Only lower case letter input is allowed.
+    \value Qt.ImhDialableCharactersOnly Only characters suitable for phone dialing are allowed.
+    \value Qt.ImhEmailCharactersOnly Only characters suitable for email addresses are allowed.
+    \value Qt.ImhUrlCharactersOnly  Only characters suitable for URLs are allowed.
 
     Masks:
 
-    \list
-    \li Qt.ImhExclusiveInputMask - This mask yields nonzero if any of the exclusive flags are used.
-    \endlist
+    \value Qt.ImhExclusiveInputMask This mask yields nonzero if any of the exclusive flags are used.
 */
 
 Qt::InputMethodHints QQuickTextEdit::inputMethodHints() const
@@ -1574,10 +1569,8 @@ void QQuickTextEdit::setSelectByMouse(bool on)
 
     Specifies how text should be selected using a mouse.
 
-    \list
-    \li TextEdit.SelectCharacters - The selection is updated with individual characters. (Default)
-    \li TextEdit.SelectWords - The selection is updated with whole words.
-    \endlist
+    \value TextEdit.SelectCharacters    (default) The selection is updated with individual characters.
+    \value TextEdit.SelectWords         The selection is updated with whole words.
 
     This property only applies when \l selectByMouse is true.
 */

@@ -2068,7 +2068,7 @@ void QQuickComboBox::keyReleaseEvent(QKeyEvent *event)
 
     switch (event->key()) {
     case Qt::Key_Space:
-        if (!isEditable())
+        if (!isEditable() && isPressed())
             d->togglePopup(true);
         setPressed(false);
         event->accept();

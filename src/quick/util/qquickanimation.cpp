@@ -1664,14 +1664,16 @@ void QQuickRotationAnimation::setTo(qreal t)
 
     Possible values are:
 
-    \list
-    \li RotationAnimation.Numerical (default) - Rotate by linearly interpolating between the two numbers.
-           A rotation from 10 to 350 will rotate 340 degrees clockwise.
-    \li RotationAnimation.Clockwise - Rotate clockwise between the two values
-    \li RotationAnimation.Counterclockwise - Rotate counterclockwise between the two values
-    \li RotationAnimation.Shortest - Rotate in the direction that produces the shortest animation path.
-           A rotation from 10 to 350 will rotate 20 degrees counterclockwise.
-    \endlist
+    \value RotationAnimation.Numerical
+        (default) Rotate by linearly interpolating between the two numbers.
+        A rotation from \c 10 to \c 350 will rotate 340 degrees clockwise.
+    \value RotationAnimation.Clockwise
+        Rotate clockwise between the two values
+    \value RotationAnimation.Counterclockwise
+        Rotate counterclockwise between the two values
+    \value RotationAnimation.Shortest
+        Rotate in the direction that produces the shortest animation path.
+        A rotation from \c 10 to \c 350 will rotate \c 20 degrees counterclockwise.
 */
 QQuickRotationAnimation::RotationDirection QQuickRotationAnimation::direction() const
 {

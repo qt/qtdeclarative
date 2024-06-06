@@ -30,6 +30,7 @@
 #include <QtCore/QConcatenateTablesProxyModel>
 #include <QtGui/QStandardItemModel>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlapplicationengine.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
@@ -44,12 +45,14 @@ public:
     tst_QQmlDelegateModel();
 
 private slots:
+    void resettingRolesRespected();
     void valueWithoutCallingObjectFirst_data();
     void valueWithoutCallingObjectFirst();
     void qtbug_86017();
     void filterOnGroup_removeWhenCompleted();
     void contextAccessedByHandler();
     void redrawUponColumnChange();
+    void deleteRace();
 };
 
 class AbstractItemModel : public QAbstractItemModel
@@ -107,6 +110,61 @@ tst_QQmlDelegateModel::tst_QQmlDelegateModel()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qmlRegisterType<AbstractItemModel>("Test", 1, 0, "AbstractItemModel");
+}
+
+class TableModel : public QAbstractTableModel
+{
+    Q_OBJECT
+
+public:
+    int rowCount(const QModelIndex & = QModelIndex()) const override
+    {
+        return 1;
+    }
+
+    int columnCount(const QModelIndex & = QModelIndex()) const override
+    {
+        return 1;
+    }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        switch (role) {
+        case 0:
+            return QString("foo: %1, %2").arg(index.column()).arg(index.row());
+        case 1:
+            return 42;
+        default:
+            break;
+        }
+
+        return QVariant();
+    }
+
+    Q_INVOKABLE void change() { beginResetModel(); toggle = !toggle; endResetModel(); }
+
+    QHash<int, QByteArray> roleNames() const override
+    {
+        if (toggle)
+            return { {0, "foo"} };
+        else
+            return { {1, "bar"} };
+    }
+
+    bool toggle = true;
+};
+
+void tst_QQmlDelegateModel::resettingRolesRespected()
+{
+    auto model = std::make_unique<TableModel>();
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({ {"model", QVariant::fromValue(model.get()) }} );
+    engine.load(testFileUrl("resetModelData.qml"));
+    QTRY_VERIFY(!engine.rootObjects().isEmpty());
+    QObject *root = engine.rootObjects().constFirst();
+    QVERIFY(!root->property("success").toBool());
+    model->change();
+    QTRY_VERIFY(root->property("success").toBool());
 }
 
 void tst_QQmlDelegateModel::valueWithoutCallingObjectFirst_data()
@@ -201,6 +259,18 @@ void tst_QQmlDelegateModel::redrawUponColumnChange()
     m1.removeColumn(0);
 
     QCOMPARE(item->property("text").toString(), "Coconut");
+}
+
+
+void tst_QQmlDelegateModel::deleteRace()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("deleteRace.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("count").toInt(), 2);
+    QTRY_COMPARE(o->property("count").toInt(), 0);
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)

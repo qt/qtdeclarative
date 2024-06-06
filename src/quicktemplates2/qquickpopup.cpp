@@ -47,6 +47,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickaccessibleattached_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 
@@ -200,6 +201,36 @@ Q_LOGGING_CATEGORY(lcPopup, "qt.quick.controls.popup")
             anchors.bottom: parent.bottom
         }
      }
+    \endcode
+
+    \note The popup's \l{contentItem}{content item} gets parented to the
+    \l{Overlay::overlay}{overlay}, and does not live within the popup's parent.
+    Because of that, a \l{Item::scale}{scale} applied to the tree in which
+    the popup lives does not apply to the visual popup. To make the popup
+    of e.g. a \l{ComboBox} follow the scale of the combobox, apply the same scale
+    to the \l{Overlay::overlay}{overlay} as well:
+
+    \code
+    Window {
+        property double scaleFactor: 2.0
+
+        Scale {
+            id: scale
+            xScale: scaleFactor
+            yScale: scaleFactor
+        }
+        Item {
+            id: scaledContent
+            transform: scale
+
+            ComboBox {
+                id: combobox
+                // ...
+            }
+        }
+
+        Overlay.overlay.transform: scale
+    }
     \endcode
 
     \section1 Popup Positioning
@@ -2759,6 +2790,19 @@ QFont QQuickPopup::defaultFont() const
 }
 
 #if QT_CONFIG(accessibility)
+QAccessible::Role QQuickPopup::effectiveAccessibleRole() const
+{
+    auto *attached = qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, false);
+
+    auto role = QAccessible::NoRole;
+    if (auto *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(attached))
+        role = accessibleAttached->role();
+    if (role == QAccessible::NoRole)
+        role = accessibleRole();
+
+    return role;
+}
+
 QAccessible::Role QQuickPopup::accessibleRole() const
 {
     return QAccessible::Dialog;

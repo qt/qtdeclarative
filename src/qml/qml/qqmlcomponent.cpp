@@ -381,7 +381,12 @@ bool QQmlComponentPrivate::setInitialProperty(QObject *component, const QString&
     QQmlProperty prop = QQmlComponentPrivate::removePropertyFromRequired(component, name, requiredProperties());
     QQmlPropertyPrivate *privProp = QQmlPropertyPrivate::get(prop);
     const bool isValid = prop.isValid();
-    if (!isValid || !privProp->writeValueProperty(value, {})) {
+    if (isValid && privProp->writeValueProperty(value, {})) {
+        if (prop.isBindable()) {
+            if (QQmlObjectCreator *creator = state.creator.data())
+                creator->removePendingBinding(prop.object(), prop.index());
+        }
+    } else {
         QQmlError error{};
         error.setUrl(url);
         if (isValid)
@@ -391,8 +396,9 @@ bool QQmlComponentPrivate::setInitialProperty(QObject *component, const QString&
                                                                                             QQmlMetaType::prettyTypeName(component)));
         state.errors.push_back(error);
         return false;
-    } else
-        return true;
+    }
+
+    return true;
 }
 
 /*!
@@ -436,13 +442,11 @@ QQmlComponent::~QQmlComponent()
     This property holds the status of component loading. The status can be one of the
     following:
 
-    \list
-    \li \c{Component.Null} - no data is available for the component
-    \li \c{Component.Ready} - the component has been loaded, and can be used to create instances.
-    \li \c{Component.Loading} - the component is currently being loaded
-    \li \c{Component.Error} - an error occurred while loading the component.
+    \value Component.Null       no data is available for the component
+    \value Component.Ready      the component has been loaded, and can be used to create instances.
+    \value Component.Loading    the component is currently being loaded
+    \value Component.Error      an error occurred while loading the component.
         Calling \l errorString() will provide a human-readable description of any errors.
-    \endlist
  */
 
 /*!
@@ -1394,7 +1398,10 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 */
 
 
-void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v, RequiredProperties &requiredProperties, QObject *createdComponent)
+void QQmlComponentPrivate::setInitialProperties(
+    QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o,
+    const QV4::Value &v, RequiredProperties &requiredProperties, QObject *createdComponent,
+    QQmlObjectCreator *creator)
 {
     QV4::Scope scope(engine);
     QV4::ScopedObject object(scope);
@@ -1434,13 +1441,34 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
             qmlWarning(createdComponent, error);
             continue;
         }
-        name = engine->newString(properties.last());
+        const QString lastProperty = properties.last();
+        name = engine->newString(lastProperty);
         object->put(name, val);
         if (engine->hasException) {
             qmlWarning(createdComponent, engine->catchExceptionAsQmlError());
             continue;
         } else if (isTopLevelProperty) {
             auto prop = removePropertyFromRequired(createdComponent, name->toQString(), requiredProperties);
+        }
+        if (!creator)
+            continue;
+
+        if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
+            if (QObject *o = wrapper->object()) {
+                if (QQmlData *ddata = QQmlData::get(o)) {
+                    if (const QQmlPropertyData *propData = ddata->propertyCache->property(
+                            lastProperty, o, ddata->outerContext)) {
+                        if (propData->isBindable())
+                            creator->removePendingBinding(o, propData->coreIndex());
+                    }
+                } else {
+                    const QMetaObject *meta = o->metaObject();
+                    Q_ASSERT(meta);
+                    const int index = meta->indexOfProperty(lastProperty.toUtf8());
+                    if (index != -1 && meta->property(index).isBindable())
+                        creator->removePendingBinding(o, index);
+                }
+            }
         }
     }
 
@@ -1522,7 +1550,8 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 
     if (!valuemap->isUndefined()) {
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->qmlContext());
-        QQmlComponentPrivate::setInitialProperties(v4, qmlContext, object, valuemap, d->requiredProperties(), rv);
+        QQmlComponentPrivate::setInitialProperties(
+            v4, qmlContext, object, valuemap, d->requiredProperties(), rv, d->state.creator.data());
     }
     if (!d->requiredProperties().empty()) {
         QList<QQmlError> errors;
@@ -1672,8 +1701,11 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(QV4::QmlContext
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));
     Q_ASSERT(object->as<QV4::Object>());
 
-    if (!valuemap.isUndefined())
-        setInitialProperties(v4engine, qmlContext, object, valuemap, requiredProperties, toCreate);
+    if (!valuemap.isUndefined()) {
+        setInitialProperties(
+            v4engine, qmlContext, object, valuemap, requiredProperties,
+            toCreate, state.creator.data());
+    }
 }
 
 QQmlComponentExtension::QQmlComponentExtension(QV4::ExecutionEngine *v4)
@@ -1772,7 +1804,9 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o, RequiredProperties &re
         QV4::Scope scope(v4);
         QV4::ScopedObject obj(scope, QV4::QObjectWrapper::wrap(v4, o));
         QV4::Scoped<QV4::QmlContext> qmlCtxt(scope, d()->qmlContext);
-        QQmlComponentPrivate::setInitialProperties(v4, qmlCtxt, obj, d()->valuemap, requiredProperties, o);
+        QQmlComponentPrivate::setInitialProperties(
+            v4, qmlCtxt, obj, d()->valuemap, requiredProperties, o,
+            QQmlIncubatorPrivate::get(d()->incubator)->creator.data());
     }
 }
 

@@ -36,8 +36,10 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/private/qquickimage_p.h>
+#include <QtQuick/private/qquickimage_p_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtGui/private/qrhi_p.h>
 
 using namespace QQuickVisualTestUtils;
 
@@ -57,6 +59,8 @@ private slots:
     void inset();
     void implicitSize_data();
     void implicitSize();
+    void hwCompressedImages_data();
+    void hwCompressedImages();
 };
 
 static QImage grabItemToImage(QQuickItem *item)
@@ -253,6 +257,61 @@ void tst_qquickninepatchimage::implicitSize()
 
     QCOMPARE(ninePatchImage->implicitWidth(), implicitSize.width());
     QCOMPARE(ninePatchImage->implicitHeight(), implicitSize.height());
+}
+
+void tst_qquickninepatchimage::hwCompressedImages_data()
+{
+    QTest::addColumn<int>("dpr");
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QSize>("size");
+    QTest::addColumn<QRhiTexture::Format>("format");
+
+    const struct TestFile {
+        QString name;
+        QSize size;
+        QRhiTexture::Format format;
+    } testFiles [] = {
+        { "o1_bc1.ktx", QSize(64, 64), QRhiTexture::BC1 },
+        { "logo.pkm", QSize(256, 256), QRhiTexture::ETC2_RGB8 },
+        { "qt4.astc", QSize(250, 200), QRhiTexture::ASTC_8x8 }
+    };
+
+    for (const TestFile &file : testFiles) {
+        for (int dpr = 1; dpr <= 4; ++dpr)
+            QTest::newRow(qPrintable(QString::fromLatin1("%1 DPR=%2").arg(file.name).arg(dpr))) << dpr << file.name << file.size << file.format;
+    }
+}
+
+void tst_qquickninepatchimage::hwCompressedImages()
+{
+    QFETCH(int, dpr);
+    QFETCH(QString, file);
+    QFETCH(QSize, size);
+    QFETCH(QRhiTexture::Format, format);
+
+    QHighDpiScaling::setGlobalFactor(dpr);
+
+    QQuickView view(testFileUrl("ninepatchimage.qml"));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    if (!QSGRendererInterface::isApiRhiBased(view.rendererInterface()->graphicsApi()))
+        QSKIP("Skipping due to using software backend");
+
+    QRhi *rhi = static_cast<QRhi *>(view.rendererInterface()->getResource(&view, QSGRendererInterface::RhiResource));
+    if (!rhi->isTextureFormatSupported(format))
+        QSKIP(qPrintable(QString::fromLatin1("%1 not supported, skip").arg(format)));
+
+    QQuickImage *ninePatchImage = qobject_cast<QQuickImage *>(view.rootObject());
+    QVERIFY(ninePatchImage);
+    ninePatchImage->setSource(testFileUrl(file));
+    ninePatchImage->setSize(size);
+    QSignalSpy spy(&view, SIGNAL(afterSynchronizing()));
+    QTRY_VERIFY(spy.size() >= 1);
+
+    QQuickImagePrivate *ninePatchImagePrivate = static_cast<QQuickImagePrivate *>(QQuickItemPrivate::get(ninePatchImage));
+    QVERIFY(ninePatchImagePrivate->paintNode);
 }
 
 QTEST_MAIN(tst_qquickninepatchimage)

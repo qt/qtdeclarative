@@ -904,11 +904,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
     if (_ddata->hasBindingBit(bindingProperty->coreIndex()) && allowedToRemoveBinding) {
         QQmlPropertyPrivate::removeBinding(_bindingTarget, QQmlPropertyIndex(bindingProperty->coreIndex()));
     } else if (bindingProperty->isBindable() && allowedToRemoveBinding) {
-        QList<DeferredQPropertyBinding> &pendingBindings = sharedState.data()->allQPropertyBindings;
-        auto it = std::remove_if(pendingBindings.begin(), pendingBindings.end(), [&](const DeferredQPropertyBinding &deferred) {
-            return deferred.properyIndex == bindingProperty->coreIndex() && deferred.target == _bindingTarget;
-        });
-        pendingBindings.erase(it, pendingBindings.end());
+        removePendingBinding(_bindingTarget, bindingProperty->coreIndex());
     }
 
     if (bindingType == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding()) {

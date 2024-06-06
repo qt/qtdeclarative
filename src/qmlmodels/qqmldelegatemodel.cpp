@@ -399,8 +399,8 @@ void QQmlDelegateModelPrivate::connectToAbstractItemModel()
                       q, QQmlDelegateModel, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
     qmlobject_connect(aim, QAbstractItemModel, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
                       q, QQmlDelegateModel, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
-    qmlobject_connect(aim, QAbstractItemModel, SIGNAL(modelReset()),
-                      q, QQmlDelegateModel, SLOT(_q_modelReset()));
+
+    QObject::connect(aim, &QAbstractItemModel::modelAboutToBeReset, q, &QQmlDelegateModel::_q_modelAboutToBeReset);
     qmlobject_connect(aim, QAbstractItemModel, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
                       q, QQmlDelegateModel, SLOT(_q_layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
 }
@@ -429,8 +429,7 @@ void QQmlDelegateModelPrivate::disconnectFromAbstractItemModel()
                         q, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
     QObject::disconnect(aim, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
                         q, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
-    QObject::disconnect(aim, SIGNAL(modelReset()),
-                        q, SLOT(_q_modelReset()));
+    QObject::disconnect(aim, &QAbstractItemModel::modelAboutToBeReset, q, &QQmlDelegateModel::_q_modelAboutToBeReset);
     QObject::disconnect(aim, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
                         q, SLOT(_q_layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
 }
@@ -1879,14 +1878,41 @@ void QQmlDelegateModelPrivate::emitChanges()
     for (int i = 1; i < m_groupCount; ++i)
         QQmlDelegateModelGroupPrivate::get(m_groups[i])->emitModelUpdated(reset);
 
-    auto cacheCopy = m_cache; // deliberate; emitChanges may alter m_cache
-    for (QQmlDelegateModelItem *cacheItem : qAsConst(cacheCopy)) {
-        if (cacheItem->attached)
-            cacheItem->attached->emitChanges();
+    // emitChanges may alter m_cache and delete items
+    QVarLengthArray<QPointer<QQmlDelegateModelAttached>> attachedObjects;
+    attachedObjects.reserve(m_cache.length());
+    for (const QQmlDelegateModelItem *cacheItem : std::as_const(m_cache))
+        attachedObjects.append(cacheItem->attached);
+
+    for (const QPointer<QQmlDelegateModelAttached> &attached : std::as_const(attachedObjects)) {
+        if (attached && attached->m_cacheItem)
+            attached->emitChanges();
     }
 }
 
-void QQmlDelegateModel::_q_modelReset()
+void QQmlDelegateModel::_q_modelAboutToBeReset()
+{
+    auto aim = static_cast<QAbstractItemModel *>(sender());
+    auto oldRoleNames = aim->roleNames();
+    // this relies on the fact that modelAboutToBeReset must be followed
+    // by a modelReset signal before any further modelAboutToBeReset can occur
+    QObject::connect(aim, &QAbstractItemModel::modelReset, this, [&, oldRoleNames](){
+        auto aim = static_cast<QAbstractItemModel *>(sender());
+        if (oldRoleNames == aim->roleNames()) {
+            // if the rolenames stayed the same (most common case), then we don't have
+            // to throw away all the setup that we did
+            handleModelReset();
+        } else {
+            // If they did change, we give up and just start from scratch via setMode
+            setModel(QVariant::fromValue(model()));
+            // but we still have to call handleModelReset, otherwise views will
+            // not refresh
+            handleModelReset();
+        }
+    }, Qt::SingleShotConnection);
+}
+
+void QQmlDelegateModel::handleModelReset()
 {
     Q_D(QQmlDelegateModel);
     if (!d->m_delegate)
@@ -2051,7 +2077,7 @@ void QQmlDelegateModel::_q_layoutChanged(const QList<QPersistentModelIndex> &par
         // Ignored
     } else {
         // We don't know what's going on, so reset the model
-        _q_modelReset();
+        handleModelReset();
     }
 }
 
@@ -2704,20 +2730,24 @@ void QQmlDelegateModelAttached::emitChanges()
     m_previousGroups = m_cacheItem->groups;
 
     int indexChanges = 0;
-    for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i) {
+    const int groupCount = m_cacheItem->metaType->groupCount;
+    for (int i = 1; i < groupCount; ++i) {
         if (m_previousIndex[i] != m_currentIndex[i]) {
             m_previousIndex[i] = m_currentIndex[i];
             indexChanges |= (1 << i);
         }
     }
 
+    // Don't access m_cacheItem anymore once we've started sending signals.
+    // We don't own it and someone might delete it.
+
     int notifierId = 0;
     const QMetaObject *meta = metaObject();
-    for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i, ++notifierId) {
+    for (int i = 1; i < groupCount; ++i, ++notifierId) {
         if (groupChanges & (1 << i))
             QMetaObject::activate(this, meta, notifierId, nullptr);
     }
-    for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i, ++notifierId) {
+    for (int i = 1; i < groupCount; ++i, ++notifierId) {
         if (indexChanges & (1 << i))
             QMetaObject::activate(this, meta, notifierId, nullptr);
     }

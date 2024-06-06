@@ -423,12 +423,11 @@ QString QQuickFontLoader::name() const
     \qmlproperty enumeration QtQuick::FontLoader::status
 
     This property holds the status of font loading.  It can be one of:
-    \list
-    \li FontLoader.Null - no font has been set
-    \li FontLoader.Ready - the font has been loaded
-    \li FontLoader.Loading - the font is currently being loaded
-    \li FontLoader.Error - an error occurred while loading the font
-    \endlist
+
+    \value FontLoader.Null      no font has been set
+    \value FontLoader.Ready     the font has been loaded
+    \value FontLoader.Loading   the font is currently being loaded
+    \value FontLoader.Error     an error occurred while loading the font
 
     Use this status to provide an update or respond to the status change in some way.
     For example, you could:

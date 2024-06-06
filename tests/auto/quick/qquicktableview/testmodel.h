@@ -61,13 +61,27 @@ public:
 
     QVariant data(const QModelIndex &index, int role) const override
     {
-        if (!index.isValid() || role != Qt::DisplayRole)
+        if (!index.isValid())
             return QVariant();
 
-        int serializedIndex = index.row() + (index.column() * m_columns);
-        if (modelData.contains(serializedIndex))
-            return modelData.value(serializedIndex);
-        return QStringLiteral("%1").arg(index.row());
+        QVariant ret;
+
+        switch (role) {
+        case Qt::UserRole:
+            ret = 42;
+            break;
+        case Qt::DisplayRole: {
+            int serializedIndex = index.row() + (index.column() * m_columns);
+            if (modelData.contains(serializedIndex))
+                ret = modelData.value(serializedIndex);
+            else
+                ret = QStringLiteral("%1").arg(index.row()); }
+            break;
+        default:
+            break;
+        }
+
+        return ret;
     }
 
     Q_INVOKABLE QVariant dataFromSerializedIndex(int index) const
@@ -79,7 +93,16 @@ public:
 
     QHash<int, QByteArray> roleNames() const override
     {
+        if (m_useCustomRoleNames)
+            return { { Qt::UserRole, "custom"} };
         return { {Qt::DisplayRole, "display"} };
+    }
+
+    Q_INVOKABLE void useCustomRoleNames(bool use)
+    {
+        beginResetModel();
+        m_useCustomRoleNames = use;
+        endResetModel();
     }
 
     Q_INVOKABLE void setModelData(const QPoint &cell, const QSize &span, const QString &string)
@@ -192,6 +215,7 @@ private:
     int m_rows = 0;
     int m_columns = 0;
     bool m_dataCanBeFetched = false;
+    bool m_useCustomRoleNames = false;
     QHash<int, QString> modelData;
 };
 

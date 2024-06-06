@@ -53,11 +53,12 @@ import QtQuick 2.0
 Rectangle {
     id: page
     color: "white"
-    width: 180; height: 180
+    width: 182; height: 182
+    border.color: "gray"
 
 //! [scaled border image]
 BorderImage {
-    width: 180; height: 180
+    anchors { fill: parent; margins: 1 }
     border { left: 30; top: 30; right: 30; bottom: 30 }
     horizontalTileMode: BorderImage.Stretch
     verticalTileMode: BorderImage.Stretch
@@ -67,25 +68,98 @@ BorderImage {
 
     Rectangle {
         x: 30; y: 0
-        width: 1; height: 180
+        width: 1; height: parent.height
         color: "gray"
+
+        Text {
+            text: "1"
+            font.pixelSize: 9
+            color: "red"
+            anchors.right: parent.right
+            anchors.rightMargin: 1
+            y: 20
+        }
+
+        Text {
+            text: "4"
+            font.pixelSize: 9
+            color: "red"
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.right
+            anchors.rightMargin: 1
+        }
+
+        Text {
+            text: "7"
+            font.pixelSize: 9
+            color: "red"
+            y: parent.height - 30
+            anchors.right: parent.right
+            anchors.rightMargin: 1
+        }
     }
 
     Rectangle {
-        x: 150; y: 0
-        width: 1; height: 180
+        x: parent.width - 30; y: 0
+        width: 1; height: parent.height
         color: "gray"
+
+        Text {
+            text: "3"
+            font.pixelSize: 9
+            color: "red"
+            x: 1
+            y: 20
+        }
+
+        Text {
+            text: "6"
+            font.pixelSize: 9
+            color: "red"
+            x: 1
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
+        Text {
+            text: "9"
+            font.pixelSize: 9
+            color: "red"
+            x: 1
+            y: parent.height - 30
+        }
+    }
+
+    Text {
+        text: "5"
+        font.pixelSize: 9
+        color: "red"
+        anchors.centerIn: parent
     }
 
     Rectangle {
         x: 0; y: 30
-        width: 180; height: 1
+        width: parent.width; height: 1
         color: "gray"
+
+        Text {
+            text: "2"
+            font.pixelSize: 9
+            color: "red"
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: -10
+        }
     }
 
     Rectangle {
-        x: 0; y: 150
-        width: 180; height: 1
+        x: 0; y: parent.height - 30
+        width: parent.width; height: 1
         color: "gray"
+
+        Text {
+            text: "8"
+            font.pixelSize: 9
+            color: "red"
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
     }
 }

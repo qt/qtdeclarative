@@ -85,17 +85,15 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
     mask where each bit represents graphics states changed by the \l render()
     function:
 
-    \list
-    \li DepthState - depth write mask, depth test enabled, depth comparison function
-    \li StencilState - stencil write masks, stencil test enabled, stencil operations,
-                      stencil comparison functions
-    \li ScissorState - scissor enabled, scissor test enabled
-    \li ColorState - clear color, color write mask
-    \li BlendState - blend enabled, blend function
-    \li CullState - front face, cull face enabled
-    \li ViewportState - viewport
-    \li RenderTargetState - render target
-    \endlist
+    \value DepthState   depth write mask, depth test enabled, depth comparison function
+    \value StencilState stencil write masks, stencil test enabled, stencil operations,
+                        stencil comparison functions
+    \value ScissorState scissor enabled, scissor test enabled
+    \value ColorState   clear color, color write mask
+    \value BlendState   blend enabled, blend function
+    \value CullState    front face, cull face enabled
+    \value ViewportState viewport
+    \value RenderTargetState render target
 
     With APIs other than OpenGL, the only relevant values are the ones that
     correspond to dynamic state changes recorded on the command list/buffer.

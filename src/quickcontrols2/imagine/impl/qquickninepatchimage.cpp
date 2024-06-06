@@ -476,6 +476,9 @@ QSGNode *QQuickNinePatchImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
         d->resetNode = false;
     }
 
+    if (d->ninePatch.isNull())
+        return QQuickImage::updatePaintNode(oldNode, data);
+
     QSizeF sz = size();
     QImage image = d->pix.image();
     if (!sz.isValid() || image.isNull()) {
@@ -484,9 +487,6 @@ QSGNode *QQuickNinePatchImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
         delete oldNode;
         return nullptr;
     }
-
-    if (d->ninePatch.isNull())
-        return QQuickImage::updatePaintNode(oldNode, data);
 
     QQuickNinePatchNode *patchNode = static_cast<QQuickNinePatchNode *>(oldNode);
     if (!patchNode)

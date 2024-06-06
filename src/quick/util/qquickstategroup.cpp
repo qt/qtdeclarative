@@ -383,9 +383,15 @@ bool QQuickStateGroupPrivate::updateAutoState()
 
                 // if there is a binding, the value in when might not be up-to-date at this point
                 // so we manually re-evaluate the binding
-                if (auto binding = dynamic_cast<QQmlBinding *>(potentialWhenBinding.asAbstractBinding())) {
-                    if (binding->hasValidContext())
-                        whenValue = binding->evaluate().toBool();
+                QQmlAbstractBinding *abstractBinding = potentialWhenBinding.asAbstractBinding();
+                if (abstractBinding && !abstractBinding->isValueTypeProxy()) {
+                    QQmlBinding *binding = static_cast<QQmlBinding *>(abstractBinding);
+                    if (binding->hasValidContext()) {
+                        const auto boolType = QMetaType::fromType<bool>();
+                        const bool isUndefined = !binding->evaluate(&whenValue, boolType);
+                        if (isUndefined)
+                            whenValue = false;
+                    }
                 }
 
                 if (whenValue) {

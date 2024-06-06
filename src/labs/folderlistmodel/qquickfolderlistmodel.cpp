@@ -563,15 +563,14 @@ void QQuickFolderListModel::componentComplete()
 /*!
     \qmlproperty enumeration FolderListModel::sortField
 
-    The \a sortField property contains field to use for sorting.  sortField
-    may be one of:
-    \list
-    \li Unsorted - no sorting is applied.
-    \li Name - sort by filename
-    \li Time - sort by time modified
-    \li Size - sort by file size
-    \li Type - sort by file type (extension)
-    \endlist
+    The \a sortField property contains the field to use for sorting.
+    \c sortField may be one of:
+
+    \value Unsorted no sorting is applied
+    \value Name     sort by filename
+    \value Time     sort by time modified
+    \value Size     sort by file size
+    \value Type     sort by file type (extension)
 
     \sa sortReversed
 */
@@ -821,11 +820,10 @@ void QQuickFolderListModel::setCaseSensitive(bool on)
     \since 5.11
 
     This property holds the status of folder reading.  It can be one of:
-    \list
-    \li FolderListModel.Null - no \a folder has been set
-    \li FolderListModel.Ready - the folder has been loaded
-    \li FolderListModel.Loading - the folder is currently being loaded
-    \endlist
+
+    \value FolderListModel.Null     no \a folder has been set
+    \value FolderListModel.Ready    the folder has been loaded
+    \value FolderListModel.Loading  the folder is currently being loaded
 
     Use this status to provide an update or respond to the status change in some way.
     For example, you could:

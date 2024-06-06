@@ -484,14 +484,16 @@ QQuickAnimatorJob *QQuickRotationAnimator::createJob() const {
 
     Possible values are:
 
-    \list
-    \li RotationAnimator.Numerical (default) - Rotate by linearly interpolating between the two numbers.
-           A rotation from 10 to 350 will rotate 340 degrees clockwise.
-    \li RotationAnimator.Clockwise - Rotate clockwise between the two values
-    \li RotationAnimator.Counterclockwise - Rotate counterclockwise between the two values
-    \li RotationAnimator.Shortest - Rotate in the direction that produces the shortest animation path.
-           A rotation from 10 to 350 will rotate 20 degrees counterclockwise.
-    \endlist
+    \value RotationAnimator.Numerical
+        (default) Rotate by linearly interpolating between the two numbers.
+        A rotation from 10 to 350 will rotate 340 degrees clockwise.
+    \value RotationAnimator.Clockwise
+        Rotate clockwise between the two values
+    \value RotationAnimator.Counterclockwise
+        Rotate counterclockwise between the two values
+    \value RotationAnimator.Shortest
+        Rotate in the direction that produces the shortest animation path.
+        A rotation from 10 to 350 will rotate 20 degrees counterclockwise.
 */
 void QQuickRotationAnimator::setDirection(RotationDirection dir)
 {

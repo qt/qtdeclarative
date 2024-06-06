@@ -357,14 +357,13 @@ void QQmlBind::setDelayed(bool delayed)
     be restored when the binding is disabled.
 
     The possible values are:
-    \list
-    \li Binding.RestoreNone The original value is not restored at all
-    \li Binding.RestoreBinding The original value is restored if it was another
-        binding. In that case the old binding is in effect again.
-    \li Binding.RestoreValue The original value is restored if it was a plain
-        value rather than a binding.
-    \li Binding.RestoreBindingOrValue The original value is always restored.
-    \endlist
+
+    \value Binding.RestoreNone      The original value is not restored at all
+    \value Binding.RestoreBinding   The original value is restored if it was another binding.
+                                    In that case the old binding is in effect again.
+    \value Binding.RestoreValue     The original value is restored if it was a plain
+                                    value rather than a binding.
+    \value Binding.RestoreBindingOrValue The original value is always restored.
 
     The default value is \c Binding.RestoreBindingOrValue.
 

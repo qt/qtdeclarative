@@ -144,7 +144,8 @@ bool parseFile(const QString &filename, const Options &options)
         if (options.verbose)
             qWarning().noquote() << "Writing to file" << filename;
         FileWriter fw;
-        res = qmlFile.writeOut(filename, 2, lwOptions, &fw, checks);
+        const unsigned numberOfBackupFiles = 0;
+        res = qmlFile.writeOut(filename, numberOfBackupFiles, lwOptions, &fw, checks);
     } else {
         QFile out;
         out.open(stdout, QIODevice::WriteOnly);

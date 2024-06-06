@@ -7,11 +7,7 @@
 # Collect test data
 file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/*.qml)
-list(APPEND test_data ${test_data_glob})
-file(GLOB_RECURSE test_data_glob
-    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/*.png)
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/*)
 list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquickninepatchimage

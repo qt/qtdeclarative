@@ -200,12 +200,16 @@ private slots:
     void revertListMemoryLeak();
     void duplicateStateName();
     void trivialWhen();
+    void jsValueWhen_data();
+    void jsValueWhen();
     void noStateOsciallation();
     void parentChangeCorrectReversal();
     void revertNullObjectBinding();
     void bindableProperties();
     void parentChangeInvolvingBindings();
     void rewindAnchorChange();
+    void rewindAnchorChangeSize();
+    void bindingProperlyRemovedWithTransition();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1717,6 +1721,25 @@ void tst_qquickstates::trivialWhen()
     QVERIFY(root);
 }
 
+
+void tst_qquickstates::jsValueWhen_data()
+{
+    QTest::addColumn<QByteArray>("fileName");
+    QTest::addRow("jsObject") << QByteArray("jsValueWhen.qml");
+    QTest::addRow("qmlObject") << QByteArray("jsValueWhen2.qml");
+}
+
+void tst_qquickstates::jsValueWhen()
+{
+    QFETCH(QByteArray, fileName);
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, testFileUrl(fileName.constData()));
+    QScopedPointer<QObject> root(c.create());
+    QVERIFY(root);
+    QVERIFY(root->property("works").toBool());
+}
+
 void tst_qquickstates::noStateOsciallation()
 {
    QQmlEngine engine;
@@ -1939,6 +1962,61 @@ void tst_qquickstates::rewindAnchorChange()
     QTRY_COMPARE(innerRect->y(), 0);
     QTRY_COMPARE(innerRect->width(), 200);
     QTRY_COMPARE(innerRect->height(), 200);
+}
+
+void tst_qquickstates::rewindAnchorChangeSize()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("anchorRewindSize.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    QQmlContext *context = qmlContext(root.get());
+    QVERIFY(context);
+
+    QObject *inner = context->objectForName(QStringLiteral("inner"));
+    QVERIFY(inner);
+
+    QQuickItem *innerRect = qobject_cast<QQuickItem *>(inner);
+    QVERIFY(innerRect);
+
+    QCOMPARE(innerRect->x(), 0);
+    QCOMPARE(innerRect->y(), 0);
+    QCOMPARE(innerRect->width(), 100);
+    QCOMPARE(innerRect->height(), 100);
+
+    root->setProperty("changeState", true);
+    QCOMPARE(innerRect->x(), 0);
+    QCOMPARE(innerRect->y(), 0);
+    QCOMPARE(innerRect->width(), 400);
+    QCOMPARE(innerRect->height(), 400);
+
+    root->setProperty("changeState", false);
+    QCOMPARE(innerRect->x(), 0);
+    QCOMPARE(innerRect->y(), 0);
+    QCOMPARE(innerRect->width(), 100);
+    QCOMPARE(innerRect->height(), 100);
+}
+
+void tst_qquickstates::bindingProperlyRemovedWithTransition()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("removeBindingWithTransition.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> root(c.create());
+    QVERIFY(root);
+    QQuickItem *item = qobject_cast<QQuickItem *>(root.get());
+    QVERIFY(item);
+
+    item->setProperty("toggle", false);
+    QTRY_COMPARE(item->width(), 300);
+
+    item->setProperty("state1Width", 100);
+    QCOMPARE(item->width(), 300);
+
+    item->setProperty("toggle", true);
+    QTRY_COMPARE(item->width(), 100);
 }
 
 QTEST_MAIN(tst_qquickstates)
