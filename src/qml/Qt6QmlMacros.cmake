@@ -3199,6 +3199,9 @@ function(qt6_generate_foreign_qml_types source_target destination_qml_target)
         VERBATIM
     )
 
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27")
+        set_source_files_properties(${additional_sources} PROPERTIES SKIP_LINTING ON)
+    endif()
     target_sources(${destination_qml_target} PRIVATE ${additional_sources})
 endfunction()
 
