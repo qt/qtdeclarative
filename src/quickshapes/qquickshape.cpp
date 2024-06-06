@@ -22,7 +22,7 @@ static void initResources()
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
+Q_STATIC_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
 
 /*!
     \qmlmodule QtQuick.Shapes 1.\QtMinorVersion
