@@ -18,6 +18,7 @@ set(qml_files
     "RadioButton.qml"
     "RangeSlider.qml"
     "Slider.qml"
+    "SpinBox.qml"
     "Switch.qml"
     "TabBar.qml"
     "TabButton.qml"
