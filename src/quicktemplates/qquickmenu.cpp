@@ -41,8 +41,8 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcMenu, "qt.quick.controls.menu")
-Q_LOGGING_CATEGORY(lcNativeMenus, "qt.quick.controls.nativemenus")
+Q_STATIC_LOGGING_CATEGORY(lcMenu, "qt.quick.controls.menu")
+Q_STATIC_LOGGING_CATEGORY(lcNativeMenus, "qt.quick.controls.nativemenus")
 
 // copied from qfusionstyle.cpp
 static const int SUBMENU_DELAY = 225;
