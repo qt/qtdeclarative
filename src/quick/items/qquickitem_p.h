@@ -48,6 +48,9 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcHandlerParent)
+Q_DECLARE_LOGGING_CATEGORY(lcVP)
+
 class QNetworkReply;
 class QQuickItemKeyFilter;
 class QQuickLayoutMirroringAttached;

@@ -2,14 +2,15 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquadpath_p.h"
+
+#include <private/qsgcurveprocessor_p.h>
+
 #include <QtGui/private/qbezier_p.h>
 #include <QtMath>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QVarLengthArray>
 
 QT_BEGIN_NAMESPACE
-
-Q_DECLARE_LOGGING_CATEGORY(lcSGCurveProcessor);
 
 static qreal qt_scoreQuadratic(const QBezier &b, QPointF qcp)
 {

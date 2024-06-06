@@ -34,8 +34,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcVP)
-Q_LOGGING_CATEGORY(lcTextEdit, "qt.quick.textedit")
+Q_STATIC_LOGGING_CATEGORY(lcTextEdit, "qt.quick.textedit")
 
 using namespace Qt::StringLiterals;
 

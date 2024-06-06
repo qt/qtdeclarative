@@ -21,8 +21,6 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlMaVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 
-Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
-
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), hoverEnabled(false), scrollGestureEnabled(true), hovered(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false),

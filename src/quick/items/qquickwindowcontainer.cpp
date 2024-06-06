@@ -12,7 +12,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcWindowContainer, "qt.quick.window.container")
+Q_STATIC_LOGGING_CATEGORY(lcWindowContainer, "qt.quick.window.container")
 
 using namespace Qt::StringLiterals;
 

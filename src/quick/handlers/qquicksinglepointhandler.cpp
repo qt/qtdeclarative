@@ -4,8 +4,9 @@
 #include "qquicksinglepointhandler_p.h"
 #include "qquicksinglepointhandler_p_p.h"
 
+#include <private/qquickdeliveryagent_p.h>
+
 QT_BEGIN_NAMESPACE
-Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
 
 /*!
     \qmltype SinglePointHandler

@@ -59,13 +59,8 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
-Q_DECLARE_LOGGING_CATEGORY(lcMouse)
-Q_DECLARE_LOGGING_CATEGORY(lcTouch)
-Q_DECLARE_LOGGING_CATEGORY(lcPtr)
-Q_LOGGING_CATEGORY(lcDirty, "qt.quick.dirty")
+Q_STATIC_LOGGING_CATEGORY(lcDirty, "qt.quick.dirty")
 Q_LOGGING_CATEGORY(lcQuickWindow, "qt.quick.window")
-Q_LOGGING_CATEGORY(lcTransient, "qt.quick.window.transient")
 
 bool QQuickWindowPrivate::defaultAlphaBuffer = false;
 

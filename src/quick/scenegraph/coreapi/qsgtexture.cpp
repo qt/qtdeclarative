@@ -35,8 +35,6 @@ Q_GLOBAL_STATIC(QMutex, qsg_valid_texture_mutex)
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
-
 bool operator==(const QSGSamplerDescription &a, const QSGSamplerDescription &b) noexcept
 {
     return a.filtering == b.filtering

@@ -19,8 +19,6 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_DECLARE_LOGGING_CATEGORY(lcStates)
-
 class QQuickStateGroupPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickStateGroup)

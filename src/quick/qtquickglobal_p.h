@@ -33,7 +33,6 @@ void Q_QUICK_EXPORT QQuick_initializeModule();
 Q_DECLARE_LOGGING_CATEGORY(lcTouch)
 Q_DECLARE_LOGGING_CATEGORY(lcMouse)
 Q_DECLARE_LOGGING_CATEGORY(lcFocus)
-Q_DECLARE_LOGGING_CATEGORY(lcDirty)
 
 /*
     This is needed for QuickTestUtils. Q_AUTOTEST_EXPORT checks QT_BUILDING_QT

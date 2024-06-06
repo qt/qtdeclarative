@@ -18,10 +18,9 @@
 #include <private/qrawfont_p.h>
 #include <private/qglyphrun_p.h>
 #include <private/qquickitem_p.h>
+#include <private/qsgdistancefieldglyphnode_p.h>
 
 QT_BEGIN_NAMESPACE
-
-Q_DECLARE_LOGGING_CATEGORY(lcSgText)
 
 QQuickTextNodeEngine::BinaryTreeNodeKey::BinaryTreeNodeKey(BinaryTreeNode *node)
     : fontEngine(QRawFontPrivate::get(node->glyphRun.rawFont())->fontEngine)

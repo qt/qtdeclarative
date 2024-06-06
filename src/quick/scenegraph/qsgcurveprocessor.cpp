@@ -10,7 +10,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcSGCurveProcessor, "qt.quick.curveprocessor");
-Q_LOGGING_CATEGORY(lcSGCurveIntersectionSolver, "qt.quick.curveprocessor.intersections");
+Q_STATIC_LOGGING_CATEGORY(lcSGCurveIntersectionSolver, "qt.quick.curveprocessor.intersections");
 
 namespace {
 // Input coordinate space is pre-mapped so that (0, 0) maps to [0, 0] in uv space.

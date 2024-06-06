@@ -17,7 +17,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
+Q_STATIC_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 
 /*!
     \qmltype PinchHandler

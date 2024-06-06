@@ -34,8 +34,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
-Q_LOGGING_CATEGORY(lcText, "qt.quick.text")
+Q_STATIC_LOGGING_CATEGORY(lcText, "qt.quick.text")
 
 using namespace Qt::StringLiterals;
 

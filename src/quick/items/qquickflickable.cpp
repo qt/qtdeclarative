@@ -29,12 +29,11 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcHandlerParent)
-Q_LOGGING_CATEGORY(lcFlickable, "qt.quick.flickable")
-Q_LOGGING_CATEGORY(lcFilter, "qt.quick.flickable.filter")
-Q_LOGGING_CATEGORY(lcReplay, "qt.quick.flickable.replay")
-Q_LOGGING_CATEGORY(lcWheel, "qt.quick.flickable.wheel")
-Q_LOGGING_CATEGORY(lcVel, "qt.quick.flickable.velocity")
+Q_STATIC_LOGGING_CATEGORY(lcFlickable, "qt.quick.flickable")
+Q_STATIC_LOGGING_CATEGORY(lcFilter, "qt.quick.flickable.filter")
+Q_STATIC_LOGGING_CATEGORY(lcReplay, "qt.quick.flickable.replay")
+Q_STATIC_LOGGING_CATEGORY(lcWheel, "qt.quick.flickable.wheel")
+Q_STATIC_LOGGING_CATEGORY(lcVel, "qt.quick.flickable.velocity")
 
 // RetainGrabVelocity is the maxmimum instantaneous velocity that
 // will ensure the Flickable retains the grab on consecutive flicks.

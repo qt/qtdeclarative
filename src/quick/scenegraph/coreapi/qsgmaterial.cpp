@@ -6,8 +6,6 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
-
 #ifndef QT_NO_DEBUG
 bool qsg_material_failure = false;
 bool qsg_test_and_clear_material_failure()

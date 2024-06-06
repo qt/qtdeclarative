@@ -11,8 +11,6 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
-
 #ifndef QT_NO_DEBUG
 static int qt_node_count = 0;
 

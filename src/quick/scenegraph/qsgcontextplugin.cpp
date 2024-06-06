@@ -16,8 +16,6 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_INFO)
-
 QSGContextPlugin::QSGContextPlugin(QObject *parent)
     : QObject(parent)
 {

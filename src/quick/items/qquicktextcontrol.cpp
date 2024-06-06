@@ -42,7 +42,6 @@
 const int textCursorWidth = 1;
 
 QT_BEGIN_NAMESPACE
-Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
 
 // could go into QTextCursor...
 static QTextLine currentTextLine(const QTextCursor &cursor)

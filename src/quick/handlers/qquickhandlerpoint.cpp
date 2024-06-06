@@ -6,7 +6,6 @@
 #include "private/qquickdeliveryagent_p_p.h"
 
 QT_BEGIN_NAMESPACE
-Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
 
 /*!
     \qmltype handlerPoint

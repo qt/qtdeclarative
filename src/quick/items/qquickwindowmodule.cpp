@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_DECLARE_LOGGING_CATEGORY(lcTransient)
+Q_STATIC_LOGGING_CATEGORY(lcTransient, "qt.quick.window.transient")
 
 QQuickWindowQmlImplPrivate::QQuickWindowQmlImplPrivate() = default;
 

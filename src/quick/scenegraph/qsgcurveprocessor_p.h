@@ -18,7 +18,11 @@
 #include <QtQuick/qtquickexports.h>
 #include "util/qquadpath_p.h"
 
+#include <QtCore/qloggingcategory.h>
+
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcSGCurveProcessor);
 
 class Q_QUICK_EXPORT QSGCurveProcessor
 {

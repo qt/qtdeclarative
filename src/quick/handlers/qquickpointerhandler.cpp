@@ -13,9 +13,8 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcPointerHandlerDispatch, "qt.quick.handler.dispatch")
-Q_LOGGING_CATEGORY(lcPointerHandlerGrab, "qt.quick.handler.grab")
-Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
-Q_DECLARE_LOGGING_CATEGORY(lcHandlerParent)
+Q_STATIC_LOGGING_CATEGORY(lcPointerHandlerGrab, "qt.quick.handler.grab")
+Q_STATIC_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
 
 /*!
     \qmltype PointerHandler

@@ -27,6 +27,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcStates)
+
 class QQuickStateActionEvent;
 class QQmlBinding;
 class QQmlExpression;

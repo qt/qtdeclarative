@@ -57,13 +57,9 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcMouseTarget)
-Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
-Q_DECLARE_LOGGING_CATEGORY(lcPtr)
-Q_DECLARE_LOGGING_CATEGORY(lcTransient)
 Q_LOGGING_CATEGORY(lcHandlerParent, "qt.quick.handler.parent")
 Q_LOGGING_CATEGORY(lcVP, "qt.quick.viewport")
-Q_LOGGING_CATEGORY(lcChangeListeners, "qt.quick.item.changelisteners")
+Q_STATIC_LOGGING_CATEGORY(lcChangeListeners, "qt.quick.item.changelisteners")
 
 // after 100ms, a mouse/non-mouse cursor conflict is resolved in favor of the mouse handler
 static const quint64 kCursorOverrideTimeout = 100;
