@@ -6345,6 +6345,1065 @@ QtObject {
 
             }
 
+            readonly property QtObject spinbox: QtObject {
+                readonly property QtObject atlimit: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17195;2766:9577;2526:13406"
+                        readonly property string filePath: "dark/images/spinbox-background-atlimit.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-atlimit"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24589
+                        readonly property real y: 2457.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17195;2766:9577"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-atlimit"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17195;2766:9577;2526:13408;4418:24767"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-background-atlimit.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-atlimit"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24681
+                        readonly property real y: 2461.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17195;2766:9577;2526:13408;8858:14984"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-icon-atlimit.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-atlimit"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24692
+                        readonly property real y: 2472.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17195;2766:9577;2526:13412;4418:25668"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-background-atlimit.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-atlimit"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24649
+                        readonly property real y: 2461.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17195;2766:9577;2526:13412;8858:15141"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-icon-atlimit.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-atlimit"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24660
+                        readonly property real y: 2472.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17195;2766:9577;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-atlimit"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24601
+                        readonly property real y: 2464.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17185;2766:9207;2526:13406"
+                        readonly property string filePath: "dark/images/spinbox-background-disabled.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24589
+                        readonly property real y: 2122.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17185;2766:9207"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-disabled"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17185;2766:9207;2526:13408;4418:24767"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-background-disabled.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24681
+                        readonly property real y: 2126.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17185;2766:9207;2526:13408;8858:14984"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-icon-disabled.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24692
+                        readonly property real y: 2137.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17185;2766:9207;2526:13412;4418:25668"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-background-disabled.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24649
+                        readonly property real y: 2126.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17185;2766:9207;2526:13412;8858:15141"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-icon-disabled.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24660
+                        readonly property real y: 2137.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17185;2766:9207;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24601
+                        readonly property real y: 2129.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject down_hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17187;2766:9281;2526:13406"
+                        readonly property string filePath: "dark/images/spinbox-background-down-hovered.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-down-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24589
+                        readonly property real y: 2189.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17187;2766:9281"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-down-hovered"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17187;2766:9281;2526:13408;4418:24767"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-background-down-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-down-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24681
+                        readonly property real y: 2193.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17187;2766:9281;2526:13408;8858:14984"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-icon-down-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-down-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24692
+                        readonly property real y: 2204.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17187;2766:9281;2526:13412;4418:25668"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-background-down-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-down-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24649
+                        readonly property real y: 2193.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17187;2766:9281;2526:13412;8858:15141"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-icon-down-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-down-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24660
+                        readonly property real y: 2204.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17187;2766:9281;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-down-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24601
+                        readonly property real y: 2196.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject down_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17189;2766:9355;2526:13406"
+                        readonly property string filePath: "dark/images/spinbox-background-down-pressed.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-down-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24589
+                        readonly property real y: 2256.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17189;2766:9355"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-down-pressed"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17189;2766:9355;2526:13408;4418:24767"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-background-down-pressed.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-down-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24681
+                        readonly property real y: 2260.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17189;2766:9355;2526:13408;8858:14984"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-icon-down-pressed.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-down-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24692
+                        readonly property real y: 2271.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17189;2766:9355;2526:13412;4418:25668"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-background-down-pressed.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-down-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24649
+                        readonly property real y: 2260.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17189;2766:9355;2526:13412;8858:15141"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-icon-down-pressed.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-down-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24660
+                        readonly property real y: 2271.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17189;2766:9355;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-down-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24601
+                        readonly property real y: 2263.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17183;2766:9133;2526:13406"
+                        readonly property string filePath: "dark/images/spinbox-background-hovered.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24589
+                        readonly property real y: 2055.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17183;2766:9133"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-hovered"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17183;2766:9133;2526:13408;4418:24767"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-background-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24681
+                        readonly property real y: 2059.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17183;2766:9133;2526:13408;8858:14984"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-icon-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24692
+                        readonly property real y: 2070.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17183;2766:9133;2526:13412;4418:25668"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-background-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24649
+                        readonly property real y: 2059.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17183;2766:9133;2526:13412;8858:15141"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-icon-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24660
+                        readonly property real y: 2070.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17183;2766:9133;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24601
+                        readonly property real y: 2062.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17181;2766:9059;2526:13406"
+                        readonly property string filePath: "dark/images/spinbox-background.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24589
+                        readonly property real y: 1988.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17181;2766:9059"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17181;2766:9059;2526:13408;4418:24767"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-background.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24681
+                        readonly property real y: 1992.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17181;2766:9059;2526:13408;8858:14984"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-icon.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24692
+                        readonly property real y: 2003.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17181;2766:9059;2526:13412;4418:25668"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-background.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24649
+                        readonly property real y: 1992.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17181;2766:9059;2526:13412;8858:15141"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-icon.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24660
+                        readonly property real y: 2003.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17181;2766:9059;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24601
+                        readonly property real y: 1995.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject up_hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17191;2766:9429;2526:13406"
+                        readonly property string filePath: "dark/images/spinbox-background-up-hovered.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-up-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24589
+                        readonly property real y: 2323.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17191;2766:9429"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-up-hovered"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17191;2766:9429;2526:13408;4418:24767"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-background-up-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-up-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24681
+                        readonly property real y: 2327.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17191;2766:9429;2526:13408;8858:14984"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-icon-up-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-up-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24692
+                        readonly property real y: 2338.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17191;2766:9429;2526:13412;4418:25668"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-background-up-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-up-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24649
+                        readonly property real y: 2327.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17191;2766:9429;2526:13412;8858:15141"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-icon-up-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-up-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24660
+                        readonly property real y: 2338.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17191;2766:9429;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-up-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24601
+                        readonly property real y: 2330.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject up_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17193;2766:9503;2526:13406"
+                        readonly property string filePath: "dark/images/spinbox-background-up-pressed.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-up-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24589
+                        readonly property real y: 2390.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:17193;2766:9503"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-up-pressed"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17193;2766:9503;2526:13408;4418:24767"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-background-up-pressed.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-up-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24681
+                        readonly property real y: 2394.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17193;2766:9503;2526:13408;8858:14984"
+                        readonly property string filePath: "dark/images/spinbox-indicator-down-icon-up-pressed.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-up-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24692
+                        readonly property real y: 2405.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17193;2766:9503;2526:13412;4418:25668"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-background-up-pressed.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-up-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24649
+                        readonly property real y: 2394.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17193;2766:9503;2526:13412;8858:15141"
+                        readonly property string filePath: "dark/images/spinbox-indicator-up-icon-up-pressed.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-up-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24660
+                        readonly property real y: 2405.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17193;2766:9503;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-up-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24601
+                        readonly property real y: 2397.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+            }
+
             readonly property QtObject switch_: QtObject {
                 readonly property QtObject checked: QtObject {
                     readonly property QtObject background: QtObject {
@@ -14784,6 +15843,1065 @@ QtObject {
                         readonly property real y: 2776.5
                     }
 
+                }
+
+            }
+
+            readonly property QtObject spinbox: QtObject {
+                readonly property QtObject atlimit: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15571;2766:9577;2526:13406"
+                        readonly property string filePath: "light/images/spinbox-background-atlimit.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-atlimit"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24379
+                        readonly property real y: 2457.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15571;2766:9577"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-atlimit"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15571;2766:9577;2526:13408;4418:24767"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-background-atlimit.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-atlimit"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24471
+                        readonly property real y: 2461.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15571;2766:9577;2526:13408;8858:14984"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-icon-atlimit.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-atlimit"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24482
+                        readonly property real y: 2472.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15571;2766:9577;2526:13412;4418:25668"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-background-atlimit.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-atlimit"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24439
+                        readonly property real y: 2461.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15571;2766:9577;2526:13412;8858:15141"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-icon-atlimit.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-atlimit"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24450
+                        readonly property real y: 2472.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15571;2766:9577;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-atlimit"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24391
+                        readonly property real y: 2464.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15561;2766:9207;2526:13406"
+                        readonly property string filePath: "light/images/spinbox-background-disabled.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24379
+                        readonly property real y: 2122.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15561;2766:9207"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-disabled"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15561;2766:9207;2526:13408;4418:24767"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-background-disabled.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24471
+                        readonly property real y: 2126.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15561;2766:9207;2526:13408;8858:14984"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-icon-disabled.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24482
+                        readonly property real y: 2137.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15561;2766:9207;2526:13412;4418:25668"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-background-disabled.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24439
+                        readonly property real y: 2126.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15561;2766:9207;2526:13412;8858:15141"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-icon-disabled.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24450
+                        readonly property real y: 2137.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15561;2766:9207;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24391
+                        readonly property real y: 2129.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject down_hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15563;2766:9281;2526:13406"
+                        readonly property string filePath: "light/images/spinbox-background-down-hovered.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-down-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24379
+                        readonly property real y: 2189.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15563;2766:9281"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-down-hovered"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15563;2766:9281;2526:13408;4418:24767"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-background-down-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-down-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24471
+                        readonly property real y: 2193.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15563;2766:9281;2526:13408;8858:14984"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-icon-down-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-down-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24482
+                        readonly property real y: 2204.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15563;2766:9281;2526:13412;4418:25668"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-background-down-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-down-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24439
+                        readonly property real y: 2193.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15563;2766:9281;2526:13412;8858:15141"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-icon-down-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-down-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24450
+                        readonly property real y: 2204.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15563;2766:9281;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-down-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24391
+                        readonly property real y: 2196.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject down_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15565;2766:9355;2526:13406"
+                        readonly property string filePath: "light/images/spinbox-background-down-pressed.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-down-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24379
+                        readonly property real y: 2256.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15565;2766:9355"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-down-pressed"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15565;2766:9355;2526:13408;4418:24767"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-background-down-pressed.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-down-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24471
+                        readonly property real y: 2260.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15565;2766:9355;2526:13408;8858:14984"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-icon-down-pressed.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-down-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24482
+                        readonly property real y: 2271.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15565;2766:9355;2526:13412;4418:25668"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-background-down-pressed.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-down-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24439
+                        readonly property real y: 2260.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15565;2766:9355;2526:13412;8858:15141"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-icon-down-pressed.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-down-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24450
+                        readonly property real y: 2271.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15565;2766:9355;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-down-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24391
+                        readonly property real y: 2263.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15559;2766:9133;2526:13406"
+                        readonly property string filePath: "light/images/spinbox-background-hovered.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24379
+                        readonly property real y: 2055.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15559;2766:9133"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-hovered"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15559;2766:9133;2526:13408;4418:24767"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-background-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24471
+                        readonly property real y: 2059.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15559;2766:9133;2526:13408;8858:14984"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-icon-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24482
+                        readonly property real y: 2070.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15559;2766:9133;2526:13412;4418:25668"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-background-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24439
+                        readonly property real y: 2059.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15559;2766:9133;2526:13412;8858:15141"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-icon-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24450
+                        readonly property real y: 2070.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15559;2766:9133;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24391
+                        readonly property real y: 2062.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15557;2766:9059;2526:13406"
+                        readonly property string filePath: "light/images/spinbox-background.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24379
+                        readonly property real y: 1988.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15557;2766:9059"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15557;2766:9059;2526:13408;4418:24767"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-background.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24471
+                        readonly property real y: 1992.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15557;2766:9059;2526:13408;8858:14984"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-icon.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24482
+                        readonly property real y: 2003.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15557;2766:9059;2526:13412;4418:25668"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-background.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24439
+                        readonly property real y: 1992.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15557;2766:9059;2526:13412;8858:15141"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-icon.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24450
+                        readonly property real y: 2003.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15557;2766:9059;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24391
+                        readonly property real y: 1995.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject up_hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15567;2766:9429;2526:13406"
+                        readonly property string filePath: "light/images/spinbox-background-up-hovered.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-up-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24379
+                        readonly property real y: 2323.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15567;2766:9429"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-up-hovered"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15567;2766:9429;2526:13408;4418:24767"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-background-up-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-up-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24471
+                        readonly property real y: 2327.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15567;2766:9429;2526:13408;8858:14984"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-icon-up-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-up-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24482
+                        readonly property real y: 2338.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15567;2766:9429;2526:13412;4418:25668"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-background-up-hovered.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-up-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24439
+                        readonly property real y: 2327.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15567;2766:9429;2526:13412;8858:15141"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-icon-up-hovered.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-up-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24450
+                        readonly property real y: 2338.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15567;2766:9429;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-up-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24391
+                        readonly property real y: 2330.5
+                    }
+
+                    readonly property real topPadding: 5
+                }
+
+                readonly property QtObject up_pressed: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15569;2766:9503;2526:13406"
+                        readonly property string filePath: "light/images/spinbox-background-up-pressed.png"
+                        readonly property real height: 34
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-background-up-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 124
+                        readonly property real x: 24379
+                        readonly property real y: 2390.5
+                    }
+
+                    readonly property real bottomPadding: 5
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property real bottomPadding: 5
+                        readonly property string figmaId: "I2557:15569;2766:9503"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 12
+                        readonly property string name: "spinbox-contentItem-up-pressed"
+                        readonly property real rightPadding: 5
+                        readonly property real spacing: 8
+                        readonly property real topPadding: 5
+                    }
+
+                    readonly property QtObject indicator_down_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15569;2766:9503;2526:13408;4418:24767"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-background-up-pressed.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-background-up-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24471
+                        readonly property real y: 2394.5
+                    }
+
+                    readonly property QtObject indicator_down_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15569;2766:9503;2526:13408;8858:14984"
+                        readonly property string filePath: "light/images/spinbox-indicator-down-icon-up-pressed.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-down-icon-up-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24482
+                        readonly property real y: 2405.25
+                    }
+
+                    readonly property QtObject indicator_up_background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15569;2766:9503;2526:13412;4418:25668"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-background-up-pressed.png"
+                        readonly property real height: 26
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-background-up-pressed"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 30
+                        readonly property real x: 24439
+                        readonly property real y: 2394.5
+                    }
+
+                    readonly property QtObject indicator_up_icon: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15569;2766:9503;2526:13412;8858:15141"
+                        readonly property string filePath: "light/images/spinbox-indicator-up-icon-up-pressed.png"
+                        readonly property real height: 4.50586
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-indicator-up-icon-up-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 8.00391
+                        readonly property real x: 24450
+                        readonly property real y: 2405.25
+                    }
+
+                    readonly property real leftPadding: 12
+                    readonly property bool mirrored: true
+                    readonly property real rightPadding: 5
+                    readonly property real spacing: 64
+                    readonly property QtObject textInput: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15569;2766:9503;2526:13381"
+                        readonly property string fontFamily: "Segoe UI"
+                        readonly property real fontSize: 14
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "spinbox-textInput-up-pressed"
+                        readonly property real rightShadow: 0
+                        readonly property real textHAlignment: 4
+                        readonly property real textVAlignment: 32
+                        readonly property real topShadow: 0
+                        readonly property real width: 16
+                        readonly property real x: 24391
+                        readonly property real y: 2397.5
+                    }
+
+                    readonly property real topPadding: 5
                 }
 
             }
