@@ -33,9 +33,15 @@ SpreadModel *SpreadModel::create(QQmlEngine *, QJSEngine *)
     return s_instance;
 }
 
-void SpreadModel::update(int topRow, int bottomRow, int leftColumn, int rightColumn)
+void SpreadModel::update(int row, int column)
 {
-    emit dataChanged(index(topRow, leftColumn), index(bottomRow, rightColumn), {spread::Role::Display,});
+    if (!m_updateMutex.tryLock())
+        return;
+    column = getModelColumn(column);
+    row = getModelRow(row);
+    const QModelIndex index = this->index(row, column);
+    emit dataChanged(index, index, {spread::Role::Display,});
+    m_updateMutex.unlock();
 }
 
 void SpreadModel::clearHighlight()

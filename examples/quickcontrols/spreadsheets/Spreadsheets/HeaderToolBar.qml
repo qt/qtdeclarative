@@ -31,6 +31,10 @@ Item {
                 icon.height: root.__icon_size
                 icon.color: palette.text
                 onClicked: helpRequested()
+                ToolTip {
+                    text: qsTr("Help")
+                    visible: helpButton.hovered
+                }
             }
 
             ToolButton {
@@ -41,6 +45,10 @@ Item {
                 icon.height: root.__icon_size
                 flat: true
                 checkable: true
+                ToolTip {
+                    text: qsTr("Pan")
+                    visible: panButton.hovered
+                }
             }
 
             ToolButton {
@@ -50,6 +58,10 @@ Item {
                 icon.width: root.__icon_size
                 icon.height: root.__icon_size
                 onClicked: cutRequested()
+                ToolTip {
+                    text: qsTr("Cut")
+                    visible: cutButton.hovered
+                }
             }
 
             ToolButton {
@@ -59,6 +71,10 @@ Item {
                 icon.width: root.__icon_size
                 icon.height: root.__icon_size
                 onClicked: copyRequested()
+                ToolTip {
+                    text: qsTr("Copy")
+                    visible: copyButton.hovered
+                }
             }
 
             ToolButton {
@@ -68,6 +84,10 @@ Item {
                 icon.width: root.__icon_size
                 icon.height: root.__icon_size
                 onClicked: pasteRequested()
+                ToolTip {
+                    text: qsTr("Paste")
+                    visible: pasteButton.hovered
+                }
             }
 
             Item { Layout.fillWidth: true }
