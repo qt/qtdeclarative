@@ -3334,7 +3334,7 @@ protected:
     }
 
 private:
-    static void appendEvent(QQuickItem *filter, QQuickItem *receiver, QEvent *event) {
+    static void appendEvent(QQuickItem *filter, QQuickItem *receiver, QEvent *) {
         auto record = DeliveryRecord(filter ? filter->objectName() : QString(), receiver ? receiver->objectName() : QString());
         int i = m_deliveryList.size();
         if (m_expectedDeliveryList.size() > i && m_expectedDeliveryList[i] == record)
@@ -3384,7 +3384,11 @@ void tst_qquickwindow::testChildMouseEventFilter_data()
     QTest::addColumn<InputState>("inputState");
     QTest::addColumn<DeliveryRecordVector>("expectedDeliveryOrder");
 
-    for (const QString &eventMode : {"mouse", "touch", "touchToMouse"}) {
+    for (const QString &eventMode : {
+            QStringLiteral("mouse"),
+            QStringLiteral("touch"),
+            QStringLiteral("touchToMouse")
+        }) {
 
     #define desc(txt) qPrintable(QString("%1 events, ").arg(eventMode) + txt)
 

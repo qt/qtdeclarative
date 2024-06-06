@@ -2622,7 +2622,7 @@ class TransformItemPrivate :public QQuickItemPrivate
 protected:
     Q_DECLARE_PUBLIC(TransformItem)
 
-    bool transformChanged(QQuickItem *transformedItem) override
+    bool transformChanged(QQuickItem *) override
     {
         Q_Q(TransformItem);
         q->transformChanged = true;

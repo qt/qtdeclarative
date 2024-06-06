@@ -46,7 +46,7 @@ public:
     tst_QQuickMenu();
 
 private slots:
-    void init();
+    void init() final;
 
     void defaults();
     void count();

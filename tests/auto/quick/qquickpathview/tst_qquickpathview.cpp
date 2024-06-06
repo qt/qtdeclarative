@@ -2943,11 +2943,11 @@ public:
         m_values << 0 << 1 << 2 << 3 << 4;
     }
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const {
+    int rowCount(const QModelIndex &parent = QModelIndex()) const final {
         Q_UNUSED(parent);
         return m_values.count();
     }
-    QVariant data(const QModelIndex &index, int role) const {
+    QVariant data(const QModelIndex &index, int) const final {
         if (index.row() < 0 || m_values.count() <= index.row())
             return QVariant();
 

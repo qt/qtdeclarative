@@ -8034,7 +8034,7 @@ public:
 
     void init(QV4::ExecutionEngine *v4, QV4::WeakValue *weakRef, bool *resultPtr)
     {
-        QV4::QObjectWrapper::wrap(v4, this);
+        (void) QV4::QObjectWrapper::wrap(v4, this); // Intentionally drop the wrapper
         QQmlEngine::setObjectOwnership(this, QQmlEngine::JavaScriptOwnership);
 
         this->resultPtr = resultPtr;
