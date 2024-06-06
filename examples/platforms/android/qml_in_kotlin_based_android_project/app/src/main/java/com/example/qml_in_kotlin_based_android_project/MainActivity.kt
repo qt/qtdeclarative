@@ -22,7 +22,9 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
     private lateinit var m_binding: ActivityMainBinding
     private var m_qmlButtonSignalListenerId = 0
     private var m_qtQuickView: QtQuickView? = null
+    //! [qmlComponent]
     private var m_mainQmlComponent: Main = Main()
+    //! [qmlComponent]
     private val m_statusNames = hashMapOf(
         QtQmlStatus.READY to "READY",
         QtQmlStatus.LOADING to "LOADING",
@@ -40,9 +42,9 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
 
         m_binding.signalSwitch.setOnClickListener { switchListener() }
 
-        //! [m_qmlView]
+        //! [m_qtQuickView]
         m_qtQuickView = QtQuickView(this)
-        //! [m_qmlView]
+        //! [m_qtQuickView]
 
         // Set status change listener for m_qmlView
         // listener implemented below in OnStatusChanged
@@ -56,7 +58,9 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         )
         m_binding.qmlFrame.addView(m_qtQuickView, params)
         //! [layoutParams]
+        //! [loadComponent]
         m_qtQuickView!!.loadComponent(m_mainQmlComponent)
+        //! [loadComponent]
 
         m_binding.changeColorButton.setOnClickListener { onClickListener() }
 

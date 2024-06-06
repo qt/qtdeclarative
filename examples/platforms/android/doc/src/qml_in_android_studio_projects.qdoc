@@ -50,20 +50,32 @@
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt m_qmlView
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt m_qtQuickView
 
     Previously declared variable m_mainQmlComponent is
     initialized with new Main() object. Main is a Java class extending
     QtQmlComponent, generated from the imported QML project.
     This is the QML component we will be interacting with.
 
+    For a Java-based project:
+
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java qmlComponent
+
+    For a Kotlin-based project (initialized when declared):
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt qmlComponent
 
     The \c m_mainQmlComponent is loaded into the \c m_qtQuickView through the
     \c QtQuickView.loadComponent() method, which takes \c QtQmlComponent as an
     argument.
 
+    For a Java-based project:
+
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java loadComponent
+
+    For a Kotlin-based project:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt loadComponent
 
     The \c m_qtQuickView is added to Android FrameLayout ViewGroup with
     appropriate layout parameters.
@@ -95,7 +107,7 @@
     For a Kotlin-based project:
 
     \code
-    class MainActivity : AppCompatActivity(), QtQuickView.StatusChangeListener{
+    class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener{
         ...
     }
     \endcode
@@ -161,6 +173,9 @@
     \c connectSignalListener() and \c disconnectSignalListener() methods which
     are used to connect and disconnect a signal listener/s between a signal/s
     that is/are declared in the QML component root object.
+    The \c QtQmlComponent.connectSignalListener()
+    returns a unique signal listener id which we store and use later to
+    identify and disconnect the listener.
 
     Here we connect a signal listener to the \c onClicked()  signal of the
     QML component.
@@ -179,9 +194,9 @@
     color of the layout holding the Android side of the application is set to
     a random color value fetched from the \c Colors.java class.
 
-    The \c QtQmlComponent.connectSignalListener()
-    returns a unique signal listener id which we store and use later to
-    identify and disconnect the listener.
+    Next, the signal listener is disconnected using the
+    \c QtQmlComponent.disconnectSignalListener()
+    method by giving it the unique signal listener id.
 
     For a Java-based project:
 
@@ -190,9 +205,5 @@
     For a Kotlin-based project:
 
     \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt disconnect qml signal listener
-
-    Here, the previously connected signal listener is disconnected using the
-    \c QtQmlComponent.disconnectSignalListener()
-    method by giving it the unique signal listener id.
 
 */
