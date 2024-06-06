@@ -11,6 +11,10 @@
     look and feel. It implements the same design language as the
     \l {Qt Widget Gallery}{Fusion style for Qt Widgets}.
 
+    The Fusion style automatically switches dark and light themes according to
+    the system settings. For information on how to set custom theme colors,
+    refer to the \l {customize-fusion-style}{Customization} section.
+
     \include style-screenshots.qdocinc {file} {Fusion} {fusion}
 
     To run an application with the Fusion style, see
@@ -22,17 +26,18 @@
     rendering engines.
 
     \section2 Customization
+    \target customize-fusion-style
 
     The Fusion style uses the standard system \l[QtQuick]{Palette}
     to provide colors that match the desktop environment.
 
     \image qtquickcontrols-fusion-palettes.png
 
-    Custom palettes can be specified for any control,
-    \l{Popup::palette}{popup}, or \l{Window::palette}{application window}.
-    Explicit palette attributes are automatically propagated from parent to children,
-    overriding any system defaults for that attribute. In the following example,
-    the window and all three switches appear with a violet highlight color:
+    You can specify custom palettes for any control, \l{Popup::palette}{popup},
+    or \l{Window::palette}{application window}. Explicit palette attributes are
+    automatically propagated from parent to children, overriding any system
+    defaults for that attribute. In the following example, the window and all
+    three switches appear with a violet highlight color:
 
     \table
         \row
