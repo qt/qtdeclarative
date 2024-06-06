@@ -103,8 +103,6 @@ Q_LOGGING_CATEGORY(lcDialogs, "qt.quick.dialogs")
     \sa accepted()
 */
 
-Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
-
 QQuickAbstractDialog::QQuickAbstractDialog(QQuickDialogType type, QObject *parent)
     : QObject(parent),
       m_type(type)

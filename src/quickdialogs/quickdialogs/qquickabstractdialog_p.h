@@ -17,6 +17,7 @@
 
 #include <memory>
 
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qobject.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/qpa/qplatformdialoghelper.h>
@@ -28,6 +29,8 @@
 #include "qtquickdialogs2global_p.h"
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
 
 class QWindow;
 class QPlatformDialogHelper;
