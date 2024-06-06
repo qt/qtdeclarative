@@ -125,10 +125,8 @@ void tst_qquickmenubar::mouse_data()
 
 void tst_qquickmenubar::mouse()
 {
-    QFETCH(bool, usePopupWindow);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
-    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
 
     SKIP_IF_NO_WINDOW_ACTIVATION
 
@@ -352,10 +350,8 @@ void tst_qquickmenubar::keys_data()
 
 void tst_qquickmenubar::keys()
 {
-    QFETCH(bool, usePopupWindow);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
-    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
 
     SKIP_IF_NO_WINDOW_ACTIVATION
 
@@ -1074,10 +1070,8 @@ void tst_qquickmenubar::addRemoveExistingMenus()
     // Check that you get warnings if trying to add menus that
     // are already in the menubar, or remove menus that are not.
     QFETCH(bool, native);
-    QFETCH(bool, usePopupWindow);
 
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
-    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
     QQmlApplicationEngine engine;
     engine.load(testFileUrl("menus.qml"));
 
@@ -1110,10 +1104,8 @@ void tst_qquickmenubar::checkHighlightWhenMenuDismissed_data()
 
 void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
 {
-    QFETCH(bool, usePopupWindow);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
-    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
@@ -1181,10 +1173,8 @@ void tst_qquickmenubar::hoverAfterClosingWithEscape_data()
 
 void tst_qquickmenubar::hoverAfterClosingWithEscape()
 {
-    QFETCH(bool, usePopupWindow);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
-    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
@@ -1481,7 +1471,6 @@ void tst_qquickmenubar::menuPosition()
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, true);
     // Use in-scene popups for this test, since we have no guarantee where a window
     // manager might end up placing a menu.
-    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, true);
     QQmlApplicationEngine engine;
     engine.load(testFileUrl("menus.qml"));
 
@@ -1697,7 +1686,6 @@ void tst_qquickmenubar::panMenuBar()
     // Check that a MenuBarItem's menu opens when you click it. And then check that
     // if you hover the next MenuBarItem in the MenuBar, that the first one will
     // close, and the second one will open.
-    QFETCH(bool, usePopupWindow);
 
 #if !defined(Q_OS_MACOS) || !defined(Q_OS_WINDOWS)
     QSKIP("This test doesn't pass on e.g QNX. It needs more investigation before it can be enabled");
@@ -1710,7 +1698,6 @@ void tst_qquickmenubar::panMenuBar()
 #endif
 
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, true);
-    QCoreApplication::setAttribute(Qt::AA_DontUsePopupWindows, !usePopupWindow);
     QQmlApplicationEngine engine;
     engine.load(testFileUrl("menus.qml"));
 
