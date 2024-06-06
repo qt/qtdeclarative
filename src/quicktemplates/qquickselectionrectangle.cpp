@@ -242,19 +242,9 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             m_selectable->setSelectionEndPos(pos);
             updateHandles();
             updateActiveState(true);
-        } else if (modifiers == Qt::ControlModifier) {
-            // Select a single cell, but keep the old selection (unless
-            // m_selectable->startSelection(pos, modifiers) returns false, which
-            // it will if selectionMode only allows a single selection).
-            if (!m_selectable->startSelection(pos, modifiers))
-                return;
-            m_selectable->setSelectionStartPos(pos);
-            m_selectable->setSelectionEndPos(pos);
-            updateHandles();
-            updateActiveState(true);
-        } else if (modifiers == Qt::NoModifier) {
-            // Select a single cell
-            m_selectable->clearSelection();
+        } else {
+            // Select a single cell. m_selectable->startSelection() will decide
+            // if the existing selection should also be cleared.
             if (!m_selectable->startSelection(pos, modifiers))
                 return;
             m_selectable->setSelectionStartPos(pos);
