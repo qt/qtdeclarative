@@ -734,8 +734,8 @@ QQmlJSScope::ConstPtr findDefiningScopeIf(
 Starts looking for the name starting from the given scope and traverse through base and
 extension types.
 */
-QQmlJSScope::ConstPtr findDefiningScopeForProperty(QQmlJSScope::ConstPtr referrerScope,
-                                                          const QString &nameToCheck)
+QQmlJSScope::ConstPtr findDefiningScopeForProperty(const QQmlJSScope::ConstPtr &referrerScope,
+                                                   const QString &nameToCheck)
 {
     return findDefiningScopeIf(referrerScope, [&nameToCheck](const QQmlJSScope::ConstPtr &scope) {
         return scope->hasOwnProperty(nameToCheck);
@@ -748,8 +748,8 @@ See also findDefiningScopeForProperty().
 
 Special case: you can also bind to a signal handler.
 */
-QQmlJSScope::ConstPtr findDefiningScopeForBinding(QQmlJSScope::ConstPtr referrerScope,
-                                                         const QString &nameToCheck)
+QQmlJSScope::ConstPtr findDefiningScopeForBinding(const QQmlJSScope::ConstPtr &referrerScope,
+                                                  const QString &nameToCheck)
 {
     return findDefiningScopeIf(referrerScope, [&nameToCheck](const QQmlJSScope::ConstPtr &scope) {
         return scope->hasOwnProperty(nameToCheck) || scope->hasOwnMethod(nameToCheck);
@@ -760,8 +760,8 @@ QQmlJSScope::ConstPtr findDefiningScopeForBinding(QQmlJSScope::ConstPtr referrer
 \internal
 See also findDefiningScopeForProperty().
 */
-QQmlJSScope::ConstPtr findDefiningScopeForMethod(QQmlJSScope::ConstPtr referrerScope,
-                                                        const QString &nameToCheck)
+QQmlJSScope::ConstPtr findDefiningScopeForMethod(const QQmlJSScope::ConstPtr &referrerScope,
+                                                 const QString &nameToCheck)
 {
     return findDefiningScopeIf(referrerScope, [&nameToCheck](const QQmlJSScope::ConstPtr &scope) {
         return scope->hasOwnMethod(nameToCheck);
@@ -772,8 +772,8 @@ QQmlJSScope::ConstPtr findDefiningScopeForMethod(QQmlJSScope::ConstPtr referrerS
 \internal
 See also findDefiningScopeForProperty().
 */
-QQmlJSScope::ConstPtr findDefiningScopeForEnumeration(QQmlJSScope::ConstPtr referrerScope,
-                                                             const QString &nameToCheck)
+QQmlJSScope::ConstPtr findDefiningScopeForEnumeration(const QQmlJSScope::ConstPtr &referrerScope,
+                                                      const QString &nameToCheck)
 {
     return findDefiningScopeIf(referrerScope, [&nameToCheck](const QQmlJSScope::ConstPtr &scope) {
         return scope->hasOwnEnumeration(nameToCheck);
@@ -784,8 +784,8 @@ QQmlJSScope::ConstPtr findDefiningScopeForEnumeration(QQmlJSScope::ConstPtr refe
 \internal
 See also findDefiningScopeForProperty().
 */
-QQmlJSScope::ConstPtr findDefiningScopeForEnumerationKey(QQmlJSScope::ConstPtr referrerScope,
-                                                          const QString &nameToCheck)
+QQmlJSScope::ConstPtr findDefiningScopeForEnumerationKey(const QQmlJSScope::ConstPtr &referrerScope,
+                                                         const QString &nameToCheck)
 {
     return findDefiningScopeIf(referrerScope, [&nameToCheck](const QQmlJSScope::ConstPtr &scope) {
         return scope->hasOwnEnumerationKey(nameToCheck);

@@ -257,15 +257,15 @@ QStringList fieldMemberExpressionBits(const DomItem &item, const DomItem &stopAt
 
 QString qualifiersFrom(const DomItem &el);
 
-QQmlJSScope::ConstPtr findDefiningScopeForProperty(QQmlJSScope::ConstPtr referrerScope,
+QQmlJSScope::ConstPtr findDefiningScopeForProperty(const QQmlJSScope::ConstPtr &referrerScope,
                                                         const QString &nameToCheck);
-QQmlJSScope::ConstPtr findDefiningScopeForBinding(QQmlJSScope::ConstPtr referrerScope,
+QQmlJSScope::ConstPtr findDefiningScopeForBinding(const QQmlJSScope::ConstPtr &referrerScope,
                                                         const QString &nameToCheck);
-QQmlJSScope::ConstPtr findDefiningScopeForMethod(QQmlJSScope::ConstPtr referrerScope,
+QQmlJSScope::ConstPtr findDefiningScopeForMethod(const QQmlJSScope::ConstPtr &referrerScope,
                                                         const QString &nameToCheck);
-QQmlJSScope::ConstPtr findDefiningScopeForEnumeration(QQmlJSScope::ConstPtr referrerScope,
+QQmlJSScope::ConstPtr findDefiningScopeForEnumeration(const QQmlJSScope::ConstPtr &referrerScope,
                                                             const QString &nameToCheck);
-QQmlJSScope::ConstPtr findDefiningScopeForEnumerationKey(QQmlJSScope::ConstPtr referrerScope,
+QQmlJSScope::ConstPtr findDefiningScopeForEnumerationKey(const QQmlJSScope::ConstPtr &referrerScope,
                                                         const QString &nameToCheck);
 } // namespace QQmlLSUtils
 
