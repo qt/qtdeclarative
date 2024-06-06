@@ -228,14 +228,15 @@ HelpManager::documentationForItem(const DomItem &file, QLspSpecification::Positi
  * links for qmlobject name.
  */
 std::vector<QQmlLSHelpProviderBase::DocumentLink>
-HelpManager::collectDocumentationLinks(QQmlJSScope::ConstPtr scope,
-                                       std::shared_ptr<QQmlJSTypeResolver> typeResolver,
-                                       const QString &name) const
+HelpManager::collectDocumentationLinks(
+        const QQmlJSScope::ConstPtr &scope, const std::shared_ptr<QQmlJSTypeResolver> &typeResolver,
+        const QString &name) const
 {
     if (!m_helpPlugin)
         return {};
     const auto potentialDocumentationLinks =
-            [this](QQmlJSScope::ConstPtr scope, std::shared_ptr<QQmlJSTypeResolver> typeResolver)
+            [this](const QQmlJSScope::ConstPtr &scope,
+                   const std::shared_ptr<QQmlJSTypeResolver> &typeResolver)
             -> std::vector<QQmlLSHelpProviderBase::DocumentLink> {
         if (!scope || !typeResolver)
             return {};

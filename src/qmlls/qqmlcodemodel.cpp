@@ -613,9 +613,9 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
     // if the documentation root path is not set through the commandline,
     // try to set it from the settings file (.qmlls.ini file)
     if (m_documentationRootPath.isEmpty()) {
-        QString path = url2Path(url);
+        const QString path = url2Path(url);
         if (m_settings && m_settings->search(path)) {
-            QString docDir = QStringLiteral(u"docDir");
+            const QString docDir = QStringLiteral(u"docDir");
             if (m_settings->isSet(docDir))
                 setDocumentationRootPath(m_settings->value(docDir).toString());
         }

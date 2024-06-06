@@ -45,9 +45,10 @@ private:
     [[nodiscard]] std::optional<QByteArray> tryExtract(ExtractDocumentation &extractor,
                                                        const std::vector<QQmlLSHelpProviderBase::DocumentLink> &links,
                                                        const QString &name) const;
-    [[nodiscard]] std::vector<QQmlLSHelpProviderBase::DocumentLink> collectDocumentationLinks(QQmlJSScope::ConstPtr scope,
-                                                                                              std::shared_ptr<QQmlJSTypeResolver> typeResolver,
-                                                                                              const QString &name) const;
+    [[nodiscard]] std::vector<QQmlLSHelpProviderBase::DocumentLink> collectDocumentationLinks(
+            const QQmlJSScope::ConstPtr &scope,
+            const std::shared_ptr<QQmlJSTypeResolver> &typeResolver,
+            const QString &name) const;
     void registerDocumentations(const QStringList &docs) const;
     std::unique_ptr<QQmlLSHelpProviderBase> m_helpPlugin;
     QString m_docRootPath;

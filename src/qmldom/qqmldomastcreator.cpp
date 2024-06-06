@@ -881,8 +881,8 @@ void QQmlDomAstCreator::endVisit(AST::FunctionDeclaration *fDef)
     }
     if (fDef->formals) {
         Q_SCRIPTELEMENT_EXIT_IF(!stackHasScriptList());
-        auto parameterList = scriptNodeStack.takeLast().takeList();
-        const auto parameterQList = parameterList.qList();
+        const auto parameterList = scriptNodeStack.takeLast().takeList();
+        const auto &parameterQList = parameterList.qList();
         size_t size = (size_t)parameterQList.size();
         for (size_t idx = size - 1; idx < size; --idx) {
             auto argLoc = FileLocations::ensure(

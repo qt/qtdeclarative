@@ -1235,17 +1235,15 @@ static QQmlJSScope::ConstPtr findScopeOfSpecialItems(
 
         // Note: It does not have to be an ID. It can be a property.
         return resolver->scopedType(scope, targetName);
-    } else {
-        if (item.internalKind() == DomType::Binding &&
-            item.field(Fields::bindingType).value().toInteger() == int(BindingType::OnBinding)) {
-                // Binding on sth : {} syntax
-                // Target scope is the current scope
-                return scope;
-        }
-        return scope->parentScope();
     }
 
-    return {};
+    if (item.internalKind() == DomType::Binding &&
+        item.field(Fields::bindingType).value().toInteger() == int(BindingType::OnBinding)) {
+            // Binding on sth : {} syntax
+            // Target scope is the current scope
+            return scope;
+    }
+    return scope->parentScope();
 }
 
 static std::optional<ExpressionType> resolveFieldMemberExpressionType(const DomItem &item,

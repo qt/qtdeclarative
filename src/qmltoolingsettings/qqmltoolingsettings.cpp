@@ -123,12 +123,12 @@ bool QQmlToolingSettings::search(const QString &path)
     return false;
 }
 
-QVariant QQmlToolingSettings::value(QString name) const
+QVariant QQmlToolingSettings::value(const QString &name) const
 {
     return m_values.value(name);
 }
 
-bool QQmlToolingSettings::isSet(QString name) const
+bool QQmlToolingSettings::isSet(const QString &name) const
 {
     if (!m_values.contains(name))
         return false;

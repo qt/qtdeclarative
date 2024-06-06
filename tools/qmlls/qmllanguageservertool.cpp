@@ -120,7 +120,7 @@ public slots:
             qsizetype readNow = std::cin.readsome(m_buffer + m_bytesInBuf + 1, s_bufSize) + 1;
             QByteArray toAdd(m_buffer + m_bytesInBuf, readNow);
             m_bytesInBuf += readNow;
-            m_streamReader.receiveData(toAdd);
+            m_streamReader.receiveData(std::move(toAdd));
 
             m_shouldSendData |= m_bytesInBuf >= s_bufSize;
             if (std::exchange(m_shouldSendData, false))
