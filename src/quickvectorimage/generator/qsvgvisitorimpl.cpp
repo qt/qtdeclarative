@@ -175,18 +175,66 @@ inline bool isPathContainer(const QSvgStructureNode *node)
     return foundPath;
 }
 
-void populateStrokeStyle(StrokeStyle &srokeStyle)
+static QString capStyleName(Qt::PenCapStyle style)
 {
-    QPen p = styleResolver->currentStroke();
-    srokeStyle.lineCapStyle = p.capStyle();
-    srokeStyle.lineJoinStyle = p.joinStyle() == Qt::SvgMiterJoin ? Qt::MiterJoin : p.joinStyle(); //TODO support SvgMiterJoin
-    srokeStyle.miterLimit = p.miterLimit();
-    srokeStyle.dashOffset = p.dashOffset();
-    srokeStyle.dashArray = p.dashPattern();
-    srokeStyle.color = styleResolver->currentStrokeColor();
-    srokeStyle.width = p.widthF();
+    QString styleName;
+
+    switch (style) {
+    case Qt::SquareCap:
+        styleName = QStringLiteral("squarecap");
+        break;
+    case Qt::FlatCap:
+        styleName = QStringLiteral("flatcap");
+        break;
+    case Qt::RoundCap:
+        styleName = QStringLiteral("roundcap");
+    default:
+        break;
+    }
+
+    return styleName;
 }
 
+static QString joinStyleName(Qt::PenJoinStyle style)
+{
+    QString styleName;
+
+    switch (style) {
+    case Qt::MiterJoin:
+        styleName = QStringLiteral("miterjoin");
+        break;
+    case Qt::BevelJoin:
+        styleName = QStringLiteral("beveljoin");
+        break;
+    case Qt::RoundJoin:
+        styleName = QStringLiteral("roundjoin");
+    case Qt::SvgMiterJoin:
+        styleName = QStringLiteral("svgmiterjoin");
+        break;
+    default:
+        break;
+    }
+
+    return styleName;
+}
+
+static QString dashArrayString(QList<qreal> dashArray)
+{
+    if (dashArray.isEmpty())
+        return QString();
+
+    QString dashArrayString;
+    QTextStream stream(&dashArrayString);
+
+    for (int i = 0; i < dashArray.length() - 1; i++) {
+        qreal value = dashArray[i];
+        stream << value << ", ";
+    }
+
+    stream << dashArray.last();
+
+    return dashArrayString;
+}
 };
 
 QSvgVisitorImpl::QSvgVisitorImpl(const QString svgFileName, QQuickGenerator *generator)
@@ -428,6 +476,12 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
             QString strokeColor = colorCssDescription(currentStrokeColor);
             styleTagContent += QStringLiteral("-qt-stroke-color:%1;").arg(strokeColor);
             styleTagContent += QStringLiteral("-qt-stroke-width:%1px;").arg(styleResolver->currentStrokeWidth());
+            styleTagContent += QStringLiteral("-qt-stroke-dasharray:%1;").arg(dashArrayString(styleResolver->currentStroke().dashPattern()));
+            styleTagContent += QStringLiteral("-qt-stroke-dashoffset:%1;").arg(styleResolver->currentStroke().dashOffset());
+            styleTagContent += QStringLiteral("-qt-stroke-lineCap:%1;").arg(capStyleName(styleResolver->currentStroke().capStyle()));
+            styleTagContent += QStringLiteral("-qt-stroke-lineJoin:%1;").arg(joinStyleName(styleResolver->currentStroke().joinStyle()));
+            if (styleResolver->currentStroke().joinStyle() == Qt::MiterJoin || styleResolver->currentStroke().joinStyle() == Qt::SvgMiterJoin)
+                styleTagContent += QStringLiteral("-qt-stroke-miterlimit:%1;").arg(styleResolver->currentStroke().miterLimit());
 #if QT_CONFIG(texthtmlparser)
             needsPathNode = true;
 #endif
@@ -542,11 +596,11 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                     info.painterPath = p;
 
                     if (fmt.hasProperty(QTextCharFormat::TextOutline)) {
-                        info.strokeStyle.width = fmt.textOutline().widthF();
+                        info.strokeStyle = StrokeStyle::fromPen(fmt.textOutline());
                         info.strokeStyle.color = fmt.textOutline().color();
                     } else {
+                        info.strokeStyle = StrokeStyle::fromPen(styleResolver->currentStroke());
                         info.strokeStyle.color = styleResolver->currentStrokeColor();
-                        info.strokeStyle.width = styleResolver->currentStrokeWidth();
                     }
 
                     if (info.grad.type() == QGradient::NoGradient && styleResolver->currentFillGradient() != nullptr)
@@ -661,7 +715,7 @@ bool QSvgVisitorImpl::visitStructureNodeStart(const QSvgStructureNode *node)
     info.isPathContainer = isPathContainer(node);
     info.stage = StructureNodeStage::Start;
 
-    return m_generator->generateStructureNode(info);;
+    return m_generator->generateStructureNode(info);
 }
 
 void QSvgVisitorImpl::visitStructureNodeEnd(const QSvgStructureNode *node)
@@ -690,7 +744,7 @@ bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgTinyDocument *node)
     info.isPathContainer = isPathContainer(node);
     info.stage = StructureNodeStage::Start;
 
-    return m_generator->generateRootNode(info);;
+    return m_generator->generateRootNode(info);
 }
 
 void QSvgVisitorImpl::visitDocumentNodeEnd(const QSvgTinyDocument *node)
@@ -761,7 +815,8 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
 
     info.painterPath = path;
     info.fillColor = styleResolver->currentFillColor();
-    populateStrokeStyle(info.strokeStyle);
+    info.strokeStyle = StrokeStyle::fromPen(styleResolver->currentStroke());
+    info.strokeStyle.color = styleResolver->currentStrokeColor();
     if (styleResolver->currentFillGradient() != nullptr)
         info.grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
 

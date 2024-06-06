@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="200">
+  <text y="70" style="font-size: 80px; font-weight: bold; font-family: sans-serif; stroke-dasharray:5,5; fill: peachpuff; stroke: crimson; stroke-width:4.1px; stroke-linecap: square; stroke-linejoin: bevel;">pizazz</text>
+  <text y="150" style="font-size: 80px; font-weight: bold; font-family: sans-serif; fill: peachpuff; stroke: blue; stroke-width:4.1px; stroke-linecap: square; stroke-linejoin: bevel;">pizazz</text>
+</svg>

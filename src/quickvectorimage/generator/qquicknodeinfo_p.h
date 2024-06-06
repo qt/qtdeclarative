@@ -54,6 +54,19 @@ struct StrokeStyle
     QList<qreal> dashArray;
     QColor color = QColorConstants::Transparent;
     qreal width = 1.0;
+
+    static StrokeStyle fromPen(const QPen &p)
+    {
+        StrokeStyle style;
+        style.lineCapStyle = p.capStyle();
+        style.lineJoinStyle = p.joinStyle() == Qt::SvgMiterJoin ? Qt::MiterJoin : p.joinStyle(); //TODO support SvgMiterJoin
+        style.miterLimit = p.miterLimit();
+        style.dashOffset = p.dashOffset();
+        style.dashArray = p.dashPattern();
+        style.width = p.widthF();
+
+        return style;
+    }
 };
 
 struct PathNodeInfo : NodeInfo
