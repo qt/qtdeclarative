@@ -58,10 +58,12 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         m_box = findViewById(R.id.qmlColorBox);
         m_switch = findViewById(R.id.disconnectQmlListenerSwitch);
         m_switch.setOnClickListener(view -> switchListener());
+        //! [qmlComponent]
         m_mainQmlComponent = new Main();
-        //! [m_qmlView]
+        //! [qmlComponent]
+        //! [m_qtQuickView]
         m_qtQuickView = new QtQuickView(this);
-        //! [m_qmlView]
+        //! [m_qtQuickView]
 
         // Set status change listener for m_qmlView
         // listener implemented below in OnStatusChanged
@@ -74,7 +76,9 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         m_qmlFrameLayout = findViewById(R.id.qmlFrame);
         m_qmlFrameLayout.addView(m_qtQuickView, params);
         //! [layoutParams]
+        //! [loadComponent]
         m_qtQuickView.loadComponent(m_mainQmlComponent);
+        //! [loadComponent]
 
         findViewById(R.id.changeQmlColorButton).setOnClickListener(view -> onClickListener());
 

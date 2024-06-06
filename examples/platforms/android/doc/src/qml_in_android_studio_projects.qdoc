@@ -12,8 +12,8 @@
 
     This example contains a QML project that you can import into Android Studio
     with the \l {Qt Tools for Android Studio} plugin
-    and Java and Kotlin projects that utilize the
-    \l {Qt Quick View Android Class}{QtQuickView} API.
+    and Java and Kotlin projects that use the QML project as a View by
+    utilizing the \l {Qt Quick View Android Class}{QtQuickView} API.
 
     For more information on how QML works, see the \l {Qt Qml}. This
     documentation will focus on how a QML component is embedded into
@@ -37,21 +37,35 @@
 
     \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt binding
 
-    Inside the \c onCreate() method, an instance of
-    \l {Qt Quick View Android Class}{QtQuickView} named
-    \c m_qmlView is created by giving it the Java/Kotlin application Context,
-    URI of the QML project's \c main.qml file and the name of the QML project's
-    main library as parameters.
+    Inside the \c onCreate() method, a previously declared variable
+    \c m_qtQuickView is initialized with a new
+    \l {Qt Quick View Android Class}{QtQuickView}.
+    This new instance of \l {Qt Quick View Android Class}{QtQuickView}
+    is created by giving it the Context of the Java/Kotlin Activity as
+    an argument.
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java m_qmlView
+    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java m_qtQuickView
 
     For a Kotlin-based project:
 
     \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt m_qmlView
 
-    \c m_qmlView is then added to Android FrameLayout ViewGroup with
+    Previously declared variable m_mainQmlComponent is
+    initialized with new Main() object. Main is a Java class extending
+    QtQmlComponent, generated from the imported QML project.
+    This is the QML component we will be interacting with.
+
+    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java qmlComponent
+
+    The \c m_mainQmlComponent is loaded into the \c m_qtQuickView through the
+    \c QtQuickView.loadComponent() method, which takes \c QtQmlComponent as an
+    argument.
+
+    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java loadComponent
+
+    The \c m_qtQuickView is added to Android FrameLayout ViewGroup with
     appropriate layout parameters.
 
     For a Java-based project:
@@ -64,20 +78,21 @@
 
     \section1 Interacting with the QML component
 
-    To interact with the embedded QML component we first need to implement
-    the \l {Qt Quick View Android Class}{QtQuickView} public interface
-    \l [Qt Quick View Android Class]{public interface StatusChangeListener}{StatusChangeListener}.
+    To interact with the embedded QML component we implement the
+    \c QtQmlStatusChangeListener interface and override the onStatusChanged
+    method to get the loading status of the QtQmlComponent currently being
+    loaded into the \c m_qtQuickView.
 
     For a Java-based project:
 
     \code
     public class MainActivity extends AppCompatActivity implements
-    QtQuickView.StatusChangeListener{
+    QtQmlStatusChangeListener{
         ...
     }
     \endcode
 
-    IFor a Kotlin-based project:
+    For a Kotlin-based project:
 
     \code
     class MainActivity : AppCompatActivity(), QtQuickView.StatusChangeListener{
@@ -85,9 +100,7 @@
     }
     \endcode
 
-    Then, define an override for the
-    \l [Qt Quick View Android Class]{public interface StatusChangeListener}{StatusChangeListener}
-    callback function \c onStatusChanged().
+    OnstatusChanged implementation.
 
     For a Java-based project:
 
@@ -97,8 +110,9 @@
 
     \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt onStatusChanged
 
-    Then, set that listener to listen for status changes of \c m_qmlView
-    with the \l [Qt Quick View Android Class]{public void setStatusChangeListener(StatusChangeListener listener)}{setStatusChangeListener()}.
+    The onStatusChanged method is then set as the statusChangeListener of
+    the \c QtQmlComponent with QtQmlComponent.setStatusChangeListener(
+    QtQmlStatusChangeListener onStatusChanged()).
 
     For a Java-based project:
 
@@ -110,22 +124,18 @@
 
     The overridden callback function \c onStatusChanged() receives
     \c StatusChanged() signal containing the current
-    \l [Qt Quick View Android Class]{Status values}{Status value} of the
-    \c m_qmlView. If this
-    \l [Qt Quick View Android Class]{Status values}{Status value}
-    is confirmed to be
-    \l [Qt Quick View Android Class]{Status values}{STATUS_READY},
-    we can start interacting with the QML view.
+    status (public Enum QtQmlStatus) of the loading of the current
+    QtQmlComponent into the \c m_qtQuickView. If this \c QtQmlStatus
+    is confirmed to be \c QtQmlStatus.READY, we can start interacting
+    with the QML view.
 
-    \section1 Getting and setting QML view property values
+    \section1 Getting and setting QML component property values
 
-    Getting and setting QML view property values happens through the
-    \l [Qt Quick View Android Class]{public <T extends Object> T getProperty(String propertyName)}{QtQuickView.getProperty()}
-    and \l [Qt Quick View Android Class]{public void setProperty(String propertyName, Object value)}{QtQuickView.setProperty()}
-    methods.
-
-    The root object of the QML component's background color is set when a click
-    event of an Android button occurs.
+    Getting and setting QML component property values happens through the
+    methods described in the \c Main.java class. In this case we use the
+    \c m_mainQmlComponent.setColorStringProperty() and
+    \c m_mainQmlComponent.getColorStringProperty() methods. These methods are
+    generated according to what properties the QML component includes.
 
     For a Java-based project:
 
@@ -135,21 +145,22 @@
 
     \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt onClickListener
 
-    With the \l [Qt Quick View Android Class]{public void setProperty(StringpropertyName, Object value)}{QtQuickView.setProperty()}
-    method we set the "colorStringFormat" property value to a random color
-    value that is fetched from the project's \c Colors.java class.
+    With the \c m_mainQmlComponent.setColorStringProperty()
+    method we set the \c colorStringFormat property value of the
+    \c m_mainQmlComponent a random color value that is fetched from the
+    \c Colors.java class.
 
-    The \l [Qt Quick View Android Class]{public <T extends Object> T getProperty (String propertyName)}{QtQuickView.getProperty()}{QtQuickView.getProperty()}
+    The \c m_mainQmlComponent.getColorStringProperty()
     method is used here to fetch the current background color of the root
-    object of the QML component and then show it to the user on the Android
-    side of the application.
+    object of the m_mainQmlComponent and then show it to the user on the
+    Java/Kotlin Android side of the application.
 
     \section1 Signal listeners
 
-    \l {Qt Quick View Android Class}{QtQuickView} class offers a
-    connectSignalListener() and disconnectSignalListener() methods which are
-    used to connect and disconnect a signal listener to a signal that is
-    declared in the QML component root object.
+    The \c QtQmlComponent class offers a
+    \c connectSignalListener() and \c disconnectSignalListener() methods which
+    are used to connect and disconnect a signal listener/s between a signal/s
+    that is/are declared in the QML component root object.
 
     Here we connect a signal listener to the \c onClicked()  signal of the
     QML component.
@@ -162,12 +173,13 @@
 
     \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt qml signal listener
 
-    The \c onClicked() signal is emitted every time the button on the QML UI is
-    clicked. That signal is then received by this listener and the background
+    The \c onClicked() signal is emitted every time the button on the
+    QML component is clicked.
+    That signal is then received by this listener and the background
     color of the layout holding the Android side of the application is set to
-    a random color value fetched from the project's \c Colors.java class.
+    a random color value fetched from the \c Colors.java class.
 
-    The \l [Qt Quick View Android Class]{public <T> int addSignalListener(String signalName, Class<T> argType, SignalListener<T> listener)}{QtQuickView.connectSignalListener()}
+    The \c QtQmlComponent.connectSignalListener()
     returns a unique signal listener id which we store and use later to
     identify and disconnect the listener.
 
@@ -180,7 +192,7 @@
     \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt disconnect qml signal listener
 
     Here, the previously connected signal listener is disconnected using the
-    \l [Qt Quick View Android Class]{public boolean removeSignalListener(int signalListenerId)}{QtQuickView.disconnectSignalListener()}
+    \c QtQmlComponent.disconnectSignalListener()
     method by giving it the unique signal listener id.
 
 */
