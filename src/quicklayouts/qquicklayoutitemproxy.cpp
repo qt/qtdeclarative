@@ -73,7 +73,7 @@
     \sa Item, GridLayout, RowLayout, ColumnLayout
 */
 
-Q_LOGGING_CATEGORY(lcLayouts, "qt.quick.layouts")
+Q_STATIC_LOGGING_CATEGORY(lcLayouts, "qt.quick.layouts")
 
 
 QQuickLayoutItemProxy::QQuickLayoutItemProxy(QQuickItem *parent)
