@@ -506,6 +506,12 @@ public:
     bool visit(AST::NestedExpression *) override;
     void endVisit(AST::NestedExpression *) override;
 
+    bool visit(AST::NewExpression *) override;
+    void endVisit(AST::NewExpression *) override;
+
+    bool visit(AST::NewMemberExpression *) override;
+    void endVisit(AST::NewMemberExpression *) override;
+
     // lists of stuff whose children don't need a qqmljsscope: visitation order can be custom
     bool visit(AST::UiParameterList *) override;
     bool visit(AST::Elision *elision) override;

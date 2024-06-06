@@ -3938,6 +3938,280 @@ private slots:
         QCOMPARE(lambda.internalKind(), DomType::ScriptFunctionExpression);
     }
 
+    void regexpLiteral()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/regexpLiterals.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+
+        const DomItem noFlag =
+                statements.index(0).field(Fields::declarations).index(0).field(Fields::initializer);
+        QVERIFY(noFlag);
+        QCOMPARE(noFlag.internalKind(), DomType::ScriptRegExpLiteral);
+        const DomItem pattern = noFlag.field(Fields::regExpPattern);
+        QVERIFY(pattern);
+        QCOMPARE(pattern.value().toString(), u"HelloWorld"_s);
+        const DomItem flags = noFlag.field(Fields::regExpFlags);
+        QVERIFY(flags);
+        QCOMPARE(flags.value().toInteger(42), 0);
+    }
+
+    void regexpLiteralWithFlag()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/regexpLiterals.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+        const DomItem withFlag =
+                statements.index(1).field(Fields::declarations).index(0).field(Fields::initializer);
+        QVERIFY(withFlag);
+        QCOMPARE(withFlag.internalKind(), DomType::ScriptRegExpLiteral);
+        const DomItem pattern = withFlag.field(Fields::regExpPattern);
+        QVERIFY(pattern);
+        QCOMPARE(pattern.value().toString(), u"H?ello.*[^s]+"_s);
+        const DomItem flags = withFlag.field(Fields::regExpFlags);
+        QVERIFY(flags);
+        QCOMPARE(flags.value().toInteger(), 1);
+    }
+
+    void templateLiteral()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/templateLiterals.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+        {
+            auto checkIdentifier = [](const DomItem &component, const QStringView value) {
+                QVERIFY(component);
+                QCOMPARE(component.internalKind(), DomType::ScriptIdentifierExpression);
+                QCOMPARE(component.value().toString(), value);
+            };
+            auto checkLiteral = [](const DomItem &component, const QStringView value) {
+                QVERIFY(component);
+                QCOMPARE(component.internalKind(), DomType::ScriptTemplateStringPart);
+                QCOMPARE(component.value().toString(), value);
+            };
+            for (int i = 0; i < 4; ++i) {
+                const DomItem initializer = statements.index(i)
+                                                    .field(Fields::declarations)
+                                                    .index(0)
+                                                    .field(Fields::initializer);
+                QVERIFY(initializer);
+                QCOMPARE(initializer.internalKind(), DomType::ScriptTemplateLiteral);
+                const DomItem components = initializer.field(Fields::components);
+                QVERIFY(components);
+
+                QCOMPARE(components.indexes(), i == 0 ? 5 : (i == 3 ? 3 : 4));
+
+                int currentIndex = 0;
+                if (i == 0 || i == 2)
+                    checkLiteral(components.index(currentIndex++), u"a");
+
+                checkIdentifier(components.index(currentIndex++), u"b");
+                checkLiteral(components.index(currentIndex++), u"c");
+                checkIdentifier(components.index(currentIndex++), u"d");
+
+                if (i == 0 || i == 1)
+                    checkLiteral(components.index(currentIndex++), u"e");
+            }
+        }
+    }
+
+    void newExpression()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/newExpressions.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+        {
+            const DomItem newExpression = statements.index(0).field(Fields::expression);
+            QVERIFY(newExpression);
+            QCOMPARE(newExpression.internalKind(), DomType::ScriptNewExpression);
+            const DomItem expression = newExpression.field((Fields::expression));
+            QVERIFY(expression);
+            QCOMPARE(expression.value().toInteger(), 4);
+        }
+    }
+
+    void newMemberExpression()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/newExpressions.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"g"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+        {
+            const DomItem newMemberExpression = statements.index(0).field(Fields::expression);
+            QVERIFY(newMemberExpression);
+            QCOMPARE(newMemberExpression.internalKind(), DomType::ScriptNewMemberExpression);
+            const DomItem base = newMemberExpression.field((Fields::base));
+            QVERIFY(base);
+            QCOMPARE(base.value().toString(), u"Base"_s);
+            const DomItem arguments = newMemberExpression.field((Fields::arguments));
+            QCOMPARE(arguments.indexes(), 1);
+            QCOMPARE(arguments.index(0).value().toString(), u"argument");
+        }
+    }
+
+    void emptyTemplateLiteral()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/templateLiterals.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+
+        {
+            const DomItem empty = statements.index(4)
+                                          .field(Fields::declarations)
+                                          .index(0)
+                                          .field(Fields::initializer);
+            QVERIFY(empty);
+            QCOMPARE(empty.internalKind(), DomType::ScriptTemplateLiteral);
+            QVERIFY(empty.field(Fields::components));
+            QCOMPARE(empty.field(Fields::components).indexes(), 0);
+        }
+    }
+
+    void multiLineTemplateLiteral()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/templateLiterals.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+
+        {
+            const DomItem manyLines = statements.index(5)
+                                              .field(Fields::declarations)
+                                              .index(0)
+                                              .field(Fields::initializer);
+            QVERIFY(manyLines);
+            QCOMPARE(manyLines.internalKind(), DomType::ScriptTemplateLiteral);
+            QVERIFY(manyLines.field(Fields::components));
+            QCOMPARE(manyLines.field(Fields::components).indexes(), 1);
+            QCOMPARE(manyLines.field(Fields::components)
+                             .index(0)
+                             .value()
+                             .toString(),
+                     u"line 1\nline 2\nline 3");
+
+            // should not be a string, or a part of the string.
+            const DomItem afterManyLines = statements.index(6);
+            QCOMPARE(afterManyLines.internalKind(), DomType::ScriptVariableDeclaration);
+        }
+    }
+
+    void taggedTemplateLiteral()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/templateLiterals.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+
+        {
+            const DomItem taggedTemplate = statements.index(7)
+                                                   .field(Fields::declarations)
+                                                   .index(0)
+                                                   .field(Fields::initializer);
+            QVERIFY(taggedTemplate);
+            QCOMPARE(taggedTemplate.internalKind(), DomType::ScriptTaggedTemplate);
+            {
+                const DomItem templateLiteral = taggedTemplate.field(Fields::templateLiteral);
+                QVERIFY(templateLiteral);
+                QVERIFY(templateLiteral.field(Fields::components));
+                // That might change in future if we end up needing the non-script parts inside of
+                // the templates in the Dom.
+                QCOMPARE(templateLiteral.field(Fields::components).indexes(), 1);
+                QCOMPARE(templateLiteral.field(Fields::components).index(0).value().toString(),
+                         u"a normal string"_s);
+            }
+            {
+                const DomItem base = taggedTemplate.field(Fields::callee);
+                QVERIFY(base);
+                QCOMPARE(base.internalKind(), DomType::ScriptIdentifierExpression);
+                QCOMPARE(base.value().toString(), u"its"_s);
+            }
+        }
+    }
 
 private:
     QString baseDir;

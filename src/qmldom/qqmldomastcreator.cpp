@@ -2968,6 +2968,55 @@ void QQmlDomAstCreator::endVisit(AST::NestedExpression *expression)
     pushScriptElement(current);
 }
 
+bool QQmlDomAstCreator::visit(AST::NewExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::NewExpression *expression)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(expression, DomType::ScriptNewExpression);
+    current->addLocation(FileLocationRegion::NewKeywordRegion, expression->newToken);
+
+    if (expression->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(!stackHasScriptVariant());
+        current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::NewMemberExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::NewMemberExpression *expression)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(expression, DomType::ScriptNewMemberExpression);
+    current->addLocation(FileLocationRegion::NewKeywordRegion, expression->newToken);
+    current->addLocation(FileLocationRegion::LeftParenthesisRegion, expression->lparenToken);
+    current->addLocation(FileLocationRegion::RightParenthesisRegion, expression->rparenToken);
+
+    if (expression->arguments) {
+        Q_SCRIPTELEMENT_EXIT_IF(!stackHasScriptList());
+        current->insertChild(Fields::arguments, scriptNodeStack.takeLast().takeList());
+    }
+    if (expression->base) {
+        Q_SCRIPTELEMENT_EXIT_IF(!stackHasScriptVariant());
+        current->insertChild(Fields::base, scriptNodeStack.takeLast().takeVariant());
+    }
+
+    pushScriptElement(current);
+}
+
 bool QQmlDomAstCreator::visit(AST::PreDecrementExpression *)
 {
     return m_enableScriptExpressions;

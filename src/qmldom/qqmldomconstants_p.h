@@ -233,6 +233,8 @@ enum class DomType {
     ScriptParenthesizedExpression,
     ScriptFunctionExpression,
     ScriptYieldExpression,
+    ScriptNewExpression,
+    ScriptNewMemberExpression,
 
     ScriptElementStop, // marker to check if a DomType is a scriptelement or not
 };
@@ -378,6 +380,7 @@ enum FileLocationRegion : int {
     LeftBracketRegion,
     LeftParenthesisRegion,
     MainRegion,
+    NewKeywordRegion,
     OperatorTokenRegion,
     OnTargetRegion,
     OnTokenRegion,
