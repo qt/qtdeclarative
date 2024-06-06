@@ -627,17 +627,24 @@ ApplicationWindow {
                         updateViewArea()
                     }
 
+                    // The model is updated, then the visible area needs to be updated as well.
+                    // Maybe some cells need to get the display data again
+                    // due to their data, if it's a formula.
                     function updateViewArea()
                     {
-                        visibleCellsConnection.blockConnection(true)
-                        const topRow = tableView.topRow
-                        const bottomRow = tableView.bottomRow
-                        const leftColumn = tableView.leftColumn
-                        const rightColumn = tableView.rightColumn
-                        SpreadModel.update(topRow, bottomRow, leftColumn, rightColumn)
-                        visibleCellsConnection.blockConnection(false)
+                        for (let row = tableView.topRow; row <= tableView.bottomRow; ++row) {
+                            for (let column = tableView.leftColumn; column <= tableView.rightColumn; ++column) {
+                                SpreadModel.update(row, column)
+                            }
+                        }
                     }
 
+                    // Blocks/unblocks the connection. This function is useful when
+                    // some actions may update a large amount of data in the model,
+                    // or may update a cell which affects other cells,
+                    // for example clipboard actions and drag/drop actions.
+                    // Block the connection, update the model, unblock the connection,
+                    // and the call the updateViewArea() function to update the view.
                     function blockConnection(block=true)
                     {
                         visibleCellsConnection.enabled = !block

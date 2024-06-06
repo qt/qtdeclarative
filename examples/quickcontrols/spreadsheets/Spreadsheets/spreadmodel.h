@@ -10,6 +10,7 @@
 #include <QQmlEngine>
 #include <QAbstractTableModel>
 #include <QItemSelectionModel>
+#include <QMutex>
 
 
 class DataModel;
@@ -42,7 +43,7 @@ public:
     static SpreadModel *create(QQmlEngine *, QJSEngine *);
 
 protected:
-    Q_INVOKABLE void update(int topRow, int bottomRow, int leftColumn, int rightColumn);
+    Q_INVOKABLE void update(int row, int column);
     Q_INVOKABLE void clearHighlight();
     Q_INVOKABLE void setHighlight(const QModelIndex &index, bool highlight);
     Q_INVOKABLE bool clearItemData(const QModelIndexList &indexes);
@@ -80,6 +81,7 @@ private:
     DataModel m_dataModel;
     QMap<int, int> m_viewColumns;
     QMap<int, int> m_viewRows;
+    QMutex m_updateMutex;
     static inline SpreadModel *s_instance {nullptr};
 };
 
