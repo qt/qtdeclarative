@@ -73,6 +73,22 @@ TestCase {
     }
 
     Component {
+        id: delegateWithTapHandlerComp
+        Rectangle {
+            implicitWidth: 100
+            implicitHeight: 50
+            color: selected ? "lightblue" : "transparent"
+            border.width: 1
+            required property bool selected
+
+            TapHandler {
+                // This tap handler will block the tap handler in
+                // QQuickTableView from being called.
+            }
+        }
+    }
+
+    Component {
         id: tableviewComp
         TableView {
             id: tableView
@@ -572,6 +588,43 @@ TestCase {
         verify(!tableView.selectionModel.hasSelection)
         verify(!topLeftHandle.visible)
         verify(!bottomRightHandle.visible)
+    }
+
+    function test_delegateWithTapHandler() {
+        // Check that we clear the current selection if you start a new
+        // mouse drag selection on top of a delegate with a tap handler.
+        let tableView = createTemporaryObject(tableviewComp, testCase)
+        verify(tableView)
+
+        tableView.delegate = delegateWithTapHandlerComp;
+        let selectionRectangle = tableView.selectionRectangle
+        verify(selectionRectangle)
+
+        selectionRectangle.selectionMode = SelectionRectangle.Drag
+        tableView.selectionMode = TableView.ExtendedSelection
+
+        verify(waitForItemPolished(tableView))
+
+        let item0_0 = tableView.itemAtIndex(tableView.index(0, 0))
+        let item1_1 = tableView.itemAtIndex(tableView.index(1, 1))
+        verify(item0_0)
+        verify(item1_1)
+
+        tableView.selectionModel.select(tableView.index(0, 0), ItemSelectionModel.Select)
+        compare(tableView.selectionModel.selectedIndexes.length, 1)
+        compare(tableView.selectionModel.selectedIndexes[0], tableView.index(0, 0))
+
+        // A drag should clear the current selection and select a new cell
+        mouseDrag(tableView.contentItem, item1_1.x, item1_1.y, 10, 10, Qt.LeftButton)
+        compare(tableView.selectionModel.selectedIndexes.length, 1)
+        compare(tableView.selectionModel.selectedIndexes[0], tableView.index(1, 1))
+
+        // Verify that a PressAndHold works as well
+        selectionRectangle.selectionMode = SelectionRectangle.PressAndHold
+        mousePress(tableView, item0_0.x, item0_0.y, Qt.LeftButton)
+        mouseRelease(tableView, item0_0.x, item0_0.y, Qt.LeftButton, Qt.NoModifier, 2000)
+        compare(tableView.selectionModel.selectedIndexes.length, 1)
+        compare(tableView.selectionModel.selectedIndexes[0], tableView.index(0, 0))
     }
 
 // TODO: enable this test when mouseDrag sends modifiers for all mouse events
