@@ -36,8 +36,6 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorImage)
-
 class QSvgStyleResolver
 {
 public:

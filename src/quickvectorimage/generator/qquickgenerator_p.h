@@ -17,8 +17,11 @@
 
 #include <private/qquickvectorimageglobal_p.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
+
+QT_DECLARE_EXPORTED_QT_LOGGING_CATEGORY(lcQuickVectorImage, Q_QUICKVECTORIMAGEGENERATOR_EXPORT)
 
 class QSvgVisitorImpl;
 class QPainterPath;

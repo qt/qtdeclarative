@@ -15,8 +15,6 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorImage)
-
 QQuickItemGenerator::QQuickItemGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags, QQuickItem *parentItem)
     :QQuickGenerator(fileName, flags)
 {

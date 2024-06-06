@@ -34,8 +34,6 @@ QT_BEGIN_NAMESPACE
     \section1 QML Types
 */
 
-Q_LOGGING_CATEGORY(lcQuickVectorImage, "qt.quick.vectorimage", QtWarningMsg)
-
 void QQuickVectorImagePrivate::setSource(const QUrl &source)
 {
     Q_Q(QQuickVectorImage);
