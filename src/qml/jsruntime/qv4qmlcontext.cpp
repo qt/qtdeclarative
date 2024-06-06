@@ -26,7 +26,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQmlContext, "qt.qml.context");
+Q_STATIC_LOGGING_CATEGORY(lcQmlContext, "qt.qml.context");
 
 using namespace QV4;
 

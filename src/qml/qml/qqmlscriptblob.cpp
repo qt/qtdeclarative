@@ -12,10 +12,9 @@
 
 #include <QtCore/qloggingcategory.h>
 
-Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
-Q_LOGGING_CATEGORY(DBG_DISK_CACHE, "qt.qml.diskcache")
-
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(DBG_DISK_CACHE, "qt.qml.diskcache")
 
 QQmlScriptBlob::QQmlScriptBlob(const QUrl &url, QQmlTypeLoader *loader)
     : QQmlTypeLoader::Blob(url, JavaScriptFile, loader)

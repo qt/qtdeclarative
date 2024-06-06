@@ -56,10 +56,8 @@
 #include <pthread_np.h>
 #endif
 
-Q_LOGGING_CATEGORY(lcGcStats, "qt.qml.gc.statistics")
-Q_DECLARE_LOGGING_CATEGORY(lcGcStats)
-Q_LOGGING_CATEGORY(lcGcAllocatorStats, "qt.qml.gc.allocatorStats")
-Q_DECLARE_LOGGING_CATEGORY(lcGcAllocatorStats)
+Q_STATIC_LOGGING_CATEGORY(lcGcStats, "qt.qml.gc.statistics")
+Q_STATIC_LOGGING_CATEGORY(lcGcAllocatorStats, "qt.qml.gc.allocatorStats")
 
 using namespace WTF;
 

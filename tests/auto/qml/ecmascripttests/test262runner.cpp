@@ -89,9 +89,7 @@ void initD262(ExecutionEngine *e)
 
 }
 
-
-Q_DECLARE_LOGGING_CATEGORY(lcJsTest);
-Q_LOGGING_CATEGORY(lcJsTest, "qt.v4.ecma262.tests", QtWarningMsg);
+Q_STATIC_LOGGING_CATEGORY(lcJsTest, "qt.v4.ecma262.tests", QtWarningMsg);
 
 Test262Runner::Test262Runner(const QString &command, const QString &dir, const QString &expectationsFile)
     : command(command), testDir(dir), expectationsFile(expectationsFile)

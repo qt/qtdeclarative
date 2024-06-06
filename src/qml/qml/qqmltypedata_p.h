@@ -20,6 +20,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcCycle)
+
 class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeData)

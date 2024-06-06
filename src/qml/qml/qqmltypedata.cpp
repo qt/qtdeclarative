@@ -18,10 +18,9 @@
 
 #include <memory>
 
-Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
-Q_LOGGING_CATEGORY(lcCycle, "qt.qml.typeresolution.cycle", QtWarningMsg)
-
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcCycle, "qt.qml.typeresolution.cycle", QtWarningMsg)
 
 QQmlTypeData::TypeDataCallback::~TypeDataCallback()
 {

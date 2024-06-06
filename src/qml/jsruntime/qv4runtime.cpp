@@ -41,7 +41,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcCoercingTypeAssertion, "qt.qml.coercingTypeAssertion");
+Q_STATIC_LOGGING_CATEGORY(lcCoercingTypeAssertion, "qt.qml.coercingTypeAssertion");
 
 namespace QV4 {
 

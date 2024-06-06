@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QmlLsp {
 
-Q_LOGGING_CATEGORY(codeModelLog, "qt.languageserver.codemodel")
+Q_STATIC_LOGGING_CATEGORY(codeModelLog, "qt.languageserver.codemodel")
 
 using namespace QQmlJS::Dom;
 using namespace Qt::StringLiterals;

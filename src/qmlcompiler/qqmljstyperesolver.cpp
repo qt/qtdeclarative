@@ -17,7 +17,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(lcTypeResolver, "qt.qml.compiler.typeresolver", QtInfoMsg);
+Q_STATIC_LOGGING_CATEGORY(lcTypeResolver, "qt.qml.compiler.typeresolver", QtInfoMsg);
 
 static inline void assertExtension(const QQmlJSScope::ConstPtr &type, QLatin1String extension)
 {

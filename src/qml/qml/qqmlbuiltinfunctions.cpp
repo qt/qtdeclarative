@@ -35,7 +35,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcRootProperties, "qt.qml.rootObjectProperties");
+Q_STATIC_LOGGING_CATEGORY(lcRootProperties, "qt.qml.rootObjectProperties");
 Q_LOGGING_CATEGORY(lcQml, "qml");
 Q_LOGGING_CATEGORY(lcJs, "js");
 

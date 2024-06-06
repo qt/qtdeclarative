@@ -22,7 +22,7 @@
 using namespace QV4;
 using namespace Qt::Literals::StringLiterals;
 
-Q_LOGGING_CATEGORY(lcJavaScriptGlobals, "qt.qml.js.globals")
+Q_STATIC_LOGGING_CATEGORY(lcJavaScriptGlobals, "qt.qml.js.globals")
 
 DEFINE_OBJECT_VTABLE(Object);
 

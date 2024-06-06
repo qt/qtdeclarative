@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
 
-Q_LOGGING_CATEGORY(lcAsm, "qt.qml.v4.asm")
+Q_STATIC_LOGGING_CATEGORY(lcAsm, "qt.qml.v4.asm")
 
 namespace {
 class QIODevicePrintStream: public FilePrintStream

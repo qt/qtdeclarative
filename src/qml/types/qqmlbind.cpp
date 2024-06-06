@@ -30,7 +30,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQtQmlBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
+Q_STATIC_LOGGING_CATEGORY(lcQtQmlBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
 
 enum class QQmlBindEntryKind: quint8 {
     V4Value,

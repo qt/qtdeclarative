@@ -6,6 +6,7 @@
 #include <private/qqmlextensionplugin_p.h>
 #include <private/qqmlmetatypedata_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
+#include <private/qqmlscriptblob_p.h>
 #include <private/qqmltype_p_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmltypemodule_p.h>
@@ -16,8 +17,7 @@
 #include <QtCore/qmutex.h>
 #include <QtCore/qloggingcategory.h>
 
-Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
-Q_LOGGING_CATEGORY(lcTypeRegistration, "qt.qml.typeregistration")
+Q_STATIC_LOGGING_CATEGORY(lcTypeRegistration, "qt.qml.typeregistration")
 
 QT_BEGIN_NAMESPACE
 

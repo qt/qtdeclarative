@@ -36,7 +36,7 @@ namespace {
     Q_CONSTINIT thread_local int creationDepth = 0;
 }
 
-Q_LOGGING_CATEGORY(lcQmlComponentGeneral, "qt.qml.qmlcomponent")
+Q_STATIC_LOGGING_CATEGORY(lcQmlComponentGeneral, "qt.qml.qmlcomponent")
 
 QT_BEGIN_NAMESPACE
 

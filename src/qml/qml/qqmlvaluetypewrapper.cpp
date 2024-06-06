@@ -30,8 +30,6 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcBuiltinsBindingRemoval)
-
 DEFINE_OBJECT_VTABLE(QV4::QQmlValueTypeWrapper);
 
 namespace QV4 {

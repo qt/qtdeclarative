@@ -30,8 +30,8 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(lcQmlUsedBeforeDeclared, "qt.qml.usedbeforedeclared");
-Q_LOGGING_CATEGORY(lcQmlInjectedParameter, "qt.qml.injectedparameter");
+Q_STATIC_LOGGING_CATEGORY(lcQmlUsedBeforeDeclared, "qt.qml.usedbeforedeclared");
+Q_STATIC_LOGGING_CATEGORY(lcQmlInjectedParameter, "qt.qml.injectedparameter");
 
 using namespace QV4;
 using namespace QV4::Compiler;

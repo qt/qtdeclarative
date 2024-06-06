@@ -50,10 +50,10 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcBuiltinsBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
-Q_LOGGING_CATEGORY(lcObjectConnect, "qt.qml.object.connect", QtWarningMsg)
-Q_LOGGING_CATEGORY(lcOverloadResolution, "qt.qml.overloadresolution", QtWarningMsg)
-Q_LOGGING_CATEGORY(lcMethodBehavior, "qt.qml.method.behavior")
-Q_LOGGING_CATEGORY(lcSignalHandler, "qt.qml.signalhandler")
+Q_STATIC_LOGGING_CATEGORY(lcObjectConnect, "qt.qml.object.connect", QtWarningMsg)
+Q_STATIC_LOGGING_CATEGORY(lcOverloadResolution, "qt.qml.overloadresolution", QtWarningMsg)
+Q_STATIC_LOGGING_CATEGORY(lcMethodBehavior, "qt.qml.method.behavior")
+Q_STATIC_LOGGING_CATEGORY(lcSignalHandler, "qt.qml.signalhandler")
 
 // The code in this file does not violate strict aliasing, but GCC thinks it does
 // so turn off the warnings for us to have a clean build

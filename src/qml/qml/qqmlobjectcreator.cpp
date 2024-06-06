@@ -34,7 +34,7 @@
 #include <QScopedValueRollback>
 #include <QLoggingCategory>
 
-Q_LOGGING_CATEGORY(lcQmlDefaultMethod, "qt.qml.defaultmethod")
+Q_STATIC_LOGGING_CATEGORY(lcQmlDefaultMethod, "qt.qml.defaultmethod")
 
 QT_USE_NAMESPACE
 

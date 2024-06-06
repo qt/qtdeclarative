@@ -12,7 +12,7 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdiriterator.h>
 
-Q_LOGGING_CATEGORY(lcTypeResolver2, "qml.qmltc.typeresolver", QtInfoMsg);
+Q_STATIC_LOGGING_CATEGORY(lcTypeResolver2, "qml.qmltc.typeresolver", QtInfoMsg);
 
 void QmltcTypeResolver::init(QmltcVisitor *visitor, QQmlJS::AST::Node *program)
 {
