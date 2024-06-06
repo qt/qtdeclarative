@@ -4030,6 +4030,61 @@ private slots:
         }
     }
 
+    void newExpression()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/newExpressions.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+        {
+            const DomItem newExpression = statements.index(0).field(Fields::expression);
+            QVERIFY(newExpression);
+            QCOMPARE(newExpression.internalKind(), DomType::ScriptNewExpression);
+            const DomItem expression = newExpression.field((Fields::expression));
+            QVERIFY(expression);
+            QCOMPARE(expression.value().toInteger(), 4);
+        }
+    }
+
+    void newMemberExpression()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/newExpressions.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"g"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+        {
+            const DomItem newMemberExpression = statements.index(0).field(Fields::expression);
+            QVERIFY(newMemberExpression);
+            QCOMPARE(newMemberExpression.internalKind(), DomType::ScriptNewMemberExpression);
+            const DomItem base = newMemberExpression.field((Fields::base));
+            QVERIFY(base);
+            QCOMPARE(base.value().toString(), u"Base"_s);
+            const DomItem arguments = newMemberExpression.field((Fields::arguments));
+            QCOMPARE(arguments.indexes(), 1);
+            QCOMPARE(arguments.index(0).value().toString(), u"argument");
+        }
+    }
+
     void emptyTemplateLiteral()
     {
         using namespace Qt::StringLiterals;

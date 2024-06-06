@@ -248,6 +248,9 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region)
     case YieldKeywordRegion:
         codeForRegion = u"yield"_s;
         break;
+    case NewKeywordRegion:
+        codeForRegion = u"new"_s;
+        break;
     // not keywords:
     case ImportUriRegion:
     case IdNameRegion:
