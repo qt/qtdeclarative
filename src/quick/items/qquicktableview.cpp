@@ -1637,9 +1637,12 @@ bool QQuickTableViewPrivate::startSelection(const QPointF &pos, Qt::KeyboardModi
     if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
         return false;
 
-    // For SingleSelection and ContiguousSelection, we should only allow one selection at a time
+    // For SingleSelection and ContiguousSelection, we should only allow one
+    // selection at a time. We also clear the current selection if the mode
+    // is ExtendedSelection, but no modifier is being held.
     if (selectionMode == QQuickTableView::SingleSelection
-            || selectionMode == QQuickTableView::ContiguousSelection)
+            || selectionMode == QQuickTableView::ContiguousSelection
+            || modifiers == Qt::NoModifier)
         clearSelection();
     else if (selectionModel)
         existingSelection = selectionModel->selection();
