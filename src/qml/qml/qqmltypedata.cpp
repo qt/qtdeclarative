@@ -208,7 +208,8 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
     const CompiledObject *obj = m_compiler->objectAt(objectIndex);
     for (auto alias = obj->aliasesBegin(), end = obj->aliasesEnd(); alias != end; ++alias) {
         if (!alias->hasFlag(QV4::CompiledData::Alias::Resolved)) {
-            *error = qQmlCompileError( alias->referenceLocation, tr("Unresolved alias found"));
+            *error = qQmlCompileError(alias->referenceLocation,
+                                      QQmlComponentAndAliasResolverBase::tr("Unresolved alias found"));
             return NoAliasResolved;
         }
 
