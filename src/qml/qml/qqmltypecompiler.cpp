@@ -842,7 +842,7 @@ QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
         if (targetObjectIndex == -1) {
             *error = qQmlCompileError(
                     alias->referenceLocation,
-                    tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
+                    QQmlComponentAndAliasResolverBase::tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
             break;
         }
 
@@ -872,7 +872,7 @@ QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
             if (!targetCache) {
                 *error = qQmlCompileError(
                         alias->referenceLocation,
-                        tr("Invalid alias target location: %1").arg(property.toString()));
+                        QQmlComponentAndAliasResolverBase::tr("Invalid alias target location: %1").arg(property.toString()));
                 break;
             }
 
@@ -909,7 +909,7 @@ QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
             if (!targetProperty || targetProperty->coreIndex() > 0x0000FFFF) {
                 *error = qQmlCompileError(
                         alias->referenceLocation,
-                        tr("Invalid alias target location: %1").arg(property.toString()));
+                        QQmlComponentAndAliasResolverBase::tr("Invalid alias target location: %1").arg(property.toString()));
                 break;
             }
 
@@ -937,7 +937,7 @@ QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
                     if (!isDeepAlias) {
                         *error = qQmlCompileError(
                                 alias->referenceLocation,
-                                tr("Invalid alias target location: %1").arg(subProperty.toString()));
+                                QQmlComponentAndAliasResolverBase::tr("Invalid alias target location: %1").arg(subProperty.toString()));
                         break;
                     }
                 } else {
@@ -947,7 +947,7 @@ QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
                     if (valueTypeIndex == -1) {
                         *error = qQmlCompileError(
                                 alias->referenceLocation,
-                                tr("Invalid alias target location: %1").arg(subProperty.toString()));
+                                QQmlComponentAndAliasResolverBase::tr("Invalid alias target location: %1").arg(subProperty.toString()));
                         break;
                     }
                     Q_ASSERT(valueTypeIndex <= 0x0000FFFF);

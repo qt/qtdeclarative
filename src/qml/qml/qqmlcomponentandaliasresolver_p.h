@@ -33,10 +33,14 @@ Q_DECLARE_LOGGING_CATEGORY(lcQmlTypeCompiler);
 // to be located in surrounding components. That's why we have to do this with the component
 // boundaries in mind.
 
-template<typename ObjectContainer>
-class QQmlComponentAndAliasResolver
+class QQmlComponentAndAliasResolverBase
 {
-    Q_DECLARE_TR_FUNCTIONS(QQmlComponentAndAliasResolver)
+    Q_DECLARE_TR_FUNCTIONS(QQmlComponentAndAliasResolverBase)
+};
+
+template<typename ObjectContainer>
+class QQmlComponentAndAliasResolver : public QQmlComponentAndAliasResolverBase
+{
 public:
     using CompiledObject = typename ObjectContainer::CompiledObject;
     using CompiledBinding = typename ObjectContainer::CompiledBinding;
@@ -191,7 +195,7 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::findAndRegisterImplici
             continue;
 
         if (!wrapImplicitComponent(binding))
-            return error(binding, tr("Cannot wrap implicit component"));
+            return error(binding, QQmlComponentAndAliasResolverBase::tr("Cannot wrap implicit component"));
     }
 
     return QQmlError();
@@ -287,7 +291,7 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolve(int root)
         }
 
         if (!markAsComponent(i))
-            return error(obj, tr("Cannot mark object as component"));
+            return error(obj, QQmlComponentAndAliasResolverBase::tr("Cannot mark object as component"));
 
         // check if this object is the root
         if (i == 0) {
@@ -301,14 +305,14 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolve(int root)
         }
 
         if (obj->functionCount() > 0)
-            return error(obj, tr("Component objects cannot declare new functions."));
+            return error(obj, QQmlComponentAndAliasResolverBase::tr("Component objects cannot declare new functions."));
         if (obj->propertyCount() > 0 || obj->aliasCount() > 0)
-            return error(obj, tr("Component objects cannot declare new properties."));
+            return error(obj, QQmlComponentAndAliasResolverBase::tr("Component objects cannot declare new properties."));
         if (obj->signalCount() > 0)
-            return error(obj, tr("Component objects cannot declare new signals."));
+            return error(obj, QQmlComponentAndAliasResolverBase::tr("Component objects cannot declare new signals."));
 
         if (obj->bindingCount() == 0)
-            return error(obj, tr("Cannot create empty component specification"));
+            return error(obj, QQmlComponentAndAliasResolverBase::tr("Cannot create empty component specification"));
 
         const auto rootBinding = obj->bindingsBegin();
         const auto bindingsEnd = obj->bindingsEnd();
@@ -319,12 +323,12 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolve(int root)
             if (b->propertyNameIndex == 0)
                 continue;
 
-            return error(b, tr("Component elements may not contain properties other than id"));
+            return error(b, QQmlComponentAndAliasResolverBase::tr("Component elements may not contain properties other than id"));
         }
 
         if (auto b = rootBinding;
                 b->type() != QV4::CompiledData::Binding::Type_Object || ++b != bindingsEnd) {
-            return error(obj, tr("Invalid component body specification"));
+            return error(obj, QQmlComponentAndAliasResolverBase::tr("Invalid component body specification"));
         }
 
         // For the root object, we are going to collect ids/aliases and resolve them for as a
@@ -377,7 +381,7 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::collectIdsAndAliases(i
 
     if (obj->idNameIndex != 0) {
         if (m_idToObjectIndex.contains(obj->idNameIndex))
-            return error(obj->locationOfIdProperty, tr("id is not unique"));
+            return error(obj->locationOfIdProperty, QQmlComponentAndAliasResolverBase::tr("id is not unique"));
         setObjectId(objectIndex);
         m_idToObjectIndex.insert(obj->idNameIndex, objectIndex);
     }
@@ -459,7 +463,7 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolveAliases(int com
         const CompiledObject *obj = m_compiler->objectAt(m_objectsWithAliases.first());
         for (auto alias = obj->aliasesBegin(), end = obj->aliasesEnd(); alias != end; ++alias) {
             if (!alias->hasFlag(QV4::CompiledData::Alias::Resolved))
-                return error(alias->location, tr("Circular alias reference detected"));
+                return error(alias->location, QQmlComponentAndAliasResolverBase::tr("Circular alias reference detected"));
         }
     }
 
