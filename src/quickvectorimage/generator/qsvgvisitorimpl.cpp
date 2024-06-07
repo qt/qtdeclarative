@@ -560,7 +560,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                     baselineOffset = -lout->lineAt(0).ascent();
 
                 const QPointF baselineTranslation(0.0, baselineOffset);
-                auto glyphsToPath = [&](QList<QGlyphRun> glyphRuns) {
+                auto glyphsToPath = [&](QList<QGlyphRun> glyphRuns, qreal width) {
                     QPainterPath path;
                     path.setFillRule(Qt::WindingFill);
                     for (const QGlyphRun &glyphRun : glyphRuns) {
@@ -578,6 +578,11 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                         }
                     }
 
+                    if (styleResolver->states().textAnchor == Qt::AlignHCenter)
+                        path.translate(QPointF(-0.5 * width, 0));
+                    else if (styleResolver->states().textAnchor == Qt::AlignRight)
+                        path.translate(QPointF(-width, 0));
+
                     return path;
                 };
 
@@ -586,7 +591,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                     QTextLayout::FormatRange range = formats.at(i);
 
                     QList<QGlyphRun> glyphRuns = lout->glyphRuns(range.start, range.length);
-                    QPainterPath path = glyphsToPath(glyphRuns);
+                    QPainterPath path = glyphsToPath(glyphRuns, lout->minimumWidth());
                     addPathForFormat(path, range.format);
                 }
             }
