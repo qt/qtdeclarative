@@ -585,15 +585,6 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                 for (int i = 0; i < formats.size(); ++i) {
                     QTextLayout::FormatRange range = formats.at(i);
 
-                    // If we hit a "multi" anchor, it means we have additional formats to apply
-                    // for both this and the subsequent range, so we merge them.
-                    if (!range.format.anchorNames().isEmpty()
-                        && range.format.anchorNames().first().startsWith(QStringLiteral("multi"))
-                        && i < formats.size() - 1) {
-                        QTextLayout::FormatRange nextRange = formats.at(++i);
-                        range.length += nextRange.length;
-                        range.format.merge(nextRange.format);
-                    }
                     QList<QGlyphRun> glyphRuns = lout->glyphRuns(range.start, range.length);
                     QPainterPath path = glyphsToPath(glyphRuns);
                     addPathForFormat(path, range.format);
