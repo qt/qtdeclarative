@@ -25,8 +25,12 @@
 
 #include <private/qquadpath_p.h>
 
+#include <QtCore/private/qstringiterator_p.h>
+
 #include "utils_p.h"
 #include <QtCore/qloggingcategory.h>
+
+#include <QtSvg/private/qsvgstyle_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -416,17 +420,205 @@ QString QSvgVisitorImpl::colorCssDescription(QColor color)
     return cssDescription;
 }
 
+namespace {
+
+    // Simple class for representing the SVG font as a font engine
+    // We use the Proxy font engine type, which is currently unused and does not map to
+    // any specific font engine
+    // (The QSvgFont object must outlive the engine.)
+    class QSvgFontEngine : public QFontEngine
+    {
+    public:
+        QSvgFontEngine(const QSvgFont *font, qreal size);
+
+        QFontEngine *cloneWithSize(qreal size) const override;
+
+        glyph_t glyphIndex(uint ucs4) const override;
+        int stringToCMap(const QChar *str,
+                         int len,
+                         QGlyphLayout *glyphs,
+                         int *nglyphs,
+                         ShaperFlags flags) const override;
+
+        void addGlyphsToPath(glyph_t *glyphs,
+                             QFixedPoint *positions,
+                             int nGlyphs,
+                             QPainterPath *path,
+                             QTextItem::RenderFlags flags) override;
+
+        glyph_metrics_t boundingBox(glyph_t glyph) override;
+
+        void recalcAdvances(QGlyphLayout *, ShaperFlags) const override;
+        QFixed ascent() const override;
+        QFixed capHeight() const override;
+        QFixed descent() const override;
+        QFixed leading() const override;
+        qreal maxCharWidth() const override;
+        qreal minLeftBearing() const override;
+        qreal minRightBearing() const override;
+
+        QFixed emSquareSize() const override;
+
+    private:
+        const QSvgFont *m_font;
+    };
+
+    QSvgFontEngine::QSvgFontEngine(const QSvgFont *font, qreal size)
+        : QFontEngine(Proxy)
+        , m_font(font)
+    {
+        fontDef.pixelSize = size;
+        fontDef.families = QStringList(m_font->m_familyName);
+    }
+
+    QFixed QSvgFontEngine::emSquareSize() const
+    {
+        return QFixed::fromReal(m_font->m_unitsPerEm);
+    }
+
+    glyph_t QSvgFontEngine::glyphIndex(uint ucs4) const
+    {
+        if (ucs4 < USHRT_MAX && m_font->m_glyphs.contains(QChar(ushort(ucs4))))
+            return glyph_t(ucs4);
+
+        return 0;
+    }
+
+    int QSvgFontEngine::stringToCMap(const QChar *str,
+                                     int len,
+                                     QGlyphLayout *glyphs,
+                                     int *nglyphs,
+                                     ShaperFlags flags) const
+    {
+        Q_ASSERT(glyphs->numGlyphs >= *nglyphs);
+        if (*nglyphs < len) {
+            *nglyphs = len;
+            return -1;
+        }
+
+        int ucs4Length = 0;
+        QStringIterator it(str, str + len);
+        while (it.hasNext()) {
+            char32_t ucs4 = it.next();
+            glyph_t index = glyphIndex(ucs4);
+            glyphs->glyphs[ucs4Length++] = index;
+        }
+
+        *nglyphs = ucs4Length;
+        glyphs->numGlyphs = ucs4Length;
+
+        if (!(flags & GlyphIndicesOnly))
+            recalcAdvances(glyphs, flags);
+
+        return *nglyphs;
+    }
+
+    void QSvgFontEngine::addGlyphsToPath(glyph_t *glyphs,
+                                         QFixedPoint *positions,
+                                         int nGlyphs,
+                                         QPainterPath *path,
+                                         QTextItem::RenderFlags flags)
+    {
+        Q_UNUSED(flags);
+        const qreal scale = fontDef.pixelSize / m_font->m_unitsPerEm;
+        for (int i = 0; i < nGlyphs; ++i) {
+            glyph_t index = glyphs[i];
+            if (index > 0) {
+                QPointF position = positions[i].toPointF();
+                QPainterPath glyphPath = m_font->m_glyphs.value(QChar(ushort(index))).m_path;
+
+                QTransform xform;
+                xform.translate(position.x(), position.y());
+                xform.scale(scale, -scale);
+                glyphPath = xform.map(glyphPath);
+                path->addPath(glyphPath);
+            }
+        }
+    }
+
+    glyph_metrics_t QSvgFontEngine::boundingBox(glyph_t glyph)
+    {
+        glyph_metrics_t ret;
+        ret.x = 0; // left bearing
+        ret.y = -ascent();
+        const qreal scale = fontDef.pixelSize / m_font->m_unitsPerEm;
+        const QSvgGlyph &svgGlyph = m_font->m_glyphs.value(QChar(ushort(glyph)));
+        ret.width = QFixed::fromReal(svgGlyph.m_horizAdvX * scale);
+        ret.height = ascent() + descent();
+        return ret;
+    }
+
+    QFontEngine *QSvgFontEngine::cloneWithSize(qreal size) const
+    {
+        QSvgFontEngine *otherEngine = new QSvgFontEngine(m_font, size);
+        return otherEngine;
+    }
+
+    void QSvgFontEngine::recalcAdvances(QGlyphLayout *glyphLayout, ShaperFlags) const
+    {
+        const qreal scale = fontDef.pixelSize / m_font->m_unitsPerEm;
+        for (int i = 0; i < glyphLayout->numGlyphs; i++) {
+            glyph_t glyph = glyphLayout->glyphs[i];
+            const QSvgGlyph &svgGlyph = m_font->m_glyphs.value(QChar(ushort(glyph)));
+            glyphLayout->advances[i] = QFixed::fromReal(svgGlyph.m_horizAdvX * scale);
+        }
+    }
+
+    QFixed QSvgFontEngine::ascent() const
+    {
+        return QFixed::fromReal(fontDef.pixelSize);
+    }
+
+    QFixed QSvgFontEngine::capHeight() const
+    {
+        return ascent();
+    }
+    QFixed QSvgFontEngine::descent() const
+    {
+        return QFixed{};
+    }
+
+    QFixed QSvgFontEngine::leading() const
+    {
+        return QFixed{};
+    }
+
+    qreal QSvgFontEngine::maxCharWidth() const
+    {
+        const qreal scale = fontDef.pixelSize / m_font->m_unitsPerEm;
+        return m_font->m_horizAdvX * scale;
+    }
+
+    qreal QSvgFontEngine::minLeftBearing() const
+    {
+        return 0.0;
+    }
+
+    qreal QSvgFontEngine::minRightBearing() const
+    {
+        return 0.0;
+    }
+}
+
 void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 {
     handleBaseNodeSetup(node);
     const bool isTextArea = node->type() == QSvgNode::Textarea;
 
     QString text;
+    const QSvgFont *svgFont = styleResolver->states().svgFont;
     bool needsRichText = false;
     bool preserveWhiteSpace = node->whitespaceMode() == QSvgText::Preserve;
     const QGradient *mainGradient = styleResolver->currentFillGradient();
+
+    QFontEngine *fontEngine = nullptr;
+    if (svgFont != nullptr) {
+        fontEngine = new QSvgFontEngine(svgFont, styleResolver->painter().font().pointSize());
+        fontEngine->ref.ref();
+    }
+
 #if QT_CONFIG(texthtmlparser)
-    bool needsPathNode = mainGradient != nullptr;
+    bool needsPathNode = mainGradient != nullptr || svgFont != nullptr;
 #endif
     for (const auto *tspan : node->tspans()) {
         if (!tspan) {
@@ -523,7 +715,6 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         if (font.resolveMask() & QFont::StyleResolved && font.italic())
             text += QStringLiteral("<i>");
 
-
         if (font.resolveMask() & QFont::CapitalizationResolved) {
             switch (font.capitalization()) {
             case QFont::AllLowercase:
@@ -578,6 +769,20 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
             QTextLayout *lout = block.layout();
 
             if (lout != nullptr) {
+                // If this block has requested the current SVG font, we override it
+                // (note that this limits the text to one svg font, but this is also the case
+                // in the QPainter at the moment, and needs a more centralized solution in Qt Svg
+                // first)
+                QFont blockFont = block.charFormat().font();
+                if (svgFont != nullptr
+                    && blockFont.family() == svgFont->m_familyName) {
+                    QRawFont rawFont;
+                    QRawFontPrivate *rawFontD = QRawFontPrivate::get(rawFont);
+                    rawFontD->setFontEngine(fontEngine->cloneWithSize(blockFont.pixelSize()));
+
+                    lout->setRawFont(rawFont);
+                }
+
                 auto addPathForFormat = [&](QPainterPath p, QTextCharFormat fmt) {
                     PathNodeInfo info;
                     fillCommonNodeInfo(node, info);
@@ -615,8 +820,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 
                 const QPointF baselineTranslation(0.0, baselineOffset);
                 auto glyphsToPath = [&](QList<QGlyphRun> glyphRuns, qreal width) {
-                    QPainterPath path;
-                    path.setFillRule(Qt::WindingFill);
+                    QList<QPainterPath> paths;
                     for (const QGlyphRun &glyphRun : glyphRuns) {
                         QRawFont font = glyphRun.rawFont();
                         QList<quint32> glyphIndexes = glyphRun.glyphIndexes();
@@ -628,16 +832,15 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 
                             QPainterPath p = font.pathForGlyph(glyphIndex);
                             p.translate(pos + node->position() + baselineTranslation);
-                            path.addPath(p);
+                            if (styleResolver->states().textAnchor == Qt::AlignHCenter)
+                                p.translate(QPointF(-0.5 * width, 0));
+                            else if (styleResolver->states().textAnchor == Qt::AlignRight)
+                                p.translate(QPointF(-width, 0));
+                            paths.append(p);
                         }
                     }
 
-                    if (styleResolver->states().textAnchor == Qt::AlignHCenter)
-                        path.translate(QPointF(-0.5 * width, 0));
-                    else if (styleResolver->states().textAnchor == Qt::AlignRight)
-                        path.translate(QPointF(-width, 0));
-
-                    return path;
+                    return paths;
                 };
 
                 QList<QTextLayout::FormatRange> formats = block.textFormats();
@@ -654,8 +857,9 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                         range.format.merge(nextRange.format);
                     }
                     QList<QGlyphRun> glyphRuns = lout->glyphRuns(range.start, range.length);
-                    QPainterPath path = glyphsToPath(glyphRuns, lout->minimumWidth());
-                    addPathForFormat(path, range.format);
+                    QList<QPainterPath> paths = glyphsToPath(glyphRuns, lout->minimumWidth());
+                    for (const QPainterPath &path : paths)
+                        addPathForFormat(path, range.format);
                 }
             }
 
@@ -681,6 +885,12 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     }
 
     handleBaseNodeEnd(node);
+
+    if (fontEngine != nullptr) {
+        fontEngine->ref.deref();
+        Q_ASSERT(fontEngine->ref.loadRelaxed() == 0);
+        delete fontEngine;
+    }
 }
 
 void QSvgVisitorImpl::visitUseNode(const QSvgUse *node)
