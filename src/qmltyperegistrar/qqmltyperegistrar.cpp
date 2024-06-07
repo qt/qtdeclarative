@@ -229,6 +229,9 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
                           .arg(majorVersion);
     }
 
+    output << uR"(
+    QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED)"_s;
+
     QVector<QAnyStringView> typesRegisteredAnonymously;
 
     const auto fillTypesRegisteredAnonymously = [&](const auto &members, QAnyStringView typeName) {
@@ -501,6 +504,7 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
     }
 
     output << uR"(
+    QT_WARNING_POP
     qmlRegisterModule("%1", %2, %3);
 }
 
