@@ -150,7 +150,7 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function,
             e.variableName = u"r%1_%2"_s
                                      .arg(registerIndex)
                                      .arg(numRegisterVariablesPerIndex[registerIndex]++);
-            e.storedType = m_typeResolver->comparableType(seenType);
+            e.storedType = seenType;
         }
         ++e.numTracked;
     };
