@@ -3,6 +3,7 @@ opensuse-42.1
 [contentSize]
 windows gcc
 msvc-2019
+msvc-2022
 [hAlignVisual]
 sles
 # QTQAINFRA-4127
