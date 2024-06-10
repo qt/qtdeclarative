@@ -18,8 +18,9 @@ T.Button {
     topInset: 6
     bottomInset: 6
     verticalPadding: Material.buttonVerticalPadding
-    leftPadding: Material.buttonLeftPadding(flat, hasIcon)
-    rightPadding: Material.buttonRightPadding(flat, hasIcon, text !== "")
+    leftPadding: Material.buttonLeftPadding(flat, hasIcon && (display !== AbstractButton.TextOnly))
+    rightPadding: Material.buttonRightPadding(flat, hasIcon && (display !== AbstractButton.TextOnly),
+                                              (text !== "") && (display !== AbstractButton.IconOnly))
     spacing: 8
 
     icon.width: 24
