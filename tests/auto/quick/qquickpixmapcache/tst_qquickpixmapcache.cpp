@@ -546,6 +546,8 @@ void tst_qquickpixmapcache::dataLeak()
 */
 void tst_qquickpixmapcache::slowDevice()
 {
+    QSKIP("Crashes: QTBUG-126047");
+
 #ifdef QT_BUILD_INTERNAL
     auto *provider = new SlowProvider;
     engine.addImageProvider("slow", provider); // takes ownership
