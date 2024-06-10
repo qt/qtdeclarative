@@ -1445,7 +1445,8 @@ static bool createRhiRenderTargetWithDepthTexture(QRhiTexture *texture,
         return false;
     }
     if (needsDepthStencilBuffer && !depthStencil) {
-        depthStencil.reset(rhi->newTexture(QRhiTexture::D24S8, pixelSize, sampleCount, QRhiTexture::RenderTarget));
+        QRhiTexture::Format multisampleDepthTextureFormat = depthTexture->format();
+        depthStencil.reset(rhi->newTexture(multisampleDepthTextureFormat, pixelSize, sampleCount, QRhiTexture::RenderTarget));
         depthStencil->setName(QByteArrayLiteral("Depth-stencil texture for QQuickRenderTarget"));
         if (!depthStencil->create()) {
             qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
