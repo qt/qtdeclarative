@@ -4167,7 +4167,7 @@ void tst_qquickwindow::visibilityDoesntClobberWindowState()
     window->installEventFilter(&eventFilter);
     window->setProperty("visibility", QWindow::FullScreen);
     QTRY_VERIFY(eventFilter.events.contains(QEvent::WindowStateChange));
-    QCOMPARE(window->windowState(), Qt::WindowFullScreen);
+    QTRY_COMPARE(window->windowState(), Qt::WindowFullScreen);
 
     eventFilter.events.clear();
     window->setWindowState(Qt::WindowMaximized);
