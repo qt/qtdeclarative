@@ -374,7 +374,7 @@ manner, advancing animations cannot be based on the rendering.
 This switch of animation handling mechanisms is transparent to the
 applications.
 
-\section3 What if vsync-based throttling is disfunctional, globally disabled, or the application disabled it itself?
+\section3 What if vsync-based throttling is dysfunctional, globally disabled, or the application disabled it itself?
 
 The \c threaded render loop relies on the graphics API implementation and/or
 the windowing system for throttling, for example, by requesting a swap interval
