@@ -27,6 +27,3 @@ opensuse-leap
 [popupWindowFocus]
 * # QTBUG-121363
 
-# QTBUG-126175
-[popupWindowChangingParent]
-linux
