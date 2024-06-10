@@ -439,6 +439,8 @@ qt_internal_add_qml_module(Qml
         QTP0001
         QTP0004
         QTP0005
+    ATTRIBUTION_FILE_DIR_PATHS
+        ../3rdparty/masm
 )
 
 _qt_internal_add_qml_deploy_info_finalizer(Qml)

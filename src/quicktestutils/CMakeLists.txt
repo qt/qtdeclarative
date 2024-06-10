@@ -35,6 +35,7 @@ qt_internal_add_module(QuickTestUtilsPrivate
         Qt::Qml
         Qt::QmlPrivate
     NO_GENERATE_CPP_EXPORTS
+    QT_LICENSE_ID QT_COMMERCIAL_OR_GPL3
 )
 
 if(TARGET Qt::Quick)
