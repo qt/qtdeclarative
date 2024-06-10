@@ -22,6 +22,7 @@ QT_BEGIN_NAMESPACE
 QQmlJSCompilePass::BlocksAndAnnotations
 QQmlJSStorageGeneralizer::run(Function *function, QQmlJS::DiagnosticMessage *error)
 {
+    m_function = function;
     m_error = error;
 
     if (QQmlJSRegisterContent &returnType = function->returnType; returnType.isValid()) {

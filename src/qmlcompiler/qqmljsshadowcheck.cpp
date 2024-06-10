@@ -193,8 +193,6 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
 
         if (currentAnnotation.changedRegisterIndex != InvalidRegister) {
             m_typeResolver->adjustOriginalType(
-                    currentAnnotation.changedRegister.storedType(), varType);
-            m_typeResolver->adjustOriginalType(
                     m_typeResolver->containedType(currentAnnotation.changedRegister), varType);
             m_adjustedTypes.insert(currentAnnotation.changedRegister);
         }

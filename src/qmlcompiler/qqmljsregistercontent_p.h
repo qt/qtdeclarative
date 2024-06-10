@@ -186,33 +186,30 @@ public:
         Q_UNREACHABLE_RETURN(seed);
     }
 
-    static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
-                                        const QQmlJSScope::ConstPtr &type,
+    static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &type,
                                         int resultLookupIndex, ContentVariant variant,
                                         const QQmlJSScope::ConstPtr &scope = {});
 
-    static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
-                                        const QQmlJSMetaProperty &property,
+    static QQmlJSRegisterContent create(const QQmlJSMetaProperty &property,
                                         int baseLookupIndex, int resultLookupIndex,
                                         ContentVariant variant,
                                         const QQmlJSScope::ConstPtr &scope);
 
-    static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
-                                        const QQmlJSMetaEnum &enumeration,
+    static QQmlJSRegisterContent create(const QQmlJSMetaEnum &enumeration,
                                         const QString &enumMember, ContentVariant variant,
                                         const QQmlJSScope::ConstPtr &scope);
 
-    static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
-                                        const QList<QQmlJSMetaMethod> &methods,
+    static QQmlJSRegisterContent create(const QList<QQmlJSMetaMethod> &methods,
+                                        const QQmlJSScope::ConstPtr &methodType,
                                         ContentVariant variant,
                                         const QQmlJSScope::ConstPtr &scope);
 
-    static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
-                                        uint importNamespaceStringId, ContentVariant variant,
+    static QQmlJSRegisterContent create(uint importNamespaceStringId,
+                                        const QQmlJSScope::ConstPtr &importNamespaceType,
+                                        ContentVariant variant,
                                         const QQmlJSScope::ConstPtr &scope = {});
 
-    static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
-                                        const QList<QQmlJSScope::ConstPtr> &origins,
+    static QQmlJSRegisterContent create(const QList<QQmlJSScope::ConstPtr> &origins,
                                         const QQmlJSScope::ConstPtr &conversion,
                                         const QQmlJSScope::ConstPtr &conversionScope,
                                         ContentVariant variant,
@@ -292,9 +289,8 @@ private:
         ConvertedTypes
     >;
 
-    QQmlJSRegisterContent(const QQmlJSScope::ConstPtr &storedType,
-                          const QQmlJSScope::ConstPtr &scope, ContentVariant variant)
-        : m_storedType(storedType), m_scope(scope), m_variant(variant)
+    QQmlJSRegisterContent(const QQmlJSScope::ConstPtr &scope, ContentVariant variant)
+        : m_scope(scope), m_variant(variant)
     {
     }
 

@@ -230,7 +230,9 @@ protected:
             // we can convert by stored type.
             return convertStored(from, to.storedType(), variable);
         } else {
-            return convertContained(m_typeResolver->globalType(from), to, variable);
+            return convertContained(
+                    m_typeResolver->globalType(from).storedIn(m_typeResolver->storedType(from)),
+                    to, variable);
         }
     }
 
@@ -334,6 +336,22 @@ private:
     bool generateContentPointerCheck(
             const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
             const QString &variable, const QString &errorMessage);
+
+    QQmlJSRegisterContent original(const QQmlJSRegisterContent &tracked)
+    {
+        const QQmlJSRegisterContent restored = m_typeResolver->original(tracked);
+        return restored.storedIn(m_typeResolver->originalType(tracked.storedType()));
+    }
+
+    QQmlJSRegisterContent global(const QQmlJSScope::ConstPtr &contained)
+    {
+        return m_typeResolver->globalType(contained).storedIn(contained);
+    }
+
+    QQmlJSRegisterContent builtin(const QQmlJSScope::ConstPtr &contained)
+    {
+        return m_typeResolver->builtinType(contained).storedIn(contained);
+    }
 
     bool registerIsStoredIn(
             const QQmlJSRegisterContent &reg, const QQmlJSScope::ConstPtr &type) const

@@ -575,7 +575,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     if (!m_state.accumulatorOut().isValid() && m_typeResolver->isPrefix(name)) {
         const QQmlJSRegisterContent inType = m_typeResolver->globalType(qmlScope);
         setAccumulator(QQmlJSRegisterContent::create(
-                    m_typeResolver->voidType(), nameIndex, QQmlJSRegisterContent::ScopeModulePrefix,
+                    nameIndex, m_typeResolver->voidType(), QQmlJSRegisterContent::ScopeModulePrefix,
                     m_typeResolver->containedType(inType)));
         return;
     }
@@ -833,8 +833,8 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
             Q_ASSERT(m_state.accumulatorIn().isValid());
             addReadAccumulator(m_state.accumulatorIn());
             setAccumulator(QQmlJSRegisterContent::create(
-                        m_state.accumulatorIn().storedType(),
                         m_jsUnitGenerator->getStringId(propertyName),
+                        m_state.accumulatorIn().containedType(),
                         QQmlJSRegisterContent::ObjectModulePrefix,
                         m_typeResolver->containedType(m_state.accumulatorIn())));
             return;
@@ -929,7 +929,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
             prop.setType(m_typeResolver->realType());
             setAccumulator(
                 QQmlJSRegisterContent::create(
-                    m_typeResolver->realType(), prop, m_state.accumulatorIn().resultLookupIndex(), lookupIndex,
+                    prop, m_state.accumulatorIn().resultLookupIndex(), lookupIndex,
                     QQmlJSRegisterContent::GenericObjectProperty, mathObject)
             );
 
@@ -1058,7 +1058,7 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
 
     const QQmlJSScope::ConstPtr varType = m_typeResolver->varType();
     const QQmlJSRegisterContent readType = m_typeResolver->canHoldUndefined(m_state.accumulatorIn())
-            ? property.storedIn(varType).castTo(varType)
+            ? property.castTo(varType)
             : std::move(property);
     addReadAccumulator(readType);
     addReadRegister(base, callBase);

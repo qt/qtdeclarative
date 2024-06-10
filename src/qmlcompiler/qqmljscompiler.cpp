@@ -15,6 +15,7 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsshadowcheck_p.h>
 #include <private/qqmljsstoragegeneralizer_p.h>
+#include <private/qqmljsstorageinitializer_p.h>
 #include <private/qqmljstypepropagator_p.h>
 
 #include <QtCore/qfile.h>
@@ -775,8 +776,13 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
     if (error->isValid())
         return compileError();
 
+    QQmlJSStorageInitializer initializer(
+            m_unitGenerator, &m_typeResolver, m_logger, blocks, annotations);
+    passResult = initializer.run(function, error);
+
     // Generalize all arguments, registers, and the return type.
-    QQmlJSStorageGeneralizer generalizer(m_unitGenerator, &m_typeResolver, m_logger, blocks, annotations);
+    QQmlJSStorageGeneralizer generalizer(
+            m_unitGenerator, &m_typeResolver, m_logger, blocks, annotations);
     passResult = generalizer.run(function, error);
     if (error->isValid())
         return compileError();

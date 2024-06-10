@@ -213,7 +213,7 @@ QT_WARNING_POP
         if (!registerIsArgument
                 && registerIndex != Accumulator
                 && registerIndex != This
-                && !registerIsStoredIn(
+                && !m_typeResolver->registerContains(
                     function->registerTypes[registerIndex - firstRegisterIndex()],
                     m_typeResolver->voidType())) {
             result.code += registerIt->variableName + u" = "_s;
@@ -223,10 +223,9 @@ QT_WARNING_POP
             const int argumentIndex = registerIndex - FirstArgument;
             const QQmlJSRegisterContent argument
                     = m_function->argumentTypes[argumentIndex];
-            const QQmlJSRegisterContent original
-                    = m_typeResolver->original(argument);
+            const QQmlJSRegisterContent originalArgument = original(argument);
 
-            const bool needsConversion = argument != original;
+            const bool needsConversion = argument != originalArgument;
             if (!isPointer && registerIt->numTracked == 1 && !needsConversion) {
                 // Not a pointer, never written to, and doesn't need any initial conversion.
                 // This is a readonly argument.
@@ -240,11 +239,11 @@ QT_WARNING_POP
             result.code += registerIt->variableName + u" = "_s;
 
             const QString originalValue
-                    = u"(*static_cast<"_s + castTargetName(original.storedType())
+                    = u"(*static_cast<"_s + castTargetName(originalArgument.storedType())
                     + u"*>(argv["_s + QString::number(argumentIndex + 1) + u"]))"_s;
 
             if (needsConversion)
-                result.code += conversion(original, argument, originalValue);
+                result.code += conversion(originalArgument, argument, originalValue);
             else
                 result.code += originalValue;
         } else {
@@ -683,9 +682,11 @@ void QQmlJSCodeGenerator::generate_LoadQmlContextPropertyLookup(int index)
     const int nameIndex = m_jsUnitGenerator->lookupNameIndex(index);
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::JavaScriptGlobal) {
+        // This produces a QJSValue. The QQmlJSMetaProperty used to analyze it may have more details
+        // but the QQmlJSAotContext API does not reflect them.
         m_body += m_state.accumulatorVariableOut + u" = "_s
                 + conversion(
-                    m_typeResolver->original(m_state.accumulatorOut()), m_state.accumulatorOut(),
+                    m_typeResolver->jsValueType(), m_state.accumulatorOut(),
                     u"aotContext->javaScriptGlobalProperty("_s + QString::number(nameIndex) + u")")
                 + u";\n"_s;
         return;
@@ -775,7 +776,7 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
     }
 
     const QString voidAssignment = u"    "_s + m_state.accumulatorVariableOut + u" = "_s +
-            conversion(m_typeResolver->globalType(m_typeResolver->voidType()),
+            conversion(global(m_typeResolver->voidType()),
                        m_state.accumulatorOut(), QString()) + u";\n"_s;
 
     QString indexName = m_state.accumulatorVariableIn;
@@ -812,7 +813,7 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
 
     if (registerIsStoredIn(baseType, m_typeResolver->listPropertyType())) {
         // Our QQmlListProperty only keeps plain QObject*.
-        const auto elementType = m_typeResolver->globalType(m_typeResolver->qObjectType());
+        const auto elementType = global(m_typeResolver->qObjectType());
 
         m_body += u"if ("_s + indexName + u" < "_s + baseName
                 + u".count(&"_s + baseName + u"))\n"_s;
@@ -825,7 +826,9 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
         return;
     }
 
-    const auto elementType = m_typeResolver->valueType(baseType);
+    // Since we can do .at() below, we know that we can natively store the element type.
+    QQmlJSRegisterContent elementType = m_typeResolver->valueType(baseType);
+    elementType = elementType.storedIn(m_typeResolver->storedType(elementType.containedType()));
 
     QString access = baseName + u".at("_s + indexName + u')';
 
@@ -865,8 +868,8 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
     const QString indexName = registerVariable(index);
 
     const auto valueType = m_typeResolver->valueType(baseType);
-    const auto elementType = m_typeResolver->globalType(m_typeResolver->genericType(
-                                          m_typeResolver->containedType(valueType)));
+    const auto elementType = global(m_typeResolver->genericType(
+            m_typeResolver->containedType(valueType)));
 
     addInclude(u"QtQml/qjslist.h"_s);
     if (!m_typeResolver->isNativeArrayIndex(indexType))
@@ -1078,8 +1081,7 @@ void QQmlJSCodeGenerator::generateVariantEqualityComparison(
               : m_typeResolver->containedType(storableContent);
 
     if (contained->isReferenceType()) {
-        const QQmlJSRegisterContent comparable
-                = m_typeResolver->builtinType(m_typeResolver->qObjectType());
+        const QQmlJSRegisterContent comparable = builtin(m_typeResolver->qObjectType());
         m_body += m_state.accumulatorVariableOut + u" = "_s + (invert ? u"!"_s : QString()) + u"(("
                 + varRegisterName + u".metaType().flags() & QMetaType::PointerToQObject) "_s
                 + u" && "_s + conversion(storableContent, comparable, typedRegisterName) + u" == "_s
@@ -1088,8 +1090,7 @@ void QQmlJSCodeGenerator::generateVariantEqualityComparison(
     }
 
     if (m_typeResolver->isPrimitive(contained)) {
-        const QQmlJSRegisterContent comparable
-                = m_typeResolver->builtinType(m_typeResolver->jsPrimitiveType());
+        const QQmlJSRegisterContent comparable = builtin(m_typeResolver->jsPrimitiveType());
         m_body += m_state.accumulatorVariableOut + u" = "_s + (invert ? u"!"_s : QString())
                 + conversion(storableContent, comparable, typedRegisterName)
                 + u".strictlyEquals("_s
@@ -1457,7 +1458,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         if (stored->isListProperty()) {
             m_body += m_state.accumulatorVariableOut + u" = "_s;
             m_body += conversion(
-                        m_typeResolver->globalType(m_typeResolver->sizeType()),
+                        global(m_typeResolver->sizeType()),
                         m_state.accumulatorOut(),
                         m_state.accumulatorVariableIn + u".count("_s + u'&'
                             + m_state.accumulatorVariableIn + u')');
@@ -1465,7 +1466,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         } else if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
                    || m_typeResolver->equals(stored, m_typeResolver->stringType())) {
             m_body += m_state.accumulatorVariableOut + u" = "_s
-                    + conversion(m_typeResolver->globalType(m_typeResolver->sizeType()),
+                    + conversion(global(m_typeResolver->sizeType()),
                                  m_state.accumulatorOut(),
                                  m_state.accumulatorVariableIn + u".length()"_s)
                     + u";\n"_s;
@@ -1476,7 +1477,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         QString mapLookup = m_state.accumulatorVariableIn + u"["_s
                 + QQmlJSUtils::toLiteral(m_jsUnitGenerator->lookupName(index)) + u"]"_s;
         m_body += m_state.accumulatorVariableOut + u" = "_s;
-        m_body += conversion(m_typeResolver->globalType(m_typeResolver->varType()),
+        m_body += conversion(global(m_typeResolver->varType()),
                              m_state.accumulatorOut(), mapLookup);
         m_body += u";\n"_s;
     } else {
@@ -2189,7 +2190,7 @@ bool QQmlJSCodeGenerator::inlineArrayMethod(const QString &name, int base, int a
         call += u")";
 
         const auto outType = baseType.storedType()->isListProperty()
-                ? m_typeResolver->globalType(m_typeResolver->qObjectListType())
+                ? global(m_typeResolver->qObjectListType())
                 : baseType;
 
         m_body += m_state.accumulatorVariableOut + u" = "_s
@@ -2347,9 +2348,9 @@ void QQmlJSCodeGenerator::generate_Construct(int func, int argc, int argv)
     INJECT_TRACE_INFO(generate_Construct);
     Q_UNUSED(func);
 
-    const auto original = m_typeResolver->original(m_state.accumulatorOut());
+    const auto originalResult = original(m_state.accumulatorOut());
 
-    if (m_typeResolver->registerContains(original, m_typeResolver->dateTimeType())) {
+    if (m_typeResolver->registerContains(originalResult, m_typeResolver->dateTimeType())) {
         m_body += m_state.accumulatorVariableOut + u" = ";
         if (argc == 0) {
             m_body += conversion(
@@ -2382,7 +2383,7 @@ void QQmlJSCodeGenerator::generate_Construct(int func, int argc, int argv)
         return;
     }
 
-    if (m_typeResolver->registerContains(original, m_typeResolver->variantListType())) {
+    if (m_typeResolver->registerContains(originalResult, m_typeResolver->variantListType())) {
         rejectIfBadArray();
 
         if (argc == 1
@@ -2464,8 +2465,7 @@ void QQmlJSCodeGenerator::generate_ThrowException()
 
     generateSetInstructionPointer();
     m_body += u"aotContext->engine->throwError("_s
-        + conversion(m_state.accumulatorIn(), m_typeResolver->globalType(
-                         m_typeResolver->jsValueType()),
+        + conversion(m_state.accumulatorIn(), global(m_typeResolver->jsValueType()),
                      m_state.accumulatorVariableIn) + u");\n"_s;
     generateReturnError();
     m_skipUntilNextLabel = true;
@@ -2593,10 +2593,14 @@ void QQmlJSCodeGenerator::generate_IteratorNext(int value, int offset)
         reject(u"using non-iterator as iterator"_s);
 
     m_body += u"if (" + m_state.accumulatorVariableIn + u"->hasNext(" + qjsList + u")) {\n    ";
+
+    // We know that this works because we can do ->next() below.
+    QQmlJSRegisterContent iteratorValue = m_typeResolver->valueType(iteratorContent);
+    iteratorValue = iteratorValue.storedIn(iteratorValue.containedType());
+
     m_body += changedRegisterVariable() + u" = "
             + conversion(
-                      m_typeResolver->valueType(iteratorContent),
-                      m_state.changedRegister(),
+                      iteratorValue, m_state.changedRegister(),
                       m_state.accumulatorVariableIn + u"->next(" + qjsList + u')')
             + u";\n";
     m_body += u"} else {\n    ";
@@ -2700,7 +2704,7 @@ void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int 
             m_body += u"{ "_s
                     + conversion(
                               registerType(nameArg),
-                              m_typeResolver->globalType(m_typeResolver->stringType()),
+                              global(m_typeResolver->stringType()),
                               consumedRegisterVariable(nameArg))
                     + u", "_s;
 
@@ -2891,15 +2895,13 @@ void QQmlJSCodeGenerator::generate_CheckException()
 void QQmlJSCodeGenerator::generate_CmpEqNull()
 {
     INJECT_TRACE_INFO(generate_CmpEqNull);
-    generateEqualityOperation(
-            m_typeResolver->globalType(m_typeResolver->nullType()), QString(), u"equals"_s, false);
+    generateEqualityOperation(global(m_typeResolver->nullType()), QString(), u"equals"_s, false);
 }
 
 void QQmlJSCodeGenerator::generate_CmpNeNull()
 {
     INJECT_TRACE_INFO(generate_CmlNeNull);
-    generateEqualityOperation(
-            m_typeResolver->globalType(m_typeResolver->nullType()), QString(), u"equals"_s, true);
+    generateEqualityOperation(global(m_typeResolver->nullType()), QString(), u"equals"_s, true);
 }
 
 QString QQmlJSCodeGenerator::getLookupPreparation(
@@ -2973,8 +2975,7 @@ void QQmlJSCodeGenerator::generate_CmpEqInt(int lhsConst)
     INJECT_TRACE_INFO(generate_CmpEqInt);
 
     generateEqualityOperation(
-            m_typeResolver->globalType(m_typeResolver->int32Type()), QString::number(lhsConst),
-            u"equals"_s, false);
+            global(m_typeResolver->int32Type()), QString::number(lhsConst), u"equals"_s, false);
 }
 
 void QQmlJSCodeGenerator::generate_CmpNeInt(int lhsConst)
@@ -2982,8 +2983,7 @@ void QQmlJSCodeGenerator::generate_CmpNeInt(int lhsConst)
     INJECT_TRACE_INFO(generate_CmpNeInt);
 
     generateEqualityOperation(
-            m_typeResolver->globalType(m_typeResolver->int32Type()), QString::number(lhsConst),
-            u"equals"_s, true);
+            global(m_typeResolver->int32Type()), QString::number(lhsConst), u"equals"_s, true);
 }
 
 void QQmlJSCodeGenerator::generate_CmpEq(int lhs)
@@ -3056,8 +3056,8 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
 
     // If the original output is a conversion, we're supposed to check for the contained
     // type and if it doesn't match, set the result to null or undefined.
-    const QQmlJSRegisterContent originalContent = m_typeResolver->original(outputContent);
-    const QQmlJSScope::ConstPtr target = originalContent.storedType()->isReferenceType()
+    const QQmlJSRegisterContent originalContent = original(outputContent);
+    const QQmlJSScope::ConstPtr target = originalContent.containedType()->isReferenceType()
             ? m_typeResolver->containedType(originalContent)
             : m_typeResolver->extractNonVoidFromOptionalType(originalContent);
 
@@ -3095,14 +3095,13 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
         || registerIsStoredIn(inputContent, m_typeResolver->jsPrimitiveType())) {
 
         const auto source = m_typeResolver->extractNonVoidFromOptionalType(
-                m_typeResolver->original(inputContent));
+                original(inputContent));
 
         if (source && m_typeResolver->equals(source, target)) {
             m_body += input + u".metaType() == "_s + metaType(target)
                     + u" ? " + conversion(inputContent, outputContent, input)
                     + u" : " + conversion(
-                                  m_typeResolver->globalType(m_typeResolver->voidType()),
-                                  outputContent, QString());
+                                  global(m_typeResolver->voidType()), outputContent, QString());
             m_body += u";\n"_s;
             return;
         }
@@ -3244,7 +3243,7 @@ void QQmlJSCodeGenerator::generate_Exp(int lhs)
     Q_ASSERT(m_error->isValid() || !lhsString.isEmpty());
     Q_ASSERT(m_error->isValid() || !rhsString.isEmpty());
 
-    const QQmlJSRegisterContent originalOut = m_typeResolver->original(m_state.accumulatorOut());
+    const QQmlJSRegisterContent originalOut = original(m_state.accumulatorOut());
     m_body += m_state.accumulatorVariableOut + u" = "_s;
     m_body += conversion(
                 originalOut, m_state.accumulatorOut(),
@@ -3412,20 +3411,20 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
 
     const auto retrieveOriginal = [this](const QQmlJSRegisterContent &content) {
         const auto contained = m_typeResolver->containedType(content);
-        const auto original = m_typeResolver->original(content);
-        const auto containedOriginal = m_typeResolver->containedType(original);
+        const auto originalContent = original(content);
+        const auto containedOriginal = m_typeResolver->containedType(originalContent);
 
         if (m_typeResolver->equals(
-                    m_typeResolver->genericType(containedOriginal), original.storedType())) {
+                    m_typeResolver->genericType(containedOriginal), originalContent.storedType())) {
             // The original type doesn't need any wrapping.
-            return original;
+            return originalContent;
         } else if (m_typeResolver->equals(contained, containedOriginal)) {
-            if (original.isConversion()) {
+            if (originalContent.isConversion()) {
                 // The original conversion origins are more accurate
-                return original.storedIn(content.storedType());
+                return originalContent.storedIn(content.storedType());
             }
         } else if (m_typeResolver->canHold(contained, containedOriginal)) {
-            return original.storedIn(content.storedType());
+            return originalContent.storedIn(content.storedType());
         }
 
         return content;
@@ -3599,7 +3598,7 @@ void QQmlJSCodeGenerator::generateCompareOperation(int lhs, const QString &cppOp
     const auto lhsType = registerType(lhs);
     const QQmlJSScope::ConstPtr compareType =
             m_typeResolver->isNumeric(lhsType) && m_typeResolver->isNumeric(m_state.accumulatorIn())
-                ? m_typeResolver->merge(lhsType, m_state.accumulatorIn()).storedType()
+                ? m_typeResolver->merge(lhsType.storedType(), m_state.accumulatorIn().storedType())
                 : m_typeResolver->jsPrimitiveType();
 
     m_body += conversion(
@@ -3638,7 +3637,7 @@ void QQmlJSCodeGenerator::generateArithmeticOperation(
     Q_ASSERT(m_error->isValid() || !lhs.isEmpty());
     Q_ASSERT(m_error->isValid() || !rhs.isEmpty());
 
-    const QQmlJSRegisterContent originalOut = m_typeResolver->original(m_state.accumulatorOut());
+    const QQmlJSRegisterContent originalOut = original(m_state.accumulatorOut());
     m_body += m_state.accumulatorVariableOut;
     m_body += u" = "_s;
     const QString explicitCast
@@ -3656,7 +3655,7 @@ void QQmlJSCodeGenerator::generateArithmeticConstOperation(int rhsConst, const Q
     generateArithmeticOperation(
                 conversion(m_state.accumulatorIn(), m_state.readAccumulator(),
                            consumedAccumulatorVariableIn()),
-                conversion(m_typeResolver->globalType(m_typeResolver->int32Type()),
+                conversion(global(m_typeResolver->int32Type()),
                            m_state.readAccumulator(), QString::number(rhsConst)),
                 cppOperator);
 }
@@ -3664,7 +3663,7 @@ void QQmlJSCodeGenerator::generateArithmeticConstOperation(int rhsConst, const Q
 void QQmlJSCodeGenerator::generateUnaryOperation(const QString &cppOperator)
 {
     const auto var = conversion(m_state.accumulatorIn(),
-                                m_typeResolver->original(m_state.readAccumulator()),
+                                original(m_state.readAccumulator()),
                                 consumedAccumulatorVariableIn());
 
     if (var == m_state.accumulatorVariableOut) {
@@ -3672,8 +3671,8 @@ void QQmlJSCodeGenerator::generateUnaryOperation(const QString &cppOperator)
         return;
     }
 
-    const auto original = m_typeResolver->original(m_state.accumulatorOut());
-    if (m_state.accumulatorOut() == original) {
+    const auto originalResult = original(m_state.accumulatorOut());
+    if (m_state.accumulatorOut() == originalResult) {
         m_body += m_state.accumulatorVariableOut + u" = "_s + var + u";\n"_s;
         m_body += m_state.accumulatorVariableOut + u" = "_s
                 + cppOperator + m_state.accumulatorVariableOut + u";\n"_s;
@@ -3681,7 +3680,7 @@ void QQmlJSCodeGenerator::generateUnaryOperation(const QString &cppOperator)
     }
 
     m_body += m_state.accumulatorVariableOut + u" = "_s + conversion(
-                original, m_state.accumulatorOut(), cppOperator + var) + u";\n"_s;
+                originalResult, m_state.accumulatorOut(), cppOperator + var) + u";\n"_s;
 }
 
 void QQmlJSCodeGenerator::generateInPlaceOperation(const QString &cppOperator)
@@ -3699,8 +3698,8 @@ void QQmlJSCodeGenerator::generateInPlaceOperation(const QString &cppOperator)
     const QString var = conversion(m_state.accumulatorIn(), m_state.readAccumulator(),
                                    consumedAccumulatorVariableIn());
 
-    const auto original = m_typeResolver->original(m_state.accumulatorOut());
-    if (m_state.accumulatorOut() == original) {
+    const auto originalResult = original(m_state.accumulatorOut());
+    if (m_state.accumulatorOut() == originalResult) {
         m_body += m_state.accumulatorVariableOut + u" = "_s + var + u";\n"_s;
         m_body += cppOperator + m_state.accumulatorVariableOut + u";\n"_s;
         return;
@@ -3709,7 +3708,7 @@ void QQmlJSCodeGenerator::generateInPlaceOperation(const QString &cppOperator)
     m_body += u"{\n"_s;
     m_body += u"auto converted = "_s + var + u";\n"_s;
     m_body += m_state.accumulatorVariableOut + u" = "_s + conversion(
-                original, m_state.accumulatorOut(), u'('
+                originalResult, m_state.accumulatorOut(), u'('
                 + cppOperator + u"converted)"_s)  + u";\n"_s;
     m_body += u"}\n"_s;
 }
@@ -4024,7 +4023,7 @@ QString QQmlJSCodeGenerator::convertStored(
         return variable;
 
     const auto isBoolOrNumber = [&](const QQmlJSScope::ConstPtr &type) {
-        return m_typeResolver->isNumeric(m_typeResolver->globalType(type))
+        return m_typeResolver->isNumeric(type)
                 || m_typeResolver->equals(type, m_typeResolver->boolType())
                 || type->scopeType() == QQmlSA::ScopeType::EnumScope;
     };
@@ -4259,9 +4258,7 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
             input = variable;
             argPointer = contentPointer(from, u"arg"_s);
         } else {
-            const QQmlJSRegisterContent argument
-                    = m_typeResolver->globalType(argumentType)
-                    .storedIn(m_typeResolver->genericType(argumentType));
+            const QQmlJSRegisterContent argument = global(argumentType);
             input = conversion(from, argument, variable);
             argPointer = contentPointer(argument, u"arg"_s);
         }
@@ -4274,7 +4271,7 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
                 + u", "_s + argPointer + u"); }()"_s;
     }
 
-    const auto originalFrom = m_typeResolver->original(from);
+    const auto originalFrom = original(from);
     const auto containedOriginalFrom = m_typeResolver->containedType(originalFrom);
     if (!m_typeResolver->equals(containedFrom, containedOriginalFrom)
             && m_typeResolver->canHold(containedFrom, containedOriginalFrom)) {
@@ -4320,7 +4317,7 @@ QQmlJSCodeGenerator::AccumulatorConverter::AccumulatorConverter(QQmlJSCodeGenera
 
         const bool storable = isTypeStorable(resolver, origStored);
         generator->m_state.accumulatorVariableOut = storable ? u"retrieved"_s : QString();
-        generator->m_state.setRegister(Accumulator, resolver->original(accumulatorOut));
+        generator->m_state.setRegister(Accumulator, generator->original(accumulatorOut));
         generator->m_body += u"{\n"_s;
         if (storable) {
             generator->m_body += origStored->augmentedInternalName() + u' '

@@ -6,6 +6,7 @@
 #include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
 #include <QtQmlCompiler/private/qqmljsshadowcheck_p.h>
 #include <QtQmlCompiler/private/qqmljsstoragegeneralizer_p.h>
+#include <QtQmlCompiler/private/qqmljsstorageinitializer_p.h>
 #include <QtQmlCompiler/private/qqmljstypepropagator_p.h>
 #include <QtQmlCompiler/private/qqmljsfunctioninitializer_p.h>
 
@@ -89,6 +90,12 @@ bool QQmlJSLinterCodegen::analyzeFunction(const QV4::Compiler::Context *context,
         QQmlJSShadowCheck shadowCheck(m_unitGenerator, &m_typeResolver, m_logger, basicBlocks,
                                       annotations);
         shadowCheck.run(function, error);
+    }
+
+    if (!error->isValid()) {
+        QQmlJSStorageInitializer initializer(m_unitGenerator, &m_typeResolver, m_logger,
+                                             basicBlocks, annotations);
+        initializer.run(function, error);
     }
 
     if (!error->isValid()) {

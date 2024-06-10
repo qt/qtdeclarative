@@ -84,11 +84,7 @@ void QQmlJSOptimizations::populateReaderLocations()
                 it->second.changedRegister = QQmlJSRegisterContent();
             } else {
                 // void the output, rather than deleting it. We still need its variant.
-                bool adjusted = m_typeResolver->adjustTrackedType(
-                        it->second.changedRegister.storedType(), m_typeResolver->voidType());
-                Q_ASSERT(adjusted); // Can always convert to void
-
-                adjusted = m_typeResolver->adjustTrackedType(
+                const bool adjusted = m_typeResolver->adjustTrackedType(
                             m_typeResolver->containedType(it->second.changedRegister),
                             m_typeResolver->voidType());
                 Q_ASSERT(adjusted); // Can always convert to void
@@ -315,13 +311,6 @@ void QQmlJSOptimizations::adjustTypes()
         }
     };
 
-    const auto transformRegister = [&](const QQmlJSRegisterContent &content) {
-        const QQmlJSScope::ConstPtr conversion
-                = m_typeResolver->storedType(m_typeResolver->containedType(content));
-        if (!m_typeResolver->adjustTrackedType(content.storedType(), conversion))
-            setError(adjustErrorMessage(content.storedType(), conversion));
-    };
-
     // Handle the array definitions first.
     // Changing the array type changes the expected element types.
     auto adjustArray = [&](int instructionOffset, int mode) {
@@ -354,9 +343,6 @@ void QQmlJSOptimizations::adjustTypes()
                     || !m_typeResolver->equals(contained, m_typeResolver->realType())) {
                 if (!m_typeResolver->adjustTrackedType(contained, valueType))
                     setError(adjustErrorMessage(contained, valueType));
-
-                // We still need to adjust the stored type, too.
-                transformRegister(content);
             }
         }
 
@@ -412,9 +398,6 @@ void QQmlJSOptimizations::adjustTypes()
             const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
             if (!m_typeResolver->adjustTrackedType(contained, propType))
                 setError(adjustErrorMessage(contained, propType));
-
-            // We still need to adjust the stored type, too.
-            transformRegister(content);
         }
 
         // The others cannot be adjusted. We don't know their names, yet.
@@ -456,9 +439,6 @@ void QQmlJSOptimizations::adjustTypes()
 
     NewVirtualRegisters newRegisters;
     for (auto i = m_annotations.begin(), iEnd = m_annotations.end(); i != iEnd; ++i) {
-        if (i->second.changedRegisterIndex != InvalidRegister)
-            transformRegister(i->second.changedRegister);
-
         for (auto conversion = i->second.typeConversions.begin(),
              conversionEnd = i->second.typeConversions.end(); conversion != conversionEnd;
              ++conversion) {
@@ -475,7 +455,6 @@ void QQmlJSOptimizations::adjustTypes()
                 if (!m_typeResolver->adjustTrackedType(conversionResult, newResult))
                     setError(adjustErrorMessage(conversionResult, newResult));
             }
-            transformRegister(content);
             newRegisters.appendOrdered(conversion);
         }
         i->second.typeConversions = newRegisters.take();

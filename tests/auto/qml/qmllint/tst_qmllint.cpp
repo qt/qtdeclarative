@@ -1374,8 +1374,7 @@ void TestQmllint::compilerWarnings_data()
 
     QTest::newRow("shadowable")
             << QStringLiteral("shadowable.qml")
-            << Result { { Message {QStringLiteral(
-                       "with type NotSoSimple (stored as QQuickItem) can be shadowed") } } }
+            << Result { { Message {QStringLiteral("with type NotSoSimple can be shadowed") } } }
             << true;
     QTest::newRow("tooFewParameters")
             << QStringLiteral("tooFewParams.qml")
@@ -1411,20 +1410,20 @@ void TestQmllint::compilerWarnings_data()
             << QStringLiteral("returnTypeAnnotation_component.qml")
             << Result{ { { "Could not compile function comp: function without return type "
                            "annotation returns (component in" },
-                         { "returnTypeAnnotation_component.qml)::c with type Comp (stored as "
-                           "QQuickItem). This may prevent proper compilation to Cpp." } } }
+                         { "returnTypeAnnotation_component.qml)::c with type Comp. "
+                           "This may prevent proper compilation to Cpp." } } }
             << true;
     QTest::newRow("returnTypeAnnotation-enum")
             << QStringLiteral("returnTypeAnnotation_enum.qml")
             << Result{ { { "Could not compile function enumeration: function without return type "
-                           "annotation returns QQuickText::HAlignment::AlignRight (stored as int). "
+                           "annotation returns QQuickText::HAlignment::AlignRight. "
                            "This may prevent proper compilation to Cpp." } } }
             << true;
     QTest::newRow("returnTypeAnnotation-method")
             << QStringLiteral("returnTypeAnnotation_method.qml")
             << Result{ { { "Could not compile function method: function without return type "
                            "annotation returns (component in " }, // Don't check the build folder path
-                         { "returnTypeAnnotation_method.qml)::f(...) (stored as QJSValue). This may "
+                         { "returnTypeAnnotation_method.qml)::f(...). This may "
                            "prevent proper compilation to Cpp." } } }
             << true;
     QTest::newRow("returnTypeAnnotation-property")

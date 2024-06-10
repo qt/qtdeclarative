@@ -34,6 +34,7 @@ qt_internal_add_module(QmlCompiler
         qqmljscontextualtypes_p.h
         qqmljsshadowcheck.cpp qqmljsshadowcheck_p.h
         qqmljsstoragegeneralizer.cpp qqmljsstoragegeneralizer_p.h
+        qqmljsstorageinitializer.cpp qqmljsstorageinitializer_p.h
         qqmljstypedescriptionreader.cpp qqmljstypedescriptionreader_p.h
         qqmljstypepropagator.cpp qqmljstypepropagator_p.h
         qqmljstypereader.cpp qqmljstypereader_p.h
