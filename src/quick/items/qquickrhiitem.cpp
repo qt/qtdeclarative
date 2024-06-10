@@ -919,7 +919,7 @@ QRhi *QQuickRhiItemRenderer::rhi() const
 
     Unlike the depth-stencil buffer and the QRhiRenderTarget, this texture is
     always available and is managed by the QQuickRhiItem, independent of the
-    value of \l {QQuickRhiItem::}{autoRenderTarget}.
+    value of \l {QQuickRhiItem::}{isAutoRenderTargetEnabled}.
 
     \note When \l {QQuickRhiItem::}{sampleCount} is larger than 1, and so
     multisample antialiasing is enabled, the return value is \nullptr. Instead,
@@ -944,12 +944,12 @@ QRhiTexture *QQuickRhiItemRenderer::colorTexture() const
 
     When \l {QQuickRhiItem::}{sampleCount} is larger than 1, and so multisample
     antialising is enabled, the returned QRhiRenderBuffer has a matching sample
-    count and serves as the color buffer. Graphics pipelines used to render into
-    this buffer must be created with the same sample count, and the
+    count and serves as the color buffer. Graphics pipelines used to render
+    into this buffer must be created with the same sample count, and the
     depth-stencil buffer's sample count must match as well. The multisample
     content is expected to be resolved into the texture returned from
-    resolveTexture(). When \l {QQuickRhiItem::}{autoRenderTarget} is \c true,
-    renderTarget() is set up automatically to do this, by setting up
+    resolveTexture(). When \l {QQuickRhiItem::}{isAutoRenderTargetEnabled} is
+    \c true, renderTarget() is set up automatically to do this, by setting up
     msaaColorBuffer() as the
     \l{QRhiColorAttachment::renderBuffer()}{renderbuffer} of color attachment 0
     and resolveTexture() as its
@@ -989,11 +989,11 @@ QRhiRenderBuffer *QQuickRhiItemRenderer::msaaColorBuffer() const
     With MSAA enabled, this is the texture that gets used by the item's
     underlying scene graph node when texturing a quad in the main render pass
     of Qt Quick. However, the QQuickRhiItemRenderer's rendering must target the
-    (multisample) QRhiRenderBuffer returned from msaaColorBuffer(). When
-    \l {QQuickRhiItem::}{autoRenderTarget} is \c true, this is taken care of by
-    the QRhiRenderTarget returned from renderTarget(). Otherwise, it is up to
-    the subclass code to correctly configure a render target object with both
-    the color buffer and resolve textures.
+    (multisample) QRhiRenderBuffer returned from msaaColorBuffer(). When \l
+    {QQuickRhiItem::}{isAutoRenderTargetEnabled} is \c true, this is taken care
+    of by the QRhiRenderTarget returned from renderTarget(). Otherwise, it is
+    up to the subclass code to correctly configure a render target object with
+    both the color buffer and resolve textures.
 
     \sa colorTexture()
  */
@@ -1007,10 +1007,10 @@ QRhiTexture *QQuickRhiItemRenderer::resolveTexture() const
 
     Must only be called from initialize() and render().
 
-    Available only when \l {QQuickRhiItem::}{autoRenderTarget} is \c true.
-    Otherwise the returned value is \nullptr and it is up the reimplementation
-    of initialize() to create and manage a depth-stencil buffer and a
-    QRhiTextureRenderTarget.
+    Available only when \l {QQuickRhiItem::}{isAutoRenderTargetEnabled} is \c
+    true. Otherwise the returned value is \nullptr and it is up the
+    reimplementation of initialize() to create and manage a depth-stencil
+    buffer and a QRhiTextureRenderTarget.
 
     \sa colorTexture(), renderTarget()
  */
@@ -1025,10 +1025,10 @@ QRhiRenderBuffer *QQuickRhiItemRenderer::depthStencilBuffer() const
 
     Must only be called from initialize() and render().
 
-    Available only when \l {QQuickRhiItem::}{autoRenderTarget} is \c true.
-    Otherwise the returned value is \nullptr and it is up the reimplementation
-    of initialize() to create and manage a depth-stencil buffer and a
-    QRhiTextureRenderTarget.
+    Available only when \l {QQuickRhiItem::}{isAutoRenderTargetEnabled} is \c
+    true. Otherwise the returned value is \nullptr and it is up the
+    reimplementation of initialize() to create and manage a depth-stencil
+    buffer and a QRhiTextureRenderTarget.
 
     When creating \l{QRhiGraphicsPipeline}{graphics pipelines}, a
     QRhiRenderPassDescriptor is needed. This can be queried from the returned
@@ -1090,14 +1090,14 @@ QRhiRenderTarget *QQuickRhiItemRenderer::renderTarget() const
     resources previously created by the subclass are destroyed because they
     belong to the previous QRhi that should not be used anymore.
 
-    When \l {QQuickRhiItem::}{autoRenderTarget} is \c true, which is the
-    default, a depth-stencil QRhiRenderBuffer and a QRhiTextureRenderTarget
+    When \l {QQuickRhiItem::}{isAutoRenderTargetEnabled} is \c true, which is
+    the default, a depth-stencil QRhiRenderBuffer and a QRhiTextureRenderTarget
     associated with the colorTexture() (or msaaColorBuffer()) and the
     depth-stencil buffer are created and managed automatically.
     Reimplementations of initialize() and render() can query those objects via
-    depthStencilBuffer() and renderTarget(). When
-    \l {QQuickRhiItem::}{autoRenderTarget} is set to \c false, these objects are
-    no longer created and managed automatically. Rather, it will be
+    depthStencilBuffer() and renderTarget(). When \l
+    {QQuickRhiItem::}{isAutoRenderTargetEnabled} is set to \c false, these
+    objects are no longer created and managed automatically. Rather, it will be
     up the the initialize() implementation to create buffers and set up the
     render target as it sees fit. When manually managing additional color or
     depth-stencil attachments for the render target, their size and sample

@@ -226,7 +226,7 @@ void QQuickRenderTarget::setDepthTexture(QRhiTexture *texture)
     \enum QQuickRenderTarget::Flag
     Flags for the static QQuickRenderTarget constructor functions.
 
-    \value MultisampleResolve Indicates the the \c sampleCount argument is not
+    \value MultisampleResolve Indicates that the \c sampleCount argument is not
     the number of samples for the provided texture (and that the texture is
     still a non-multisample texture), but rather the desired samples for
     multisample antialiasing. Triggers automatically creating and managing an
