@@ -55,7 +55,7 @@ T.RangeSlider {
         imageConfig: control.firstHandleConfig.first_handle
 
         property Rectangle indicator: Rectangle {
-            property real diameter: control.first.pressed ? 8 : control.first.hovered ? 14 : 10
+            property real diameter: !control.enabled ? 10 : control.first.pressed ? 8 : control.first.hovered ? 14 : 10
             parent: control.first.handle
             width: diameter
             height: diameter
@@ -67,7 +67,7 @@ T.RangeSlider {
                     : control.palette.accent
             Behavior on diameter {
                 // From WindowsUI 3 Animation Values
-                NumberAnimation{
+                NumberAnimation {
                     duration: 167
                     easing.type: Easing.OutCubic
                 }

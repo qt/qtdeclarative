@@ -40,7 +40,7 @@ T.Slider {
         imageConfig: control.config.handle
 
         property Rectangle indicator: Rectangle {
-            property real diameter: control.pressed ? 8 : control.hovered ? 14 : 10
+            property real diameter: !control.enabled ? 10 : control.pressed ? 8 : control.hovered ? 14 : 10
             parent: control.handle
             width: diameter
             height: diameter
