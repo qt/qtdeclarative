@@ -1,5 +1,12 @@
 [tabKey]
 opensuse-42.3
 opensuse-leap
+macos-12
 [enterLeave]
 macos
+[focusOnClickInProxyWidget]
+macos-12
+[focusPreserved]
+macos-12
+[synthMouseFromTouch]
+macos-12
