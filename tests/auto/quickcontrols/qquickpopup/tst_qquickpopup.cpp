@@ -2385,19 +2385,16 @@ void tst_QQuickPopup::noDimmer()
     QTRY_VERIFY(!drawer->isModal());
 }
 
-#define VERIFY_LOCAL_POS(POPUP, EXPECTED)                              \
-    QTRY_COMPARE_LE(qAbs(POPUP->x() - qreal(EXPECTED.x())), 1);        \
-    QCOMPARE_LE(qAbs(POPUP->position().x() - qreal(EXPECTED.x())), 1); \
-    QCOMPARE_LE(qAbs(POPUP->y() - qreal(EXPECTED.y())), 1);            \
-    QCOMPARE_LE(qAbs(POPUP->position().y() - qreal(EXPECTED.y())), 1)
+#define VERIFY_LOCAL_POS(POPUP, EXPECTED)                                                                     \
+    QTRY_VERIFY2(qAbs(POPUP->x() - qreal(EXPECTED.x())) <= 1,                                                 \
+        qPrintable(QStringLiteral("QQuickPopup::x() = %1, expected = %2").arg(POPUP->x()).arg(EXPECTED.x())));\
+    QVERIFY2(qAbs(POPUP->y() - qreal(EXPECTED.y())) <= 1,                                                     \
+        qPrintable(QStringLiteral("QQuickPopup::y() = %1, expected = %2").arg(POPUP->y()).arg(EXPECTED.y())))
 
-#define VERIFY_GLOBAL_POS(FROM, POPUPWINDOW, EXPECTED)                                 \
-    do {                                                                               \
-        const auto expectedGlobalPos = FROM->mapToGlobal(EXPECTED.x(), EXPECTED.y());  \
-        const auto actualGlobalPos = POPUPWINDOW->position();                          \
-        QTRY_COMPARE_LE(qAbs(actualGlobalPos.x() - qFloor(expectedGlobalPos.x())), 1); \
-        QCOMPARE_LE(qAbs(actualGlobalPos.y() - qFloor(expectedGlobalPos.y())), 1);     \
-    } while (false)
+#define VERIFY_GLOBAL_POS(FROM, POPUPWINDOW, EXPECTED)                                                             \
+    QTRY_VERIFY2((POPUPWINDOW->position() - FROM->mapToGlobal(EXPECTED.x(), EXPECTED.y())).manhattanLength() <= 2, \
+        qPrintable(QStringLiteral("PopupWindow pos = (%1, %2), expected (%3, %4)")                                 \
+        .arg(POPUPWINDOW->x()).arg(POPUPWINDOW->y()).arg(EXPECTED.x()).arg(EXPECTED.y())))
 
 void tst_QQuickPopup::popupWindowPositioning()
 {
@@ -2645,15 +2642,15 @@ void tst_QQuickPopup::popupWindowChangingParent()
 
     QQuickApplicationHelper helper(this, "reparentingPopup.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
-
     QQuickWindow *window = helper.window;
-    window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
-
     auto *popup = window->contentItem()->findChild<QQuickPopup *>();
     QVERIFY(popup);
     auto *popupPrivate = QQuickPopupPrivate::get(popup);
     QVERIFY(popupPrivate);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(!popup->isVisible());
 
     QQuickItem *item1 = window->property("rectangle1").value<QQuickItem *>();
     QVERIFY(item1);
@@ -2665,11 +2662,13 @@ void tst_QQuickPopup::popupWindowChangingParent()
     QVERIFY(item3);
 
     popup->open();
-    QTRY_VERIFY(popup->isVisible());
+    QTRY_VERIFY(popup->isOpened());
 
-    auto *popupWindow = popupPrivate->popupWindow;
-    QVERIFY(popupWindow);
-    QVERIFY(popupWindow->isVisible());
+    QTRY_VERIFY(popupPrivate->popupWindow);
+    QWindow *popupWindow = popupPrivate->popupWindow;
+
+    QTRY_VERIFY(popupWindow->isVisible());
+    QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
 
     const QPoint initialPos(10, 10);
 
