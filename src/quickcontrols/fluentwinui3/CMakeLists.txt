@@ -24,6 +24,8 @@ set(qml_files
     "TabButton.qml"
     "TextField.qml"
     "TextArea.qml"
+    "ToolBar.qml"
+    "ToolButton.qml"
     "Config.qml" # TODO: move to impl module
     "StyleImage.qml" # TODO: move to impl module
 )

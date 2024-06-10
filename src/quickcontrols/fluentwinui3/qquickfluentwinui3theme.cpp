@@ -103,16 +103,26 @@ static void populateSystemPalette(QPalette &palette)
     palette.setColor(QPalette::Disabled, QPalette::HighlightedText, WINUI3Colors[colorSchemeIndex][textOnAccentDisabled]);
 }
 
-static void populateSystemFont(QFont &systemFont)
+static void populateThemeFont(QQuickTheme *theme)
 {
+    QFont systemFont;
+    QFont toolBarFont;
+
     const QLatin1String segoeUiFamilyName("Segoe UI Variable");
     if (QFontDatabase::families().contains(segoeUiFamilyName)) {
-        const QFont font(segoeUiFamilyName);
-        const QStringList families{font.family()};
+        const QFont segoeFont(segoeUiFamilyName);
+        const QStringList families{segoeFont.family()};
         systemFont.setFamilies(families);
+        toolBarFont.setFamilies(families);
     }
     systemFont.setWeight(QFont::Weight::Normal);
+    toolBarFont.setWeight(QFont::Weight::Normal);
+
     systemFont.setPixelSize(14);
+    toolBarFont.setPixelSize(12);
+
+    theme->setFont(QQuickTheme::System, systemFont);
+    theme->setFont(QQuickTheme::ToolBar, toolBarFont);
 }
 
 void QQuickFluentWinUI3Theme::updatePalette(QPalette &palette)
@@ -122,9 +132,8 @@ void QQuickFluentWinUI3Theme::updatePalette(QPalette &palette)
 
 void QQuickFluentWinUI3Theme::initialize(QQuickTheme *theme)
 {
-    QFont systemFont;
-    populateSystemFont(systemFont);
-    theme->setFont(QQuickTheme::System, systemFont);
+    populateThemeFont(theme);
+
     QPalette systemPalette;
     updatePalette(systemPalette);
     theme->setPalette(QQuickTheme::System, systemPalette);
