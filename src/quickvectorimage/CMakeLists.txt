@@ -20,7 +20,6 @@ qt_internal_add_module(QuickVectorImageGeneratorPrivate
         Qt::QuickPrivate
         Qt::QuickShapesPrivate
         Qt::SvgPrivate
-    GENERATE_CPP_EXPORTS
 )
 
 qt_internal_add_qml_module(QuickVectorImage
@@ -36,5 +35,4 @@ qt_internal_add_qml_module(QuickVectorImage
         Qt::QuickPrivate
         Qt::QuickVectorImageGeneratorPrivate
         Qt::SvgPrivate
-    GENERATE_CPP_EXPORTS
 )

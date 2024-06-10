@@ -12,5 +12,4 @@ qt_internal_add_module(QmlToolingSettingsPrivate
         qqmltoolingutils.cpp
     PUBLIC_LIBRARIES
         Qt::Core
-    GENERATE_CPP_EXPORTS
 )

@@ -49,7 +49,6 @@ qt_internal_add_qml_module(QuickTest
         Qt::Test
     PRIVATE_MODULE_INTERFACE
         Qt::TestPrivate
-    GENERATE_CPP_EXPORTS
 )
 
 qt_internal_extend_target(QuickTest CONDITION QT_FEATURE_qml_debug

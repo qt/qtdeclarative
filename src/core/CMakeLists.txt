@@ -20,7 +20,6 @@ qt_internal_add_qml_module(QmlCore
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Qml
-    GENERATE_CPP_EXPORTS
     )
 
 qt_internal_extend_target(QmlCore CONDITION QT_FEATURE_settings

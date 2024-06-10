@@ -111,7 +111,6 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         Qt::Core
         Qt::Gui
         Qt::Quick
-    GENERATE_CPP_EXPORTS
 )
 
 add_dependencies(QuickDialogs2QuickImpl Qt::QuickControls2Basic)

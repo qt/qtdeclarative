@@ -24,5 +24,4 @@ qt_internal_add_module(QuickDialogs2Utils
         Qt::GuiPrivate
     PUBLIC_LIBRARIES
         Qt::Core
-    GENERATE_CPP_EXPORTS
     )

@@ -6,7 +6,6 @@
 #####################################################################
 
 qt_internal_add_module(QmlCompiler
-    GENERATE_CPP_EXPORTS
         PLUGIN_TYPES qmllint
     SOURCES
         qcoloroutput_p.h qcoloroutput.cpp
