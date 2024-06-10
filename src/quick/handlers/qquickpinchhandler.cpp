@@ -32,7 +32,7 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
     by default it is fully functional, and manipulates its \l target,
     which is the Item within which it is declared.
 
-    \snippet pointerHandlers/pinchHandler.qml 0
+    \snippet pointerHandlers/pinchHandlerSimple.qml 0
 
     It has properties to restrict the range of dragging, rotation, and zoom.
 
