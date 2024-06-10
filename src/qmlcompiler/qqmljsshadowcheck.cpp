@@ -154,7 +154,7 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
     else
         m_baseTypes.append(baseType);
 
-    if (baseType.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Reference)
+    if (!m_typeResolver->containedType(baseType)->isReferenceType())
         return NotShadowable;
 
     switch (baseType.variant()) {

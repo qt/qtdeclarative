@@ -157,11 +157,13 @@ public:
             const QQmlJSRegisterContent &listType, QQmlJS::AST::ForEachType type,
             int lookupIndex) const;
 
-    bool registerIsStoredIn(const QQmlJSRegisterContent &reg,
-                            const QQmlJSScope::ConstPtr &type) const;
     bool registerContains(const QQmlJSRegisterContent &reg,
                           const QQmlJSScope::ConstPtr &type) const;
-    QQmlJSScope::ConstPtr containedType(const QQmlJSRegisterContent &container) const;
+    QQmlJSScope::ConstPtr containedType(const QQmlJSRegisterContent &container) const
+    {
+        return container.containedType();
+    }
+
     QString containedTypeName(const QQmlJSRegisterContent &container,
                               bool useFancyName = false) const;
 

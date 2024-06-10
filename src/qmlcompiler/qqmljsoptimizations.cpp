@@ -127,6 +127,7 @@ void QQmlJSOptimizations::populateReaderLocations()
         } else {
             access.trackedTypes.append(
                     m_typeResolver->trackedContainedType(writeIt->second.changedRegister));
+            Q_ASSERT(!access.trackedTypes.last().isNull());
         }
 
         auto blockIt = QQmlJSBasicBlocks::basicBlockForInstruction(m_basicBlocks, writeIt.key());

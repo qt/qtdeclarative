@@ -588,10 +588,10 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
         return;
     }
 
-    const QQmlJSScope::ConstPtr outStored
-            = m_typeResolver->genericType(m_state.accumulatorOut().storedType());
+    const QQmlJSScope::ConstPtr retrieved
+            = m_typeResolver->genericType(m_state.accumulatorOut().containedType());
 
-    if (outStored.isNull()) {
+    if (retrieved.isNull()) {
         // It should really be valid.
         // We get the generic type from aotContext->loadQmlContextPropertyIdLookup().
         setError(u"Cannot determine generic type for "_s + name);
@@ -599,7 +599,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     }
 
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectById
-            && !outStored->isReferenceType()) {
+            && !retrieved->isReferenceType()) {
         setError(u"Cannot retrieve a non-object type by ID: "_s + name);
         return;
     }
@@ -675,7 +675,7 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
 
 
     if (m_typeResolver->canHoldUndefined(in) && !m_typeResolver->canHoldUndefined(type)) {
-        if (m_typeResolver->registerIsStoredIn(in, m_typeResolver->voidType()))
+        if (m_typeResolver->registerContains(in, m_typeResolver->voidType()))
             addReadAccumulator(m_typeResolver->globalType(m_typeResolver->varType()));
         else
             addReadAccumulator(in);
@@ -1023,13 +1023,13 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
         return;
     }
 
-    if (property.storedType().isNull()) {
+    if (m_typeResolver->containedType(property).isNull()) {
         setError(u"Cannot determine type for property %1 of type %2"_s.arg(
                 propertyName, callBase.descriptiveName()));
         return;
     }
 
-    if (!property.isWritable() && !property.storedType()->isListProperty()) {
+    if (!property.isWritable() && !m_typeResolver->containedType(property)->isListProperty()) {
         setError(u"Can't assign to read-only property %1"_s.arg(propertyName));
 
         m_logger->log(u"Cannot assign to read-only property %1"_s.arg(propertyName),
@@ -1734,7 +1734,7 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
         for (int i = 0; i < argc; ++i)
             addReadRegister(argv + i, intType);
 
-        setReturnType(baseType.storedType()->isListProperty()
+        setReturnType(m_typeResolver->containedType(baseType)->isListProperty()
                                ? m_typeResolver->qObjectListType()
                                : baseContained);
         return true;
@@ -2800,12 +2800,6 @@ QQmlJSRegisterContent QQmlJSTypePropagator::propagateBinaryOperation(QSOperator:
                 op, lhsRegister, m_state.accumulatorIn());
 
     setAccumulator(type);
-
-    // If we're dealing with QJSPrimitiveType, do not force premature conversion of the arguemnts
-    // to the target type. Such an operation can lose information.
-    if (type.storedType() == m_typeResolver->jsPrimitiveType())
-        return m_typeResolver->globalType(m_typeResolver->jsPrimitiveType());
-
     return type;
 }
 

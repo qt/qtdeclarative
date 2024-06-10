@@ -213,12 +213,12 @@ QT_WARNING_POP
         if (!registerIsArgument
                 && registerIndex != Accumulator
                 && registerIndex != This
-                && !m_typeResolver->registerIsStoredIn(
+                && !registerIsStoredIn(
                     function->registerTypes[registerIndex - firstRegisterIndex()],
                     m_typeResolver->voidType())) {
             result.code += registerIt->variableName + u" = "_s;
             result.code += convertStored(m_typeResolver->voidType(), storedType, QString());
-        } else if (registerIsArgument && m_typeResolver->registerIsStoredIn(
+        } else if (registerIsArgument && registerIsStoredIn(
                        argumentType(registerIndex), storedType)) {
             const int argumentIndex = registerIndex - FirstArgument;
             const QQmlJSRegisterContent argument
@@ -332,15 +332,15 @@ void QQmlJSCodeGenerator::generate_Ret()
             m_body += signalUndefined;
 
         }
-    } else if (m_typeResolver->registerIsStoredIn(
+    } else if (registerIsStoredIn(
                     m_state.accumulatorIn(), m_typeResolver->varType())) {
         m_body += u"    if (!"_s + in + u".isValid())\n"_s;
         m_body += u"        "_s + signalUndefined;
-    } else if (m_typeResolver->registerIsStoredIn(
+    } else if (registerIsStoredIn(
                    m_state.accumulatorIn(), m_typeResolver->jsPrimitiveType())) {
         m_body += u"    if ("_s + in + u".type() == QJSPrimitiveValue::Undefined)\n"_s;
         m_body += u"        "_s + signalUndefined;
-    } else if (m_typeResolver->registerIsStoredIn(
+    } else if (registerIsStoredIn(
                    m_state.accumulatorIn(), m_typeResolver->jsValueType())) {
         m_body += u"    if ("_s + in + u".isUndefined())\n"_s;
         m_body += u"        "_s + signalUndefined;
@@ -769,7 +769,7 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
     const QQmlJSRegisterContent baseType = registerType(base);
 
     if (!baseType.isList()
-            && !m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->stringType())) {
+            && !registerIsStoredIn(baseType, m_typeResolver->stringType())) {
         reject(u"LoadElement with non-list base type "_s + baseType.descriptiveName());
         return;
     }
@@ -810,7 +810,7 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
                 + u"else "_s;
     }
 
-    if (m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->listPropertyType())) {
+    if (registerIsStoredIn(baseType, m_typeResolver->listPropertyType())) {
         // Our QQmlListProperty only keeps plain QObject*.
         const auto elementType = m_typeResolver->globalType(m_typeResolver->qObjectType());
 
@@ -830,7 +830,7 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
     QString access = baseName + u".at("_s + indexName + u')';
 
     // TODO: Once we get a char type in QML, use it here.
-    if (m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->stringType()))
+    if (registerIsStoredIn(baseType, m_typeResolver->stringType()))
         access = u"QString("_s + access + u")"_s;
     else if (m_state.isRegisterAffectedBySideEffects(base))
         reject(u"LoadElement on a sequence potentially affected by side effects"_s);
@@ -876,7 +876,7 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
     else
         m_body += u"{\n"_s;
 
-    if (m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->listPropertyType())) {
+    if (registerIsStoredIn(baseType, m_typeResolver->listPropertyType())) {
         m_body += u"    if ("_s + indexName + u" < "_s + baseName + u".count(&"_s + baseName
                 + u"))\n"_s;
         m_body += u"        "_s + baseName + u".replace(&"_s + baseName
@@ -992,7 +992,7 @@ void QQmlJSCodeGenerator::generateTypeLookup(int index)
         reject(u"script lookup"_s);
         break;
     case QQmlJSRegisterContent::MetaType: {
-        if (!m_typeResolver->registerIsStoredIn(
+        if (!registerIsStoredIn(
                     m_state.accumulatorOut(), m_typeResolver->metaObjectType())) {
             // TODO: Can we trigger this somehow?
             //       It might be impossible, but we better be safe here.
@@ -1433,7 +1433,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
 
     Q_ASSERT(m_state.accumulatorOut().isProperty());
 
-    if (m_typeResolver->registerIsStoredIn(accumulatorIn, m_typeResolver->jsValueType())) {
+    if (registerIsStoredIn(accumulatorIn, m_typeResolver->jsValueType())) {
         reject(u"lookup in QJSValue"_s);
     } else if (isReferenceType) {
         const QString inputPointer = resolveQObjectPointer(
@@ -1472,8 +1472,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         } else {
             reject(u"access to 'length' property of sequence wrapped in non-sequence"_s);
         }
-    } else if (m_typeResolver->registerIsStoredIn(accumulatorIn,
-                                                  m_typeResolver->variantMapType())) {
+    } else if (registerIsStoredIn(accumulatorIn, m_typeResolver->variantMapType())) {
         QString mapLookup = m_state.accumulatorVariableIn + u"["_s
                 + QQmlJSUtils::toLiteral(m_jsUnitGenerator->lookupName(index)) + u"]"_s;
         m_body += m_state.accumulatorVariableOut + u" = "_s;
@@ -1548,7 +1547,7 @@ QString QQmlJSCodeGenerator::setLookupPreparation(
     if (m_typeResolver->registerContains(content, content.storedType()))
         return QString();
 
-    if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType())) {
+    if (registerIsStoredIn(content, m_typeResolver->varType())) {
         return u"const QMetaType argType = aotContext->lookupResultMetaType("_s
                 + QString::number(lookup) + u");\n"_s
                 + u"if (argType.isValid())\n    "_s + arg + u".convert(argType)";
@@ -2909,7 +2908,7 @@ QString QQmlJSCodeGenerator::getLookupPreparation(
     if (m_typeResolver->registerContains(content, content.storedType()))
         return QString();
 
-    if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType())) {
+    if (registerIsStoredIn(content, m_typeResolver->varType())) {
         return var + u" = QVariant(aotContext->lookupResultMetaType("_s
                 + QString::number(lookup) + u"))"_s;
     }
@@ -2923,8 +2922,8 @@ QString QQmlJSCodeGenerator::contentPointer(const QQmlJSRegisterContent &content
     if (m_typeResolver->registerContains(content, stored))
         return u'&' + var;
 
-    if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType())
-            || m_typeResolver->registerIsStoredIn(content, m_typeResolver->jsPrimitiveType())) {
+    if (registerIsStoredIn(content, m_typeResolver->varType())
+            || registerIsStoredIn(content, m_typeResolver->jsPrimitiveType())) {
         return var + u".data()"_s;
     }
 
@@ -2951,7 +2950,7 @@ QString QQmlJSCodeGenerator::contentType(const QQmlJSRegisterContent &content, c
         return metaTypeFromType(stored);
 
     if (m_typeResolver->equals(stored, m_typeResolver->varType())
-            || m_typeResolver->registerIsStoredIn(content, m_typeResolver->jsPrimitiveType())) {
+            || registerIsStoredIn(content, m_typeResolver->jsPrimitiveType())) {
         return var + u".metaType()"_s; // We expect the container to be initialized
     }
 
@@ -3092,8 +3091,8 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
         return;
     }
 
-    if (m_typeResolver->registerIsStoredIn(inputContent, m_typeResolver->varType())
-        || m_typeResolver->registerIsStoredIn(inputContent, m_typeResolver->jsPrimitiveType())) {
+    if (registerIsStoredIn(inputContent, m_typeResolver->varType())
+        || registerIsStoredIn(inputContent, m_typeResolver->jsPrimitiveType())) {
 
         const auto source = m_typeResolver->extractNonVoidFromOptionalType(
                 m_typeResolver->original(inputContent));
@@ -3885,7 +3884,7 @@ QString QQmlJSCodeGenerator::conversion(
     const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
 
     // If from is QJSPrimitiveValue and to contains a primitive we coerce using QJSPrimitiveValue
-    if (m_typeResolver->registerIsStoredIn(from, m_typeResolver->jsPrimitiveType())
+    if (registerIsStoredIn(from, m_typeResolver->jsPrimitiveType())
             && m_typeResolver->isPrimitive(to)) {
 
         QString primitive = [&]() {
@@ -3911,7 +3910,7 @@ QString QQmlJSCodeGenerator::conversion(
         return convertStored(m_typeResolver->jsPrimitiveType(), to.storedType(), primitive);
     }
 
-    if (m_typeResolver->registerIsStoredIn(to, contained)
+    if (registerIsStoredIn(to, contained)
             || m_typeResolver->isNumeric(to.storedType())
             || to.storedType()->isReferenceType()
             || m_typeResolver->registerContains(from, contained)) {
@@ -4230,12 +4229,12 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
 
     // Those should be handled before, by convertStored().
     Q_ASSERT(!to.storedType()->isReferenceType());
-    Q_ASSERT(!m_typeResolver->registerIsStoredIn(to, containedTo));
+    Q_ASSERT(!registerIsStoredIn(to, containedTo));
     Q_ASSERT(!m_typeResolver->isIntegral(from.storedType()));
     Q_ASSERT(!m_typeResolver->equals(containedFrom, containedTo));
 
-    if (!m_typeResolver->registerIsStoredIn(to, m_typeResolver->varType()) &&
-            !m_typeResolver->registerIsStoredIn(to, m_typeResolver->jsPrimitiveType())) {
+    if (!registerIsStoredIn(to, m_typeResolver->varType()) &&
+            !registerIsStoredIn(to, m_typeResolver->jsPrimitiveType())) {
         reject(u"internal conversion into unsupported wrapper type."_s);
         return QString();
     }
@@ -4329,7 +4328,7 @@ QQmlJSCodeGenerator::AccumulatorConverter::AccumulatorConverter(QQmlJSCodeGenera
         }
     } else if (generator->m_state.accumulatorVariableIn == generator->m_state.accumulatorVariableOut
                && generator->m_state.readsRegister(Accumulator)
-               && resolver->registerIsStoredIn(
+               && generator->registerIsStoredIn(
                    generator->m_state.accumulatorOut(), resolver->varType())) {
         // If both m_state.accumulatorIn and m_state.accumulatorOut are QVariant, we will need to
         // prepare the output QVariant, and afterwards use the input variant. Therefore we need to

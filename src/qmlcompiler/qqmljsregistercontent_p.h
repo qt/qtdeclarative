@@ -64,7 +64,7 @@ public:
     enum { InvalidLookupIndex = -1 };
 
     QQmlJSRegisterContent() = default;
-    bool isValid() const { return !m_storedType.isNull(); }
+    bool isValid() const { return !containedType().isNull(); }
 
     QString descriptiveName() const;
 
@@ -90,6 +90,7 @@ public:
     bool isWritable() const;
 
     QQmlJSScope::ConstPtr storedType() const { return m_storedType; }
+    QQmlJSScope::ConstPtr containedType() const;
     QQmlJSScope::ConstPtr scopeType() const { return m_scope; }
 
     QQmlJSScope::ConstPtr type() const
@@ -123,8 +124,24 @@ public:
     {
         return std::get<std::pair<QQmlJSMetaEnum, QString>>(m_content).second;
     }
-    QList<QQmlJSMetaMethod> method() const { return std::get<QList<QQmlJSMetaMethod>>(m_content); }
-    uint importNamespace() const { return std::get<uint>(m_content); }
+    QList<QQmlJSMetaMethod> method() const
+    {
+        return std::get<std::pair<QList<QQmlJSMetaMethod>, QQmlJSScope::ConstPtr>>(
+                       m_content).first;
+    }
+    QQmlJSScope::ConstPtr methodType() const
+    {
+        return std::get<std::pair<QList<QQmlJSMetaMethod>, QQmlJSScope::ConstPtr>>(
+                       m_content).second;
+    }
+    uint importNamespace() const
+    {
+        return std::get<std::pair<uint, QQmlJSScope::ConstPtr>>(m_content).first;
+    }
+    QQmlJSScope::ConstPtr importNamespaceType() const
+    {
+        return std::get<std::pair<uint, QQmlJSScope::ConstPtr>>(m_content).second;
+    }
 
     QQmlJSScope::ConstPtr conversionResult() const
     {
@@ -157,9 +174,11 @@ public:
             return qHash(std::get<std::pair<QQmlJSMetaEnum, QString>>(registerContent.m_content),
                          seed);
         case Method:
-            return qHash(std::get<QList<QQmlJSMetaMethod>>(registerContent.m_content), seed);
+            return qHash(std::get<std::pair<QList<QQmlJSMetaMethod>, QQmlJSScope::ConstPtr>>(
+                                 registerContent.m_content), seed);
         case ImportNamespace:
-            return qHash(std::get<uint>(registerContent.m_content), seed);
+            return qHash(std::get<std::pair<uint, QQmlJSScope::ConstPtr>>(
+                                 registerContent.m_content), seed);
         case Conversion:
             return qHash(std::get<ConvertedTypes>(registerContent.m_content), seed);
         }
@@ -268,8 +287,8 @@ private:
         std::pair<QQmlJSScope::ConstPtr, int>,
         PropertyLookup,
         std::pair<QQmlJSMetaEnum, QString>,
-        QList<QQmlJSMetaMethod>,
-        uint,
+        std::pair<QList<QQmlJSMetaMethod>, QQmlJSScope::ConstPtr>,
+        std::pair<uint, QQmlJSScope::ConstPtr>,
         ConvertedTypes
     >;
 

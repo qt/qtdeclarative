@@ -335,6 +335,12 @@ private:
             const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
             const QString &variable, const QString &errorMessage);
 
+    bool registerIsStoredIn(
+            const QQmlJSRegisterContent &reg, const QQmlJSScope::ConstPtr &type) const
+    {
+        return m_typeResolver->equals(reg.storedType(), type);
+    }
+
     // map from instruction offset to sequential label number
     QHash<int, QString> m_labels;
 

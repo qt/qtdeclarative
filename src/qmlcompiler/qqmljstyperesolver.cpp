@@ -386,33 +386,6 @@ bool QQmlJSTypeResolver::isNativeArrayIndex(const QQmlJSScope::ConstPtr &type) c
             || equals(type, m_int32Type));
 }
 
-QQmlJSScope::ConstPtr
-QQmlJSTypeResolver::containedType(const QQmlJSRegisterContent &container) const
-{
-    if (container.isType())
-        return container.type();
-    if (container.isProperty())
-        return container.property().type();
-    if (container.isEnumeration())
-        return container.enumeration().type();
-    if (container.isMethod())
-        return container.storedType(); // Methods can only be stored in QJSValue.
-    if (container.isImportNamespace()) {
-        switch (container.variant()) {
-        case QQmlJSRegisterContent::ScopeModulePrefix:
-            return container.storedType(); // We don't store scope module prefixes
-        case QQmlJSRegisterContent::ObjectModulePrefix:
-            return container.scopeType();  // We need to pass the original object through.
-        default:
-            Q_UNREACHABLE();
-        }
-    }
-    if (container.isConversion())
-        return container.conversionResult();
-
-    Q_UNREACHABLE_RETURN({});
-}
-
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::trackedType(const QQmlJSScope::ConstPtr &type) const
 {
     if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)
@@ -893,11 +866,11 @@ bool QQmlJSTypeResolver::canHoldUndefined(const QQmlJSRegisterContent &content) 
                 || equals(type, m_jsValueType) || equals(type, m_jsPrimitiveType);
     };
 
-    if (!canBeUndefined(content.storedType()))
+    if (!canBeUndefined(containedType(content)))
         return false;
 
     if (!content.isConversion())
-        return canBeUndefined(containedType(content));
+        return true;
 
     const auto origins = content.conversionOrigins();
     for (const auto &origin : origins) {
@@ -1833,12 +1806,6 @@ QQmlJSRegisterContent QQmlJSTypeResolver::iteratorPointer(
             storedType(iteratorPointer), prop, lookupIndex,
             QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::ListIterator,
             listContained);
-}
-
-bool QQmlJSTypeResolver::registerIsStoredIn(
-        const QQmlJSRegisterContent &reg, const QQmlJSScope::ConstPtr &type) const
-{
-    return equals(reg.storedType(), type);
 }
 
 bool QQmlJSTypeResolver::registerContains(const QQmlJSRegisterContent &reg,
