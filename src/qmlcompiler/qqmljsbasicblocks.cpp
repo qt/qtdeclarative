@@ -126,7 +126,7 @@ QQmlJSBasicBlocks::run(const Function *function, QQmlJSAotCompiler::Flags compil
     zeroBlock.jumpOrigins.append(m_basicBlocks.begin().key());
     m_basicBlocks.insert(0, zeroBlock);
 
-    const QByteArray byteCode = function->code;
+    const QByteArray &byteCode = function->code;
     decode(byteCode.constData(), static_cast<uint>(byteCode.size()));
     if (m_hadBackJumps) {
         // We may have missed some connections between basic blocks if there were back jumps.
