@@ -1,2 +1,4 @@
 [state]
 opensuse-leap # QTBUG-122031
+[active]
+opensuse-leap # QTBUG-75215
