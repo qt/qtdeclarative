@@ -30,7 +30,6 @@ qt_internal_add_qml_module(QmlModels
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
         Qt::QmlPrivate
-    GENERATE_CPP_EXPORTS
     )
 
 qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_itemmodel

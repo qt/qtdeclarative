@@ -177,7 +177,6 @@ qt_internal_add_qml_module(QuickControls2Basic
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
-    GENERATE_CPP_EXPORTS
 )
 
 target_sources(qtquickcontrols2basicstyleplugin

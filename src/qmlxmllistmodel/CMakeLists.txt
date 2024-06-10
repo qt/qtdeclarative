@@ -21,7 +21,6 @@ qt_internal_add_qml_module(QmlXmlListModel
         Qt::Qml
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
-    GENERATE_CPP_EXPORTS
     )
 
 qt_internal_add_docs(QmlXmlListModel

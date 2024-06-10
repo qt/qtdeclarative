@@ -53,7 +53,6 @@ qt_internal_add_qml_module(QmlWorkerScript
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
         Qt::QmlPrivate
-    GENERATE_CPP_EXPORTS
     )
 
 qt_internal_extend_target(QmlWorkerScript CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))

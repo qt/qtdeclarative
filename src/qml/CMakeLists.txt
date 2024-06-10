@@ -445,7 +445,6 @@ qt_internal_add_qml_module(Qml
     EXTRA_CMAKE_INCLUDES
         "${INSTALL_CMAKE_NAMESPACE}QmlFindQmlscInternal.cmake"
         ${extra_cmake_includes}
-    GENERATE_CPP_EXPORTS
     POLICIES
         QTP0001
         QTP0004
@@ -520,7 +519,6 @@ qt_internal_add_qml_module(QmlMeta
     LIBRARIES
         Qml
         QmlModels
-    GENERATE_CPP_EXPORTS
 )
 
 add_dependencies(QmlMeta BuiltinsOutput)
