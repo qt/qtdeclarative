@@ -65,8 +65,8 @@ QHash<int, QByteArray> QAndroidItemModelProxy::roleNames() const
     Q_ASSERT(jInstance.isValid());
 
     QHash<int, QByteArray> roleNames;
-    JHashMap hashMap = jInstance.callMethod<JHashMap>("roleNames");
-    JSet set = hashMap.callMethod<JSet>("keySet");
+    HashMap hashMap = jInstance.callMethod<HashMap>("roleNames");
+    Set set = hashMap.callMethod<Set>("keySet");
     QJniArray<jobject> keyArray = set.callMethod<QJniArray<jobject>>("toArray");
 
     for (auto key : keyArray) {
@@ -191,7 +191,7 @@ jobject QAndroidItemModelProxy::jni_roleNames(JNIEnv *env, jobject object)
 {
     auto roleNames = invokeNativeImpl(env, object, &QAndroidItemModelProxy::defaultRoleNames,
                                       &QAbstractItemModel::roleNames);
-    JHashMap jRoleNames{};
+    HashMap jRoleNames{};
     for (auto [role, roleName] : roleNames.asKeyValueRange()) {
         const Integer jRole(role);
         const QJniObject jRoleName = QJniObject::fromString(roleName);
