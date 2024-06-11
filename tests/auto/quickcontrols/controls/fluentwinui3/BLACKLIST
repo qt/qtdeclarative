@@ -4,6 +4,10 @@
 [BusyIndicator::test_visibility]
 *
 
+# until adding FluentWinUI3's own Page implementation
+[Page::test_layout]
+*
+
 # QTBUG-95750
 [RangeSlider::test_overlappingHandles]
 b2qt
