@@ -366,6 +366,24 @@ void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
     \c {0, 0} again.
 */
 
+/*!
+    \qmlproperty flags QtQuick::DragHandler::acceptedButtons
+
+    The mouse buttons that can activate this DragHandler.
+
+    By default, this property is set to
+    \l {QtQuick::MouseEvent::button} {Qt.LeftButton}.
+    It can be set to an OR combination of mouse buttons, and will ignore events
+    from other buttons.
+
+    For example, if a component (such as TextEdit) already handles
+    left-button drags in its own way, it can be augmented with a
+    DragHandler that does something different when dragged via the
+    right button:
+
+    \snippet pointerHandlers/dragHandlerAcceptedButtons.qml 0
+*/
+
 QT_END_NAMESPACE
 
 #include "moc_qquickdraghandler_p.cpp"
