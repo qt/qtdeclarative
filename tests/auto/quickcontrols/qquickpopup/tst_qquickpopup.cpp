@@ -119,6 +119,8 @@ private slots:
     void popupWindowAnchorsCenterIn();
     void popupWindowModality();
     void popupWindowClosesOnParentWindowClosing();
+    void initialPopupSize_data();
+    void initialPopupSize();
     void popupWindowChangingParent();
     void popupWindowFocus();
     void popupTypeChangeFromWindowToItem();
@@ -2590,6 +2592,50 @@ void tst_QQuickPopup::popupWindowClosesOnParentWindowClosing()
 
     QTRY_VERIFY(!window->isVisible());
     QTRY_VERIFY(!popupWindow->isVisible());
+}
+
+void tst_QQuickPopup::initialPopupSize_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+
+    QTest::newRow("Item") << QQuickPopup::Item;
+    if (popupWindowsSupported)
+        QTest::newRow("Window") << QQuickPopup::Window;
+}
+
+void tst_QQuickPopup::initialPopupSize()
+{
+    QFETCH(QQuickPopup::PopupType, popupType);
+    QQuickApplicationHelper helper(this, "reparentingPopup.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *popup = window->contentItem()->findChild<QQuickPopup *>();
+    QVERIFY(popup);
+    auto *popupPrivate = QQuickPopupPrivate::get(popup);
+    QVERIFY(popupPrivate);
+
+    popup->setPopupType(popupType);
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+
+    QCOMPARE(popup->width(), 200);
+    QCOMPARE(popup->height(), 200);
+
+    auto popupItem = popupPrivate->popupItem;
+    QCOMPARE(popupItem->width(), 200);
+    QCOMPARE(popupItem->height(), 200);
+
+    if (popupType == QQuickPopup::Window) {
+        auto *popupWindow = popupPrivate->popupWindow;
+        QVERIFY(popupWindow);
+        QVERIFY(popupWindow->isVisible());
+        QCOMPARE(popupWindow->width(), 200);
+        QCOMPARE(popupWindow->height(), 200);
+    }
 }
 
 void tst_QQuickPopup::popupWindowChangingParent()
