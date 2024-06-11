@@ -34,6 +34,8 @@ QtObject {
 
             ToolButton {
                 text: qsTr("ToolButton 3")
+                checkable: true
+                checked: true
             }
         }
     }
