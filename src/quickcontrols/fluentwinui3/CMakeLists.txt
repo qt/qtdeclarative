@@ -41,6 +41,7 @@ set(qml_files
     "ToolBar.qml"
     "ToolButton.qml"
     "ToolSeparator.qml"
+    "ToolTip.qml"
     "Config.qml" # TODO: move to impl module
     "StyleImage.qml" # TODO: move to impl module
 )
