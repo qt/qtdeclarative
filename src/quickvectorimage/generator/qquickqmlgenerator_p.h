@@ -18,10 +18,9 @@
 #include "qquickgenerator_p.h"
 
 #include <QtCore/qtextstream.h>
+#include <QtCore/qbuffer.h>
 
 QT_BEGIN_NAMESPACE
-
-class GeneratorStream;
 
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickQmlGenerator : public QQuickGenerator
 {
@@ -79,14 +78,16 @@ protected:
 
 private:
     void generateGradient(const QGradient *grad, const QRectF &boundingRect);
-    QString indent();
-    GeneratorStream stream();
+
+    QStringView indent();
+    enum StreamFlags { NoFlags = 0x0, SameLine = 0x1 };
+    QTextStream &stream(int flags = NoFlags);
     const char *shapeName() const;
 
 private:
     int m_indentLevel = 0;
-    QTextStream *m_stream;
-    QByteArray result;
+    QBuffer m_result;
+    QTextStream m_stream;
     QString outputFileName;
     bool m_inShapeItem = false;
     QByteArray m_shapeTypeName;
