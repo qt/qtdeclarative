@@ -18,63 +18,11 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcQuickVectorImage)
 
-class GeneratorStream
-{
-public:
-    explicit GeneratorStream(QTextStream *result)
-        : m_array(new QByteArray())
-        , m_stream(new QTextStream(m_array, QIODeviceBase::ReadWrite))
-        , m_resultStream(result)
-    {}
-
-    ~GeneratorStream()
-    {
-        if (m_stream) {
-            m_stream->flush();
-            delete m_stream;
-        }
-
-        if (m_resultStream && m_array && !m_array->isEmpty())
-            *m_resultStream << *m_array << Qt::endl;
-
-        delete m_array;
-    }
-
-    GeneratorStream(GeneratorStream &&other) noexcept
-        : m_array(std::exchange(other.m_array, nullptr))
-        , m_stream(std::exchange(other.m_stream, nullptr))
-        , m_resultStream(std::exchange(other.m_resultStream, nullptr))
-    {}
-    GeneratorStream &operator=(GeneratorStream &&other) noexcept
-    {
-        std::swap(m_resultStream, other.m_resultStream);
-        std::swap(m_stream, other.m_stream);
-        std::swap(m_array, other.m_array);
-
-        return *this;
-    }
-
-    Q_DISABLE_COPY(GeneratorStream)
-private:
-    template<typename T>
-    friend const GeneratorStream &operator<<(const GeneratorStream& str, T val);
-    QByteArray *m_array = nullptr;
-    QTextStream *m_stream = nullptr;
-    QTextStream *m_resultStream = nullptr;
-};
-
-template<typename T>
-const GeneratorStream &operator<<(const GeneratorStream& str, T val)
-{
-    *str.m_stream << val;
-    return str;
-}
-
 QQuickQmlGenerator::QQuickQmlGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags, const QString &outFileName)
     : QQuickGenerator(fileName, flags)
     , outputFileName(outFileName)
 {
-    m_stream = new QTextStream(&result);
+    m_result.open(QIODevice::ReadWrite);
 }
 
 QQuickQmlGenerator::~QQuickQmlGenerator()
@@ -85,17 +33,16 @@ QQuickQmlGenerator::~QQuickQmlGenerator()
         if (!dir.exists() && !dir.mkpath(QStringLiteral("."))) {
             qCWarning(lcQuickVectorImage) << "Failed to create path" << dir.absolutePath();
         } else {
+            stream().flush(); // Add a final newline and flush the stream to m_result
             QFile outFile(outputFileName);
             outFile.open(QIODevice::WriteOnly);
-            outFile.write(result);
+            outFile.write(m_result.data());
             outFile.close();
         }
     }
 
-    if (lcQuickVectorImage().isDebugEnabled()) {
-        result.truncate(300);
-        qCDebug(lcQuickVectorImage).noquote() << result;
-    }
+    if (lcQuickVectorImage().isDebugEnabled())
+        qCDebug(lcQuickVectorImage).noquote() << m_result.data().left(300);
 }
 
 void QQuickQmlGenerator::setShapeTypeName(const QString &name)
@@ -564,16 +511,22 @@ bool QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
     return true;
 }
 
-QString QQuickQmlGenerator::indent()
+QStringView QQuickQmlGenerator::indent()
 {
-    return QString().fill(QLatin1Char(' '), m_indentLevel * 4);
+    static QString indentString;
+    int indentWidth = m_indentLevel * 4;
+    if (indentWidth > indentString.size())
+        indentString.fill(QLatin1Char(' '), indentWidth * 2);
+    return QStringView(indentString).first(indentWidth);
 }
 
-GeneratorStream QQuickQmlGenerator::stream()
+QTextStream &QQuickQmlGenerator::stream(int flags)
 {
-    GeneratorStream strm(m_stream);
-    strm << indent();
-    return strm;
+    if (m_stream.device() == nullptr)
+        m_stream.setDevice(&m_result);
+    else if (!(flags & StreamFlags::SameLine))
+        m_stream << Qt::endl << indent();
+    return m_stream;
 }
 
 const char *QQuickQmlGenerator::shapeName() const
