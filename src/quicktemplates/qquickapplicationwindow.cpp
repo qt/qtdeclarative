@@ -8,6 +8,7 @@
 #include "qquicktextarea_p.h"
 #include "qquicktextfield_p.h"
 #include "qquicktoolbar_p.h"
+#include "qquicktooltip_p.h"
 #include <private/qtquicktemplates2-config_p.h>
 #if QT_CONFIG(quicktemplates2_container)
 #include "qquicktabbar_p.h"
@@ -135,9 +136,15 @@ public:
         // Update regular children
         QQuickWindowPrivate::updateChildrenPalettes(parentPalette);
 
-        // And cover one special case
-        for (auto &&popup : q_func()->findChildren<QQuickPopup *>())
-            QQuickPopupPrivate::get(popup)->updateContentPalettes(parentPalette);
+        // And cover special cases
+        for (auto &&child : q_func()->findChildren<QObject *>()) {
+            if (auto *popup = qobject_cast<QQuickPopup *>(child))
+                QQuickPopupPrivate::get(popup)->updateContentPalettes(parentPalette);
+            else if (auto *toolTipAttached = qobject_cast<QQuickToolTipAttached *>(child)) {
+                if (auto *toolTip = toolTipAttached->toolTip())
+                    QQuickPopupPrivate::get(toolTip)->updateContentPalettes(parentPalette);
+            }
+        }
     }
 
     QQuickDeferredPointer<QQuickItem> background;
