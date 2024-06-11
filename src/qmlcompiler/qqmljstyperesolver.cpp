@@ -982,8 +982,20 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
     if (type->scopeType() == QQmlSA::ScopeType::EnumScope)
         return type->baseType();
 
-    if (isPrimitive(type))
-        return type;
+    if (isPrimitive(type)) {
+        // If the filePath is set, the type is storable and we can just return it.
+        if (!type->filePath().isEmpty())
+            return type;
+
+        // If the type is JavaScript's 'number' type, it's not directly storable, but still
+        // primitive. We use C++ 'double' then.
+        if (isNumeric(type))
+            return m_realType;
+
+        // Otherwise we use QJSPrimitiveValue.
+        // TODO: JavaScript's 'string' and 'boolean' could be special-cased here.
+        return m_jsPrimitiveType;
+    }
 
     for (const QQmlJSScope::ConstPtr &builtin : {
                  m_realType, m_floatType, m_int8Type, m_uint8Type, m_int16Type, m_uint16Type,
