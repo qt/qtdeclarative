@@ -998,6 +998,8 @@ void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
     if (usePopupWindow()) {
         if (!popupWindow) {
             popupWindow = new QQuickPopupWindow(q, window);
+            popupWindow->setWidth(popupItem->width());
+            popupWindow->setHeight(popupItem->height());
             popupWindow->setModality(modal ? Qt::ApplicationModal : Qt::NonModal);
             popupItem->resetTitle();
             popupWindow->setTitle(m_title);
