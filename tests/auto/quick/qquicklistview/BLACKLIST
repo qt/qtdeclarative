@@ -13,3 +13,7 @@ macos ci
 android
 [contentHeightWithDelayRemove]
 android
+
+# QTBUG-123894
+[multipleTransitions]
+macos
