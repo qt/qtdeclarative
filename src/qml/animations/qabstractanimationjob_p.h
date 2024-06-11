@@ -193,7 +193,11 @@ public:
     void updateAnimationsTime(qint64 timeStep) override;
 
     //useful for profiling/debugging
+#ifdef QT_QAbstractAnimationTimer_runningAnimationCount_IS_CONST
+    qsizetype runningAnimationCount() const override { return animations.size(); }
+#else
     int runningAnimationCount() override { return animations.size(); }
+#endif
 
     bool hasStartAnimationPending() const { return startAnimationPending; }
 

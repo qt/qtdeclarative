@@ -22,6 +22,7 @@
 #include <QtQml/private/qqmlprofilerdefinitions_p.h>
 #endif
 
+#include <QtCore/private/qnumeric_p.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qsize.h>
 #include <QtCore/qmutex.h>
@@ -206,11 +207,12 @@ public:
 
     static void animationFrame(qint64 delta, AnimationThread threadId)
     {
-        int animCount = QUnifiedTimer::instance()->runningAnimationCount();
+        const qsizetype animCount = QUnifiedTimer::instance()->runningAnimationCount();
 
         if (animCount > 0 && delta > 0) {
             s_instance->processMessage(QQuickProfilerData(s_instance->timestamp(), 1 << Event,
-                    1 << AnimationFrame, 1000 / (int)delta /* trim fps to integer */, animCount,
+                    1 << AnimationFrame, 1000 / (int)delta /* trim fps to integer */,
+                    qt_saturate<int>(animCount),
                     threadId));
         }
     }
