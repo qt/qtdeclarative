@@ -60,6 +60,7 @@ void tst_HowToQml::activeFocusDebugging()
 
     auto *window = qobject_cast<QQuickWindow*>(engine.rootObjects().at(0));
     window->show();
+    window->requestActivate();
     QTest::ignoreMessage(QtDebugMsg, QRegularExpression("activeFocusItem: .*\"ActiveFocusDebuggingMain\""));
     QVERIFY(QTest::qWaitForWindowActive(window));
 
