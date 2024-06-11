@@ -22,6 +22,7 @@ QT_BEGIN_NAMESPACE
 // Try to keep these consistent with the widget windows11 style
 enum WinUI3Color {
     solidBackground,                    // Solid background color used for the bottom most layer
+    acrylicBackgroundDefault,           // Acrylic background for popups/tooltips
     textPrimary,                        // Color for UI labels and static text
     textSecondary,                      // Color for text in pressed controls
     textDisabled,                       // Color for disabled text
@@ -41,6 +42,7 @@ enum WinUI3Color {
 
 const static QColor WINUI3ColorsLight [] {
     QColor(0xF3,0xF3,0xF3,0xFF), //solidBackgroundColor
+    QColor(0xFC,0xFC,0xFC,0xFF), //acrylicBackgroundDefault
     QColor(0x00,0x00,0x00,0xE4), //textPrimary
     QColor(0x00,0x00,0x00,0x9E), //textSecondary
     QColor(0x00,0x00,0x00,0x5C), //textDisabled
@@ -60,6 +62,7 @@ const static QColor WINUI3ColorsLight [] {
 
 const static QColor WINUI3ColorsDark[] {
     QColor(0x20,0x20,0x20,0xFF), //solidBackgroundColor
+    QColor(0x2C,0x2C,0x2C,0xFF), //acrylicBackgroundDefault
     QColor(0xFF,0xFF,0xFF,0xFF), //textPrimary
     QColor(0xFF,0xFF,0xFF,0xC5), //textSecondary
     QColor(0xFF,0xFF,0xFF,0x5D), //textDisabled
@@ -102,6 +105,10 @@ static void populateSystemPalette(QPalette &palette)
     palette.setColor(QPalette::All, QPalette::ButtonText, WINUI3Colors[colorSchemeIndex][textPrimary]);
     palette.setColor(QPalette::Disabled, QPalette::ButtonText, WINUI3Colors[colorSchemeIndex][textDisabled]);
 
+    palette.setColor(QPalette::All, QPalette::ToolTipBase, WINUI3Colors[colorSchemeIndex][acrylicBackgroundDefault]);
+    palette.setColor(QPalette::All, QPalette::ToolTipText, WINUI3Colors[colorSchemeIndex][textPrimary]);
+    palette.setColor(QPalette::Disabled, QPalette::ToolTipText, WINUI3Colors[colorSchemeIndex][textDisabled]);
+
     palette.setColor(QPalette::Disabled, QPalette::Accent, WINUI3Colors[colorSchemeIndex][accentDisabled]);
     palette.setColor(QPalette::Disabled, QPalette::Highlight, WINUI3Colors[colorSchemeIndex][accentDisabled]);
 
@@ -117,6 +124,7 @@ static void populateThemeFont(QQuickTheme *theme)
 {
     QFont systemFont;
     QFont toolBarFont;
+    QFont toolTipFont;
 
     const QLatin1String segoeUiFamilyName("Segoe UI Variable");
     if (QFontDatabase::families().contains(segoeUiFamilyName)) {
@@ -127,12 +135,15 @@ static void populateThemeFont(QQuickTheme *theme)
     }
     systemFont.setWeight(QFont::Weight::Normal);
     toolBarFont.setWeight(QFont::Weight::Normal);
+    toolTipFont.setWeight(QFont::Weight::Normal);
 
     systemFont.setPixelSize(14);
     toolBarFont.setPixelSize(12);
+    toolTipFont.setPixelSize(12);
 
     theme->setFont(QQuickTheme::System, systemFont);
     theme->setFont(QQuickTheme::ToolBar, toolBarFont);
+    theme->setFont(QQuickTheme::ToolTip, toolTipFont);
 }
 
 void QQuickFluentWinUI3Theme::updatePalette(QPalette &palette)
