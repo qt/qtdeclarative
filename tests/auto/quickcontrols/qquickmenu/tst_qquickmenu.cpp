@@ -81,6 +81,7 @@ private slots:
     void subMenuPosition();
     void subMenuWithIcon();
     void addRemoveSubMenus();
+    void subMenuPopupType();
     void scrollable_data();
     void scrollable();
     void disableWhenTriggered_data();
@@ -110,6 +111,7 @@ private slots:
 
 private:
     bool nativeMenuSupported = false;
+    bool popupWindowsSupported = false;
 };
 
 // This allows us to use QQuickMenuItem's more descriptive operator<< output
@@ -126,6 +128,7 @@ tst_QQuickMenu::tst_QQuickMenu()
 {
     std::unique_ptr<QPlatformMenu> platformMenu(QGuiApplicationPrivate::platformTheme()->createPlatformMenu());
     nativeMenuSupported = platformMenu != nullptr;
+    popupWindowsSupported = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows);
 }
 
 void tst_QQuickMenu::init()
@@ -1834,6 +1837,92 @@ void tst_QQuickMenu::addRemoveSubMenus()
     QVERIFY(subSubMenu1.isNull());
     QCoreApplication::sendPostedEvents(subSubMenu1Item, QEvent::DeferredDelete);
     QVERIFY(subSubMenu1Item.isNull());
+}
+
+void tst_QQuickMenu::subMenuPopupType()
+{
+    // Check that all sub-menus will end up with an effective popup
+    // type equal to the root menu.
+    QQuickControlsApplicationHelper helper(this, QLatin1String("subMenus.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
+    auto *subMenu1 = window->property("subMenu1").value<QQuickMenu *>();
+    auto *subSubMenu1 = window->property("subSubMenu1").value<QQuickMenu *>();
+    QVERIFY(mainMenu);
+    QVERIFY(subMenu1);
+    QVERIFY(subSubMenu1);
+    auto *mainMenu_d = QQuickMenuPrivate::get(mainMenu);
+    auto *subMenu1_d = QQuickMenuPrivate::get(subMenu1);
+    auto *subSubMenu1_d = QQuickMenuPrivate::get(subSubMenu1);
+
+    mainMenu->setPopupType(QQuickPopup::Item);
+    QCOMPARE(mainMenu->popupType(), QQuickPopup::Item);
+    mainMenu->open();
+    QTRY_VERIFY(mainMenu->isOpened());
+    QCOMPARE(mainMenu_d->resolvedPopupType(), QQuickPopup::Item);
+    QCOMPARE(subMenu1_d->resolvedPopupType(), QQuickPopup::Item);
+    QCOMPARE(subSubMenu1_d->resolvedPopupType(), QQuickPopup::Item);
+    mainMenu->close();
+    QTRY_VERIFY(!mainMenu->isVisible());
+
+    // Even if we set QQuickPopup::Window as preferred popup type for
+    // subMenu1, the the effective type will still be the same as the
+    // parent menu: QQuickPopup::Item
+    subMenu1->setPopupType(QQuickPopup::Window);
+    QCOMPARE(subMenu1->popupType(), QQuickPopup::Window);
+    QCOMPARE(mainMenu->popupType(), QQuickPopup::Item);
+    mainMenu->open();
+    QTRY_VERIFY(mainMenu->isOpened());
+    QCOMPARE(mainMenu_d->resolvedPopupType(), QQuickPopup::Item);
+    QCOMPARE(subMenu1_d->resolvedPopupType(), QQuickPopup::Item);
+    QCOMPARE(subSubMenu1_d->resolvedPopupType(), QQuickPopup::Item);
+    mainMenu->close();
+    QTRY_VERIFY(!mainMenu->isVisible());
+
+    // Setting QQuickPopup::Window on the root menu will force all sub-menus
+    // to use QQuickPopup::Window as well, if it's supported on the platform
+    // where the test runs. Otherwise it will fall back to QQuickPopup::Item.
+    const QQuickPopup::PopupType windowIfSupportedElseItem =
+        popupWindowsSupported ? QQuickPopup::Window : QQuickPopup::Item;
+    mainMenu->setPopupType(QQuickPopup::Window);
+    QCOMPARE(mainMenu->popupType(), QQuickPopup::Window);
+    QCOMPARE(subMenu1->popupType(), QQuickPopup::Window);
+    mainMenu->open();
+    QTRY_VERIFY(mainMenu->isOpened());
+    QCOMPARE(mainMenu_d->resolvedPopupType(), windowIfSupportedElseItem);
+    QCOMPARE(subMenu1_d->resolvedPopupType(), windowIfSupportedElseItem);
+    QCOMPARE(subSubMenu1_d->resolvedPopupType(), windowIfSupportedElseItem);
+    mainMenu->close();
+    QTRY_VERIFY(!mainMenu->isVisible());
+
+    // Setting QQuickPopup::Native on the root menu will force all sub-menus
+    // to use QQuickPopup::Native as well, if it's supported on the platform
+    // where the test runs. Otherwise it will fall back to either
+    // QQuickPopup::Window or QQuickPopup::Item.
+    mainMenu->setPopupType(QQuickPopup::Native);
+    QCOMPARE(mainMenu->popupType(), QQuickPopup::Native);
+    QCOMPARE(subMenu1->popupType(), QQuickPopup::Window);
+    if (nativeMenuSupported) {
+        // Note that we cannot actually show a native popup while testing, since
+        // that will be a blocking call. Instead we just verify that we
+        // intend to use a native menu.
+        QVERIFY(mainMenu_d->useNativeMenu());
+        QVERIFY(subMenu1_d->useNativeMenu());
+        QVERIFY(subSubMenu1_d->useNativeMenu());
+    } else {
+        // When Native is not supported, we fall back to either Window or Item
+        mainMenu->open();
+        QTRY_VERIFY(mainMenu->isOpened());
+        QCOMPARE(mainMenu_d->resolvedPopupType(), windowIfSupportedElseItem);
+        QCOMPARE(subMenu1_d->resolvedPopupType(), windowIfSupportedElseItem);
+        QCOMPARE(subSubMenu1_d->resolvedPopupType(), windowIfSupportedElseItem);
+        mainMenu->close();
+        QTRY_VERIFY(!mainMenu->isVisible());
+    }
 }
 
 void tst_QQuickMenu::scrollable_data()

@@ -596,9 +596,10 @@ bool QQuickDrawerPrivate::prepareExitTransition()
     return QQuickPopupPrivate::prepareExitTransition();
 }
 
-Qt::WindowFlags QQuickDrawerPrivate::popupWindowType() const
+QQuickPopup::PopupType QQuickDrawerPrivate::resolvedPopupType() const
 {
-    return Qt::Widget;
+    // For now, a drawer will always be shown in-scene
+    return QQuickPopup::Item;
 }
 
 bool QQuickDrawerPrivate::setEdge(Qt::Edge e)

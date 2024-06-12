@@ -974,11 +974,28 @@ QPalette QQuickPopupPrivate::defaultPalette() const
     return QQuickTheme::palette(QQuickTheme::System);
 }
 
+QQuickPopup::PopupType QQuickPopupPrivate::resolvedPopupType() const
+{
+    // Whether or not the resolved popup type ends up the same as the preferred popup type
+    // depends on platform capabilities, the popup subclass, and sometimes also the location
+    // of the popup in the parent hierarchy (menus). This function can therefore be overridden
+    // to return the actual popup type that should be used, based on the knowledge the popup
+    // has just before it's about to be shown.
+
+    // PopupType::Native is not directly supported by QQuickPopup (only by subclasses).
+    // So for that case, we fall back to use PopupType::Window, if supported.
+    if (m_popupType == QQuickPopup::PopupType::Window
+        || m_popupType == QQuickPopup::PopupType::Native) {
+        if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows))
+            return QQuickPopup::PopupType::Window;
+    }
+
+    return QQuickPopup::PopupType::Item;
+}
+
 bool QQuickPopupPrivate::usePopupWindow() const
 {
-    return QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows)
-            && m_popupType == QQuickPopup::PopupType::Window
-            && popupWindowType() != Qt::Widget; // We use Qt::Widget here, to allow some popup derived types, like drawer, to opt out of using separate windows.
+    return resolvedPopupType() == QQuickPopup::PopupType::Window;
 }
 
 void QQuickPopupPrivate::adjustPopupItemParentAndWindow()

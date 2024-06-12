@@ -104,6 +104,9 @@ public:
     void destroyDimmer();
     void toggleOverlay();
     void updateContentPalettes(const QPalette& parentPalette);
+
+    virtual QQuickPopup::PopupType resolvedPopupType() const;
+
     virtual void showDimmer();
     virtual void hideDimmer();
     virtual void resizeDimmer();
