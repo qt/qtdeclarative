@@ -1220,7 +1220,7 @@ int Lexer::scanNumber(QChar ch)
                 _state.errorCode = IllegalNumber;
                 _errorMessage = QCoreApplication::translate(
                     "QQmlParser",
-                    "There can be at most one numeric separator beetwen digits"
+                    "There can be at most one numeric separator between digits"
                 );
                 return false;
             }

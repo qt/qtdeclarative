@@ -547,7 +547,7 @@ void tst_qqmlparser::invalidNumericSeparator_data() {
     QTest::addColumn<QString>("error");
 
     QTest::newRow("Trailing numeric separator") << "1_" << "A trailing numeric separator is not allowed in numeric literals";
-    QTest::newRow("Multiple numeric separators") << "1__2" << "There can be at most one numeric separator beetwen digits";
+    QTest::newRow("Multiple numeric separators") << "1__2" << "There can be at most one numeric separator between digits";
 }
 
 void tst_qqmlparser::invalidNumericSeparator() {
