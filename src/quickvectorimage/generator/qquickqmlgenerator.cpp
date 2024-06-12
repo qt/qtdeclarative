@@ -80,17 +80,9 @@ void QQuickQmlGenerator::generateNodeBase(const NodeInfo &info)
         } else if (info.transform.type() == QTransform::TxScale && !x && !y) {
             stream() << "transform: Scale { xScale: " << sx << "; yScale: " << sy << " }";
         } else {
-            const QMatrix4x4 m(info.transform);
-            {
-                stream() << "transform: [ Matrix4x4 { matrix: Qt.matrix4x4 (";
-                m_indentLevel += 3;
-                const auto *data = m.data();
-                for (int i = 0; i < 4; i++) {
-                    stream() << data[i] << ", " << data[i+4] << ", " << data[i+8] << ", " << data[i+12] << ", ";
-                }
-                stream() << ")  } ]";
-                m_indentLevel -= 3;
-            }
+            stream() << "transform: Matrix4x4 { matrix: ";
+            generateTransform(info.transform);
+            stream(SameLine) << " }";
         }
     }
     if (!info.isDefaultOpacity) {
@@ -222,6 +214,28 @@ void QQuickQmlGenerator::generateGradient(const QGradient *grad, const QRectF &b
     }
 }
 
+void QQuickQmlGenerator::generateTransform(const QTransform &xf)
+{
+    if (xf.isAffine()) {
+        stream(SameLine) << "PlanarTransform.fromAffineMatrix("
+                         << xf.m11() << ", " << xf.m12() << ", "
+                         << xf.m21() << ", " << xf.m22() << ", "
+                         << xf.dx() << ", " << xf.dy() << ")";
+    } else {
+        QMatrix4x4 m(xf);
+        stream(SameLine) << "Qt.matrix4x4(";
+        m_indentLevel += 3;
+        const auto *data = m.data();
+        for (int i = 0; i < 4; i++) {
+            stream() << data[i] << ", " << data[i+4] << ", " << data[i+8] << ", " << data[i+12];
+            if (i < 3)
+                stream(SameLine) << ", ";
+        }
+        stream(SameLine) << ")";
+        m_indentLevel -= 3;
+    }
+}
+
 void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainterPath *painterPath, const QQuadPath *quadPath, QQuickVectorImageGenerator::PathSelector pathSelector, const QRectF &boundingRect)
 {
     Q_UNUSED(pathSelector)
@@ -275,6 +289,18 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     } else {
         stream() << "fillColor: \"" << info.fillColor.name(QColor::HexArgb) << "\"";
     }
+
+    if (!info.fillTransform.isIdentity()) {
+        const QTransform &xf = info.fillTransform;
+        stream() << "fillTransform: ";
+        if (info.fillTransform.type() == QTransform::TxTranslate)
+            stream(SameLine) << "PlanarTransform.fromTranslate(" << xf.dx() << ", " << xf.dy() << ")";
+        else if (info.fillTransform.type() == QTransform::TxScale && !xf.dx() && !xf.dy())
+            stream(SameLine) << "PlanarTransform.fromScale(" << xf.m11() << ", " << xf.m22() << ")";
+        else
+            generateTransform(xf);
+    }
+
     if (fillRule == QQuickShapePath::WindingFill)
         stream() << "fillRule: ShapePath.WindingFill";
     else

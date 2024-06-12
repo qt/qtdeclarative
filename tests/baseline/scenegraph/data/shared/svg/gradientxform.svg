@@ -1,0 +1,62 @@
+<svg viewBox="0 0 380 800" xmlns="http://www.w3.org/2000/svg">
+  <radialGradient
+    id="gradient1"
+    gradientUnits="userSpaceOnUse"
+    cx="100"
+    cy="100"
+    r="100"
+    fx="100"
+    fy="100"
+    gradientTransform="translate(100 0)">
+    <stop offset="0%" stop-color="darkblue" />
+    <stop offset="50%" stop-color="skyblue" />
+    <stop offset="100%" stop-color="darkblue" />
+  </radialGradient>
+  <radialGradient
+    id="gradient2"
+    gradientUnits="userSpaceOnUse"
+    cx="100"
+    cy="100"
+    r="100"
+    fx="100"
+    fy="100"
+    gradientTransform="scale(2 1)">
+    <stop offset="0%" stop-color="darkblue" />
+    <stop offset="50%" stop-color="skyblue" />
+    <stop offset="100%" stop-color="darkblue" />
+  </radialGradient>
+  <radialGradient
+    id="gradient3"
+    gradientUnits="userSpaceOnUse"
+    cx="100"
+    cy="100"
+    r="100"
+    fx="100"
+    fy="100"
+    gradientTransform="skewX(40)">
+    <stop offset="0%" stop-color="darkblue" />
+    <stop offset="50%" stop-color="skyblue" />
+    <stop offset="100%" stop-color="darkblue" />
+  </radialGradient>
+
+  <rect x="0" y="0" width="300" height="100" fill="url(#gradient1)" />
+  <text font-size="124" x="0" y="200" stroke="black" fill="url(#gradient1)">XLAT</text>
+
+  <g transform="translate(0 250)">
+    <rect x="0" y="0" width="300" height="100" fill="url(#gradient2)" />
+    <text font-size="124" x="0" y="200" stroke="black" fill="url(#gradient2)">SCAL</text>
+  </g>
+  
+  <g transform="translate(0 500)">
+    <rect x="0" y="0" width="300" height="100" fill="url(#gradient3)" />
+    <text font-size="124" x="0" y="200" stroke="black" fill="url(#gradient3)">SKEW</text>
+  </g>
+  
+  <!--
+  <g font-family="Arial" font-size="92" transform="translate(50 0)">
+    <text x="0" y="100" stroke="black" fill="url(#gradient1)">TEST</text>
+  </g>
+-->
+</svg>
+
+ 

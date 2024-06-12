@@ -161,6 +161,8 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
         shapePath->setFillColor(info.fillColor);
 
     shapePath->setFillRule(fillRule);
+    if (!info.fillTransform.isIdentity())
+        shapePath->setFillTransform(info.fillTransform);
 
     QString svgPathString = painterPath ? QQuickVectorImageGenerator::Utils::toSvgString(*painterPath) : QQuickVectorImageGenerator::Utils::toSvgString(*quadPath);
 
