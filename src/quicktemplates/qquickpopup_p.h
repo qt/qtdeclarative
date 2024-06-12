@@ -313,7 +313,6 @@ public:
     void resetBottomInset();
 
     enum PopupType {
-        Default,
         Item,
         Window,
         Native

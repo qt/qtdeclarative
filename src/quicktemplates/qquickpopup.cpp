@@ -2799,13 +2799,6 @@ QQuickPopup::PopupType QQuickPopup::popupType() const
 void QQuickPopup::setPopupType(PopupType popupType)
 {
     Q_D(QQuickPopup);
-    // If the user tries to use popup windows on a platform or type that doesn't support it, change it back to default.
-    if (popupType == PopupType::Window && (d->popupWindowType() == Qt::Widget
-            || !QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows))) {
-        popupType = PopupType::Default;
-        qmlWarning(this) << "Popup.Window can not be used by this particular popup type, or on this particular platform.";
-    }
-
     if (d->m_popupType == popupType)
         return;
 
@@ -2816,7 +2809,7 @@ void QQuickPopup::setPopupType(PopupType popupType)
 
 void QQuickPopup::resetPopupType()
 {
-    setPopupType(PopupType::Default);
+    setPopupType(PopupType::Item);
 }
 
 /*!
