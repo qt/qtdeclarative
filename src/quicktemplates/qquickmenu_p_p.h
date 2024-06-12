@@ -121,6 +121,7 @@ public:
     static void contentData_clear(QQmlListProperty<QObject> *prop);
 
     QPalette defaultPalette() const override;
+    virtual QQuickPopup::PopupType resolvedPopupType() const override;
 
     bool cascade = false;
     bool triedToCreateNativeMenu = false;

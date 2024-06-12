@@ -54,7 +54,7 @@ public:
     bool prepareEnterTransition() override;
     bool prepareExitTransition() override;
 
-    Qt::WindowFlags popupWindowType() const override;
+    QQuickPopup::PopupType resolvedPopupType() const override;
 
     bool setEdge(Qt::Edge edge);
     Qt::Edge effectiveEdge() const;

@@ -338,6 +338,21 @@ QQuickMenu *QQuickMenuPrivate::rootMenu() const
     return const_cast<QQuickMenu *>(rootMenu);
 }
 
+ QQuickPopup::PopupType QQuickMenuPrivate::resolvedPopupType() const
+{
+    // The resolved popup type is decided by the root
+    // menu (which can be this menu, unless it's a child menu).
+    QQuickMenuPrivate *root_d = QQuickMenuPrivate::get(rootMenu());
+
+    // If the root menu is native, then so should we. We assume here that
+    // the root menu is always shown and created first, before we try to
+    // show and create a child menu.
+    if (root_d->maybeNativeHandle())
+        return QQuickPopup::PopupType::Native;
+
+    return root_d->QQuickPopupPrivate::resolvedPopupType();
+}
+
 bool QQuickMenuPrivate::useNativeMenu() const
 {
     // If we're inside a MenuBar, it'll decide whether or not we
@@ -346,7 +361,7 @@ bool QQuickMenuPrivate::useNativeMenu() const
     QQuickMenu *root = rootMenu();
     if (auto menuBar = QQuickMenuPrivate::get(root)->menuBar.get())
         return QQuickMenuBarPrivate::get(menuBar)->useNativeMenu(q_func());
-    return m_popupType == QQuickPopup::Native;
+    return root->popupType() == QQuickPopup::Native;
 }
 
 QPlatformMenu *QQuickMenuPrivate::nativeHandle()
