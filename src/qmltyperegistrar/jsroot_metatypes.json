@@ -9560,6 +9560,13 @@
                         ],
                         "isJavaScriptFunction": true,
                         "name": "valueOf"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                        ],
+                        "isJavaScriptFunction": true,
+                        "name": "shift"
                     }
                 ],
                 "object": true,
