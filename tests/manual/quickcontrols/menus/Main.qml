@@ -35,7 +35,7 @@ ApplicationWindow {
             id: fileMenu
             objectName: "file"
             title: qsTr("&File")
-            popupType: popupTypeCombo.currentIndex
+            popupType: popupTypeCombo.popupType()
             ContextAction { text: qsTr("&New...") }
             ContextMenuItem { text: "menuItem" }
             ContextAction { text: qsTr("&Open...") }
@@ -61,7 +61,7 @@ ApplicationWindow {
             id: editMenu
             objectName: "edit"
             title: qsTr("&Edit")
-            popupType: popupTypeCombo.currentIndex
+            popupType: popupTypeCombo.popupType()
             ContextAction {
                 id: cutAction
                 text: qsTr("Cut")
@@ -106,7 +106,7 @@ ApplicationWindow {
                 id: menuBarItemMenu
                 objectName: "MenuBarItem"
                 title: "MenuBarItem"
-                popupType: popupTypeCombo.currentIndex
+                popupType: popupTypeCombo.popupType()
                 ContextAction { text: qsTr("Action") }
                 Action {
                     text: qsTr("Remove menu")
@@ -170,9 +170,18 @@ ApplicationWindow {
 
                     ComboBox {
                         id: popupTypeCombo
-                        model: ["Default", "Item", "Window", "Native"]
+                        model: ["Item", "Window", "Native"]
                         onCurrentIndexChanged: CppSettings.popupType = currentIndex
                         currentIndex: CppSettings.popupType
+
+                        function popupType() {
+                            if (currentText === "Window")
+                                return Popup.Window
+                            else if (currentText === "Native")
+                                return Popup.Native
+                            else
+                                return Popup.Item
+                        }
                     }
                 }
 
@@ -323,7 +332,7 @@ ApplicationWindow {
     Menu {
         id: backgroundContextMenu
         objectName: "backgroundContextMenu"
-        popupType: popupTypeCombo.currentIndex
+        popupType: popupTypeCombo.popupType()
 
         function appendAction() {
             let action = actionComponent.createObject(null, { text: qsTr("Extra context menu item") })
@@ -390,7 +399,7 @@ ApplicationWindow {
             id: subMenu
             title: qsTr("Sub-menu")
             objectName: title
-            popupType: backgroundContextMenu.popupType
+            popupType: popupTypeCombo.popupType()
 
             function appendAction() {
                 let action = actionComponent.createObject(null, { text: qsTr("Extra sub-menu item") })
