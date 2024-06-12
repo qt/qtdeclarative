@@ -139,7 +139,11 @@ Ui.ApplicationWindow {
                 text: "\ue801"
                 font.family: "fontello"
                 visible: searchTextField.length > 0
-                onClicked: searchTextField.clear()
+                onClicked: {
+                    searchTextField.clear()
+                    // textEdited is not emitted for clear(), so we have to set this ourselves.
+                    settings.lastSearchText = ""
+                }
 
                 Layout.leftMargin: -5
             }
