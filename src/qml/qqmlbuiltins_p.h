@@ -541,7 +541,7 @@ struct QQmlQJsonValueForeign
     Q_GADGET
     QML_ANONYMOUS
     QML_FOREIGN(QJsonValue)
-    QML_EXTENDED_JAVASCRIPT(Object)
+    QML_EXTENDED(QQmlQJsonValueForeign)
 };
 
 struct QQmlQJsonArrayForeign
