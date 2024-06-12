@@ -605,18 +605,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17040;8622:13107;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator-checked.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-checked"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -679,18 +679,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17050;8622:13117;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator-checked-disabled.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-checked-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -753,18 +753,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17054;8622:13121;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator-checked-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-checked-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -827,18 +827,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17052;8622:13119;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator-checked-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-checked-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -901,18 +901,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17056;8622:13123;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator-disabled.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -975,18 +975,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17048;8622:13115;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator-disabled-partiallyChecked.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-disabled-partiallyChecked"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -1049,18 +1049,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17036;8622:13103;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -1123,18 +1123,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17044;8622:13111;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator-hovered-partiallyChecked.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-hovered-partiallyChecked"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -1197,18 +1197,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17034;8622:13101;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -1271,18 +1271,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17042;8622:13109;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator-partiallyChecked.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-partiallyChecked"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -1345,18 +1345,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17046;8622:13113;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator-partiallyChecked-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-partiallyChecked-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -1419,18 +1419,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17038;8622:13105;2425:10953"
                         readonly property string filePath: "dark/images/checkbox-indicator-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -1497,18 +1497,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17071;2407:10440;2397:10731"
                         readonly property string filePath: "dark/images/combobox-indicator-disabled.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8219
@@ -1617,18 +1617,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I4677:11470;4606:28948;2397:10731"
                         readonly property string filePath: "dark/images/combobox-indicator-focused.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-focused"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8219
@@ -1737,18 +1737,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17061;2397:10784;2397:10731"
                         readonly property string filePath: "dark/images/combobox-indicator-hovered.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8195.5
@@ -1857,18 +1857,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17067;2407:10424;2397:10731"
                         readonly property string filePath: "dark/images/combobox-indicator-hovered-open.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-hovered-open"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8219
@@ -1977,18 +1977,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17059;2397:10736;2397:10731"
                         readonly property string filePath: "dark/images/combobox-indicator.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8195.5
@@ -2097,18 +2097,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17065;2399:10706;2397:10731"
                         readonly property string filePath: "dark/images/combobox-indicator-open.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-open"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8219
@@ -2217,18 +2217,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17069;2407:10432;2397:10731"
                         readonly property string filePath: "dark/images/combobox-indicator-open-pressed.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-open-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8219
@@ -2337,18 +2337,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17063;2397:10792;2397:10731"
                         readonly property string filePath: "dark/images/combobox-indicator-pressed.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8219
@@ -2459,17 +2459,17 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I4435:9461;4610:29709;4610:29356"
                         readonly property string filePath: ""
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8954
@@ -2577,17 +2577,17 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I4677:11669;4610:29759;4610:29356"
                         readonly property string filePath: ""
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-focused"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8954
@@ -2695,17 +2695,17 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I4435:9451;4610:29459;4610:29356"
                         readonly property string filePath: ""
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8954
@@ -2814,18 +2814,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I4435:9457;4610:29609;4610:29356"
                         readonly property string filePath: "dark/images/editablecombobox-indicator-hovered-open.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-hovered-open"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8954
@@ -2934,17 +2934,17 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I4435:9449;4610:29409;4610:29356"
                         readonly property string filePath: ""
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8954
@@ -3053,18 +3053,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I4435:9455;4610:29559;4610:29356"
                         readonly property string filePath: "dark/images/editablecombobox-indicator-open.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-open"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8954
@@ -3174,18 +3174,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I4435:9459;4610:29659;4610:29356"
                         readonly property string filePath: "dark/images/editablecombobox-indicator-open-pressed.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-open-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8954
@@ -3294,17 +3294,17 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I4435:9453;4610:29509;4610:29356"
                         readonly property string filePath: ""
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8954
@@ -4904,18 +4904,18 @@ QtObject {
             readonly property QtObject pageindicatordelegate: QtObject {
                 readonly property QtObject delegate_current: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17112;2450:11721;2450:11670"
                         readonly property string filePath: "dark/images/pageindicatordelegate-indicator-delegate-current.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-delegate-current"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14238
@@ -4926,18 +4926,18 @@ QtObject {
 
                 readonly property QtObject delegate_current_hovered: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17114;2450:11763;2450:11670"
                         readonly property string filePath: "dark/images/pageindicatordelegate-indicator-delegate-current-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-delegate-current-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14238
@@ -4948,18 +4948,18 @@ QtObject {
 
                 readonly property QtObject delegate_current_pressed: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17116;2450:11777;2450:11670"
                         readonly property string filePath: "dark/images/pageindicatordelegate-indicator-delegate-current-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-delegate-current-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14238
@@ -4970,18 +4970,18 @@ QtObject {
 
                 readonly property QtObject delegate_pressed: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17118;2450:11735;2450:11670"
                         readonly property string filePath: "dark/images/pageindicatordelegate-indicator-delegate-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-delegate-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14238
@@ -4992,18 +4992,18 @@ QtObject {
 
                 readonly property QtObject disabled: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17120;2450:11749;2450:11670"
                         readonly property string filePath: "dark/images/pageindicatordelegate-indicator-disabled.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14238
@@ -5014,18 +5014,18 @@ QtObject {
 
                 readonly property QtObject hovered: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17110;2450:11706;2450:11670"
                         readonly property string filePath: "dark/images/pageindicatordelegate-indicator-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14238
@@ -5036,18 +5036,18 @@ QtObject {
 
                 readonly property QtObject normal: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17108;2450:11692;2450:11670"
                         readonly property string filePath: "dark/images/pageindicatordelegate-indicator.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14238
@@ -5336,18 +5336,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17135;2483:15472;2473:12871"
                         readonly property string filePath: "dark/images/radiobutton-indicator-checked.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-checked"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 17061.5
@@ -5410,18 +5410,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17141;2488:15512;2473:12871"
                         readonly property string filePath: "dark/images/radiobutton-indicator-checked-disabled.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-checked-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 17061.5
@@ -5484,18 +5484,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17137;8622:14996"
                         readonly property string filePath: "dark/images/radiobutton-indicator-checked-hovered.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-checked-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 17061.5
@@ -5558,18 +5558,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17139;8622:15033"
                         readonly property string filePath: "dark/images/radiobutton-indicator-checked-pressed.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-checked-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 17061.5
@@ -5632,18 +5632,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17143;2483:15480;2473:12871"
                         readonly property string filePath: "dark/images/radiobutton-indicator-disabled.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 17061.5
@@ -5706,18 +5706,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17131;2473:12899;2473:12871"
                         readonly property string filePath: "dark/images/radiobutton-indicator-hovered.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 17061.5
@@ -5780,18 +5780,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17129;2473:12891;2473:12871"
                         readonly property string filePath: "dark/images/radiobutton-indicator.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 17061.5
@@ -5854,18 +5854,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17133;8622:15070"
                         readonly property string filePath: "dark/images/radiobutton-indicator-pressed.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 17061.5
@@ -6753,18 +6753,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17195;2766:9577;2526:13408;8858:14984"
                         readonly property string filePath: "dark/images/spinbox-indicator-down-icon-atlimit.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-atlimit"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24692
@@ -6791,18 +6791,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17195;2766:9577;2526:13412;8858:15141"
                         readonly property string filePath: "dark/images/spinbox-indicator-up-icon-atlimit.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-atlimit"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24660
@@ -6885,18 +6885,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17185;2766:9207;2526:13408;8858:14984"
                         readonly property string filePath: "dark/images/spinbox-indicator-down-icon-disabled.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24692
@@ -6923,18 +6923,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17185;2766:9207;2526:13412;8858:15141"
                         readonly property string filePath: "dark/images/spinbox-indicator-up-icon-disabled.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24660
@@ -7017,18 +7017,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17187;2766:9281;2526:13408;8858:14984"
                         readonly property string filePath: "dark/images/spinbox-indicator-down-icon-down-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-down-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24692
@@ -7055,18 +7055,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17187;2766:9281;2526:13412;8858:15141"
                         readonly property string filePath: "dark/images/spinbox-indicator-up-icon-down-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-down-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24660
@@ -7149,18 +7149,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17189;2766:9355;2526:13408;8858:14984"
                         readonly property string filePath: "dark/images/spinbox-indicator-down-icon-down-pressed.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-down-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24692
@@ -7187,18 +7187,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17189;2766:9355;2526:13412;8858:15141"
                         readonly property string filePath: "dark/images/spinbox-indicator-up-icon-down-pressed.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-down-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24660
@@ -7281,18 +7281,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17183;2766:9133;2526:13408;8858:14984"
                         readonly property string filePath: "dark/images/spinbox-indicator-down-icon-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24692
@@ -7319,18 +7319,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17183;2766:9133;2526:13412;8858:15141"
                         readonly property string filePath: "dark/images/spinbox-indicator-up-icon-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24660
@@ -7413,18 +7413,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17181;2766:9059;2526:13408;8858:14984"
                         readonly property string filePath: "dark/images/spinbox-indicator-down-icon.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24692
@@ -7451,18 +7451,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17181;2766:9059;2526:13412;8858:15141"
                         readonly property string filePath: "dark/images/spinbox-indicator-up-icon.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24660
@@ -7545,18 +7545,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17191;2766:9429;2526:13408;8858:14984"
                         readonly property string filePath: "dark/images/spinbox-indicator-down-icon-up-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-up-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24692
@@ -7583,18 +7583,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17191;2766:9429;2526:13412;8858:15141"
                         readonly property string filePath: "dark/images/spinbox-indicator-up-icon-up-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-up-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24660
@@ -7677,18 +7677,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17193;2766:9503;2526:13408;8858:14984"
                         readonly property string filePath: "dark/images/spinbox-indicator-down-icon-up-pressed.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-up-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24692
@@ -7715,18 +7715,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17193;2766:9503;2526:13412;8858:15141"
                         readonly property string filePath: "dark/images/spinbox-indicator-up-icon-up-pressed.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-up-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24660
@@ -11287,18 +11287,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15416;2829:5675;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator-checked.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-checked"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -11361,18 +11361,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15426;2427:12224;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator-checked-disabled.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-checked-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -11435,18 +11435,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15430;2829:5737;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator-checked-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-checked-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -11509,18 +11509,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15428;2425:12191;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator-checked-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-checked-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -11583,18 +11583,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15432;2829:5710;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator-disabled.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -11657,18 +11657,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15424;2427:12263;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator-disabled-partiallyChecked.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-disabled-partiallyChecked"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -11731,18 +11731,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15412;2829:5612;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -11805,18 +11805,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15420;2427:12244;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator-hovered-partiallyChecked.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-hovered-partiallyChecked"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -11879,18 +11879,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15410;2829:5455;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -11953,18 +11953,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15418;2427:12233;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator-partiallyChecked.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-partiallyChecked"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -12027,18 +12027,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15422;2427:12254;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator-partiallyChecked-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-partiallyChecked-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -12101,18 +12101,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15414;2829:5648;2425:10953"
                         readonly property string filePath: "light/images/checkbox-indicator-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "checkbox-indicator-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 20
                         readonly property real x: 4756.5
@@ -12179,18 +12179,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15447;2407:10440;2397:10731"
                         readonly property string filePath: "light/images/combobox-indicator-disabled.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 7672
@@ -12299,18 +12299,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I4677:11371;4606:28948;2397:10731"
                         readonly property string filePath: "light/images/combobox-indicator-focused.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-focused"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 7672
@@ -12419,18 +12419,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15437;2397:10784;2397:10731"
                         readonly property string filePath: "light/images/combobox-indicator-hovered.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 7648.5
@@ -12539,18 +12539,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15443;2407:10424;2397:10731"
                         readonly property string filePath: "light/images/combobox-indicator-hovered-open.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-hovered-open"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 7672
@@ -12659,18 +12659,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15435;2397:10736;2397:10731"
                         readonly property string filePath: "light/images/combobox-indicator.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 7648.5
@@ -12779,18 +12779,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15441;2399:10706;2397:10731"
                         readonly property string filePath: "light/images/combobox-indicator-open.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-open"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 7672
@@ -12899,18 +12899,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15445;2407:10432;2397:10731"
                         readonly property string filePath: "light/images/combobox-indicator-open-pressed.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-open-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 7672
@@ -13019,18 +13019,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15439;2397:10792;2397:10731"
                         readonly property string filePath: "light/images/combobox-indicator-pressed.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "combobox-indicator-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 7672
@@ -13141,17 +13141,17 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I4435:9446;4610:29709;4610:29356"
                         readonly property string filePath: ""
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8734
@@ -13259,17 +13259,17 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I4677:11569;4610:29759;4610:29356"
                         readonly property string filePath: ""
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-focused"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8734
@@ -13377,17 +13377,17 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I4435:9436;4610:29459;4610:29356"
                         readonly property string filePath: ""
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8734
@@ -13496,18 +13496,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I4435:9442;4610:29609;4610:29356"
                         readonly property string filePath: "light/images/editablecombobox-indicator-hovered-open.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-hovered-open"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8734
@@ -13616,17 +13616,17 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I4435:9434;4610:29409;4610:29356"
                         readonly property string filePath: ""
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8734
@@ -13735,18 +13735,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I4435:9440;4610:29559;4610:29356"
                         readonly property string filePath: "light/images/editablecombobox-indicator-open.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-open"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8734
@@ -13856,18 +13856,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I4435:9444;4610:29659;4610:29356"
                         readonly property string filePath: "light/images/editablecombobox-indicator-open-pressed.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-open-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8734
@@ -13976,17 +13976,17 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I4435:9438;4610:29509;4610:29356"
                         readonly property string filePath: ""
                         readonly property real height: 16
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "editablecombobox-indicator-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 8734
@@ -15586,18 +15586,18 @@ QtObject {
             readonly property QtObject pageindicatordelegate: QtObject {
                 readonly property QtObject delegate_current: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15488;2450:11721;2450:11670"
                         readonly property string filePath: "light/images/pageindicatordelegate-indicator-delegate-current.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-delegate-current"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14054
@@ -15608,18 +15608,18 @@ QtObject {
 
                 readonly property QtObject delegate_current_hovered: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15490;2450:11763;2450:11670"
                         readonly property string filePath: "light/images/pageindicatordelegate-indicator-delegate-current-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-delegate-current-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14054
@@ -15630,18 +15630,18 @@ QtObject {
 
                 readonly property QtObject delegate_current_pressed: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15492;2450:11777;2450:11670"
                         readonly property string filePath: "light/images/pageindicatordelegate-indicator-delegate-current-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-delegate-current-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14054
@@ -15652,18 +15652,18 @@ QtObject {
 
                 readonly property QtObject delegate_pressed: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15494;2450:11735;2450:11670"
                         readonly property string filePath: "light/images/pageindicatordelegate-indicator-delegate-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-delegate-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14054
@@ -15674,18 +15674,18 @@ QtObject {
 
                 readonly property QtObject disabled: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15496;2450:11749;2450:11670"
                         readonly property string filePath: "light/images/pageindicatordelegate-indicator-disabled.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14054
@@ -15696,18 +15696,18 @@ QtObject {
 
                 readonly property QtObject hovered: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15486;2450:11706;2450:11670"
                         readonly property string filePath: "light/images/pageindicatordelegate-indicator-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14054
@@ -15718,18 +15718,18 @@ QtObject {
 
                 readonly property QtObject normal: QtObject {
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15484;2450:11692;2450:11670"
                         readonly property string filePath: "light/images/pageindicatordelegate-indicator.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "pageindicatordelegate-indicator"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 14054
@@ -16018,18 +16018,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15511;2483:15472;2473:12871"
                         readonly property string filePath: "light/images/radiobutton-indicator-checked.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-checked"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 16871.5
@@ -16092,18 +16092,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15517;2488:15512;2473:12871"
                         readonly property string filePath: "light/images/radiobutton-indicator-checked-disabled.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-checked-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 16871.5
@@ -16166,18 +16166,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15513;8622:14996"
                         readonly property string filePath: "light/images/radiobutton-indicator-checked-hovered.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-checked-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 16871.5
@@ -16240,18 +16240,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15515;8622:15033"
                         readonly property string filePath: "light/images/radiobutton-indicator-checked-pressed.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-checked-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 16871.5
@@ -16314,18 +16314,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15519;2483:15480;2473:12871"
                         readonly property string filePath: "light/images/radiobutton-indicator-disabled.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 16871.5
@@ -16388,18 +16388,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15507;2473:12899;2473:12871"
                         readonly property string filePath: "light/images/radiobutton-indicator-hovered.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 16871.5
@@ -16462,18 +16462,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15505;2473:12891;2473:12871"
                         readonly property string filePath: "light/images/radiobutton-indicator.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 16871.5
@@ -16536,18 +16536,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15509;8622:15070"
                         readonly property string filePath: "light/images/radiobutton-indicator-pressed.png"
                         readonly property real height: 24
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "radiobutton-indicator-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 24
                         readonly property real x: 16871.5
@@ -17435,18 +17435,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15571;2766:9577;2526:13408;8858:14984"
                         readonly property string filePath: "light/images/spinbox-indicator-down-icon-atlimit.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-atlimit"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24482
@@ -17473,18 +17473,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15571;2766:9577;2526:13412;8858:15141"
                         readonly property string filePath: "light/images/spinbox-indicator-up-icon-atlimit.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-atlimit"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24450
@@ -17567,18 +17567,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15561;2766:9207;2526:13408;8858:14984"
                         readonly property string filePath: "light/images/spinbox-indicator-down-icon-disabled.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24482
@@ -17605,18 +17605,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15561;2766:9207;2526:13412;8858:15141"
                         readonly property string filePath: "light/images/spinbox-indicator-up-icon-disabled.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-disabled"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24450
@@ -17699,18 +17699,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15563;2766:9281;2526:13408;8858:14984"
                         readonly property string filePath: "light/images/spinbox-indicator-down-icon-down-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-down-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24482
@@ -17737,18 +17737,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15563;2766:9281;2526:13412;8858:15141"
                         readonly property string filePath: "light/images/spinbox-indicator-up-icon-down-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-down-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24450
@@ -17831,18 +17831,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15565;2766:9355;2526:13408;8858:14984"
                         readonly property string filePath: "light/images/spinbox-indicator-down-icon-down-pressed.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-down-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24482
@@ -17869,18 +17869,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15565;2766:9355;2526:13412;8858:15141"
                         readonly property string filePath: "light/images/spinbox-indicator-up-icon-down-pressed.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-down-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24450
@@ -17963,18 +17963,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15559;2766:9133;2526:13408;8858:14984"
                         readonly property string filePath: "light/images/spinbox-indicator-down-icon-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24482
@@ -18001,18 +18001,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15559;2766:9133;2526:13412;8858:15141"
                         readonly property string filePath: "light/images/spinbox-indicator-up-icon-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24450
@@ -18095,18 +18095,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15557;2766:9059;2526:13408;8858:14984"
                         readonly property string filePath: "light/images/spinbox-indicator-down-icon.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24482
@@ -18133,18 +18133,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15557;2766:9059;2526:13412;8858:15141"
                         readonly property string filePath: "light/images/spinbox-indicator-up-icon.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24450
@@ -18227,18 +18227,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15567;2766:9429;2526:13408;8858:14984"
                         readonly property string filePath: "light/images/spinbox-indicator-down-icon-up-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-up-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24482
@@ -18265,18 +18265,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15567;2766:9429;2526:13412;8858:15141"
                         readonly property string filePath: "light/images/spinbox-indicator-up-icon-up-hovered.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-up-hovered"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24450
@@ -18359,18 +18359,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_down_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15569;2766:9503;2526:13408;8858:14984"
                         readonly property string filePath: "light/images/spinbox-indicator-down-icon-up-pressed.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-down-icon-up-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24482
@@ -18397,18 +18397,18 @@ QtObject {
                     }
 
                     readonly property QtObject indicator_up_icon: QtObject {
-                        readonly property real bottomOffset: 1
+                        readonly property real bottomOffset: 0
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15569;2766:9503;2526:13412;8858:15141"
                         readonly property string filePath: "light/images/spinbox-indicator-up-icon-up-pressed.png"
                         readonly property real height: 4.50586
-                        readonly property real leftOffset: 1
+                        readonly property real leftOffset: 0
                         readonly property real leftShadow: 0
                         readonly property string name: "spinbox-indicator-up-icon-up-pressed"
-                        readonly property real rightOffset: 1
+                        readonly property real rightOffset: 0
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 1
+                        readonly property real topOffset: 0
                         readonly property real topShadow: 0
                         readonly property real width: 8.00391
                         readonly property real x: 24450
