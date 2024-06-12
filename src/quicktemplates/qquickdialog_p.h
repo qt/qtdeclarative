@@ -113,6 +113,31 @@ private:
     Q_DECLARE_PRIVATE(QQuickDialog)
 };
 
+// The dialog options are registered here because they conceptually belong to QPlatformDialogHelper
+// used as extension above. They may not be used QtQuick.Templates itself, but not registering them
+// here would cause every downstream module that uses them to produce a redundant registration.
+
+struct QColorDialogOptionsForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN_NAMESPACE(QColorDialogOptions)
+};
+
+struct QFileDialogOptionsForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN_NAMESPACE(QFileDialogOptions)
+};
+
+struct QFontDialogOptionsForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN_NAMESPACE(QFontDialogOptions)
+};
+
 QT_END_NAMESPACE
 
 #endif // QQUICKDIALOG_P_H
