@@ -6072,6 +6072,10 @@
                         "type": "number"
                     },
                     {
+                        "name": "AA_DontUseNativeMenuWindows",
+                        "type": "number"
+                    },
+                    {
                         "name": "AA_SynthesizeTouchForUnhandledMouseEvents",
                         "type": "number"
                     },
@@ -6149,10 +6153,6 @@
                     },
                     {
                         "name": "AA_DisableSessionManager",
-                        "type": "number"
-                    },
-                    {
-                        "name": "AA_DontUseNativeMenuWindows",
                         "type": "number"
                     },
                     {
@@ -8805,6 +8805,14 @@
                     },
                     {
                         "name": "PreventContextMenu",
+                        "type": "number"
+                    },
+                    {
+                        "name": "Press",
+                        "type": "number"
+                    },
+                    {
+                        "name": "Release",
                         "type": "number"
                     },
                     {
