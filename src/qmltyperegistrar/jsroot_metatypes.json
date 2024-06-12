@@ -9548,15 +9548,6 @@
                     {
                         "access": "public",
                         "arguments": [
-                            {
-                            }
-                        ],
-                        "isJavaScriptFunction": true,
-                        "name": "sort"
-                    },
-                    {
-                        "access": "public",
-                        "arguments": [
                         ],
                         "isJavaScriptFunction": true,
                         "name": "valueOf"
