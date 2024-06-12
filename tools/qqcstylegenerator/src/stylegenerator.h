@@ -959,14 +959,14 @@ private:
     {
         // Use radii and border width of the obj to determine the offsets.
         // The biggest of them wins.
-        const qreal strokeWeight = obj["strokeWeight"].toDouble(0);
+        const qreal strokeWeight = !obj["strokes"].toArray().isEmpty() ? obj["strokeWeight"].toDouble(0) : .0;
         const QString strokeAlign = obj["strokeAlign"].toString();
 
         BorderImageOffset offset;
         Radii radii = getRadii(obj);
 
         // if the stroke is not inside of the control, we need to include it in the offsets
-        if (strokeAlign == "OUTSIDE" || strokeAlign == "CENTERED") {
+        if (strokeWeight && (strokeAlign == "OUTSIDE" || strokeAlign == "CENTERED")) {
             const auto borderWidth = strokeAlign == "CENTERED" ? strokeWeight/2 : strokeWeight;
             radii.topLeft += borderWidth;
             radii.topRight += borderWidth;
