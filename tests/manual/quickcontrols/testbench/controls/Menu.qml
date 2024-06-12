@@ -42,15 +42,18 @@ QtObject {
 
             MenuItem {
                 text: "Checked"
+                checkable: true
                 checked: true
             }
             MenuItem {
                 text: "Checked + Pressed"
+                checkable: true
                 checked: true
                 down: true
             }
             MenuItem {
                 text: "Checked + Disabled"
+                checkable: true
                 checked: true
                 enabled: false
             }
