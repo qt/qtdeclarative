@@ -384,6 +384,75 @@ void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
     \snippet pointerHandlers/dragHandlerAcceptedButtons.qml 0
 */
 
+/*!
+    \qmlproperty flags DragHandler::acceptedDevices
+
+    The types of pointing devices that can activate this DragHandler.
+
+    By default, this property is set to
+    \l{QInputDevice::DeviceType}{PointerDevice.AllDevices}.
+    If you set it to an OR combination of device types, it will ignore events
+    from non-matching devices.
+
+    \note Not all platforms are yet able to distinguish mouse and touchpad; and
+    on those that do, you often want to make mouse and touchpad behavior the same.
+*/
+
+/*!
+    \qmlproperty flags DragHandler::acceptedModifiers
+
+    If this property is set, it will require the given keyboard modifiers to
+    be pressed in order to react to pointer events, and otherwise ignore them.
+
+    For example, two DragHandlers can perform two different drag-and-drop
+    operations, depending on whether the \c Control modifier is pressed:
+
+    \snippet pointerHandlers/draggableGridView.qml entire
+
+    If this property is set to \c Qt.KeyboardModifierMask (the default value),
+    then the DragHandler ignores the modifier keys.
+
+    If you set \c acceptedModifiers to an OR combination of modifier keys,
+    it means \e all of those modifiers must be pressed to activate the handler.
+
+    The available modifiers are as follows:
+
+    \value NoModifier       No modifier key is allowed.
+    \value ShiftModifier    A Shift key on the keyboard must be pressed.
+    \value ControlModifier  A Ctrl key on the keyboard must be pressed.
+    \value AltModifier      An Alt key on the keyboard must be pressed.
+    \value MetaModifier     A Meta key on the keyboard must be pressed.
+    \value KeypadModifier   A keypad button must be pressed.
+    \value GroupSwitchModifier X11 only (unless activated on Windows by a command line argument).
+                            A Mode_switch key on the keyboard must be pressed.
+    \value KeyboardModifierMask The handler does not care which modifiers are pressed.
+
+    \sa Qt::KeyboardModifier
+*/
+
+/*!
+    \qmlproperty flags DragHandler::acceptedPointerTypes
+
+    The types of pointing instruments (finger, stylus, eraser, etc.)
+    that can activate this DragHandler.
+
+    By default, this property is set to
+    \l {QPointingDevice::PointerType} {PointerDevice.AllPointerTypes}.
+    If you set it to an OR combination of device types, it will ignore events
+    from non-matching \l {PointerDevice}{devices}.
+*/
+
+/*!
+    \qmlproperty real DragHandler::margin
+
+    The margin beyond the bounds of the \l {PointerHandler::parent}{parent}
+    item within which an \l eventPoint can activate this handler. For example,
+    you can make it easier to drag small items by allowing the user to drag
+    from a position nearby:
+
+    \snippet pointerHandlers/dragHandlerMargin.qml draggable
+*/
+
 QT_END_NAMESPACE
 
 #include "moc_qquickdraghandler_p.cpp"
