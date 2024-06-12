@@ -76,6 +76,7 @@ struct PathNodeInfo : NodeInfo
     QColor fillColor;
     StrokeStyle strokeStyle;
     QGradient grad;
+    QTransform fillTransform;
 };
 
 struct TextNodeInfo : NodeInfo

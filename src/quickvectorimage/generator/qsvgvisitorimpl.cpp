@@ -85,6 +85,11 @@ public:
         return nullptr;
     }
 
+    QTransform currentFillTransform() const
+    {
+        return m_dummyPainter.brush().transform();
+    }
+
     QColor currentStrokeColor() const
     {
         if (m_dummyPainter.pen().brush().style() == Qt::NoBrush ||
@@ -811,6 +816,8 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                     if (info.grad.type() == QGradient::NoGradient && styleResolver->currentFillGradient() != nullptr)
                         info.grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
 
+                    info.fillTransform = styleResolver->currentFillTransform();
+
                     m_generator->generatePath(info);
                 };
 
@@ -1038,6 +1045,7 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
     info.strokeStyle.color = styleResolver->currentStrokeColor();
     if (styleResolver->currentFillGradient() != nullptr)
         info.grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
+    info.fillTransform = styleResolver->currentFillTransform();
 
     m_generator->generatePath(info);
 
