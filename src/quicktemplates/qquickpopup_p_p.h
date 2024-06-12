@@ -194,7 +194,7 @@ public:
     qreal prevOpacity = 0;
     qreal prevScale = 0;
     QString m_title;
-    QQuickPopup::PopupType m_popupType = QQuickPopup::Default;
+    QQuickPopup::PopupType m_popupType = QQuickPopup::Item;
 
     friend class QQuickPopupTransitionManager;
 };
