@@ -15,6 +15,7 @@ set(qml_files
     "ItemDelegate.qml"
     "Popup.qml"
     "ProgressBar.qml"
+    "PageIndicator.qml"
     "RadioButton.qml"
     "RangeSlider.qml"
     "Slider.qml"

@@ -4703,6 +4703,361 @@ QtObject {
 
             }
 
+            readonly property QtObject pageindicator: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17120;2450:11749;2450:11668"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 100
+                        readonly property real x: 14194
+                        readonly property real y: 3574.5
+                    }
+
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17120;2450:11749"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 20
+                        readonly property string name: "pageindicator-contentItem-disabled"
+                        readonly property real rightPadding: 20
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject indicator1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17120;2450:11749;2450:11678"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator1-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14214
+                        readonly property real y: 3574.5
+                    }
+
+                    readonly property QtObject indicator2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17120;2450:11749;2450:11676"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator2-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14226
+                        readonly property real y: 3574.5
+                    }
+
+                    readonly property real leftPadding: 20
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 20
+                    readonly property real spacing: 0
+                    readonly property real topPadding: 0
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17110;2450:11706;2450:11668"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 100
+                        readonly property real x: 14194
+                        readonly property real y: 3379.5
+                    }
+
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17110;2450:11706"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 20
+                        readonly property string name: "pageindicator-contentItem-hovered"
+                        readonly property real rightPadding: 20
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject indicator1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17110;2450:11706;2450:11678"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator1-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14214
+                        readonly property real y: 3379.5
+                    }
+
+                    readonly property QtObject indicator2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17110;2450:11706;2450:11676"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator2-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14226
+                        readonly property real y: 3379.5
+                    }
+
+                    readonly property real leftPadding: 20
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 20
+                    readonly property real spacing: 0
+                    readonly property real topPadding: 0
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17108;2450:11692;2450:11668"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 100
+                        readonly property real x: 14194
+                        readonly property real y: 3314.5
+                    }
+
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:17108;2450:11692"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 20
+                        readonly property string name: "pageindicator-contentItem"
+                        readonly property real rightPadding: 20
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject indicator1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17108;2450:11692;2450:11678"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator1"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14214
+                        readonly property real y: 3314.5
+                    }
+
+                    readonly property QtObject indicator2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:17108;2450:11692;2450:11676"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator2"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14226
+                        readonly property real y: 3314.5
+                    }
+
+                    readonly property real leftPadding: 20
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 20
+                    readonly property real spacing: 0
+                    readonly property real topPadding: 0
+                }
+
+            }
+
+            readonly property QtObject pageindicatordelegate: QtObject {
+                readonly property QtObject delegate_current: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17112;2450:11721;2450:11670"
+                        readonly property string filePath: "dark/images/pageindicatordelegate-indicator-delegate-current.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-delegate-current"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14238
+                        readonly property real y: 3444.5
+                    }
+
+                }
+
+                readonly property QtObject delegate_current_hovered: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17114;2450:11763;2450:11670"
+                        readonly property string filePath: "dark/images/pageindicatordelegate-indicator-delegate-current-hovered.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-delegate-current-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14238
+                        readonly property real y: 3639.5
+                    }
+
+                }
+
+                readonly property QtObject delegate_current_pressed: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17116;2450:11777;2450:11670"
+                        readonly property string filePath: "dark/images/pageindicatordelegate-indicator-delegate-current-pressed.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-delegate-current-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14238
+                        readonly property real y: 3704.5
+                    }
+
+                }
+
+                readonly property QtObject delegate_pressed: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17118;2450:11735;2450:11670"
+                        readonly property string filePath: "dark/images/pageindicatordelegate-indicator-delegate-pressed.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-delegate-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14238
+                        readonly property real y: 3509.5
+                    }
+
+                }
+
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17120;2450:11749;2450:11670"
+                        readonly property string filePath: "dark/images/pageindicatordelegate-indicator-disabled.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14238
+                        readonly property real y: 3574.5
+                    }
+
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17110;2450:11706;2450:11670"
+                        readonly property string filePath: "dark/images/pageindicatordelegate-indicator-hovered.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14238
+                        readonly property real y: 3379.5
+                    }
+
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:17108;2450:11692;2450:11670"
+                        readonly property string filePath: "dark/images/pageindicatordelegate-indicator.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14238
+                        readonly property real y: 3314.5
+                    }
+
+                }
+
+            }
+
             readonly property QtObject popup: QtObject {
                 readonly property QtObject normal: QtObject {
                     readonly property QtObject background: QtObject {
@@ -15026,6 +15381,361 @@ QtObject {
                     readonly property real leftPadding: 12
                     readonly property real rightPadding: 12
                     readonly property real topPadding: 8
+                }
+
+            }
+
+            readonly property QtObject pageindicator: QtObject {
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15496;2450:11749;2450:11668"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-background-disabled"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 100
+                        readonly property real x: 14010
+                        readonly property real y: 3574.5
+                    }
+
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15496;2450:11749"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 20
+                        readonly property string name: "pageindicator-contentItem-disabled"
+                        readonly property real rightPadding: 20
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject indicator1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15496;2450:11749;2450:11678"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator1-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14030
+                        readonly property real y: 3574.5
+                    }
+
+                    readonly property QtObject indicator2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15496;2450:11749;2450:11676"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator2-disabled"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14042
+                        readonly property real y: 3574.5
+                    }
+
+                    readonly property real leftPadding: 20
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 20
+                    readonly property real spacing: 0
+                    readonly property real topPadding: 0
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15486;2450:11706;2450:11668"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-background-hovered"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 100
+                        readonly property real x: 14010
+                        readonly property real y: 3379.5
+                    }
+
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15486;2450:11706"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 20
+                        readonly property string name: "pageindicator-contentItem-hovered"
+                        readonly property real rightPadding: 20
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject indicator1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15486;2450:11706;2450:11678"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator1-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14030
+                        readonly property real y: 3379.5
+                    }
+
+                    readonly property QtObject indicator2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15486;2450:11706;2450:11676"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator2-hovered"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14042
+                        readonly property real y: 3379.5
+                    }
+
+                    readonly property real leftPadding: 20
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 20
+                    readonly property real spacing: 0
+                    readonly property real topPadding: 0
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject background: QtObject {
+                        readonly property real bottomOffset: 4
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15484;2450:11692;2450:11668"
+                        readonly property string filePath: ""
+                        readonly property real height: 32
+                        readonly property real leftOffset: 4
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-background"
+                        readonly property real rightOffset: 4
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 4
+                        readonly property real topShadow: 0
+                        readonly property real width: 100
+                        readonly property real x: 14010
+                        readonly property real y: 3314.5
+                    }
+
+                    readonly property real bottomPadding: 0
+                    readonly property QtObject contentItem: QtObject {
+                        readonly property string alignItems: "CENTER"
+                        readonly property real bottomPadding: 0
+                        readonly property string figmaId: "I2557:15484;2450:11692"
+                        readonly property string layoutMode: "HORIZONTAL"
+                        readonly property real leftPadding: 20
+                        readonly property string name: "pageindicator-contentItem"
+                        readonly property real rightPadding: 20
+                        readonly property real spacing: 0
+                        readonly property real topPadding: 0
+                    }
+
+                    readonly property QtObject indicator1: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15484;2450:11692;2450:11678"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator1"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14030
+                        readonly property real y: 3314.5
+                    }
+
+                    readonly property QtObject indicator2: QtObject {
+                        readonly property real bottomShadow: 0
+                        readonly property string figmaId: "I2557:15484;2450:11692;2450:11676"
+                        readonly property real height: 20
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicator-indicator2"
+                        readonly property real rightShadow: 0
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14042
+                        readonly property real y: 3314.5
+                    }
+
+                    readonly property real leftPadding: 20
+                    readonly property bool mirrored: false
+                    readonly property real rightPadding: 20
+                    readonly property real spacing: 0
+                    readonly property real topPadding: 0
+                }
+
+            }
+
+            readonly property QtObject pageindicatordelegate: QtObject {
+                readonly property QtObject delegate_current: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15488;2450:11721;2450:11670"
+                        readonly property string filePath: "light/images/pageindicatordelegate-indicator-delegate-current.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-delegate-current"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14054
+                        readonly property real y: 3444.5
+                    }
+
+                }
+
+                readonly property QtObject delegate_current_hovered: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15490;2450:11763;2450:11670"
+                        readonly property string filePath: "light/images/pageindicatordelegate-indicator-delegate-current-hovered.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-delegate-current-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14054
+                        readonly property real y: 3639.5
+                    }
+
+                }
+
+                readonly property QtObject delegate_current_pressed: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15492;2450:11777;2450:11670"
+                        readonly property string filePath: "light/images/pageindicatordelegate-indicator-delegate-current-pressed.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-delegate-current-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14054
+                        readonly property real y: 3704.5
+                    }
+
+                }
+
+                readonly property QtObject delegate_pressed: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15494;2450:11735;2450:11670"
+                        readonly property string filePath: "light/images/pageindicatordelegate-indicator-delegate-pressed.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-delegate-pressed"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14054
+                        readonly property real y: 3509.5
+                    }
+
+                }
+
+                readonly property QtObject disabled: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15496;2450:11749;2450:11670"
+                        readonly property string filePath: "light/images/pageindicatordelegate-indicator-disabled.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-disabled"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14054
+                        readonly property real y: 3574.5
+                    }
+
+                }
+
+                readonly property QtObject hovered: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15486;2450:11706;2450:11670"
+                        readonly property string filePath: "light/images/pageindicatordelegate-indicator-hovered.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator-hovered"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14054
+                        readonly property real y: 3379.5
+                    }
+
+                }
+
+                readonly property QtObject normal: QtObject {
+                    readonly property QtObject indicator: QtObject {
+                        readonly property real bottomOffset: 1
+                        readonly property real bottomShadow: 0
+                        readonly property string exportType: "image"
+                        readonly property string figmaId: "I2557:15484;2450:11692;2450:11670"
+                        readonly property string filePath: "light/images/pageindicatordelegate-indicator.png"
+                        readonly property real height: 20
+                        readonly property real leftOffset: 1
+                        readonly property real leftShadow: 0
+                        readonly property string name: "pageindicatordelegate-indicator"
+                        readonly property real rightOffset: 1
+                        readonly property real rightShadow: 0
+                        readonly property real topOffset: 1
+                        readonly property real topShadow: 0
+                        readonly property real width: 12
+                        readonly property real x: 14054
+                        readonly property real y: 3314.5
+                    }
+
                 }
 
             }
