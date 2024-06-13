@@ -29,20 +29,13 @@ namespace QtAndroidQuickViewEmbedding
 
     void createQuickView(JNIEnv *, jobject nativeWindow, jstring qmlUri, jint width, jint height,
                          jlong parentWindowReference, jlong viewReference,
-                         QtJniTypes::StringArray qmlImportPaths)
+                         const QJniArray<jstring> &qmlImportPaths)
     {
         static_assert (sizeof(jlong) >= sizeof(void*),
                       "Insufficient size of Java type to hold the c++ pointer");
         const QUrl qmlUrl(QJniObject(qmlUri).toString());
 
-        QStringList importPaths;
-        if (qmlImportPaths.isValid()) {
-            QJniArray<QtJniTypes::String> importPathsArray(qmlImportPaths);
-            importPaths.reserve(importPathsArray.size());
-            for (int i = 0; i < importPathsArray.size(); ++i)
-                importPaths << importPathsArray.at(i).toString();
-        }
-
+        const QStringList importPaths = qmlImportPaths.toContainer();
         QMetaObject::invokeMethod(qApp, [qtViewObject = QJniObject(nativeWindow),
                                         parentWindowReference,
                                         viewReference,
