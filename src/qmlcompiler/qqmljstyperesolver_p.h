@@ -152,9 +152,8 @@ public:
             const QQmlJSRegisterContent &type, const QString &name,
             int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex) const;
     QQmlJSRegisterContent valueType(const QQmlJSRegisterContent &list) const;
-    QQmlJSRegisterContent returnType(
-            const QQmlJSScope::ConstPtr &type, QQmlJSRegisterContent::ContentVariant variant,
-            const QQmlJSScope::ConstPtr &scope) const;
+    QQmlJSRegisterContent returnType(const QQmlJSScope::ConstPtr &type, QQmlJSRegisterContent::ContentVariant variant,
+                                     const QQmlJSRegisterContent &scope) const;
 
     QQmlJSRegisterContent iteratorPointer(
             const QQmlJSRegisterContent &listType, QQmlJS::AST::ForEachType type,
@@ -243,26 +242,46 @@ public:
     QQmlJSLogger *logger() const { return m_logger; }
     QStringList seenModuleQualifiers() const { return m_seenModuleQualifiers; }
 
+    // These methods are used to mark the places we have to adapt to propagate dependencies between
+    // values once the current QQmlJSRegisterContent is refactored to form a graph.
+    // We want to pass a node of the graph, with all its existing edges intact, instead of just a
+    // bare QQmlJSScope::ConstPtr.
+    QQmlJSRegisterContent syntheticType(const QQmlJSScope::ConstPtr &scope) const
+    {
+        return globalType(scope);
+    }
+    QList<QQmlJSRegisterContent> syntheticTypes(const QList<QQmlJSScope::ConstPtr> &scopes) const
+    {
+        QList<QQmlJSRegisterContent> result;
+        result.reserve(scopes.length());
+        for (const QQmlJSScope::ConstPtr &scope : scopes)
+            result.append(syntheticType(scope));
+        return result;
+    }
+
 protected:
 
-    QQmlJSRegisterContent memberType(
-            const QQmlJSScope::ConstPtr &type, const QString &name,
-            int baseLookupIndex, int resultLookupIndex) const;
-    QQmlJSRegisterContent memberEnumType(const QQmlJSScope::ConstPtr &type,
+    QQmlJSRegisterContent memberType(const QQmlJSRegisterContent &type, const QString &name,
+                                     int baseLookupIndex, int resultLookupIndex) const;
+    QQmlJSRegisterContent memberEnumType(const QQmlJSRegisterContent &type,
                                          const QString &name) const;
-    bool checkEnums(const QQmlJSScope::ConstPtr &scope, const QString &name,
+    bool checkEnums(const QQmlJSRegisterContent &scope, const QString &name,
                     QQmlJSRegisterContent *result, QQmlJSScope::ExtensionKind mode) const;
     bool canPrimitivelyConvertFromTo(
             const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) const;
-    QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSScope::ConstPtr &scope) const;
+    QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSRegisterContent &scope) const;
+
+    QQmlJSRegisterContent shallowTransformed(
+            const QQmlJSRegisterContent &origin,
+            QQmlJSScope::ConstPtr (QQmlJSTypeResolver::*op)(const QQmlJSScope::ConstPtr &) const,
+            const QQmlJSRegisterContent &transformedScope) const;
     QQmlJSRegisterContent transformed(
             const QQmlJSRegisterContent &origin,
             QQmlJSScope::ConstPtr (QQmlJSTypeResolver::*op)(const QQmlJSScope::ConstPtr &) const) const;
 
     QQmlJSScope::ConstPtr containedTypeForName(const QString &name) const;
     QQmlJSRegisterContent registerContentForName(
-            const QString &name,
-            const QQmlJSScope::ConstPtr &scopeType = QQmlJSScope::ConstPtr(),
+            const QString &name, const QQmlJSRegisterContent &scopeType = {},
             bool hasObjectModuelPrefix = false) const;
 
     QQmlJSScope::ConstPtr resolveParentProperty(

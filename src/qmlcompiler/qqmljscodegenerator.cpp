@@ -716,7 +716,6 @@ void QQmlJSCodeGenerator::generate_LoadQmlContextPropertyLookup(int index)
     }
 
     const bool isProperty = m_state.accumulatorOut().isProperty();
-    const QQmlJSScope::ConstPtr scope = m_state.accumulatorOut().scopeType();
     const QQmlJSScope::ConstPtr stored = m_state.accumulatorOut().storedType();
     if (isProperty) {
         const auto lookupType = contentType(m_state.accumulatorOut(), m_state.accumulatorVariableOut);
@@ -952,7 +951,7 @@ void QQmlJSCodeGenerator::generateEnumLookup(int index)
         return;
     }
 
-    const QQmlJSScope::ConstPtr scopeType = m_state.accumulatorOut().scopeType();
+    const QQmlJSScope::ConstPtr scopeType = m_state.accumulatorOut().scopeType().containedType();
 
     // Otherwise we would have found an enum with values.
     Q_ASSERT(!scopeType->isComposite());
@@ -1203,7 +1202,7 @@ void QQmlJSCodeGenerator::generateWriteBack(int registerIndex)
             Q_UNREACHABLE();
         case QQmlJSRegisterContent::ObjectProperty:
         case QQmlJSRegisterContent::ExtensionObjectProperty:
-            if (writeBack.scopeType()->isReferenceType()) {
+            if (writeBack.scopeType().containedType()->isReferenceType()) {
                 const QString lookup = u"aotContext->writeBackObjectLookup("_s
                         + writeBackIndexString
                         + u", "_s + outerRegister
@@ -1221,7 +1220,7 @@ void QQmlJSCodeGenerator::generateWriteBack(int registerIndex)
                         + u", "_s + contentPointer(writeBack, writeBackRegister) + u')';
                 const QString initialization = u"aotContext->initGetValueLookup("_s
                         + writeBackIndexString
-                        + u", "_s + metaObject(writeBack.scopeType())
+                        + u", "_s + metaObject(writeBack.scopeType().containedType())
                         + u", "_s + contentType(writeBack, writeBackRegister) + u')';
                 generateLookup(lookup, initialization);
             }
@@ -1349,7 +1348,8 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         return;
     }
 
-    if (m_typeResolver->equals(m_state.accumulatorOut().scopeType(), m_typeResolver->mathObject())) {
+    if (m_typeResolver->registerContains(
+                m_state.accumulatorOut().scopeType(), m_typeResolver->mathObject())) {
         QString name = m_jsUnitGenerator->lookupName(index);
 
         double value{};
@@ -1403,8 +1403,8 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
             ? QString::number(m_state.accumulatorIn().importNamespace())
             : u"QQmlPrivate::AOTCompiledContext::InvalidStringId"_s;
     const auto accumulatorIn = m_state.accumulatorIn();
-    const QQmlJSScope::ConstPtr scope = m_state.accumulatorOut().scopeType();
-    const bool isReferenceType = scope->isReferenceType();
+    const QQmlJSRegisterContent scope = m_state.accumulatorOut().scopeType();
+    const bool isReferenceType = scope.containedType()->isReferenceType();
 
     switch (m_state.accumulatorOut().variant()) {
     case QQmlJSRegisterContent::ObjectAttached: {
@@ -1450,7 +1450,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         reject(u"lookup in QJSValue"_s);
     } else if (isReferenceType) {
         const QString inputPointer = resolveQObjectPointer(
-                    scope, accumulatorIn, m_state.accumulatorVariableIn,
+                    scope.containedType(), accumulatorIn, m_state.accumulatorVariableIn,
                     u"Cannot read property '%1' of %2"_s.arg(
                         m_jsUnitGenerator->lookupName(index)));
         const QString lookup = u"aotContext->getObjectLookup("_s + indexString
@@ -1463,8 +1463,8 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         const QString preparation = getLookupPreparation(
                     m_state.accumulatorOut(), m_state.accumulatorVariableOut, index);
         generateLookup(lookup, initialization, preparation);
-    } else if ((scope->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
-                || m_typeResolver->equals(scope, m_typeResolver->stringType()))
+    } else if ((scope.containedType()->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+                || m_typeResolver->registerContains(scope, m_typeResolver->stringType()))
                && m_jsUnitGenerator->lookupName(index) == u"length"_s) {
         const QQmlJSScope::ConstPtr stored = accumulatorIn.storedType();
         if (stored->isListProperty()) {
@@ -1497,7 +1497,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
             reject(u"reading from a value that's potentially affected by side effects"_s);
 
         const QString inputContentPointer = resolveValueTypeContentPointer(
-                    scope, accumulatorIn, m_state.accumulatorVariableIn,
+                    scope.containedType(), accumulatorIn, m_state.accumulatorVariableIn,
                     u"Cannot read property '%1' of %2"_s.arg(
                         m_jsUnitGenerator->lookupName(index)));
 
@@ -1507,7 +1507,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
                 + u')';
         const QString initialization = u"aotContext->initGetValueLookup("_s
                 + indexString + u", "_s
-                + metaObject(scope) + u", "_s
+                + metaObject(scope.containedType()) + u", "_s
                 + contentType(m_state.accumulatorOut(), m_state.accumulatorVariableOut) + u')';
         const QString preparation = getLookupPreparation(
                     m_state.accumulatorOut(), m_state.accumulatorVariableOut, index);
@@ -1563,7 +1563,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
     const QQmlJSRegisterContent specific = m_state.readAccumulator();
     Q_ASSERT(specific.isConversion());
     const QQmlJSScope::ConstPtr originalScope
-            = m_typeResolver->originalType(specific.conversionResultScope());
+        = m_typeResolver->originalType(specific.conversionResultScope().containedType());
 
     if (specific.storedType().isNull()) {
         reject(u"SetLookup. Could not find property "
@@ -2211,7 +2211,7 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::JavaScriptReturnValue)
         reject(u"call to untyped JavaScript function"_s);
 
-    const QQmlJSScope::ConstPtr scope = m_state.accumulatorOut().scopeType();
+    const QQmlJSScope::ConstPtr scope = m_state.accumulatorOut().scopeType().containedType();
 
     AccumulatorConverter registers(this);
 
@@ -2288,8 +2288,8 @@ void QQmlJSCodeGenerator::generate_CallQmlContextPropertyLookup(int index, int a
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::JavaScriptReturnValue)
         reject(u"call to untyped JavaScript function"_s);
 
-    if (m_typeResolver->equals(m_state.accumulatorOut().scopeType(),
-                               m_typeResolver->jsGlobalObject())) {
+    if (m_typeResolver->registerContains(
+                m_state.accumulatorOut().scopeType(), m_typeResolver->jsGlobalObject())) {
         const QString name = m_jsUnitGenerator->stringForIndex(
                 m_jsUnitGenerator->lookupNameIndex(index));
         if (inlineTranslateMethod(name, argc, argv))

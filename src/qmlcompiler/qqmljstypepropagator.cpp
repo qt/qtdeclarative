@@ -589,7 +589,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
         const QQmlJSRegisterContent inType = m_typeResolver->globalType(qmlScope);
         setAccumulator(QQmlJSRegisterContent::create(
                     nameIndex, m_typeResolver->voidType(), QQmlJSRegisterContent::ScopeModulePrefix,
-                    inType.containedType()));
+                    inType));
         return;
     }
 
@@ -718,7 +718,7 @@ bool QQmlJSTypePropagator::checkForEnumProblems(
             return true;
         }
     } else if (base.variant() == QQmlJSRegisterContent::MetaType) {
-        const QQmlJSMetaEnum metaEn = base.scopeType()->enumeration(propertyName);
+        const QQmlJSMetaEnum metaEn = base.scopeType().containedType()->enumeration(propertyName);
         if (metaEn.isValid() && !metaEn.isScoped() && !metaEn.isQml()) {
             const QString error
                     = u"You cannot access unscoped enum \"%1\" from here."_s.arg(propertyName);
@@ -841,7 +841,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
                         m_jsUnitGenerator->getStringId(propertyName),
                         m_state.accumulatorIn().containedType(),
                         QQmlJSRegisterContent::ObjectModulePrefix,
-                        m_state.accumulatorIn().containedType()));
+                        m_state.accumulatorIn()));
             return;
         }
         if (m_state.accumulatorIn().isImportNamespace())
@@ -906,7 +906,8 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
         if (!fixSuggestion.has_value()
                 && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::MetaType) {
 
-            const QQmlJSScope::ConstPtr scopeType = m_state.accumulatorIn().scopeType();
+            const QQmlJSScope::ConstPtr scopeType
+                    = m_state.accumulatorIn().scopeType().containedType();
             const auto metaEnums = scopeType->enumerations();
             const bool enforcesScoped = scopeType->enforcesScopedEnums();
 
@@ -944,7 +945,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
             setAccumulator(
                 QQmlJSRegisterContent::create(
                     prop, m_state.accumulatorIn().resultLookupIndex(), lookupIndex,
-                    QQmlJSRegisterContent::GenericObjectProperty, mathObject)
+                    QQmlJSRegisterContent::GenericObjectProperty, m_state.accumulatorIn())
             );
 
             return;
@@ -1148,7 +1149,7 @@ void QQmlJSTypePropagator::generate_CallProperty_SCMath(int base, int argc, int 
 
     QQmlJSRegisterContent realType = m_typeResolver->returnType(
             m_typeResolver->realType(), QQmlJSRegisterContent::MethodReturnValue,
-            m_typeResolver->mathObject());
+            m_state.registers[base].content);
     for (int i = 0; i < argc; ++i)
         addReadRegister(argv + i, realType);
     setAccumulator(realType);
@@ -1197,7 +1198,7 @@ void QQmlJSTypePropagator::generate_CallProperty_SCconsole(int base, int argc, i
     m_state.setHasSideEffects(true);
     setAccumulator(m_typeResolver->returnType(
             m_typeResolver->voidType(), QQmlJSRegisterContent::MethodReturnValue,
-            m_typeResolver->consoleObject()));
+            m_state.registers[base].content));
 }
 
 void QQmlJSTypePropagator::generate_callProperty_SAcheck(const QString propertyName, const QQmlJSScope::ConstPtr &baseType)
@@ -1243,7 +1244,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
             m_state.setHasSideEffects(true);
             setAccumulator(m_typeResolver->returnType(
                     m_typeResolver->jsValueType(), QQmlJSRegisterContent::JavaScriptReturnValue,
-                    m_typeResolver->jsValueType()));
+                    callBase));
             return;
         }
 
@@ -1280,13 +1281,14 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
 
     if (m_typeResolver->registerContains(callBase, m_typeResolver->stringType())) {
         if (propertyName == u"arg"_s && argc == 1) {
-            propagateStringArgCall(argv);
+            propagateStringArgCall(callBase, argv);
             return;
         }
     }
 
     if (baseType->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
-            && m_typeResolver->equals(member.scopeType(), m_typeResolver->arrayPrototype())
+            && m_typeResolver->registerContains(
+                member.scopeType(), m_typeResolver->arrayPrototype())
             && propagateArrayMethod(propertyName, argc, argv, callBase)) {
         return;
     }
@@ -1447,7 +1449,7 @@ void QQmlJSTypePropagator::addReadRegister(int index, const QQmlJSRegisterConten
 
 void QQmlJSTypePropagator::propagateCall(
         const QList<QQmlJSMetaMethod> &methods, int argc, int argv,
-        const QQmlJSScope::ConstPtr &scope)
+        const QQmlJSRegisterContent &scope)
 {
     QStringList errors;
     const QQmlJSMetaMethod match = bestMatchForCall(methods, argc, argv, &errors);
@@ -1508,7 +1510,7 @@ bool QQmlJSTypePropagator::propagateTranslationMethod(
     const QQmlJSRegisterContent returnType
             = m_typeResolver->returnType(
                     m_typeResolver->stringType(), QQmlJSRegisterContent::MethodReturnValue,
-                    m_typeResolver->jsGlobalObject());
+                    m_typeResolver->syntheticType(m_typeResolver->jsGlobalObject()));
 
     if (method.methodName() == u"qsTranslate"_s) {
         switch (argc) {
@@ -1602,11 +1604,11 @@ bool QQmlJSTypePropagator::propagateTranslationMethod(
     return false;
 }
 
-void QQmlJSTypePropagator::propagateStringArgCall(int argv)
+void QQmlJSTypePropagator::propagateStringArgCall(const QQmlJSRegisterContent &base, int argv)
 {
     setAccumulator(m_typeResolver->returnType(
                        m_typeResolver->stringType(), QQmlJSRegisterContent::MethodReturnValue,
-                       m_typeResolver->stringType()));
+                       base));
     Q_ASSERT(m_state.accumulatorOut().isValid());
 
     const QQmlJSScope::ConstPtr input = m_state.registers[argv].content.containedType();
@@ -1652,7 +1654,7 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
 
     const auto setReturnType = [&](const QQmlJSScope::ConstPtr type) {
         setAccumulator(m_typeResolver->returnType(
-                type, QQmlJSRegisterContent::MethodReturnValue, baseContained));
+                type, QQmlJSRegisterContent::MethodReturnValue, baseType));
     };
 
     if (name == u"copyWithin" && argc > 0 && argc < 4) {
@@ -2444,23 +2446,23 @@ void QQmlJSTypePropagator::generate_As(int lhs)
     const QQmlJSRegisterContent input = checkedInputRegister(lhs);
     const QQmlJSScope::ConstPtr inContained = input.containedType();
 
-    QQmlJSScope::ConstPtr outContained;
+    QQmlJSRegisterContent output;
 
     switch (m_state.accumulatorIn().variant()) {
     case QQmlJSRegisterContent::ScopeAttached:
-        outContained = m_state.accumulatorIn().scopeType();
+        output = m_state.accumulatorIn().scopeType();
         break;
     case QQmlJSRegisterContent::MetaType:
-        outContained = m_state.accumulatorIn().scopeType();
-        if (outContained->isComposite()) // Otherwise we don't need it
+        output = m_state.accumulatorIn().scopeType();
+        if (output.containedType()->isComposite()) // Otherwise we don't need it
             addReadAccumulator(m_typeResolver->globalType(m_typeResolver->metaObjectType()));
         break;
     default:
-        outContained = m_state.accumulatorIn().containedType();
+        output = m_state.accumulatorIn();
         break;
     }
 
-    QQmlJSRegisterContent output;
+    QQmlJSScope::ConstPtr outContained = output.containedType();
 
     if (outContained->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
         // A referece type cast can result in either the type or null.

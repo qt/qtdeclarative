@@ -215,9 +215,9 @@ private:
 
     void propagateCall(
             const QList<QQmlJSMetaMethod> &methods, int argc, int argv,
-            const QQmlJSScope::ConstPtr &scope);
+            const QQmlJSRegisterContent &scope);
     bool propagateTranslationMethod(const QList<QQmlJSMetaMethod> &methods, int argc, int argv);
-    void propagateStringArgCall(int argv);
+    void propagateStringArgCall(const QQmlJSRegisterContent &base, int argv);
     bool propagateArrayMethod(const QString &name, int argc, int argv, const QQmlJSRegisterContent &valueType);
     void propagatePropertyLookup(
             const QString &name, int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex);

@@ -63,7 +63,7 @@ public:
 
     enum { InvalidLookupIndex = -1 };
 
-    QQmlJSRegisterContent() = default;
+    QQmlJSRegisterContent();
     bool isValid() const { return !containedType().isNull(); }
 
     QString descriptiveName() const;
@@ -72,7 +72,8 @@ public:
     friend bool operator==(const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b)
     {
         return a.m_storedType == b.m_storedType && a.m_variant == b.m_variant
-                && a.m_scope == b.m_scope && a.m_content == b.m_content;
+                && (a.m_scope ? (b.m_scope && *a.m_scope == *b.m_scope) : !b.m_scope)
+                && a.m_content == b.m_content;
     }
 
     friend bool operator!=(const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b)
@@ -92,7 +93,7 @@ public:
 
     QQmlJSScope::ConstPtr storedType() const { return m_storedType; }
     QQmlJSScope::ConstPtr containedType() const;
-    QQmlJSScope::ConstPtr scopeType() const { return m_scope; }
+    QQmlJSRegisterContent scopeType() const { return m_scope ? *m_scope : QQmlJSRegisterContent(); }
 
     QQmlJSScope::ConstPtr type() const
     {
@@ -149,9 +150,10 @@ public:
         return std::get<ConvertedTypes>(m_content).result;
     }
 
-    QQmlJSScope::ConstPtr conversionResultScope() const
+    QQmlJSRegisterContent conversionResultScope() const
     {
-        return std::get<ConvertedTypes>(m_content).resultScope;
+        const auto result = std::get<ConvertedTypes>(m_content).resultScope;
+        return result ? *result : QQmlJSRegisterContent();
     }
 
     QList<QQmlJSScope::ConstPtr> conversionOrigins() const
@@ -163,8 +165,13 @@ public:
 
     friend size_t qHash(const QQmlJSRegisterContent &registerContent, size_t seed = 0)
     {
-        seed = qHashMulti(seed, registerContent.m_storedType, registerContent.m_content.index(),
-                          registerContent.m_scope, registerContent.m_variant);
+        seed = qHashMulti(
+                seed, registerContent.m_storedType, registerContent.m_content.index(),
+                registerContent.m_variant);
+
+        if (registerContent.m_scope)
+            seed = qHash(registerContent.m_scope, seed);
+
         switch (Kind(registerContent.m_content.index())) {
         case Kind::Type:
             return qHash(std::get<std::pair<QQmlJSScope::ConstPtr, int>>(registerContent.m_content),
@@ -189,32 +196,32 @@ public:
 
     static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &type,
                                         int resultLookupIndex, ContentVariant variant,
-                                        const QQmlJSScope::ConstPtr &scope = {});
+                                        const QQmlJSRegisterContent &scope = {});
 
     static QQmlJSRegisterContent create(const QQmlJSMetaProperty &property,
                                         int baseLookupIndex, int resultLookupIndex,
                                         ContentVariant variant,
-                                        const QQmlJSScope::ConstPtr &scope);
+                                        const QQmlJSRegisterContent &scope);
 
     static QQmlJSRegisterContent create(const QQmlJSMetaEnum &enumeration,
                                         const QString &enumMember, ContentVariant variant,
-                                        const QQmlJSScope::ConstPtr &scope);
+                                        const QQmlJSRegisterContent &scope);
 
     static QQmlJSRegisterContent create(const QList<QQmlJSMetaMethod> &methods,
                                         const QQmlJSScope::ConstPtr &methodType,
                                         ContentVariant variant,
-                                        const QQmlJSScope::ConstPtr &scope);
+                                        const QQmlJSRegisterContent &scope);
 
     static QQmlJSRegisterContent create(uint importNamespaceStringId,
                                         const QQmlJSScope::ConstPtr &importNamespaceType,
                                         ContentVariant variant,
-                                        const QQmlJSScope::ConstPtr &scope = {});
+                                        const QQmlJSRegisterContent &scope = {});
 
-    static QQmlJSRegisterContent create(const QList<QQmlJSScope::ConstPtr> &origins,
+    static QQmlJSRegisterContent create(const QList<QQmlJSRegisterContent> &origins,
                                         const QQmlJSScope::ConstPtr &conversion,
-                                        const QQmlJSScope::ConstPtr &conversionScope,
+                                        const QQmlJSRegisterContent &conversionScope,
                                         ContentVariant variant,
-                                        const QQmlJSScope::ConstPtr &scope = {});
+                                        const QQmlJSRegisterContent &scope = {});
 
     QQmlJSRegisterContent storedIn(const QQmlJSScope::ConstPtr &newStoredType) const
     {
@@ -238,16 +245,20 @@ private:
     {
         QList<QQmlJSScope::ConstPtr> origins;
         QQmlJSScope::ConstPtr result;
-        QQmlJSScope::ConstPtr resultScope;
+        QSharedPointer<QQmlJSRegisterContent> resultScope;
 
         friend size_t qHash(const ConvertedTypes &types, size_t seed = 0)
         {
-            return qHashMulti(seed, types.origins, types.result, types.resultScope);
+            return qHashMulti(seed, types.origins, types.result,
+                              types.resultScope ? *types.resultScope : QQmlJSRegisterContent());
         }
 
         friend bool operator==(const ConvertedTypes &a, const ConvertedTypes &b)
         {
-            return a.origins == b.origins && a.result == b.result && a.resultScope == b.resultScope;
+            return a.origins == b.origins && a.result == b.result
+                    && (a.resultScope
+                                ? (b.resultScope && *a.resultScope == *b.resultScope)
+                                : !b.resultScope);
         }
 
         friend bool operator!=(const ConvertedTypes &a, const ConvertedTypes &b)
@@ -290,13 +301,13 @@ private:
         ConvertedTypes
     >;
 
-    QQmlJSRegisterContent(const QQmlJSScope::ConstPtr &scope, ContentVariant variant)
-        : m_scope(scope), m_variant(variant)
+    QQmlJSRegisterContent(const QQmlJSRegisterContent &scope, ContentVariant variant)
+        : m_scope(QSharedPointer<QQmlJSRegisterContent>::create(scope)), m_variant(variant)
     {
     }
 
     QQmlJSScope::ConstPtr m_storedType;
-    QQmlJSScope::ConstPtr m_scope;
+    QSharedPointer<QQmlJSRegisterContent> m_scope;
     Content m_content;
     ContentVariant m_variant = Unknown;
 
