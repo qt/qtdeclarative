@@ -129,7 +129,7 @@ public:
     template<SceneGraphFrameType type>
     qint64 *timings()
     {
-        if (type < NumRenderThreadFrameTypes)
+        if constexpr (type < NumRenderThreadFrameTypes)
             return renderThreadTimings.localData().values[type];
         else
             return guiThreadTimings.values[type - NumRenderThreadFrameTypes];
