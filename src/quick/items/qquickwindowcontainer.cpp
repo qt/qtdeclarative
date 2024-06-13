@@ -21,8 +21,7 @@ using namespace Qt::StringLiterals;
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \inherits Item
-    \since 6.7
-    \preliminary
+    \since 6.8
 
     \brief Allows embedding arbitrary QWindows into a Qt Quick scene.
 
