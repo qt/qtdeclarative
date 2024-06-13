@@ -202,6 +202,9 @@ private:
     void insideParenthesizedExpression(const DomItem &parentForContext,
                                        const QQmlLSCompletionPosition &positionInfo,
                                        BackInsertIterator it) const;
+    void insideTemplateLiteral(const DomItem &parentForContext,
+                               const QQmlLSCompletionPosition &positionInfo,
+                               BackInsertIterator it) const;
     void signalHandlerCompletion(const QQmlJSScope::ConstPtr &scope,
                                  QDuplicateTracker<QString> *usedNames,
                                  BackInsertIterator it) const;

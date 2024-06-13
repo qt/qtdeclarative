@@ -1611,6 +1611,14 @@ void QQmlLSCompletion::insideParenthesizedExpression(const DomItem &parentForCon
     }
 }
 
+void QQmlLSCompletion::insideTemplateLiteral(const DomItem &parentForContext,
+                                             const QQmlLSCompletionPosition &positionInfo,
+                                             BackInsertIterator result) const
+{
+    Q_UNUSED(parentForContext);
+    suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+}
+
 void QQmlLSCompletion::signalHandlerCompletion(const QQmlJSScope::ConstPtr &scope,
                                                QDuplicateTracker<QString> *usedNames,
                                                BackInsertIterator result) const
@@ -1819,6 +1827,12 @@ void QQmlLSCompletion::collectCompletions(const DomItem &currentItem,
             return;
         case DomType::ScriptParenthesizedExpression:
             insideParenthesizedExpression(currentParent, positionInfo, result);
+            return;
+        case DomType::ScriptTemplateLiteral:
+            insideTemplateLiteral(currentParent, positionInfo, result);
+            return;
+        case DomType::ScriptTemplateStringPart:
+            // no completion inside of the non-expression parts of template strings
             return;
 
         // TODO: Implement those statements.

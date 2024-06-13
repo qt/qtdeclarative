@@ -5,5 +5,8 @@ import QtQuick
 
 Item {
     property int helloProperty: 42
-    property string myTemplateLiteral: `hello${helloProperty}World!`
+    function f() {
+        let x = `hello${helloProperty}World!`;
+        let y = f`hello${helloProperty}World!`;
+    }
 }
