@@ -251,6 +251,12 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region)
     case NewKeywordRegion:
         codeForRegion = u"new"_s;
         break;
+    case ThisKeywordRegion:
+        codeForRegion = u"this"_s;
+        break;
+    case SuperKeywordRegion:
+        codeForRegion = u"super"_s;
+        break;
     // not keywords:
     case ImportUriRegion:
     case IdNameRegion:

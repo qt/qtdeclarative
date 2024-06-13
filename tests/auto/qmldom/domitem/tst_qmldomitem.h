@@ -4195,6 +4195,75 @@ private slots:
         }
     }
 
+    void thisExpression()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/thisExpressions.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+
+        {
+            const DomItem thisLiteral = statements.index(0)
+                                          .field(Fields::declarations)
+                                          .index(0)
+                                          .field(Fields::initializer);
+            QVERIFY(thisLiteral);
+            QCOMPARE(thisLiteral.internalKind(), DomType::ScriptThisExpression);
+        }
+        {
+            const DomItem thisAccess = statements.index(1)
+                                          .field(Fields::left)
+                                          .field(Fields::left);
+            QVERIFY(thisAccess);
+            QCOMPARE(thisAccess.internalKind(), DomType::ScriptThisExpression);
+        }
+    }
+
+    void superLiteral()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/superLiteral.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+
+        {
+            const DomItem superCall = statements.index(0).field(Fields::callee);
+            QVERIFY(superCall);
+            QCOMPARE(superCall.internalKind(), DomType::ScriptSuperLiteral);
+        }
+
+        {
+            const DomItem superAccess = statements.index(1)
+                    .field(Fields::declarations)
+                    .index(0)
+                    .field(Fields::initializer)
+                    .field(Fields::callee)
+                    .field(Fields::left);
+            QVERIFY(superAccess);
+            QCOMPARE(superAccess.internalKind(), DomType::ScriptSuperLiteral);
+        }
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

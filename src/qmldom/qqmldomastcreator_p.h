@@ -541,6 +541,8 @@ public:
     bool visit(AST::StringLiteralPropertyName *expression) override;
     bool visit(AST::TypeAnnotation *expression) override;
     bool visit(AST::RegExpLiteral *) override;
+    bool visit(AST::ThisExpression *) override;
+    bool visit(AST::SuperLiteral *) override;
 
     void throwRecursionDepthError() override;
 

@@ -1699,6 +1699,30 @@ bool QQmlDomAstCreator::visit(AST::RegExpLiteral *literal)
     return true;
 }
 
+bool QQmlDomAstCreator::visit(AST::ThisExpression *expression)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto current = makeGenericScriptElement(expression, DomType::ScriptThisExpression);
+    if (expression->thisToken.isValid())
+        current->addLocation(ThisKeywordRegion, expression->thisToken);
+    pushScriptElement(current);
+    return true;
+}
+
+bool QQmlDomAstCreator::visit(AST::SuperLiteral *expression)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto current = makeGenericScriptElement(expression, DomType::ScriptSuperLiteral);
+    if (expression->superToken.isValid())
+        current->addLocation(SuperKeywordRegion, expression->superToken);
+    pushScriptElement(current);
+    return true;
+}
+
 bool QQmlDomAstCreator::visit(AST::NumericLiteralPropertyName *expression)
 {
     if (!m_enableScriptExpressions)
