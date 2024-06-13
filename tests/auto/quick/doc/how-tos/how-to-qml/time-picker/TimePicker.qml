@@ -278,10 +278,6 @@ Item {
                 opacity: contentContainer.labelOpacity
                 anchors.centerIn: parent
 
-                // TODO: remove me - QTBUG-122679
-                Component.onCompleted: print("created", labelDelegate, "at index", index)
-                Component.onDestruction: print("destroyed", labelDelegate, "at index", index)
-
                 required property int index
                 // From 0 to 60.
                 readonly property int value: (index * 5) % root.__to
