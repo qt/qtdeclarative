@@ -312,18 +312,11 @@ void tst_HowToQml::timePicker()
     QCOMPARE(dialog->property("minutes").toInt(), 8);
 
     // Test that the 24 hour mode works.
-    const bool isCi = qgetenv("QTEST_ENVIRONMENT") == "ci"; // QTBUG-122679
-    if (isCi)
-        qDebug() << "about to set is24hour to true";
     QVERIFY(dialog->setProperty("is24Hour", QVariant::fromValue(true)));
-    if (isCi)
-        qDebug() << "about to open picker";
     QTest::touchEvent(window, touchScreen.data()).press(0, mapCenterToWindow(openDialogLabel));
     QTest::touchEvent(window, touchScreen.data()).release(0, mapCenterToWindow(openDialogLabel));
     QTRY_COMPARE(dialog->property("opened").toBool(), true);
     QCOMPARE(timePicker->property("mode").toInt(), Hours);
-    if (isCi)
-        qDebug() << "about to verify labels after switching to 24hr";
     RETURN_IF_FAILED(verifyLabels(Hours, TwentyFourHour, __LINE__));
     // TwelveHour because the selected value (7) is on the 12 hour "ring".
     RETURN_IF_FAILED(verifySelectionIndicator(valueForHour(7), TwelveHour, __LINE__));
