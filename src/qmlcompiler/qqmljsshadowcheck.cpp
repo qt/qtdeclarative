@@ -154,7 +154,7 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
     else
         m_baseTypes.append(baseType);
 
-    if (!m_typeResolver->containedType(baseType)->isReferenceType())
+    if (!baseType.containedType()->isReferenceType())
         return NotShadowable;
 
     switch (baseType.variant()) {
@@ -193,7 +193,7 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
 
         if (currentAnnotation.changedRegisterIndex != InvalidRegister) {
             m_typeResolver->adjustOriginalType(
-                    m_typeResolver->containedType(currentAnnotation.changedRegister), varType);
+                    currentAnnotation.changedRegister.containedType(), varType);
             m_adjustedTypes.insert(currentAnnotation.changedRegister);
         }
 

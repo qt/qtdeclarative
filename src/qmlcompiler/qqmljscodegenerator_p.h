@@ -217,7 +217,7 @@ protected:
                        const QQmlJSRegisterContent &to,
                        const QString &variable)
     {
-        const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
+        const QQmlJSScope::ConstPtr contained = to.containedType();
         if (m_typeResolver->equals(to.storedType(), contained)
                 || m_typeResolver->isNumeric(to.storedType())
                 || to.storedType()->isReferenceType()

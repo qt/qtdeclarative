@@ -809,7 +809,7 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompileAndRecordAotStats(
         entry.column = location.startColumn;
         entry.codegenSuccessful = !error->isValid();
         QQmlJS::QQmlJSAotCompilerStats::addEntry(
-                m_typeResolver.containedType(function->qmlScope)->filePath(), entry);
+                function->qmlScope.containedType()->filePath(), entry);
     }
 
     return result;

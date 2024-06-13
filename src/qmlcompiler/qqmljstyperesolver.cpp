@@ -270,8 +270,8 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
     case QSOperator::Op::URShift:
         return builtinType(uint32Type());
     case QSOperator::Op::Add: {
-        const auto leftContents = containedType(left);
-        const auto rightContents = containedType(right);
+        const auto leftContents = left.containedType();
+        const auto rightContents = right.containedType();
         if (equals(leftContents, stringType()) || equals(rightContents, stringType()))
             return builtinType(stringType());
 
@@ -286,7 +286,7 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
     case QSOperator::Op::Sub:
     case QSOperator::Op::Mul:
     case QSOperator::Op::Exp: {
-        const QQmlJSScope::ConstPtr result = merge(containedType(left), containedType(right));
+        const QQmlJSScope::ConstPtr result = merge(left.containedType(), right.containedType());
         return builtinType(equals(result, boolType()) ? int32Type() : realType());
     }
     case QSOperator::Op::Div:
@@ -314,7 +314,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::typeForArithmeticUnaryOperation(
             return operand;
         Q_FALLTHROUGH();
     default:
-        if (equals(containedType(operand), boolType()))
+        if (equals(operand.containedType(), boolType()))
             return builtinType(int32Type());
         break;
     }
@@ -324,17 +324,17 @@ QQmlJSRegisterContent QQmlJSTypeResolver::typeForArithmeticUnaryOperation(
 
 bool QQmlJSTypeResolver::isPrimitive(const QQmlJSRegisterContent &type) const
 {
-    return isPrimitive(containedType(type));
+    return isPrimitive(type.containedType());
 }
 
 bool QQmlJSTypeResolver::isNumeric(const QQmlJSRegisterContent &type) const
 {
-    return isNumeric(containedType(type));
+    return isNumeric(type.containedType());
 }
 
 bool QQmlJSTypeResolver::isIntegral(const QQmlJSRegisterContent &type) const
 {
-    return isIntegral(containedType(type));
+    return isIntegral(type.containedType());
 }
 
 bool QQmlJSTypeResolver::isIntegral(const QQmlJSScope::ConstPtr &type) const
@@ -565,14 +565,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::tracked(const QQmlJSRegisterContent &t
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::trackedContainedType(
         const QQmlJSRegisterContent &container) const
 {
-    const QQmlJSScope::ConstPtr type = containedType(container);
+    const QQmlJSScope::ConstPtr type = container.containedType();
     return m_trackedTypes->contains(type) ? type : QQmlJSScope::ConstPtr();
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::originalContainedType(
         const QQmlJSRegisterContent &container) const
 {
-    return originalType(containedType(container));
+    return originalType(container.containedType());
 }
 
 bool QQmlJSTypeResolver::adjustTrackedType(
@@ -661,7 +661,7 @@ QString QQmlJSTypeResolver::containedTypeName(const QQmlJSRegisterContent &conta
         type = container.scopeType();
         break;
     default:
-        type = containedType(container);
+        type = container.containedType();
         break;
     }
 
@@ -705,7 +705,7 @@ bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
 bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSRegisterContent &from,
                                           const QQmlJSRegisterContent &to) const
 {
-    return canConvertFromTo(containedType(from), containedType(to));
+    return canConvertFromTo(from.containedType(), to.containedType());
 }
 
 static QQmlJSRegisterContent::ContentVariant mergeVariants(QQmlJSRegisterContent::ContentVariant a,
@@ -727,7 +727,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
         origins.append(a.conversionOrigins());
         aResultScope = a.conversionResultScope();
     } else {
-        origins.append(containedType(a));
+        origins.append(a.containedType());
         aResultScope = a.scopeType();
     }
 
@@ -736,7 +736,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
         origins.append(b.conversionOrigins());
         bResultScope = b.conversionResultScope();
     } else {
-        origins.append(containedType(b));
+        origins.append(b.containedType());
         bResultScope = b.scopeType();
     }
 
@@ -746,7 +746,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
 
     return QQmlJSRegisterContent::create(
                 origins,
-                merge(containedType(a), containedType(b)),
+                merge(a.containedType(), b.containedType()),
                 merge(aResultScope, bResultScope),
                 mergeVariants(a.variant(), b.variant()),
                 merge(a.scopeType(), b.scopeType()));
@@ -864,7 +864,7 @@ bool QQmlJSTypeResolver::canHoldUndefined(const QQmlJSRegisterContent &content) 
                 || equals(type, m_jsValueType) || equals(type, m_jsPrimitiveType);
     };
 
-    if (!canBeUndefined(containedType(content)))
+    if (!canBeUndefined(content.containedType()))
         return false;
 
     if (!content.isConversion())
@@ -1148,7 +1148,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSRegisterContent
                                                      const QString &name, int lookupIndex,
                                                      QQmlJSScopesByIdOptions options) const
 {
-    const QQmlJSScope::ConstPtr contained = containedType(scope);
+    const QQmlJSScope::ConstPtr contained = scope.containedType();
     if (QQmlJSScope::ConstPtr identified = m_objectsById.scope(name, contained, options)) {
         return QQmlJSRegisterContent::create(
                 identified, lookupIndex, QQmlJSRegisterContent::ObjectById, contained);
@@ -1784,13 +1784,13 @@ QQmlJSRegisterContent QQmlJSTypeResolver::iteratorPointer(
 {
     const QQmlJSScope::ConstPtr value = (type == QQmlJS::AST::ForEachType::In)
             ? m_int32Type
-            : containedType(valueType(listType));
+            : valueType(listType).containedType();
 
     QQmlJSScope::ConstPtr iteratorPointer = type == QQmlJS::AST::ForEachType::In
             ? m_forInIteratorPtr
             : m_forOfIteratorPtr;
 
-    const QQmlJSScope::ConstPtr listContained = containedType(listType);
+    const QQmlJSScope::ConstPtr listContained = listType.containedType();
 
     QQmlJSMetaProperty prop;
     prop.setPropertyName(u"<>"_s);
@@ -1862,14 +1862,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::convert(
 {
     if (from.isConversion()) {
         return QQmlJSRegisterContent::create(
-                from.conversionOrigins(), containedType(to),
+                from.conversionOrigins(), to.containedType(),
                 to.scopeType() ? to.scopeType() : from.conversionResultScope(),
                 from.variant(), from.scopeType());
     }
 
     return QQmlJSRegisterContent::create(
-            QList<QQmlJSScope::ConstPtr>{containedType(from)},
-            containedType(to), to.scopeType(), from.variant(), from.scopeType());
+            QList<QQmlJSScope::ConstPtr>{from.containedType()},
+            to.containedType(), to.scopeType(), from.variant(), from.scopeType());
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::cast(

@@ -85,7 +85,7 @@ void QQmlJSOptimizations::populateReaderLocations()
             } else {
                 // void the output, rather than deleting it. We still need its variant.
                 const bool adjusted = m_typeResolver->adjustTrackedType(
-                            m_typeResolver->containedType(it->second.changedRegister),
+                            it->second.changedRegister.containedType(),
                             m_typeResolver->voidType());
                 Q_ASSERT(adjusted); // Can always convert to void
             }
@@ -323,7 +323,7 @@ void QQmlJSOptimizations::adjustTypes()
             return;
 
         Q_ASSERT(it->trackedTypes.size() == 1);
-        Q_ASSERT(it->trackedTypes[0] == m_typeResolver->containedType(annotation.changedRegister));
+        Q_ASSERT(it->trackedTypes[0] == annotation.changedRegister.containedType());
 
         if (it->trackedTypes[0]->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence)
             return; // Constructed something else.
@@ -336,7 +336,7 @@ void QQmlJSOptimizations::adjustTypes()
         // QQmlJSTypePropagator.
         if (QQmlJSScope::ConstPtr valueType = it->trackedTypes[0]->valueType()) {
             const QQmlJSRegisterContent content = annotation.readRegisters.begin().value().content;
-            const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
+            const QQmlJSScope::ConstPtr contained = content.containedType();
 
             // If it's the 1-arg Array ctor, and the argument is a number, that's special.
             if (mode != ObjectOrArrayDefinition::ArrayConstruct1ArgId
@@ -362,7 +362,7 @@ void QQmlJSOptimizations::adjustTypes()
         Q_ASSERT(it->trackedTypes.size() == 1);
         QQmlJSScope::ConstPtr resultType = it->trackedTypes[0];
 
-        Q_ASSERT(resultType == m_typeResolver->containedType(annotation.changedRegister));
+        Q_ASSERT(resultType == annotation.changedRegister.containedType());
         Q_ASSERT(!annotation.readRegisters.isEmpty());
 
         if (!m_typeResolver->adjustTrackedType(resultType, it->typeReaders.values()))
@@ -395,7 +395,7 @@ void QQmlJSOptimizations::adjustTypes()
                 continue;
             }
             const QQmlJSRegisterContent content = annotation.readRegisters[object.argv + i].content;
-            const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
+            const QQmlJSScope::ConstPtr contained = content.containedType();
             if (!m_typeResolver->adjustTrackedType(contained, propType))
                 setError(adjustErrorMessage(contained, propType));
         }

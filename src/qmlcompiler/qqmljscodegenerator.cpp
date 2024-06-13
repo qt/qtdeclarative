@@ -262,7 +262,7 @@ QT_WARNING_POP
 
     if (function->returnType.isValid()) {
         signature += u"    argTypes[0] = %1;\n"_s.arg(
-                metaType(m_typeResolver->containedType(function->returnType)));
+                metaType(function->returnType.containedType()));
     } else {
         signature += u"    argTypes[0] = QMetaType();\n"_s;
     }
@@ -288,7 +288,7 @@ void QQmlJSCodeGenerator::generateReturnError()
 
     m_body += u"if (argv[0]) {\n"_s;
 
-    const auto contained = m_typeResolver->containedType(ret);
+    const auto contained = ret.containedType();
     const auto stored = ret.storedType();
     if (contained->isReferenceType() && stored->isReferenceType()) {
         m_body += u"    *static_cast<"_s
@@ -299,7 +299,7 @@ void QQmlJSCodeGenerator::generateReturnError()
                 + stored->internalName() + u"();\n"_s;
     } else {
         m_body += u"    const QMetaType returnType = "_s
-                + metaType(m_typeResolver->containedType(ret)) + u";\n"_s;
+                + metaType(ret.containedType()) + u";\n"_s;
         m_body += u"    returnType.destruct(argv[0]);\n"_s;
         m_body += u"    returnType.construct(argv[0]);\n "_s;
     }
@@ -351,7 +351,7 @@ void QQmlJSCodeGenerator::generate_Ret()
         return;
     }
 
-    const auto contained = m_typeResolver->containedType(m_function->returnType);
+    const auto contained = m_function->returnType.containedType();
     const auto stored = m_function->returnType.storedType();
     if (m_typeResolver->equals(contained, stored)
             || (contained->isReferenceType() && stored->isReferenceType())) {
@@ -782,7 +782,7 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
     QString indexName = m_state.accumulatorVariableIn;
     QQmlJSScope::ConstPtr indexType;
     if (m_typeResolver->isNumeric(m_state.accumulatorIn())) {
-        indexType = m_typeResolver->containedType(m_state.accumulatorIn());
+        indexType = m_state.accumulatorIn().containedType();
     } else if (m_state.accumulatorIn().isConversion()) {
         const auto target = m_typeResolver->extractNonVoidFromOptionalType(m_state.accumulatorIn());
         if (m_typeResolver->isNumeric(target)) {
@@ -852,7 +852,7 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
     INJECT_TRACE_INFO(generate_StoreElement);
 
     const QQmlJSRegisterContent baseType = registerType(base);
-    const QQmlJSScope::ConstPtr indexType = m_typeResolver->containedType(registerType(index));
+    const QQmlJSScope::ConstPtr indexType = registerType(index).containedType();
 
     if (!m_typeResolver->isNumeric(indexType) || !baseType.isList()) {
         reject(u"StoreElement with non-list base type or non-numeric arguments"_s);
@@ -869,7 +869,7 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
 
     const auto valueType = m_typeResolver->valueType(baseType);
     const auto elementType = global(m_typeResolver->genericType(
-            m_typeResolver->containedType(valueType)));
+            valueType.containedType()));
 
     addInclude(u"QtQml/qjslist.h"_s);
     if (!m_typeResolver->isNativeArrayIndex(indexType))
@@ -1016,7 +1016,7 @@ void QQmlJSCodeGenerator::generateTypeLookup(int index)
 void QQmlJSCodeGenerator::generateVariantEqualityComparison(
         const QQmlJSRegisterContent &nonStorableContent, const QString &registerName, bool invert)
 {
-    const auto nonStorableType = m_typeResolver->containedType(nonStorableContent);
+    const auto nonStorableType = nonStorableContent.containedType();
     QQmlJSScope::ConstPtr comparedType =
             m_typeResolver->equals(nonStorableType, m_typeResolver->nullType())
             ? m_typeResolver->nullType()
@@ -1078,7 +1078,7 @@ void QQmlJSCodeGenerator::generateVariantEqualityComparison(
     // Therefore, use the underlying type right away.
     const auto contained = storableContent.isEnumeration()
               ? storableContent.storedType()
-              : m_typeResolver->containedType(storableContent);
+              : storableContent.containedType();
 
     if (contained->isReferenceType()) {
         const QQmlJSRegisterContent comparable = builtin(m_typeResolver->qObjectType());
@@ -1266,7 +1266,7 @@ bool QQmlJSCodeGenerator::generateContentPointerCheck(
         const QString &variable, const QString &errorMessage)
 {
     const QQmlJSScope::ConstPtr scope = required;
-    const QQmlJSScope::ConstPtr input = m_typeResolver->containedType(actual);
+    const QQmlJSScope::ConstPtr input = actual.containedType();
     if (QQmlJSUtils::searchBaseAndExtensionTypes(input,
             [&](const QQmlJSScope::ConstPtr &base) {
                 return m_typeResolver->equals(base, scope);
@@ -1599,7 +1599,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
     QString preparation;
     QString argType;
     if (!m_typeResolver->registerContains(
-                m_state.accumulatorIn(), m_typeResolver->containedType(property))) {
+                m_state.accumulatorIn(), property.containedType())) {
         m_body += u"auto converted = "_s
                 + conversion(m_state.accumulatorIn(), property, consumedAccumulatorVariableIn())
                 + u";\n"_s;
@@ -1723,9 +1723,7 @@ QString QQmlJSCodeGenerator::argumentsList(int argc, int argv, QString *outVar)
         if (!m_typeResolver->registerContains(m_state.accumulatorOut(), outType)) {
              if (m_typeResolver->equals(outType, m_typeResolver->varType())
                 || m_typeResolver->equals(outType, m_typeResolver->jsPrimitiveType())) {
-                m_body += u'('
-                        + metaType(m_typeResolver->containedType(m_state.accumulatorOut()))
-                        + u')';
+                m_body += u'(' + metaType(m_state.accumulatorOut().containedType()) + u')';
              }
         }
         m_body += u";\n";
@@ -1801,7 +1799,7 @@ bool QQmlJSCodeGenerator::inlineStringMethod(const QString &name, int base, int 
     m_body += m_state.accumulatorVariableOut + u" = "_s;
 
     if (m_typeResolver->isNumeric(input))
-        m_body += ret(arg(m_typeResolver->containedType(input)));
+        m_body += ret(arg(input.containedType()));
     else if (m_typeResolver->registerContains(input, m_typeResolver->boolType()))
         m_body += ret(arg(m_typeResolver->boolType()));
     else
@@ -2071,7 +2069,7 @@ bool QQmlJSCodeGenerator::inlineConsoleMethod(const QString &name, int argc, int
     // because QQmlLoggingCategoryBase is now a builtin.
     // TODO: The run time check for firstArg is obsolete.
     const bool firstArgIsReference = argc > 0
-            && m_typeResolver->containedType(firstArg)->isReferenceType();
+            && firstArg.containedType()->isReferenceType();
 
     if (firstArgIsReference) {
         m_body += u"    QObject *firstArg = ";
@@ -2395,7 +2393,7 @@ void QQmlJSCodeGenerator::generate_Construct(int func, int argc, int argv)
                     + u"QLatin1String(\"Invalid array length\"));\n"_s;
 
             const QString indexName = registerVariable(argv);
-            const auto indexType = m_typeResolver->containedType(registerType(argv));
+            const auto indexType = registerType(argv).containedType();
             if (!m_typeResolver->isNativeArrayIndex(indexType)) {
                 m_body += u"if (!QJSNumberCoercion::isArrayIndex("_s + indexName + u")) {\n"_s
                         + error;
@@ -2679,7 +2677,7 @@ void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int 
         return;
     }
 
-    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(m_state.accumulatorOut());
+    const QQmlJSScope::ConstPtr contained = m_state.accumulatorOut().containedType();
 
     const int classSize = m_jsUnitGenerator->jsClassSize(internalClassId);
     Q_ASSERT(argc >= classSize);
@@ -2727,7 +2725,7 @@ void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int 
     if (m_typeResolver->registerContains(m_state.accumulatorOut(), stored)) {
         m_body += u"()";
     } else if (isVariantOrPrimitive) {
-        m_body += u'(' + metaType(m_typeResolver->containedType(m_state.accumulatorOut())) + u')';
+        m_body += u'(' + metaType(m_state.accumulatorOut().containedType()) + u')';
     } else {
         reject(u"storing an object literal in an unsupported container %1"_s
                        .arg(stored->internalName()));
@@ -2933,11 +2931,11 @@ QString QQmlJSCodeGenerator::contentPointer(const QQmlJSRegisterContent &content
         return u'&' + var;
 
     if (m_typeResolver->isNumeric(content.storedType())
-        && m_typeResolver->containedType(content)->scopeType() == QQmlSA::ScopeType::EnumScope) {
+        && content.containedType()->scopeType() == QQmlSA::ScopeType::EnumScope) {
         return u'&' + var;
     }
 
-    if (stored->isListProperty() && m_typeResolver->containedType(content)->isListProperty())
+    if (stored->isListProperty() && content.containedType()->isListProperty())
         return u'&' + var;
 
     reject(u"content pointer of unsupported wrapper type "_s + content.descriptiveName());
@@ -2947,7 +2945,7 @@ QString QQmlJSCodeGenerator::contentPointer(const QQmlJSRegisterContent &content
 QString QQmlJSCodeGenerator::contentType(const QQmlJSRegisterContent &content, const QString &var)
 {
     const QQmlJSScope::ConstPtr stored = content.storedType();
-    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
+    const QQmlJSScope::ConstPtr contained = content.containedType();
     if (m_typeResolver->equals(contained, stored))
         return metaTypeFromType(stored);
 
@@ -3058,7 +3056,7 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
     // type and if it doesn't match, set the result to null or undefined.
     const QQmlJSRegisterContent originalContent = original(outputContent);
     const QQmlJSScope::ConstPtr target = originalContent.containedType()->isReferenceType()
-            ? m_typeResolver->containedType(originalContent)
+            ? originalContent.containedType()
             : m_typeResolver->extractNonVoidFromOptionalType(originalContent);
 
     if (!target) {
@@ -3384,11 +3382,11 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
 
     const auto rhsContained = rhsIsOptional
             ? m_typeResolver->extractNonVoidFromOptionalType(rhsContent)
-            : m_typeResolver->containedType(rhsContent);
+            : rhsContent.containedType();
 
     const auto lhsContained = lhsIsOptional
             ? m_typeResolver->extractNonVoidFromOptionalType(lhsContent)
-            : m_typeResolver->containedType(lhsContent);
+            : lhsContent.containedType();
 
     const bool isStrict = function == "strictlyEquals"_L1;
     const bool strictlyComparableWithVar
@@ -3410,9 +3408,9 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
     };
 
     const auto retrieveOriginal = [this](const QQmlJSRegisterContent &content) {
-        const auto contained = m_typeResolver->containedType(content);
+        const auto contained = content.containedType();
         const auto originalContent = original(content);
-        const auto containedOriginal = m_typeResolver->containedType(originalContent);
+        const auto containedOriginal = originalContent.containedType();
 
         if (m_typeResolver->equals(
                     m_typeResolver->genericType(containedOriginal), originalContent.storedType())) {
@@ -3880,7 +3878,7 @@ bool QQmlJSCodeGenerator::shouldMoveRegister(int index) const
 QString QQmlJSCodeGenerator::conversion(
         const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to, const QString &variable)
 {
-    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
+    const QQmlJSScope::ConstPtr contained = to.containedType();
 
     // If from is QJSPrimitiveValue and to contains a primitive we coerce using QJSPrimitiveValue
     if (registerIsStoredIn(from, m_typeResolver->jsPrimitiveType())
@@ -4223,8 +4221,8 @@ QString QQmlJSCodeGenerator::convertStored(
 
 QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to, const QString &variable)
 {
-    const QQmlJSScope::ConstPtr containedFrom = m_typeResolver->containedType(from);
-    const QQmlJSScope::ConstPtr containedTo = m_typeResolver->containedType(to);
+    const QQmlJSScope::ConstPtr containedFrom = from.containedType();
+    const QQmlJSScope::ConstPtr containedTo = to.containedType();
 
     // Those should be handled before, by convertStored().
     Q_ASSERT(!to.storedType()->isReferenceType());
@@ -4272,7 +4270,7 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
     }
 
     const auto originalFrom = original(from);
-    const auto containedOriginalFrom = m_typeResolver->containedType(originalFrom);
+    const auto containedOriginalFrom = originalFrom.containedType();
     if (!m_typeResolver->equals(containedFrom, containedOriginalFrom)
             && m_typeResolver->canHold(containedFrom, containedOriginalFrom)) {
         // If from is simply a wrapping of a specific type into a more general one, we can convert
@@ -4312,7 +4310,7 @@ QQmlJSCodeGenerator::AccumulatorConverter::AccumulatorConverter(QQmlJSCodeGenera
     // If the stored type differs or if we store in QVariant and the contained type differs,
     // then we have to use a temporary ...
     if (!resolver->equals(origStored, stored)
-        || (!resolver->equals(origContained, resolver->containedType(accumulatorOut))
+        || (!resolver->equals(origContained, accumulatorOut.containedType())
             && resolver->equals(stored, resolver->varType()))) {
 
         const bool storable = isTypeStorable(resolver, origStored);

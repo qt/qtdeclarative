@@ -79,9 +79,9 @@ void QQmlJSTypePropagator::generate_ret_SAcheck()
         return;
     QQmlSA::PassManagerPrivate::get(m_passManager)
             ->analyzeBinding(QQmlJSScope::createQQmlSAElement(
-                                     m_typeResolver->containedType(m_function->qmlScope)),
+                                     m_function->qmlScope.containedType()),
                              QQmlJSScope::createQQmlSAElement(
-                                     m_typeResolver->containedType(m_state.accumulatorIn())),
+                                     m_state.accumulatorIn().containedType()),
                              QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                                      getCurrentBindingSourceLocation()));
 }
@@ -297,7 +297,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
 {
     auto location = getCurrentSourceLocation();
 
-    const auto qmlScopeContained = m_typeResolver->containedType(m_function->qmlScope);
+    const auto qmlScopeContained = m_function->qmlScope.containedType();
     if (qmlScopeContained->isInCustomParserParent()) {
         // Only ignore custom parser based elements if it's not Connections.
         if (qmlScopeContained->baseType().isNull()
@@ -314,7 +314,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
 
     std::optional<QQmlJSFixSuggestion> suggestion;
 
-    const auto childScopes = m_typeResolver->containedType(m_function->qmlScope)->childScopes();
+    const auto childScopes = m_function->qmlScope.containedType()->childScopes();
     for (qsizetype i = 0, end = childScopes.size(); i < end; i++) {
         auto &scope = childScopes[i];
         if (location.offset > scope->sourceLocation().offset) {
@@ -363,7 +363,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
     // This heuristic does not recognize all instances of this occurring but should be sufficient
     // protection against wrongly suggesting to add an id to the view to access the model that way
     // which is very misleading
-    const auto qmlScope = m_typeResolver->containedType(m_function->qmlScope);
+    const auto qmlScope = m_function->qmlScope.containedType();
     if (name == u"model" || name == u"index") {
         if (const QQmlJSScope::ConstPtr parent = qmlScope->parentScope(); !parent.isNull()) {
             const auto bindings = parent->ownPropertyBindings(u"delegate"_s);
@@ -552,7 +552,7 @@ bool QQmlJSTypePropagator::isCallingProperty(QQmlJSScope::ConstPtr scope, const 
 
 void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup_SAcheck(const QString &name)
 {
-    const auto qmlScope = m_typeResolver->containedType(m_function->qmlScope);
+    const auto qmlScope = m_function->qmlScope.containedType();
     QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeRead(
             QQmlJSScope::createQQmlSAElement(qmlScope), name,
             QQmlJSScope::createQQmlSAElement(qmlScope),
@@ -571,12 +571,12 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 
     setAccumulator(m_typeResolver->scopedType(m_function->qmlScope, name, index));
 
-    const auto qmlScope = m_typeResolver->containedType(m_function->qmlScope);
+    const auto qmlScope = m_function->qmlScope.containedType();
     if (!m_state.accumulatorOut().isValid() && m_typeResolver->isPrefix(name)) {
         const QQmlJSRegisterContent inType = m_typeResolver->globalType(qmlScope);
         setAccumulator(QQmlJSRegisterContent::create(
                     nameIndex, m_typeResolver->voidType(), QQmlJSRegisterContent::ScopeModulePrefix,
-                    m_typeResolver->containedType(inType)));
+                    inType.containedType()));
         return;
     }
 
@@ -613,10 +613,10 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 
 void QQmlJSTypePropagator::generate_StoreNameCommon_SAcheck(const QQmlJSRegisterContent &in, const QString &name)
 {
-    const auto qmlScope = m_typeResolver->containedType(m_function->qmlScope);
+    const auto qmlScope = m_function->qmlScope.containedType();
     QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeWrite(
             QQmlJSScope::createQQmlSAElement(qmlScope), name,
-            QQmlJSScope::createQQmlSAElement(m_typeResolver->containedType(in)),
+            QQmlJSScope::createQQmlSAElement(in.containedType()),
             QQmlJSScope::createQQmlSAElement(qmlScope),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                     getCurrentBindingSourceLocation()));
@@ -744,7 +744,7 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
     addReadRegister(base, baseRegister);
 
     if (m_typeResolver->isNumeric(m_state.accumulatorIn())) {
-        const auto contained = m_typeResolver->containedType(m_state.accumulatorIn());
+        const auto contained = m_state.accumulatorIn().containedType();
         if (m_typeResolver->isSignedInteger(contained))
             addReadAccumulator(m_typeResolver->globalType(m_typeResolver->sizeType()));
         else if (m_typeResolver->isUnsignedInteger(contained))
@@ -783,7 +783,7 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
         return;
     }
 
-    const auto contained = m_typeResolver->containedType(indexRegister);
+    const auto contained = indexRegister.containedType();
     if (m_typeResolver->isSignedInteger(contained))
         addReadRegister(index, m_typeResolver->globalType(m_typeResolver->int32Type()));
     else if (m_typeResolver->isUnsignedInteger(contained))
@@ -809,11 +809,11 @@ void QQmlJSTypePropagator::propagatePropertyLookup_SAcheck(const QString &proper
 
     QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeRead(
             QQmlJSScope::createQQmlSAElement(
-                    m_typeResolver->containedType(m_state.accumulatorIn())),
+                    m_state.accumulatorIn().containedType()),
             propertyName,
             QQmlJSScope::createQQmlSAElement(isAttached
                     ? m_attachedContext
-                    : m_typeResolver->containedType(m_function->qmlScope)),
+                    : m_function->qmlScope.containedType()),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                     getCurrentBindingSourceLocation()));
 }
@@ -836,7 +836,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
                         m_jsUnitGenerator->getStringId(propertyName),
                         m_state.accumulatorIn().containedType(),
                         QQmlJSRegisterContent::ObjectModulePrefix,
-                        m_typeResolver->containedType(m_state.accumulatorIn())));
+                        m_state.accumulatorIn().containedType()));
             return;
         }
         if (m_state.accumulatorIn().isImportNamespace())
@@ -878,7 +878,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
         if (m_state.accumulatorIn().isList() && propertyName == u"length")
             return;
 
-        auto baseType = m_typeResolver->containedType(m_state.accumulatorIn());
+        auto baseType = m_state.accumulatorIn().containedType();
         // Warn separately when a property is only not found because of a missing type
 
         if (propertyResolution(baseType, propertyName) != PropertyMissing)
@@ -954,7 +954,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
         propagatePropertyLookup_SAcheck(propertyName);
 
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectAttached)
-        m_attachedContext = m_typeResolver->containedType(m_state.accumulatorIn());
+        m_attachedContext = m_state.accumulatorIn().containedType();
 
     switch (m_state.accumulatorOut().variant()) {
     case QQmlJSRegisterContent::ObjectEnum:
@@ -1000,13 +1000,13 @@ void QQmlJSTypePropagator::generate_StoreProperty_SAcheck(const QString property
     const bool isAttached = callBase.variant() == QQmlJSRegisterContent::ObjectAttached;
 
     QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeWrite(
-            QQmlJSScope::createQQmlSAElement(m_typeResolver->containedType(callBase)),
+            QQmlJSScope::createQQmlSAElement(callBase.containedType()),
             propertyName,
             QQmlJSScope::createQQmlSAElement(
-                    m_typeResolver->containedType(m_state.accumulatorIn())),
+                    m_state.accumulatorIn().containedType()),
             QQmlJSScope::createQQmlSAElement(isAttached
                     ? m_attachedContext
-                    : m_typeResolver->containedType(m_function->qmlScope)),
+                    : m_function->qmlScope.containedType()),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                     getCurrentBindingSourceLocation()));
 }
@@ -1023,13 +1023,13 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
         return;
     }
 
-    if (m_typeResolver->containedType(property).isNull()) {
+    if (property.containedType().isNull()) {
         setError(u"Cannot determine type for property %1 of type %2"_s.arg(
                 propertyName, callBase.descriptiveName()));
         return;
     }
 
-    if (!property.isWritable() && !m_typeResolver->containedType(property)->isListProperty()) {
+    if (!property.isWritable() && !property.containedType()->isListProperty()) {
         setError(u"Can't assign to read-only property %1"_s.arg(propertyName));
 
         m_logger->log(u"Cannot assign to read-only property %1"_s.arg(propertyName),
@@ -1153,7 +1153,7 @@ void QQmlJSTypePropagator::generate_CallProperty_SCconsole(int base, int argc, i
 
     if (argc > 0) {
         const QQmlJSRegisterContent firstContent = m_state.registers[argv].content;
-        const QQmlJSScope::ConstPtr firstArg = m_typeResolver->containedType(firstContent);
+        const QQmlJSScope::ConstPtr firstArg = firstContent.containedType();
         switch (firstArg->accessSemantics()) {
         case QQmlJSScope::AccessSemantics::Reference:
             // We cannot know whether this will be a logging category at run time.
@@ -1172,7 +1172,7 @@ void QQmlJSTypePropagator::generate_CallProperty_SCconsole(int base, int argc, i
 
     for (int i = 1; i < argc; ++i) {
         const QQmlJSRegisterContent argContent = m_state.registers[argv + i].content;
-        const QQmlJSScope::ConstPtr arg = m_typeResolver->containedType(argContent);
+        const QQmlJSScope::ConstPtr arg = argContent.containedType();
         addReadRegister(
                 argv + i,
                 arg->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
@@ -1191,7 +1191,7 @@ void QQmlJSTypePropagator::generate_callProperty_SAcheck(const QString propertyN
     // TODO: Should there be an analyzeCall() in the future? (w. corresponding onCall in Pass)
     QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeRead(
             QQmlJSScope::createQQmlSAElement(baseType), propertyName,
-            QQmlJSScope::createQQmlSAElement(m_typeResolver->containedType(m_function->qmlScope)),
+            QQmlJSScope::createQQmlSAElement(m_function->qmlScope.containedType()),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                     getCurrentBindingSourceLocation()));
 }
@@ -1212,7 +1212,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         return;
     }
 
-    const auto baseType = m_typeResolver->containedType(callBase);
+    const auto baseType = callBase.containedType();
     const auto member = m_typeResolver->memberType(callBase, propertyName);
 
     if (!member.isMethod()) {
@@ -1326,7 +1326,7 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
             // We can try to call a method that expects a derived type.
             if (argumentType->isReferenceType()
                     && m_typeResolver->inherits(
-                        argumentType->baseType(), m_typeResolver->containedType(content))) {
+                        argumentType->baseType(), content.containedType())) {
                 continue;
             }
 
@@ -1364,7 +1364,7 @@ void QQmlJSTypePropagator::setRegister(int index, const QQmlJSRegisterContent &c
     auto it = m_prevStateAnnotations.find(currentInstructionOffset());
     if (it != m_prevStateAnnotations.end()) {
         const QQmlJSRegisterContent &lastTry = it->second.changedRegister;
-        if (m_typeResolver->registerContains(lastTry, m_typeResolver->containedType(content))) {
+        if (m_typeResolver->registerContains(lastTry, content.containedType())) {
             m_state.setRegister(index, lastTry);
             return;
         }
@@ -1589,8 +1589,7 @@ void QQmlJSTypePropagator::propagateStringArgCall(int argv)
                        m_typeResolver->stringType()));
     Q_ASSERT(m_state.accumulatorOut().isValid());
 
-    const QQmlJSScope::ConstPtr input = m_typeResolver->containedType(
-                m_state.registers[argv].content);
+    const QQmlJSScope::ConstPtr input = m_state.registers[argv].content.containedType();
 
     if (m_typeResolver->equals(input, m_typeResolver->uint32Type())) {
         addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->realType()));
@@ -1627,7 +1626,7 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
 
     const auto intType = m_typeResolver->globalType(m_typeResolver->int32Type());
     const auto stringType = m_typeResolver->globalType(m_typeResolver->stringType());
-    const auto baseContained = m_typeResolver->containedType(baseType);
+    const auto baseContained = baseType.containedType();
     const auto valueContained = baseContained->valueType();
     const auto valueType = m_typeResolver->globalType(valueContained);
 
@@ -1734,7 +1733,7 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
         for (int i = 0; i < argc; ++i)
             addReadRegister(argv + i, intType);
 
-        setReturnType(m_typeResolver->containedType(baseType)->isListProperty()
+        setReturnType(baseType.containedType()->isListProperty()
                                ? m_typeResolver->qObjectListType()
                                : baseContained);
         return true;
@@ -1833,7 +1832,7 @@ void QQmlJSTypePropagator::generate_CallQmlContextPropertyLookup(int index, int 
 {
     const QString name = m_jsUnitGenerator->lookupName(index);
     propagateScopeLookupCall(name, argc, argv);
-    checkDeprecated(m_typeResolver->containedType(m_function->qmlScope), name, true);
+    checkDeprecated(m_function->qmlScope.containedType(), name, true);
 }
 
 void QQmlJSTypePropagator::generate_CallWithSpread(int func, int thisObject, int argc, int argv)
@@ -2252,7 +2251,7 @@ void QQmlJSTypePropagator::recordEqualsNullType()
 {
     // TODO: We can specialize this further, for QVariant, QJSValue, int, bool, whatever.
     if (m_typeResolver->registerContains(m_state.accumulatorIn(), m_typeResolver->nullType())
-            || m_typeResolver->containedType(m_state.accumulatorIn())->isReferenceType()) {
+            || m_state.accumulatorIn().containedType()->isReferenceType()) {
         addReadAccumulator(m_state.accumulatorIn());
     } else {
         addReadAccumulator(m_typeResolver->globalType(m_typeResolver->jsPrimitiveType()));
@@ -2261,7 +2260,7 @@ void QQmlJSTypePropagator::recordEqualsNullType()
 void QQmlJSTypePropagator::recordEqualsIntType()
 {
     // We have specializations for numeric types and bool.
-    const QQmlJSScope::ConstPtr in = m_typeResolver->containedType(m_state.accumulatorIn());
+    const QQmlJSScope::ConstPtr in = m_state.accumulatorIn().containedType();
     if (m_typeResolver->registerContains(m_state.accumulatorIn(), m_typeResolver->boolType())
             || m_typeResolver->isNumeric(m_state.accumulatorIn())) {
         addReadAccumulator(m_state.accumulatorIn());
@@ -2281,7 +2280,7 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
     // If the types are primitive, we compare directly ...
     if (m_typeResolver->isPrimitive(accumulatorIn) || accumulatorIn.isEnumeration()) {
         if (m_typeResolver->registerContains(
-                    accumulatorIn, m_typeResolver->containedType(lhsRegister))
+                    accumulatorIn, lhsRegister.containedType())
                 || (isNumericOrEnum(accumulatorIn) && isNumericOrEnum(lhsRegister))
                 || m_typeResolver->isPrimitive(lhsRegister)) {
             addReadRegister(lhs, lhsRegister);
@@ -2292,11 +2291,11 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
 
     const auto containedAccumulatorIn = m_typeResolver->isOptionalType(accumulatorIn)
             ? m_typeResolver->extractNonVoidFromOptionalType(accumulatorIn)
-            : m_typeResolver->containedType(accumulatorIn);
+            : accumulatorIn.containedType();
 
     const auto containedLhs = m_typeResolver->isOptionalType(lhsRegister)
             ? m_typeResolver->extractNonVoidFromOptionalType(lhsRegister)
-            : m_typeResolver->containedType(lhsRegister);
+            : lhsRegister.containedType();
 
     // We don't modify types if the types are comparable with QObject, QUrl or var types
     if (canStrictlyCompareWithVar(m_typeResolver, containedLhs, containedAccumulatorIn)
@@ -2427,7 +2426,7 @@ void QQmlJSTypePropagator::generate_CmpInstanceOf(int lhs)
 void QQmlJSTypePropagator::generate_As(int lhs)
 {
     const QQmlJSRegisterContent input = checkedInputRegister(lhs);
-    const QQmlJSScope::ConstPtr inContained = m_typeResolver->containedType(input);
+    const QQmlJSScope::ConstPtr inContained = input.containedType();
 
     QQmlJSScope::ConstPtr outContained;
 
@@ -2441,7 +2440,7 @@ void QQmlJSTypePropagator::generate_As(int lhs)
             addReadAccumulator(m_typeResolver->globalType(m_typeResolver->metaObjectType()));
         break;
     default:
-        outContained = m_typeResolver->containedType(m_state.accumulatorIn());
+        outContained = m_state.accumulatorIn().containedType();
         break;
     }
 
