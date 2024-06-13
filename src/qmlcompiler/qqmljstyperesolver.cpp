@@ -649,30 +649,6 @@ void QQmlJSTypeResolver::generalizeType(const QQmlJSScope::ConstPtr &type) const
     it->original = genericType(it->original);
 }
 
-QString QQmlJSTypeResolver::containedTypeName(const QQmlJSRegisterContent &container,
-                                              bool useFancyName) const
-{
-    QQmlJSScope::ConstPtr type;
-
-    // Use the type proper instead of the attached type
-    switch (container.variant()) {
-    case QQmlJSRegisterContent::ScopeAttached:
-    case QQmlJSRegisterContent::MetaType:
-        type = container.scopeType();
-        break;
-    default:
-        type = container.containedType();
-        break;
-    }
-
-    QString typeName = type->internalName().isEmpty() ? type->baseTypeName() : type->internalName();
-
-    if (useFancyName)
-        return QQmlJSScope::prettyName(typeName);
-
-    return typeName;
-}
-
 bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
                                           const QQmlJSScope::ConstPtr &to) const
 {

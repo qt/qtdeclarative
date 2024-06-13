@@ -159,8 +159,6 @@ public:
 
     bool registerContains(const QQmlJSRegisterContent &reg,
                           const QQmlJSScope::ConstPtr &type) const;
-    QString containedTypeName(const QQmlJSRegisterContent &container,
-                              bool useFancyName = false) const;
 
     QQmlJSRegisterContent tracked(const QQmlJSRegisterContent &type) const;
     QQmlJSRegisterContent original(const QQmlJSRegisterContent &type) const;

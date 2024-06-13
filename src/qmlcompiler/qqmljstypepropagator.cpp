@@ -102,7 +102,7 @@ void QQmlJSTypePropagator::generate_Ret()
         if (m_function->isFullyTyped) {
             // Do not complain if the function didn't have a valid annotation in the first place.
             m_logger->log(u"Function without return type annotation returns %1"_s.arg(
-                                  m_typeResolver->containedTypeName(m_state.accumulatorIn(), true)),
+                                  m_state.accumulatorIn().containedTypeName()),
                           qmlIncompatibleType, getCurrentBindingSourceLocation());
         }
         return;
@@ -112,8 +112,8 @@ void QQmlJSTypePropagator::generate_Ret()
                               m_returnType.descriptiveName()));
 
         m_logger->log(u"Cannot assign binding of type %1 to %2"_s.arg(
-                              m_typeResolver->containedTypeName(m_state.accumulatorIn(), true),
-                              m_typeResolver->containedTypeName(m_returnType, true)),
+                              m_state.accumulatorIn().containedTypeName(),
+                              m_returnType.containedTypeName()),
                       qmlIncompatibleType, getCurrentBindingSourceLocation());
         return;
     }
@@ -871,7 +871,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
         setError(u"Cannot load property %1 from %2."_s
                          .arg(propertyName, m_state.accumulatorIn().descriptiveName()));
 
-        const QString typeName = m_typeResolver->containedTypeName(m_state.accumulatorIn(), true);
+        const QString typeName = m_state.accumulatorIn().containedTypeName();
 
         if (typeName == u"QVariant")
             return;
@@ -1247,7 +1247,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         }
 
         m_logger->log(u"Member \"%1\" not found on type \"%2\""_s.arg(
-                              propertyName, m_typeResolver->containedTypeName(callBase, true)),
+                              propertyName, callBase.containedTypeName()),
                       qmlMissingProperty, getCurrentSourceLocation(), true, true, fixSuggestion);
         return;
     }

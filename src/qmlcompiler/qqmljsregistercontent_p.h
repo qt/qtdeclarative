@@ -67,6 +67,7 @@ public:
     bool isValid() const { return !containedType().isNull(); }
 
     QString descriptiveName() const;
+    QString containedTypeName() const;
 
     friend bool operator==(const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b)
     {

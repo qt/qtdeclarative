@@ -71,6 +71,25 @@ QString QQmlJSRegisterContent::descriptiveName() const
     Q_UNREACHABLE_RETURN(result + u"wat?"_s);
 }
 
+QString QQmlJSRegisterContent::containedTypeName() const
+{
+    QQmlJSScope::ConstPtr type;
+
+    // Use the type proper instead of the attached type
+    switch (variant()) {
+    case QQmlJSRegisterContent::ScopeAttached:
+    case QQmlJSRegisterContent::MetaType:
+        type = scopeType();
+        break;
+    default:
+        type = containedType();
+        break;
+    }
+
+    return QQmlJSScope::prettyName(
+            type->internalName().isEmpty() ? type->baseTypeName() : type->internalName());
+}
+
 bool QQmlJSRegisterContent::isList() const
 {
     switch (m_content.index()) {
