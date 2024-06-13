@@ -113,11 +113,12 @@ public abstract class QtQmlComponent
      * properties to the QML root object if they do not exist but prints a warning.
      * <p>
      * @param propertyName the name of the existing QML property to set the value of
-     * @param value        the value to set the property to
-     * @see <a href="https://doc.qt.io/qt-6/qml-int.html">QML int</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-double.html">QML double/float</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-bool.html">QML bool</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-string.html">QML string</a>.
+     * @param value        the value to set the property to QML's int, double/float,
+                           bool or string
+     * @see <a href="https://doc.qt.io/qt-6/qml-int.html">QML int</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-double.html">QML double/float</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-bool.html">QML bool</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-string.html">QML string</a>
      **/
     protected void setProperty(String propertyName, Object value)
     {
@@ -140,10 +141,10 @@ public abstract class QtQmlComponent
      * <p>
      * @param propertyName the name of the existing root object property
      * @throws ClassCastException if the returned type cannot be cast to the requested type.
-     * @see <a href="https://doc.qt.io/qt-6/qml-int.html">QML int</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-double.html">QML double/float</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-bool.html">QML bool</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-string.html">QML string</a>.
+     * @see <a href="https://doc.qt.io/qt-6/qml-int.html">QML int</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-double.html">QML double/float</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-bool.html">QML bool</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-string.html">QML string</a>
      **/
     protected <T> T getProperty(String propertyName)
     {
