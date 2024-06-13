@@ -182,11 +182,12 @@ public class QtQuickView extends QtView {
      * properties to the QML root object if they do not exist, but prints a warning.
      * <p>
      * @param propertyName the name of the existing root object property to set the value of
-     * @param value        the value to set the property to
-     * @see <a href="https://doc.qt.io/qt-6/qml-int.html">QML int</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-double.html">QML double/float</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-bool.html">QML bool</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-string.html">QML string</a>.
+     * @param value        the value to set the property to QML's int, double/float, bool or
+                           string
+     * @see <a href="https://doc.qt.io/qt-6/qml-int.html">QML int</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-double.html">QML double/float</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-bool.html">QML bool</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-string.html">QML string</a>
      **/
     public void setProperty(String propertyName, Object value)
     {
@@ -203,10 +204,10 @@ public class QtQuickView extends QtView {
      * <p>
      * @param propertyName the name of the existing root object property
      * @throws ClassCastException if the returned type could not be casted to the requested type.
-     * @see <a href="https://doc.qt.io/qt-6/qml-int.html">QML int</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-double.html">QML double/float</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-bool.html">QML bool</a>,
-     * @see <a href="https://doc.qt.io/qt-6/qml-string.html">QML string</a>.
+     * @see <a href="https://doc.qt.io/qt-6/qml-int.html">QML int</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-double.html">QML double/float</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-bool.html">QML bool</a>
+     * @see <a href="https://doc.qt.io/qt-6/qml-string.html">QML string</a>
      **/
     // getRootObjectProperty always returns a primitive type or an Object
     // so it is safe to suppress the unchecked warning
@@ -261,7 +262,8 @@ public class QtQuickView extends QtView {
      *         {@link QtQuickView#addSignalListener() addSignalListener}) would succeed <b>only</b>
      *         if the current status is QtQmlStatus.READY. It can also return QtQmlStatus.NULL,
      *         QtQmlStatus.LOADING, or QtQmlStatus.ERROR based on the status of the underlaying
-     *         @see <a href="https://doc.qt.io/qt-6/qquickview.html">QQuickView</a> instance.
+               QQuickView instance.
+     * @see <a href="https://doc.qt.io/qt-6/qquickview.html">QQuickView</a>
      **/
     public QtQmlStatus getStatus()
     {
