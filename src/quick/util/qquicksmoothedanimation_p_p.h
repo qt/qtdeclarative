@@ -21,7 +21,7 @@
 #include "qquickanimation_p_p.h"
 
 #include <private/qobject_p.h>
-#include <QBasicTimer>
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 class QSmoothedAnimation;
