@@ -4051,9 +4051,24 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{ { u"inRoot"_s, CompletionItemKind::Property } }
             << QStringList{ u"root"_s };
 
-    QTest::newRow("insideTemplate")
-            << testFile("completions/templateLiterals.qml") << 8 << 49
+    QTest::newRow("insideTemplateLiteralExpression")
+            << testFile("completions/templateLiterals.qml") << 9 << 27
             << ExpectedCompletions{ { u"helloProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ forStatementCompletion };
+
+    QTest::newRow("insideTemplateLiteralString")
+            << testFile("completions/templateLiterals.qml") << 9 << 40
+            << ExpectedCompletions{ }
+            << QStringList{ forStatementCompletion };
+
+    QTest::newRow("insideTaggedLiteralExpression")
+            << testFile("completions/templateLiterals.qml") << 10 << 27
+            << ExpectedCompletions{ { u"helloProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ forStatementCompletion };
+
+    QTest::newRow("insideTaggedLiteralString")
+            << testFile("completions/templateLiterals.qml") << 10 << 40
+            << ExpectedCompletions{ }
             << QStringList{ forStatementCompletion };
 }
 
