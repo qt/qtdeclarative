@@ -235,6 +235,8 @@ enum class DomType {
     ScriptYieldExpression,
     ScriptNewExpression,
     ScriptNewMemberExpression,
+    ScriptThisExpression,
+    ScriptSuperLiteral,
 
     ScriptElementStop, // marker to check if a DomType is a scriptelement or not
 };
@@ -397,8 +399,10 @@ enum FileLocationRegion : int {
     SecondSemicolonRegion,
     SemicolonTokenRegion,
     SignalKeywordRegion,
+    SuperKeywordRegion,
     StarTokenRegion,
     SwitchKeywordRegion,
+    ThisKeywordRegion,
     ThrowKeywordRegion,
     TryKeywordRegion,
     TypeIdentifierRegion,

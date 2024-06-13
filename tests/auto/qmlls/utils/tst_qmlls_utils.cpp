@@ -4232,6 +4232,34 @@ void tst_qmlls_utils::completions_data()
             << testFile("completions/newExpressions.qml") << 6 << 13
             << ExpectedCompletions{ { u"f"_s, CompletionItemKind::Method } }
             << QStringList{ forStatementCompletion };
+
+    QTest::newRow("insideSuperLiteral")
+            << testFile("completions/superLiteral.qml") << 5 << 11 << ExpectedCompletions{}
+            << QStringList{ forStatementCompletion, u"f"_s };
+
+    QTest::newRow("insideSuperParameter")
+            << testFile("completions/superLiteral.qml") << 5 << 15
+            << ExpectedCompletions{ { u"f"_s, CompletionItemKind::Method } }
+            << QStringList{ forStatementCompletion };
+
+    QTest::newRow("insideSuperField")
+            << testFile("completions/superLiteral.qml") << 6 << 15 << ExpectedCompletions{}
+            << QStringList{ forStatementCompletion, u"f"_s };
+
+    QTest::newRow("insideSuperParameter2")
+            << testFile("completions/superLiteral.qml") << 6 << 17
+            << ExpectedCompletions{ { u"f"_s, CompletionItemKind::Method } }
+            << QStringList{ forStatementCompletion };
+
+    QTest::newRow("insideThisExpression")
+            << testFile("completions/thisExpression.qml") << 5 << 10
+            << ExpectedCompletions{ }
+            << QStringList{ forStatementCompletion, u"f"_s };
+
+    QTest::newRow("insideThisField")
+            << testFile("completions/thisExpression.qml") << 5 << 14
+            << ExpectedCompletions{ }
+            << QStringList{ forStatementCompletion, u"f"_s };
 }
 
 void tst_qmlls_utils::completions()

@@ -1872,6 +1872,12 @@ void QQmlLSCompletion::collectCompletions(const DomItem &currentItem,
         case DomType::ScriptNewMemberExpression:
             insideNewMemberExpression(currentParent, positionInfo, result);
             return;
+        case DomType::ScriptThisExpression:
+            // suppress completions on `this`
+            return;
+        case DomType::ScriptSuperLiteral:
+            // suppress completions on `super`
+            return;
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
