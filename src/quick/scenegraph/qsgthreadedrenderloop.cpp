@@ -7,7 +7,7 @@
 #include <QtCore/QWaitCondition>
 #include <QtCore/QAnimationDriver>
 #include <QtCore/QQueue>
-#include <QtCore/QTime>
+#include <QtCore/QTimer>
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
