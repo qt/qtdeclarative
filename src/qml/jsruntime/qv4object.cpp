@@ -747,6 +747,12 @@ ReturnedValue Object::virtualResolveLookupGetter(const Object *object, Execution
 
     Heap::Object *obj = object->d();
     PropertyKey name = engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[lookup->nameIndex]);
+    if (object->as<QV4::ProxyObject>()) {
+        // proxies invalidate assumptions that we normally maek in lookups
+        // so we always need to use the fallback path
+        lookup->getter = Lookup::getterFallback;
+        return lookup->getter(lookup, engine, *object);
+    }
     if (name.isArrayIndex()) {
         lookup->indexedLookup.index = name.asArrayIndex();
         lookup->getter = Lookup::getterIndexed;
