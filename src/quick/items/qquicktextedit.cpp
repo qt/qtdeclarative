@@ -2423,6 +2423,7 @@ void QQuickTextEdit::setDocument(QTextDocument *doc)
     d->document = doc;
     d->ownsDocument = false;
     d->control->setDocument(doc);
+    q_textChanged();
 }
 
 inline void resetEngine(QQuickTextNodeEngine *engine, const QColor& textColor, const QColor& selectedTextColor, const QColor& selectionColor)

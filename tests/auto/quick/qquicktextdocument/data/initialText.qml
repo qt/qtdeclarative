@@ -7,7 +7,8 @@ TextEdit {
     property var statusHistory: []
 
     width: 320; height: 240
-    text: "" // this is not a document modification
+    text: "Hello Qt"
+    focus: true
 
     textDocument.onSourceChanged: ++te.sourceChangeCount
     textDocument.onModifiedChanged: ++te.modifiedChangeCount

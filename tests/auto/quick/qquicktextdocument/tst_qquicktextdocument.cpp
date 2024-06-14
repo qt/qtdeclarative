@@ -39,6 +39,7 @@ private:
 private slots:
     void textDocumentWriter();
     void customDocument();
+    void replaceDocument();
     void sourceAndSave_data();
     void sourceAndSave();
     void loadErrorNoSuchFile();
@@ -195,6 +196,45 @@ void tst_qquicktextdocument::customDocument()
     }
     QVERIFY(foundImage);
     QCOMPARE(fragmentCount, 2);
+}
+
+/*! \internal
+    Verify that it's OK to replace the default QTextDocument that TextEdit creates
+    with a user-created QTextDocument that has different text in it, and that
+    interactive editing continues to function afterwards, independently of
+    the previous document.
+*/
+void tst_qquicktextdocument::replaceDocument() // QTBUG-126267
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("initialText.qml")));
+    QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit *>(window.rootObject());
+    QVERIFY(textEdit);
+    auto *textEditPriv = QQuickTextEditPrivate::get(textEdit);
+    QVERIFY(textEditPriv->ownsDocument);
+    QQuickTextDocument *quickDocument = textEdit->property("textDocument").value<QQuickTextDocument*>();
+    QVERIFY(quickDocument);
+    QPointer<QTextDocument> defaultDocument(quickDocument->textDocument());
+
+    QTextDocument replacementDoc;
+    const QString replacementText("Hello World");
+    {
+        QTextCursor cursor(&replacementDoc);
+        cursor.insertText(replacementText);
+    }
+    QCOMPARE(textEdit->text(), "Hello Qt");
+    QSignalSpy renderSpy(&window, &QQuickWindow::afterRendering);
+    quickDocument->setTextDocument(&replacementDoc);
+    QVERIFY(defaultDocument.isNull()); // deleted because of being replaced (don't leak)
+    QCOMPARE(textEditPriv->ownsDocument, false);
+    QCOMPARE(textEdit->text(), replacementText);
+    QCOMPARE(replacementDoc.toPlainText(), replacementText);
+    QTRY_COMPARE_GT(renderSpy.size(), 0);
+
+    QCOMPARE(window.activeFocusItem(), textEdit);
+    QTest::keyEvent(QTest::KeyAction::Click, &window, Qt::Key_End);
+    QTest::keyEvent(QTest::KeyAction::Click, &window, '!');
+    QCOMPARE(textEdit->text(), replacementText + '!');
 }
 
 void tst_qquicktextdocument::sourceAndSave_data()
