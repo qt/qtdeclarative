@@ -1619,6 +1619,35 @@ void QQmlLSCompletion::insideTemplateLiteral(const DomItem &parentForContext,
     suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
 }
 
+void QQmlLSCompletion::insideNewExpression(const DomItem &parentForContext,
+                                           const QQmlLSCompletionPosition &positionInfo,
+                                           BackInsertIterator result) const
+{
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
+    const QQmlJS::SourceLocation newKeyword = regions[NewKeywordRegion];
+
+    if (afterLocation(newKeyword, positionInfo)) {
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
+    }
+}
+
+void QQmlLSCompletion::insideNewMemberExpression(const DomItem &parentForContext,
+                                                 const QQmlLSCompletionPosition &positionInfo,
+                                                 BackInsertIterator result) const
+{
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
+    const QQmlJS::SourceLocation newKeyword = regions[NewKeywordRegion];
+    const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
+    const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
+
+    if (betweenLocations(newKeyword, positionInfo, leftParenthesis)
+        || betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
+        suggestJSExpressionCompletion(positionInfo.itemAtPosition, result);
+        return;
+    }
+}
+
 void QQmlLSCompletion::signalHandlerCompletion(const QQmlJSScope::ConstPtr &scope,
                                                QDuplicateTracker<QString> *usedNames,
                                                BackInsertIterator result) const
@@ -1836,6 +1865,12 @@ void QQmlLSCompletion::collectCompletions(const DomItem &currentItem,
             return;
         case DomType::ScriptTemplateStringPart:
             // no completion inside of the non-expression parts of template strings
+            return;
+        case DomType::ScriptNewExpression:
+            insideNewExpression(currentParent, positionInfo, result);
+            return;
+        case DomType::ScriptNewMemberExpression:
+            insideNewMemberExpression(currentParent, positionInfo, result);
             return;
 
         // TODO: Implement those statements.

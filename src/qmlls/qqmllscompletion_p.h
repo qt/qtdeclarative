@@ -205,6 +205,12 @@ private:
     void insideTemplateLiteral(const DomItem &parentForContext,
                                const QQmlLSCompletionPosition &positionInfo,
                                BackInsertIterator it) const;
+    void insideNewExpression(const DomItem &parentForContext,
+                             const QQmlLSCompletionPosition &positionInfo,
+                             BackInsertIterator it) const;
+    void insideNewMemberExpression(const DomItem &parentForContext,
+                                   const QQmlLSCompletionPosition &positionInfo,
+                                   BackInsertIterator it) const;
     void signalHandlerCompletion(const QQmlJSScope::ConstPtr &scope,
                                  QDuplicateTracker<QString> *usedNames,
                                  BackInsertIterator it) const;
