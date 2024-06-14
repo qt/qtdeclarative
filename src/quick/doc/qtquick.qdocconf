@@ -72,7 +72,7 @@ depends += \
     ../../qmllocalstorage \
     ../../quicklayouts \
     ../../labs \
-    ../../quick/jar/org/qtproject/qt/android \
+    ../../quick/platform/android/jar/src/org/qtproject/qt/android \
     ../../../examples/platforms
 
 # both have their own documentation project

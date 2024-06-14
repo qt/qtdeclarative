@@ -604,7 +604,7 @@ qt_internal_extend_target(Quick CONDITION ANDROID
         platform/android/qandroidviewsignalmanager.cpp platform/android/qandroidviewsignalmanager_p.h
 )
 if (ANDROID)
-    add_subdirectory(jar)
+    add_subdirectory(platform/android/jar)
     set_property(TARGET Quick PROPERTY QT_ANDROID_BUNDLED_JAR_DEPENDENCIES
         jar/Qt${QtDeclarative_VERSION_MAJOR}AndroidQuick.jar
     )
