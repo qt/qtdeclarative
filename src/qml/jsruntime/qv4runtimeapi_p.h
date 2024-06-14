@@ -230,6 +230,12 @@ struct Q_QML_EXPORT Runtime {
         static void call(ExecutionEngine *, const Value &);
     };
 
+    /* garbage collection */
+    struct Q_QML_EXPORT MarkCustom : PureMethod
+    {
+        static void call(const Value &toBeMarked);
+    };
+
     /* closures */
     struct Q_QML_EXPORT Closure : Method<Throws::No>
     {

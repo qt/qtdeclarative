@@ -883,6 +883,20 @@ void BaselineAssembler::storeLocal(int index, int level)
         --level;
     }
     pasm()->storeAccumulator(Address(PlatformAssembler::ScratchRegister, ctx.locals.offset + offsetof(ValueArray<0>, values) + sizeof(Value)*index));
+    // check if we need a write barrier
+    auto skipBarrier = pasm()->branch8(
+            PlatformAssembler::Equal,
+            PlatformAssembler::Address(PlatformAssembler::EngineRegister,
+                                       offsetof(EngineBase, isGCOngoing)),
+            TrustedImm32(0));
+    saveAccumulatorInFrame();
+    // if so, do a runtime call
+    pasm()->prepareCallWithArgCount(1);
+    pasm()->passAccumulatorAsArg(0);
+    pasm()->callRuntime((void*)Runtime::MarkCustom::call, CallResultDestination::Ignore);
+    loadAccumulatorFromFrame();
+    skipBarrier.link(pasm());
+
 }
 
 void BaselineAssembler::loadString(int stringId)

@@ -15,6 +15,9 @@
 #include <private/qqmlcomponentattached_p.h>
 #include <private/qv4mapobject_p.h>
 #include <private/qv4setobject_p.h>
+#if QT_CONFIG(qml_jit)
+#include <private/qv4baselinejit_p.h>
+#endif
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -40,6 +43,7 @@ private slots:
     void gcTriggeredInOnDestroyed();
     void weakValuesAssignedAfterThePhaseThatShouldHandleWeakValues();
     void mapAndSetKeepValuesAlive();
+    void jittedStoreLocalMarksValue();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -656,6 +660,74 @@ void tst_qv4mm::mapAndSetKeepValuesAlive()
         gc(engine);
         QCOMPARE(map.property("size").toInt(), 0);
     }
+}
+
+QV4::ReturnedValue method_force_jit(const QV4::FunctionObject *b, const QV4::Value *, const QV4::Value *argv, int argc)
+{
+#if QT_CONFIG(qml_jit)
+    auto *v4 =b->engine();
+
+    Q_ASSERT(argc == 1);
+    QV4::Scope scope(v4);
+    QV4::Scoped<QV4::JavaScriptFunctionObject> functionObject(scope, argv[0]);
+    auto *func = static_cast<QV4::Heap::JavaScriptFunctionObject *>(functionObject->heapObject())->function;
+    Q_ASSERT(func);
+    func->interpreterCallCount = std::numeric_limits<int>::max();
+    if (!v4->canJIT(func))
+        return QV4::StaticValue::fromBoolean(false).asReturnedValue();
+    QV4::JIT::BaselineJIT(func).generate();
+    return QV4::StaticValue::fromBoolean(true).asReturnedValue();
+#else
+    return QV4::StaticValue::fromBoolean(false).asReturnedValue();
+#endif
+}
+
+QV4::ReturnedValue method_setup_gc_for_test(const QV4::FunctionObject *b, const QV4::Value *, const QV4::Value *, int)
+{
+    auto *v4 =b->engine();
+    auto *mm = v4->memoryManager;
+    mm->runFullGC();
+
+    auto sm = v4->memoryManager->gcStateMachine.get();
+    sm->reset();
+    while (sm->state != QV4::GCState::MarkGlobalObject) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+
+    return QV4::Encode::undefined();
+}
+
+QV4::ReturnedValue method_is_marked(const QV4::FunctionObject *, const QV4::Value *, const QV4::Value *argv, int argc)
+{
+    Q_ASSERT(argc == 1);
+
+    auto h = argv[0].heapObject();
+    Q_ASSERT(h);
+    return QV4::Encode(h->isMarked());
+}
+
+void tst_qv4mm::jittedStoreLocalMarksValue()
+{
+    QQmlEngine engine;
+
+    auto *v4 = engine.handle();
+    auto globalObject = v4->globalObject;
+    globalObject->defineDefaultProperty(QStringLiteral("__setupGC"), method_setup_gc_for_test);
+    globalObject->defineDefaultProperty(QStringLiteral("__forceJit"), method_force_jit);
+    globalObject->defineDefaultProperty(QStringLiteral("__isMarked"), method_is_marked);
+
+    QQmlComponent comp(&engine, testFileUrl("storeLocal.qml"));
+    QVERIFY(comp.isReady());
+    std::unique_ptr<QObject> root {comp.create()};
+
+    QVERIFY(root);
+    bool ok = false;
+    int result = root->property("result").toInt(&ok);
+    QVERIFY(ok);
+    if (result == -1)
+        QSKIP("Could not run JIT");
+    QCOMPARE(result, 0);
 }
 
 QTEST_MAIN(tst_qv4mm)
