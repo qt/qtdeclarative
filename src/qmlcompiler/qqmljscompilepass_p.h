@@ -59,7 +59,6 @@ public:
     {
         QList<int> jumpOrigins;
         QList<int> readRegisters;
-        QList<QQmlJSScope::ConstPtr> readTypes;
         int jumpTarget = -1;
         bool jumpIsUnconditional = false;
         bool isReturnBlock = false;

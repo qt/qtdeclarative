@@ -28,10 +28,6 @@ void QQmlJSBasicBlocks::dumpBasicBlocks()
         for (auto reg : block.readRegisters) {
             debug << reg << ", ";
         }
-        debug << "\n  readTypes[" << block.readTypes.size() << "]: ";
-        for (const auto &type : block.readTypes) {
-            debug << type->augmentedInternalName() << ", ";
-        }
         debug << "\n  jumpTarget: " << block.jumpTarget;
         debug << "\n  jumpIsUnConditional: " << block.jumpIsUnconditional;
         debug << "\n  isReturnBlock: " << block.isReturnBlock;

@@ -480,14 +480,7 @@ void QQmlJSOptimizations::populateBasicBlocks()
             const InstructionAnnotation &instruction = instrIt->second;
             for (auto it = instruction.readRegisters.begin(), end = instruction.readRegisters.end();
                  it != end; ++it) {
-                if (!instruction.isRename) {
-                    Q_ASSERT(it->second.content.isConversion());
-                    for (const QQmlJSScope::ConstPtr &origin :
-                         it->second.content.conversionOrigins()) {
-                        if (!writtenTypes.contains(origin))
-                            block.readTypes.append(origin);
-                    }
-                }
+                Q_ASSERT(instruction.isRename || it->second.content.isConversion());
                 if (!writtenRegisters.contains(it->first))
                     block.readRegisters.append(it->first);
             }
@@ -502,7 +495,6 @@ void QQmlJSOptimizations::populateBasicBlocks()
             }
         }
 
-        QQmlJSUtils::deduplicate(block.readTypes);
         QQmlJSUtils::deduplicate(block.readRegisters);
     }
 }
