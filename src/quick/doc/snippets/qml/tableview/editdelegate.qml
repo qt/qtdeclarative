@@ -46,7 +46,7 @@ Window {
                     display = text
                     // 'display = text' is short-hand for:
                     // let index = TableView.view.index(row, column)
-                    // TableView.view.model.setData(index, text, Qt.DisplayRole)
+                    // TableView.view.model.setData(index, "display", text)
                 }
             }
         }
