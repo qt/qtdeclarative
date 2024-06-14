@@ -1807,6 +1807,21 @@ void Runtime::ThrowOnNullOrUndefined::call(ExecutionEngine *engine, const Value 
         engine->throwTypeError();
 }
 
+void Runtime::MarkCustom::call(const Value &toBeMarked)
+{
+    auto *h = toBeMarked.heapObject();
+    if (!h)
+        return;
+    Q_ASSERT(h->internalClass);
+    auto engine = h->internalClass->engine;
+    Q_ASSERT(engine);
+    // runtime function is only meant to be called while gc is ongoing
+    Q_ASSERT(engine->isGCOngoing);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *ms) {
+        h->mark(ms);
+    });
+}
+
 ReturnedValue Runtime::ConvertThisToObject::call(ExecutionEngine *engine, const Value &t)
 {
     if (!t.isObject()) {
@@ -2492,6 +2507,8 @@ QHash<const void *, const char *> Runtime::symbolTable()
             {symbol<ThrowOnNullOrUndefined>(), "ThrowOnNullOrUndefined" },
 
             {symbol<Closure>(), "Closure" },
+
+            {symbol<MarkCustom>(), "MarkCustom"},
 
             {symbol<ConvertThisToObject>(), "ConvertThisToObject" },
             {symbol<DeclareVar>(), "DeclareVar" },
