@@ -143,6 +143,7 @@ private slots:
     void focusPreserved();
     void accessibilityHandlesViewChange();
     void cleanupRhi();
+    void dontRecreateRootElementOnWindowChange();
 
 private:
     QPointingDevice *device = QTest::createTouchDevice();
@@ -1091,6 +1092,21 @@ void tst_qquickwidget::cleanupRhi()
 
     topLevel.destroy();
     topLevel.create();
+}
+
+void tst_qquickwidget::dontRecreateRootElementOnWindowChange()
+{
+    auto *quickWidget = new QQuickWidget();
+    quickWidget->setSource(testFileUrl("rectangle.qml"));
+    QObject *item = quickWidget->rootObject();
+
+    bool wasDestroyed = false;
+    QObject::connect(item, &QObject::destroyed, this, [&] { wasDestroyed = true; });
+
+    QEvent event(QEvent::WindowChangeInternal);
+    QCoreApplication::sendEvent(quickWidget, &event);
+
+    QVERIFY(!wasDestroyed);
 }
 
 QTEST_MAIN(tst_qquickwidget)
