@@ -381,6 +381,12 @@ void tst_qmlls_highlighting::highlights_data()
         QTest::addRow("multiline-string-second") << fileItem
                                                  << Token(QQmlJS::SourceLocation(221, 16, 10, 1),
                                                           int(SemanticTokenTypes::String), 0);
+        QTest::addRow("multiline-with-newlines-l1") << fileItem
+                                                 << Token(QQmlJS::SourceLocation(313, 10, 13, 24),
+                                                          int(SemanticTokenTypes::String), 0);
+        QTest::addRow("multiline-with-newlines-l2") << fileItem
+                                                 << Token(QQmlJS::SourceLocation(324, 16, 14, 1),
+                                                          int(SemanticTokenTypes::String), 0);
         QTest::addRow("boolean") << fileItem
                                  << Token(QQmlJS::SourceLocation(260, 4, 11, 22),
                                           int(SemanticTokenTypes::Keyword), 0);
