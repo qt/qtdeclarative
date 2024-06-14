@@ -1058,17 +1058,24 @@ void QQuickAnchorChanges::reverse()
     //restore any absolute geometry changed by the state's anchors
     QQuickAnchors::Anchors stateVAnchors = d->anchorSet->d_func()->usedAnchors & QQuickAnchors::Vertical_Mask;
     QQuickAnchors::Anchors origVAnchors = targetPrivate->anchors()->usedAnchors() & QQuickAnchors::Vertical_Mask;
+    QQuickAnchors::Anchors resetVAnchors = d->anchorSet->d_func()->resetAnchors & QQuickAnchors::Vertical_Mask;
     QQuickAnchors::Anchors stateHAnchors = d->anchorSet->d_func()->usedAnchors & QQuickAnchors::Horizontal_Mask;
     QQuickAnchors::Anchors origHAnchors = targetPrivate->anchors()->usedAnchors() & QQuickAnchors::Horizontal_Mask;
+    QQuickAnchors::Anchors resetHAnchors = d->anchorSet->d_func()->resetAnchors & QQuickAnchors::Horizontal_Mask;
 
     const QRectF oldGeometry(d->target->position(), d->target->size());
     bool stateSetWidth = (stateHAnchors &&
                           stateHAnchors != QQuickAnchors::LeftAnchor &&
                           stateHAnchors != QQuickAnchors::RightAnchor &&
                           stateHAnchors != QQuickAnchors::HCenterAnchor);
-    // in case of an additive AnchorChange, we _did_ end up modifying the width
-    stateSetWidth |= ((stateHAnchors & QQuickAnchors::LeftAnchor) && (origHAnchors & QQuickAnchors::RightAnchor)) ||
-                     ((stateHAnchors & QQuickAnchors::RightAnchor) && (origHAnchors & QQuickAnchors::LeftAnchor));
+    // in case of an additive AnchorChange, we _did_ end up modifying the width, unless opposite
+    // edge was set to undefined in state
+    stateSetWidth |= ((stateHAnchors & QQuickAnchors::LeftAnchor)
+                      && (origHAnchors & QQuickAnchors::RightAnchor)
+                      && !(resetHAnchors & QQuickAnchors::RightAnchor))
+            || ((stateHAnchors & QQuickAnchors::RightAnchor)
+                && (origHAnchors & QQuickAnchors::LeftAnchor)
+                && !(resetHAnchors & QQuickAnchors::LeftAnchor));
     bool origSetWidth = (origHAnchors &&
                          origHAnchors != QQuickAnchors::LeftAnchor &&
                          origHAnchors != QQuickAnchors::RightAnchor &&
@@ -1084,9 +1091,14 @@ void QQuickAnchorChanges::reverse()
                            stateVAnchors != QQuickAnchors::BottomAnchor &&
                            stateVAnchors != QQuickAnchors::VCenterAnchor &&
                            stateVAnchors != QQuickAnchors::BaselineAnchor);
-    // in case of an additive AnchorChange, we _did_ end up modifying the height
-    stateSetHeight |= ((stateVAnchors & QQuickAnchors::TopAnchor) && (origVAnchors & QQuickAnchors::BottomAnchor)) ||
-                     ((stateVAnchors & QQuickAnchors::BottomAnchor) && (origVAnchors & QQuickAnchors::TopAnchor));
+    // in case of an additive AnchorChange, we _did_ end up modifying the height, unless opposite
+    // edge was set to undefined in state
+    stateSetHeight |= ((stateVAnchors & QQuickAnchors::TopAnchor)
+                       && (origVAnchors & QQuickAnchors::BottomAnchor)
+                       && !(resetVAnchors & QQuickAnchors::BottomAnchor))
+            || ((stateVAnchors & QQuickAnchors::BottomAnchor)
+                && (origVAnchors & QQuickAnchors::TopAnchor)
+                && !(resetVAnchors & QQuickAnchors::TopAnchor));
     bool origSetHeight = (origVAnchors &&
                           origVAnchors != QQuickAnchors::TopAnchor &&
                           origVAnchors != QQuickAnchors::BottomAnchor &&
