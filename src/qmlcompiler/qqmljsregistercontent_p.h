@@ -153,7 +153,7 @@ public:
         return result ? *result : QQmlJSRegisterContent();
     }
 
-    QList<QQmlJSScope::ConstPtr> conversionOrigins() const
+    QList<QQmlJSRegisterContent> conversionOrigins() const
     {
         return std::get<ConvertedTypes>(m_content).origins;
     }
@@ -240,7 +240,7 @@ private:
 
     struct ConvertedTypes
     {
-        QList<QQmlJSScope::ConstPtr> origins;
+        QList<QQmlJSRegisterContent> origins;
         QQmlJSScope::ConstPtr result;
         QSharedPointer<QQmlJSRegisterContent> resultScope;
 

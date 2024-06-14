@@ -80,7 +80,10 @@ void QQmlJSOptimizations::populateReaderLocations()
             // If it's a conversion, we have to check for all readers of the conversion origins.
             // This happens at jump targets where different types are merged. A StoreReg or similar
             // instruction must be optimized out if none of the types it can hold is read anymore.
-            access.trackedTypes = writeIt->second.changedRegister.conversionOrigins();
+            access.trackedTypes.clear();
+            const auto origins = writeIt->second.changedRegister.conversionOrigins();
+            for (const QQmlJSRegisterContent &origin : origins)
+                access.trackedTypes.append(origin.containedType());
         } else {
             access.trackedTypes.append(
                     m_typeResolver->trackedContainedType(writeIt->second.changedRegister));
@@ -121,12 +124,19 @@ void QQmlJSOptimizations::populateReaderLocations()
                 for (auto readIt = blockInstr->second.readRegisters.constBegin(),
                      end = blockInstr->second.readRegisters.constEnd();
                      readIt != end; ++readIt) {
-                    if (!blockInstr->second.isRename && containsAny(
-                                readIt->second.content.conversionOrigins(), access.trackedTypes)) {
-                        Q_ASSERT(readIt->second.content.isConversion());
-                        Q_ASSERT(readIt->second.content.conversionResult());
-                        access.typeReaders[blockInstr.key()]
-                                = readIt->second.content.conversionResult();
+                    if (!blockInstr->second.isRename) {
+                        const QList<QQmlJSRegisterContent> conversionOrigins
+                                = readIt->second.content.conversionOrigins();
+                        for (const QQmlJSRegisterContent &origin : conversionOrigins) {
+                            if (!access.trackedTypes.contains(origin.containedType()))
+                                continue;
+
+                            Q_ASSERT(readIt->second.content.isConversion());
+                            Q_ASSERT(readIt->second.content.conversionResult());
+                            access.typeReaders[blockInstr.key()]
+                                    = readIt->second.content.conversionResult();
+                            break;
+                        }
                     }
                     if (registerActive && readIt->first == writtenRegister)
                         access.registerReadersAndConversions[blockInstr.key()] = conversions;
@@ -449,7 +459,7 @@ void QQmlJSOptimizations::adjustTypes()
                 QQmlJSScope::ConstPtr conversionResult = content.conversionResult();
                 const auto conversionOrigins = content.conversionOrigins();
                 for (const auto &origin : conversionOrigins)
-                    newResult = m_typeResolver->merge(newResult, origin);
+                    newResult = m_typeResolver->merge(newResult, origin.containedType());
                 if (!m_typeResolver->adjustTrackedType(conversionResult, newResult))
                     addError(adjustErrorMessage(conversionResult, newResult));
             }

@@ -447,15 +447,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::shallowTransformed(
         // When retrieving the originals we want a deep retrieval.
         // When tracking a new type, we don't want to re-track its originals, though.
 
-        const QList<QQmlJSScope::ConstPtr> origins = origin.conversionOrigins();
+        const QList<QQmlJSRegisterContent> origins = origin.conversionOrigins();
         QList<QQmlJSRegisterContent> transformedOrigins;
         if (op == &QQmlJSTypeResolver::trackedType) {
-            transformedOrigins = syntheticTypes(origins);
+            transformedOrigins = origins;
         } else {
             transformedOrigins.reserve(origins.length());
-            for (const QQmlJSScope::ConstPtr &origin: origins)
-                transformedOrigins.append(syntheticType((this->*op)(origin)));
-
+            for (const QQmlJSRegisterContent &origin: origins)
+                transformedOrigins.append(shallowTransformed(origin, op, origin.scopeType()));
         }
 
         return QQmlJSRegisterContent::create(
@@ -721,32 +720,34 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
     if (a == b)
         return a;
 
-    QList<QQmlJSScope::ConstPtr> origins;
+    // We cannot easily provide an operator< for QQmlJSRegisterContent.
+    // Therefore we use qHash and operator== here to deduplicate. That's somewhat inefficient.
+    QSet<QQmlJSRegisterContent> origins;
 
     QQmlJSRegisterContent aResultScope;
     if (a.isConversion()) {
-        origins.append(a.conversionOrigins());
+        const auto aOrigins = a.conversionOrigins();
+        for (const auto &aOrigin : aOrigins)
+            origins.insert(aOrigin);
         aResultScope = a.conversionResultScope();
     } else {
-        origins.append(a.containedType());
+        origins.insert(a);
         aResultScope = a.scopeType();
     }
 
     QQmlJSRegisterContent bResultScope;
     if (b.isConversion()) {
-        origins.append(b.conversionOrigins());
+        const auto bOrigins = b.conversionOrigins();
+        for (const auto &bOrigin : bOrigins)
+            origins.insert(bOrigin);
         bResultScope = b.conversionResultScope();
     } else {
-        origins.append(b.containedType());
+        origins.insert(b);
         bResultScope = b.scopeType();
     }
 
-    std::sort(origins.begin(), origins.end());
-    const auto erase = std::unique(origins.begin(), origins.end());
-    origins.erase(erase, origins.end());
-
     return QQmlJSRegisterContent::create(
-            syntheticTypes(origins),
+            origins.values(),
             merge(a.containedType(), b.containedType()),
             merge(aResultScope, bResultScope),
             mergeVariants(a.variant(), b.variant()),
@@ -873,7 +874,7 @@ bool QQmlJSTypeResolver::canHoldUndefined(const QQmlJSRegisterContent &content) 
 
     const auto origins = content.conversionOrigins();
     for (const auto &origin : origins) {
-        if (canBeUndefined(origin))
+        if (canBeUndefined(origin.containedType()))
             return true;
     }
 
@@ -889,7 +890,8 @@ bool QQmlJSTypeResolver::isOptionalType(const QQmlJSRegisterContent &content) co
     if (origins.length() != 2)
         return false;
 
-    return equals(origins[0], m_voidType) || equals(origins[1], m_voidType);
+    return registerContains(origins[0], m_voidType)
+            || registerContains(origins[1], m_voidType);
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::extractNonVoidFromOptionalType(
@@ -899,9 +901,11 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::extractNonVoidFromOptionalType(
         return QQmlJSScope::ConstPtr();
 
     const auto origins = content.conversionOrigins();
-    const QQmlJSScope::ConstPtr result = equals(origins[0], m_voidType) ? origins[1] : origins[0];
-    Q_ASSERT(!equals(result, m_voidType));
-    return result;
+    const QQmlJSRegisterContent result = registerContains(origins[0], m_voidType)
+            ? origins[1]
+            : origins[0];
+    Q_ASSERT(!registerContains(result, m_voidType));
+    return result.containedType();
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
@@ -1723,13 +1727,13 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
         auto origins = type.conversionOrigins();
         const auto begin = origins.begin();
         const auto end = std::remove_if(begin, origins.end(),
-                       [this](const QQmlJSScope::ConstPtr &origin) {
-            return equals(origin, m_voidType);
+                       [this](const QQmlJSRegisterContent &origin) {
+            return registerContains(origin, m_voidType);
         });
 
         // If the conversion cannot hold the original type, it loses information.
-        return (end - begin == 1 && canHold(type.conversionResult(), *begin))
-                ? memberType(syntheticType(*begin), name, type.resultLookupIndex(), lookupIndex)
+        return (end - begin == 1 && canHold(type.conversionResult(), begin->containedType()))
+                ? memberType(*begin, name, type.resultLookupIndex(), lookupIndex)
                 : QQmlJSRegisterContent();
     }
 
@@ -1879,7 +1883,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::convert(
 {
     if (from.isConversion()) {
         return QQmlJSRegisterContent::create(
-                syntheticTypes(from.conversionOrigins()), to.containedType(),
+                from.conversionOrigins(), to.containedType(),
                 to.scopeType().isValid()
                         ? to.scopeType()
                         : from.conversionResultScope(),

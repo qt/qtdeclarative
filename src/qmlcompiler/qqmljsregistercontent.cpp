@@ -198,13 +198,8 @@ QQmlJSRegisterContent QQmlJSRegisterContent::create(
 {
     QQmlJSRegisterContent result(scope, variant);
 
-    QList<QQmlJSScope::ConstPtr> originContents;
-    originContents.reserve(origins.size());
-    for (const QQmlJSRegisterContent &content : origins)
-        originContents.append(content.containedType());
-
     result.m_content = ConvertedTypes {
-        originContents,
+        origins,
         conversion,
         QSharedPointer<QQmlJSRegisterContent>::create(conversionScope)
     };

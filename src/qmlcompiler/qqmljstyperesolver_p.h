@@ -260,14 +260,6 @@ public:
     {
         return globalType(scope);
     }
-    QList<QQmlJSRegisterContent> syntheticTypes(const QList<QQmlJSScope::ConstPtr> &scopes) const
-    {
-        QList<QQmlJSRegisterContent> result;
-        result.reserve(scopes.length());
-        for (const QQmlJSScope::ConstPtr &scope : scopes)
-            result.append(syntheticType(scope));
-        return result;
-    }
 
 protected:
 
