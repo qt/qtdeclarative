@@ -4,3 +4,5 @@
 qt_internal_add_example(qtquickview)
 qt_internal_add_example(qtquickview_java)
 qt_internal_add_example(qtquickview_kotlin)
+qt_internal_add_example(models/qtabstractitemmodel)
+qt_internal_add_example(models/qtabstractitemmodel_java)
