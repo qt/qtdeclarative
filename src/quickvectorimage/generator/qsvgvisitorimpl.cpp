@@ -78,6 +78,17 @@ public:
         return m_svgState.fillOpacity;
     }
 
+    const QGradient *currentStrokeGradient() const
+    {
+        QBrush brush = m_dummyPainter.pen().brush();
+        if (brush.style() == Qt::LinearGradientPattern
+                || brush.style() == Qt::RadialGradientPattern
+                || brush.style() == Qt::ConicalGradientPattern) {
+            return brush.gradient();
+        }
+        return nullptr;
+    }
+
     const QGradient *currentFillGradient() const
     {
         if (m_dummyPainter.brush().style() == Qt::LinearGradientPattern || m_dummyPainter.brush().style() == Qt::RadialGradientPattern || m_dummyPainter.brush().style() == Qt::ConicalGradientPattern )
@@ -626,7 +637,9 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     }
 
 #if QT_CONFIG(texthtmlparser)
-    bool needsPathNode = mainGradient != nullptr || svgFont != nullptr;
+    bool needsPathNode = mainGradient != nullptr
+                           || svgFont != nullptr
+                           || styleResolver->currentStrokeGradient() != nullptr;
 #endif
     for (const auto *tspan : node->tspans()) {
         if (!tspan) {
@@ -808,12 +821,20 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 
                     info.painterPath = p;
 
+                    const QGradient *strokeGradient = styleResolver->currentStrokeGradient();
+                    QPen pen;
                     if (fmt.hasProperty(QTextCharFormat::TextOutline)) {
-                        info.strokeStyle = StrokeStyle::fromPen(fmt.textOutline());
-                        info.strokeStyle.color = fmt.textOutline().color();
+                        pen = fmt.textOutline();
+                        if (strokeGradient == nullptr) {
+                            info.strokeStyle = StrokeStyle::fromPen(pen);
+                            info.strokeStyle.color = pen.color();
+                        }
                     } else {
-                        info.strokeStyle = StrokeStyle::fromPen(styleResolver->currentStroke());
-                        info.strokeStyle.color = styleResolver->currentStrokeColor();
+                        pen = styleResolver->currentStroke();
+                        if (strokeGradient == nullptr) {
+                            info.strokeStyle = StrokeStyle::fromPen(pen);
+                            info.strokeStyle.color = styleResolver->currentStrokeColor();
+                        }
                     }
 
                     if (info.grad.type() == QGradient::NoGradient && styleResolver->currentFillGradient() != nullptr)
@@ -822,6 +843,17 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                     info.fillTransform = styleResolver->currentFillTransform();
 
                     m_generator->generatePath(info);
+
+                    if (strokeGradient != nullptr) {
+                        PathNodeInfo strokeInfo;
+                        fillCommonNodeInfo(node, strokeInfo);
+
+                        strokeInfo.grad = *strokeGradient;
+
+                        QPainterPathStroker stroker(pen);
+                        strokeInfo.painterPath = stroker.createStroke(p);
+                        m_generator->generatePath(strokeInfo);
+                    }
                 };
 
                 qreal baselineOffset = -QFontMetricsF(font).ascent();
@@ -1033,15 +1065,30 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
     if (fillStyle)
         info.fillRule = fillStyle->fillRule();
 
+    const QGradient *strokeGradient = styleResolver->currentStrokeGradient();
+
     info.painterPath = path;
     info.fillColor = styleResolver->currentFillColor();
-    info.strokeStyle = StrokeStyle::fromPen(styleResolver->currentStroke());
-    info.strokeStyle.color = styleResolver->currentStrokeColor();
+    if (strokeGradient == nullptr) {
+        info.strokeStyle = StrokeStyle::fromPen(styleResolver->currentStroke());
+        info.strokeStyle.color = styleResolver->currentStrokeColor();
+    }
     if (styleResolver->currentFillGradient() != nullptr)
         info.grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
     info.fillTransform = styleResolver->currentFillTransform();
 
     m_generator->generatePath(info);
+
+    if (strokeGradient != nullptr) {
+        PathNodeInfo strokeInfo;
+        fillCommonNodeInfo(node, strokeInfo);
+
+        strokeInfo.grad = *strokeGradient;
+
+        QPainterPathStroker stroker(styleResolver->currentStroke());
+        strokeInfo.painterPath = stroker.createStroke(path);
+        m_generator->generatePath(strokeInfo);
+    }
 
     handleBaseNodeEnd(node);
 }
