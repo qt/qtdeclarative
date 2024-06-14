@@ -154,6 +154,7 @@ private slots:
     void anchorChangesCrash();
     void anchorRewindBug();
     void anchorRewindBug2();
+    void anchorRewind_keepsSize_whenStateResetsDefaultAnchors();
     void script();
     void restoreEntryValues();
     void explicitChanges();
@@ -1085,6 +1086,30 @@ void tst_qquickstates::anchorRewindBug2()
     QQuickItemPrivate::get(rect.get())->setState("");
     QCOMPARE(mover->y(), qreal(0.0));
     QCOMPARE(mover->width(), qreal(50.0));
+}
+
+// QTBUG-126057
+void tst_qquickstates::anchorRewind_keepsSize_whenStateResetsDefaultAnchors()
+{
+    // Arrange
+    QQmlEngine engine;
+
+    // NOTE: Contains two nested rectangles, inner is by default anchored to the top left corner of
+    // its parent. A state is initially "anchored" which removes the default anchoring and anchors
+    // the inner rectangle to the bottom right corner of the parent. The size of the inner rectangle
+    // is assigned to 50x50 on Component.onCompleted of outer rectangle.
+    QQmlComponent rectComponent(&engine, testFileUrl("anchorRewindBug3.qml"));
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(rectComponent.create()));
+    QVERIFY(rect != nullptr);
+    QQuickRectangle *mover = rect->findChild<QQuickRectangle*>("inner");
+    QVERIFY(mover != nullptr);
+
+    // Act
+    QQuickItemPrivate::get(rect.get())->setState("");
+
+    // Assert
+    QCOMPARE(mover->width(), qreal(50.0));
+    QCOMPARE(mover->height(), qreal(50.0));
 }
 
 void tst_qquickstates::script()
