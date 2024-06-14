@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     parser.setApplicationDescription("SVG to QML converter [tech preview]");
     parser.addHelpOption();
     parser.addPositionalArgument("input", QCoreApplication::translate("main", "SVG file to read."));
-    parser.addPositionalArgument("output", QCoreApplication::translate("main", "QML file to write."));
+    parser.addPositionalArgument("output", QCoreApplication::translate("main", "QML file to write."), "[output]");
 
     QCommandLineOption optimizeOption("optimize-paths",
                                       QCoreApplication::translate("main", "Optimize paths for the curve renderer."));
@@ -74,7 +74,8 @@ int main(int argc, char *argv[])
 
 #ifdef ENABLE_GUI
     QCommandLineOption guiOption(QStringList() << "v" << "view",
-                                 QCoreApplication::translate("main", "Display the SVG in a window."));
+                                 QCoreApplication::translate("main", "Display the generated QML in a window. This is the default behavior if no "
+                                                                     "output file is specified."));
     parser.addOption(guiOption);
 #endif
     parser.process(app);
@@ -114,10 +115,10 @@ int main(int argc, char *argv[])
     generator.setAssetFileDirectory(assetOutputDirectory);
     generator.setAssetFilePrefix(assetOutputPrefix);
     generator.setRetainFilePaths(keepPaths);
-    generator.generate();
+    bool ok = generator.generate();
 
 #ifdef ENABLE_GUI
-    if (parser.isSet(guiOption)) {
+    if (ok && (parser.isSet(guiOption) || outFileName.isEmpty())) {
         app.setOrganizationName("QtProject");
         const QUrl url(QStringLiteral("qrc:/main.qml"));
         QQmlApplicationEngine engine;
@@ -134,8 +135,7 @@ int main(int argc, char *argv[])
         engine.load(url);
         return app.exec();
     }
-#else
-    return 0;
 #endif
 
+    return ok ? 0 : 1;
 }

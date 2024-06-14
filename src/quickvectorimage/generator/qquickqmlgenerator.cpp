@@ -27,7 +27,7 @@ QQuickQmlGenerator::QQuickQmlGenerator(const QString fileName, QQuickVectorImage
 
 QQuickQmlGenerator::~QQuickQmlGenerator()
 {
-    if (!outputFileName.isEmpty()) {
+    if (m_generationSucceeded && !outputFileName.isEmpty()) {
         QFileInfo fileInfo(outputFileName);
         QDir dir(fileInfo.absolutePath());
         if (!dir.exists() && !dir.mkpath(QStringLiteral("."))) {

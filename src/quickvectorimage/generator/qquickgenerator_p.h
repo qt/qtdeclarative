@@ -45,7 +45,7 @@ public:
     void setGeneratorFlags(QQuickVectorImageGenerator::GeneratorFlags flags);
     QQuickVectorImageGenerator::GeneratorFlags generatorFlags();
 
-    void generate();
+    bool generate();
 
 protected:
     virtual void generateNodeBase(const NodeInfo &info) = 0;
@@ -62,6 +62,7 @@ protected:
     bool isNodeVisible(const NodeInfo &info);
 
 protected:
+    bool m_generationSucceeded = false;
     QQuickVectorImageGenerator::GeneratorFlags m_flags;
 
 private:
