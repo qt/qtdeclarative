@@ -1738,6 +1738,9 @@ void QQmlLSCompletion::collectCompletions(const DomItem &currentItem,
         case DomType::ScriptLiteral:
             insideScriptLiteralCompletion(currentParent, positionInfo, result);
             return;
+        case DomType::ScriptRegExpLiteral:
+            // no completion inside of regexp literals
+            return;
         case DomType::ScriptCallExpression:
             insideCallExpression(currentParent, positionInfo, result);
             return;
