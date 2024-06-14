@@ -569,14 +569,14 @@ void QQuickAccessibleAttached::setProxying(QQuickAccessibleAttached *proxying)
 
 /*!
  * \since 6.8
- * Issues an announcement event with a \a message with priority \a priority.
+ * Issues an announcement event with a \a message with politeness \a politeness.
  *
  * \sa QAccessibleAnnouncementEvent
  */
-void QQuickAccessibleAttached::announce(const QString &message, QAccessible::AnnouncementPriority priority)
+void QQuickAccessibleAttached::announce(const QString &message, QAccessible::AnnouncementPoliteness politeness)
 {
     QAccessibleAnnouncementEvent event(parent(), message);
-    event.setPriority(priority);
+    event.setPoliteness(politeness);
     QAccessible::updateAccessibility(&event);
 }
 

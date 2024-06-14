@@ -185,7 +185,7 @@ public:
     Q_REVISION(6, 2) Q_INVOKABLE static QString stripHtml(const QString &html);
     void setProxying(QQuickAccessibleAttached *proxying);
 
-    Q_REVISION(6, 8) Q_INVOKABLE void announce(const QString &message, QAccessible::AnnouncementPriority priority = QAccessible::AnnouncementPriority::Polite);
+    Q_REVISION(6, 8) Q_INVOKABLE void announce(const QString &message, QAccessible::AnnouncementPoliteness politeness = QAccessible::AnnouncementPoliteness::Polite);
 
 public Q_SLOTS:
     void valueChanged() {
