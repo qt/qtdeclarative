@@ -276,9 +276,7 @@ void QQuickWidgetPrivate::handleWindowChange()
     QObject::connect(renderControl, SIGNAL(renderRequested()), q, SLOT(triggerUpdate()));
     QObject::connect(renderControl, SIGNAL(sceneChanged()), q, SLOT(triggerUpdate()));
 
-    if (!source.isEmpty())
-        execute();
-    else if (QQuickItem *sgItem = qobject_cast<QQuickItem *>(root))
+    if (QQuickItem *sgItem = qobject_cast<QQuickItem *>(root))
         sgItem->setParentItem(offscreenWindow->contentItem());
 }
 
