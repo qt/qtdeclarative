@@ -4264,6 +4264,30 @@ private slots:
         }
     }
 
+    void metaProperty()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/metaProperty.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem statements = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0)
+                                           .field(Fields::methods)
+                                           .key(u"f"_s)
+                                           .index(0)
+                                           .field(Fields::body)
+                                           .field(Fields::scriptElement)
+                                           .field(Fields::statements);
+
+        {
+            const DomItem newTarget = statements.index(0).field(Fields::condition);
+            QVERIFY(newTarget);
+            QCOMPARE(newTarget.internalKind(), DomType::ScriptBinaryExpression);
+        }
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;
