@@ -4070,6 +4070,16 @@ void tst_qmlls_utils::completions_data()
             << testFile("completions/templateLiterals.qml") << 10 << 40
             << ExpectedCompletions{ }
             << QStringList{ forStatementCompletion };
+
+    QTest::newRow("insideRegularExpression")
+            << testFile("completions/regularExpressions.qml") << 5 << 20
+            << ExpectedCompletions{ }
+            << QStringList{};
+
+    QTest::newRow("insideRegularExpressionFlag")
+            << testFile("completions/regularExpressions.qml") << 5 << 25
+            << ExpectedCompletions{ }
+            << QStringList{};
 }
 
 void tst_qmlls_utils::completions()
