@@ -2437,6 +2437,7 @@ void QQuickTextEdit::setDocument(QTextDocument *doc)
     d->document = doc;
     d->ownsDocument = false;
     d->control->setDocument(doc);
+    q_textChanged();
 }
 
 inline void resetEngine(QQuickTextNodeEngine *engine, const QColor& textColor, const QColor& selectedTextColor, const QColor& selectionColor)
@@ -3083,8 +3084,11 @@ void QQuickTextEdit::updateSize()
 
     qreal baseline = fm.ascent();
     QTextBlock firstBlock = d->document->firstBlock();
-    if (firstBlock.isValid() && firstBlock.layout() != nullptr && firstBlock.lineCount() > 0)
-        baseline = firstBlock.layout()->lineAt(0).ascent();
+    if (firstBlock.isValid() && firstBlock.layout() != nullptr && firstBlock.lineCount() > 0) {
+        QTextLine firstLine = firstBlock.layout()->lineAt(0);
+        if (firstLine.isValid())
+            baseline = firstLine.ascent();
+    }
 
     setBaselineOffset(baseline + d->yoff + d->textMargin);
 
