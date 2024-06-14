@@ -2,3 +2,8 @@
 # QTBUG-94225
 [clickAroundInTheFamilyListView]
 b2qt
+
+# QTBUG-126375
+[settingUnderlineAndStrikeoutEffects]
+macos
+linux
