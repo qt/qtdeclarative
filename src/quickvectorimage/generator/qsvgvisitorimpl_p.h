@@ -29,7 +29,7 @@ class QSvgVisitorImpl : public QSvgVisitor
 {
 public:
     QSvgVisitorImpl(const QString svgFileName, QQuickGenerator *generator);
-    void traverse();
+    bool traverse();
 
 protected:
     void visitNode(const QSvgNode *node) override;

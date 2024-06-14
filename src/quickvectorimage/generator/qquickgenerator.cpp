@@ -39,10 +39,11 @@ QQuickVectorImageGenerator::GeneratorFlags QQuickGenerator::generatorFlags()
     return m_flags;
 }
 
-void QQuickGenerator::generate()
+bool QQuickGenerator::generate()
 {
     m_loader = new QSvgVisitorImpl(m_fileName, this);
-    m_loader->traverse();
+    m_generationSucceeded = m_loader->traverse();
+    return m_generationSucceeded;
 }
 
 void QQuickGenerator::optimizePaths(const PathNodeInfo &info)

@@ -252,20 +252,21 @@ QSvgVisitorImpl::QSvgVisitorImpl(const QString svgFileName, QQuickGenerator *gen
 {
 }
 
-void QSvgVisitorImpl::traverse()
+bool QSvgVisitorImpl::traverse()
 {
     if (!m_generator) {
         qCDebug(lcQuickVectorImage) << "No valid QQuickGenerator is set. Genration will stop";
-        return;
+        return false;
     }
 
     auto *doc = QSvgTinyDocument::load(m_svgFileName);
     if (!doc) {
         qCDebug(lcQuickVectorImage) << "Not a valid Svg File : " << m_svgFileName;
-        return;
+        return false;
     }
 
     QSvgVisitor::traverse(doc);
+    return true;
 }
 
 void QSvgVisitorImpl::visitNode(const QSvgNode *node)
