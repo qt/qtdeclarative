@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">QtAbstractItemModel Android Java Example</string>
+    <string name="addRowText">Add Row at End</string>
+    <string name="removeRowText">Remove Last Row</string>
+    <string name="removeFirstRow">Remove First Row</string>
+    <string name="add_row_at_start">Add Row at Start</string>
+    <string name="add_column">Add Column</string>
+    <string name="remove_column">Remove Column</string>
+</resources>
+
