@@ -4080,6 +4080,21 @@ void tst_qmlls_utils::completions_data()
             << testFile("completions/regularExpressions.qml") << 5 << 25
             << ExpectedCompletions{ }
             << QStringList{};
+
+    QTest::newRow("insideNewMemberExpression")
+            << testFile("completions/newExpressions.qml") << 5 << 13
+            << ExpectedCompletions{ { u"f"_s, CompletionItemKind::Method } }
+            << QStringList{ forStatementCompletion };
+
+    QTest::newRow("insideNewMemberExpressionArgument")
+            << testFile("completions/newExpressions.qml") << 5 << 15
+            << ExpectedCompletions{ { u"f"_s, CompletionItemKind::Method } }
+            << QStringList{ forStatementCompletion };
+
+    QTest::newRow("insideNewExpression")
+            << testFile("completions/newExpressions.qml") << 6 << 13
+            << ExpectedCompletions{ { u"f"_s, CompletionItemKind::Method } }
+            << QStringList{ forStatementCompletion };
 }
 
 void tst_qmlls_utils::completions()
