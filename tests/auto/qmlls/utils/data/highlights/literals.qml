@@ -10,5 +10,7 @@ Item {
     line string";
     property bool d: true
     property var e: null
-
+    property string d: "multi\n\n
+    newlines\n\n
+    "
 }

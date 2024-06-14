@@ -360,9 +360,14 @@ void HighlightingVisitor::highlightScriptLiteral(const DomItem &item)
         return;
     const auto regions = fLocs->info().regions;
     if (std::holds_alternative<QString>(literal->literalValue())) {
-        const QString value = u'\"' + std::get<QString>(literal->literalValue()) + u'\"';
+        const auto file = item.containingFile().as<QmlFile>();
+        Q_ASSERT(file);
+        const auto &code = file->engine()->code();
+        const auto offset = regions[MainRegion].offset;
+        const auto length = regions[MainRegion].length;
+        const QStringView literalCode = QStringView{code}.mid(offset, length);
         const auto &locs = HighlightingUtils::sourceLocationsFromMultiLineToken(
-                value, regions[MainRegion]);
+                literalCode, regions[MainRegion]);
         for (const auto &loc : locs)
             m_highlights.addHighlight(loc, int(SemanticTokenTypes::String));
     } else if (std::holds_alternative<double>(literal->literalValue()))
