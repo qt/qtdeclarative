@@ -78,6 +78,7 @@ public:
     QQmlJSScope::ConstPtr forInIteratorPtr() const { return m_forInIteratorPtr; }
     QQmlJSScope::ConstPtr forOfIteratorPtr() const { return m_forOfIteratorPtr; }
 
+    QQmlJSRegisterContent jsGlobalObjectContent() const { return m_jsGlobalObjectContent; }
     QQmlJSScope::ConstPtr mathObject() const;
     QQmlJSScope::ConstPtr consoleObject() const;
 
@@ -332,6 +333,8 @@ protected:
     QQmlJSScope::ConstPtr m_jsGlobalObject;
     QQmlJSScope::ConstPtr m_forInIteratorPtr;
     QQmlJSScope::ConstPtr m_forOfIteratorPtr;
+
+    QQmlJSRegisterContent m_jsGlobalObjectContent;
 
     QQmlJSScopesById m_objectsById;
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> m_objectsByLocation;

@@ -1510,7 +1510,7 @@ bool QQmlJSTypePropagator::propagateTranslationMethod(
     const QQmlJSRegisterContent returnType
             = m_typeResolver->returnType(
                     m_typeResolver->stringType(), QQmlJSRegisterContent::MethodReturnValue,
-                    m_typeResolver->syntheticType(m_typeResolver->jsGlobalObject()));
+                    m_typeResolver->jsGlobalObjectContent());
 
     if (method.methodName() == u"qsTranslate"_s) {
         switch (argc) {

@@ -162,6 +162,9 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     forOfIteratorPtr->setFilePath(u"qjslist.h"_s);
     forOfIteratorPtr->setInternalName(u"QJSListForOfIterator::Ptr"_s);
     m_forOfIteratorPtr = forOfIteratorPtr;
+
+    // We use this as scope type quite often, and it should always be the same scope type.
+    m_jsGlobalObjectContent = globalType(m_jsGlobalObject);
 }
 
 /*!
@@ -1201,12 +1204,11 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSRegisterContent
     if (m_jsGlobalObject->hasProperty(name)) {
         return QQmlJSRegisterContent::create(
                 m_jsGlobalObject->property(name), QQmlJSRegisterContent::InvalidLookupIndex,
-                lookupIndex, QQmlJSRegisterContent::JavaScriptGlobal,
-                syntheticType(m_jsGlobalObject));
+                lookupIndex, QQmlJSRegisterContent::JavaScriptGlobal, m_jsGlobalObjectContent);
     } else if (m_jsGlobalObject->hasMethod(name)) {
         return QQmlJSRegisterContent::create(
                 m_jsGlobalObject->methods(name), jsValueType(),
-                QQmlJSRegisterContent::JavaScriptGlobal, syntheticType(m_jsGlobalObject));
+                QQmlJSRegisterContent::JavaScriptGlobal, m_jsGlobalObjectContent);
     }
 
     return {};
