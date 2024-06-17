@@ -657,6 +657,20 @@ TestCase {
             width: 100
             height: 120
 
+            property int rotation: 0
+
+            transform: [
+                Rotation {
+                    angle: rotation
+                    origin.x: 0
+                    origin.y: 0
+                },
+                Translate {
+                    x: (rotation === 90) ? parent.width : 0
+                    y: 0
+                }
+            ]
+
             model: ListModel {
                 ListElement { name: "Apple" }
                 ListElement { name: "Orange" }
@@ -714,14 +728,19 @@ TestCase {
     function test_removableDelegates_data() {
         return [
             { tag: "mouse", touch: false },
-            { tag: "touch", touch: true }
+            { tag: "touch", touch: true },
+            { tag: "mouse_rotation_90", touch: false, rotation: 90 },
+            { tag: "touch_rotation_90", touch: true, rotation: 90 },
         ]
     }
 
-    function test_removableDelegates() {
+    function test_removableDelegates(data) {
         let listView = createTemporaryObject(removableDelegatesComponent, testCase);
         verify(listView);
         compare(listView.count, 3);
+
+        if (data.rotation)
+            listView.rotation = data.rotation;
 
         let touch = data.touch ? touchEvent(listView) : null
 
