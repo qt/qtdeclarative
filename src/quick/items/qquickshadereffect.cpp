@@ -538,6 +538,14 @@ QQuickShaderEffect::~QQuickShaderEffect()
 {
     Q_D(QQuickShaderEffect);
     d->inDestructor = true;
+
+    for (int i = 0; i < QQuickShaderEffectPrivate::NShader; ++i) {
+        d->disconnectSignals(QQuickShaderEffectPrivate::Shader(i));
+        d->clearMappers(QQuickShaderEffectPrivate::Shader(i));
+    }
+
+    delete d->m_mgr;
+    d->m_mgr = nullptr;
 }
 
 /*!
@@ -835,12 +843,7 @@ QQuickShaderEffectPrivate::QQuickShaderEffectPrivate()
 
 QQuickShaderEffectPrivate::~QQuickShaderEffectPrivate()
 {
-    for (int i = 0; i < NShader; ++i) {
-        disconnectSignals(Shader(i));
-        clearMappers(Shader(i));
-    }
-
-    delete m_mgr;
+    Q_ASSERT(m_mgr == nullptr);
 }
 
 void QQuickShaderEffectPrivate::setFragmentShader(const QUrl &fileUrl)
