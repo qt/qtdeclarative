@@ -27,6 +27,7 @@ class Q_QMLCOMPILER_EXPORT QQmlJSRegisterContent
 public:
     enum ContentVariant {
         ObjectById,
+        TypeByName,
         Singleton,
         Script,
         MetaType,

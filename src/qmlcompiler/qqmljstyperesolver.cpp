@@ -525,6 +525,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::registerContentForName(
                 QQmlJSRegisterContent::Script, scopeType);
     }
 
+    const QQmlJSRegisterContent namedType = QQmlJSRegisterContent::create(
+            type, QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::TypeByName,
+            scopeType);
+
     if (const auto attached = type->attachedType()) {
         if (!genericType(attached)) {
             m_logger->log(u"Cannot resolve generic base of attached %1"_s.arg(
@@ -544,7 +548,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::registerContentForName(
                         attached, QQmlJSRegisterContent::InvalidLookupIndex,
                         hasObjectModulePrefix
                             ? QQmlJSRegisterContent::ObjectAttached
-                            : QQmlJSRegisterContent::ScopeAttached, syntheticType(type));
+                            : QQmlJSRegisterContent::ScopeAttached, namedType);
         }
     }
 
@@ -557,13 +561,13 @@ QQmlJSRegisterContent QQmlJSTypeResolver::registerContentForName(
         // This only works with namespaces and object types.
         return QQmlJSRegisterContent::create(
                 metaObjectType(), QQmlJSRegisterContent::InvalidLookupIndex,
-                QQmlJSRegisterContent::MetaType, syntheticType(type));
+                QQmlJSRegisterContent::MetaType, namedType);
     case QQmlJSScope::AccessSemantics::Sequence:
     case QQmlJSScope::AccessSemantics::Value:
         if (canAddressValueTypes()) {
             return QQmlJSRegisterContent::create(
                     metaObjectType(), QQmlJSRegisterContent::InvalidLookupIndex,
-                    QQmlJSRegisterContent::MetaType, syntheticType(type));
+                    QQmlJSRegisterContent::MetaType, namedType);
         }
         // Else this is not actually a type reference. You cannot get the metaobject
         // of a value type in QML and sequences don't even have metaobjects.
@@ -1624,9 +1628,13 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
                               qmlCompiler, contained->sourceLocation());
                 return {};
             } else {
+                const QQmlJSRegisterContent namedType = QQmlJSRegisterContent::create(
+                        attachedBase, QQmlJSRegisterContent::InvalidLookupIndex,
+                        QQmlJSRegisterContent::TypeByName, type);
+
                 return QQmlJSRegisterContent::create(
                         attached, resultLookupIndex, QQmlJSRegisterContent::ObjectAttached,
-                        syntheticType(attachedBase));
+                        namedType);
             }
         }
     }
