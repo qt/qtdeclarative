@@ -2092,7 +2092,7 @@ RenameUsages renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
             continue;
 
         const QString newFilename =
-                QDir::cleanPath(filename + "/..").append(u"/"_s).append(newName).append(extension);
+                QDir::cleanPath(filename + "/.."_L1) + '/'_L1 + newName + extension;
         result.appendRename({ filename, newFilename });
     }
 
