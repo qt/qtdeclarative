@@ -273,6 +273,8 @@ void tst_QQuickFontDialogImpl::settingUnderlineAndStrikeoutEffects()
     QVERIFY(dialogHelper.dialog->selectedFont().underline());
     QVERIFY(!dialogHelper.dialog->selectedFont().strikeOut());
 
+    QVERIFY(QQuickTest::qWaitForPolish(dialogHelper.window()));
+
     QVERIFY(clickButton(underlineCheckBox));
 
     QCOMPARE(selectedFontSpy.size(), 2);
