@@ -80,7 +80,7 @@ void QQuickPopupPositioner::reposition()
         QPointF requestedPos(p->x, p->y);
         // Shift the window position a bit back, so that the top-left of the
         // background frame ends up at the requested position.
-        QPointF windowPos = requestedPos - p->dropShadowOffset();
+        QPointF windowPos = requestedPos - p->windowInsetsTopLeft();
 
         if (!p->popupWindow || !p->parentItem) {
             // If we don't have a popupWindow, set a temporary effective pos. Otherwise
@@ -103,7 +103,7 @@ void QQuickPopupPositioner::reposition()
 
         const QPointF globalCoords = p->parentItem->mapToGlobal(windowPos.x(), windowPos.y());
         p->popupWindow->setPosition(globalCoords.x(), globalCoords.y());
-        p->popupItem->setPosition({0, 0});
+        p->popupItem->setPosition(p->windowInsetsTopLeft());
         return;
     }
 
@@ -262,9 +262,7 @@ void QQuickPopupPositioner::reposition()
 
     m_positioning = true;
 
-    // Shift the "window" a bit back, so that the top-left of the
-    // background frame ends up at the requested position.
-    const QPointF windowPos = rect.topLeft() - p->dropShadowOffset();
+    const QPointF windowPos = rect.topLeft();
     popupItem->setPosition(windowPos);
 
     // If the popup was assigned a parent, rect will be in scene coordinates,

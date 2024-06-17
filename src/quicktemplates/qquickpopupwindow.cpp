@@ -99,8 +99,9 @@ void QQuickPopupWindow::resizeEvent(QResizeEvent *e)
         return;
 
     qCDebug(lcPopupWindow) << "A window system event changed the popup's size to be " << e->size();
-    d->m_popupItem->setWidth(e->size().width());
-    d->m_popupItem->setHeight(e->size().height());
+    const QMarginsF windowInsets = QQuickPopupPrivate::get(d->m_popup)->windowInsets();
+    d->m_popupItem->setWidth(e->size().width() - windowInsets.left() - windowInsets.right());
+    d->m_popupItem->setHeight(e->size().height() - windowInsets.top() - windowInsets.bottom());
 }
 
 /*! \internal

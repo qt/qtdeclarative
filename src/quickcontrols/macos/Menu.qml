@@ -16,18 +16,16 @@ T.Menu {
                              contentHeight + topPadding + bottomPadding)
 
     // The insets are found by examining the MultiEffect.itemRect, which
-    // contains the drop shadow offsets. QQuickPopup will subract these insets when
-    // it opens up the menu so that the top left corner of the background ends up at
-    // the requested popup position.
-    // Note: the insets are hard-coded to avoid a binding loop to implicit size.
-    leftInset: 32
-    topInset: 32
-    rightInset: 32
-    bottomInset: 32
-    leftPadding: leftInset + 5
-    rightPadding: rightInset + 5
-    topPadding: topInset + 5
-    bottomPadding: bottomInset + 5
+    // contains the drop shadow offsets. Note: the insets are hard-coded
+    // to avoid a binding loop to implicit size.
+    leftInset: -32
+    topInset: -32
+    rightInset: -32
+    bottomInset: -32
+    leftPadding: 5
+    topPadding: 5
+    rightPadding: 5
+    bottomPadding: 5
     margins: 0
     overlap: 4
 
@@ -45,28 +43,34 @@ T.Menu {
         ScrollIndicator.vertical: ScrollIndicator {}
     }
 
-    background: MultiEffect {
-        implicitWidth: 200
-        implicitHeight: 20
-        source: Rectangle {
-            width: control.background.width
-            height: control.background.height
-            radius: 5
-            color: Application.styleHints.colorScheme === Qt.Light
-                   ? Qt.darker(control.palette.window, 1.04)
-                   : Qt.darker(control.palette.window, 1.2)
-            border.color: Application.styleHints.colorScheme === Qt.Light
-                   ? Qt.darker(control.palette.window, 1.4)
-                   : Qt.lighter(control.palette.window, 2.0)
-            border.width: 0.5
-            visible: false
+    background: Item {
+        implicitWidth: 200 - control.leftInset - control.rightInset
+        implicitHeight: 20 - control.topInset - control.bottomInset
+        MultiEffect {
+            x: -control.leftInset
+            y: -control.topInset
+            width: source.width
+            height: source.height
+            source: Rectangle {
+                width: control.background.width + control.leftInset + control.rightInset
+                height: control.background.height + control.topInset + control.bottomInset
+                radius: 5
+                color: Application.styleHints.colorScheme === Qt.Light
+                       ? Qt.darker(control.palette.window, 1.04)
+                       : Qt.darker(control.palette.window, 1.2)
+                border.color: Application.styleHints.colorScheme === Qt.Light
+                              ? Qt.darker(control.palette.window, 1.4)
+                              : Qt.lighter(control.palette.window, 2.0)
+                border.width: 0.5
+                visible: false
+            }
+            shadowScale: 1.04
+            shadowOpacity: Application.styleHints.colorScheme === Qt.Light ? 0.15 : 0.2
+            shadowColor: 'black'
+            shadowEnabled: true
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 7
         }
-        shadowScale: 1.04
-        shadowOpacity: Application.styleHints.colorScheme === Qt.Light ? 0.15 : 0.2
-        shadowColor: 'black'
-        shadowEnabled: true
-        shadowHorizontalOffset: 0
-        shadowVerticalOffset: 7
     }
 
     T.Overlay.modal: Rectangle {

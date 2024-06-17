@@ -600,27 +600,38 @@ bool QQuickPopupPrivate::handleHoverEvent(QQuickItem *item, QHoverEvent *event)
     }
 }
 
-QPointF QQuickPopupPrivate::dropShadowOffset() const
+QMarginsF QQuickPopupPrivate::windowInsets() const
 {
-    // If the popupWindowType has Qt::FramelessWindowHint set, it means
-    // that the background delegate is responsible for drawing the window
-    // frame. And to make room for a drop-shadow in that case, the delegate
-    // can be shifted into the popup using insets, to allow the shadow to
-    // be drawn between the edge of the window and the edge of the frame.
-    // This function will report the size of that shadow, to ensure that we
-    // place the popup such that the top-left corner of the background
-    // frame ends up at the requested position, rather then the top-left
-    // corner of the drop-shadow. If the insets are negative, the shadow
-    // is drawn on the outside of the popup, and the corner of the frame
-    // should already be at 0, 0.
-    if (popupWindowType() & Qt::FramelessWindowHint) {
-        return {
-            popupItem->leftInset() > 0 ? popupItem->leftInset() : 0,
-            popupItem->topInset() > 0 ? popupItem->topInset() : 0
-        };
+    Q_Q(const QQuickPopup);
+    // If the popup has negative insets, it means that its background is pushed
+    // outside the bounds of the popup. This is fine when the popup is an item in the
+    // scene (Popup.Item), but will result in the background being clipped when using
+    // a window (Popup.Window). To avoid this, the window will been made bigger than
+    // the popup (according to the insets), to also include the part that ends up
+    // outside (which is usually a drop-shadow).
+    // Note that this also means that we need to take those extra margins into account
+    // whenever we resize or position the menu, so that the top-left of the popup ends
+    // up at the requested position, and not the top-left of the window.
+
+    if (!usePopupWindow() || (q->background() && q->background()->clip())) {
+        // Items in the scene are allowed to draw out-of-bounds, so we don't
+        // need to do anything if we're not using popup windows. The same is
+        // also true for popup windows if the background is clipped.
+        return {0, 0, 0, 0};
     }
 
-    return {0, 0};
+    return {
+        q->leftInset() < 0 ? -q->leftInset() : 0,
+        q->rightInset() < 0 ? -q->rightInset() : 0,
+        q->topInset() < 0 ? -q->topInset() : 0,
+        q->bottomInset() < 0 ? -q->bottomInset() : 0
+    };
+}
+
+QPointF QQuickPopupPrivate::windowInsetsTopLeft() const
+{
+    const QMarginsF windowMargins = windowInsets();
+    return {windowMargins.left(), windowMargins.top()};
 }
 
 void QQuickPopupPrivate::setEffectivePosFromWindowPos(const QPointF &windowPos)
@@ -641,7 +652,7 @@ void QQuickPopupPrivate::setEffectivePosFromWindowPos(const QPointF &windowPos)
     // the effective position and subtract the dropShadowOffset().
     Q_Q(QQuickPopup);
     const QPointF oldEffectivePos = effectivePos;
-    effectivePos = windowPos + dropShadowOffset();
+    effectivePos = windowPos + windowInsetsTopLeft();
     if (!qFuzzyCompare(oldEffectivePos.x(), effectivePos.x()))
         emit q->xChanged();
     if (!qFuzzyCompare(oldEffectivePos.y(), effectivePos.y()))
@@ -1015,8 +1026,8 @@ void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
     if (usePopupWindow()) {
         if (!popupWindow) {
             popupWindow = new QQuickPopupWindow(q, window);
-            popupWindow->setWidth(popupItem->width());
-            popupWindow->setHeight(popupItem->height());
+            popupWindow->setWidth(popupItem->width() + windowInsets().left() + windowInsets().right());
+            popupWindow->setHeight(popupItem->height() + windowInsets().top() + windowInsets().bottom());
             popupWindow->setModality(modal ? Qt::ApplicationModal : Qt::NonModal);
             popupItem->resetTitle();
             popupWindow->setTitle(m_title);
@@ -1417,7 +1428,7 @@ void QQuickPopup::setWidth(qreal width)
     // which emits widthChanged().
 
     if (d->popupWindow)
-        d->popupWindow->setWidth(width);
+        d->popupWindow->setWidth(width + d->windowInsets().left() + d->windowInsets().right());
     else
         d->popupItem->setWidth(width);
 }
@@ -1456,7 +1467,7 @@ void QQuickPopup::setHeight(qreal height)
     // which emits heightChanged().
 
     if (d->popupWindow)
-        d->popupWindow->setHeight(height);
+        d->popupWindow->setHeight(height + d->windowInsets().top() + d->windowInsets().bottom());
     else
         d->popupItem->setHeight(height);
 }

@@ -146,18 +146,6 @@ QPalette QQuickPopupItemPrivate::parentPalette(const QPalette &fallbackPalette) 
     return QQuickPopupPrivate::get(popup)->parentPalette(fallbackPalette);
 }
 
-bool QQuickPopupItem::contains(const QPointF &point) const
-{
-    Q_D(const QQuickPopupItem);
-    // A popup will often contain a drop shadow. And when determining if a point
-    // is inside the popup, we want to exclude that shadow from the test, and only
-    // consider the background rect.
-    const QRectF backgroundRect = boundingRect().adjusted(
-        d->popup->leftInset(), d->popup->topInset(),
-        -d->popup->rightInset(), -d->popup->bottomInset());
-    return backgroundRect.contains(point);
-}
-
 void QQuickPopupItem::updatePolish()
 {
     Q_D(QQuickPopupItem);

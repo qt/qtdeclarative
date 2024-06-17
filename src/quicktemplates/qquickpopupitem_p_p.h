@@ -30,8 +30,6 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickPopupItem : public QQuickPage
 public:
     explicit QQuickPopupItem(QQuickPopup *popup);
 
-    bool contains(const QPointF &point) const override;
-
 protected:
     void updatePolish() override;
 
