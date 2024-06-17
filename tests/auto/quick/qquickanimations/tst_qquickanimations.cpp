@@ -101,6 +101,7 @@ private slots:
     void restartAnimationGroupWhenDirty();
     void restartNestedAnimationGroupWhenDirty();
     void targetsDeletedNotRemoved();
+    void alwaysRunToEndSetFalseRestartBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -2293,6 +2294,41 @@ void tst_qquickanimations::targetsDeletedNotRemoved()
         QCOMPARE(ref.size(), 1);
         QCOMPARE(ref.at(0), nullptr);
     }
+}
+
+//QTBUG-125224
+void tst_qquickanimations::alwaysRunToEndSetFalseRestartBug()
+{
+    QQuickRectangle rect;
+    QQuickSequentialAnimation sequential;
+    QQuickPropertyAnimation beginAnim;
+    QQuickPropertyAnimation endAnim;
+
+    beginAnim.setTargetObject(&rect);
+    beginAnim.setProperty("x");
+    beginAnim.setTo(200);
+    beginAnim.setDuration(1000);
+
+    endAnim.setTargetObject(&rect);
+    endAnim.setProperty("x");
+    endAnim.setFrom(200);
+    endAnim.setDuration(1000);
+
+    beginAnim.setGroup(&sequential);
+    endAnim.setGroup(&sequential);
+
+    sequential.setLoops(-1);
+    sequential.setAlwaysRunToEnd(true);
+
+    QCOMPARE(sequential.loops(), -1);
+    QVERIFY(sequential.alwaysRunToEnd());
+    sequential.start();
+    sequential.stop();
+    sequential.setAlwaysRunToEnd(false);
+    sequential.start();
+    QCOMPARE(sequential.isRunning(), true);
+    sequential.stop();
+    QCOMPARE(sequential.isRunning(), false);
 }
 
 QTEST_MAIN(tst_qquickanimations)
