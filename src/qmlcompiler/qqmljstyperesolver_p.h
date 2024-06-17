@@ -165,6 +165,9 @@ public:
     QQmlJSRegisterContent extensionType(
             const QQmlJSScope::ConstPtr &extension, const QQmlJSRegisterContent &base) const;
 
+    QQmlJSRegisterContent baseType(
+            const QQmlJSScope::ConstPtr &base, const QQmlJSRegisterContent &derived) const;
+
     QQmlJSRegisterContent iteratorPointer(
             const QQmlJSRegisterContent &listType, QQmlJS::AST::ForEachType type,
             int lookupIndex) const;

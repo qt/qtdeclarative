@@ -55,6 +55,8 @@ public:
         ListValue,
         ListIterator,
         Builtin,
+
+        BaseType,
         Unknown,
     };
 

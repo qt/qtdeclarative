@@ -1571,7 +1571,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
 
     const auto check = [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind mode) {
         const QQmlJSRegisterContent resultScope = mode == QQmlJSScope::NotExtension
-                ? syntheticType(scope)
+                ? baseType(scope, type)
                 : extensionType(scope, type);
 
         if (mode != QQmlJSScope::ExtensionNamespace) {
@@ -1653,7 +1653,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberEnumType(
                 type.containedType(),
                 [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind mode) {
                     return checkEnums(mode == QQmlJSScope::NotExtension
-                                              ? syntheticType(scope)
+                                              ? baseType(scope, type)
                                               : extensionType(scope, type),
                                       name, &result);
                 })) {
@@ -1799,6 +1799,22 @@ QQmlJSRegisterContent QQmlJSTypeResolver::extensionType(
 {
     return QQmlJSRegisterContent::create(
             extension, base.resultLookupIndex(), QQmlJSRegisterContent::Extension, base);
+}
+
+/*!
+ * \internal
+ * Encodes \a base as a base type of \a derived and returns a QQmlJSRegisterContent.
+ * "Base type" here is understood the same way as std::is_base_of would understand it.
+ * That means, if you pass the contained type of \a derived as \a base, then \a derived
+ * itself is returned.
+ */
+QQmlJSRegisterContent QQmlJSTypeResolver::baseType(
+        const QQmlJSScope::ConstPtr &base, const QQmlJSRegisterContent &derived) const
+{
+    if (derived.containedType() == base)
+        return derived;
+    return QQmlJSRegisterContent::create(
+            base, derived.resultLookupIndex(), QQmlJSRegisterContent::BaseType, derived);
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::iteratorPointer(
