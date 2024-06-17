@@ -162,6 +162,9 @@ public:
     QQmlJSRegisterContent returnType(const QQmlJSScope::ConstPtr &type, QQmlJSRegisterContent::ContentVariant variant,
                                      const QQmlJSRegisterContent &scope) const;
 
+    QQmlJSRegisterContent extensionType(
+            const QQmlJSScope::ConstPtr &extension, const QQmlJSRegisterContent &base) const;
+
     QQmlJSRegisterContent iteratorPointer(
             const QQmlJSRegisterContent &listType, QQmlJS::AST::ForEachType type,
             int lookupIndex) const;
@@ -273,7 +276,7 @@ protected:
     QQmlJSRegisterContent memberEnumType(const QQmlJSRegisterContent &type,
                                          const QString &name) const;
     bool checkEnums(const QQmlJSRegisterContent &scope, const QString &name,
-                    QQmlJSRegisterContent *result, QQmlJSScope::ExtensionKind mode) const;
+                    QQmlJSRegisterContent *result) const;
     bool canPrimitivelyConvertFromTo(
             const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) const;
     QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSRegisterContent &scope) const;

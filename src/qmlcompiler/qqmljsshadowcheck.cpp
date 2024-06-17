@@ -156,8 +156,6 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
         return NotShadowable;
 
     switch (baseType.variant()) {
-    case QQmlJSRegisterContent::ExtensionObjectProperty:
-    case QQmlJSRegisterContent::ExtensionScopeProperty:
     case QQmlJSRegisterContent::MethodReturnValue:
     case QQmlJSRegisterContent::ObjectProperty:
     case QQmlJSRegisterContent::ScopeProperty:

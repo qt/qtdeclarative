@@ -857,7 +857,6 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
         setAccumulator(QQmlJSRegisterContent());
     } else if (m_state.accumulatorOut().isEnumeration()) {
         switch (m_state.accumulatorIn().variant()) {
-        case QQmlJSRegisterContent::ExtensionObjectEnum:
         case QQmlJSRegisterContent::MetaType:
         case QQmlJSRegisterContent::ObjectAttached:
         case QQmlJSRegisterContent::ObjectEnum:
@@ -973,7 +972,6 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
 
     switch (m_state.accumulatorOut().variant()) {
     case QQmlJSRegisterContent::ObjectEnum:
-    case QQmlJSRegisterContent::ExtensionObjectEnum:
     case QQmlJSRegisterContent::Singleton:
         // For reading enums or singletons, we don't need to access anything, unless it's an
         // import namespace. Then we need the name.

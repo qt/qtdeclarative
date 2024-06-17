@@ -1006,11 +1006,9 @@ static QQmlJSRegisterContent::ContentVariant scopeContentVariant(QQmlJSScope::Ex
 {
     switch (mode) {
     case QQmlJSScope::NotExtension:
-        return isMethod ? QQmlJSRegisterContent::ScopeMethod : QQmlJSRegisterContent::ScopeProperty;
     case QQmlJSScope::ExtensionType:
     case QQmlJSScope::ExtensionJavaScript:
-        return isMethod ? QQmlJSRegisterContent::ExtensionScopeMethod
-                        : QQmlJSRegisterContent::ExtensionScopeProperty;
+        return isMethod ? QQmlJSRegisterContent::ScopeMethod : QQmlJSRegisterContent::ScopeProperty;
     case QQmlJSScope::ExtensionNamespace:
         break;
     }
@@ -1166,6 +1164,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSRegisterContent
             if (mode == QQmlJSScope::ExtensionNamespace) // no use for it here
                 return false;
 
+            const QQmlJSRegisterContent resultScope = mode == QQmlJSScope::NotExtension
+                    ? scope
+                    : extensionType(found, scope);
+
             if (found->hasOwnProperty(name)) {
                 QQmlJSMetaProperty prop = found->ownProperty(name);
                 if (!isRevisionAllowed(prop.revision(), contained))
@@ -1174,7 +1176,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSRegisterContent
                 prop.setType(resolveParentProperty(name, base, prop.type()));
                 result = QQmlJSRegisterContent::create(
                         prop, QQmlJSRegisterContent::InvalidLookupIndex, lookupIndex,
-                        scopeContentVariant(mode, false), scope);
+                        scopeContentVariant(mode, false), resultScope);
                 return true;
             }
 
@@ -1189,7 +1191,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSRegisterContent
                 if (methods.isEmpty())
                     return false;
                 result = QQmlJSRegisterContent::create(
-                        methods, jsValueType(), scopeContentVariant(mode, true), scope);
+                        methods, jsValueType(), scopeContentVariant(mode, true), resultScope);
                 return true;
             }
 
@@ -1233,21 +1235,18 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSRegisterContent
 
 bool QQmlJSTypeResolver::checkEnums(
         const QQmlJSRegisterContent &scope, const QString &name,
-        QQmlJSRegisterContent *result, QQmlJSScope::ExtensionKind mode) const
+        QQmlJSRegisterContent *result) const
 {
     // You can't have lower case enum names in QML, even if we know the enums here.
     if (name.isEmpty() || !name.at(0).isUpper())
         return false;
-
-    const bool inExtension = (mode != QQmlJSScope::NotExtension);
 
     const auto enums = scope.containedType()->ownEnumerations();
     for (const auto &enumeration : enums) {
         if ((enumeration.isScoped() || enumeration.isQml()) && enumeration.name() == name) {
             *result = QQmlJSRegisterContent::create(
                     enumeration, QString(),
-                    inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum
-                                : QQmlJSRegisterContent::ObjectEnum,
+                    QQmlJSRegisterContent::ObjectEnum,
                     scope);
             return true;
         }
@@ -1256,8 +1255,7 @@ bool QQmlJSTypeResolver::checkEnums(
              || !scope.containedType()->enforcesScopedEnums()) && enumeration.hasKey(name)) {
             *result = QQmlJSRegisterContent::create(
                     enumeration, name,
-                    inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum
-                                : QQmlJSRegisterContent::ObjectEnum,
+                    QQmlJSRegisterContent::ObjectEnum,
                     scope);
             return true;
         }
@@ -1568,15 +1566,17 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
     }
 
     const auto check = [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind mode) {
+        const QQmlJSRegisterContent resultScope = mode == QQmlJSScope::NotExtension
+                ? syntheticType(scope)
+                : extensionType(scope, type);
+
         if (mode != QQmlJSScope::ExtensionNamespace) {
             if (scope->hasOwnProperty(name)) {
                 const auto prop = scope->ownProperty(name);
                 result = QQmlJSRegisterContent::create(
                         prop, baseLookupIndex, resultLookupIndex,
-                        mode == QQmlJSScope::NotExtension
-                                ? QQmlJSRegisterContent::ObjectProperty
-                                : QQmlJSRegisterContent::ExtensionObjectProperty,
-                        syntheticType(scope));
+                        QQmlJSRegisterContent::ObjectProperty,
+                        resultScope);
                 return true;
             }
 
@@ -1584,15 +1584,13 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
                 const auto methods = scope->ownMethods(name);
                 result = QQmlJSRegisterContent::create(
                         methods, jsValueType(),
-                        mode == QQmlJSScope::NotExtension
-                                ? QQmlJSRegisterContent::ObjectMethod
-                                : QQmlJSRegisterContent::ExtensionObjectMethod,
-                        syntheticType(scope));
+                        QQmlJSRegisterContent::ObjectMethod,
+                        resultScope);
                 return true;
             }
         }
 
-        return checkEnums(syntheticType(scope), name, &result, mode);
+        return checkEnums(resultScope, name, &result);
     };
 
     if (QQmlJSUtils::searchBaseAndExtensionTypes(type.containedType(), check))
@@ -1650,7 +1648,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberEnumType(
     if (QQmlJSUtils::searchBaseAndExtensionTypes(
                 type.containedType(),
                 [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind mode) {
-                    return checkEnums(syntheticType(scope), name, &result, mode);
+                    return checkEnums(mode == QQmlJSScope::NotExtension
+                                              ? syntheticType(scope)
+                                              : extensionType(scope, type),
+                                      name, &result);
                 })) {
         return result;
     }
@@ -1787,6 +1788,13 @@ QQmlJSRegisterContent QQmlJSTypeResolver::returnType(
              || variant == QQmlJSRegisterContent::JavaScriptReturnValue);
     return QQmlJSRegisterContent::create(
             type, QQmlJSRegisterContent::InvalidLookupIndex, variant, scope);
+}
+
+QQmlJSRegisterContent QQmlJSTypeResolver::extensionType(
+        const QQmlJSScope::ConstPtr &extension, const QQmlJSRegisterContent &base) const
+{
+    return QQmlJSRegisterContent::create(
+            extension, base.resultLookupIndex(), QQmlJSRegisterContent::Extension, base);
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::iteratorPointer(

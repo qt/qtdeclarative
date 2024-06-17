@@ -747,8 +747,7 @@ void QQmlJSCodeGenerator::generate_StoreNameSloppy(int nameIndex)
     Q_ASSERT(type.isProperty());
 
     switch (type.variant()) {
-    case QQmlJSRegisterContent::ScopeProperty:
-    case QQmlJSRegisterContent::ExtensionScopeProperty: {
+    case QQmlJSRegisterContent::ScopeProperty: {
         // Do not convert here. We may intentionally pass the "wrong" type, for example to trigger
         // a property reset.
         m_body += u"aotContext->storeNameSloppy("_s + QString::number(nameIndex)
@@ -760,7 +759,6 @@ void QQmlJSCodeGenerator::generate_StoreNameSloppy(int nameIndex)
         break;
     }
     case QQmlJSRegisterContent::ScopeMethod:
-    case QQmlJSRegisterContent::ExtensionScopeMethod:
         reject(u"assignment to scope method"_s);
         break;
     default:
@@ -1161,8 +1159,7 @@ void QQmlJSCodeGenerator::generateWriteBack(int registerIndex)
         const QString writeBackIndexString = QString::number(lookupIndex);
 
         const QQmlJSRegisterContent::ContentVariant variant = writeBack.variant();
-        if (variant == QQmlJSRegisterContent::ScopeProperty
-            || variant == QQmlJSRegisterContent::ExtensionScopeProperty) {
+        if (variant == QQmlJSRegisterContent::ScopeProperty) {
             const QString lookup = u"aotContext->writeBackScopeObjectPropertyLookup("_s
                     + writeBackIndexString
                     + u", "_s + contentPointer(writeBack, writeBackRegister) + u')';
@@ -1198,10 +1195,8 @@ void QQmlJSCodeGenerator::generateWriteBack(int registerIndex)
 
         switch (writeBack.variant()) {
         case QQmlJSRegisterContent::ScopeProperty:
-        case QQmlJSRegisterContent::ExtensionScopeProperty:
             Q_UNREACHABLE();
         case QQmlJSRegisterContent::ObjectProperty:
-        case QQmlJSRegisterContent::ExtensionObjectProperty:
             if (writeBack.scopeType().containedType()->isReferenceType()) {
                 const QString lookup = u"aotContext->writeBackObjectLookup("_s
                         + writeBackIndexString

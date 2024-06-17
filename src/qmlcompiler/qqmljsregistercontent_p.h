@@ -31,6 +31,7 @@ public:
         Singleton,
         Script,
         MetaType,
+        Extension,
 
         JavaScriptGlobal,
         JavaScriptObject,
@@ -41,17 +42,12 @@ public:
         ScopeMethod,
         ScopeAttached,
         ScopeModulePrefix,
-        ExtensionScopeProperty,
-        ExtensionScopeMethod,
 
         ObjectProperty,
         ObjectMethod,
         ObjectEnum,
         ObjectAttached,
         ObjectModulePrefix,
-        ExtensionObjectProperty,
-        ExtensionObjectMethod,
-        ExtensionObjectEnum,
 
         MethodReturnValue,
         JavaScriptReturnValue,
