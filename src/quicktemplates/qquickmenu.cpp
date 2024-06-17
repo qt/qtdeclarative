@@ -950,22 +950,21 @@ void QQuickMenuPositioner::reposition()
 
     if (QQuickMenu *parentMenu = menu_d->parentMenu) {
         if (menu_d->cascade) {
-            // Align the menu to the frame of the parent menu, minus overlap. The position
+            // Align the menu to the frame of the parent menuItem, minus overlap. The position
             // should be in the coordinate system of the parentItem.
             if (menu_d->popupItem->isMirrored()) {
-                menu->setPosition({-menu->width()
-                                       - parentMenu->leftPadding() + parentMenu->leftInset()
-                                       + menu->overlap(),
-                                   menu->topInset() - menu->topPadding()});
+                const qreal distanceToFrame = parentMenu->leftPadding();
+                const qreal menuX = -menu->width() - distanceToFrame + menu->overlap();
+                menu->setPosition({menuX, -menu->topPadding()});
             } else if (menu_d->parentItem) {
-                menu->setPosition({menu_d->parentItem->width()
-                                       + parentMenu->rightPadding() - parentMenu->rightInset()
-                                       - menu->overlap(),
-                                   menu->topInset() - menu->topPadding()});
+                const qreal distanceToFrame = parentMenu->rightPadding();
+                const qreal menuX = menu_d->parentItem->width() + distanceToFrame - menu->overlap();
+                menu->setPosition({menuX, -menu->topPadding()});
             }
         } else {
-            menu->setPosition(QPointF(parentMenu->x() + (parentMenu->width() - menu->width()) / 2,
-                                      parentMenu->y() + (parentMenu->height() - menu->height()) / 2));
+            const qreal menuX = parentMenu->x() + (parentMenu->width() - menu->width()) / 2;
+            const qreal menuY = parentMenu->y() + (parentMenu->height() - menu->height()) / 2;
+            menu->setPosition({menuX, menuY});
         }
     }
 

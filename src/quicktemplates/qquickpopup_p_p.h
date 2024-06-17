@@ -94,7 +94,8 @@ public:
     bool handleTouchEvent(QQuickItem *item, QTouchEvent *event);
 #endif
 
-    QPointF dropShadowOffset() const;
+    QMarginsF windowInsets() const;
+    QPointF windowInsetsTopLeft() const;
     void setEffectivePosFromWindowPos(const QPointF &windowPos);
     void reposition();
 
