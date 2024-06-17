@@ -1613,7 +1613,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
 
             return QQmlJSRegisterContent::create(
                     prop, baseLookupIndex, resultLookupIndex,
-                    QQmlJSRegisterContent::JavaScriptObject, syntheticType(scope));
+                    QQmlJSRegisterContent::JavaScriptObject, javaScriptParentScope(scope, type));
         }
     }
 
@@ -1815,6 +1815,22 @@ QQmlJSRegisterContent QQmlJSTypeResolver::baseType(
         return derived;
     return QQmlJSRegisterContent::create(
             base, derived.resultLookupIndex(), QQmlJSRegisterContent::BaseType, derived);
+}
+
+/*!
+ * \internal
+ * Encodes \a parent as a parent scope of \a child and returns a QQmlJSRegisterContent.
+ * "Parent scope" here means any scope above, but also _including_ \a child.
+ * That means, if you pass the contained type of \a child as \a parent, then \a child
+ * itself is returned.
+ */
+QQmlJSRegisterContent QQmlJSTypeResolver::javaScriptParentScope(
+        const QQmlJSScope::ConstPtr &parent, const QQmlJSRegisterContent &child) const
+{
+    if (child.containedType() == parent)
+        return child;
+    return QQmlJSRegisterContent::create(
+            parent, child.resultLookupIndex(), QQmlJSRegisterContent::JavaScriptParentScope, child);
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::iteratorPointer(

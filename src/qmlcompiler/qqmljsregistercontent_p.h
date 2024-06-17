@@ -35,7 +35,7 @@ public:
 
         JavaScriptGlobal,
         JavaScriptObject,
-        JavaScriptScopeProperty,
+        JavaScriptParentScope,
         GenericObjectProperty, // Can be JSObject property or QVariantMap
 
         ScopeProperty,

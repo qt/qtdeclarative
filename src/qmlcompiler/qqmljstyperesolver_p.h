@@ -168,6 +168,9 @@ public:
     QQmlJSRegisterContent baseType(
             const QQmlJSScope::ConstPtr &base, const QQmlJSRegisterContent &derived) const;
 
+    QQmlJSRegisterContent javaScriptParentScope(
+            const QQmlJSScope::ConstPtr &parent, const QQmlJSRegisterContent &child) const;
+
     QQmlJSRegisterContent iteratorPointer(
             const QQmlJSRegisterContent &listType, QQmlJS::AST::ForEachType type,
             int lookupIndex) const;
@@ -254,15 +257,6 @@ public:
     bool inherits(const QQmlJSScope::ConstPtr &derived, const QQmlJSScope::ConstPtr &base) const;
     QQmlJSLogger *logger() const { return m_logger; }
     QStringList seenModuleQualifiers() const { return m_seenModuleQualifiers; }
-
-    // These methods are used to mark the places we have to adapt to propagate dependencies between
-    // values once the current QQmlJSRegisterContent is refactored to form a graph.
-    // We want to pass a node of the graph, with all its existing edges intact, instead of just a
-    // bare QQmlJSScope::ConstPtr.
-    QQmlJSRegisterContent syntheticType(const QQmlJSScope::ConstPtr &scope) const
-    {
-        return globalType(scope);
-    }
 
 protected:
 
