@@ -197,6 +197,7 @@ static QString capStyleName(Qt::PenCapStyle style)
         break;
     case Qt::RoundCap:
         styleName = QStringLiteral("roundcap");
+        break;
     default:
         break;
     }
@@ -217,6 +218,7 @@ static QString joinStyleName(Qt::PenJoinStyle style)
         break;
     case Qt::RoundJoin:
         styleName = QStringLiteral("roundjoin");
+        break;
     case Qt::SvgMiterJoin:
         styleName = QStringLiteral("svgmiterjoin");
         break;
