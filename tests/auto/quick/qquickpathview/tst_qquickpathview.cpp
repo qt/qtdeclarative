@@ -1568,6 +1568,7 @@ void tst_QQuickPathView::mouseDrag()
 
 void tst_QQuickPathView::nestedMouseAreaDrag()
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     QScopedPointer<QQuickView> window(createView());
     QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("nestedmousearea.qml"));
@@ -1578,16 +1579,17 @@ void tst_QQuickPathView::nestedMouseAreaDrag()
     QVERIFY(pathview != nullptr);
 
     // Dragging the child mouse area should move it and not animate the PathView
-    flick(window.data(), QPoint(200,200), QPoint(400,200), 200);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200,200), QPoint(400,200), 200);
     QVERIFY(!pathview->isMoving());
 
     // Dragging outside the mouse are should animate the PathView.
-    flick(window.data(), QPoint(75,75), QPoint(175,75), 200);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(75,75), QPoint(175,75), 200);
     QVERIFY(pathview->isMoving());
 }
 
 void tst_QQuickPathView::flickNClick() // QTBUG-77173
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     QScopedPointer<QQuickView> window(createView());
     QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("nestedmousearea2.qml"));
@@ -1619,7 +1621,7 @@ void tst_QQuickPathView::flickNClick() // QTBUG-77173
         flickStartedSpy.clear();
         flickEndedSpy.clear();
         // Dragging the child mouse area should animate the PathView (MA has no drag target)
-        flick(window.data(), QPoint(199,199), QPoint(399,199), duration);
+        QQuickTest::pointerFlick(device, window.data(), 0, QPoint(199,199), QPoint(399,199), duration);
         QVERIFY(pathview->isMoving());
         QCOMPARE(movingChangedSpy.size(), 1);
         QCOMPARE(draggingSpy.size(), 2);
@@ -1924,6 +1926,7 @@ void tst_QQuickPathView::cancelDrag()
 
 void tst_QQuickPathView::maximumFlickVelocity()
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("dragpath.qml"));
     QQuickVisualTestUtils::moveMouseAway(window.data());
@@ -1934,7 +1937,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
     QVERIFY(pathview != nullptr);
 
     pathview->setMaximumFlickVelocity(700);
-    flick(window.data(), QPoint(200,10), QPoint(10,10), 180);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200,10), QPoint(10,10), 180);
     QVERIFY(pathview->isMoving());
     QVERIFY(pathview->isFlicking());
     QTRY_VERIFY_WITH_TIMEOUT(!pathview->isMoving(), 50000);
@@ -1943,7 +1946,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
 
     pathview->setOffset(0.);
     pathview->setMaximumFlickVelocity(300);
-    flick(window.data(), QPoint(200,10), QPoint(10,10), 180);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200,10), QPoint(10,10), 180);
     QVERIFY(pathview->isMoving());
     QVERIFY(pathview->isFlicking());
     QTRY_VERIFY_WITH_TIMEOUT(!pathview->isMoving(), 50000);
@@ -1952,7 +1955,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
 
     pathview->setOffset(0.);
     pathview->setMaximumFlickVelocity(500);
-    flick(window.data(), QPoint(200,10), QPoint(10,10), 180);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200,10), QPoint(10,10), 180);
     QVERIFY(pathview->isMoving());
     QVERIFY(pathview->isFlicking());
     QTRY_VERIFY_WITH_TIMEOUT(!pathview->isMoving(), 50000);
@@ -1968,6 +1971,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
 void tst_QQuickPathView::snapToItem()
 {
     QFETCH(bool, enforceRange);
+    auto device = QPointingDevice::primaryPointingDevice();
 
     QScopedPointer<QQuickView> window(createView());
     QQuickVisualTestUtils::moveMouseAway(window.data());
@@ -1985,7 +1989,7 @@ void tst_QQuickPathView::snapToItem()
 
     QSignalSpy snapModeSpy(pathview, SIGNAL(snapModeChanged()));
 
-    flick(window.data(), QPoint(200,10), QPoint(10,10), 180);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200,10), QPoint(10,10), 180);
 
     QVERIFY(pathview->isMoving());
     QTRY_VERIFY_WITH_TIMEOUT(!pathview->isMoving(), 50000);
@@ -2010,6 +2014,7 @@ void tst_QQuickPathView::snapToItem_data()
 void tst_QQuickPathView::snapOneItem()
 {
     QFETCH(bool, enforceRange);
+    auto device = QPointingDevice::primaryPointingDevice();
 
     QScopedPointer<QQuickView> window(createView());
     QQuickVisualTestUtils::moveMouseAway(window.data());
@@ -2031,7 +2036,7 @@ void tst_QQuickPathView::snapOneItem()
     int currentIndex = pathview->currentIndex();
 
     double startOffset = pathview->offset();
-    flick(window.data(), QPoint(200,10), QPoint(10,10), 180);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200,10), QPoint(10,10), 180);
 
     QVERIFY(pathview->isMoving());
     QTRY_VERIFY(!pathview->isMoving());
@@ -2859,6 +2864,7 @@ void tst_QQuickPathView::touchMove()
 
 void tst_QQuickPathView::mousePressAfterFlick() // QTBUG-115121
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     QScopedPointer<QQuickView> window(createView());
     QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("mousePressAfterFlick.qml"));
@@ -2884,7 +2890,7 @@ void tst_QQuickPathView::mousePressAfterFlick() // QTBUG-115121
     // Dragging the child mouse area should animate the PathView (MA has no drag target)
     QPoint from = QPoint((window->width() / 2), (window->height() * 3 / 4));
     QPoint to = QPoint((window->width() / 2), (window->height() / 4));
-    flick(window.data(), from, to, 100);
+    QQuickTest::pointerFlick(device, window.data(), 0, from, to, 100);
     QVERIFY(pathview->isMoving());
     QCOMPARE(flickingSpy.size(), 1);
     QCOMPARE(flickStartedSpy.size(), 1);
