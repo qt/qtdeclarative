@@ -348,6 +348,9 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(
         return;
     }
 
+    if (metaMethod.returnTypeName().isEmpty())
+        metaMethod.setReturnTypeName(QLatin1String("void"));
+
     scope->addOwnMethod(metaMethod);
 }
 

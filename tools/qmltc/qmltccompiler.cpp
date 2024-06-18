@@ -707,24 +707,10 @@ compileMethodParameters(const QList<QQmlJSMetaParameter> &parameterInfos, bool a
     return parameters;
 }
 
-static QString figureReturnType(const QQmlJSMetaMethod &m)
-{
-    const bool isVoidMethod =
-            m.returnTypeName() == u"void" || m.methodType() == QQmlJSMetaMethodType::Signal;
-    Q_ASSERT(isVoidMethod || m.returnType());
-    QString type;
-    if (isVoidMethod) {
-        type = u"void"_s;
-    } else {
-        type = m.returnType()->augmentedInternalName();
-    }
-    return type;
-}
-
 void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
                                   const QQmlJSScope::ConstPtr &owner)
 {
-    const auto returnType = figureReturnType(m);
+    const QString returnType = m.returnType()->augmentedInternalName();
 
     const QList<QmltcVariable> compiledParams = compileMethodParameters(m.parameters());
     const auto methodType = m.methodType();
@@ -1926,7 +1912,7 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
         const QString signalName = signal.methodName();
         const QString slotName = newSymbol(signalName + u"_slot");
 
-        const QString signalReturnType = figureReturnType(signal);
+        const QString signalReturnType = signal.returnType()->augmentedInternalName();
         const QList<QmltcVariable> slotParameters =
                 compileMethodParameters(signal.parameters(), /* allow unnamed = */ true);
 

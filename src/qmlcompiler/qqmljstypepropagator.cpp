@@ -1450,7 +1450,7 @@ void QQmlJSTypePropagator::propagateCall(
             ? m_typeResolver->jsValueType()
             : QQmlJSScope::ConstPtr(match.returnType());
     setAccumulator(m_typeResolver->returnType(
-            returnType ? QQmlJSScope::ConstPtr(returnType) : m_typeResolver->voidType(),
+            returnType,
             match.isJavaScriptFunction()
                     ? QQmlJSRegisterContent::JavaScriptReturnValue
                     : QQmlJSRegisterContent::MethodReturnValue,

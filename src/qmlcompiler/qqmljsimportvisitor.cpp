@@ -1589,6 +1589,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         UiParameterList *param = publicMember->parameters;
         QQmlJSMetaMethod method;
         method.setMethodType(QQmlJSMetaMethodType::Signal);
+        method.setReturnTypeName(QStringLiteral("void"));
         method.setMethodName(publicMember->name.toString());
         method.setSourceLocation(combine(publicMember->firstSourceLocation(),
                                          publicMember->lastSourceLocation()));
