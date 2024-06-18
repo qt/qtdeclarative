@@ -769,7 +769,8 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("badAttachedProperty")
             << QStringLiteral("badAttachedProperty.qml")
             << Result { { Message {
-                       QStringLiteral("Member \"progress\" not found on type \"TestType\"") } } };
+                       QStringLiteral("Member \"progress\" not found on type \"TestTypeAttached\"")
+               } } };
     QTest::newRow("badAttachedPropertyNested")
             << QStringLiteral("badAttachedPropertyNested.qml")
             << Result { { Message { QStringLiteral(

@@ -75,9 +75,7 @@ QString QQmlJSRegisterContent::containedTypeName() const
 {
     QQmlJSScope::ConstPtr type;
 
-    // Use the type proper instead of the attached type
     switch (variant()) {
-    case QQmlJSRegisterContent::ScopeAttached:
     case QQmlJSRegisterContent::MetaType:
         type = scopeType();
         break;
