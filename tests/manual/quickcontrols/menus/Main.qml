@@ -45,6 +45,11 @@ ApplicationWindow {
                 title: qsTr("Sub...")
                 ContextAction { text: qsTr("Sub action 1") }
                 ContextAction { text: qsTr("Sub action 2") }
+                Menu {
+                    title: qsTr("SubSub...")
+                    ContextAction { text: qsTr("SubSub action 1") }
+                    ContextAction { text: qsTr("SubSub action 2") }
+                }
             }
             MenuSeparator { }
             ContextAction {
@@ -437,6 +442,11 @@ ApplicationWindow {
                 checked: true
                 enabled: false
                 shortcut: "J"
+            }
+            Menu {
+                title: qsTr("SubSub...")
+                ContextAction { text: qsTr("SubSub action 1") }
+                ContextAction { text: qsTr("SubSub action 2") }
             }
         }
     }
