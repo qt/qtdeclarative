@@ -166,7 +166,12 @@ void QSGDistanceFieldGlyphCache::update()
     distanceFields.reserve(pendingGlyphsSize);
     for (int i = 0; i < pendingGlyphsSize; ++i) {
         GlyphData &gd = glyphData(m_pendingGlyphs.at(i));
-        distanceFields.append(QDistanceField(gd.path,
+
+        QSize size = QSize(qCeil(gd.texCoord.width + gd.texCoord.xMargin * 2),
+                           qCeil(gd.texCoord.height + gd.texCoord.yMargin * 2));
+
+        distanceFields.append(QDistanceField(size,
+                                             gd.path,
                                              m_pendingGlyphs.at(i),
                                              m_doubleGlyphResolution));
         gd.path = QPainterPath(); // no longer needed, so release memory used by the painter path
