@@ -333,7 +333,7 @@ void tst_qmlls_highlighting::highlights_data()
                          defaultModifier);
     }
     {
-        // methods and signals
+        // methods and signals, lambda functions
         const auto filePath = m_highlightingDataDir + "/methodAndSignal.qml";
         const auto fileItem = fileObject(filePath);
 
@@ -364,6 +364,25 @@ void tst_qmlls_highlighting::highlights_data()
         QTest::addRow("function-rtn-type")
                 << fileItem
                 << Token(QQmlJS::SourceLocation(216, 3, 10, 26), int(SemanticTokenTypes::Type), 0);
+        // lambda function keywords
+        QTest::addRow("function-keyword-rhs")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(344, 8, 16, 24), int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("function-keyword-rhs-1")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(441, 8, 19, 20), int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("function-keyword-in-function-body")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(536, 8, 21, 9), int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("nested-function-identifier")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(545, 6, 21, 18), int(SemanticTokenTypes::Method), 0);
+        QTest::addRow("lambda-undefined-arg")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(409, 1, 17, 33), int(SemanticTokenTypes::Variable), 0);
+        QTest::addRow("yield-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(697, 5, 25, 50), int(SemanticTokenTypes::Keyword), 0);
     }
     { // literals
         const auto filePath = m_highlightingDataDir + "/literals.qml";

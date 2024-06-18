@@ -47,6 +47,7 @@ static int tokenTypeFromRegion(QQmlJS::Dom::FileLocationRegion region)
     case RequiredKeywordRegion:
     case IfKeywordRegion:
     case SwitchKeywordRegion:
+    case YieldKeywordRegion:
         return int(SemanticTokenTypes::Keyword);
     case QuestionMarkTokenRegion:
     case EllipsisTokenRegion:
@@ -555,6 +556,14 @@ void HighlightingVisitor::highlightScriptExpressions(const DomItem &item)
         m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Type));
         m_highlights.addHighlight(regions[TypeIdentifierRegion], int(SemanticTokenTypes::Type));
         return;
+    case DomType::ScriptFunctionExpression: {
+        m_highlights.addHighlight(regions, FunctionKeywordRegion);
+        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Method));
+        return;
+    }
+    case DomType::ScriptYieldExpression:
+        m_highlights.addHighlight(regions, YieldKeywordRegion);
+        return;
     default:
         qCDebug(semanticTokens)
                 << "Script Expressions with kind" << item.internalKind() << "not implemented";
@@ -748,6 +757,8 @@ void Highlights::addHighlight(const QMap<FileLocationRegion, QQmlJS::SourceLocat
     }
 
     const auto loc = regions.value(region);
+    if (loc.length == 0)
+        return;
     return addHighlight(loc, tokenTypeFromRegion(region), modifier);
 }
 
