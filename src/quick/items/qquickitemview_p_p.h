@@ -145,6 +145,11 @@ public:
     void mirrorChange() override;
 
     FxViewItem *createItem(int modelIndex,QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested);
+    bool releaseCurrentItem(QQmlInstanceModel::ReusableFlag reusableFlag)
+    {
+        auto oldCurrentItem = std::exchange(currentItem, nullptr);
+        return releaseItem(oldCurrentItem, reusableFlag);
+    }
     virtual bool releaseItem(FxViewItem *item, QQmlInstanceModel::ReusableFlag reusableFlag);
 
     QQuickItem *createHighlightItem() const;
