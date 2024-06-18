@@ -504,8 +504,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::containedTypeForName(const QString &na
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::registerContentForName(
-        const QString &name, const QQmlJSRegisterContent &scopeType,
-        bool hasObjectModulePrefix) const
+        const QString &name, const QQmlJSRegisterContent &scopeType) const
 {
     QQmlJSScope::ConstPtr type = typeForName(name);
     if (!type)
@@ -544,9 +543,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::registerContentForName(
             // plain type directly. In indirect mode, we can use enum lookups.
             return QQmlJSRegisterContent::create(
                         attached, QQmlJSRegisterContent::InvalidLookupIndex,
-                        hasObjectModulePrefix
-                            ? QQmlJSRegisterContent::ObjectAttached
-                            : QQmlJSRegisterContent::ScopeAttached, namedType);
+                        QQmlJSRegisterContent::Attachment, namedType);
         }
     }
 
@@ -1011,7 +1008,9 @@ static QQmlJSRegisterContent::ContentVariant scopeContentVariant(QQmlJSScope::Ex
     case QQmlJSScope::NotExtension:
     case QQmlJSScope::ExtensionType:
     case QQmlJSScope::ExtensionJavaScript:
-        return isMethod ? QQmlJSRegisterContent::ScopeMethod : QQmlJSRegisterContent::ScopeProperty;
+        return isMethod
+                ? QQmlJSRegisterContent::Method
+                : QQmlJSRegisterContent::Property;
     case QQmlJSScope::ExtensionNamespace:
         break;
     }
@@ -1205,7 +1204,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSRegisterContent
         }
     }
 
-    QQmlJSRegisterContent result = registerContentForName(name);
+    QQmlJSRegisterContent result = registerContentForName(name, scope);
 
     if (result.isValid())
         return result;
@@ -1249,7 +1248,7 @@ bool QQmlJSTypeResolver::checkEnums(
         if ((enumeration.isScoped() || enumeration.isQml()) && enumeration.name() == name) {
             *result = QQmlJSRegisterContent::create(
                     enumeration, QString(),
-                    QQmlJSRegisterContent::ObjectEnum,
+                    QQmlJSRegisterContent::Enum,
                     scope);
             return true;
         }
@@ -1258,7 +1257,7 @@ bool QQmlJSTypeResolver::checkEnums(
              || !scope.containedType()->enforcesScopedEnums()) && enumeration.hasKey(name)) {
             *result = QQmlJSRegisterContent::create(
                     enumeration, name,
-                    QQmlJSRegisterContent::ObjectEnum,
+                    QQmlJSRegisterContent::Enum,
                     scope);
             return true;
         }
@@ -1548,7 +1547,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
         prop.setIsWritable(true);
         return QQmlJSRegisterContent::create(
                 prop, baseLookupIndex, resultLookupIndex,
-                QQmlJSRegisterContent::GenericObjectProperty, type);
+                QQmlJSRegisterContent::Property, type);
     }
 
     if (equals(contained, jsValueType())) {
@@ -1559,7 +1558,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
         prop.setIsWritable(true);
         return QQmlJSRegisterContent::create(
                 prop, baseLookupIndex, resultLookupIndex,
-                QQmlJSRegisterContent::GenericObjectProperty, type);
+                QQmlJSRegisterContent::Property, type);
     }
 
     if ((equals(contained, stringType())
@@ -1578,17 +1577,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
                 const auto prop = scope->ownProperty(name);
                 result = QQmlJSRegisterContent::create(
                         prop, baseLookupIndex, resultLookupIndex,
-                        QQmlJSRegisterContent::ObjectProperty,
-                        resultScope);
+                        QQmlJSRegisterContent::Property, resultScope);
                 return true;
             }
 
             if (scope->hasOwnMethod(name)) {
                 const auto methods = scope->ownMethods(name);
                 result = QQmlJSRegisterContent::create(
-                        methods, jsValueType(),
-                        QQmlJSRegisterContent::ObjectMethod,
-                        resultScope);
+                        methods, jsValueType(), QQmlJSRegisterContent::Method, resultScope);
                 return true;
             }
         }
@@ -1634,7 +1630,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
                         QQmlJSRegisterContent::TypeByName, type);
 
                 return QQmlJSRegisterContent::create(
-                        attached, resultLookupIndex, QQmlJSRegisterContent::ObjectAttached,
+                        attached, resultLookupIndex, QQmlJSRegisterContent::Attachment,
                         namedType);
             }
         }
@@ -1682,8 +1678,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
         if (!type.enumMember().isEmpty() || !enumeration.hasKey(name))
             return {};
         return QQmlJSRegisterContent::create(
-                enumeration, name, QQmlJSRegisterContent::ObjectEnum,
-                type.scopeType());
+                enumeration, name, QQmlJSRegisterContent::Enum, type.scopeType());
     }
     if (type.isMethod()) {
         QQmlJSMetaProperty prop;
@@ -1693,7 +1688,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
         prop.setIsWritable(true);
         return QQmlJSRegisterContent::create(
                 prop, QQmlJSRegisterContent::InvalidLookupIndex, lookupIndex,
-                QQmlJSRegisterContent::GenericObjectProperty, type);
+                QQmlJSRegisterContent::Property, type);
     }
     if (type.isImportNamespace()) {
         if (type.scopeType().containedType()->accessSemantics()
@@ -1705,9 +1700,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
             return {};
         }
 
-        return registerContentForName(
-                    name, type.scopeType(),
-                    type.variant() == QQmlJSRegisterContent::ObjectModulePrefix);
+        return registerContentForName(name, type);
     }
     if (type.isConversion()) {
         if (const auto result = memberType(

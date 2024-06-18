@@ -32,22 +32,18 @@ public:
         Script,
         MetaType,
         Extension,
+        ScopeObject,
 
         JavaScriptGlobal,
         JavaScriptObject,
         JavaScriptParentScope,
-        GenericObjectProperty, // Can be JSObject property or QVariantMap
 
-        ScopeProperty,
-        ScopeMethod,
-        ScopeAttached,
-        ScopeModulePrefix,
+        Property,
+        Method,
+        Enum,
 
-        ObjectProperty,
-        ObjectMethod,
-        ObjectEnum,
-        ObjectAttached,
-        ObjectModulePrefix,
+        Attachment,
+        ModulePrefix,
 
         MethodReturnValue,
         JavaScriptReturnValue,
@@ -89,6 +85,10 @@ public:
     bool isList() const;
 
     bool isWritable() const;
+    bool isScopeObject() const;
+
+    QQmlJSRegisterContent attacher() const;
+    QQmlJSRegisterContent attachee() const;
 
     QQmlJSScope::ConstPtr storedType() const { return m_storedType; }
     QQmlJSScope::ConstPtr containedType() const;

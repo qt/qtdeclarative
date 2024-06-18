@@ -280,8 +280,7 @@ protected:
 
     QQmlJSScope::ConstPtr containedTypeForName(const QString &name) const;
     QQmlJSRegisterContent registerContentForName(
-            const QString &name, const QQmlJSRegisterContent &scopeType = {},
-            bool hasObjectModuelPrefix = false) const;
+            const QString &name, const QQmlJSRegisterContent &scopeType = {}) const;
 
     QQmlJSScope::ConstPtr resolveParentProperty(
             const QString &name, const QQmlJSScope::ConstPtr &base,

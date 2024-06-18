@@ -747,7 +747,7 @@ void QQmlJSCodeGenerator::generate_StoreNameSloppy(int nameIndex)
     Q_ASSERT(type.isProperty());
 
     switch (type.variant()) {
-    case QQmlJSRegisterContent::ScopeProperty: {
+    case QQmlJSRegisterContent::Property: {
         // Do not convert here. We may intentionally pass the "wrong" type, for example to trigger
         // a property reset.
         m_body += u"aotContext->storeNameSloppy("_s + QString::number(nameIndex)
@@ -758,7 +758,7 @@ void QQmlJSCodeGenerator::generate_StoreNameSloppy(int nameIndex)
         m_body += u";\n"_s;
         break;
     }
-    case QQmlJSRegisterContent::ScopeMethod:
+    case QQmlJSRegisterContent::Method:
         reject(u"assignment to scope method"_s);
         break;
     default:
@@ -989,9 +989,9 @@ void QQmlJSCodeGenerator::generateTypeLookup(int index)
         generateLookup(lookup, initialization);
         break;
     }
-    case QQmlJSRegisterContent::ScopeModulePrefix:
+    case QQmlJSRegisterContent::ModulePrefix:
         break;
-    case QQmlJSRegisterContent::ScopeAttached: {
+    case QQmlJSRegisterContent::Attachment: {
         rejectIfNonQObjectOut(u"non-QObject attached type"_s);
         const QString lookup = u"aotContext->loadAttachedLookup("_s + indexString
                 + u", aotContext->qmlScopeObject, &"_s + m_state.accumulatorVariableOut + u')';
@@ -1159,7 +1159,8 @@ void QQmlJSCodeGenerator::generateWriteBack(int registerIndex)
         const QString writeBackIndexString = QString::number(lookupIndex);
 
         const QQmlJSRegisterContent::ContentVariant variant = writeBack.variant();
-        if (variant == QQmlJSRegisterContent::ScopeProperty) {
+        if (variant == QQmlJSRegisterContent::Property
+                && writeBack.scopeType().isScopeObject()) {
             const QString lookup = u"aotContext->writeBackScopeObjectPropertyLookup("_s
                     + writeBackIndexString
                     + u", "_s + contentPointer(writeBack, writeBackRegister) + u')';
@@ -1194,9 +1195,7 @@ void QQmlJSCodeGenerator::generateWriteBack(int registerIndex)
         Q_ASSERT(!outerRegister.isEmpty());
 
         switch (writeBack.variant()) {
-        case QQmlJSRegisterContent::ScopeProperty:
-            Q_UNREACHABLE();
-        case QQmlJSRegisterContent::ObjectProperty:
+        case QQmlJSRegisterContent::Property:
             if (writeBack.scopeType().containedType()->isReferenceType()) {
                 const QString lookup = u"aotContext->writeBackObjectLookup("_s
                         + writeBackIndexString
@@ -1375,7 +1374,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
     }
 
     if (m_state.accumulatorOut().isImportNamespace()) {
-        Q_ASSERT(m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectModulePrefix);
+        Q_ASSERT(m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ModulePrefix);
         // If we have an object module prefix, we need to pass through the original object.
         if (m_state.accumulatorVariableIn != m_state.accumulatorVariableOut) {
             m_body += m_state.accumulatorVariableOut + u" = "_s
@@ -1402,7 +1401,11 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
     const bool isReferenceType = scope.containedType()->isReferenceType();
 
     switch (m_state.accumulatorOut().variant()) {
-    case QQmlJSRegisterContent::ObjectAttached: {
+    case QQmlJSRegisterContent::Attachment: {
+        if (m_state.accumulatorOut().attachee().isScopeObject()) {
+            generateTypeLookup(index);
+            return;
+        }
         if (!isReferenceType) {
             // This can happen on incomplete type information. We contextually know that the
             // type must be a QObject, but we cannot construct the inheritance chain. Then we
@@ -1428,7 +1431,6 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         generateLookup(lookup, initialization);
         return;
     }
-    case QQmlJSRegisterContent::ScopeAttached:
     case QQmlJSRegisterContent::Singleton:
     case QQmlJSRegisterContent::Script:
     case QQmlJSRegisterContent::MetaType: {
@@ -1530,7 +1532,7 @@ void QQmlJSCodeGenerator::generate_GetOptionalLookup(int index, int offset)
                   "|| %1.equals(QJSPrimitiveNull()))\n"_s.arg(accumulatorVarIn);
         generateJumpCodeWithTypeConversions(offset);
     } else if (annotation.changedRegisterIndex == Accumulator
-               && annotation.changedRegister.variant() == QQmlJSRegisterContent::ObjectEnum) {
+               && annotation.changedRegister.variant() == QQmlJSRegisterContent::Enum) {
         // Nothing
     } else if (m_typeResolver->equals(accumulatorIn.storedType(), m_typeResolver->jsValueType())) {
         m_body += u"if (%1.isNull() || %1.isUndefined())\n"_s.arg(accumulatorVarIn);

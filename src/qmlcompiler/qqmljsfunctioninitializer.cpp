@@ -162,7 +162,9 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
     bindingLocation.startColumn = irBinding.location.column();
 
     QQmlJSCompilePass::Function function;
-    function.qmlScope = m_typeResolver->globalType(m_scopeType);
+    function.qmlScope = QQmlJSRegisterContent::create(
+            m_scopeType, QQmlJSRegisterContent::InvalidLookupIndex,
+            QQmlJSRegisterContent::ScopeObject);
 
     if (irBinding.type() != QmlIR::Binding::Type_Script) {
         diagnose(u"Binding is not a script binding, but %1."_s.arg(
@@ -272,7 +274,9 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
     Q_UNUSED(functionName);
 
     QQmlJSCompilePass::Function function;
-    function.qmlScope = m_typeResolver->globalType(m_scopeType);
+    function.qmlScope = QQmlJSRegisterContent::create(
+            m_scopeType, QQmlJSRegisterContent::InvalidLookupIndex,
+            QQmlJSRegisterContent::ScopeObject);
 
     auto ast = astNode->asFunctionDefinition();
     Q_ASSERT(ast);

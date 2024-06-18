@@ -157,8 +157,7 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
 
     switch (baseType.variant()) {
     case QQmlJSRegisterContent::MethodReturnValue:
-    case QQmlJSRegisterContent::ObjectProperty:
-    case QQmlJSRegisterContent::ScopeProperty:
+    case QQmlJSRegisterContent::Property:
     case QQmlJSRegisterContent::Unknown: {
         const QQmlJSRegisterContent member = m_typeResolver->memberType(baseType, memberName);
 

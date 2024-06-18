@@ -599,36 +599,42 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 
     setAccumulator(m_typeResolver->scopedType(m_function->qmlScope, name, index));
 
-    const auto qmlScope = m_function->qmlScope.containedType();
     if (!m_state.accumulatorOut().isValid() && m_typeResolver->isPrefix(name)) {
-        const QQmlJSRegisterContent inType = m_typeResolver->globalType(qmlScope);
         setAccumulator(QQmlJSRegisterContent::create(
-                    nameIndex, m_typeResolver->voidType(), QQmlJSRegisterContent::ScopeModulePrefix,
-                    inType));
+                    nameIndex, m_typeResolver->voidType(), QQmlJSRegisterContent::ModulePrefix,
+                    m_function->qmlScope));
         return;
     }
 
-    checkDeprecated(qmlScope, name, false);
+    checkDeprecated(m_function->qmlScope.containedType(), name, false);
 
-    if (!m_state.accumulatorOut().isValid()) {
+    const QQmlJSRegisterContent accumulatorOut = m_state.accumulatorOut();
+
+    if (!accumulatorOut.isValid()) {
         addError(u"Cannot access value for name "_s + name);
         handleUnqualifiedAccess(name, false);
         setVarAccumulatorAndError();
         return;
     }
 
-    const QQmlJSRegisterContent accumulatorOut = m_state.accumulatorOut();
+    const QQmlJSScope::ConstPtr retrieved
+            = m_typeResolver->genericType(accumulatorOut.containedType());
+
+    if (retrieved.isNull()) {
+        // It should really be valid.
+        // We get the generic type from aotContext->loadQmlContextPropertyIdLookup().
+        addError(u"Cannot determine generic type for "_s + name);
+        return;
+    }
+
     if (accumulatorOut.variant() == QQmlJSRegisterContent::ObjectById
-            && !m_typeResolver->genericType(accumulatorOut.containedType())->isReferenceType()) {
+            && !retrieved->isReferenceType()) {
         addError(u"Cannot retrieve a non-object type by ID: "_s + name);
         return;
     }
 
     if (m_passManager != nullptr)
         generate_LoadQmlContextPropertyLookup_SAcheck(name);
-
-    if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ScopeAttached)
-        m_attachedContext = QQmlJSScope::ConstPtr();
 }
 
 void QQmlJSTypePropagator::generate_StoreNameCommon_SAcheck(const QQmlJSRegisterContent &in, const QString &name)
@@ -824,15 +830,15 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
 
 void QQmlJSTypePropagator::propagatePropertyLookup_SAcheck(const QString &propertyName)
 {
-    const bool isAttached =
-            m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ObjectAttached;
+    const QQmlJSRegisterContent in = m_state.accumulatorIn();
+    const bool isAttached = in.variant() == QQmlJSRegisterContent::Attachment;
 
     QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeRead(
             QQmlJSScope::createQQmlSAElement(
                     m_state.accumulatorIn().containedType()),
             propertyName,
             QQmlJSScope::createQQmlSAElement(isAttached
-                    ? m_attachedContext
+                    ? in.attachee().containedType()
                     : m_function->qmlScope.containedType()),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                     getCurrentNonEmptySourceLocation()));
@@ -855,7 +861,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
             setAccumulator(QQmlJSRegisterContent::create(
                         m_jsUnitGenerator->getStringId(propertyName),
                         m_state.accumulatorIn().containedType(),
-                        QQmlJSRegisterContent::ObjectModulePrefix,
+                        QQmlJSRegisterContent::ModulePrefix,
                         m_state.accumulatorIn()));
             return;
         }
@@ -865,7 +871,8 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
     }
 
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::Singleton
-        && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ObjectModulePrefix) {
+        && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ModulePrefix
+        && !m_state.accumulatorIn().scopeType().isScopeObject()) {
         m_logger->log(
                 u"Cannot access singleton as a property of an object. Did you want to access an attached object?"_s,
                 qmlAccessSingleton, getCurrentSourceLocation());
@@ -873,11 +880,9 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
     } else if (m_state.accumulatorOut().isEnumeration()) {
         switch (m_state.accumulatorIn().variant()) {
         case QQmlJSRegisterContent::MetaType:
-        case QQmlJSRegisterContent::ObjectAttached:
-        case QQmlJSRegisterContent::ObjectEnum:
-        case QQmlJSRegisterContent::ObjectModulePrefix:
-        case QQmlJSRegisterContent::ScopeAttached:
-        case QQmlJSRegisterContent::ScopeModulePrefix:
+        case QQmlJSRegisterContent::Attachment:
+        case QQmlJSRegisterContent::Enum:
+        case QQmlJSRegisterContent::ModulePrefix:
         case QQmlJSRegisterContent::Singleton:
             break; // OK, can look up enums on that thing
         default:
@@ -959,7 +964,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
             setAccumulator(
                 QQmlJSRegisterContent::create(
                     prop, m_state.accumulatorIn().resultLookupIndex(), lookupIndex,
-                    QQmlJSRegisterContent::GenericObjectProperty, m_state.accumulatorIn())
+                    QQmlJSRegisterContent::Property, m_state.accumulatorIn())
             );
 
             return;
@@ -982,11 +987,8 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
     if (m_passManager != nullptr)
         propagatePropertyLookup_SAcheck(propertyName);
 
-    if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectAttached)
-        m_attachedContext = m_state.accumulatorIn().containedType();
-
     switch (m_state.accumulatorOut().variant()) {
-    case QQmlJSRegisterContent::ObjectEnum:
+    case QQmlJSRegisterContent::Enum:
     case QQmlJSRegisterContent::Singleton:
         // For reading enums or singletons, we don't need to access anything, unless it's an
         // import namespace. Then we need the name.
@@ -1025,7 +1027,7 @@ void QQmlJSTypePropagator::generate_GetOptionalLookup(int index, int offset)
 
 void QQmlJSTypePropagator::generate_StoreProperty_SAcheck(const QString propertyName, const QQmlJSRegisterContent &callBase)
 {
-    const bool isAttached = callBase.variant() == QQmlJSRegisterContent::ObjectAttached;
+    const bool isAttached = callBase.variant() == QQmlJSRegisterContent::Attachment;
 
     QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeWrite(
             QQmlJSScope::createQQmlSAElement(callBase.containedType()),
@@ -1033,7 +1035,7 @@ void QQmlJSTypePropagator::generate_StoreProperty_SAcheck(const QString property
             QQmlJSScope::createQQmlSAElement(
                     m_state.accumulatorIn().containedType()),
             QQmlJSScope::createQQmlSAElement(isAttached
-                    ? m_attachedContext
+                    ? callBase.attachee().containedType()
                     : m_function->qmlScope.containedType()),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
                     getCurrentNonEmptySourceLocation()));
@@ -2463,17 +2465,18 @@ void QQmlJSTypePropagator::generate_As(int lhs)
 
     QQmlJSRegisterContent output;
 
-    switch (m_state.accumulatorIn().variant()) {
-    case QQmlJSRegisterContent::ScopeAttached:
-        output = m_state.accumulatorIn().scopeType();
+    const QQmlJSRegisterContent accumulatorIn = m_state.accumulatorIn();
+    switch (accumulatorIn.variant()) {
+    case QQmlJSRegisterContent::Attachment:
+        output = accumulatorIn.scopeType();
         break;
     case QQmlJSRegisterContent::MetaType:
-        output = m_state.accumulatorIn().scopeType();
+        output = accumulatorIn.scopeType();
         if (output.containedType()->isComposite()) // Otherwise we don't need it
             addReadAccumulator(m_typeResolver->globalType(m_typeResolver->metaObjectType()));
         break;
     default:
-        output = m_state.accumulatorIn();
+        output = accumulatorIn;
         break;
     }
 

@@ -126,6 +126,52 @@ bool QQmlJSRegisterContent::isWritable() const
     return true;
 }
 
+/*!
+ * \internal
+ * Determines whether this is the scope object.
+ * We omit any module prefixes seen on top of the object.
+ * The module prefixes don't actually add anything unless they
+ * are the prefix to an attachment.
+ */
+bool QQmlJSRegisterContent::isScopeObject() const
+{
+    switch (m_variant) {
+    case ScopeObject:
+        return true;
+    case ModulePrefix:
+        return m_scope->isScopeObject();
+    default:
+        break;
+    }
+
+    return false;
+}
+
+/*!
+ * \internal
+ * Precondition: This is an attachment.
+ * Return the type that does the attaching.
+ */
+QQmlJSRegisterContent QQmlJSRegisterContent::attacher() const
+{
+    Q_ASSERT(m_variant == Attachment);
+    return scopeType();
+}
+
+/*!
+ * \internal
+ * Precondition: This is an attachment.
+ * Return the type of the object the attachment is attached to.
+ */
+QQmlJSRegisterContent QQmlJSRegisterContent::attachee() const
+{
+    Q_ASSERT(m_variant == Attachment);
+    QQmlJSRegisterContent attachee = attacher().scopeType();
+    while (attachee.variant() == ModulePrefix)
+        attachee = attachee.scopeType();
+    return attachee;
+}
+
 QQmlJSScope::ConstPtr QQmlJSRegisterContent::containedType() const
 {
     if (isType())

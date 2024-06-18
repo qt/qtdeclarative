@@ -357,7 +357,7 @@ void tst_qqmljsscope::descriptiveNameOfNull()
     property.setTypeName(u"baz"_s);
     QQmlJSRegisterContent unscoped = QQmlJSRegisterContent::create(
             property, QQmlJSRegisterContent::InvalidLookupIndex,
-            QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::ScopeProperty,
+            QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::Property,
             QQmlJSRegisterContent()).storedIn(stored);
     QCOMPARE(unscoped.descriptiveName(), u"(invalid type)::foo with type baz (stored as bar)"_s);
 }
