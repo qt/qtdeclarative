@@ -316,15 +316,17 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
 
     d->status = Null; // reset status, no emit
 
-    d->pendingPix->load(qmlEngine(this),
-                        loadUrl,
-                        d->sourceClipRect.toRect(),
-                        (loadOptions & HandleDPR) ? d->sourcesize * d->devicePixelRatio : QSize(),
-                        options,
-                        (loadOptions & UseProviderOptions) ? d->providerOptions : QQuickImageProviderOptions(),
-                        d->currentFrame, d->frameCount,
-                        d->devicePixelRatio);
-
+    auto engine = qmlEngine(this);
+    if (engine) {
+        d->pendingPix->load(engine,
+                            loadUrl,
+                            d->sourceClipRect.toRect(),
+                            (loadOptions & HandleDPR) ? d->sourcesize * d->devicePixelRatio : QSize(),
+                            options,
+                            (loadOptions & UseProviderOptions) ? d->providerOptions : QQuickImageProviderOptions(),
+                            d->currentFrame, d->frameCount,
+                            d->devicePixelRatio);
+    }
     if (d->pendingPix->isLoading()) {
         d->setProgress(0);
         d->setStatus(Loading);
