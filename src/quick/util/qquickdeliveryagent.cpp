@@ -1788,14 +1788,11 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
     const bool grabGained = (transition == QPointingDevice::GrabTransition::GrabExclusive ||
                              transition == QPointingDevice::GrabTransition::GrabPassive);
 
-    QQuickDeliveryAgent *deliveryAgent = nullptr;
-
     // note: event can be null, if the signal was emitted from QPointingDevicePrivate::removeGrabber(grabber)
     if (auto *handler = qmlobject_cast<QQuickPointerHandler *>(grabber)) {
         if (handler->parentItem()) {
             auto itemPriv = QQuickItemPrivate::get(handler->parentItem());
-            deliveryAgent = itemPriv->deliveryAgent();
-            if (deliveryAgent == q) {
+            if (itemPriv->deliveryAgent() == q) {
                 handler->onGrabChanged(handler, transition, const_cast<QPointerEvent *>(event),
                                        const_cast<QEventPoint &>(point));
             }
@@ -1841,7 +1838,6 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
             break;
         }
         auto *itemPriv = QQuickItemPrivate::get(grabberItem);
-        deliveryAgent = itemPriv->deliveryAgent();
         // An item that is NOT a subscene root needs to track whether it got a grab via a subscene delivery agent,
         // whereas the subscene root item already knows it has its own DA.
         if (isSubsceneAgent && grabGained && (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent))
