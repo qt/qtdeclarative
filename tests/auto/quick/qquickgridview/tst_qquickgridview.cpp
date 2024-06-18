@@ -4306,6 +4306,7 @@ void tst_QQuickGridView::snapToRow()
     QFETCH(qreal, snapAlignment);
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
+    auto device = QPointingDevice::primaryPointingDevice();
 
     QQuickView *window = getView();
 
@@ -4328,7 +4329,7 @@ void tst_QQuickGridView::snapToRow()
     qreal origContentY = gridview->contentY();
     qreal origContentX = gridview->contentX();
     // confirm that a flick hits an item boundary
-    flick(window, flickStart, flickEnd, 180);
+    QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd, 180);
 
     // wait until it's at least one cell further
     QTRY_VERIFY(qAbs(gridview->contentX() - origContentX) > 80 ||
@@ -4353,7 +4354,7 @@ void tst_QQuickGridView::snapToRow()
 
         // flick to end
         for (int i = 0; i < 4 && !atEnd(); ++i) {
-            flick(window, flickStart, flickEnd, 180);
+            QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd, 180);
             QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
         }
         QVERIFY(atEnd());
@@ -4373,7 +4374,7 @@ void tst_QQuickGridView::snapToRow()
 
         // flick to start
         for (int i = 0; i < 4 && !atStart(); ++i) {
-            flick(window, flickEnd, flickStart, 180);
+            QQuickTest::pointerFlick(device, window, 0, flickEnd, flickStart, 180);
             QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
         }
         QVERIFY(atStart());
@@ -4438,6 +4439,7 @@ void tst_QQuickGridView::snapOneRow()
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
     QFETCH(qreal, flickSlowdown);
+    auto device = QPointingDevice::primaryPointingDevice();
 
     qreal flickDuration = 180 * flickSlowdown;
 
@@ -4462,7 +4464,7 @@ void tst_QQuickGridView::snapOneRow()
     QSignalSpy currentIndexSpy(gridview, SIGNAL(currentIndexChanged()));
 
     // confirm that a flick hits next row boundary
-    flick(window, flickStart, flickEnd, flickDuration);
+    QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd, flickDuration);
     QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), snapAlignment);
@@ -4483,7 +4485,8 @@ void tst_QQuickGridView::snapOneRow()
 
         // flick to end
         for (int i = 0; i < 4 && !atEnd(); ++i) {
-            flick(window, flickStart, flickEnd, flickDuration);
+            QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd,
+                                     flickDuration, Qt::LeftButton, Qt::NoModifier, 500);
             QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
         }
         QVERIFY(atEnd());
@@ -4508,7 +4511,8 @@ void tst_QQuickGridView::snapOneRow()
 
         // flick to start
         for (int i = 0; i < 4 && !atStart(); ++i) {
-            flick(window, flickEnd, flickStart, flickDuration);
+            QQuickTest::pointerFlick(device, window, 0, flickEnd, flickStart,
+                                     flickDuration, Qt::LeftButton, Qt::NoModifier, 500);
             QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
         }
         QVERIFY(atStart());
@@ -6731,6 +6735,7 @@ void tst_QQuickGridView::positionViewAtBeginningAfterResizingCells()
 
 void tst_QQuickGridView::keyNavigationEnabled()
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("keyNavigationEnabled.qml"));
     window->show();
@@ -6753,7 +6758,7 @@ void tst_QQuickGridView::keyNavigationEnabled()
     QCOMPARE(enabledSpy.size(), 1);
     QCOMPARE(gridView->isKeyNavigationEnabled(), false);
 
-    flick(window.data(), QPoint(200, 175), QPoint(200, 50), 100);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200, 175), QPoint(200, 50), 100);
     QVERIFY(!gridView->isMoving());
     QCOMPARE(gridView->contentY(), 0.0);
     QCOMPARE(gridView->currentIndex(), 0);
@@ -6774,7 +6779,7 @@ void tst_QQuickGridView::keyNavigationEnabled()
     // Setting keyNavigationEnabled to true shouldn't enable mouse interaction.
     gridView->setKeyNavigationEnabled(true);
     QCOMPARE(enabledSpy.size(), 4);
-    flick(window.data(), QPoint(200, 175), QPoint(200, 50), 100);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200, 175), QPoint(200, 50), 100);
     QVERIFY(!gridView->isMoving());
     QCOMPARE(gridView->contentY(), 0.0);
     QCOMPARE(gridView->currentIndex(), 0);
@@ -6796,6 +6801,7 @@ void tst_QQuickGridView::keyNavigationEnabled()
 
 void tst_QQuickGridView::QTBUG_48870_fastModelUpdates()
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     StressTestModel model;
 
     QScopedPointer<QQuickView> window(createView());
@@ -6823,9 +6829,9 @@ void tst_QQuickGridView::QTBUG_48870_fastModelUpdates()
                                         : QString("Found index %1, expected index is %3").arg(item->index).arg(expectedIdx)));
         if (i % 3 != 0) {
             if (i & 1)
-                flick(window.data(), QPoint(100, 200), QPoint(100, 0), 100);
+                QQuickTest::pointerFlick(device, window.data(), 0, QPoint(100, 200), QPoint(100, 0), 100);
             else
-                flick(window.data(), QPoint(100, 200), QPoint(100, 400), 100);
+                QQuickTest::pointerFlick(device, window.data(), 0, QPoint(100, 200), QPoint(100, 400), 100);
         }
     }
 }
