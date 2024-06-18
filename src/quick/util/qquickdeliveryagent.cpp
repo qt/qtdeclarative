@@ -1540,6 +1540,28 @@ bool QQuickDeliveryAgentPrivate::isSynthMouse(const QPointerEvent *ev)
     return (!isEventFromMouseOrTouchpad(ev) && isMouseEvent(ev));
 }
 
+/*!
+    Returns \c true if \a dev is a type of device that only sends
+    QSinglePointEvents.
+*/
+bool QQuickDeliveryAgentPrivate::isSinglePointDevice(const QInputDevice *dev)
+{
+    switch (dev->type()) {
+    case QInputDevice::DeviceType::Mouse:
+    case QInputDevice::DeviceType::TouchPad:
+    case QInputDevice::DeviceType::Puck:
+    case QInputDevice::DeviceType::Stylus:
+    case QInputDevice::DeviceType::Airbrush:
+        return true;
+    case QInputDevice::DeviceType::TouchScreen:
+    case QInputDevice::DeviceType::Keyboard:
+    case QInputDevice::DeviceType::Unknown:
+    case QInputDevice::DeviceType::AllDevices:
+        return false;
+    }
+    return false;
+}
+
 QQuickPointingDeviceExtra *QQuickDeliveryAgentPrivate::deviceExtra(const QInputDevice *device)
 {
     QInputDevicePrivate *devPriv = QInputDevicePrivate::get(const_cast<QInputDevice *>(device));
@@ -1845,17 +1867,18 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
         switch (transition) {
         case QPointingDevice::CancelGrabExclusive:
         case QPointingDevice::UngrabExclusive:
-            if (isDeliveringTouchAsMouse()
-                || point.device()->type() == QInputDevice::DeviceType::Mouse
-                || point.device()->type() == QInputDevice::DeviceType::TouchPad) {
+            if (isDeliveringTouchAsMouse() || isSinglePointDevice(point.device())) {
+                // If an EventPoint from the mouse or the synth-mouse or from any
+                // mouse-like device is ungrabbed, call QQuickItem::mouseUngrabEvent().
                 QMutableSinglePointEvent e(QEvent::UngrabMouse, point.device(), point);
                 hasFiltered.clear();
                 if (!sendFilteredMouseEvent(&e, grabberItem, grabberItem->parentItem())) {
                     lastUngrabbed = grabberItem;
                     grabberItem->mouseUngrabEvent();
                 }
-            }
-            if (point.device()->type() == QInputDevice::DeviceType::TouchScreen) {
+            } else {
+                // Multi-point event: call QQuickItem::touchUngrabEvent() only if
+                // all eventpoints are released or cancelled.
                 bool allReleasedOrCancelled = true;
                 if (transition == QPointingDevice::UngrabExclusive && event) {
                     for (const auto &pt : event->points()) {

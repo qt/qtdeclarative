@@ -39,6 +39,8 @@ Q_DECLARE_METATYPE(QQuickListView::Orientation)
 Q_DECLARE_METATYPE(QQuickFlickable::FlickableDirection)
 Q_DECLARE_METATYPE(Qt::Key)
 
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
 using namespace QQuickViewTestUtils;
 using namespace QQuickVisualTestUtils;
 
@@ -268,6 +270,8 @@ private slots:
     void addOnCompleted();
     void setPositionOnLayout();
     void touchCancel();
+    void cancelDelegatePastDragThreshold_data();
+    void cancelDelegatePastDragThreshold();
     void resizeAfterComponentComplete();
     void dragOverFloatingHeaderOrFooter();
 
@@ -340,6 +344,12 @@ private:
     QQuickView *m_view;
     QString testForView;
     QPointingDevice *touchDevice = QTest::createTouchDevice();
+#if QT_CONFIG(tabletevent)
+    QScopedPointer<const QPointingDevice> tabletStylusDevice = QScopedPointer<const QPointingDevice>(
+            QPointingDevicePrivate::tabletDevice(QInputDevice::DeviceType::Stylus,
+                                                 QPointingDevice::PointerType::Pen,
+                                                 QPointingDeviceUniqueId::fromNumericId(1234567890)));
+#endif
 };
 
 class TestObject : public QObject
@@ -9742,6 +9752,61 @@ void tst_QQuickListView::touchCancel() // QTBUG-74679
     listview->setCurrentIndex(1);
     // ensure that it actually moves (animates) to the second delegate
     QTRY_COMPARE(listview->contentY(), 500.0);
+}
+
+void tst_QQuickListView::cancelDelegatePastDragThreshold_data()
+{
+    QTest::addColumn<const QPointingDevice *>("device");
+
+    QTest::newRow("primary") << QPointingDevice::primaryPointingDevice();
+    QTest::newRow("touch") << static_cast<const QPointingDevice*>(touchDevice); // TODO QTBUG-107864
+#if QT_CONFIG(tabletevent) && !defined(Q_OS_QNX)
+    QTest::newRow("stylus") << tabletStylusDevice.get();
+#endif
+}
+
+void tst_QQuickListView::cancelDelegatePastDragThreshold() // QTBUG-118903
+{
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QFETCH(const QPointingDevice *, device);
+
+#if QT_CONFIG(tabletevent)
+    QVERIFY(qApp->testAttribute(Qt::AA_SynthesizeMouseForUnhandledTabletEvents));
+#endif
+
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("delegateWithMouseArea.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listview);
+    QQuickMouseArea *mouseArea = listview->currentItem()->findChild<QQuickMouseArea *>();
+    QVERIFY(mouseArea);
+    QSignalSpy canceledSpy(mouseArea, &QQuickMouseArea::canceled);
+
+    QPoint p = mouseArea->mapToScene(mouseArea->boundingRect().center()).toPoint();
+    // MouseArea grabs on press
+    QQuickTest::pointerPress(device, window.get(), 1, p);
+    QTRY_VERIFY(mouseArea->isPressed());
+    // drag past the drag threshold until ListView takes over the grab
+    p -= {0, dragThreshold + 1};
+    QQuickTest::pointerMove(device, window.get(), 1, p);
+    int movesWhenGrabbed = 1;
+    for (int i = 2; i < 6; ++i) {
+        p -= {0, 1};
+        QQuickTest::pointerMove(device, window.get(), 1, p);
+        if (device == tabletStylusDevice.get())
+            QTest::qWait(1);
+        if (listview->isDragging())
+            movesWhenGrabbed = i;
+    }
+    qCDebug(lcTests) << "ListView took over grab after" << movesWhenGrabbed << "moves";
+    QVERIFY(listview->isDragging());
+    // MouseArea's grab got canceled
+    QCOMPARE(canceledSpy.size(), 1);
+    QCOMPARE(mouseArea->isPressed(), false);
+    QQuickTest::pointerRelease(device, window.get(), 1, p);
 }
 
 void tst_QQuickListView::resizeAfterComponentComplete()  // QTBUG-76487

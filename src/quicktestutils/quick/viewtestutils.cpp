@@ -9,6 +9,7 @@
 #include <QtQuick/QQuickView>
 #include <QtGui/QScreen>
 #include <QtGui/qpa/qwindowsysteminterface.h>
+#include <QtGui/private/qhighdpiscaling_p.h>
 
 #include <QtTest/QTest>
 
@@ -537,13 +538,17 @@ namespace QQuickTest {
             break;
         case QPointingDevice::DeviceType::Puck:
         case QPointingDevice::DeviceType::Stylus:
-        case QPointingDevice::DeviceType::Airbrush:
-            QTest::lastMouseTimestamp += QTest::defaultMouseDelay();
+        case QPointingDevice::DeviceType::Airbrush:{
+            const QPointF nativeLocal = QHighDpi::toNativeLocalPosition(p, window);
+            const QPointF nativeGlobal = QHighDpi::toNativeGlobalPosition(window->mapToGlobal(p), window);
+            const auto delay = QTest::defaultMouseDelay();
+            QTest::lastMouseTimestamp += delay ? delay : 1;
             pressedTabletButton = button;
             pressedTabletModifiers = modifiers;
-            QWindowSystemInterface::handleTabletEvent(window, QTest::lastMouseTimestamp, dev, p, window->mapToGlobal(p),
+            QWindowSystemInterface::handleTabletEvent(window, QTest::lastMouseTimestamp, dev, nativeLocal, nativeGlobal,
                                                       button, 0.8, 0, 0, 0, 0, 0, modifiers);
             break;
+        }
         default:
             qWarning() << "can't send a press event from" << dev;
             break;
@@ -563,11 +568,17 @@ namespace QQuickTest {
             break;
         case QPointingDevice::DeviceType::Puck:
         case QPointingDevice::DeviceType::Stylus:
-        case QPointingDevice::DeviceType::Airbrush:
-            QTest::lastMouseTimestamp += QTest::defaultMouseDelay();
-            QWindowSystemInterface::handleTabletEvent(window, QTest::lastMouseTimestamp, dev, p, window->mapToGlobal(p),
-                                                      pressedTabletButton, 0, 0, 0, 0, 0, 0, pressedTabletModifiers);
+        case QPointingDevice::DeviceType::Airbrush: {
+            const QPointF nativeLocal = QHighDpi::toNativeLocalPosition(p, window);
+            const QPointF nativeGlobal = QHighDpi::toNativeGlobalPosition(window->mapToGlobal(p), window);
+            const auto delay = QTest::defaultMouseDelay();
+            // often QTest::defaultMouseDelay() == 0; but avoid infinite velocity
+            QTest::lastMouseTimestamp += delay ? delay : 1;
+            QWindowSystemInterface::handleTabletEvent(window, QTest::lastMouseTimestamp, dev, nativeLocal, nativeGlobal,
+                                                      pressedTabletButton, pressedTabletButton == Qt::NoButton ? 0 : 0.75,
+                                                      0, 0, 0, 0, 0, pressedTabletModifiers);
             break;
+        }
         default:
             qWarning() << "can't send a move event from" << dev;
             break;
@@ -588,11 +599,15 @@ namespace QQuickTest {
             break;
         case QPointingDevice::DeviceType::Puck:
         case QPointingDevice::DeviceType::Stylus:
-        case QPointingDevice::DeviceType::Airbrush:
-            QTest::lastMouseTimestamp += QTest::defaultMouseDelay();
-            QWindowSystemInterface::handleTabletEvent(window, QTest::lastMouseTimestamp, dev, p, window->mapToGlobal(p),
+        case QPointingDevice::DeviceType::Airbrush: {
+            const QPointF nativeLocal = QHighDpi::toNativeLocalPosition(p, window);
+            const QPointF nativeGlobal = QHighDpi::toNativeGlobalPosition(window->mapToGlobal(p), window);
+            const auto delay = QTest::defaultMouseDelay();
+            QTest::lastMouseTimestamp += delay ? delay : 1;
+            QWindowSystemInterface::handleTabletEvent(window, QTest::lastMouseTimestamp, dev, nativeLocal, nativeGlobal,
                                                       Qt::NoButton, 0, 0, 0, 0, 0, 0, modifiers);
             break;
+        }
         default:
             qWarning() << "can't send a press event from" << dev;
             break;
