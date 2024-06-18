@@ -33,6 +33,7 @@
 #include "PageAllocation.h"
 #include <errno.h>
 #include <sys/mman.h>
+#include <string.h>
 #include <wtf/Assertions.h>
 #include <wtf/UnusedParam.h>
 
