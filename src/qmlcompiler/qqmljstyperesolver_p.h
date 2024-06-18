@@ -159,8 +159,9 @@ public:
             const QQmlJSRegisterContent &type, const QString &name,
             int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex) const;
     QQmlJSRegisterContent valueType(const QQmlJSRegisterContent &list) const;
-    QQmlJSRegisterContent returnType(const QQmlJSScope::ConstPtr &type, QQmlJSRegisterContent::ContentVariant variant,
-                                     const QQmlJSRegisterContent &scope) const;
+    QQmlJSRegisterContent returnType(
+            const QQmlJSMetaMethod &method, const QQmlJSScope::ConstPtr &returnType,
+            const QQmlJSRegisterContent &scope) const;
 
     QQmlJSRegisterContent extensionType(
             const QQmlJSScope::ConstPtr &extension, const QQmlJSRegisterContent &base) const;

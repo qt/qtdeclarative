@@ -1152,7 +1152,8 @@ static bool isLoggingMethod(const QString &consoleMethod)
             || consoleMethod == u"warn" || consoleMethod == u"error";
 }
 
-void QQmlJSTypePropagator::generate_CallProperty_SCMath(int base, int argc, int argv)
+void QQmlJSTypePropagator::generate_CallProperty_SCMath(
+        const QString &name, int base, int argc, int argv)
 {
     // If we call a method on the Math object we don't need the actual Math object. We do need
     // to transfer the type information to the code generator so that it knows that this is the
@@ -1162,15 +1163,19 @@ void QQmlJSTypePropagator::generate_CallProperty_SCMath(int base, int argc, int 
 
     addReadRegister(base, m_typeResolver->globalType(m_typeResolver->voidType()));
 
+    const QQmlJSRegisterContent &math = m_state.registers[base].content;
+    const QList<QQmlJSMetaMethod> methods = math.containedType()->ownMethods(name);
+    Q_ASSERT(methods.length() == 1);
+
     QQmlJSRegisterContent realType = m_typeResolver->returnType(
-            m_typeResolver->realType(), QQmlJSRegisterContent::MethodReturnValue,
-            m_state.registers[base].content);
+            methods[0], m_typeResolver->realType(), math);
     for (int i = 0; i < argc; ++i)
         addReadRegister(argv + i, realType);
     setAccumulator(realType);
 }
 
-void QQmlJSTypePropagator::generate_CallProperty_SCconsole(int base, int argc, int argv)
+void QQmlJSTypePropagator::generate_CallProperty_SCconsole(
+        const QString &name, int base, int argc, int argv)
 {
     const QQmlJSRegisterContent voidType
             = m_typeResolver->globalType(m_typeResolver->voidType());
@@ -1211,9 +1216,11 @@ void QQmlJSTypePropagator::generate_CallProperty_SCconsole(int base, int argc, i
     }
 
     m_state.setHasSideEffects(true);
-    setAccumulator(m_typeResolver->returnType(
-            m_typeResolver->voidType(), QQmlJSRegisterContent::MethodReturnValue,
-            m_state.registers[base].content));
+
+    const QQmlJSRegisterContent &console = m_state.registers[base].content;
+    QList<QQmlJSMetaMethod> methods = console.containedType()->ownMethods(name);
+    Q_ASSERT(methods.length() == 1);
+    setAccumulator(m_typeResolver->returnType(methods[0], m_typeResolver->voidType(), console));
 }
 
 void QQmlJSTypePropagator::generate_callProperty_SAcheck(const QString propertyName, const QQmlJSScope::ConstPtr &baseType)
@@ -1233,14 +1240,14 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
     const QString propertyName = m_jsUnitGenerator->stringForIndex(nameIndex);
 
     if (m_typeResolver->registerContains(callBase, m_typeResolver->mathObject())) {
-        generate_CallProperty_SCMath(base, argc, argv);
+        generate_CallProperty_SCMath(propertyName, base, argc, argv);
         if (m_passManager != nullptr)
             generate_callProperty_SAcheck(propertyName, callBase.containedType());
         return;
     }
 
     if (m_typeResolver->registerContains(callBase, m_typeResolver->consoleObject()) && isLoggingMethod(propertyName)) {
-        generate_CallProperty_SCconsole(base, argc, argv);
+        generate_CallProperty_SCconsole(propertyName, base, argc, argv);
         if (m_passManager != nullptr)
             generate_callProperty_SAcheck(propertyName, callBase.containedType());
         return;
@@ -1257,9 +1264,14 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
             for (int i = 0; i < argc; ++i)
                 addReadRegister(argv + i, jsValueType);
             m_state.setHasSideEffects(true);
+
+            QQmlJSMetaMethod method;
+            method.setIsJavaScriptFunction(true);
+            method.setMethodName(propertyName);
+            method.setMethodType(QQmlJSMetaMethod::MethodType::Method);
+
             setAccumulator(m_typeResolver->returnType(
-                    m_typeResolver->jsValueType(), QQmlJSRegisterContent::JavaScriptReturnValue,
-                    callBase));
+                    method, m_typeResolver->jsValueType(), callBase));
             return;
         }
 
@@ -1486,12 +1498,7 @@ void QQmlJSTypePropagator::propagateCall(
     const QQmlJSScope::ConstPtr returnType = match.isJavaScriptFunction()
             ? m_typeResolver->jsValueType()
             : QQmlJSScope::ConstPtr(match.returnType());
-    setAccumulator(m_typeResolver->returnType(
-            returnType,
-            match.isJavaScriptFunction()
-                    ? QQmlJSRegisterContent::JavaScriptReturnValue
-                    : QQmlJSRegisterContent::MethodReturnValue,
-            scope));
+    setAccumulator(m_typeResolver->returnType(match, returnType, scope));
     if (!m_state.accumulatorOut().isValid())
         addError(u"Cannot store return type of method %1()."_s.arg(match.methodName()));
 
@@ -1522,10 +1529,9 @@ bool QQmlJSTypePropagator::propagateTranslationMethod(
             = m_typeResolver->globalType(m_typeResolver->int32Type());
     const QQmlJSRegisterContent stringType
             = m_typeResolver->globalType(m_typeResolver->stringType());
-    const QQmlJSRegisterContent returnType
-            = m_typeResolver->returnType(
-                    m_typeResolver->stringType(), QQmlJSRegisterContent::MethodReturnValue,
-                    m_typeResolver->jsGlobalObjectContent());
+
+    const QQmlJSRegisterContent returnType = m_typeResolver->returnType(
+            method, m_typeResolver->stringType(), m_typeResolver->jsGlobalObjectContent());
 
     if (method.methodName() == u"qsTranslate"_s) {
         switch (argc) {
@@ -1621,9 +1627,10 @@ bool QQmlJSTypePropagator::propagateTranslationMethod(
 
 void QQmlJSTypePropagator::propagateStringArgCall(const QQmlJSRegisterContent &base, int argv)
 {
-    setAccumulator(m_typeResolver->returnType(
-                       m_typeResolver->stringType(), QQmlJSRegisterContent::MethodReturnValue,
-                       base));
+    QQmlJSMetaMethod method;
+    method.setIsJavaScriptFunction(true);
+    method.setMethodName(u"arg"_s);
+    setAccumulator(m_typeResolver->returnType(method, m_typeResolver->stringType(), base));
     Q_ASSERT(m_state.accumulatorOut().isValid());
 
     const QQmlJSScope::ConstPtr input = m_state.registers[argv].content.containedType();
@@ -1670,8 +1677,10 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
     const auto valueType = m_typeResolver->globalType(valueContained);
 
     const auto setReturnType = [&](const QQmlJSScope::ConstPtr type) {
-        setAccumulator(m_typeResolver->returnType(
-                type, QQmlJSRegisterContent::MethodReturnValue, baseType));
+        QQmlJSMetaMethod method;
+        method.setIsJavaScriptFunction(true);
+        method.setMethodName(name);
+        setAccumulator(m_typeResolver->returnType(method, type, baseType));
     };
 
     if (name == u"copyWithin" && argc > 0 && argc < 4) {

@@ -73,6 +73,11 @@ QString QQmlJSRegisterContent::descriptiveName() const
     case Kind::Conversion: {
         return u"conversion to %1"_s.arg(conversionResult()->internalName());
     }
+    case Kind::MethodCall: {
+        const QQmlJSMetaMethod &method = std::get<QQmlJSMetaMethod>(m_content);
+        return u"call to method %1, returning %2"_s.arg(
+                method.methodName(), method.returnTypeName());
+    }
     }
 
     Q_UNREACHABLE_RETURN(result + u"wat?"_s);
@@ -106,6 +111,9 @@ bool QQmlJSRegisterContent::isList() const
                 == QQmlJSScope::AccessSemantics::Sequence;
     case Kind::Conversion:
         return std::get<ConvertedTypes>(m_content).result->accessSemantics()
+                == QQmlJSScope::AccessSemantics::Sequence;
+    case Kind::MethodCall:
+        return std::get<QQmlJSMetaMethod>(m_content).returnType()->accessSemantics()
                 == QQmlJSScope::AccessSemantics::Sequence;
     default:
         return false;
@@ -177,15 +185,17 @@ QQmlJSScope::ConstPtr QQmlJSRegisterContent::containedType() const
     if (isType())
         return type();
     if (isProperty())
-        return property().type();
+        return std::get<PropertyLookup>(m_content).property.type();
     if (isEnumeration())
-        return enumeration().type();
+        return std::get<std::pair<QQmlJSMetaEnum, QString>>(m_content).first.type();
     if (isMethod())
         return methodType();
     if (isImportNamespace())
         return importNamespaceType();
     if (isConversion())
         return conversionResult();
+    if (isMethodCall())
+        return std::get<QQmlJSMetaMethod>(m_content).returnType();
 
     Q_UNREACHABLE_RETURN({});
 }
@@ -225,6 +235,20 @@ QQmlJSRegisterContent QQmlJSRegisterContent::create(
     Q_ASSERT(methodType->internalName() == u"QJSValue"_s);
     QQmlJSRegisterContent result(scope, variant);
     result.m_content = std::make_pair(methods, methodType);
+    return result;
+}
+
+QQmlJSRegisterContent QQmlJSRegisterContent::create(
+        const QQmlJSMetaMethod &method, const QQmlJSScope::ConstPtr &returnType,
+        const QQmlJSRegisterContent &scope)
+{
+    QQmlJSRegisterContent result(scope, MethodCall);
+
+    QQmlJSMetaMethod resultMethod = method;
+    resultMethod.setReturnType({ returnType });
+    resultMethod.setReturnTypeName(returnType->internalName());
+    result.m_content = std::move(resultMethod);
+
     return result;
 }
 

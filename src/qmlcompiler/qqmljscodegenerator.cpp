@@ -2205,9 +2205,6 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
 {
     INJECT_TRACE_INFO(generate_CallPropertyLookup);
 
-    if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::JavaScriptReturnValue)
-        reject(u"call to untyped JavaScript function"_s);
-
     const QQmlJSScope::ConstPtr scope = m_state.accumulatorOut().scopeType().containedType();
 
     AccumulatorConverter registers(this);
@@ -2228,6 +2225,9 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
         if (inlineArrayMethod(name, base, argc, argv))
             return;
     }
+
+    if (m_state.accumulatorOut().isJavaScriptReturnValue())
+        reject(u"call to untyped JavaScript function"_s);
 
     if (!scope->isReferenceType()) {
         // This is possible, once we establish the right kind of lookup for it
@@ -2282,9 +2282,6 @@ void QQmlJSCodeGenerator::generate_CallQmlContextPropertyLookup(int index, int a
 {
     INJECT_TRACE_INFO(generate_CallQmlContextPropertyLookup);
 
-    if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::JavaScriptReturnValue)
-        reject(u"call to untyped JavaScript function"_s);
-
     if (m_typeResolver->registerContains(
                 m_state.accumulatorOut().scopeType(), m_typeResolver->jsGlobalObject())) {
         const QString name = m_jsUnitGenerator->stringForIndex(
@@ -2292,6 +2289,9 @@ void QQmlJSCodeGenerator::generate_CallQmlContextPropertyLookup(int index, int a
         if (inlineTranslateMethod(name, argc, argv))
             return;
     }
+
+    if (m_state.accumulatorOut().isJavaScriptReturnValue())
+        reject(u"call to untyped JavaScript function"_s);
 
     AccumulatorConverter registers(this);
 

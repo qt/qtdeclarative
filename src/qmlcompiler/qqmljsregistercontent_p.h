@@ -45,8 +45,7 @@ public:
         Attachment,
         ModulePrefix,
 
-        MethodReturnValue,
-        JavaScriptReturnValue,
+        MethodCall,
 
         ListValue,
         ListIterator,
@@ -82,10 +81,16 @@ public:
     bool isMethod() const { return m_content.index() == size_t(Kind::Method); }
     bool isImportNamespace() const { return m_content.index() == size_t(Kind::ImportNamespace); }
     bool isConversion() const { return m_content.index() == size_t(Kind::Conversion); }
+    bool isMethodCall() const { return m_content.index() == size_t(Kind::MethodCall); }
     bool isList() const;
 
     bool isWritable() const;
     bool isScopeObject() const;
+
+    bool isJavaScriptReturnValue() const
+    {
+        return isMethodCall() && std::get<QQmlJSMetaMethod>(m_content).isJavaScriptFunction();
+    }
 
     QQmlJSRegisterContent attacher() const;
     QQmlJSRegisterContent attachee() const;
@@ -160,6 +165,11 @@ public:
         return std::get<ConvertedTypes>(m_content).origins;
     }
 
+    QQmlJSMetaMethod methodCall() const
+    {
+        return std::get<QQmlJSMetaMethod>(m_content);
+    }
+
     ContentVariant variant() const { return m_variant; }
 
     friend size_t qHash(const QQmlJSRegisterContent &registerContent, size_t seed = 0)
@@ -188,6 +198,8 @@ public:
                                  registerContent.m_content), seed);
         case Kind::Conversion:
             return qHash(std::get<ConvertedTypes>(registerContent.m_content), seed);
+        case Kind::MethodCall:
+            return qHash(std::get<QQmlJSMetaMethod>(registerContent.m_content), seed);
         }
 
         Q_UNREACHABLE_RETURN(seed);
@@ -209,6 +221,10 @@ public:
     static QQmlJSRegisterContent create(const QList<QQmlJSMetaMethod> &methods,
                                         const QQmlJSScope::ConstPtr &methodType,
                                         ContentVariant variant,
+                                        const QQmlJSRegisterContent &scope);
+
+    static QQmlJSRegisterContent create(const QQmlJSMetaMethod &method,
+                                        const QQmlJSScope::ConstPtr &returnType,
                                         const QQmlJSRegisterContent &scope);
 
     static QQmlJSRegisterContent create(uint importNamespaceStringId,
@@ -238,7 +254,9 @@ public:
     }
 
 private:
-    enum class Kind : size_t { Type, Property, Enum, Method, ImportNamespace, Conversion };
+    enum class Kind : size_t {
+        Type, Property, Enum, Method, ImportNamespace, Conversion, MethodCall
+    };
 
     struct ConvertedTypes
     {
@@ -297,7 +315,8 @@ private:
         std::pair<QQmlJSMetaEnum, QString>,
         std::pair<QList<QQmlJSMetaMethod>, QQmlJSScope::ConstPtr>,
         std::pair<uint, QQmlJSScope::ConstPtr>,
-        ConvertedTypes
+        ConvertedTypes,
+        QQmlJSMetaMethod
     >;
 
     QQmlJSRegisterContent(const QQmlJSRegisterContent &scope, ContentVariant variant)

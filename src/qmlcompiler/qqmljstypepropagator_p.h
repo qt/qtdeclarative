@@ -251,8 +251,8 @@ private:
     void recordCompareType(int lhs);
 
     // helper functions to deal with special cases in generate_ methods
-    void generate_CallProperty_SCMath(int base, int arcg, int argv);
-    void generate_CallProperty_SCconsole(int base, int argc, int argv);
+    void generate_CallProperty_SCMath(const QString &name, int base, int arcg, int argv);
+    void generate_CallProperty_SCconsole(const QString &name, int base, int argc, int argv);
     void generate_Construct_SCDate(int argc, int argv);
     void generate_Construct_SCArray(int argc, int argv);
 

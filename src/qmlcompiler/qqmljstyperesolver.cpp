@@ -442,6 +442,11 @@ QQmlJSRegisterContent QQmlJSTypeResolver::shallowTransformed(
                 origin.variant(), transformedScope);
     }
 
+    if (origin.isMethodCall()) {
+        return QQmlJSRegisterContent::create(
+                origin.methodCall(), (this->*op)(origin.containedType()), transformedScope);
+    }
+
     if (origin.isConversion()) {
         // When retrieving the originals we want a deep retrieval.
         // When tracking a new type, we don't want to re-track its originals, though.
@@ -1662,7 +1667,6 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
         const QQmlJSRegisterContent &type, const QString &name, int lookupIndex) const
 {
     if (type.isType()) {
-        const auto content = type.type();
         const auto result = memberType(type, name, type.resultLookupIndex(), lookupIndex);
         if (result.isValid())
             return result;
@@ -1671,7 +1675,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
         // we might have an enum of the attaching type.
         return memberEnumType(type.scopeType(), name);
     }
-    if (type.isProperty())
+    if (type.isProperty() || type.isMethodCall())
         return memberType(type, name, type.resultLookupIndex(), lookupIndex);
     if (type.isEnumeration()) {
         const auto enumeration = type.enumeration();
@@ -1755,12 +1759,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent 
         return QQmlJSScope::ConstPtr();
     };
 
-    if (list.isType())
-        value = valueType(list.type());
-    else if (list.isConversion())
-        value = valueType(list.conversionResult());
-    else if (list.isProperty())
-        value = valueType(list.property().type());
+    value = valueType(list.containedType());
 
     if (value.isNull())
         return {};
@@ -1777,13 +1776,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent 
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::returnType(
-        const QQmlJSScope::ConstPtr &type, QQmlJSRegisterContent::ContentVariant variant,
+        const QQmlJSMetaMethod &method, const QQmlJSScope::ConstPtr &returnType,
         const QQmlJSRegisterContent &scope) const
 {
-    Q_ASSERT(variant == QQmlJSRegisterContent::MethodReturnValue
-             || variant == QQmlJSRegisterContent::JavaScriptReturnValue);
-    return QQmlJSRegisterContent::create(
-            type, QQmlJSRegisterContent::InvalidLookupIndex, variant, scope);
+    return QQmlJSRegisterContent::create(method, returnType, scope);
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::extensionType(
@@ -1850,17 +1846,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::iteratorPointer(
 bool QQmlJSTypeResolver::registerContains(const QQmlJSRegisterContent &reg,
                                           const QQmlJSScope::ConstPtr &type) const
 {
-    if (reg.isType())
-        return equals(reg.type(), type);
-    if (reg.isConversion())
-        return equals(reg.conversionResult(), type);
-    if (reg.isProperty())
-        return equals(type, reg.property().type());
-    if (reg.isEnumeration())
-        return equals(type, reg.enumeration().type());
-    if (reg.isMethod())
-        return equals(type, jsValueType());
-    return false;
+    return equals(reg.containedType(), type);
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::storedType(const QQmlJSScope::ConstPtr &type) const
