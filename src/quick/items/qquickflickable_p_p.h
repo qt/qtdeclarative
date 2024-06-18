@@ -62,18 +62,12 @@ public:
     struct AxisData {
         AxisData(QQuickFlickablePrivate *fp, void (QQuickFlickablePrivate::*func)(qreal))
             : move(fp, func)
-            , transitionToBounds(nullptr)
-            , viewSize(-1), lastPos(0), previousDragDelta(0), velocity(0), startMargin(0), endMargin(0)
-            , origin(0), overshoot(0)
-            , transitionTo(0)
-            , continuousFlickVelocity(0), velocityTime(), vTime(0)
             , smoothVelocity(fp), atEnd(false), atBeginning(true)
             , transitionToSet(false)
             , fixingUp(false), inOvershoot(false), inRebound(false), moving(false), flicking(false)
             , flickingWhenDragBegan(false), dragging(false), extentsChanged(false)
-            , explicitValue(false), minExtentDirty(true), maxExtentDirty(true)
-            , contentPositionChangedExternallyDuringDrag(false)
-            , unused(0)
+            , explicitValue(false), contentPositionChangedExternallyDuringDrag(false)
+            , minExtentDirty(true), maxExtentDirty(true)
         {}
 
         ~AxisData();
@@ -101,26 +95,27 @@ public:
         void updateVelocity();
 
         QQuickTimeLineValueProxy<QQuickFlickablePrivate> move;
-        QQuickFlickableReboundTransition *transitionToBounds;
-        qreal viewSize;
-        qreal pressPos;
-        qreal lastPos;
-        qreal dragStartOffset;
-        qreal dragMinBound;
-        qreal dragMaxBound;
-        qreal previousDragDelta;
-        qreal velocity;
-        qreal flickTarget;
-        qreal startMargin;
-        qreal endMargin;
-        qreal origin;
-        qreal overshoot;
-        qreal transitionTo;
-        qreal continuousFlickVelocity;
+        QQuickFlickableReboundTransition *transitionToBounds = nullptr;
+        qreal viewSize = -1;
+        qreal pressPos = 0;
+        qreal lastPos = 0;
+        qreal dragStartOffset = 0;
+        qreal dragMinBound = 0;
+        qreal dragMaxBound = 0;
+        qreal previousDragDelta = 0;
+        qreal velocity = 0;
+        qreal flickTarget = 0;
+        qreal startMargin = 0;
+        qreal endMargin = 0;
+        qreal origin = 0;
+        qreal overshoot = 0;
+        qreal transitionTo = 0;
+        qreal continuousFlickVelocity = 0;
         QElapsedTimer velocityTime;
-        int vTime;
+        int vTime = 0;
         QQuickFlickablePrivate::Velocity smoothVelocity;
         QPODVector<qreal,10> velocityBuffer;
+        // bitfield
         uint atEnd : 1;
         uint atBeginning : 1;
         uint transitionToSet : 1;
@@ -133,10 +128,11 @@ public:
         uint dragging : 1;
         uint extentsChanged : 1;
         uint explicitValue : 1;
+        uint contentPositionChangedExternallyDuringDrag : 1;
+        // mutable portion of bitfield
         mutable uint minExtentDirty : 1;
         mutable uint maxExtentDirty : 1;
-        uint contentPositionChangedExternallyDuringDrag : 1;
-        uint unused : 17;
+        // end bitfield
     };
 
     bool flickX(QEvent::Type eventType, qreal velocity);
