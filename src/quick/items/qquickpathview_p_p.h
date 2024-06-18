@@ -69,6 +69,11 @@ public:
     }
 
     QQuickItem *getItem(int modelIndex, qreal z = 0, bool async=false);
+    void releaseCurrentItem()
+    {
+        auto oldCurrentItem = std::exchange(currentItem, nullptr);
+        releaseItem(oldCurrentItem);
+    }
     void releaseItem(QQuickItem *item);
     QQuickPathViewAttached *attached(QQuickItem *item);
     QQmlOpenMetaObjectType *attachedType();
