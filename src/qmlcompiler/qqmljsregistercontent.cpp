@@ -24,22 +24,22 @@ QString QQmlJSRegisterContent::descriptiveName() const
     };
 
     QString result;
-    switch (m_content.index()) {
-    case Type: {
+    switch (Kind(m_content.index())) {
+    case Kind::Type: {
         const QQmlJSScope::ConstPtr contained = type();
         result += contained->internalName();
         if (m_storedType && m_storedType->internalName() != contained->internalName())
             result += u" stored as "_s + m_storedType->internalName();
         return result;
     }
-    case Property: {
+    case Kind::Property: {
         const QQmlJSMetaProperty prop = property();
         result += scope() + prop.propertyName() + u" with type "_s + prop.typeName();
         if (m_storedType && m_storedType->internalName() != prop.typeName())
             result += u" (stored as "_s + m_storedType->internalName() + u")";
         return result;
     }
-    case Method: {
+    case Kind::Method: {
         const auto methods = method();
         if (methods.isEmpty())
             result = scope() + u"(unknown method)"_s;
@@ -49,7 +49,7 @@ QString QQmlJSRegisterContent::descriptiveName() const
             return result + u" (stored as "_s + m_storedType->internalName() + u")";
         return result;
     }
-    case Enum: {
+    case Kind::Enum: {
         const QString enumName = enumeration().name();
         const QString memberName = enumMember();
         if (memberName.isEmpty())
@@ -60,10 +60,10 @@ QString QQmlJSRegisterContent::descriptiveName() const
             return result + u" (stored as "_s + m_storedType->internalName() + u")";
         return result;
     }
-    case ImportNamespace: {
+    case Kind::ImportNamespace: {
         return u"import namespace %1"_s.arg(importNamespace());
     }
-    case Conversion: {
+    case Kind::Conversion: {
         return u"conversion to %1"_s.arg(conversionResult()->internalName());
     }
     }
@@ -90,14 +90,14 @@ QString QQmlJSRegisterContent::containedTypeName() const
 
 bool QQmlJSRegisterContent::isList() const
 {
-    switch (m_content.index()) {
-    case Type:
+    switch (Kind(m_content.index())) {
+    case Kind::Type:
         return std::get<std::pair<QQmlJSScope::ConstPtr, int>>(m_content).first->accessSemantics()
                 == QQmlJSScope::AccessSemantics::Sequence;
-    case Property:
+    case Kind::Property:
         return std::get<PropertyLookup>(m_content).property.type()->accessSemantics()
                 == QQmlJSScope::AccessSemantics::Sequence;
-    case Conversion:
+    case Kind::Conversion:
         return std::get<ConvertedTypes>(m_content).result->accessSemantics()
                 == QQmlJSScope::AccessSemantics::Sequence;
     default:
@@ -107,8 +107,8 @@ bool QQmlJSRegisterContent::isList() const
 
 bool QQmlJSRegisterContent::isWritable() const
 {
-    switch (m_content.index()) {
-    case Property:
+    switch (Kind(m_content.index())) {
+    case Kind::Property:
         return std::get<PropertyLookup>(m_content).property.isWritable();
 
     // TODO: What can we actually write?

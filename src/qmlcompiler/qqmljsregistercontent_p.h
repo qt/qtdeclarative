@@ -80,12 +80,12 @@ public:
         return !(a == b);
     }
 
-    bool isType() const { return m_content.index() == Type; }
-    bool isProperty() const { return m_content.index() == Property; }
-    bool isEnumeration() const { return m_content.index() == Enum; }
-    bool isMethod() const { return m_content.index() == Method; }
-    bool isImportNamespace() const { return m_content.index() == ImportNamespace; }
-    bool isConversion() const { return m_content.index() == Conversion; }
+    bool isType() const { return m_content.index() == size_t(Kind::Type); }
+    bool isProperty() const { return m_content.index() == size_t(Kind::Property); }
+    bool isEnumeration() const { return m_content.index() == size_t(Kind::Enum); }
+    bool isMethod() const { return m_content.index() == size_t(Kind::Method); }
+    bool isImportNamespace() const { return m_content.index() == size_t(Kind::ImportNamespace); }
+    bool isConversion() const { return m_content.index() == size_t(Kind::Conversion); }
     bool isList() const;
 
     bool isWritable() const;
@@ -108,10 +108,10 @@ public:
     }
     int resultLookupIndex() const
     {
-        switch (m_content.index()) {
-        case Type:
+        switch (Kind(m_content.index())) {
+        case Kind::Type:
             return std::get<std::pair<QQmlJSScope::ConstPtr, int>>(m_content).second;
-        case Property:
+        case Kind::Property:
             return std::get<PropertyLookup>(m_content).resultLookupIndex;
         default:
             return InvalidLookupIndex;
@@ -165,22 +165,22 @@ public:
     {
         seed = qHashMulti(seed, registerContent.m_storedType, registerContent.m_content.index(),
                           registerContent.m_scope, registerContent.m_variant);
-        switch (registerContent.m_content.index()) {
-        case Type:
+        switch (Kind(registerContent.m_content.index())) {
+        case Kind::Type:
             return qHash(std::get<std::pair<QQmlJSScope::ConstPtr, int>>(registerContent.m_content),
                          seed);
-        case Property:
+        case Kind::Property:
             return qHash(std::get<PropertyLookup>(registerContent.m_content), seed);
-        case Enum:
+        case Kind::Enum:
             return qHash(std::get<std::pair<QQmlJSMetaEnum, QString>>(registerContent.m_content),
                          seed);
-        case Method:
+        case Kind::Method:
             return qHash(std::get<std::pair<QList<QQmlJSMetaMethod>, QQmlJSScope::ConstPtr>>(
                                  registerContent.m_content), seed);
-        case ImportNamespace:
+        case Kind::ImportNamespace:
             return qHash(std::get<std::pair<uint, QQmlJSScope::ConstPtr>>(
                                  registerContent.m_content), seed);
-        case Conversion:
+        case Kind::Conversion:
             return qHash(std::get<ConvertedTypes>(registerContent.m_content), seed);
         }
 
@@ -232,7 +232,7 @@ public:
     }
 
 private:
-    enum ContentKind { Type, Property, Enum, Method, ImportNamespace, Conversion };
+    enum class Kind : size_t { Type, Property, Enum, Method, ImportNamespace, Conversion };
 
     struct ConvertedTypes
     {
