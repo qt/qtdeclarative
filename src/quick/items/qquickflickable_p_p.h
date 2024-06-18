@@ -192,6 +192,7 @@ public:
     bool calcVelocity : 1;
     bool pixelAligned : 1;
     bool syncDrag : 1;
+    Qt::MouseButtons acceptedButtons = Qt::LeftButton;
     QElapsedTimer timer;
     qint64 lastPosTime;
     qint64 lastPressTime;
@@ -229,6 +230,7 @@ public:
     void handlePressEvent(QPointerEvent *);
     void handleMoveEvent(QPointerEvent *);
     void handleReleaseEvent(QPointerEvent *);
+    bool buttonsAccepted(const QSinglePointEvent *event);
 
     void maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn,
                         Qt::MouseButtons buttons = Qt::NoButton);

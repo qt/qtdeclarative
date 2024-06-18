@@ -1123,23 +1123,48 @@ void tst_qquickflickable::nestedTrackpad()
 
 void tst_qquickflickable::movingAndFlicking_data()
 {
+    const QPointingDevice *constTouchDevice = touchDevice;
+
     QTest::addColumn<bool>("verticalEnabled");
     QTest::addColumn<bool>("horizontalEnabled");
+    QTest::addColumn<Qt::MouseButtons>("acceptedButtons");
+    QTest::addColumn<Qt::MouseButton>("testButton");
+    QTest::addColumn<const QPointingDevice *>("device");
     QTest::addColumn<QPoint>("flickToWithoutSnapBack");
     QTest::addColumn<QPoint>("flickToWithSnapBack");
 
     QTest::newRow("vertical")
-            << true << false
+            << true << false << Qt::MouseButtons(Qt::LeftButton) << Qt::LeftButton << mouseDevice
             << QPoint(50, 100)
             << QPoint(50, 300);
 
     QTest::newRow("horizontal")
-            << false << true
+            << false << true << Qt::MouseButtons(Qt::LeftButton) << Qt::LeftButton << mouseDevice
             << QPoint(-50, 200)
             << QPoint(150, 200);
 
     QTest::newRow("both")
-            << true << true
+            << true << true << Qt::MouseButtons(Qt::LeftButton) << Qt::LeftButton << mouseDevice
+            << QPoint(-50, 100)
+            << QPoint(150, 300);
+
+    QTest::newRow("mouse disabled")
+            << true << true << Qt::MouseButtons(Qt::NoButton) << Qt::LeftButton << mouseDevice
+            << QPoint(-50, 100)
+            << QPoint(150, 300);
+
+    QTest::newRow("wrong button")
+            << true << true << Qt::MouseButtons(Qt::RightButton) << Qt::LeftButton << mouseDevice
+            << QPoint(-50, 100)
+            << QPoint(150, 300);
+
+    QTest::newRow("right button")
+            << true << true << Qt::MouseButtons(Qt::RightButton) << Qt::RightButton << mouseDevice
+            << QPoint(-50, 100)
+            << QPoint(150, 300);
+
+    QTest::newRow("touch")
+            << true << true << Qt::MouseButtons(Qt::NoButton) << Qt::LeftButton << constTouchDevice
             << QPoint(-50, 100)
             << QPoint(150, 300);
 }
@@ -1148,9 +1173,11 @@ void tst_qquickflickable::movingAndFlicking()
 {
     QFETCH(bool, verticalEnabled);
     QFETCH(bool, horizontalEnabled);
+    QFETCH(Qt::MouseButtons, acceptedButtons);
+    QFETCH(Qt::MouseButton, testButton);
     QFETCH(QPoint, flickToWithoutSnapBack);
     QFETCH(QPoint, flickToWithSnapBack);
-    auto device = mouseDevice;
+    QFETCH(const QPointingDevice *, device);
 
     const QPoint flickFrom(50, 200);   // centre
 
@@ -1165,6 +1192,7 @@ void tst_qquickflickable::movingAndFlicking()
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
     QVERIFY(flickable != nullptr);
+    flickable->setAcceptedButtons(acceptedButtons);
 
     QSignalSpy vMoveSpy(flickable, SIGNAL(movingVerticallyChanged()));
     QSignalSpy hMoveSpy(flickable, SIGNAL(movingHorizontallyChanged()));
@@ -1179,7 +1207,12 @@ void tst_qquickflickable::movingAndFlicking()
     QSignalSpy flickEndSpy(flickable, SIGNAL(flickEnded()));
 
     // do a flick that keeps the view within the bounds
-    QQuickTest::pointerFlick(device, window.data(), 0, flickFrom, flickToWithoutSnapBack, 200);
+    QQuickTest::pointerFlick(device, window.data(), 0, flickFrom, flickToWithoutSnapBack, 200, testButton);
+
+    if (!(acceptedButtons & testButton) && device->type() != QInputDevice::DeviceType::TouchScreen) {
+        QVERIFY(!flickable->isMoving());
+        return;
+    }
 
     QTRY_VERIFY(flickable->isMoving());
     QCOMPARE(flickable->isMovingHorizontally(), horizontalEnabled);
@@ -1238,7 +1271,7 @@ void tst_qquickflickable::movingAndFlicking()
     flickable->setContentX(0);
     flickable->setContentY(0);
     QTRY_VERIFY(!flickable->isMoving());
-    QQuickTest::pointerFlick(device, window.data(), 0, flickFrom, flickToWithSnapBack, 10);
+    QQuickTest::pointerFlick(device, window.data(), 0, flickFrom, flickToWithSnapBack, 10, testButton);
 
     QTRY_VERIFY(flickable->isMoving());
     QCOMPARE(flickable->isMovingHorizontally(), horizontalEnabled);

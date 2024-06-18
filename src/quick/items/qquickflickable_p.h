@@ -75,6 +75,8 @@ class Q_QUICK_EXPORT QQuickFlickable : public QQuickItem
     Q_PROPERTY(qreal horizontalOvershoot READ horizontalOvershoot NOTIFY horizontalOvershootChanged REVISION(2, 9))
     Q_PROPERTY(qreal verticalOvershoot READ verticalOvershoot NOTIFY verticalOvershootChanged REVISION(2, 9))
 
+    Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged REVISION(6, 9) FINAL)
+
     Q_PROPERTY(QQmlListProperty<QObject> flickableData READ flickableData)
     Q_PROPERTY(QQmlListProperty<QQuickItem> flickableChildren READ flickableChildren)
     Q_CLASSINFO("DefaultProperty", "flickableData")
@@ -183,6 +185,9 @@ public:
     bool synchronousDrag() const;
     void setSynchronousDrag(bool v);
 
+    Qt::MouseButtons acceptedButtons() const;
+    void setAcceptedButtons(Qt::MouseButtons buttons);
+
     qreal horizontalOvershoot() const;
     qreal verticalOvershoot() const;
 
@@ -238,6 +243,8 @@ Q_SIGNALS:
     void atYEndChanged();
     void atXBeginningChanged();
     void atYBeginningChanged();
+
+    Q_REVISION(6, 9) void acceptedButtonsChanged();
 
 protected:
     bool childMouseEventFilter(QQuickItem *, QEvent *) override;
