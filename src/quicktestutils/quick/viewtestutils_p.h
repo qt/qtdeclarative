@@ -31,12 +31,9 @@ namespace QQuickViewTestUtils
 {
     QQuickView *createView();
 
-    void flick(QQuickView *window, const QPoint &from, const QPoint &to, int duration);
     void centerOnScreen(QQuickView *window, const QSize &size);
     void centerOnScreen(QQuickView *window);
     void moveMouseAway(QQuickView *window);
-    void moveAndPress(QQuickView *window, const QPoint &position);
-    void moveAndRelease(QQuickView *window, const QPoint &position);
 
     QList<int> adjustIndexesForAddDisplaced(const QList<int> &indexes, int index, int count);
     QList<int> adjustIndexesForMove(const QList<int> &indexes, int from, int to, int count);
@@ -185,14 +182,27 @@ namespace QQuickTest {
 
     void pointerPress(const QPointingDevice *dev, QQuickWindow *window,
                       int pointId, const QPoint &p, Qt::MouseButton button = Qt::LeftButton,
-                      Qt::KeyboardModifiers modifiers = Qt::NoModifier);
+                      Qt::KeyboardModifiers modifiers = Qt::NoModifier, int delay = -1);
 
     void pointerMove(const QPointingDevice *dev, QQuickWindow *window, int pointId,
-                     const QPoint &p);
+                     const QPoint &p, int delay = -1);
 
     void pointerRelease(const QPointingDevice *dev, QQuickWindow *window, int pointId,
                         const QPoint &p, Qt::MouseButton button = Qt::LeftButton,
-                        Qt::KeyboardModifiers modifiers = Qt::NoModifier);
+                        Qt::KeyboardModifiers modifiers = Qt::NoModifier, int delay = -1);
+
+    void pointerMoveAndPress(const QPointingDevice *dev, QQuickWindow *window,
+                             int pointId, const QPoint &p, Qt::MouseButton button = Qt::LeftButton,
+                             Qt::KeyboardModifiers modifiers = Qt::NoModifier, int delay = -1);
+
+    void pointerMoveAndRelease(const QPointingDevice *dev, QQuickWindow *window,
+                               int pointId, const QPoint &p, Qt::MouseButton button = Qt::LeftButton,
+                               Qt::KeyboardModifiers modifiers = Qt::NoModifier, int delay = -1);
+
+    void pointerFlick(const QPointingDevice *dev, QQuickWindow *window,
+                      int pointId, const QPoint &from, const QPoint &to, int duration,
+                      Qt::MouseButton button = Qt::LeftButton,
+                      Qt::KeyboardModifiers modifiers = Qt::NoModifier, int delay = -1);
 }
 
 QT_END_NAMESPACE
