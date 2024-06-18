@@ -1086,8 +1086,7 @@ qreal QQuickItemViewPrivate::calculatedMaxExtent() const
 void QQuickItemViewPrivate::applyDelegateChange()
 {
     releaseVisibleItems(QQmlDelegateModel::NotReusable);
-    releaseItem(currentItem, QQmlDelegateModel::NotReusable);
-    currentItem = nullptr;
+    releaseCurrentItem(QQmlDelegateModel::NotReusable);
     updateSectionCriteria();
     refill();
     moveReason = QQuickItemViewPrivate::SetIndex;
@@ -1654,8 +1653,7 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
         if (currentItem) {
             if (currentItem->attached)
                 currentItem->attached->setIsCurrentItem(false);
-            releaseItem(currentItem, reusableFlag);
-            currentItem = nullptr;
+            releaseCurrentItem(reusableFlag);
             currentIndex = modelIndex;
             emit q->currentIndexChanged();
             emit q->currentItemChanged();
@@ -1716,10 +1714,9 @@ void QQuickItemViewPrivate::clear(bool onDestruction)
     releasePendingTransition.clear();
 #endif
 
-    auto oldCurrentItem = currentItem;
-    releaseItem(currentItem, QQmlDelegateModel::NotReusable);
-    currentItem = nullptr;
-    if (oldCurrentItem)
+    const bool hadCurrentItem = currentItem != nullptr;
+    releaseCurrentItem(QQmlDelegateModel::NotReusable);
+    if (hadCurrentItem)
         emit q->currentItemChanged();
     createHighlight(onDestruction);
     trackedItem = nullptr;
@@ -2123,10 +2120,9 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         if (currentChanges.currentRemoved && currentItem) {
             if (currentItem->item && currentItem->attached)
                 currentItem->attached->setIsCurrentItem(false);
-            auto oldCurrentItem = currentItem;
-            releaseItem(currentItem, reusableFlag);
-            currentItem = nullptr;
-            if (oldCurrentItem)
+            const bool hadCurrentItem = currentItem != nullptr;
+            releaseCurrentItem(reusableFlag);
+            if (hadCurrentItem)
                 emit q->currentItemChanged();
         }
         if (!currentIndexCleared)
