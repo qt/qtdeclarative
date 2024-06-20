@@ -58,6 +58,15 @@ capable of rendering changes to the code in realtime. It avoids the need to
 rebuild the application after every code change and install it on the target
 device. You can also extend it to build a custom runtime that suits your needs.
 
+\section1 Felgo QML Hot Reload
+
+\l{Felgo QML Hot Reload Tool}{Felgo QML Hot Reload} is a third-party tool that
+updates QML and JavaScript code in your running application without recompiling
+and redeploying after each change. Unlike Live Reload, it preserves the
+application's current state after a reload and can run on multiple devices
+simultaneously to test and iterate code. Felgo Hot Reload supports all Qt
+target platforms and architectures.
+
 \section1 GammaRay
 
 \l{GammaRay Manual}{GammaRay} is a useful utility that provides diagnostic
