@@ -81,10 +81,8 @@ void QQuickPopupWindow::hideEvent(QHideEvent *e)
 {
     Q_D(QQuickPopupWindow);
     QQuickWindow::hideEvent(e);
-    if (QQuickPopup *popup = d->m_popup) {
-        QQuickPopupPrivate::get(popup)->visible = false;
-        emit popup->visibleChanged();
-    }
+    if (QQuickPopup *popup = d->m_popup)
+        popup->setVisible(false);
 }
 
 void QQuickPopupWindow::moveEvent(QMoveEvent *e)

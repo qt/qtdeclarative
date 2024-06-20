@@ -56,6 +56,8 @@ private slots:
     void checkHighlightWhenMenuDismissed();
     void hoverAfterClosingWithEscape_data();
     void hoverAfterClosingWithEscape();
+    void closeByClickingOutside_data();
+    void closeByClickingOutside();
     void AA_DontUseNativeMenuBar();
     void containerItems_data();
     void containerItems();
@@ -1205,6 +1207,55 @@ void tst_qquickmenubar::hoverAfterClosingWithEscape()
     QQuickMenu *secondMenu = menuBar->menuAt(1);
     QVERIFY(secondMenu);
     QVERIFY(!secondMenu->isVisible());
+}
+
+void tst_qquickmenubar::closeByClickingOutside_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+
+    QTest::newRow("Item") << QQuickPopup::Item;
+    QTest::newRow("Window") << QQuickPopup::Window;
+}
+
+void tst_qquickmenubar::closeByClickingOutside()
+{
+    QFETCH(QQuickPopup::PopupType, popupType);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("hoverAfterClosingWithEscape.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *menuBar = window->property("menuBar").value<QQuickMenuBar*>();
+    QVERIFY(menuBar);
+    auto *fileMenu = window->property("fileMenu").value<QQuickMenu*>();
+    QVERIFY(fileMenu);
+    auto *firstMenuBarItem(qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(0)));
+    QVERIFY(firstMenuBarItem);
+
+    fileMenu->setPopupType(popupType);
+
+    // Open the first menu by clicking on the first menu bar item.
+    QVERIFY(clickButton(firstMenuBarItem));
+    QTRY_VERIFY(fileMenu->isOpened());
+    // Check that the first menu bar item stays highlighted
+    QVERIFY(firstMenuBarItem->isHighlighted());
+    // ...also after we move the mouse away from it
+    const QPoint windowCenter = {window->width() / 2, window->height() / 2};
+    QTest::mouseMove(window, windowCenter);
+    QVERIFY(firstMenuBarItem->isHighlighted());
+    // Close the menu with by clicking outside of it
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, windowCenter);
+    QTRY_VERIFY(!fileMenu->isVisible());
+    // Check that firstMenuBarItem is no longer highlighted since it's
+    // no longer hovered, and the menu it represents is closed.
+    QVERIFY(!firstMenuBarItem->isHighlighted());
 }
 
 void tst_qquickmenubar::AA_DontUseNativeMenuBar()

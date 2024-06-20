@@ -8,10 +8,13 @@ ApplicationWindow {
     width: 300
     height: 300
 
-    MenuBar {
+    property alias fileMenu: fileMenu
+
+    menuBar: MenuBar {
         objectName: "menuBar"
 
         Menu {
+            id: fileMenu
             title: qsTr("File")
 
             MenuItem {
