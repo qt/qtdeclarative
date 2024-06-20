@@ -57,11 +57,11 @@ T.DelayButton {
         // Delay progress bar.
         Rectangle {
             x: (parent.width - parent.implicitWidth) / 2
-            y: parent.height + (Qt.styleHints.colorScheme === Qt.Light ? 1 : 0)
+            y: parent.height + (Application.styleHints.colorScheme === Qt.Light ? 1 : 0)
             width: control.progress * parent.implicitWidth
             // The bar is too thick for the light theme at 2 pixels,
             // but too thin for the dark theme at 1.
-            height: Qt.styleHints.colorScheme === Qt.Light ? 1 : 2
+            height: Application.styleHints.colorScheme === Qt.Light ? 1 : 2
             color: control.palette.accent
             scale: control.mirrored ? -1 : 1
         }

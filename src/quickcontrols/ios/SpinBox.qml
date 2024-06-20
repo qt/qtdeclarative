@@ -53,8 +53,8 @@ T.SpinBox {
             states: [
                 {"up": true},
                 {"pressed": control.up.pressed},
-                {"light": Qt.styleHints.colorScheme === Qt.Light},
-                {"dark": Qt.styleHints.colorScheme === Qt.Dark}
+                {"light": Application.styleHints.colorScheme === Qt.Light},
+                {"dark": Application.styleHints.colorScheme === Qt.Dark}
             ]
         }
     }
@@ -69,8 +69,8 @@ T.SpinBox {
             states: [
                 {"down": true},
                 {"pressed": control.down.pressed},
-                {"light": Qt.styleHints.colorScheme === Qt.Light},
-                {"dark": Qt.styleHints.colorScheme === Qt.Dark}
+                {"light": Application.styleHints.colorScheme === Qt.Light},
+                {"dark": Application.styleHints.colorScheme === Qt.Dark}
             ]
         }
     }
@@ -87,8 +87,8 @@ T.SpinBox {
             y: (parent.height - height) / 2
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.colorScheme === Qt.Light},
-                    {"dark": Qt.styleHints.colorScheme === Qt.Dark}
+                    {"light": Application.styleHints.colorScheme === Qt.Light},
+                    {"dark": Application.styleHints.colorScheme === Qt.Dark}
                 ]
             }
         }

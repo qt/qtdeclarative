@@ -48,7 +48,7 @@ T.Slider {
             x: (control.config.handle.width - width) / 2
             y: (control.config.handle.height - height) / 2
             color: control.pressed
-                    ? Qt.styleHints.colorScheme == Qt.Light ? "#CC005FB8" : "#CC60CDFF"// AccentFillColorTertiary
+                    ? Application.styleHints.colorScheme == Qt.Light ? "#CC005FB8" : "#CC60CDFF"// AccentFillColorTertiary
                     : control.palette.accent
             Behavior on diameter {
                 // From WindowsUI 3 Animation Values
@@ -116,7 +116,7 @@ T.Slider {
                     y: control.horizontal
                         ? -4 - height
                         : 6 + index * (parent.height - 2 * 6 - height) / (control.background._background.ticksTop.model - 1)
-                    color: Qt.styleHints.colorScheme == Qt.Light ? "#9C000000" : "#9AFFFFFF"
+                    color: Application.styleHints.colorScheme == Qt.Light ? "#9C000000" : "#9AFFFFFF"
 
                     required property int index
                 }
@@ -134,7 +134,7 @@ T.Slider {
                     y: control.horizontal
                         ? parent.height + 4
                         : 6 + index * (parent.height - 2 * 6 - height) / (control.background._background.ticksBottom.model - 1)
-                    color: Qt.styleHints.colorScheme == Qt.Light ? "#9C000000" : "#9AFFFFFF"
+                    color: Application.styleHints.colorScheme == Qt.Light ? "#9C000000" : "#9AFFFFFF"
 
                     required property int index
                 }

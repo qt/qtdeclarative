@@ -26,7 +26,7 @@ T.BusyIndicator {
 
     contentItem: AnimatedImage {
         source: "qrc:/qt-project.org/imports/QtQuick/Controls/macOS/images/busyindicator-"
-            + (Qt.styleHints.colorScheme === Qt.Light ? "light" : "dark") + ".webp"
+            + (Application.styleHints.colorScheme === Qt.Light ? "light" : "dark") + ".webp"
         opacity: control.running ? 1 : 0
         playing: control.running || opacity > 0
         visible: control.running || opacity > 0

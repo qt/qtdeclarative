@@ -52,17 +52,17 @@ T.Menu {
             width: control.background.width
             height: control.background.height
             radius: 5
-            color: Qt.styleHints.colorScheme === Qt.Light
+            color: Application.styleHints.colorScheme === Qt.Light
                    ? Qt.darker(control.palette.window, 1.04)
                    : Qt.darker(control.palette.window, 1.2)
-            border.color: Qt.styleHints.colorScheme === Qt.Light
+            border.color: Application.styleHints.colorScheme === Qt.Light
                    ? Qt.darker(control.palette.window, 1.4)
                    : Qt.lighter(control.palette.window, 2.0)
             border.width: 0.5
             visible: false
         }
         shadowScale: 1.04
-        shadowOpacity: Qt.styleHints.colorScheme === Qt.Light ? 0.15 : 0.2
+        shadowOpacity: Application.styleHints.colorScheme === Qt.Light ? 0.15 : 0.2
         shadowColor: 'black'
         shadowEnabled: true
         shadowHorizontalOffset: 0

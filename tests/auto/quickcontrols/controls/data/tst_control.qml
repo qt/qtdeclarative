@@ -1064,7 +1064,7 @@ TestCase {
         verify(control)
 
         compare(control.hovered, false)
-        compare(control.hoverEnabled, Qt.styleHints.useHoverEffects)
+        compare(control.hoverEnabled, Application.styleHints.useHoverEffects)
 
         control.hoverEnabled = false
 
@@ -1098,7 +1098,7 @@ TestCase {
 
     function test_hoverEnabled() {
         let control = createTemporaryObject(component, testCase)
-        compare(control.hoverEnabled, Qt.styleHints.useHoverEffects)
+        compare(control.hoverEnabled, Application.styleHints.useHoverEffects)
 
         let child = component.createObject(control)
         let grandChild = component.createObject(child)

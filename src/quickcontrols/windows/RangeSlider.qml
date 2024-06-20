@@ -76,9 +76,9 @@ T.RangeSlider {
                 height: parent.height
                 radius: parent.radius
                 // No border in dark mode, instead we fill.
-                color: Qt.styleHints.colorScheme === Qt.Light
+                color: Application.styleHints.colorScheme === Qt.Light
                     ? "transparent" : Qt.lighter(control.palette.window, 1.6)
-                border.color: Qt.styleHints.colorScheme === Qt.Light
+                border.color: Application.styleHints.colorScheme === Qt.Light
                     ? Qt.darker(control.palette.window, 1.1)
                     : "transparent"
             }

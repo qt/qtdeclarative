@@ -28,7 +28,7 @@ T.Button {
     icon.width: 16
     icon.height: 16
     icon.color: (control.checked || control.highlighted)
-                ? (control.down ? (Qt.styleHints.colorScheme == Qt.Light ? "#7FFFFFFF" : "#80000000") //textOnAccentSecondary
+                ? (control.down ? (Application.styleHints.colorScheme == Qt.Light ? "#7FFFFFFF" : "#80000000") //textOnAccentSecondary
                                 : control.palette.highlightedText)
                 : (control.down ? control.palette.brightText : control.palette.buttonText)
 

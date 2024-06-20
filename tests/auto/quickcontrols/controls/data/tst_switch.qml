@@ -212,7 +212,7 @@ TestCase {
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                 "pressed"]
         // Don't want to double-click.
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -229,7 +229,7 @@ TestCase {
         // release on the right
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -248,7 +248,7 @@ TestCase {
         // release on the left
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -267,7 +267,7 @@ TestCase {
         // release in the middle
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, 0, 0).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -428,7 +428,7 @@ TestCase {
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                 "pressed"]
         // Don't want to double-click.
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, 0).commit()
         compare(control.position, 1.0)
         compare(control.checked, true)
@@ -464,7 +464,7 @@ TestCase {
         // press-drag-release from and to outside the indicator
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width - 1).commit()
         compare(control.position, 0.0)
         compare(control.checked, false)
