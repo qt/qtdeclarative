@@ -246,7 +246,7 @@ void tst_qquickapplication::styleHints()
 {
     // technically not in QQuickApplication, but testing anyway here
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; Item { property variant styleHints: Qt.styleHints }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0; Item { property variant styleHints: Application.styleHints }", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(item);
     QQuickView view;

@@ -27,7 +27,7 @@ T.BusyIndicator {
     contentItem: Image {
         property int currentImage: 8
         source: IOS.url + "busyindicator-frame-0" + currentImage +
-                (Qt.styleHints.colorScheme === Qt.Light ? "-light.png" : "-dark.png")
+                (Application.styleHints.colorScheme === Qt.Light ? "-light.png" : "-dark.png")
         fillMode: Image.PreserveAspectFit
         NumberAnimation on currentImage {
             running: control.visible && control.running

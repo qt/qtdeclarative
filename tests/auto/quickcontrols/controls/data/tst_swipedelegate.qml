@@ -14,7 +14,7 @@ TestCase {
     when: windowShown
     name: "SwipeDelegate"
 
-    readonly property int dragDistance: Math.max(20, Qt.styleHints.startDragDistance + 5)
+    readonly property int dragDistance: Math.max(20, Application.styleHints.startDragDistance + 5)
 
     Component {
         id: backgroundFillComponent

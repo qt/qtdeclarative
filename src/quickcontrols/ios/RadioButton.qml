@@ -26,8 +26,8 @@ T.RadioButton {
         ImageSelector on source {
             states: [
                 {"checked": control.checked},
-                {"light": Qt.styleHints.colorScheme === Qt.Light},
-                {"dark": Qt.styleHints.colorScheme === Qt.Dark}
+                {"light": Application.styleHints.colorScheme === Qt.Light},
+                {"dark": Application.styleHints.colorScheme === Qt.Dark}
             ]
         }
     }
