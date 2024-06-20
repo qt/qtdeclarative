@@ -240,7 +240,7 @@ void QQmlThread::wait()
 
 bool QQmlThread::isThisThread() const
 {
-    return QThread::currentThreadId() == static_cast<QThreadPrivate *>(QObjectPrivate::get(d))->threadData.loadRelaxed()->threadId.loadRelaxed();
+    return d->isCurrentThread();
 }
 
 QThread *QQmlThread::thread() const
