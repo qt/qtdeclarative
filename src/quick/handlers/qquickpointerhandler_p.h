@@ -145,6 +145,7 @@ protected:
 
     friend class QQuickDeliveryAgentPrivate;
     friend class QQuickItemPrivate;
+    friend class QQuickMenuPrivate;
     friend class QQuickWindowPrivate;
 
     Q_DECLARE_PRIVATE(QQuickPointerHandler)

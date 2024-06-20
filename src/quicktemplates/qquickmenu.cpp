@@ -593,6 +593,27 @@ void QQuickMenuPrivate::setNativeMenuVisible(bool visible)
         const QPointF globalPos = parentItem->mapToGlobal(x, y);
         const QPoint windowPos = window->mapFromGlobal(globalPos.toPoint());
         QRect targetRect(windowPos, QSize(0, 0));
+        auto *daPriv = QQuickItemPrivate::get(parentItem)->deliveryAgentPrivate();
+        Q_ASSERT(daPriv);
+        // A menu is typically opened when some event-handling object (like TapHandler) calls
+        // QQuickMenu::popup(). We don't have the event or the caller available directly here.
+        // But showPopup() below is expected to "eat" the release event, so
+        // the caller will not see it. Cancel all grabs so that the object that
+        // handled the press event will not get stuck in pressed state.
+        if (QPointerEvent *openingEvent = daPriv->eventInDelivery()) {
+            auto *devPriv = QPointingDevicePrivate::get(const_cast<QPointingDevice *>(openingEvent->pointingDevice()));
+            for (const auto &pt : std::as_const(openingEvent->points())) {
+                qCDebug(lcNativeMenus) << "popup over" << window << "its DA" << daPriv->q_func() << "opening due to" << openingEvent
+                                       << "with grabbers" << openingEvent->exclusiveGrabber(pt) << openingEvent->passiveGrabbers(pt);
+
+                if (auto *opener = openingEvent->exclusiveGrabber(pt))
+                    devPriv->removeGrabber(opener, true); // cancel
+                for (auto passiveGrabber : openingEvent->passiveGrabbers(pt)) {
+                    if (auto *opener = passiveGrabber.get())
+                        devPriv->removeGrabber(opener, true); // cancel
+                }
+            }
+        }
         handle->showPopup(window, QHighDpi::toNativePixels(targetRect, window),
             /*menuItem ? menuItem->handle() : */nullptr);
     } else {
