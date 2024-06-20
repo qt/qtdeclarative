@@ -52,10 +52,10 @@
 
     \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt m_qtQuickView
 
-    Previously declared variable m_mainQmlComponent is
-    initialized with new Main() object. Main is a Java class extending
-    QtQmlComponent, generated from the imported QML project.
-    This is the QML component we will be interacting with.
+    The \c Main and \c Second Java classes inherit from the \c QtQmlComponent
+    class. These classes are generated from the QML project that we've
+    imported. In this example, these QML components are used to explain how to
+    embed QML components into Android Projects.
 
     For a Java-based project:
 
@@ -112,7 +112,7 @@
     }
     \endcode
 
-    OnstatusChanged implementation.
+    The \c onStatusChanged implementation.
 
     For a Java-based project:
 
@@ -122,9 +122,10 @@
 
     \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt onStatusChanged
 
-    The onStatusChanged method is then set as the statusChangeListener of
-    the \c QtQmlComponent with QtQmlComponent.setStatusChangeListener(
-    QtQmlStatusChangeListener onStatusChanged()).
+    The \c onStatusChanged listener is set as the \c statusChangeListener
+    of the \c m_mainQmlComponent and \c m_secondQmlComponent with
+    \c {QtQmlComponent.setStatusChangeListener(QtQmlStatusChangeListener onStatusChanged())}
+    method.
 
     For a Java-based project:
 
@@ -140,6 +141,16 @@
     QtQmlComponent into the \c m_qtQuickView. If this \c QtQmlStatus
     is confirmed to be \c QtQmlStatus.READY, we can start interacting
     with the QML view.
+
+    \section1 Loading QtQmlComponents into QtQuickView
+
+    You can have multiple QtQmlComponents in the imported QML project and
+    switch the currently loaded component of the QtQuickView between them
+    using the QtQuickView.loadComponent() method, which
+    takes a QtQmlComponent as an argument. This will load the QtQmlComponent
+    that was given and unloads the previous one, if there is one.
+
+    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java switchLoadedComponent
 
     \section1 Getting and setting QML component property values
 
@@ -160,12 +171,20 @@
     With the \c m_mainQmlComponent.setColorStringProperty()
     method we set the \c colorStringFormat property value of the
     \c m_mainQmlComponent a random color value that is fetched from the
-    \c Colors.java class.
+    \c Colors.java (or \c {Colors.kt}) class.
 
     The \c m_mainQmlComponent.getColorStringProperty()
     method is used here to fetch the current background color of the root
     object of the m_mainQmlComponent and then show it to the user on the
     Java/Kotlin Android side of the application.
+
+    \c m_secondQmlComponent has a \l {Grid QML Type}{Grid} QML component which we can rotate
+    from the Java side with the generated
+    \c m_secondQmlComponent.setGridRotation() method.
+
+    For Java:
+
+    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java gridRotate
 
     \section1 Signal listeners
 
