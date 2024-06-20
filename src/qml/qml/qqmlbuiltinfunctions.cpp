@@ -229,7 +229,9 @@ The following functions are also on the Qt object.
     The \c styleHints object provides platform-specific style hints and settings.
     See the \l QStyleHints documentation for further details.
 
-    You should access StyleHints via \l Application::styleHints instead.
+    You should access StyleHints via \l Application::styleHints instead, as
+    this provides better type information for tooling such as the
+    \l {Qt Quick Compiler}.
 
     \note The \c styleHints object is only available when using the Qt Quick module.
 */
