@@ -441,7 +441,8 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event,
         }
         if (cancel) {
             emit canceled(point);
-            setExclusiveGrab(event, point, false);
+            if (event)
+                setExclusiveGrab(event, point, false);
             // In case there is a filtering parent (Flickable), we should not give up the passive grab,
             // so that it can continue to filter future events.
             d_func()->reset();
