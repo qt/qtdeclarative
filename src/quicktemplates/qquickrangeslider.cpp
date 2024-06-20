@@ -712,7 +712,7 @@ void QQuickRangeSlider::setTo(qreal to)
 
     This property holds the threshold (in logical pixels) at which a touch drag event will be initiated.
     The mouse drag threshold won't be affected.
-    The default value is \c Qt.styleHints.startDragDistance.
+    The default value is \c Application.styleHints.startDragDistance.
 
     \sa QStyleHints
 

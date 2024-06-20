@@ -731,7 +731,7 @@ void QQuickDrawer::setPosition(qreal position)
     drag actions will open the drawer. Setting the value to \c 0 or less
     prevents opening the drawer by dragging.
 
-    The default value is \c Qt.styleHints.startDragDistance.
+    The default value is \c Application.styleHints.startDragDistance.
 
     \sa interactive
 */

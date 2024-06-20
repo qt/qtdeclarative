@@ -54,8 +54,8 @@ T.ComboBox {
                     states: [
                         {"edge": isFirstItem || isLastItem },
                         {"single": isSingleItem},
-                        {"light": Qt.styleHints.colorScheme === Qt.Light},
-                        {"dark": Qt.styleHints.colorScheme === Qt.Dark},
+                        {"light": Application.styleHints.colorScheme === Qt.Light},
+                        {"dark": Application.styleHints.colorScheme === Qt.Dark},
                         {"pressed": down}
                     ]
                 }
@@ -74,8 +74,8 @@ T.ComboBox {
                                         : defaultColor
         ImageSelector on source {
             states: [
-                {"light": Qt.styleHints.colorScheme === Qt.Light},
-                {"dark": Qt.styleHints.colorScheme === Qt.Dark},
+                {"light": Application.styleHints.colorScheme === Qt.Light},
+                {"dark": Application.styleHints.colorScheme === Qt.Dark},
                 {"pressed": control.down}
             ]
         }

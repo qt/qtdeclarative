@@ -1947,7 +1947,7 @@ TestCase {
     // and then that ComboBox loses focus, its currentIndex should change
     // to the index of the edit text (assuming a match is found).
     function test_currentIndexChangeOnLostFocus() {
-        if (Qt.styleHints.tabFocusBehavior !== Qt.TabFocusAllControls)
+        if (Application.styleHints.tabFocusBehavior !== Qt.TabFocusAllControls)
             skip("This platform only allows tab focus for text controls")
 
         let theModel = []

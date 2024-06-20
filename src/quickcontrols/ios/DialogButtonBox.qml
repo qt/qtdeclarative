@@ -50,8 +50,8 @@ T.DialogButtonBox {
             NinePatchImageSelector on source {
                 states: [
                     {"pressed": delegate.down},
-                    {"light": Qt.styleHints.colorScheme === Qt.Light},
-                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
+                    {"light": Application.styleHints.colorScheme === Qt.Light},
+                    {"dark": Application.styleHints.colorScheme === Qt.Dark},
                 ]
             }
         }
@@ -66,8 +66,8 @@ T.DialogButtonBox {
             source: IOS.url + "dialogbuttonbox-separator"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.colorScheme === Qt.Light},
-                    {"dark": Qt.styleHints.colorScheme === Qt.Dark}
+                    {"light": Application.styleHints.colorScheme === Qt.Light},
+                    {"dark": Application.styleHints.colorScheme === Qt.Dark}
                 ]
             }
         }

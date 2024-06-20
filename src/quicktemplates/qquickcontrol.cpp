@@ -1460,7 +1460,7 @@ void QQuickControl::setHovered(bool hovered)
     \qmlproperty bool QtQuick.Controls::Control::hoverEnabled
 
     This property determines whether the control accepts hover events. The default value
-    is \c Qt.styleHints.useHoverEffects.
+    is \c Application.styleHints.useHoverEffects.
 
     Setting this property propagates the value to all child controls that do not have
     \c hoverEnabled explicitly set.

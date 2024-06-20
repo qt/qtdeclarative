@@ -16,7 +16,7 @@ Rectangle {
     // For QQuickMacFocusFrame.
     readonly property real __focusFrameRadius: radius
 
-    color: Qt.styleHints.colorScheme === Qt.Light
+    color: Application.styleHints.colorScheme === Qt.Light
         ? Qt.darker(indicator.control.checked
             ? indicator.palette.accent : "#d9d6d2", indicator.control.down ? indicator.downTintFactor : 1)
         : Qt.lighter(indicator.control.checked
@@ -32,7 +32,7 @@ Rectangle {
             // the ColorAnimation to happen when changing checked state.
             PropertyChanges {
                 target: indicator
-                color: Qt.styleHints.colorScheme === Qt.Light
+                color: Application.styleHints.colorScheme === Qt.Light
                     ? indicator.control.checked ? indicator.palette.accent : "#d9d6d2"
                     : indicator.control.checked ? indicator.palette.accent : "#454545"
             }
@@ -57,7 +57,7 @@ Rectangle {
         height: parent.height
         radius: height / 2
         color: "transparent"
-        border.color: Qt.styleHints.colorScheme === Qt.Light
+        border.color: Application.styleHints.colorScheme === Qt.Light
             ? Qt.darker("#06000000", indicator.control.down ? indicator.downTintFactor : 1)
             : Qt.lighter("#1affffff", indicator.control.down ? indicator.downTintFactor : 1)
 
@@ -68,7 +68,7 @@ Rectangle {
             implicitHeight: parent.height - 2
             radius: parent.radius
             color: "transparent"
-            border.color: Qt.styleHints.colorScheme === Qt.Light
+            border.color: Application.styleHints.colorScheme === Qt.Light
                 ? Qt.darker("#02000000", indicator.control.down ? indicator.downTintFactor : 1)
                 : Qt.lighter("#04ffffff", indicator.control.down ? indicator.downTintFactor : 1)
         }

@@ -563,7 +563,7 @@ TestCase {
     }
 
     function test_focus() {
-        if (Qt.styleHints.tabFocusBehavior !== Qt.TabFocusAllControls)
+        if (Application.styleHints.tabFocusBehavior !== Qt.TabFocusAllControls)
             skip("This platform only allows tab focus for text controls")
 
         let control = createTemporaryObject(focusSwipeViewComponent, testCase)

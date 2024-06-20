@@ -9,7 +9,7 @@ Button {
     text: qsTr("Button")
 
     ToolTip.visible: pressed
-    ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+    ToolTip.delay: Application.styleHints.mousePressAndHoldInterval
     ToolTip.text: qsTr("This tool tip is shown after pressing and holding the button down.")
 }
 //! [1]

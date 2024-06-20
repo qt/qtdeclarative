@@ -156,7 +156,7 @@ TestCase {
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                         "pressed"]
         // Don't want to double-click.
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(sequenceSpy.success)
@@ -171,7 +171,7 @@ TestCase {
         // release outside
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                         "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(sequenceSpy.success)
