@@ -584,7 +584,7 @@ void tst_QQuickListView2::singletonModelLifetime()
 {
     // this does not really test any functionality of listview, but we do not have a good way
     // to unit test QQmlAdaptorModel in isolation.
-    qmlRegisterSingletonType<SingletonModel>("test", 1, 0, "SingletonModel",
+    qmlRegisterSingletonType<SingletonModel>("SingletonModelLifeTimeTest", 1, 0, "SingletonModel",
             [](QQmlEngine* , QJSEngine*) -> QObject* { return new SingletonModel; });
 
     QQmlApplicationEngine engine(testFile("singletonModelLifetime.qml"));
