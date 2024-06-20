@@ -68,6 +68,7 @@ private slots:
     void implicitWithDependencies();
     void qualifiedScriptImport();
     void invalidImportUrl();
+    void registerTypesFromImplicitImport_data();
     void registerTypesFromImplicitImport();
     void containsAllQtConfEntries();
 
@@ -192,10 +193,19 @@ void tst_QQmlImport::invalidImportUrl()
                     ":2 Cannot resolve URL for import \"file://./MyModuleName\"\n"));
 }
 
+void tst_QQmlImport::registerTypesFromImplicitImport_data()
+{
+    QTest::addColumn<QUrl>("testfile");
+    QTest::addRow("immediate") << testFileUrl("noimport/Main.qml");
+    QTest::addRow("redirected") << testFileUrl("noimport/redirected/Redirected.qml");
+    QTest::addRow("dirimported") << testFileUrl("noimport/dirimported/Dirimported.qml");
+}
+
 void tst_QQmlImport::registerTypesFromImplicitImport()
 {
+    QFETCH(QUrl, testfile);
     QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("noimport/Main.qml"));
+    QQmlComponent c(&engine, testfile);
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());

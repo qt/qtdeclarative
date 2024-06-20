@@ -59,6 +59,16 @@ qt_internal_add_resource(tst_qqmlimport "preferred2"
         "qmldir"
 )
 
+qt_internal_add_resource(tst_qqmlimport "nomimport"
+    BASE
+        "data"
+    PREFIX
+        "/qqmlimport/"
+    FILES
+        "data/noimport/Main.qml"
+        "data/noimport/qmldir"
+)
+
 qt_internal_add_resource(tst_qqmlimport "qtconf"
     PREFIX
         "/"

@@ -235,7 +235,12 @@ private:
             QQmlTypeLoader *typeLoader, const QString &uri, QTypeRevision version,
             const QQmlTypeLoaderQmldirContent *qmldir, QList<QQmlError> *errors);
 
-    QString redirectQmldirContent(QQmlTypeLoader *typeLoader, QQmlTypeLoaderQmldirContent *qmldir);
+    void registerBuiltinModuleTypes(
+            const QQmlTypeLoaderQmldirContent &qmldir, QTypeRevision version);
+
+    QString redirectQmldirContent(
+            QQmlTypeLoader *typeLoader, QQmlTypeLoaderQmldirContent *qmldir,
+            QQmlImportInstance *inserted);
 
     bool getQmldirContent(
             QQmlTypeLoader *typeLoader,  const QString &qmldirIdentifier, const QString &uri,
