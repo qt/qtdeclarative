@@ -63,7 +63,7 @@ T.RangeSlider {
             x: (control.secondHandleConfig.first_handle.width - width) / 2
             y: (control.secondHandleConfig.first_handle.height - height) / 2
             color: control.first.pressed
-                    ? Qt.styleHints.colorScheme == Qt.Light ? "#CC005FB8" : "#CC60CDFF"// AccentFillColorTertiary
+                    ? Application.styleHints.colorScheme == Qt.Light ? "#CC005FB8" : "#CC60CDFF"// AccentFillColorTertiary
                     : control.palette.accent
             Behavior on diameter {
                 // From WindowsUI 3 Animation Values
@@ -94,7 +94,7 @@ T.RangeSlider {
             x: (control.secondHandleConfig.second_handle.width - width) / 2
             y: (control.secondHandleConfig.second_handle.height - height) / 2
             color: control.second.pressed
-                    ? Qt.styleHints.colorScheme == Qt.Light ? "#CC005FB8" : "#CC60CDFF"// AccentFillColorTertiary
+                    ? Application.styleHints.colorScheme == Qt.Light ? "#CC005FB8" : "#CC60CDFF"// AccentFillColorTertiary
                     : control.palette.accent
             Behavior on diameter {
                 // From WindowsUI 3 Animation Values
@@ -169,7 +169,7 @@ T.RangeSlider {
                     y: control.horizontal
                         ? -4 - height
                         : 6 + index * (parent.height - 2 * 6 - height) / (control.background._background.ticksTop.model - 1)
-                    color: Qt.styleHints.colorScheme == Qt.Light ? "#9C000000" : "#9AFFFFFF"
+                    color: Application.styleHints.colorScheme == Qt.Light ? "#9C000000" : "#9AFFFFFF"
 
                     required property int index
                 }
@@ -187,7 +187,7 @@ T.RangeSlider {
                     y: control.horizontal
                         ? parent.height + 4
                         : 6 + index * (parent.height - 2 * 6 - height) / (control.background._background.ticksBottom.model - 1)
-                    color: Qt.styleHints.colorScheme == Qt.Light ? "#9C000000" : "#9AFFFFFF"
+                    color: Application.styleHints.colorScheme == Qt.Light ? "#9C000000" : "#9AFFFFFF"
 
                     required property int index
                 }

@@ -21,8 +21,8 @@ T.SelectionRectangle {
             visible: SelectionRectangle.control.active
             ImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.colorScheme === Qt.Light},
-                    {"dark": Qt.styleHints.colorScheme === Qt.Dark}
+                    {"light": Application.styleHints.colorScheme === Qt.Light},
+                    {"dark": Application.styleHints.colorScheme === Qt.Dark}
                 ]
             }
         }

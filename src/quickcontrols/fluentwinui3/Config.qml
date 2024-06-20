@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 pragma Singleton
-import QtQml
+import QtQuick
 
 QtObject {
-    readonly property QtObject controls: Qt.styleHints.colorScheme === Qt.Light ? light.controls : dark.controls
+    readonly property QtObject controls: Application.styleHints.colorScheme === Qt.Light ? light.controls : dark.controls
 
     readonly property QtObject dark: QtObject {
         readonly property QtObject controls: QtObject {

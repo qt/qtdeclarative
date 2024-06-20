@@ -10,7 +10,7 @@ Rectangle {
     width: 20
     height: 20
     radius: 10
-    color: Qt.styleHints.colorScheme === Qt.Light
+    color: Application.styleHints.colorScheme === Qt.Light
         ? Qt.darker(palette.base, down ? 1.05 : 1)
         : Qt.lighter("#cdcbc9", down ? 1.05 : 1)
 
