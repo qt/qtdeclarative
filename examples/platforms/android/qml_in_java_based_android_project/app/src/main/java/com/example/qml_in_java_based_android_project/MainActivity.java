@@ -42,8 +42,8 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
     private QtQuickView m_qtQuickView;
     //! [qmlComponent]
     private final Main m_mainQmlComponent = new Main();
-    //! [qmlComponent]
     private final Second m_secondQmlComponent = new Second();
+    //! [qmlComponent]
     private LinearLayout m_androidControlsLayout;
     private TextView m_getPropertyValueText;
     private TextView m_qmlStatus;
@@ -71,8 +71,8 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         // listener implemented below in OnStatusChanged
         //! [setStatusChangeListener]
         m_mainQmlComponent.setStatusChangeListener(this);
-        //! [setStatusChangeListener]
         m_secondQmlComponent.setStatusChangeListener(this);
+        //! [setStatusChangeListener]
         //! [layoutParams]
         ViewGroup.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -196,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         //! [qml signal listener]
     }
     //! [onStatusChanged]
-
+    //! [switchLoadedComponent]
     private void loadSecondQml() {
         m_qtQuickView.loadComponent(m_secondQmlComponent);
 
@@ -212,11 +212,13 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         m_box.setBackgroundColor(Color.parseColor("#00ffffff"));
         m_getPropertyValueText.setText("");
     }
+    //! [switchLoadedComponent]
+    //! [gridRotate]
     private void rotateQmlGrid() {
         Integer previousGridRotation = m_secondQmlComponent.getGridRotation();
         if (previousGridRotation != null) {
             m_secondQmlComponent.setGridRotation(previousGridRotation + 45);
         }
     }
+    //! [gridRotate]
 }
-
