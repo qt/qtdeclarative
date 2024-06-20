@@ -136,10 +136,15 @@ file will still be added to the \c target as a resource in uncompiled form
 (see \l{qmlcachegen-auto}{Caching compiled QML sources}).
 
 Set the \c QT_QML_SKIP_QMLDIR_ENTRY source file property to \c TRUE to prevent
-that \c{.qml} file from being added as a type to the QML module's typeinfo file
-(see \l{qmldir-autogeneration}{Auto-generating \c{qmldir} and typeinfo files}).
-This would normally only be used for a file that does not expose a public type,
-such as a private JS file.
+that QML or JavaScript file from being added as a type to the QML module's
+\c{qmldir} file (see \l{qmldir-autogeneration}{Auto-generating \c{qmldir} and
+typeinfo files}). This would normally be used for a file that does not expose
+a public type, such as a private JavaScript file. For JavaScript files with
+upper case names that are neither ECMAScript modules nor declared as stateless
+libraries via \c{.pragma library} you should consider this option. If you
+include them in the \c{qmldir} file, they are re-evaluated in the scope of
+every QML document that explicitly or implicitly imports the module they
+belong to.
 
 By default, when \l{qmldir-autogeneration}{generating the \c qmldir file}, a
 single type entry will be generated for each \c{.qml} file that provides a type.

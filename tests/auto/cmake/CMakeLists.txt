@@ -119,6 +119,12 @@ if(TARGET Qt::Qml)
         set(test_static_qml_module_extra_args "")
     endif()
     _qt_internal_test_expect_pass(test_static_qml_module ${test_static_qml_module_extra_args})
+    _qt_internal_test_expect_pass(test_javascript_files TESTNAME cmake_test_javascript_files)
+    set_tests_properties(cmake_test_javascript_files PROPERTIES
+        FAIL_REGULAR_EXPRESSION "(Good\.js|good\.js|Included\.js|Excluded\.js|Good\.mjs) is not an ECMAScript module"
+        PASS_REGULAR_EXPRESSION "Bad\.js is not an ECMAScript module"
+    )
+
 endif()
 
 if(TARGET Qt::Quick)

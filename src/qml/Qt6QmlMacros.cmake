@@ -2572,6 +2572,23 @@ function(qt6_target_qml_sources target)
                         "and .mjs. This leads to unexpected component names."
                     )
                 endif()
+                if(qml_file_ext AND qml_file_ext STREQUAL ".js" AND skip_qmldir STREQUAL "NOTFOUND")
+                    file(
+                        STRINGS ${qml_file_src} pragma_library
+                        REGEX "^\\.pragma library$"
+                        LIMIT_COUNT 1
+                        LIMIT_INPUT 128
+                    )
+                    if(NOT pragma_library)
+                        message(AUTHOR_WARNING
+                            "${qml_file_src} is not an ECMAScript module and also doesn't contain "
+                            "'.pragma library'. It will be re-evaluated in the context of every "
+                            "QML document that explicitly or implicitly imports ${uri}. Set its "
+                            "QT_QML_SKIP_QMLDIR_ENTRY source file property to FALSE if you really "
+                            "want this to happen. Set it to TRUE to prevent it."
+                        )
+                    endif()
+                endif()
 
                 # We previously accepted the singular form of this property name
                 # during tech preview. Issue a warning for that, but still
