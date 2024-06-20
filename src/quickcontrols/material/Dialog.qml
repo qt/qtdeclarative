@@ -44,7 +44,7 @@ T.Dialog {
 
     background: Rectangle {
         // FullScale doesn't make sense for Dialog.
-        radius: control.Material.roundedScale
+        radius: parent?.parent === Overlay.overlay ? control.Material.roundedScale : 0
         color: control.Material.dialogColor
 
         layer.enabled: control.Material.elevation > 0
@@ -56,7 +56,7 @@ T.Dialog {
 
     header: Label {
         text: control.title
-        visible: control.title
+        visible: parent?.parent === Overlay.overlay && control.title
         elide: Label.ElideRight
         padding: 24
         bottomPadding: 0
