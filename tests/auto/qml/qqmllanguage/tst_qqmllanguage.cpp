@@ -93,7 +93,7 @@ private slots:
     void assignCompositeToType();
     void assignLiteralToVar();
     void assignLiteralToJSValue();
-    void assignNullStrings();
+    void assignEmptyStrings();
     void bindJSValueToVar();
     void bindJSValueToVariant();
     void bindJSValueToType();
@@ -1117,17 +1117,24 @@ void tst_qqmllanguage::assignLiteralToJSValue()
     }
 }
 
-void tst_qqmllanguage::assignNullStrings()
+void tst_qqmllanguage::assignEmptyStrings()
 {
-    QQmlComponent component(&engine, testFileUrl("assignNullStrings.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignEmptyStrings.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<MyTypeObject> object(qobject_cast<MyTypeObject *>(component.create()));
     QVERIFY(object != nullptr);
-    QVERIFY(object->stringProperty().isNull());
-    QVERIFY(object->byteArrayProperty().isNull());
+
+    QVERIFY(!object->stringProperty().isNull());
+    QVERIFY(object->stringProperty().isEmpty());
+    QVERIFY(!object->byteArrayProperty().isNull());
+    QVERIFY(object->byteArrayProperty().isEmpty());
+
     QMetaObject::invokeMethod(object.data(), "assignNullStringsFromJs", Qt::DirectConnection);
-    QVERIFY(object->stringProperty().isNull());
-    QVERIFY(object->byteArrayProperty().isNull());
+
+    QVERIFY(!object->stringProperty().isNull());
+    QVERIFY(object->stringProperty().isEmpty());
+    QVERIFY(!object->byteArrayProperty().isNull());
+    QVERIFY(object->byteArrayProperty().isEmpty());
 }
 
 void tst_qqmllanguage::bindJSValueToVar()
