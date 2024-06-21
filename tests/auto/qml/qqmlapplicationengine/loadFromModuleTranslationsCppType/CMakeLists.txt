@@ -1,7 +1,7 @@
 # Copyright (C) 2024 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
-qt_standard_project_setup(REQUIRES 6.5 I18N_LANGUAGES es)
+qt_standard_project_setup(REQUIRES 6.5 I18N_TRANSLATED_LANGUAGES es)
 
 qt_internal_add_executable(i18nLoadFromModuleCppType
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
