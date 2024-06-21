@@ -1012,6 +1012,11 @@ ReturnedValue StringPrototype::method_startsWith(const FunctionObject *b, const 
     if (argc > 1)
         pos = argv[1].toInteger();
 
+    pos = std::clamp(
+        pos,
+        0.0,
+        double(value.size()));
+
     if (pos == 0)
         return Encode(value.startsWith(searchString));
 

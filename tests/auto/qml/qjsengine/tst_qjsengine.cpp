@@ -320,6 +320,8 @@ private slots:
     void deleteDefineCycle();
     void deleteFromSparseArray();
 
+    void emptyStringLiteralEvaluatesToANonNullString();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6417,6 +6419,21 @@ void tst_QJSEngine::deleteFromSparseArray()
     QVERIFY(result.property(10000).isUndefined());
     QVERIFY(result.property(20000).isUndefined());
 }
+
+void tst_QJSEngine::emptyStringLiteralEvaluatesToANonNullString() {
+  QJSEngine engine;
+  QJSValue result = engine.evaluate(R"(
+    function f() {
+        return "";
+    }
+    f();
+  )");
+
+  QVERIFY(result.isString());
+  QVERIFY(!result.toString().isNull());
+  QVERIFY(result.toString().isEmpty());
+}
+
 
 QTEST_MAIN(tst_QJSEngine)
 

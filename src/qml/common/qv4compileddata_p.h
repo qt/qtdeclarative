@@ -1287,8 +1287,6 @@ struct Unit
         const quint32_le offset = offsetTable[idx];
         const String *str = reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
         Q_ASSERT(str->size >= 0);
-        if (str->size == 0)
-            return QString();
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
         const QChar *characters = reinterpret_cast<const QChar *>(str + 1);
         if (flags & StaticData)
