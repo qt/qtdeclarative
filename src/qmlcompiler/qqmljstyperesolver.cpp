@@ -916,14 +916,18 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
             }
         }
 
+        // Reference types that are not QObject or QQmlComponent are likely JavaScript objects.
+        // We don't want to deal with those, but m_jsValueType is the best generic option.
+        if (type->filePath().isEmpty())
+            return m_jsValueType;
+
         m_logger->log(u"Object type %1 is not derived from QObject or QQmlComponent. "
                       "You may need to fully qualify all names in C++ so that moc can see them. "
                       "You may also need to add qt_extract_metatypes(<target containing %2>)."_s
                       .arg(type->internalName(), unresolvedBaseTypeName),
                       qmlCompiler, type->sourceLocation());
 
-        // Reference types that are not QObject or QQmlComponent are likely JavaScript objects.
-        // We don't want to deal with those, but m_jsValueType is the best generic option.
+        // If it does have a filePath, it's some C++ type which we haven't fully resolved.
         return m_jsValueType;
     }
 
