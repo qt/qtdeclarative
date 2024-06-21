@@ -74,7 +74,7 @@ void ExecutableCompilationUnit::populate()
 {
     /* In general, we should use QV4::Scope whenever we allocate heap objects, and employ write barriers
        for member variables pointing to heap objects. However, ExecutableCompilationUnit is special, as it
-       is always part of the root set. So instead of using scopde allocations and write barriers, we use a
+       is always part of the root set. So instead of using scoped allocations and write barriers, we use a
        slightly different approach: We temporarily block the gc from running. Afterwards, at the end of the
        function we check whether the gc was already running, and mark the ExecutableCompilationUnit. This
        ensures that all the newly allocated objects of the compilation unit will be marked in turn.
