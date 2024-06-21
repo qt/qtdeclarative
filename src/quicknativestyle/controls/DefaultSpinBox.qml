@@ -33,7 +33,6 @@ T.SpinBox {
 
     contentItem: TextInput {
         text: control.displayText
-        font: font.font
         color: control.palette.text
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
