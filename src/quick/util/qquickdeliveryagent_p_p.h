@@ -120,6 +120,7 @@ public:
     bool deliverTouchAsMouse(QQuickItem *item, QTouchEvent *pointerEvent);
     void translateTouchEvent(QTouchEvent *touchEvent);
     void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true, bool cancel = false);
+    void clearGrabbers(QPointerEvent *pointerEvent);
     void onGrabChanged(QObject *grabber, QPointingDevice::GrabTransition transition, const QPointerEvent *event, const QEventPoint &point);
     static QPointerEvent *clonePointerEvent(QPointerEvent *event, std::optional<QPointF> transformedLocalPos = std::nullopt);
     void deliverToPassiveGrabbers(const QVector<QPointer<QObject> > &passiveGrabbers, QPointerEvent *pointerEvent);
