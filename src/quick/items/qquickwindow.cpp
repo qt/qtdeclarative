@@ -1414,41 +1414,6 @@ QObject *QQuickWindow::focusObject() const
     return const_cast<QQuickWindow*>(this);
 }
 
-/*!
-    \internal
-
-    Clears all exclusive and passive grabs for the points in \a pointerEvent.
-
-    We never allow any kind of grab to persist after release, unless we're waiting
-    for a synth event from QtGui (as with most tablet events), so for points that
-    are fully released, the grab is cleared.
-
-    Called when QQuickWindow::event dispatches events, or when the QQuickOverlay
-    has filtered an event so that it bypasses normal delivery.
-*/
-void QQuickWindowPrivate::clearGrabbers(QPointerEvent *pointerEvent)
-{
-    if (pointerEvent->isEndEvent()
-        && !(QQuickDeliveryAgentPrivate::isTabletEvent(pointerEvent)
-             && (qApp->testAttribute(Qt::AA_SynthesizeMouseForUnhandledTabletEvents)
-                 || QWindowSystemInterfacePrivate::TabletEvent::platformSynthesizesMouse))) {
-        if (pointerEvent->isSinglePointEvent()) {
-            if (static_cast<QSinglePointEvent *>(pointerEvent)->buttons() == Qt::NoButton) {
-                auto &firstPt = pointerEvent->point(0);
-                pointerEvent->setExclusiveGrabber(firstPt, nullptr);
-                pointerEvent->clearPassiveGrabbers(firstPt);
-            }
-        } else {
-            for (auto &point : pointerEvent->points()) {
-                if (point.state() == QEventPoint::State::Released) {
-                    pointerEvent->setExclusiveGrabber(point, nullptr);
-                    pointerEvent->clearPassiveGrabbers(point);
-                }
-            }
-        }
-    }
-}
-
 /*! \reimp */
 bool QQuickWindow::event(QEvent *event)
 {
@@ -1591,7 +1556,7 @@ bool QQuickWindow::event(QEvent *event)
         // or fix QTBUG-90851 so that the event always has points?
         bool ret = (da && da->event(event));
 
-        d->clearGrabbers(pe);
+        d->deliveryAgentPrivate()->clearGrabbers(pe);
 
         if (ret)
             return true;
