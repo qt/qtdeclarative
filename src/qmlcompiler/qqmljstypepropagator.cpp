@@ -585,8 +585,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
         return;
     }
 
-    const QQmlJSScope::ConstPtr outStored
-            = m_typeResolver->genericType(m_state.accumulatorOut().storedType());
+    const QQmlJSScope::ConstPtr outStored = m_state.accumulatorOut().storedType();
 
     if (outStored.isNull()) {
         // It should really be valid.
@@ -596,7 +595,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     }
 
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectById
-            && !outStored->isReferenceType()) {
+            && !m_typeResolver->genericType(outStored)->isReferenceType()) {
         setError(u"Cannot retrieve a non-object type by ID: "_s + name);
         return;
     }
