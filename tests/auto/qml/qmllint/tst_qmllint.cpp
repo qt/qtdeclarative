@@ -1447,6 +1447,11 @@ void TestQmllint::compilerWarnings_data()
                            "annotation returns double. This may prevent proper compilation to "
                            "Cpp." } } }
             << true;
+
+    QTest::newRow("functionAssign1")
+            << QStringLiteral("functionAssign1.qml") << Result::clean() << true;
+    QTest::newRow("functionAssign2")
+            << QStringLiteral("functionAssign2.qml") << Result::clean() << true;
 }
 
 void TestQmllint::compilerWarnings()

@@ -588,18 +588,9 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
         return;
     }
 
-    const QQmlJSScope::ConstPtr retrieved
-            = m_typeResolver->genericType(m_state.accumulatorOut().containedType());
-
-    if (retrieved.isNull()) {
-        // It should really be valid.
-        // We get the generic type from aotContext->loadQmlContextPropertyIdLookup().
-        setError(u"Cannot determine generic type for "_s + name);
-        return;
-    }
-
-    if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectById
-            && !retrieved->isReferenceType()) {
+    const QQmlJSRegisterContent accumulatorOut = m_state.accumulatorOut();
+    if (accumulatorOut.variant() == QQmlJSRegisterContent::ObjectById
+            && !m_typeResolver->genericType(accumulatorOut.containedType())->isReferenceType()) {
         setError(u"Cannot retrieve a non-object type by ID: "_s + name);
         return;
     }
