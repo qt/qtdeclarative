@@ -11,7 +11,7 @@
 #include <QQmlContext>
 #include <QtGui/private/qtexthtmlparser_p.h>
 
-Q_LOGGING_CATEGORY(lcStyledText, "qt.quick.styledtext")
+Q_STATIC_LOGGING_CATEGORY(lcStyledText, "qt.quick.styledtext")
 
 /*
     QQuickStyledText supports few tags:

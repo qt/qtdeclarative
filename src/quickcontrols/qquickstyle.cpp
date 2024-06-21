@@ -27,7 +27,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQtQuickControlsStyle, "qt.quick.controls.style")
+Q_STATIC_LOGGING_CATEGORY(lcQtQuickControlsStyle, "qt.quick.controls.style")
 
 /*!
     \class QQuickStyle

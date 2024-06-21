@@ -12,9 +12,9 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcFolderDialogCurrentFolder, "qt.quick.dialogs.quickfolderdialogimpl.currentFolder")
-Q_LOGGING_CATEGORY(lcFolderDialogSelectedFolder, "qt.quick.dialogs.quickfolderdialogimpl.selectedFolder")
-Q_LOGGING_CATEGORY(lcFolderDialogOptions, "qt.quick.dialogs.quickfolderdialogimpl.options")
+Q_STATIC_LOGGING_CATEGORY(lcFolderDialogCurrentFolder, "qt.quick.dialogs.quickfolderdialogimpl.currentFolder")
+Q_STATIC_LOGGING_CATEGORY(lcFolderDialogSelectedFolder, "qt.quick.dialogs.quickfolderdialogimpl.selectedFolder")
+Q_STATIC_LOGGING_CATEGORY(lcFolderDialogOptions, "qt.quick.dialogs.quickfolderdialogimpl.options")
 
 QQuickFolderDialogImplPrivate::QQuickFolderDialogImplPrivate()
 {

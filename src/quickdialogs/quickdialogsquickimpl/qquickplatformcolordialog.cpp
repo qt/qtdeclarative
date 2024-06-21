@@ -16,7 +16,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQuickPlatformColorDialog, "qt.quick.dialogs.quickplatformcolordialog")
+Q_STATIC_LOGGING_CATEGORY(lcQuickPlatformColorDialog, "qt.quick.dialogs.quickplatformcolordialog")
 
 QQuickPlatformColorDialog::QQuickPlatformColorDialog(QObject *parent)
 {

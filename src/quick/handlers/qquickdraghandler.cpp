@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 
 static const qreal DragAngleToleranceDegrees = 10;
 
-Q_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
+Q_STATIC_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
 
 /*!
     \qmltype DragHandler

@@ -31,7 +31,7 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
-Q_LOGGING_CATEGORY(lcQuickTextInput, "qt.quick.textInput")
+Q_STATIC_LOGGING_CATEGORY(lcQuickTextInput, "qt.quick.textInput")
 
 /*!
     \qmltype TextInput

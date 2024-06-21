@@ -8,7 +8,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcHoverHandler, "qt.quick.handler.hover")
+Q_STATIC_LOGGING_CATEGORY(lcHoverHandler, "qt.quick.handler.hover")
 
 /*!
     \qmltype HoverHandler

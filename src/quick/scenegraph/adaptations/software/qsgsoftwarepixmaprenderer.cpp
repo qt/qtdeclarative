@@ -8,7 +8,7 @@
 
 #include <QElapsedTimer>
 
-Q_LOGGING_CATEGORY(lcPixmapRenderer, "qt.scenegraph.softwarecontext.pixmapRenderer")
+Q_STATIC_LOGGING_CATEGORY(lcPixmapRenderer, "qt.scenegraph.softwarecontext.pixmapRenderer")
 
 QT_BEGIN_NAMESPACE
 

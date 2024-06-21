@@ -11,7 +11,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTapHandler, "qt.quick.handler.tap")
+Q_STATIC_LOGGING_CATEGORY(lcTapHandler, "qt.quick.handler.tap")
 
 quint64 QQuickTapHandler::m_multiTapInterval(0);
 // single tap distance is the same as the drag threshold

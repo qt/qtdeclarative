@@ -13,7 +13,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTumblerView, "qt.quick.controls.tumblerview")
+Q_STATIC_LOGGING_CATEGORY(lcTumblerView, "qt.quick.controls.tumblerview")
 
 QQuickTumblerView::QQuickTumblerView(QQuickItem *parent) :
     QQuickItem(parent)

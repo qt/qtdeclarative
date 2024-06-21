@@ -130,7 +130,7 @@ QT_BEGIN_NAMESPACE
     \sa showMessage()
 */
 
-Q_LOGGING_CATEGORY(qtLabsPlatformTray, "qt.labs.platform.tray")
+Q_STATIC_LOGGING_CATEGORY(qtLabsPlatformTray, "qt.labs.platform.tray")
 
 QQuickLabsPlatformSystemTrayIcon::QQuickLabsPlatformSystemTrayIcon(QObject *parent)
     : QObject(parent),

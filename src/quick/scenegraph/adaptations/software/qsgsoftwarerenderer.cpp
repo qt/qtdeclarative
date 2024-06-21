@@ -12,7 +12,7 @@
 #include <QtGui/QBackingStore>
 #include <QElapsedTimer>
 
-Q_LOGGING_CATEGORY(lcRenderer, "qt.scenegraph.softwarecontext.renderer")
+Q_STATIC_LOGGING_CATEGORY(lcRenderer, "qt.scenegraph.softwarecontext.renderer")
 
 QT_BEGIN_NAMESPACE
 

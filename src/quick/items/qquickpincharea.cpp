@@ -17,7 +17,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcPA, "qt.quick.pincharea")
+Q_STATIC_LOGGING_CATEGORY(lcPA, "qt.quick.pincharea")
 
 /*!
     \qmltype PinchEvent

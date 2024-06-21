@@ -201,7 +201,7 @@ QT_BEGIN_NAMESPACE
     \sa {QtCore::}{Settings}, QSettings
 */
 
-Q_LOGGING_CATEGORY(lcSettings, "qt.labs.settings")
+Q_STATIC_LOGGING_CATEGORY(lcSettings, "qt.labs.settings")
 
 static const int settingsWriteDelay = 500;
 

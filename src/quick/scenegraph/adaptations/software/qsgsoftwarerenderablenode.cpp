@@ -20,7 +20,7 @@
 
 #include <qmath.h>
 
-Q_LOGGING_CATEGORY(lcRenderable, "qt.scenegraph.softwarecontext.renderable")
+Q_STATIC_LOGGING_CATEGORY(lcRenderable, "qt.scenegraph.softwarecontext.renderable")
 
 QT_BEGIN_NAMESPACE
 

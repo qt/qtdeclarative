@@ -18,7 +18,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTl, "qt.quick.timeline")
+Q_STATIC_LOGGING_CATEGORY(lcTl, "qt.quick.timeline")
 
 struct Update {
     Update(QQuickTimeLineValue *_g, qreal _v)

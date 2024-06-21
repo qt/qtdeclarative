@@ -16,7 +16,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTextDoc, "qt.quick.textdocument")
+Q_STATIC_LOGGING_CATEGORY(lcTextDoc, "qt.quick.textdocument")
 
 using namespace Qt::StringLiterals;
 

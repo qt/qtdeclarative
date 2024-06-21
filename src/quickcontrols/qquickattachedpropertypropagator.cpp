@@ -12,7 +12,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcAttached, "qt.quick.controls.attachedpropertypropagator")
+Q_STATIC_LOGGING_CATEGORY(lcAttached, "qt.quick.controls.attachedpropertypropagator")
 
 /*!
     \class QQuickAttachedPropertyPropagator

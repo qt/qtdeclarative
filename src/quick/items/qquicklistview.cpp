@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 #define QML_FLICK_SNAPONETHRESHOLD 30
 #endif
 
-Q_LOGGING_CATEGORY(lcEvents, "qt.quick.listview.events")
+Q_STATIC_LOGGING_CATEGORY(lcEvents, "qt.quick.listview.events")
 
 class FxListItemSG;
 

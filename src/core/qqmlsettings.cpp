@@ -200,7 +200,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(lcQmlSettings, "qt.core.settings")
+Q_STATIC_LOGGING_CATEGORY(lcQmlSettings, "qt.core.settings")
 
 static constexpr const int settingsWriteDelay = 500;
 

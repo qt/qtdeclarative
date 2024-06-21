@@ -12,7 +12,7 @@
 #include <QtGui/QWindow>
 #include <QtQuick/QSGSimpleRectNode>
 
-Q_LOGGING_CATEGORY(lc2DRender, "qt.scenegraph.softwarecontext.abstractrenderer")
+Q_STATIC_LOGGING_CATEGORY(lc2DRender, "qt.scenegraph.softwarecontext.abstractrenderer")
 
 QT_BEGIN_NAMESPACE
 
