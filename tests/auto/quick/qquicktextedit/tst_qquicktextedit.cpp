@@ -6131,20 +6131,26 @@ void tst_qquicktextedit::embeddedImages_data()
 {
     QTest::addColumn<QUrl>("qmlfile");
     QTest::addColumn<QString>("error");
-    QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "";
+    QTest::addColumn<QSize>("expectedImageSize");
+
+    QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "" << QSize(100, 100);
     QTest::newRow("local-error") << testFileUrl("embeddedImagesLocalError.qml")
-        << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML TextEdit: Cannot open: " + testFileUrl("http/notexists.png").toString();
-    QTest::newRow("local-relative") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
-    QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
+        << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML TextEdit: Cannot open: " + testFileUrl("http/notexists.png").toString()
+        << QSize();
+    QTest::newRow("local-relative") << testFileUrl("embeddedImagesLocalRelative.qml") << "" << QSize(100, 100);
+    QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "" << QSize(100, 100);
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
-        << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML TextEdit: Error transferring {{ServerBaseUrl}}/notexists.png - server replied: Not found";
-    QTest::newRow("remote-relative") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
+        << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML TextEdit: Error transferring {{ServerBaseUrl}}/notexists.png - server replied: Not found"
+        << QSize();
+    QTest::newRow("remote-relative") << testFileUrl("embeddedImagesRemoteRelative.qml") << "" << QSize(100, 100);
+    QTest::newRow("resource") << testFileUrl("embeddedImageResource.qml") << "" << QSize(16, 16);
 }
 
 void tst_qquicktextedit::embeddedImages()
 {
     QFETCH(QUrl, qmlfile);
     QFETCH(QString, error);
+    QFETCH(QSize, expectedImageSize);
 
     TestHTTPServer server;
     QVERIFY2(server.listen(), qPrintable(server.errorString()));
@@ -6169,12 +6175,19 @@ void tst_qquicktextedit::embeddedImages()
 
     QTRY_COMPARE(textObject->resourcesLoading(), 0);
 
-    QPixmap pm(testFile("http/exists.png"));
-    if (error.isEmpty()) {
-        QCOMPARE(textObject->width(), pm.width());
-        QCOMPARE(textObject->height(), pm.height());
+    if (expectedImageSize.isValid()) {
+        QTextDocument *doc = textObject->textDocument()->textDocument();
+        QVERIFY(doc);
+        const auto formats = doc->allFormats();
+        const auto it = std::find_if(formats.begin(), formats.end(), [](const auto &format){
+            return format.objectType() == QTextFormat::ImageObject;
+        });
+        QCOMPARE_NE(it, formats.end());
+        const QTextImageFormat format = (*it).toImageFormat();
+        QImage image = doc->resource(QTextDocument::ImageResource, format.name()).value<QImage>();
+        qCDebug(lcTests) << "found image?" << format.name() << image;
+        QCOMPARE(image.size(), expectedImageSize);
     } else {
-        QVERIFY(16 != pm.width()); // check test is effective
         QCOMPARE(textObject->width(), 16); // default size of QTextDocument broken image icon
         QCOMPARE(textObject->height(), 16);
     }
