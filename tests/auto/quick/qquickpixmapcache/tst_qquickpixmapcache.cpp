@@ -140,6 +140,11 @@ void tst_qquickpixmapcache::single()
     QFETCH(bool, exists);
     QFETCH(bool, neterror);
 
+#if !QT_CONFIG(qml_network)
+    if (target.scheme() == "http")
+        QSKIP("Skipping due to lack of QML network feature");
+#endif
+
     QString expectedError;
     if (neterror) {
         expectedError = "Error transferring " + target.toString() + " - server replied: Not found";
@@ -227,6 +232,11 @@ void tst_qquickpixmapcache::parallel()
     QFETCH(QUrl, target2);
     QFETCH(int, incache);
     QFETCH(int, cancel);
+
+#if !QT_CONFIG(qml_network)
+    if (target1.scheme() == "http" || target2.scheme() == "http")
+        QSKIP("Skipping due to lack of QML network feature");
+#endif
 
     QList<QUrl> targets;
     targets << target1 << target2;
