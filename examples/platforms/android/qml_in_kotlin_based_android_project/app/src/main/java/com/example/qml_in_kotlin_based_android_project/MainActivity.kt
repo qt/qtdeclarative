@@ -27,8 +27,8 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
     private var m_qtQuickView: QtQuickView? = null
     //! [qmlComponent]
     private var m_mainQmlComponent: Main = Main()
-    //! [qmlComponent]
     private val m_secondQmlComponent: Second = Second()
+    //! [qmlComponent]
     private val m_statusNames = hashMapOf(
         QtQmlStatus.READY to "READY",
         QtQmlStatus.LOADING to "LOADING",
@@ -54,8 +54,8 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         // listener implemented below in OnStatusChanged
         //! [setStatusChangeListener]
         m_mainQmlComponent.setStatusChangeListener(this)
-        //! [setStatusChangeListener]
         m_secondQmlComponent.setStatusChangeListener(this)
+        //! [setStatusChangeListener]
 
         //! [layoutParams]
         val params: ViewGroup.LayoutParams = FrameLayout.LayoutParams(
@@ -176,7 +176,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         //! [qml signal listener]
     }
     //! [onStatusChanged]
-
+    //! [switchLoadedComponent]
     private fun loadSecondQml() {
         m_qtQuickView!!.loadComponent(m_secondQmlComponent)
 
@@ -192,11 +192,13 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         m_binding.colorBox.setBackgroundColor(Color.parseColor("#00ffffff"))
         m_binding.getPropertyValueText.text = ""
     }
-
+    //! [switchLoadedComponent]
+    //! [gridRotate]
     private fun rotateQmlGrid() {
         val previousGridRotation = m_secondQmlComponent.gridRotation
         if (previousGridRotation != null) {
             m_secondQmlComponent.gridRotation = previousGridRotation + 45
         }
     }
+    //! [gridRotate]
 }

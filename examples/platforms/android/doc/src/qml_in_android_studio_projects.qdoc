@@ -150,7 +150,13 @@
     takes a QtQmlComponent as an argument. This will load the QtQmlComponent
     that was given and unloads the previous one, if there is one.
 
+    For a Java-based project:
+
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java switchLoadedComponent
+
+    For a Kotlin-based project:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt switchLoadedComponent
 
     \section1 Getting and setting QML component property values
 
@@ -178,13 +184,17 @@
     object of the m_mainQmlComponent and then show it to the user on the
     Java/Kotlin Android side of the application.
 
-    \c m_secondQmlComponent has a \l {Grid QML Type}{Grid} QML component which we can rotate
-    from the Java side with the generated
+    \c m_secondQmlComponent has a \l {Grid QML Type}{Grid} QML component
+    which we can rotate from the Java side with the generated
     \c m_secondQmlComponent.setGridRotation() method.
 
-    For Java:
+    For a Java-based project:
 
     \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java gridRotate
+
+    For a Kotlin-based project:
+
+    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt gridRotate
 
     \section1 Signal listeners
 
