@@ -16,7 +16,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQuickPlatformFontDialog, "qt.quick.dialogs.quickplatformfontdialog")
+Q_STATIC_LOGGING_CATEGORY(lcQuickPlatformFontDialog, "qt.quick.dialogs.quickplatformfontdialog")
 
 /*!
     \class QQuickPlatformFontDialog

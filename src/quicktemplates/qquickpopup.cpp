@@ -25,8 +25,8 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcDimmer, "qt.quick.controls.popup.dimmer")
-Q_LOGGING_CATEGORY(lcQuickPopup, "qt.quick.controls.popup")
+Q_STATIC_LOGGING_CATEGORY(lcDimmer, "qt.quick.controls.popup.dimmer")
+Q_STATIC_LOGGING_CATEGORY(lcQuickPopup, "qt.quick.controls.popup")
 
 /*!
     \qmltype Popup

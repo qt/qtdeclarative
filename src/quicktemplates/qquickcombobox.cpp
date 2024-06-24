@@ -29,7 +29,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobox.calculatewidesttextwidth")
+Q_STATIC_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobox.calculatewidesttextwidth")
 
 /*!
     \qmltype ComboBox

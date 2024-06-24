@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \sa accepted()
 */
 
-Q_LOGGING_CATEGORY(qtLabsPlatformDialogs, "qt.labs.platform.dialogs")
+Q_STATIC_LOGGING_CATEGORY(qtLabsPlatformDialogs, "qt.labs.platform.dialogs")
 
 QQuickLabsPlatformDialog::QQuickLabsPlatformDialog(QPlatformTheme::DialogType type, QObject *parent)
     : QObject(parent),

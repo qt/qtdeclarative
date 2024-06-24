@@ -12,7 +12,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTumbler, "qt.quick.controls.tumbler")
+Q_STATIC_LOGGING_CATEGORY(lcTumbler, "qt.quick.controls.tumbler")
 
 /*!
     \qmltype Tumbler

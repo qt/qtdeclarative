@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcNativeMenuItem, "qt.quick.controls.nativemenuitem")
+Q_STATIC_LOGGING_CATEGORY(lcNativeMenuItem, "qt.quick.controls.nativemenuitem")
 
 /*!
     \class QQuickNativeMenuItem

@@ -17,7 +17,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcAction, "qt.quick.controls.action")
+Q_STATIC_LOGGING_CATEGORY(lcAction, "qt.quick.controls.action")
 
 /*!
     \qmltype Action

@@ -14,7 +14,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcPopupPositioner, "qt.quick.controls.popuppositioner")
+Q_STATIC_LOGGING_CATEGORY(lcPopupPositioner, "qt.quick.controls.popuppositioner")
 
 static const QQuickItemPrivate::ChangeTypes AncestorChangeTypes = QQuickItemPrivate::Geometry
                                                                   | QQuickItemPrivate::Parent

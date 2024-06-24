@@ -9,7 +9,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcPane, "qt.quick.controls.pane")
+Q_STATIC_LOGGING_CATEGORY(lcPane, "qt.quick.controls.pane")
 
 /*!
     \qmltype Pane

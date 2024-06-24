@@ -19,7 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcPopupWindow, "qt.quick.controls.popup.window")
+Q_STATIC_LOGGING_CATEGORY(lcPopupWindow, "qt.quick.controls.popup.window")
 
 class QQuickPopupWindowPrivate : public QQuickWindowQmlImplPrivate
 {

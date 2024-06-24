@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
         {Focus Management in Qt Quick Controls}
 */
 
-Q_LOGGING_CATEGORY(lcMenuBar, "qt.quick.controls.menubar")
+Q_STATIC_LOGGING_CATEGORY(lcMenuBar, "qt.quick.controls.menubar")
 
 static const char* kCreatedFromDelegate = "_qt_createdFromDelegate";
 
