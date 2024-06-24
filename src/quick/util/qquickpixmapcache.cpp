@@ -528,7 +528,6 @@ QQuickPixmapReader::~QQuickPixmapReader()
         delete reply;
     }
     jobs.clear();
-#if QT_CONFIG(qml_network)
 
     const auto cancelJob = [this](QQuickPixmapReply *reply) {
         if (reply->loading) {
@@ -537,12 +536,13 @@ QQuickPixmapReader::~QQuickPixmapReader()
         }
     };
 
+#if QT_CONFIG(qml_network)
     for (auto *reply : std::as_const(networkJobs))
         cancelJob(reply);
+#endif
 
     for (auto *reply : std::as_const(asyncResponses))
         cancelJob(reply);
-#endif
     if (threadObject())
         threadObject()->processJobs();
     mutex.unlock();
@@ -550,7 +550,6 @@ QQuickPixmapReader::~QQuickPixmapReader()
     eventLoopQuitHack->deleteLater();
     wait();
 
-#if QT_CONFIG(qml_network)
     // While we've been waiting, the other thread may have added
     // more replies. No one will care about them anymore.
 
@@ -559,16 +558,17 @@ QQuickPixmapReader::~QQuickPixmapReader()
             reply->data->reply = nullptr;
         delete reply;
     };
-
+#if QT_CONFIG(qml_network)
     for (QQuickPixmapReply *reply : std::as_const(networkJobs))
         deleteReply(reply);
-
+#endif
     for (QQuickPixmapReply *reply : std::as_const(asyncResponses))
         deleteReply(reply);
 
+#if QT_CONFIG(qml_network)
     networkJobs.clear();
-    asyncResponses.clear();
 #endif
+    asyncResponses.clear();
 }
 
 #if QT_CONFIG(qml_network)
@@ -729,7 +729,9 @@ void QQuickPixmapReader::processJobs()
                         // cancel any jobs already started
                         reply->close();
                     }
-                } else {
+                } else
+#endif
+                {
                     QQuickImageResponse *asyncResponse = asyncResponses.key(job);
                     if (asyncResponse) {
                         asyncResponses.remove(asyncResponse);
@@ -737,7 +739,6 @@ void QQuickPixmapReader::processJobs()
                     }
                 }
                 PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(job->url));
-#endif
                 // deleteLater, since not owned by this thread
                 job->deleteLater();
             }
