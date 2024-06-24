@@ -193,6 +193,11 @@ void tst_qquickimage::imageSource()
     QFETCH(QString, error);
     QFETCH(bool, retainWhileLoading);
 
+#if !QT_CONFIG(qml_network)
+    if (remote)
+        QSKIP("Skipping due to lack of QML network feature");
+#endif
+
     TestHTTPServer server;
     if (remote) {
         QVERIFY2(server.listen(), qPrintable(server.errorString()));
@@ -566,6 +571,10 @@ void tst_qquickimage::tiling_QTBUG_6716_data()
 
 void tst_qquickimage::noLoading()
 {
+#if !QT_CONFIG(qml_network)
+    QSKIP("Skipping due to lack of QML network feature");
+#endif
+
     qRegisterMetaType<QQuickImageBase::Status>();
 
     TestHTTPServer server;
@@ -708,6 +717,10 @@ void tst_qquickimage::sourceSize_QTBUG_16389()
 // QTBUG-15690
 void tst_qquickimage::nullPixmapPaint()
 {
+#if !QT_CONFIG(qml_network)
+    QSKIP("Skipping due to lack of QML network feature");
+#endif
+
     QScopedPointer<QQuickView> window(new QQuickView(nullptr));
     window->setSource(testFileUrl("nullpixmap.qml"));
     window->show();
@@ -730,6 +743,10 @@ void tst_qquickimage::nullPixmapPaint()
 
 void tst_qquickimage::imageCrash_QTBUG_22125()
 {
+#if !QT_CONFIG(qml_network)
+    QSKIP("Skipping due to lack of QML network feature");
+#endif
+
     TestHTTPServer server;
     QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
@@ -842,6 +859,10 @@ void tst_qquickimage::sourceSizeChanges()
     QTRY_COMPARE(sourceSizeSpy.size(), 3);
 
     // Remote
+#if !QT_CONFIG(qml_network)
+    QSKIP("Skipping due to lack of QML network feature");
+#endif
+
     ctxt->setContextProperty("srcImage", server.url("/heart.png"));
     QTRY_COMPARE(img->status(), QQuickImage::Ready);
     QTRY_COMPARE(sourceSizeSpy.size(), 4);
@@ -975,6 +996,10 @@ void tst_qquickimage::progressAndStatusChanges()
     QTRY_COMPARE(statusSpy.size(), 1);
 
     // Loading remote file
+#if !QT_CONFIG(qml_network)
+    QSKIP("Skipping due to lack of QML network feature");
+#endif
+
     ctxt->setContextProperty("srcImage", server.url("/heart.png"));
     QTRY_COMPARE(obj->status(), QQuickImage::Loading);
     QTRY_COMPARE(obj->progress(), 0.0);
