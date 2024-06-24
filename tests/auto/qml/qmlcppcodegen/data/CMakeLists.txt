@@ -183,6 +183,7 @@ set(qml_files
     jsMathObject.qml
     jsimport.qml
     jsmoduleimport.qml
+    jsonArrayToStringList.qml
     layouts.qml
     letAndConst.qml
     library.js

@@ -2085,12 +2085,11 @@ bool QQmlJSCodeGenerator::inlineConsoleMethod(const QString &name, int argc, int
     m_body += u"        const QString message = ";
 
     const auto stringConversion = [&](int i) -> QString {
-        const QQmlJSScope::ConstPtr stored = m_state.readRegister(argv + i).storedType();
-        if (m_typeResolver->equals(stored, m_typeResolver->stringType())) {
-            return convertStored(
-                    registerType(argv + i).storedType(),
-                    m_typeResolver->stringType(), consumedRegisterVariable(argv + i));
-        } else if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
+        const QQmlJSScope::ConstPtr read = m_state.readRegister(argv + i).storedType();
+        const QQmlJSScope::ConstPtr actual = registerType(argv + i).storedType();
+        if (m_typeResolver->equals(read, m_typeResolver->stringType())) {
+            return convertStored(actual, read, consumedRegisterVariable(argv + i));
+        } else if (actual->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
             addInclude(u"QtQml/qjslist.h"_s);
             return u"u'[' + QJSList(&"_s + registerVariable(argv + i)
                     + u", aotContext->engine).toString() + u']'"_s;

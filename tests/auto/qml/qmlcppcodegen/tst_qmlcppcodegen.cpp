@@ -7,6 +7,7 @@
 #include <data/enumProperty.h>
 #include <data/enumproblems.h>
 #include <data/getOptionalLookup.h>
+#include <data/listprovider.h>
 #include <data/objectwithmethod.h>
 #include <data/resettable.h>
 #include <data/weathermoduleurl.h>
@@ -148,6 +149,7 @@ private slots:
     void jsImport();
     void jsMathObject();
     void jsmoduleImport();
+    void jsonArrayToStringList();
     void lengthAccessArraySequenceCompat();
     void letAndConst();
     void listAsArgument();
@@ -2890,6 +2892,29 @@ void tst_QmlCppCodegen::jsmoduleImport()
     QJSValue result = val.call();
     QVERIFY(result.isBool());
     QVERIFY(result.toBool());
+}
+
+void tst_QmlCppCodegen::jsonArrayToStringList()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/jsonArrayToStringList.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QTest::ignoreMessage(QtDebugMsg, "json [1,aa,2,null,null]");
+
+    // TODO: Enable when fixed. We cannot QEXPECT_FAIL on ignoreMessage
+    // QTest::ignoreMessage(QtDebugMsg, "strings [1,aa,2,null,null]");
+    // QTest::ignoreMessage(QtDebugMsg, "strings2 [1,aa,2,null,null]");
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QListProvider *provider = qobject_cast<QListProvider *>(object.data());
+    QCOMPARE(provider->json(), QJsonDocument::fromJson("[1,\"aa\",2,null,null]").array());
+    QEXPECT_FAIL("", "assignment to string list is broken", Continue);
+    QCOMPARE(provider->strings(), (QStringList { u"1"_s, u"aa"_s, u"2"_s, u"null"_s, u"null"_s }));
+    QEXPECT_FAIL("", "assignment to string list is broken", Continue);
+    QCOMPARE(provider->property("strings2").toStringList(),
+             (QStringList { u"1"_s, u"aa"_s, u"2"_s, u"null"_s, u"null"_s }));
 }
 
 void tst_QmlCppCodegen::lengthAccessArraySequenceCompat()
