@@ -27,3 +27,6 @@ opensuse-leap
 [popupWindowFocus]
 * # QTBUG-121363
 
+# QTBUG-126667
+[popupWindowPositioning]
+linux
