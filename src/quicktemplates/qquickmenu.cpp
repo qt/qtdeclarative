@@ -210,8 +210,8 @@ static const int SUBMENU_DELAY = 225;
     more about these options \l{Popup type}{here.}
 
     Whether a menu will be able to use the preferred type depends on the platform.
-    \c Popup.Item is supported on all platforms, but \c Popup.Window and \c Popup.Native
-    are normally only supported on desktop platforms. Additionally, if the menu is inside
+    \c Popup.Item is supported on all platforms, but \c Popup.Window is
+    normally only supported on desktop platforms. Additionally, if the menu is inside
     a \l {Native menu bars}{native menubar}, the menu will be native as well. And if
     the menu is a sub-menu inside another menu, the parent (or root) menu will decide the type.
 
