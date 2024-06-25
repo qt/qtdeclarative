@@ -1202,13 +1202,15 @@
 
     Convenience function for doing:
     \code
-    modelIndex(cell.y, cell.x)
+    index(cell.y, cell.x)
     \endcode
 
     A cell is simply a \l point that combines row and column into
     a single type.
 
     \note \c {point.x} will map to the column, and \c {point.y} will map to the row.
+
+    \sa index()
 */
 
 /*!
