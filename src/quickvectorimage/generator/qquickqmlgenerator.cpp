@@ -523,7 +523,7 @@ bool QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
                 stream() << "Translate { x: " << -info.viewBox.x() << "; y: " << -info.viewBox.y() << " },";
             stream() << "Scale { xScale: width / " << info.viewBox.width() << "; yScale: height / " << info.viewBox.height() << " }";
             m_indentLevel--;
-            stream() << "]";;
+            stream() << "]";
         }
 
         generateNodeBase(info);

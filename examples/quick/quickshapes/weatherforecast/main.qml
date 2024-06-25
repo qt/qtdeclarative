@@ -19,7 +19,6 @@ Window {
     visible: true
     color: "white"
 
-
     FontLoader {
         id: workSansRegular
         source: "assets/WorkSans-Regular.ttf"
@@ -176,8 +175,6 @@ Window {
                                 itemX: 0.796
                                 itemY: 0.543
                             }
-
-
                             ListElement {
                                 itemSource: "Sun.qml"
                                 placeName: "Madrid"
@@ -185,7 +182,6 @@ Window {
                                 itemX: 0.140
                                 itemY: 0.830
                             }
-
                             ListElement {
                                 itemSource: "CloudWithSnow.qml"
                                 placeName: "Reykjavik"
@@ -206,7 +202,6 @@ Window {
                             }
                         }
                     }
-
                 } // end globalLayer
             } // end Europe
 

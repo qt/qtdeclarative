@@ -3,15 +3,22 @@
 
 import QtQuick
 import QtQuick.Shapes
-Europe_generated {
+Item {
     id: map
+
+    implicitWidth: mapShape.implicitWidth
+    implicitHeight: mapShape.implicitHeight
+
+    Europe_generated {
+        id: mapShape
+    }
+
     property int containsMode: Shape.FillContains
 
     property bool zoomedIn: false
     signal zoomTo(Item child, string name, var childRect, var textRect)
 
-
-property var lookupTable: {
+    property var lookupTable: {
         "fi"         : "Finland"
         ,"se"         : "Sweden"
         ,"dk"         : "Denmark"
@@ -86,7 +93,7 @@ property var lookupTable: {
         property color prevColor
         property color selectedColor: "#dbd6c8"
 
-        acceptedButtons:  Qt.LeftButton
+        acceptedButtons: Qt.LeftButton
 
         function traverseChildren(item, x, y) {
             let p = item.mapFromItem(mouseArea, x, y)
