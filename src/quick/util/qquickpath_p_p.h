@@ -36,7 +36,10 @@ public:
     static QQuickPathPrivate* get(QQuickPath *path) { return path->d_func(); }
     static const QQuickPathPrivate* get(const QQuickPath *path) { return path->d_func(); }
 
-    QQuickPathPrivate() {}
+    QQuickPathPrivate()
+        : componentComplete(true), isShapePath(false), simplify(false)
+          , processPending(false), asynchronous(false)
+    {}
 
     QPainterPath _path;
     QList<QQuickPathElement*> _pathElements;
@@ -51,9 +54,11 @@ public:
     qreal pathLength = 0;
     QSizeF scale = QSizeF(1, 1);
     bool closed = false;
-    bool componentComplete = true;
-    bool isShapePath = false;
-    bool simplify = false;
+    bool componentComplete : 1;
+    bool isShapePath : 1;
+    bool simplify : 1;
+    bool processPending : 1;
+    bool asynchronous : 1;
 };
 
 QT_END_NAMESPACE
