@@ -4,6 +4,7 @@
 #include <QtTest/qtest.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/QConcatenateTablesProxyModel>
+#include <QtCore/qtimer.h>
 #include <QtGui/QStandardItemModel>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlapplicationengine.h>
@@ -11,10 +12,16 @@
 #include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickitemview_p_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
+#include <QtQuickTest/quicktest.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtTest/QSignalSpy>
 
 #include <forward_list>
+
+using namespace QQuickVisualTestUtils;
 
 class tst_QQmlDelegateModel : public QQmlDataTest
 {
@@ -25,6 +32,8 @@ public:
 
 private slots:
     void resettingRolesRespected();
+    void resetInQAIMConstructor();
+    void reset();
     void valueWithoutCallingObjectFirst_data();
     void valueWithoutCallingObjectFirst();
     void qtbug_86017();
@@ -44,16 +53,9 @@ private slots:
     void viewUpdatedOnDelegateChoiceAffectingRoleChange();
 };
 
-class AbstractItemModel : public QAbstractItemModel
+class BaseAbstractItemModel : public QAbstractItemModel
 {
-    Q_OBJECT
 public:
-    AbstractItemModel()
-    {
-        for (int i = 0; i < 3; ++i)
-            mValues.append(QString::fromLatin1("Item %1").arg(i));
-    }
-
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override
     {
         if (parent.isValid())
@@ -91,8 +93,19 @@ public:
         return mValues.at(index.row());
     }
 
-private:
+protected:
     QVector<QString> mValues;
+};
+
+class AbstractItemModel : public BaseAbstractItemModel
+{
+    Q_OBJECT
+public:
+    AbstractItemModel()
+    {
+        for (int i = 0; i < 3; ++i)
+            mValues.append(QString::fromLatin1("Item %1").arg(i));
+    }
 };
 
 tst_QQmlDelegateModel::tst_QQmlDelegateModel()
@@ -153,7 +166,109 @@ void tst_QQmlDelegateModel::resettingRolesRespected()
     QObject *root = engine.rootObjects().constFirst();
     QVERIFY(!root->property("success").toBool());
     model->change();
-    QTRY_VERIFY(root->property("success").toBool());
+    QTRY_VERIFY_WITH_TIMEOUT(root->property("success").toBool(), 100);
+}
+
+class ResetInConstructorModel : public BaseAbstractItemModel
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    ResetInConstructorModel()
+    {
+        beginResetModel();
+        QTimer::singleShot(0, this, &ResetInConstructorModel::finishReset);
+    }
+
+private:
+    void finishReset()
+    {
+        mValues.append("First");
+        endResetModel();
+    }
+};
+
+void tst_QQmlDelegateModel::resetInQAIMConstructor()
+{
+    qmlRegisterTypesAndRevisions<ResetInConstructorModel>("Test", 1);
+
+    QQuickApplicationHelper helper(this, "resetInQAIMConstructor.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *listView = window->property("listView").value<QQuickListView *>();
+    QVERIFY(listView);
+    QTRY_VERIFY_WITH_TIMEOUT(listView->itemAtIndex(0), 100);
+    QQuickItem *firstDelegateItem = listView->itemAtIndex(0);
+    QVERIFY(firstDelegateItem);
+    QCOMPARE(firstDelegateItem->property("display").toString(), "First");
+}
+
+class ResettableModel : public BaseAbstractItemModel
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    ResettableModel()
+    {
+        mValues.append("First");
+    }
+
+    void callBeginResetModel()
+    {
+        beginResetModel();
+        mValues.clear();
+    }
+
+    void appendData()
+    {
+        mValues.append(QString::fromLatin1("Item %1").arg(mValues.size()));
+    }
+
+    void callEndResetModel()
+    {
+        endResetModel();
+    }
+};
+
+// Tests that everything works as expected when calling beginResetModel/endResetModel
+// after the QAIM subclass constructor has run.
+void tst_QQmlDelegateModel::reset()
+{
+    qmlRegisterTypesAndRevisions<ResettableModel>("Test", 1);
+
+    QQuickApplicationHelper helper(this, "reset.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *listView = window->property("listView").value<QQuickListView *>();
+    QVERIFY(listView);
+    QQuickItem *firstDelegateItem = listView->itemAtIndex(0);
+    QVERIFY(firstDelegateItem);
+    QCOMPARE(firstDelegateItem->property("display").toString(), "First");
+
+    const auto delegateModel = QQuickItemViewPrivate::get(listView)->model;
+    QSignalSpy rootIndexChangedSpy(delegateModel, SIGNAL(rootIndexChanged()));
+    QVERIFY(rootIndexChangedSpy.isValid());
+
+    auto *model = listView->model().value<ResettableModel *>();
+    model->callBeginResetModel();
+    model->appendData();
+    model->callEndResetModel();
+    // This is verifies that handleModelReset isn't called
+    // more than once during this process, since it unconditionally emits rootIndexChanged.
+    QCOMPARE(rootIndexChangedSpy.count(), 1);
+
+    QTRY_VERIFY_WITH_TIMEOUT(listView->itemAtIndex(0), 100);
+    firstDelegateItem = listView->itemAtIndex(0);
+    QVERIFY(firstDelegateItem);
+    QCOMPARE(firstDelegateItem->property("display").toString(), "Item 0");
 }
 
 void tst_QQmlDelegateModel::valueWithoutCallingObjectFirst_data()
