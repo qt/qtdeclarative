@@ -231,6 +231,8 @@ private slots:
     void proportionalWheelScrolling();
     void touchCancel();
     void pixelAlignedEndPoints();
+    void nestedWheelEventPropagation_data();
+    void nestedWheelEventPropagation();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -3431,6 +3433,73 @@ void tst_qquickflickable::pixelAlignedEndPoints()
     QVERIFY(!flickable->isAtYEnd());
     QCOMPARE(isAtEndSpy.count(), 2);
     QCOMPARE(isAtBeginningSpy.count(), 2);}
+
+void tst_qquickflickable::nestedWheelEventPropagation_data()
+{
+    QTest::addColumn<bool>("isHorizontal");
+    QTest::addColumn<bool>("isInverted");
+    QTest::addColumn<bool>("offsetStart");
+    QTest::newRow("top") << false << false << false;
+    QTest::newRow("bottom") << false << true << false;
+    QTest::newRow("left") << true << false << false;
+    QTest::newRow("right") << true << true << false;
+    QTest::newRow("top with offset") << false << false << true;
+    QTest::newRow("bottom with offset") << false << true << true;
+    QTest::newRow("left with offset") << true << false << true;
+    QTest::newRow("right with offset") << true << true << true;
+}
+
+void tst_qquickflickable::nestedWheelEventPropagation()
+{
+    // Arrange
+    QFETCH(bool, isHorizontal);
+    QFETCH(bool, isInverted);
+    QFETCH(bool, offsetStart);
+
+    QQuickView view;
+    view.setSource(testFileUrl("nestedWheel.qml"));
+    QTRY_COMPARE(view.status(), QQuickView::Ready);
+    QQuickVisualTestUtils::centerOnScreen(&view);
+    QQuickVisualTestUtils::moveMouseAway(&view);
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QVERIFY(view.rootObject());
+
+    QQuickMouseArea *outer = qobject_cast<QQuickMouseArea *>(view.rootObject());
+    QVERIFY(outer);
+
+    QQuickFlickable *inner = outer->findChild<QQuickFlickable *>("innerFlickable");
+    QVERIFY(inner);
+    inner->setFlickableDirection(isHorizontal ? QQuickFlickable::HorizontalFlick
+                                              : QQuickFlickable::VerticalFlick);
+
+    // Setting isInverted property moves the Flickable viewable area to the opposite corner
+    inner->setProperty("isInverted", isInverted);
+    QCOMPARE(inner->contentX(), isInverted ? 100 : 0);
+    QCOMPARE(inner->contentY(), isInverted ? 100 : 0);
+
+    if (offsetStart) {
+        // Set starting position slightly away from the bound
+        inner->setContentX(isInverted ? 99.0 : 1.0);
+        inner->setContentY(isInverted ? 99.0 : 1.0);
+    }
+
+    QSignalSpy propagateSpy(outer, &QQuickMouseArea::wheel);
+
+    // Act
+    QPoint position(50, 50);
+    QWheelEvent event(position, view.mapToGlobal(position), QPoint(),
+                      QPoint(isHorizontal ? (isInverted ? -120 : 120) : 0,
+                             !isHorizontal ? (isInverted ? -120 : 120) : 0),
+                      Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+    event.setAccepted(false);
+    QGuiApplication::sendEvent(&view, &event);
+
+    // Assert
+    QCOMPARE(inner->isMoving(), offsetStart);
+    QCOMPARE(propagateSpy.count(), 1);
+}
 
 QTEST_MAIN(tst_qquickflickable)
 
