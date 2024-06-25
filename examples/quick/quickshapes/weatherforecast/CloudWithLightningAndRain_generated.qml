@@ -1,140 +1,151 @@
 // Copyright (C) 2023 Googlefonts
 // SPDX-License-Identifier: Apache-2.0
-// Generated from: assets/cloud-with-lightning-and-rain-svgrepo-com.svg
+// Generated from SVG file cloud-with-lightning-and-rain-svgrepo-com.svg
 import QtQuick
 import QtQuick.Shapes
 
 Item {
-    // viewBox 0, 0 128x128
-    // size 800x800
     implicitWidth: 800
     implicitHeight: 800
-    // START  type: DOC 0
-    DemoShape { //combined path container
-        transform: [
-            Scale { xScale: width / 128; yScale: height / 128 }
-        ]
-        // PATH visit  count: 27
+    transform: [
+        Scale { xScale: width / 128; yScale: height / 128 }
+    ]
+    DemoShape {
         ShapePath {
-            // boundingRect: 46.8504, 67.82 37.9392x46.8238
             strokeColor: "transparent"
             fillColor: "#fffeca18"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 78 67.82 L 55.17 71.79 C 55.17 71.79 47.57 91.15 47.1 92.46 C 46.63 93.77 46.65 95.84 48.72 95.84 C 51.35 95.84 64.7 95.77 64.7 95.77 C 64.7 95.77 61.46 111.4 61.27 112.8 C 61.08 114.2 62.58 115.43 63.9 114.02 C 65.22 112.61 83.41 89.23 84.2 88.09 C 85.61 86.05 84.25 84.17 82.65 84.08 C 81.05 83.99 70.33 84.22 70.33 84.22 L 78 67.82 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 78 67.82 L 55.17 71.79 L 47.1 92.46 Q 46.6655 93.671 46.9575 94.6413 Q 47.3182 95.84 48.72 95.84 L 57.6963 95.805 L 64.7 95.77 L 61.27 112.8 Q 61.1168 113.929 62.0187 114.464 Q 62.9612 115.023 63.9 114.02 L 74.2487 100.954 L 84.2 88.09 Q 85.1946 86.6509 84.5537 85.3538 Q 83.9609 84.1537 82.65 84.08 L 70.33 84.22 L 78 67.82 " }
         }
-        // PATH visit  count: 11
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 66.5578, 69.49 9.44218x14.9005
             strokeColor: "transparent"
             fillColor: "#fffdb900"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 71.92 70.54 C 71.92 70.54 66.83 81.8 66.64 82.44 C 66.08 84.34 68.54 85.11 69.24 83.57 C 69.94 82.02 76 69.49 76 69.49 L 71.92 70.54 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 71.92 70.54 L 66.64 82.44 Q 66.4418 83.1123 66.7116 83.6347 Q 66.9527 84.1017 67.4675 84.295 Q 67.9727 84.4847 68.4597 84.3103 Q 68.9898 84.1205 69.24 83.57 L 76 69.49 L 71.92 70.54 " }
         }
-        // PATH visit  count: 13
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 48.3858, 92.0244 17.1635x2.46762
             strokeColor: "transparent"
             fillColor: "#fffdb900"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 49.99 92.17 C 51.33 92.13 63.09 92.1 64.07 92.03 C 65.9 91.89 66.18 94.42 64.07 94.42 C 61.88 94.42 50.34 94.46 49.64 94.49 C 48.02 94.57 47.8 92.24 49.99 92.17 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 49.99 92.17 L 55.4823 92.1221 L 64.07 92.03 Q 64.7193 91.9803 65.1387 92.3444 Q 65.5192 92.6745 65.5475 93.1725 Q 65.5763 93.6783 65.2175 94.0269 Q 64.8129 94.42 64.07 94.42 L 56.2962 94.4437 L 49.64 94.49 Q 49.0607 94.5186 48.7033 94.1711 Q 48.3733 93.8502 48.3862 93.3863 Q 48.3997 92.9059 48.7836 92.5733 Q 49.2207 92.1946 49.99 92.17 " }
         }
-        // PATH visit  count: 13
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 52.8347, 68.3555 12.6443x20.6092
             strokeColor: "transparent"
             fillColor: "#ffffe36a"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 59.42 69.01 C 59.42 69.01 53.42 84.07 53.08 85.2 C 51.67 89.92 56.74 89.78 58.08 87.1 C 58.74 85.77 65.19 72.11 65.47 69.64 C 65.75 67.18 59.42 69.01 59.42 69.01 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 59.42 69.01 L 53.08 85.2 Q 52.0953 88.4962 54.5488 88.925 Q 55.5245 89.0955 56.5352 88.5975 Q 57.5916 88.0769 58.08 87.1 L 61.9175 78.7975 Q 65.2921 71.2096 65.47 69.64 Q 65.645 68.1025 62.55 68.4025 Q 61.0025 68.5525 59.42 69.01 " }
         }
-        // PATH visit  count: 13
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 57.598, 86.3211 4.2165x4.82538
             strokeColor: "transparent"
             fillColor: "#ffffe36a"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 61.01 86.57 C 60.15 85.98 59.11 86.5 58.48 87.49 C 57.85 88.48 56.93 90.09 58.34 90.94 C 59.61 91.7 60.73 90.17 61.23 89.46 C 61.72 88.75 62.35 87.48 61.01 86.57 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 61.01 86.57 Q 60.3881 86.1433 59.6587 86.4375 Q 58.974 86.7137 58.48 87.49 Q 57.7903 88.5738 57.645 89.2675 Q 57.4118 90.3805 58.34 90.94 Q 59.6399 91.7179 61.23 89.46 Q 62.5178 87.594 61.01 86.57 " }
         }
-        // PATH visit  count: 16
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 65.0829, 89.7223 7.8611x17.1865
             strokeColor: "transparent"
             fillColor: "#ffffe36a"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 71.34 89.8 C 69.05 89.31 68.31 91.21 67.82 93.46 C 67.33 95.71 65.49 102.99 65.15 104.79 C 64.66 107.32 66.98 107.68 67.97 105.35 C 68.71 103.61 71.92 95.76 72.33 94.51 C 72.96 92.62 73.66 90.3 71.34 89.8 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 71.34 89.8 Q 69.7762 89.4654 68.905 90.6025 Q 68.2586 91.4462 67.82 93.46 L 66.6591 98.3441 L 65.15 104.79 Q 64.9752 105.692 65.2447 106.272 Q 65.4899 106.8 66.005 106.893 Q 66.5173 106.984 67.0428 106.601 Q 67.6158 106.184 67.97 105.35 L 70.2738 99.7462 L 72.33 94.51 Q 72.9795 92.5614 72.9413 91.6338 Q 72.8793 90.1317 71.34 89.8 " }
         }
-        // PATH visit  count: 26
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 4.48158, 6.41669 120.262x63.9578
             strokeColor: "transparent"
             fillColor: "#ffe4eaee"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 107.92 46.26 C 107.92 46.26 110.52 11.28 80.61 6.84 C 53.72 2.85 48.44 28.38 48.44 28.38 C 48.44 28.38 38.28 26.01 30.98 32.53 C 23.73 39.01 24.29 46.68 24.29 46.68 C 24.29 46.68 6.41 43.86 4.58 59.21 C 2.87 73.55 24.01 69.98 24.01 69.98 L 124.39 62.59 C 124.39 62.59 126.77 55.05 119.18 49.36 C 114.67 45.97 107.92 46.26 107.92 46.26 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 107.92 46.26 Q 108.57 37.515 105.481 28.215 Q 99.3037 9.615 80.61 6.84 Q 63.8037 4.34625 54.4412 16.1138 Q 49.76 21.9975 48.44 28.38 Q 45.9 27.7875 42.4475 28.01 Q 35.5425 28.455 30.98 32.53 Q 26.4487 36.58 24.9163 42.035 Q 24.15 44.7625 24.29 46.68 Q 19.82 45.975 15.1213 47.1888 Q 5.72375 49.6162 4.58 59.21 Q 3.51125 68.1725 13.6538 69.9725 Q 18.725 70.8725 24.01 69.98 L 124.39 62.59 Q 124.985 60.705 124.631 58.1087 Q 123.924 52.9162 119.18 49.36 Q 116.361 47.2412 111.859 46.5387 Q 109.607 46.1875 107.92 46.26 " }
         }
-        // PATH visit  count: 49
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 4.42853, 47.15 120.397x26.7991
             strokeColor: "transparent"
             fillGradient: RadialGradient {
                 centerX: 65.811
                 centerY: 75.277
                 centerRadius: 29.434
-                focalX: centerX; focalY: centerY
+                focalX:52.634
+                focalY:75.403
                 GradientStop { position: 0.193; color: "#ffffe366" }
                 GradientStop { position: 0.331; color: "#ffeddd82" }
                 GradientStop { position: 0.571; color: "#ffd0d4ad" }
                 GradientStop { position: 0.759; color: "#ffbfcfc7" }
                 GradientStop { position: 0.87; color: "#ffb8cdd1" }
             }
+            fillTransform: PlanarTransform.fromAffineMatrix(0.0288, -0.9996, 1.4975, 0.0432, -48.813, 137.809)
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 53.81 54.19 C 54.65 53.91 59.44 58 73.24 58.13 C 92.2 58.32 106.56 47.15 106.56 47.15 C 106.56 47.15 107.04 50.55 105.53 52.97 C 103.65 55.97 100.74 56.54 100.74 56.54 C 100.74 56.54 106 60.2 113.22 59.64 C 119.73 59.13 124.44 56.92 124.44 56.92 C 124.44 56.92 125.07 60.13 124.72 63.26 C 124.02 69.5 120.36 72.04 116.32 72.5 C 113.35 72.84 87.98 72.96 77.56 73.06 C 68.17 73.15 20.32 74.35 15.43 73.81 C 10.36 73.25 6.51 70.2 5.11 65.83 C 4.04 62.52 4.55 60.39 4.55 60.39 C 4.55 60.39 13.87 62.86 19.1 62.27 C 25.67 61.52 30.08 57.39 30.08 57.39 C 30.08 57.39 34.02 59.64 42.75 58.89 C 50.26 58.23 53.81 54.19 53.81 54.19 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 53.81 54.19 Q 54.0186 54.1205 55.2436 54.6621 Q 58.3194 56.022 61.2293 56.7474 Q 66.5212 58.0667 73.24 58.13 Q 85.09 58.2487 97.01 52.7113 Q 102.97 49.9425 106.56 47.15 Q 106.68 48 106.611 49.1525 Q 106.474 51.4575 105.53 52.97 Q 104.355 54.845 102.43 55.88 Q 101.467 56.3975 100.74 56.54 Q 102.055 57.455 104.272 58.3 Q 108.707 59.99 113.22 59.64 Q 119.73 59.13 124.44 56.92 Q 125.07 60.13 124.72 63.26 Q 123.779 71.6507 116.32 72.5 L 85.1441 72.9973 L 77.56 73.06 L 62.3846 73.3347 L 15.43 73.81 Q 11.6474 73.3922 8.89375 71.2487 Q 6.16567 69.1252 5.11 65.83 Q 4.04 62.52 4.55 60.39 Q 6.88 61.0075 9.86375 61.5513 Q 15.8313 62.6387 19.1 62.27 Q 23.2062 61.8013 27.0537 59.5488 Q 28.9775 58.4225 30.08 57.39 Q 34.02 59.64 42.75 58.89 Q 47.4437 58.4775 51.0962 56.2925 Q 52.9225 55.2 53.81 54.19 " }
         }
-        // PATH visit  count: 16
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 91.3033, 74.1363 13.4678x20.2873
             strokeColor: "transparent"
             fillColor: "#ff52c0ee"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 103.9 74.2 C 102.88 73.63 99.25 77.02 97.21 79.06 C 95.96 80.31 91.98 83.58 91.44 86.73 C 90.1 94.47 98.97 96.23 102.49 92.64 C 105.15 89.93 104.67 84.64 104.67 82.86 C 104.68 80.39 105.17 74.9 103.9 74.2 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 103.9 74.2 Q 103.225 73.8227 100.938 75.6513 Q 99.3484 76.9216 97.21 79.06 L 96.4981 79.7384 Q 91.9003 84.0448 91.44 86.73 Q 90.5022 92.147 95.1425 93.9337 Q 97.038 94.6636 99.09 94.3195 Q 101.188 93.9678 102.49 92.64 Q 104.849 90.2367 104.683 83.5903 L 104.67 82.86 L 104.713 81.1632 Q 104.927 74.7659 103.9 74.2 " }
         }
-        // PATH visit  count: 16
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 18.9213, 78.2966 12.9004x19.7846
             strokeColor: "transparent"
             fillColor: "#ff52c0ee"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 31.02 78.36 C 30.05 77.8 26.57 81.08 24.61 83.07 C 23.41 84.28 19.6 87.45 19.06 90.53 C 17.74 98.08 26.19 99.85 29.57 96.37 C 32.12 93.74 31.7 88.57 31.71 86.83 C 31.72 84.42 32.22 79.06 31.02 78.36 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 31.02 78.36 Q 30.3771 77.9888 28.1863 79.7588 Q 26.6447 81.0041 24.61 83.07 L 23.9402 83.7148 Q 19.5216 87.8972 19.06 90.53 Q 18.1362 95.8137 22.5525 97.5863 Q 24.3564 98.3103 26.3162 97.9873 Q 28.3198 97.6572 29.57 96.37 Q 31.8347 94.0343 31.718 87.5345 L 31.71 86.83 L 31.7574 85.0881 Q 31.9797 78.9198 31.02 78.36 " }
         }
-        // PATH visit  count: 16
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 34.7194, 100.706 13.1416x20.3505
             strokeColor: "transparent"
             fillColor: "#ff52c0ee"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 47.15 100.74 C 46.06 100.33 42.39 103.67 40.35 105.71 C 39.1 106.96 35.4 110.16 34.86 113.31 C 33.52 121.05 42.11 122.88 45.63 119.29 C 48.29 116.58 47.85 111.29 47.81 109.51 C 47.71 104.87 47.9 101.02 47.15 100.74 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 47.15 100.74 Q 45.8202 100.24 40.35 105.71 L 39.8069 106.238 Q 35.3355 110.536 34.86 113.31 Q 33.9212 118.733 38.4225 120.549 Q 40.2649 121.292 42.2738 120.959 Q 44.3283 120.618 45.63 119.29 Q 48.0668 116.807 47.8264 110.029 L 47.81 109.51 L 47.7724 106.506 Q 47.7298 100.956 47.15 100.74 " }
         }
-        // PATH visit  count: 13
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 93.1117, 83.8677 5.96569x6.96478
             strokeColor: "transparent"
             fillColor: "#ffb2e6fe"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 97.78 84.22 C 96.38 83.49 94.68 83.8 93.6 86.05 C 92.52 88.3 93.41 90.09 94.54 90.6 C 95.84 91.2 97.45 90.65 98.53 88.82 C 99.61 86.99 98.95 84.83 97.78 84.22 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 97.78 84.22 Q 96.6428 83.627 95.57 84.0175 Q 94.3651 84.456 93.6 86.05 Q 92.8483 87.6161 93.2412 88.9775 Q 93.5852 90.1691 94.54 90.6 Q 95.5491 91.0658 96.6175 90.6212 Q 97.7434 90.1528 98.53 88.82 Q 99.3013 87.5131 98.9987 86.0625 Q 98.7163 84.7081 97.78 84.22 " }
         }
-        // PATH visit  count: 13
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 36.0415, 110.757 5.61809x6.84249
             strokeColor: "transparent"
             fillColor: "#ffb2e6fe"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 40.01 110.93 C 38.57 110.43 36.99 110.96 36.27 113.27 C 35.55 115.58 36.66 117.16 37.81 117.5 C 39.14 117.89 40.6 117.14 41.38 115.23 C 42.15 113.32 41.21 111.35 40.01 110.93 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 40.01 110.93 Q 38.8391 110.523 37.87 111.046 Q 36.7798 111.634 36.27 113.27 Q 35.7695 114.876 36.3387 116.124 Q 36.835 117.212 37.81 117.5 Q 38.8429 117.803 39.8013 117.228 Q 40.8121 116.621 41.38 115.23 Q 41.9295 113.867 41.4338 112.521 Q 40.9715 111.267 40.01 110.93 " }
         }
-        // PATH visit  count: 13
+    }
+    DemoShape {
         ShapePath {
-            // boundingRect: 20.2228, 87.8513 5.75099x7.08989
             strokeColor: "transparent"
             fillColor: "#ffb2e6fe"
             fillRule: ShapePath.WindingFill
-            PathSvg { path: "M 24.07 87.97 C 22.55 87.55 20.95 88.2 20.37 90.63 C 19.79 93.06 21.03 94.62 22.24 94.88 C 23.64 95.19 25.09 94.32 25.77 92.3 C 26.44 90.3 25.35 88.32 24.07 87.97 " }
+            pathHints: ShapePath.PathQuadratic | ShapePath.PathNonIntersecting | ShapePath.PathNonOverlappingControlPointTriangles
+            PathSvg { path: "M 24.07 87.97 Q 22.8331 87.6282 21.8675 88.2312 Q 20.7805 88.9101 20.37 90.63 Q 19.9662 92.3217 20.6338 93.5687 Q 21.2181 94.6604 22.24 94.88 Q 23.3268 95.1206 24.275 94.4638 Q 25.2748 93.7711 25.77 92.3 Q 26.2494 90.869 25.6513 89.5163 Q 25.091 88.2492 24.07 87.97 " }
         }
-    } // END  type: DOC 0
+    }
 }
