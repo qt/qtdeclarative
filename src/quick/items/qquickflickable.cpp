@@ -1674,22 +1674,31 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
                 d->moveReason = QQuickFlickablePrivate::Mouse; // ItemViews will set fixupMode to Immediate in fixup() without this.
                 d->vMoved = true;
                 qreal scrollPixel = (-yDelta / 120.0 * wheelScroll);
+                bool acceptEvent = true; // Set to false if event should propagate to parent
                 if (scrollPixel > 0) { // Forward direction (away from user)
-                    if (d->vData.move.value() >= minYExtent())
+                    if (d->vData.move.value() >= minYExtent()) {
                         d->vMoved = false;
+                        acceptEvent = false;
+                    }
                 } else { // Backward direction (towards user)
-                    if (d->vData.move.value() <= maxYExtent())
+                    if (d->vData.move.value() <= maxYExtent()) {
                         d->vMoved = false;
+                        acceptEvent = false;
+                    }
                 }
                 if (d->vMoved) {
                     if (d->boundsBehavior == QQuickFlickable::StopAtBounds) {
                         const qreal estContentPos = scrollPixel + d->vData.move.value();
                         if (scrollPixel > 0) { // Forward direction (away from user)
-                            if (estContentPos > minYExtent())
+                            if (estContentPos > minYExtent()) {
                                 scrollPixel = minYExtent() - d->vData.move.value();
+                                acceptEvent = false;
+                            }
                         } else { // Backward direction (towards user)
-                            if (estContentPos < maxYExtent())
+                            if (estContentPos < maxYExtent()) {
                                 scrollPixel = maxYExtent() - d->vData.move.value();
+                                acceptEvent = false;
+                            }
                         }
                     }
                     d->resetTimeline(d->vData);
@@ -1698,28 +1707,38 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
                     d->vData.fixingUp = true;
                     d->timeline.callback(QQuickTimeLineCallback(&d->vData.move, QQuickFlickablePrivate::fixupY_callback, d));
                 }
-                event->accept();
+                if (acceptEvent)
+                    event->accept();
             }
             if (xflick() && xDelta != 0) {
                 d->moveReason = QQuickFlickablePrivate::Mouse; // ItemViews will set fixupMode to Immediate in fixup() without this.
                 d->hMoved = true;
                 qreal scrollPixel = (-xDelta / 120.0 * wheelScroll);
+                bool acceptEvent = true; // Set to false if event should propagate to parent
                 if (scrollPixel > 0) { // Forward direction (away from user)
-                    if (d->hData.move.value() >= minXExtent())
+                    if (d->hData.move.value() >= minXExtent()) {
                         d->hMoved = false;
+                        acceptEvent = false;
+                    }
                 } else { // Backward direction (towards user)
-                    if (d->hData.move.value() <= maxXExtent())
+                    if (d->hData.move.value() <= maxXExtent()) {
                         d->hMoved = false;
+                        acceptEvent = false;
+                    }
                 }
                 if (d->hMoved) {
                     if (d->boundsBehavior == QQuickFlickable::StopAtBounds) {
                         const qreal estContentPos = scrollPixel + d->hData.move.value();
                         if (scrollPixel > 0) { // Forward direction (away from user)
-                            if (estContentPos > minXExtent())
+                            if (estContentPos > minXExtent()) {
                                 scrollPixel = minXExtent() - d->hData.move.value();
+                                acceptEvent = false;
+                            }
                         } else { // Backward direction (towards user)
-                            if (estContentPos < maxXExtent())
+                            if (estContentPos < maxXExtent()) {
                                 scrollPixel = maxXExtent() - d->hData.move.value();
+                                acceptEvent = false;
+                            }
                         }
                     }
                     d->resetTimeline(d->hData);
@@ -1728,7 +1747,8 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
                     d->hData.fixingUp = true;
                     d->timeline.callback(QQuickTimeLineCallback(&d->hData.move, QQuickFlickablePrivate::fixupX_callback, d));
                 }
-                event->accept();
+                if (acceptEvent)
+                    event->accept();
             }
         } else {
             // wheelDeceleration is set to some reasonable value: the user or the platform wants to have
