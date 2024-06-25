@@ -1089,32 +1089,26 @@
     \qmlmethod real QtQuick::TableView::implicitColumnWidth(int column)
     \since 6.2
 
-    Returns the implicit width of the given \a column. If the
-    column is not loaded (and therefore not visible), the return value
-    will be \c -1.
+    Returns the implicit width of the given \a column. This is the largest
+    \l implicitWidth found among the currently \l{isRowLoaded()}{loaded}
+    delegate items inside that column.
 
-    The implicit width of a column is the largest implicitWidth
-    found among the currently loaded delegate items inside that column.
-    Widths returned by the \l columnWidthProvider will not be taken
-    into account.
+    If the \a column is not loaded (and therefore not visible), the return value is \c -1.
 
-    \sa columnWidthProvider, columnWidth(), isColumnLoaded(), {Row heights and column widths}
+    \sa columnWidth(), isRowLoaded(), {Row heights and column widths}
 */
 
 /*!
     \qmlmethod real QtQuick::TableView::implicitRowHeight(int row)
     \since 6.2
 
-    Returns the implicit height of the given \a row. If the
-    row is not loaded (and therefore not visible), the return value
-    will be \c -1.
+    Returns the implicit height of the given \a row. This is the largest
+    \l implicitHeight found among the currently \l{isColumnLoaded()}{loaded}
+    delegate items inside that row.
 
-    The implicit height of a row is the largest implicitHeight
-    found among the currently loaded delegate items inside that row.
-    Heights returned by the \l rowHeightProvider will not be taken
-    into account.
+    If the \a row is not loaded (and therefore not visible), the return value is \c -1.
 
-    \sa rowHeightProvider, rowHeight(), isRowLoaded(), {Row heights and column widths}
+    \sa rowHeight(), isColumnLoaded(), {Row heights and column widths}
 */
 
 /*!
