@@ -599,6 +599,9 @@ public:
     bool simplify() const;
     void setSimplify(bool s);
 
+    bool isAsynchronous() const;
+    void setAsynchronous(bool a);
+
 Q_SIGNALS:
     void changed();
     void startXChanged();
@@ -637,6 +640,7 @@ private:
         QHash<QString, qreal> values;
     };
 
+    void doProcessPath();
     void interpolate(int idx, const QString &name, qreal value);
     void endpoint(const QString &name);
     void createPointCache() const;

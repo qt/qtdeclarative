@@ -370,6 +370,23 @@ void QQuickPath::processPath()
     if (!d->componentComplete)
         return;
 
+    if (!d->asynchronous) {
+        doProcessPath();
+    } else if (!d->processPending) {
+        d->processPending = true;
+        QMetaObject::invokeMethod(this, &QQuickPath::doProcessPath, Qt::QueuedConnection);
+    }
+}
+
+void QQuickPath::doProcessPath()
+{
+    Q_D(QQuickPath);
+
+    d->processPending = false;
+
+    if (!d->componentComplete)
+        return;
+
     d->_pointCache.clear();
     d->prevBez.isValid = false;
 
@@ -580,7 +597,7 @@ void QQuickPath::componentComplete()
 
     gatherAttributes();
 
-    processPath();
+    doProcessPath();
 
     connectPathElements();
 }
@@ -747,6 +764,21 @@ bool QQuickPath::simplify() const
 {
     Q_D(const QQuickPath);
     return d->simplify;
+}
+
+bool QQuickPath::isAsynchronous() const
+{
+    Q_D(const QQuickPath);
+    return d->asynchronous;
+}
+
+void QQuickPath::setAsynchronous(bool a)
+{
+    Q_D(QQuickPath);
+    if (d->asynchronous == a)
+        return;
+
+    d->asynchronous = a;
 }
 
 /*!
