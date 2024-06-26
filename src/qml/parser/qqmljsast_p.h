@@ -2416,6 +2416,8 @@ public:
     StatementList *body;
     TypeAnnotation *typeAnnotation;
     SourceLocation functionToken;
+    // for generators:
+    SourceLocation starToken;
     SourceLocation identifierToken;
     SourceLocation lparenToken;
     SourceLocation rparenToken;

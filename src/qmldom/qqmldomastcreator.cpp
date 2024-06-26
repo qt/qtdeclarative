@@ -698,6 +698,8 @@ void QQmlDomAstCreator::endVisit(AST::FunctionExpression *fExpression)
         current->addLocation(IdentifierRegion, fExpression->identifierToken);
     if (fExpression->functionToken.isValid())
         current->addLocation(FunctionKeywordRegion, fExpression->functionToken);
+    if (fExpression->starToken.isValid())
+        current->addLocation(StarTokenRegion, fExpression->starToken);
     if (fExpression->lparenToken.isValid())
         current->addLocation(LeftParenthesisRegion, fExpression->lparenToken);
     if (fExpression->rparenToken.isValid())
@@ -778,6 +780,8 @@ bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
     FileLocations::addRegion(bodyTree, MainRegion, bodyLoc);
     if (fDef->functionToken.isValid())
         FileLocations::addRegion(fLoc, FunctionKeywordRegion, fDef->functionToken);
+    if (fDef->starToken.isValid())
+        FileLocations::addRegion(fLoc, StarTokenRegion, fDef->starToken);
     if (fDef->lparenToken.length != 0)
         FileLocations::addRegion(fLoc, LeftParenthesisRegion, fDef->lparenToken);
     if (fDef->rparenToken.length != 0)
