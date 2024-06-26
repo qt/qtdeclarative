@@ -127,10 +127,9 @@ void QQuickPopupWindowPrivate::forwardEventToParentMenuOrMenuBar(QEvent *event)
     auto *pe = static_cast<QPointerEvent *>(event);
     const QPointF globalPos = pe->points().first().globalPosition();
 
-    // If there is a Menu or a MenuBar under the mouse, resolve its window.
-    QQuickPopupWindow *targetPopupWindow = nullptr;
-    QQuickWindow *targetWindow = nullptr;
-
+    // Resolve the Menu or MenuBar under the mouse, if any
+    QQuickMenu *targetMenu = nullptr;
+    QQuickMenuBar *targetMenuBar = nullptr;
     QObject *menuParent = menu;
     while (menuParent) {
         if (auto parentMenu = qobject_cast<QQuickMenu *>(menuParent)) {
@@ -138,34 +137,36 @@ void QQuickPopupWindowPrivate::forwardEventToParentMenuOrMenuBar(QEvent *event)
             auto popup_d = QQuickPopupPrivate::get(popupWindow->popup());
             QPointF scenePos = popupWindow->contentItem()->mapFromGlobal(globalPos);
             if (popup_d->contains(scenePos)) {
-                targetPopupWindow = popupWindow;
-                targetWindow = popupWindow;
+                targetMenu = parentMenu;
                 break;
             }
         } else if (auto menuBar = qobject_cast<QQuickMenuBar *>(menuParent)) {
             const QPointF menuBarPos = menuBar->mapFromGlobal(globalPos);
             if (menuBar->contains(menuBarPos))
-                targetWindow = menuBar->window();
+                targetMenuBar = menuBar;
             break;
         }
 
         menuParent = menuParent->parent();
     }
 
-    if (!targetPopupWindow) {
-        if (pe->isBeginEvent()) {
-            // A QQuickPopupWindow can be bigger than the Popup itself, to make room
-            // for a drop-shadow. Close all popups if the user clicks either on the
-            // shadow or outside the window.
+    if (pe->isBeginEvent()) {
+        if (!targetMenu) {
+            // A QQuickPopupWindow can be bigger than the menu itself, to make room
+            // for a drop-shadow. Close all menus if the user do a press, either on
+            // the shadow, or outside the menu.
             QGuiApplicationPrivate::closeAllPopups();
             return;
         }
-    }
+    } else if (pe->isUpdateEvent()){
+        QQuickWindow *targetWindow = nullptr;
+        if (targetMenu)
+            targetWindow = QQuickPopupPrivate::get(targetMenu)->popupWindow;
+        else if (targetMenuBar)
+            targetWindow = targetMenuBar->window();
+        else
+            return;
 
-    if (!targetWindow)
-        return;
-
-    if (pe->isUpdateEvent()){
         // Forward move events to the target window
         const auto scenePos = pe->point(0).scenePosition();
         const auto translatedScenePos = targetWindow->mapFromGlobal(globalPos);
@@ -188,11 +189,18 @@ void QQuickPopupWindowPrivate::forwardEventToParentMenuOrMenuBar(QEvent *event)
         if (grabber)
             pe->setExclusiveGrabber(pe->point(0), grabber);
     } else if (pe->isEndEvent()) {
+        if (!targetMenu) {
+            // Close all menus if the pressAndHold didn't end up on top of a menu
+            int pressDuration = pe->point(0).timestamp() - pe->point(0).pressTimestamp();
+            if (pressDuration >= QGuiApplication::styleHints()->mousePressAndHoldInterval())
+                QGuiApplicationPrivate::closeAllPopups();
+            return;
+        }
+
         // To support opening a Menu on press (e.g on a MenuBarItem), followed by
         // a drag and release on a MenuItem inside the Menu, we ask the Menu to
         // perform a click on the active MenuItem, if any.
-        if (targetPopupWindow)
-            QQuickPopupPrivate::get(targetPopupWindow->popup())->handleReleaseWithoutGrab(pe->point(0));
+        QQuickMenuPrivate::get(targetMenu)->handleReleaseWithoutGrab(pe->point(0));
     }
 }
 
