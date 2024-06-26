@@ -116,6 +116,7 @@ void LintPlugin::registerPasses(QQmlSA::PassManager *manager, const QQmlSA::Elem
     manager->registerPropertyPass(std::make_unique<PropertyTest>(manager), "QtQuick", "Text",
                                   "text");
     manager->registerPropertyPass(std::make_unique<PropertyTest>(manager), "", "", "x");
+    manager->registerPropertyPass(std::make_unique<PropertyTest>(manager), "", "", "log");
     manager->registerPropertyPass(std::make_unique<PropertyTest>(manager), "QtQuick", "ListView");
     if (manager->hasImportedModule("QtQuick.Controls")) {
         if (manager->hasImportedModule("QtQuick")) {

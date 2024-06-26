@@ -1195,11 +1195,15 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
 
     if (m_typeResolver->registerContains(callBase, m_typeResolver->mathObject())) {
         generate_CallProperty_SCMath(base, argc, argv);
+        if (m_passManager != nullptr)
+            generate_callProperty_SAcheck(propertyName, callBase.containedType());
         return;
     }
 
     if (m_typeResolver->registerContains(callBase, m_typeResolver->consoleObject()) && isLoggingMethod(propertyName)) {
         generate_CallProperty_SCconsole(base, argc, argv);
+        if (m_passManager != nullptr)
+            generate_callProperty_SAcheck(propertyName, callBase.containedType());
         return;
     }
 

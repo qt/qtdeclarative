@@ -2085,6 +2085,9 @@ void TestQmllint::testPlugin()
                       Message { u"Saw write on Text property x with value int in scope Item"_s },
                       Message {
                               u"Saw binding on Item property x with value NULL (and type 2) in scope Item"_s },
+                      // JavaScript
+                      Message { u"Saw read on ObjectPrototype property log in scope Item"_s },
+                      Message { u"Saw read on ObjectPrototype property log in scope Item"_s },
                       // ListModel
                       Message {
                               u"Saw binding on ListView property model with value ListModel (and type 8) in scope ListView"_s },
