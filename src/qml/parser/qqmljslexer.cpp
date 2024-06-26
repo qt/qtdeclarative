@@ -933,61 +933,6 @@ again:
             if (!identifierWithEscapeChars)
                 kind = classify(_tokenStartPtr, _tokenLength, parseModeFlags());
 
-            if (kind == T_FUNCTION) {
-                continue_skipping:
-                    while (_codePtr < _endPtr && _state.currentChar.isSpace())
-                        scanChar();
-                    if (_state.currentChar == u'*') {
-                        _tokenLength = _codePtr - _tokenStartPtr - 1;
-                        kind = T_FUNCTION_STAR;
-                        scanChar();
-                    } else if (_state.currentChar == u'/') {
-                        scanChar();
-                        switch (_state.currentChar.unicode()) {
-                        case u'*':
-                            scanChar();
-                            while (_codePtr <= _endPtr) {
-                                if (_state.currentChar == u'*') {
-                                    scanChar();
-                                    if (_state.currentChar == u'/') {
-                                        scanChar();
-                                        if (_engine) {
-                                            _engine->addComment(tokenOffset() + 2,
-                                                                _codePtr - _tokenStartPtr - 1 - 4,
-                                                                tokenStartLine(),
-                                                                tokenStartColumn() + 2);
-                                        }
-                                        if (_lexMode == LexMode::LineByLine)
-                                            return T_COMMENT;
-                                        goto continue_skipping;
-                                    }
-                                } else {
-                                    scanChar();
-                                }
-                            }
-                            if (_lexMode == LexMode::LineByLine)
-                                return T_PARTIAL_COMMENT;
-                            else
-                                goto continue_skipping;
-                        case u'/':
-                            while (_codePtr <= _endPtr && !isLineTerminator()) {
-                                scanChar();
-                            }
-                            if (_engine) {
-                                _engine->addComment(tokenOffset() + 2,
-                                                    _codePtr - _tokenStartPtr - 1 - 2,
-                                                    tokenStartLine(), tokenStartColumn() + 2);
-                            }
-                            if (_lexMode == LexMode::LineByLine)
-                                return T_COMMENT;
-                            else
-                                goto continue_skipping;
-                        default:
-                            break;
-                        }
-                    }
-            }
-
             if (_engine) {
                 if (kind == T_IDENTIFIER && identifierWithEscapeChars)
                     _tokenSpell = _engine->newStringRef(_tokenText);
@@ -1657,7 +1602,6 @@ static const int uriTokens[] = {
     QQmlJSGrammar::T_FINALLY,
     QQmlJSGrammar::T_FOR,
     QQmlJSGrammar::T_FUNCTION,
-    QQmlJSGrammar::T_FUNCTION_STAR,
     QQmlJSGrammar::T_IF,
     QQmlJSGrammar::T_IN,
     QQmlJSGrammar::T_OF,

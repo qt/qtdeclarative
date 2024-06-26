@@ -350,7 +350,7 @@ void tst_qmlls_highlighting::highlights_data()
                 << fileItem
                 << Token(QQmlJS::SourceLocation(186, 3, 9, 17), int(SemanticTokenTypes::Type), 0);
         QTest::addRow("function-keyword") << fileItem
-                                          << Token(QQmlJS::SourceLocation(195, 9, 10, 5),
+                                          << Token(QQmlJS::SourceLocation(195, 8, 10, 5),
                                                    int(SemanticTokenTypes::Keyword), 0);
         QTest::addRow("function-name") << fileItem
                                        << Token(QQmlJS::SourceLocation(204, 1, 10, 14),

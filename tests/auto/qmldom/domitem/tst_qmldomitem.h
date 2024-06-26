@@ -3422,8 +3422,8 @@ private slots:
 
         QTest::newRow("function") << baseDir + u"/fileLocationRegions/functions.qml"_s
                                   << FunctionKeywordRegion
-                                  << QSet{ QQmlJS::SourceLocation{ 139, 9, 7, 5 },
-                                           QQmlJS::SourceLocation{ 195, 9, 10, 9 } };
+                                  << QSet{ QQmlJS::SourceLocation{ 139, 8, 7, 5 },
+                                           QQmlJS::SourceLocation{ 195, 8, 10, 9 } };
 
         QTest::newRow("signal") << baseDir + u"/fileLocationRegions/functions.qml"_s
                                 << SignalKeywordRegion
@@ -3613,6 +3613,17 @@ private slots:
         QCOMPARE(locs, expctedCommentLocations);
     }
 
+private:
+    void checkFunctionKeyword(const DomItem &item) const
+    {
+        auto fileLocationRegions = FileLocations::fileLocationsOf(item)->regions;
+        QVERIFY(fileLocationRegions.contains(FileLocationRegion::FunctionKeywordRegion));
+        QCOMPARE(fileLocationRegions[FileLocationRegion::FunctionKeywordRegion].length,
+                 std::char_traits<char>::length("function"));
+    }
+
+private slots:
+
     void lambdas()
     {
         using namespace Qt::StringLiterals;
@@ -3644,6 +3655,8 @@ private slots:
             auto scope = lambda.semanticScope();
             QVERIFY(scope);
             QVERIFY(scope->jsIdentifier(u"b"_s));
+
+            checkFunctionKeyword(lambda);
 
             const DomItem body = lambda.field(Fields::body);
             QCOMPARE(body.internalKind(), DomType::ScriptBlockStatement);
@@ -3723,6 +3736,9 @@ private slots:
             auto scope = lambda.semanticScope();
             QVERIFY(scope);
             QVERIFY(scope->jsIdentifier(u"z"_s));
+
+            checkFunctionKeyword(lambda);
+
             const DomItem body = lambda.field(Fields::body);
             QCOMPARE(body.internalKind(), DomType::ScriptBlockStatement);
         }
@@ -3766,6 +3782,8 @@ private slots:
             auto scope = nested.semanticScope();
             QVERIFY(scope);
             QVERIFY(scope->jsIdentifier(u"toe"_s));
+
+            checkFunctionKeyword(nested);
         }
     }
     void generatorDeclaration()

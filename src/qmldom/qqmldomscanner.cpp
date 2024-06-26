@@ -295,7 +295,6 @@ bool Token::lexKindIsJSKeyword(int kind)
     case QQmlJSGrammar::T_WITH:
     case QQmlJSGrammar::T_YIELD:
     case QQmlJSGrammar::T_VAR:
-    case QQmlJSGrammar::T_FUNCTION_STAR:
     case QQmlJSGrammar::T_FUNCTION:
         return true;
     default:

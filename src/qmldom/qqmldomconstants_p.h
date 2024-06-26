@@ -400,6 +400,7 @@ enum FileLocationRegion : int {
     SemicolonTokenRegion,
     SignalKeywordRegion,
     SuperKeywordRegion,
+    StarTokenRegion,
     SwitchKeywordRegion,
     ThisKeywordRegion,
     ThrowKeywordRegion,
