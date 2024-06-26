@@ -903,7 +903,7 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         acc = engine->hasException ? engine->exceptionValue->asReturnedValue()
                                    : Value::emptyValue().asReturnedValue();
         engine->hasException = false;
-    MOTH_END_INSTR(HasException)
+    MOTH_END_INSTR(GetException)
 
     MOTH_BEGIN_INSTR(SetException)
         if (acc != Value::emptyValue().asReturnedValue()) {
