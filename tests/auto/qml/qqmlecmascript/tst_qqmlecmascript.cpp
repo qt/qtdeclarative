@@ -6242,9 +6242,8 @@ void tst_qqmlecmascript::sequenceConversionBindings()
     }
 
     {
+        // This is not an error anymore. Lists are converted element-by-element now.
         QUrl qmlFile = testFileUrl("sequenceConversion.bindings.error.qml");
-        QString warning = QString(QLatin1String("%1:17:9: Unable to assign QList<int> to QList<bool>")).arg(qmlFile.toString());
-        QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
         QQmlComponent component(&engine, qmlFile);
         QScopedPointer<QObject> object(component.create());
         QVERIFY2(object, qPrintable(component.errorString()));

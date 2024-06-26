@@ -14,6 +14,6 @@ Item {
     MySequenceConversionObject {
         id: mscoTwo
         objectName: "mscoTwo"
-        boolListProperty: msco.intListProperty
+        boolListProperty: msco.intListProperty // used to be an error
     }
 }
