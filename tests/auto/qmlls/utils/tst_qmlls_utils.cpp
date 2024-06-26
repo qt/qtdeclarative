@@ -2057,7 +2057,7 @@ void tst_qmlls_utils::resolveExpressionType_data()
                 << derivedType << 29 << 14 << ResolveActualTypeForFieldMemberExpression << noFile
                 << noLine << SignalHandlerIdentifier << u"onBackPressed"_s;
 
-        QTest::addRow("id") << derivedType << 7 << 10 << ResolveOwnerType << derivedType << 6
+        QTest::addRow("id2") << derivedType << 7 << 10 << ResolveOwnerType << derivedType << 6
                             << QmlObjectIdIdentifier << u"self"_s;
         QTest::addRow("propertyBinding")
                 << derivedType << 31 << 13 << ResolveOwnerType << baseType << baseTypeLine
