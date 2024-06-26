@@ -2900,24 +2900,70 @@ void tst_QmlCppCodegen::jsmoduleImport()
 void tst_QmlCppCodegen::jsonArrayToStringList()
 {
     QQmlEngine engine;
-    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/jsonArrayToStringList.qml"_s));
+    const QString urlString = u"qrc:/qt/qml/TestTypes/jsonArrayToStringList.qml"_s;
+    QQmlComponent component(&engine, QUrl(urlString));
     QVERIFY2(!component.isError(), component.errorString().toUtf8());
-    QTest::ignoreMessage(QtDebugMsg, "json [1,aa,2,null,null]");
 
-    // TODO: Enable when fixed. We cannot QEXPECT_FAIL on ignoreMessage
-    // QTest::ignoreMessage(QtDebugMsg, "strings [1,aa,2,null,null]");
-    // QTest::ignoreMessage(QtDebugMsg, "strings2 [1,aa,2,null,null]");
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "Converting array value at position 0 from double to QStringList via QJSValue even "
+            "though they are not directly convertible");
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "Converting array value at position 2 from double to QStringList via QJSValue even "
+            "though they are not directly convertible");
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "Converting array value at position 3 from std::nullptr_t to QStringList via QJSValue "
+            "even though they are not directly convertible");
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "Converting array value at position 4 from std::nullptr_t to QStringList via QJSValue "
+            "even though they are not directly convertible");
+
+    QTest::ignoreMessage(QtDebugMsg, "json [1,aa,2,null,null]");
+    QTest::ignoreMessage(QtDebugMsg, "strings [1,aa,2,null,null]");
+    QTest::ignoreMessage(QtDebugMsg, "strings2 [1,aa,2,null,null]");
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
     QListProvider *provider = qobject_cast<QListProvider *>(object.data());
     QCOMPARE(provider->json(), QJsonDocument::fromJson("[1,\"aa\",2,null,null]").array());
-    QEXPECT_FAIL("", "assignment to string list is broken", Continue);
     QCOMPARE(provider->strings(), (QStringList { u"1"_s, u"aa"_s, u"2"_s, u"null"_s, u"null"_s }));
-    QEXPECT_FAIL("", "assignment to string list is broken", Continue);
     QCOMPARE(provider->property("strings2").toStringList(),
              (QStringList { u"1"_s, u"aa"_s, u"2"_s, u"null"_s, u"null"_s }));
+
+    QCOMPARE(provider->stringStrings(), (QList<QStringList> {
+        QStringList(),
+        QStringList { u"aa"_s }, // QVariant::convert auto-converts QString to QStringList ...
+        QStringList(),
+        QStringList(),
+        QStringList(),
+    }));
+
+    // Note1: Converting a generic array to string is basically ArrayPrototype.join().
+    //        This produces an empty string for null. Try [null, null].join() for that.
+    //        Converting a single null to string (in an element-by-element operation)
+    //        produces the string "null". Try (null + "") for that. The inconsistency is
+    //        in JavaScript itself, not in our implementation.
+    // Note2: Converting an array to string produces an un-delimited string. If you
+    //        convert a nested array to string, you don't see the boundaries anymore.
+    //        Try [[1, 2],[3, 4]].join() for that. Again, that's JavaScript itself.
+
+    provider->setJson(QJsonDocument::fromJson(R"([
+        ["c", null, [99], {"x": 12}],
+        [1, 2, 3, "bbb", [16, "a", null]]
+    ])").array());
+
+    QCOMPARE(provider->strings(),
+             (QStringList { u"c,,99,[object Object]"_s, u"1,2,3,bbb,16,a,"_s }));
+    QCOMPARE(provider->property("strings2").toStringList(),
+             (QStringList { u"c,,99,[object Object]"_s, u"1,2,3,bbb,16,a,"_s }));
+    QCOMPARE(provider->stringStrings(), (QList<QStringList> {
+        QStringList { u"c"_s, u"null"_s, u"99"_s, u"[object Object]"_s },
+        QStringList { u"1"_s, u"2"_s, u"3"_s, u"bbb"_s, u"16,a,"_s}
+    }));
 }
 
 void tst_QmlCppCodegen::lengthAccessArraySequenceCompat()

@@ -18,6 +18,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcListValueConversion, "qt.qml.listvalueconversion")
+
 namespace QV4 {
 
 DEFINE_OBJECT_VTABLE(Sequence);
@@ -727,6 +729,11 @@ ReturnedValue SequencePrototype::fromData(
     return engine->memoryManager->allocate<Sequence>(type, metaSequence, data)->asReturnedValue();
 }
 
+/*!
+ * \internal
+ *
+ * Produce a QVariant containing a copy of the list stored in \a object.
+ */
 QVariant SequencePrototype::toVariant(const Sequence *object)
 {
     Q_ASSERT(object->isV4SequenceType());
@@ -744,55 +751,133 @@ QVariant SequencePrototype::toVariant(const Sequence *object)
     return QVariant(p->listType(), p->storagePointer());
 }
 
-QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHint)
+bool convertToIterable(QMetaType metaType, void *data, QV4::Object *sequence)
 {
-    if (!array.as<ArrayObject>())
+    QSequentialIterable iterable;
+    if (!QMetaType::view(metaType, data, QMetaType::fromType<QSequentialIterable>(), &iterable))
+        return false;
+
+    const QMetaType elementMetaType = iterable.valueMetaType();
+    for (qsizetype i = 0, end = sequence->getLength(); i < end; ++i) {
+        QVariant element(elementMetaType);
+        ExecutionEngine::metaTypeFromJS(sequence->get(i), elementMetaType, element.data());
+        iterable.addValue(element, QSequentialIterable::AtEnd);
+    }
+    return true;
+}
+
+/*!
+ * \internal
+ *
+ * Convert the Object \a array to \a targetType. If \a targetType is not a sequential container,
+ * or if \a array is not an Object, return an invalid QVariant. Otherwise return a QVariant of
+ * \a targetType with the converted data. It is assumed that this actual requires a conversion. If
+ * the conversion is not needed, the single-argument toVariant() is faster.
+ */
+QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType targetType)
+{
+    if (!array.as<Object>())
+        return QVariant();
+
+    QMetaSequence meta;
+    QVariant result(targetType);
+    if (const QQmlType type = QQmlMetaType::qmlListType(targetType);
+            type.isSequentialContainer()) {
+        // If the QML type declares a custom sequential container, use that.
+        meta = type.priv()->extraData.sequentialContainerTypeData;
+    } else if (QSequentialIterable iterable;
+            QMetaType::view(targetType, result.data(), QMetaType::fromType<QSequentialIterable>(),
+                            &iterable)) {
+        // Otherwise try to convert to QSequentialIterable via QMetaType conversion.
+        meta = iterable.metaContainer();
+    }
+
+    if (!meta.canAddValue())
         return QVariant();
 
     QV4::Scope scope(array.as<Object>()->engine());
-    QV4::ScopedArrayObject a(scope, array);
+    QV4::ScopedObject a(scope, array);
 
-    const QQmlType type = QQmlMetaType::qmlListType(typeHint);
-    if (type.isSequentialContainer()) {
-        const QQmlTypePrivate *priv = type.priv();
-        const QMetaSequence *meta = &priv->extraData.sequentialContainerTypeData;
-        const QMetaType containerMetaType(priv->listId);
-        QVariant result(containerMetaType);
-        qint64 length = a->getLength();
-        Q_ASSERT(length >= 0);
-        Q_ASSERT(length <= qint64(std::numeric_limits<quint32>::max()));
+    const QMetaType valueMetaType = meta.valueMetaType();
+    const qint64 length = a->getLength();
+    Q_ASSERT(length >= 0);
+    Q_ASSERT(length <= qint64(std::numeric_limits<quint32>::max()));
 
-        QV4::ScopedValue v(scope);
-        for (quint32 i = 0; i < quint32(length); ++i) {
-            const QMetaType valueMetaType = priv->typeId;
-            QVariant variant = ExecutionEngine::toVariant(a->get(i), valueMetaType, false);
-            if (valueMetaType == QMetaType::fromType<QVariant>()) {
-                meta->addValueAtEnd(result.data(), &variant);
-            } else {
-                const QMetaType originalType = variant.metaType();
-                if (originalType != valueMetaType) {
-                    const QVariant converted = QQmlValueTypeProvider::createValueType(
-                                variant, valueMetaType);
-                    if (converted.isValid()) {
-                        variant = converted;
-                    } else if (!variant.convert(valueMetaType) && originalType.isValid()) {
-                        // If the original type was void, we're converting a "hole" in a sparse
-                        // array. There is no point in warning about that.
-                        qWarning().noquote()
-                                << QLatin1String("Could not convert array value "
-                                                 "at position %1 from %2 to %3")
-                                   .arg(QString::number(i),
-                                        QString::fromUtf8(originalType.name()),
-                                        QString::fromUtf8(valueMetaType.name()));
-                    }
+    QV4::ScopedValue v(scope);
+    for (quint32 i = 0; i < quint32(length); ++i) {
+        QVariant variant;
+        QV4::ScopedValue element(scope, a->get(i));
+
+        // Note: We can convert to any sequence type here, even those that don't have a specified
+        //       order. Therefore the meta.addValue() below. meta.addValue() preferably adds to the
+        //       end, but will also add in other places if that's not possible.
+
+        // If the target type is QVariant itself, let the conversion produce any interanl type.
+        if (valueMetaType == QMetaType::fromType<QVariant>()) {
+            variant = ExecutionEngine::toVariant(element, QMetaType(), false);
+            meta.addValue(result.data(), &variant);
+            continue;
+        }
+
+        // Try to convert to the specific type requested ...
+        variant = QVariant(valueMetaType);
+        if (ExecutionEngine::metaTypeFromJS(element, valueMetaType, variant.data())) {
+            meta.addValue(result.data(), variant.constData());
+            continue;
+        }
+
+        // If that doesn't work, produce any QVariant and try to convert it afterwards.
+        // toVariant() is free to ignore the type hint and can produce the "original" type.
+        variant = ExecutionEngine::toVariant(element, valueMetaType, false);
+        const QMetaType originalType = variant.metaType();
+
+        // Try value type constructors.
+        const QVariant converted = QQmlValueTypeProvider::createValueType(
+                variant, valueMetaType);
+        if (converted.isValid()) {
+            meta.addValue(result.data(), converted.constData());
+            continue;
+        }
+
+        const auto warn = [&](QLatin1String base) {
+            // If the original type was void, we're converting a "hole" in a sparse
+            // array. There is no point in warning about that.
+            if (!originalType.isValid())
+                return;
+
+            qCWarning(lcListValueConversion).noquote()
+                    << base.arg(QString::number(i), QString::fromUtf8(originalType.name()),
+                                QString::fromUtf8(valueMetaType.name()));
+        };
+
+        // Note: Ideally you should use constructible value types for everything below, but we'd
+        //       probably get a lot of pushback for warning about that.
+
+        // Before attempting a conversion from the concrete types, check if there exists a
+        // conversion from QJSValue to the result type. Prefer that one for compatibility reasons.
+        // This is a rather surprising "feature". Therefore, warn if a concrete conversion wouldn't
+        // be possible. You should at least make your type conversions consistent.
+        if (QMetaType::canConvert(QMetaType::fromType<QJSValue>(), valueMetaType)) {
+            QVariant wrappedJsValue = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(
+                    element->asReturnedValue()));
+            if (wrappedJsValue.convert(valueMetaType)) {
+                if (!QMetaType::canConvert(originalType, valueMetaType)) {
+                    warn(QLatin1String("Converting array value at position %1 from %2 to %3 via "
+                                       "QJSValue even though they are not directly convertible"));
                 }
-                meta->addValueAtEnd(result.data(), variant.constData());
+                meta.addValue(result.data(), wrappedJsValue.constData());
+                continue;
             }
         }
-        return result;
-    }
 
-    return QVariant();
+        // Last ditch effort: Try QVariant::convert()
+        if (!variant.convert(valueMetaType))
+            warn(QLatin1String("Could not convert array value at position %1 from %2 to %3"));
+
+        meta.addValue(result.data(), variant.constData());
+    }
+    return result;
+
 }
 
 void *SequencePrototype::getRawContainerPtr(const Sequence *object, QMetaType typeHint)

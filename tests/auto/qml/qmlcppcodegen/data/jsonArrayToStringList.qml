@@ -3,6 +3,7 @@ import QtQml
 ListProvider {
     json: [1, "aa", 2, null, undefined]
     strings: json
+    stringStrings: json
     property list<string> strings2: json
 
     Component.onCompleted: {

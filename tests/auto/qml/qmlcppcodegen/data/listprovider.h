@@ -13,6 +13,8 @@ class QListProvider : public QObject
     Q_PROPERTY(QJsonArray json READ json WRITE setJson NOTIFY jsonChanged FINAL)
     Q_PROPERTY(QStringList strings READ strings WRITE setStrings NOTIFY stringsChanged FINAL)
 
+    Q_PROPERTY(QList<QStringList> stringStrings READ stringStrings WRITE setStringStrings NOTIFY stringStringsChanged FINAL)
+
 public:
     explicit QListProvider(QObject *parent = nullptr) : QObject(parent) { }
 
@@ -42,13 +44,27 @@ public:
         }
     }
 
+    QList<QStringList> stringStrings() const
+    {
+        return m_stringStrings;
+    }
+    void setStringStrings(const QList<QStringList> &stringStrings)
+    {
+        if (m_stringStrings != stringStrings) {
+            m_stringStrings = stringStrings;
+            emit stringStringsChanged();
+        }
+    }
+
 signals:
     void jsonChanged();
     void stringsChanged();
+    void stringStringsChanged();
 
 private:
     QJsonArray m_json;
     QStringList m_strings;
+    QList<QStringList> m_stringStrings;
 };
 
 #endif // QLISTPROVIDER_H

@@ -1537,6 +1537,16 @@ static QVariant toVariant(const QV4::Value &value, QMetaType metaType, JSToQVari
         } else if (QV4::QmlListWrapper *l = object->as<QV4::QmlListWrapper>()) {
             return l->toVariant();
         } else if (QV4::Sequence *s = object->as<QV4::Sequence>()) {
+            if (metaType.isValid()
+                    && metaType != QMetaType::fromType<QVariant>()
+                    && metaType != s->d()->listType()) {
+                // If we can, produce an accurate result.
+                const QVariant result = QV4::SequencePrototype::toVariant(value, metaType);
+                if (result.isValid())
+                    return result;
+            }
+
+            // Otherwise produce the "natural" type of the sequence.
             return QV4::SequencePrototype::toVariant(s);
         }
     }
@@ -1565,57 +1575,6 @@ static QVariant toVariant(const QV4::Value &value, QMetaType metaType, JSToQVari
         QVariant retn = QV4::SequencePrototype::toVariant(value, metaType);
         if (retn.isValid())
             return retn;
-
-        if (metaType.isValid()) {
-            retn = QVariant(metaType, nullptr);
-            auto retnAsIterable = retn.value<QSequentialIterable>();
-            if (retnAsIterable.metaContainer().canAddValue()) {
-                QMetaType valueMetaType = retnAsIterable.metaContainer().valueMetaType();
-                auto const length = a->getLength();
-                QV4::ScopedValue arrayValue(scope);
-                for (qint64 i = 0; i < length; ++i) {
-                    arrayValue = a->get(i);
-                    QVariant asVariant = QQmlValueTypeProvider::createValueType(
-                                arrayValue, valueMetaType);
-                    if (asVariant.isValid()) {
-                        retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
-                        continue;
-                    }
-
-                    if (QMetaType::canConvert(QMetaType::fromType<QJSValue>(), valueMetaType)) {
-                        // before attempting a conversion from the concrete types,
-                        // check if there exists a conversion from QJSValue -> out type
-                        // prefer that one for compatibility reasons
-                        asVariant = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(
-                                                            arrayValue->asReturnedValue()));
-                        if (asVariant.convert(valueMetaType)) {
-                            retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
-                            continue;
-                        }
-                    }
-
-                    asVariant = toVariant(arrayValue, valueMetaType, JSToQVariantConversionBehavior::Never, visitedObjects);
-                    if (valueMetaType == QMetaType::fromType<QVariant>()) {
-                        retnAsIterable.metaContainer().addValue(retn.data(), &asVariant);
-                    } else {
-                        auto originalType = asVariant.metaType();
-                        bool couldConvert = asVariant.convert(valueMetaType);
-                        if (!couldConvert && originalType.isValid()) {
-                            // If the original type was void, we're converting a "hole" in a sparse
-                            // array. There is no point in warning about that.
-                            qWarning().noquote()
-                                    << QLatin1String("Could not convert array value "
-                                                     "at position %1 from %2 to %3")
-                                       .arg(QString::number(i),
-                                            QString::fromUtf8(originalType.name()),
-                                            QString::fromUtf8(valueMetaType.name()));
-                        }
-                        retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
-                    }
-                }
-                return retn;
-            }
-        }
     }
 
     if (value.isUndefined())

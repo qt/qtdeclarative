@@ -46,7 +46,7 @@ struct Q_QML_EXPORT SequencePrototype : public QV4::Object
 
     static QMetaType metaTypeForSequence(const Sequence *object);
     static QVariant toVariant(const Sequence *object);
-    static QVariant toVariant(const Value &array, QMetaType typeHint);
+    static QVariant toVariant(const Value &array, QMetaType targetType);
     static void *getRawContainerPtr(const Sequence *object, QMetaType typeHint);
 };
 
