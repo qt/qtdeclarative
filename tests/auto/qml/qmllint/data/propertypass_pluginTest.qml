@@ -19,6 +19,7 @@ Item {
 
     Component.onCompleted: {
         console.log(foo.x); // Reading property from another component
+        Math.log(30);
         foo.x = 30; // Writing property from another component
     }
 }
