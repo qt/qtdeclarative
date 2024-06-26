@@ -1024,24 +1024,20 @@ bool QQuickMenuPrivate::blockInput(QQuickItem *item, const QPointF &point) const
  */
 bool QQuickMenuPrivate::handleReleaseWithoutGrab(const QEventPoint &eventPoint)
 {
-    if (!contains(eventPoint.scenePosition()))
+    const QPointF scenePos = eventPoint.scenePosition();
+    if (!contains(scenePos))
         return false;
 
-    QQuickMenuItem *menuItem = nullptr;
-    // Usually, hover events have occurred, and currentIndex is set.
-    // If not, use eventPoint.position() for picking.
-    if (currentIndex < 0) {
-        auto *list = qobject_cast<QQuickListView *>(contentItem);
-        if (!list)
-            return false;
-        menuItem = qobject_cast<QQuickMenuItem *>(list->itemAt(eventPoint.position().x(), eventPoint.position().y()));
-    } else {
-        menuItem = qobject_cast<QQuickMenuItem *>(itemAt(currentIndex));
-    }
-    if (Q_LIKELY(menuItem)) {
+    auto *list = qobject_cast<QQuickListView *>(contentItem);
+    if (!list)
+        return false;
+
+    const QPointF listPos = list->mapFromScene(scenePos);
+    if (auto *menuItem = qobject_cast<QQuickMenuItem *>(list->itemAt(listPos.x(), listPos.y()))) {
         menuItem->animateClick();
         return true;
     }
+
     return false;
 }
 
