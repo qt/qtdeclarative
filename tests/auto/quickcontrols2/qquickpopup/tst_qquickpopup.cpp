@@ -121,6 +121,7 @@ private slots:
     void shrinkPopupThatWasLargerThanWindow();
     void mirroredCombobox();
     void rotatedCombobox();
+    void resetHoveredStateForItemsWithinPopup();
 
 private:
     static bool hasWindowActivation();
@@ -2036,6 +2037,40 @@ void tst_QQuickPopup::rotatedCombobox()
 
         popup->close();
     }
+}
+
+void tst_QQuickPopup::resetHoveredStateForItemsWithinPopup()
+{
+    QQuickControlsApplicationHelper helper(this, "resetHoveredForItemsWithinOverlay.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickPopup *controlsPopup = window->property("controlsPopup").value<QQuickPopup*>();
+    QVERIFY(controlsPopup);
+
+    QQuickPopup *blockInputPopup = window->property("blockInputPopup").value<QQuickPopup*>();
+    QVERIFY(controlsPopup);
+
+    controlsPopup->open();
+    QTRY_VERIFY(controlsPopup->isOpened());
+
+    QTest::mouseMove(window, QPoint(window->width() / 2 + 2, window->height() / 2 + 2));
+    QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
+
+    auto *controlItem = qobject_cast<QQuickControl *>(controlsPopup->contentItem()->childItems().at(0));
+    QVERIFY(controlItem);
+    // Check hover enabled for the control item within the popup
+    QTRY_VERIFY(controlItem->isHovered());
+
+    // Open the modal popup window over the existing control item
+    blockInputPopup->open();
+    QTRY_VERIFY(blockInputPopup->isOpened());
+
+    // Control item hovered shall be disabled once we open the modal popup
+    QTRY_VERIFY(!controlItem->isHovered());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
