@@ -128,9 +128,9 @@
     \printuntil }
     \dots 8
 
-    We consistently use the \l qsTr function to enable translation of UI text,
-    so that the application will make sense regardless of the end user's native
-    language.
+    We consistently use the \l [QML] {Qt::}{qsTr()} function to enable
+    translation of UI text, so that the application will make sense regardless
+    of the end user's native language.
 
     We use several kinds of \l {Qt Quick Dialogs QML Types}{dialogs}:
 
