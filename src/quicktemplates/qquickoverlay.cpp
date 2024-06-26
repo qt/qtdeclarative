@@ -456,6 +456,13 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
             case QEvent::HoverEnter:
             case QEvent::HoverMove:
             case QEvent::HoverLeave:
+                // If the control item has already been hovered, allow the hover leave event
+                // to be processed by the same item for resetting its internal hovered state
+                // instead of filtering it here.
+                if (auto *control = qobject_cast<QQuickControl *>(item)) {
+                    if (control->isHovered() && event->type() == QEvent::HoverLeave)
+                        return false;
+                }
                 handled = d->handleHoverEvent(item, static_cast<QHoverEvent *>(event), popup);
                 break;
 
