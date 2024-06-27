@@ -287,6 +287,24 @@ QVariant QQuickText::loadResource(int type, const QUrl &source)
         // let QTextDocument::loadResource() handle local file loading
         return {};
     }
+
+    // If the image is in resources, load it here, because QTextDocument::loadResource() doesn't do that
+    if (!url.scheme().compare("qrc"_L1, Qt::CaseInsensitive)) {
+        // qmlWarning if the file doesn't exist
+        QFile f(QQmlFile::urlToLocalFileOrQrc(url));
+        if (f.open(QFile::ReadOnly)) {
+            QByteArray buf = f.readAll();
+            f.close();
+            QImage image;
+            image.loadFromData(buf);
+            if (!image.isNull())
+                return image;
+        }
+        // if we get here, loading failed
+        qmlWarning(this) << "Cannot read resource: " << f.fileName();
+        return {};
+    }
+
     // see if we already started a load job
     for (auto it = d->extra->pixmapsInProgress.cbegin(); it != d->extra->pixmapsInProgress.cend();) {
         auto *job = *it;
