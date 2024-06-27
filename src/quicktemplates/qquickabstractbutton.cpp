@@ -1076,10 +1076,11 @@ void QQuickAbstractButton::toggle()
 
     All signals associated with a click are emitted as appropriate.
 
-    If the \l focusPolicy includes \c Qt.ClickFocus, \l activeFocus will
-    become \c true.
+    If the \l [QML] {Item::} {focusPolicy} includes \c Qt.ClickFocus,
+    \l [QML] {Item::} {activeFocus} will become \c true.
 
-    This function does nothing if the button is \l {enabled}{disabled}.
+    This function does nothing if the button is
+    \l [QML] {Item::enabled} {disabled}.
 
     Calling this function again before the button is released resets
     the release timer.
@@ -1113,10 +1114,11 @@ void QQuickAbstractButton::click()
 
     All signals associated with a click are emitted as appropriate.
 
-    If the \l focusPolicy includes \c Qt.ClickFocus, \l activeFocus will
-    become \c true.
+    If the \l [QML] {Item::} {focusPolicy} includes \c Qt.ClickFocus,
+    \l activeFocus will become \c true.
 
-    This function does nothing if the button is \l {enabled}{disabled}.
+    This function does nothing if the button is
+    \l [QML] {Item::enabled} {disabled}.
 
     Calling this function again before the button is released resets
     the release timer.

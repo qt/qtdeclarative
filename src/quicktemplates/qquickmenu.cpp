@@ -205,9 +205,9 @@ static const int SUBMENU_DELAY = 225;
 
     Since Qt 6.8, a menu offers three different implementations, depending on the
     platform. You can choose which one should be preferred by setting
-    \l popupType. This will let you control if a menu should be shown as a separate
-    window, as an item inside the parent window, or as a native menu. You can read
-    more about these options \l{Popup type}{here.}
+    \l [QML] {Popup::} {popupType}. This will let you control if a menu should
+    be shown as a separate window, as an item inside the parent window, or as a
+    native menu. You can read more about these options \l{Popup type}{here}.
 
     Whether a menu will be able to use the preferred type depends on the platform.
     \c Popup.Item is supported on all platforms, but \c Popup.Window is
@@ -217,8 +217,9 @@ static const int SUBMENU_DELAY = 225;
 
     \section2 Limitations when using native menus
 
-    When setting \l popupType to \c Popup.Native, there are some limitations and
-    differences compared to using \c Popup.Item and \c Popup.Window.
+    When setting \l [QML] {Popup::} {popupType} to \c Popup.Native
+    there are some limitations and differences compared to using \c Popup.Item
+    and \c Popup.Window.
 
     \section3 API differences
 
@@ -235,7 +236,7 @@ static const int SUBMENU_DELAY = 225;
     \li \l {Popup::}{contentChildren} (visual children will not be visible)
     \li \l contentModel
     \li \l {Popup::}{open()}
-    \li \l {Popup::}{popup()}
+    \li \l popup()
     \li \l {Popup::}{close()}
     \li \l {Popup::}{opened()}
     \li \l {Popup::}{closed()}
@@ -243,13 +244,14 @@ static const int SUBMENU_DELAY = 225;
     \li \l {Popup::}{aboutToHide()}
     \endlist
 
-    In addition, showing a popup (using for example \l {Popup::}{open()} or \l {Popup::}{popup()}
-    will, on some platforms, be a blocking call. This means that the call will not return
-    before the menu is closed again, which can affect the logic in your application. This is
-    especially important to take into consideration if your application is targeting multiple
-    platforms, and as such, sometimes run on platforms where native menus are not supported.
-    In that case the popupType will fall back to \c Popup.Item, for example, and calls to
-    \l {Popup::}{open()} will not be blocking.
+    In addition, showing a popup (using for example \l {Popup::}{open()} or
+    \l popup() will, on some platforms, be a blocking call. This means that the
+    call will not return before the menu is closed again, which can affect the
+    logic in your application. This is especially important to take into
+    consideration if your application is targeting multiple
+    platforms, and as such, sometimes run on platforms where native menus are
+    not supported. In that case the popupType will fall back to \c Popup.Item,
+    for example, and calls to \l {Popup::}{open()} will not be blocking.
 
     Items like \l MenuItem will still react to clicks in the corresponding
     native menu item by emitting signals, for example, but will be replaced by
@@ -261,7 +263,8 @@ static const int SUBMENU_DELAY = 225;
     Those menus, and all of their contents, will therefore be rendered by the platform, and
     not by QML. This means that the \l delegate will \e not be used for rendering. It will,
     however, always be instantiated (but hidden), so that functions such as
-    \l {Component.onCompleted()} execute regardless of platform and \l popupType.
+    \l {Component.onCompleted()} execute regardless of platform and
+    \l [QML] {Popup::} {popupType}.
 
     \section3 Supported platforms
 
