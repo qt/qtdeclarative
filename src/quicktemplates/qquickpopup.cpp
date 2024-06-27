@@ -813,6 +813,13 @@ void QQuickPopupPrivate::finalizeExitTransition()
     hadActiveFocusBeforeExitTransition = false;
     emit q->visibleChanged();
     emit q->closed();
+#if QT_CONFIG(accessibility)
+    const auto type = q->effectiveAccessibleRole() == QAccessible::PopupMenu
+                        ? QAccessible::PopupMenuEnd
+                        : QAccessible::DialogEnd;
+    QAccessibleEvent ev(q->popupItem(), type);
+    QAccessible::updateAccessibility(&ev);
+#endif
     if (popupItem) {
         popupItem->setScale(prevScale);
         popupItem->setOpacity(prevOpacity);
@@ -823,6 +830,13 @@ void QQuickPopupPrivate::opened()
 {
     Q_Q(QQuickPopup);
     emit q->opened();
+#if QT_CONFIG(accessibility)
+    const auto type = q->effectiveAccessibleRole() == QAccessible::PopupMenu
+                        ? QAccessible::PopupMenuStart
+                        : QAccessible::DialogStart;
+    QAccessibleEvent ev(q->popupItem(), type);
+    QAccessible::updateAccessibility(&ev);
+#endif
 }
 
 Qt::WindowFlags QQuickPopupPrivate::popupWindowType() const
