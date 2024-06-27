@@ -101,7 +101,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickPopup : public QObject, public QQmlParserSt
     Q_PROPERTY(qreal leftInset READ leftInset WRITE setLeftInset RESET resetLeftInset NOTIFY leftInsetChanged FINAL REVISION(2, 5))
     Q_PROPERTY(qreal rightInset READ rightInset WRITE setRightInset RESET resetRightInset NOTIFY rightInsetChanged FINAL REVISION(2, 5))
     Q_PROPERTY(qreal bottomInset READ bottomInset WRITE setBottomInset RESET resetBottomInset NOTIFY bottomInsetChanged FINAL REVISION(2, 5))
-    Q_PROPERTY(PopupType popupType READ popupType WRITE setPopupType RESET resetPopupType NOTIFY popupTypeChanged FINAL REVISION(6, 8))
+    Q_PROPERTY(PopupType popupType READ popupType WRITE setPopupType NOTIFY popupTypeChanged FINAL REVISION(6, 8))
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
     Q_CLASSINFO("DefaultProperty", "contentData")
     QML_NAMED_ELEMENT(Popup)
@@ -321,7 +321,6 @@ public:
 
     PopupType popupType() const;
     void setPopupType(PopupType);
-    void resetPopupType();
 
 public Q_SLOTS:
     void open();
