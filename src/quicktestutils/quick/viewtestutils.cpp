@@ -469,6 +469,7 @@ namespace QQuickTest {
     */
     bool initView(QQuickView &view, const QUrl &url, bool moveMouseOut, QByteArray *errorMessage)
     {
+        const bool platformIsWayland = !QGuiApplication::platformName().compare(QLatin1String("wayland"), Qt::CaseInsensitive);
         view.setSource(url);
         while (view.status() == QQuickView::Loading)
             QTest::qWait(10);
@@ -479,20 +480,22 @@ namespace QQuickTest {
             }
             return false;
         }
-        const QRect screenGeometry = view.screen()->availableGeometry();
-        const QSize size = view.size();
         if (view.width() == 0)
             view.setWidth(100);
         if (view.height() == 0)
             view.setHeight(100);
-        const QPoint offset = QPoint(size.width() / 2, size.height() / 2);
-        view.setFramePosition(screenGeometry.center() - offset);
-    #if QT_CONFIG(cursor) // Get the cursor out of the way.
-        if (moveMouseOut)
-             QCursor::setPos(view.geometry().topRight() + QPoint(100, 100));
-    #else
-        Q_UNUSED(moveMouseOut);
-    #endif
+        if (!platformIsWayland) {
+            const QSize size = view.size();
+            const QRect screenGeometry = view.screen()->availableGeometry();
+            const QPoint offset = QPoint(size.width() / 2, size.height() / 2);
+            view.setFramePosition(screenGeometry.center() - offset);
+#if QT_CONFIG(cursor) // Get the cursor out of the way. But it's not possible on Wayland.
+            if (moveMouseOut)
+                QCursor::setPos(view.geometry().topRight() + QPoint(100, 100));
+#else
+            Q_UNUSED(moveMouseOut);
+#endif
+        }
         return true;
     }
 
