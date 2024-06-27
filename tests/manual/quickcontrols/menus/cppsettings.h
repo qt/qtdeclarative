@@ -13,6 +13,8 @@ class CppSettings : public QObject
     Q_OBJECT
     Q_PROPERTY(bool dontUseNativeMenuBar READ dontUseNativeMenuBar WRITE setDontUseNativeMenuBar
         NOTIFY dontUseNativeMenuBarChanged FINAL)
+    Q_PROPERTY(bool dontUseNativeMenuWindows READ dontUseNativeMenuWindows WRITE setDontUseNativeMenuWindows
+        NOTIFY dontUseNativeMenuBarChanged FINAL)
     Q_PROPERTY(int popupType READ popupType WRITE setPopupType
         NOTIFY popupTypeChanged FINAL)
     QML_ELEMENT
@@ -27,8 +29,12 @@ public:
     int popupType() const;
     void setPopupType(int newPopupType);
 
+    bool dontUseNativeMenuWindows() const;
+    void setDontUseNativeMenuWindows(bool newDontUseNativeMenuWindows);
+
 signals:
     void dontUseNativeMenuBarChanged();
+    void dontUseNativeMenuWindowsChanged();
     void popupTypeChanged();
 
 private:

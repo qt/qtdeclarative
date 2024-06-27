@@ -41,3 +41,19 @@ void CppSettings::setPopupType(int newPopupType)
     mSettings.setValue("popupType", newPopupType);
     emit popupTypeChanged();
 }
+
+bool CppSettings::dontUseNativeMenuWindows() const
+{
+    return mSettings.value("dontUseNativeMenuWindows").toBool();
+}
+
+void CppSettings::setDontUseNativeMenuWindows(bool dontUseNativeMenuWindows)
+{
+    const bool oldValue = this->dontUseNativeMenuWindows();
+    if (dontUseNativeMenuWindows == oldValue)
+        return;
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, dontUseNativeMenuWindows);
+    mSettings.setValue("dontUseNativeMenuWindows", dontUseNativeMenuWindows);
+    emit dontUseNativeMenuWindowsChanged();
+}

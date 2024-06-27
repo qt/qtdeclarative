@@ -209,6 +209,15 @@ static const int SUBMENU_DELAY = 225;
     be shown as a separate window, as an item inside the parent window, or as a
     native menu. You can read more about these options \l{Popup type}{here}.
 
+    The default \l [QML] {Popup::}{popupType} is decided by the style. The \l {macOS Style}, for example,
+    sets it to be \c Popup.Native, while the \l{Imagine Style} uses \c Popup.Window (which
+    is the default when the style doesn't set a popup type).
+    If you add customizations to a menu, and want those to be used regardless of the
+    style, you should set the popup type to be \c Popup.Window (or \c Popup.Item) explicitly.
+    Another alternative is to set the \c Qt::AA_DontUseNativeMenuWindows
+    \l {Qt::ApplicationAttribute}{application attribute}. This will disable native context
+    menus for the whole application, irrespective of the style.
+
     Whether a menu will be able to use the preferred type depends on the platform.
     \c Popup.Item is supported on all platforms, but \c Popup.Window is
     normally only supported on desktop platforms. Additionally, if the menu is inside
@@ -358,9 +367,14 @@ QQuickMenu *QQuickMenuPrivate::rootMenu() const
 
 bool QQuickMenuPrivate::useNativeMenu() const
 {
-    // If we're inside a MenuBar, it'll decide whether or not we
-    // should be native or not. Otherwise, the root menu (which
-    // might be this menu) will decide.
+    if (QGuiApplication::testAttribute(Qt::AA_DontUseNativeMenuWindows))
+        return false;
+
+    // If we're inside a MenuBar, it'll decide whether or not we should be
+    // native. Otherwise, the root menu (which might be this menu) will decide.
+    // Note that this is just a preference, QPA can still fail to create a native
+    // menu. In that case we'll fall back to let QQuickPopup create the menu/popup
+    // instead, and end up with Window or Item as resolved popup type.
     QQuickMenu *root = rootMenu();
     if (auto menuBar = QQuickMenuPrivate::get(root)->menuBar.get())
         return QQuickMenuBarPrivate::get(menuBar)->useNativeMenu(q_func());
