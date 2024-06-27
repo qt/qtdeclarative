@@ -766,6 +766,15 @@ bool QQuickPath::simplify() const
     return d->simplify;
 }
 
+/*! \qmlproperty bool QtQuick::Path::asynchronous
+    \since 6.9
+
+    When set to true, the path will be processed asynchronously. This is an optimization
+    to process the path only once, after all the methods that possibly affect the path.
+    This means that when set to \c true, the updated path is not available immediately
+    after e.g. adjusting \l startX, \l scale or appending an element, only after the Qt
+    event loop has been processed. The default value is \c false.
+*/
 bool QQuickPath::isAsynchronous() const
 {
     Q_D(const QQuickPath);
@@ -779,6 +788,7 @@ void QQuickPath::setAsynchronous(bool a)
         return;
 
     d->asynchronous = a;
+    emit asynchronousChanged();
 }
 
 /*!

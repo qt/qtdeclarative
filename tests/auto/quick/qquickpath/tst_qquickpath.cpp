@@ -26,6 +26,7 @@ private slots:
     void rectangle();
     void rectangleRadii();
     void appendRemove();
+    void asynchronous();
 
 private:
     void arc(QSizeF scale);
@@ -442,6 +443,43 @@ void tst_QuickPath::appendRemove()
 
     QCOMPARE(pathElements.count(), 0);
     QCOMPARE(changedSpy.count(), 4);
+}
+
+void tst_QuickPath::asynchronous()
+{
+    QQmlEngine engine;
+    QQmlComponent c1(&engine);
+    c1.setData("import QtQuick\nPath { }", QUrl());
+    QScopedPointer<QObject> o1(c1.create());
+    QQuickPath *path = qobject_cast<QQuickPath *>(o1.data());
+    QVERIFY(path);
+
+    QQmlListReference pathElements(path, "pathElements");
+    QSignalSpy changedSpy(path, SIGNAL(changed()));
+
+    QCOMPARE(pathElements.count(), 0);
+    QCOMPARE(changedSpy.count(), 0);
+
+    QVERIFY(!path->isAsynchronous());
+    path->setAsynchronous(true);
+    QVERIFY(path->isAsynchronous());
+
+    QQuickPathLine *line = new QQuickPathLine(path);
+    line->setX(10.0);
+    pathElements.append(line);
+    QQuickPathLine *line2 = new QQuickPathLine(path);
+    line2->setX(20.0);
+    pathElements.append(line2);
+
+    // Added into path only after processing events and
+    // changed() called only once for all sequental appends.
+    QCOMPARE(pathElements.count(), 2);
+    QVERIFY(path->path().isEmpty());
+    QCOMPARE(changedSpy.count(), 0);
+    qApp->processEvents();
+    QCOMPARE(pathElements.count(), 2);
+    QTRY_VERIFY(!path->path().isEmpty());
+    QCOMPARE(changedSpy.count(), 1);
 }
 
 QTEST_MAIN(tst_QuickPath)
