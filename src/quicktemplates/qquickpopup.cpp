@@ -2920,11 +2920,23 @@ void QQuickPopup::resetBottomInset()
     well. And if the menu is a sub-menu inside another menu, the parent (or root) menu
     will decide the type.
 
-    \note The default value is platform dependent, and can change in future versions of Qt.
-    Therefore, if you want to make sure that for example \c Popup.Item is always used on all
-    platforms, you should set it explicitly.
+    The default value is style-dependent, and can change in future versions of Qt.
+    The \l {macOS Style}, for example, sets \c {Menu.popupType} to be \c Popup.Native, while
+    the \l{Imagine Style} uses \c Popup.Window (which is the default when the style doesn't
+    set a popup type). If you always want to use native menus for all styles on macOS, for
+    example, you can do:
 
-    You can set this property to \c undefined, to restore its value back to its default type.
+    \code
+    Menu {
+        popupType: Qt.platform.os === "osx" ? Popup.Native : Popup.Window
+    }
+    \endcode
+
+    Also, if you choose to customize a popup (by for example changing any of the
+    delegates), you should consider setting the popup type to be \c Popup.Window
+    as well. This will ensure that your changes will be visible on all platforms
+    and for all styles. Otherwise, when native menus are being used, the delegates
+    will \e not be used for rendering.
 
     \sa {Popup type}
 */
@@ -2943,11 +2955,6 @@ void QQuickPopup::setPopupType(PopupType popupType)
     d->m_popupType = popupType;
 
     emit popupTypeChanged();
-}
-
-void QQuickPopup::resetPopupType()
-{
-    setPopupType(PopupType::Item);
 }
 
 /*!

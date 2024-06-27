@@ -218,6 +218,12 @@ static const int SUBMENU_DELAY = 225;
     \l {Qt::ApplicationAttribute}{application attribute}. This will disable native context
     menus for the whole application, irrespective of the style.
 
+    The default \l [QML] {Popup::}{popupType} is decided by the style. The \l {macOS Style}, for example,
+    sets it to be \c Popup.Native, while the \l{Imagine Style} uses \c Popup.Window (which
+    is the default when the style doesn't set a popup type).
+    If you add customizations to a menu, and want those to be used regardless of the
+    style, you should set the popup type to be \c Popup.Window (or \c Popup.Item) explicitly.
+
     Whether a menu will be able to use the preferred type depends on the platform.
     \c Popup.Item is supported on all platforms, but \c Popup.Window is
     normally only supported on desktop platforms. Additionally, if the menu is inside
