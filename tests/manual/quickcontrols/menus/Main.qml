@@ -209,6 +209,13 @@ ApplicationWindow {
                         onClicked: subMenu.removeLastAction()
                     }
                 }
+                Row {
+                    Switch {
+                        text: qsTr("Don't use native menu windows")
+                        checked: CppSettings.dontUseNativeMenuWindows
+                        onClicked: CppSettings.dontUseNativeMenuWindows = checked
+                    }
+                }
             }
         }
 

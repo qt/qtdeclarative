@@ -101,6 +101,7 @@ private slots:
     void nativeDynamicActions();
     void nativeDynamicSubmenus();
     void nativeMenuSeparator();
+    void AA_DontUseNativeMenuWindows();
     void dontUseNativeMenuWindowsChanges();
     void nativeMixedItems();
     void effectivePosition_data();
@@ -1841,6 +1842,9 @@ void tst_QQuickMenu::addRemoveSubMenus()
 
 void tst_QQuickMenu::subMenuPopupType()
 {
+    // Undo the setting of AA_DontUseNativeMenuWindows to true from init()
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
+
     // Check that all sub-menus will end up with an effective popup
     // type equal to the root menu.
     QQuickControlsApplicationHelper helper(this, QLatin1String("subMenus.qml"));
@@ -2284,6 +2288,9 @@ void tst_QQuickMenu::invalidUrlInImgTag()
 
 void tst_QQuickMenu::nativeStatic()
 {
+    // Undo the setting of AA_DontUseNativeMenuWindows to true from init()
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
+
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeStatic.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2386,6 +2393,9 @@ void tst_QQuickMenu::nativeDynamicActions()
 
 void tst_QQuickMenu::nativeDynamicSubmenus()
 {
+    // Undo the setting of AA_DontUseNativeMenuWindows to true from init()
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
+
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeDynamicSubmenus.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2493,6 +2503,9 @@ void tst_QQuickMenu::nativeDynamicSubmenus()
 
 void tst_QQuickMenu::nativeMenuSeparator()
 {
+    // Undo the setting of AA_DontUseNativeMenuWindows to true from init()
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
+
     QQuickControlsApplicationHelper helper(this, QLatin1String("nativeMenuSeparator.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -2528,6 +2541,30 @@ void tst_QQuickMenu::nativeMenuSeparator()
         QVERIFY(subMenuSeparatorNativeItem);
         QVERIFY(subMenuSeparatorNativeItem->separator());
     }
+}
+
+void tst_QQuickMenu::AA_DontUseNativeMenuWindows()
+{
+    // Check that we end up with a non-native menu when AA_DontUseNativeMenuWindows
+    // is set, even if popupType is Native.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+    QQuickMenuPrivate *menu_d = QQuickMenuPrivate::get(menu);
+
+    menu->setPopupType(QQuickPopup::Native);
+    // Note: since a native menu is blocking, we cannot open it, in case
+    // the test fails and it actually opens. That would block the test as
+    // well. So we just check that useNativeMenu returns false for now.
+    QVERIFY(!menu_d->useNativeMenu());
+    QVERIFY(!menu_d->maybeNativeHandle());
 }
 
 void tst_QQuickMenu::dontUseNativeMenuWindowsChanges()
