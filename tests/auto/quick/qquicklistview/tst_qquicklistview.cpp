@@ -7810,7 +7810,7 @@ void tst_QQuickListView::multipleTransitions()
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->x(), 0.0);
-        QTRY_COMPARE(item->y(), i*20.0);
+        QTRY_COMPARE(item->y() - listview->originY(), i*20.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != nullptr);
         QTRY_COMPARE(name->text(), model.name(i));
