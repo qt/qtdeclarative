@@ -3,15 +3,17 @@
 import QtQuick
 import QtQuick.Controls
 
+//! [0]
 Rectangle {
     id: mainRectangle
 
     property AbstractItemModel dataModel
-
+//! [0]
     color: "#00414A"
     border.color: "#00414A"
     border.width: 2
 
+//! [1]
     TableView {
         id: tableView
 
@@ -29,7 +31,9 @@ Rectangle {
         ScrollBar.horizontal: ScrollBar{
            policy: ScrollBar.AsNeeded
         }
+//! [1]
 
+//! [2]
         delegate: Rectangle {
             width: tableView.width
             color: "#2CDE85"
@@ -37,11 +41,12 @@ Rectangle {
             border.width: 2
             Text {
                 // Calls MyDataModel::data to get data based on the roles.
-                // Calls in a context of a QtRenderingThread TODO check and synch
+                // Called in Qt qtMainLoopThread thread context.
                 text: model.row + model.column
                 font.pixelSize: 26
                 font.bold: true
             }
         }
+//! [2]
     }
 }

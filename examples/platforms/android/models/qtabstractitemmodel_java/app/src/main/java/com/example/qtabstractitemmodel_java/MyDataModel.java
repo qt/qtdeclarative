@@ -28,22 +28,25 @@ public class MyDataModel extends QtAbstractItemModel {
     private static final int ROLE_COLUMN = 1;
     private static final int MAX_ROWS_AND_COLUMNS = 26;
     private int m_columns = 4;
-    /* Two dimensional array of Cell objects to represent a sheet.
+    /*
+     * Two dimensional array of Cell objects to represent a sheet.
      * First dimension are rows. Second dimension are columns.
      * TODO QTBUG-127467
      */
     private final ArrayList<ArrayList<Cell>> m_dataList = new ArrayList<>();
     private final char m_firstLatinLetter = 'A';
 
-    // Called in Android Thread context
-   /*
-   * Initializes the two-dimensional array list with following content
-   * [] [] [] [] 1A 1B 1C 1D
-   * [] [] [] [] 2A 2B 2C 2D
-   * [] [] [] [] 3A 3B 3C 3D
-   * [] [] [] [] 4A 4B 4C 4D
-   */
+    //! [1]
+    /*
+    * Initializes the two-dimensional array list with following content:
+    * [] [] [] [] 1A 1B 1C 1D
+    * [] [] [] [] 2A 2B 2C 2D
+    * [] [] [] [] 3A 3B 3C 3D
+    * [] [] [] [] 4A 4B 4C 4D
+    * Threading: called in Android main thread context.
+    */
     public MyDataModel() {
+    //! [1]
         final int initializingRowAndColumnCount = m_columns;
         for (int rows = 0 ; rows < initializingRowAndColumnCount; rows++) {
             ArrayList<Cell> newRow = new ArrayList<>();
@@ -56,18 +59,33 @@ public class MyDataModel extends QtAbstractItemModel {
         }
     }
 
+    //! [2]
+    /*
+    * Returns the count of columns.
+    * Threading: called in Android main thread context.
+    * Threading: called in Qt qtMainLoopThread thread context.
+    */
     @Override
     public int columnCount(QtModelIndex qtModelIndex) {
         return m_columns;
     }
 
+    /*
+    * Returns the count of rows.
+    * Threading: called in Android main thread context.
+    * Threading: called in Qt qtMainLoopThread thread context.
+    */
     @Override
     public int rowCount(QtModelIndex qtModelIndex) {
         return m_dataList.size();
     }
+    //! [2]
 
-    // Returns the data to QML based on the roleNames
-    // Called in QML Rendering Thread context
+    //! [3]
+    /*
+    * Returns the data to QML based on the roleNames
+    * Threading: called in Qt qtMainLoopThread thread context.
+    */
     @Override
     public Object data(QtModelIndex qtModelIndex, int role) {
         switch (role) {
@@ -84,7 +102,11 @@ public class MyDataModel extends QtAbstractItemModel {
                 return null;
         }
     }
-    // Function which defines what string in QML side can be used to get the data from Java side
+
+    /*
+    * Defines what string i.e. role in QML side gets the data from Java side.
+    * Threading: called in Qt qtMainLoopThread thread context.
+    */
     @Override
     public HashMap<Integer, String> roleNames() {
         HashMap<Integer, String> roles = new HashMap<>();
@@ -93,18 +115,30 @@ public class MyDataModel extends QtAbstractItemModel {
         return roles;
     }
 
+    /*
+    * Returns a new index model.
+    * Threading: called in Qt qtMainLoopThread thread context.
+    */
     @Override
     public QtModelIndex index(int row, int column, QtModelIndex parent) {
         return createIndex(row, column, 0);
     }
 
+    /*
+    * Returns a parent model.
+    * Threading: not used called in this example.
+    */
     @Override
     public QtModelIndex parent(QtModelIndex qtModelIndex) {
         return new QtModelIndex();
     }
+    //! [3]
 
-    // Four model side calls for MainActivity
-    // Called in Android Thread context
+    //! [4]
+    /*
+    * Adds a row.
+    * Threading: called in Android main thread context.
+    */
     public void addRow() {
         if (m_columns > 0 && m_dataList.size() < MAX_ROWS_AND_COLUMNS) {
             beginInsertRows(new QtModelIndex(), m_dataList.size(), m_dataList.size());
@@ -113,7 +147,10 @@ public class MyDataModel extends QtAbstractItemModel {
         }
     }
 
-    // Called in Android Thread context
+    /*
+    * Removes a row.
+    * Threading: called in Android main thread context.
+    */
     public void removeRow() {
         if (m_dataList.size() > 1) {
             beginRemoveRows(new QtModelIndex(), m_dataList.size() - 1, m_dataList.size() - 1);
@@ -121,8 +158,13 @@ public class MyDataModel extends QtAbstractItemModel {
             endRemoveRows();
         }
     }
+    //! [4]
 
-    // Called in Android Thread context
+    //! [5]
+    /*
+    * Adds a column.
+    * Threading: called in Android main thread context.
+    */
     public void addColumn() {
         if (!m_dataList.isEmpty() && m_columns < MAX_ROWS_AND_COLUMNS) {
             beginInsertColumns(new QtModelIndex(), m_columns, m_columns);
@@ -132,7 +174,10 @@ public class MyDataModel extends QtAbstractItemModel {
         }
     }
 
-    // Called in Android Thread context
+    /*
+    * Removes a column.
+    * Threading: called in Android main thread context.
+    */
     public void removeColumn() {
         if (m_columns > 1) {
             int columnToRemove = m_columns - 1;
@@ -141,6 +186,7 @@ public class MyDataModel extends QtAbstractItemModel {
             endRemoveColumns();
         }
     }
+    //! [5]
 
     private void generateColumn() {
         int amountOfRows = m_dataList.size();
