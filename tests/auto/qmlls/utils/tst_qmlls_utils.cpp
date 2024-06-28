@@ -2636,6 +2636,32 @@ void tst_qmlls_utils::completions_data()
                                   << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s,
                                                    u"Rectangle"_s });
 
+    {
+
+        const QString importFile = testFile(u"completions/imports.qml"_s);
+        QTest::newRow("importAfterDot") << importFile << 1 << 16
+                                        << ExpectedCompletions({
+                                                                   { u"Controls"_s, CompletionItemKind::Module },
+                                                               })
+                                        << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s,
+                                                         u"Rectangle"_s, u"as"_s });
+
+        QTest::newRow("importAfterDot2") << importFile << 1 << 25
+                                         << ExpectedCompletions({
+                                                                    { u"Basic"_s, CompletionItemKind::Module },
+                                                                })
+                                         << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s,
+                                                          u"Rectangle"_s, u"as"_s });
+
+        QTest::newRow("importAfterDotMissing")
+                << importFile << 2 << 25
+                << ExpectedCompletions({
+                                           { u"Basic"_s, CompletionItemKind::Module },
+                                       })
+                << QStringList(
+                       { u"QtQuick"_s, u"vector4d"_s, u"width"_s, u"Rectangle"_s, u"as"_s });
+    }
+
     QTest::newRow("importModuleStart")
             << file << 1 << 8
             << ExpectedCompletions({
