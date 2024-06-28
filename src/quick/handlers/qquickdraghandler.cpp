@@ -50,7 +50,8 @@ Q_STATIC_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
     \c target is an Item, \c centroid is the point at which the drag begins and
     to which the \c target will be moved (subject to constraints).
 
-    At this time, drag-and-drop is not yet supported.
+    DragHandler can be used together with the \l Drag attached property to
+    implement drag-and-drop.
 
     \sa Drag, MouseArea, {Qt Quick Examples - Pointer Handlers}
 */
