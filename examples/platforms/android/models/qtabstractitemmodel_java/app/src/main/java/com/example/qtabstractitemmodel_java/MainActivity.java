@@ -17,8 +17,9 @@ import org.qtproject.example.qtabstractitemmodel.QmlModule.Main;
 public class MainActivity extends AppCompatActivity implements QtQmlStatusChangeListener {
     private static final String TAG = "QtAIM MainActivity";
     private Main m_mainQmlComponent;
+    //! [1]
     private final MyDataModel m_model = new MyDataModel();
-
+    //! [1]
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,11 +34,12 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         FrameLayout qmlFrameLayout = findViewById(R.id.qmlFrame);
         qmlFrameLayout.addView(qtQuickView, params);
 
+        //! [2]
         Button addRowAtEndButton = findViewById(R.id.addRowAtEndButton);
         Button removeRowFromEndButton = findViewById(R.id.removeRowFromEndButton);
         Button addColumnButton = findViewById(R.id.addColumnButton);
         Button removeLastColumnButton = findViewById(R.id.removeLastColumnButton);
-        // Calls in a context of a Android thread.
+        // Calls in a context of a Android main thread.
         addRowAtEndButton.setOnClickListener(view -> {
             m_model.addRow();
         });
@@ -50,17 +52,22 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         removeLastColumnButton.setOnClickListener(view -> {
             m_model.removeColumn();
         });
+        //! [2]
 
+        //! [3]
         qtQuickView.loadComponent(m_mainQmlComponent);
+        //! [3]
 
     }
 
+    //! [4]
     @Override
     public void onStatusChanged(QtQmlStatus qtQmlStatus) {
         Log.i(TAG, "Status of QtQuickView: " + qtQmlStatus);
         if (qtQmlStatus == QtQmlStatus.READY)
-            // Calls in a context of a Android thread.
+            // Calls in a context of a Android main thread.
             m_mainQmlComponent.setDataModel(m_model);
     }
+    //! [4]
 
 }

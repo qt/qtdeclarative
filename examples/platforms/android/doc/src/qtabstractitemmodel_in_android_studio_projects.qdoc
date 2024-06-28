@@ -1,0 +1,138 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtabstractitemmodel-in-android-studio-projects-example.html
+    \title QtAbstractItemModel Example in Android Studio Projects
+    \brief Shows how to handle complex data types and apply conditional
+    formatting to a table view format using QtAbstractItemModel class and
+    QtModelIndex class.
+    \ingroup qtquickexamples
+
+    \section1 Overview
+
+    \image qtabstractitemmodel_portrait.png
+
+    This example consists of two projects: an Android Studio project
+    (qtabstractitemmodel_java) and a QML project (qtabstractitemmodel).
+    You can import the QML project into an Android project.
+
+    The example shows how to handle complex data types between Java and QML.
+    It demonstrates how to use the \c QtAbstractItemModel and \c QtModelIndex
+    Java API classes. In QML, the data usage is demonstrated with the TableView item.
+    In Java, data usage is demonstrated with a model of nested ArrayList items
+    for rows and columns. For more information on how QML works, see \l {Qt Qml}.
+
+    \section1 Running the example
+
+    To run this example, you need Android Studio and
+    \l {Qt Tools for Android Studio} on top of a standard Qt for Android installation.
+    Open qtabstractitemmodel_java in Android Studio and follow the instructions
+    in \l {Qt Tools for Android Studio} to import the \c qtabstractitemmodel.
+
+    \section1 QML project
+
+    On the QML project side, the example uses a \l {Rectangle QML Type} as the root
+    object. The \c dataModel property variable holds the data model created and
+    delivered from the Java side.
+
+    \snippet android/models/qtabstractitemmodel/Main.qml 0
+
+    \l {TableView QML Type} displays our data model. On the \c delegate property, the example
+    defines each cell item of the model with \l {Text QML Type}.
+
+    \snippet android/models/qtabstractitemmodel/Main.qml 1
+
+    In the delegate, the example sets the \c row and \c column properties through the
+    \l {QAbstractItemModel Class}{QHash<int, QByteArray> QAbstractItemModel::roleNames() const}
+    and \l {QAbstractItemModel Class}{ QtModelIndex index(int row, int column, QtModelIndex parent) }
+    and \l {QAbstractItemModel Class}{Object data(QtModelIndex qtModelIndex, int role) }
+    methods of the model.
+
+    Calling these methods from QML means the execution takes place in the Qt qtMainLoopThread
+    thread context.
+
+    See \l {QAbstractItemModel Class}{QAbstractItemModel} for a detailed description.
+
+    \snippet android/models/qtabstractitemmodel/Main.qml 1
+
+    \section1 Android Studio project
+
+    The Android Studio project (qtabstractitemmodel_java) contains
+    one Activity class \c MainActivity and \c MyDataModel class.
+
+    \section2 Data Model
+
+    The data model, c\ MyDataModel, extends \c QtAbstractItemModel class.
+    The \c QtAbstractItemModel is a wrapper for \l {QAbstractItemModel Class}.
+
+    As the methods of \c MyDataModel class are called from both, QML and Android sides, the
+    execution occurs in both thread contexts, Qt qtMainLoopThread, and Android main thread
+    contexts. You must ensure synchronization when accessing member variables in methods of
+    the \c MyDataModel class.
+
+    First, the example initializes the model with a simple row and column mock data set. Note
+    that this constructor method is called in the Android main thread context.
+
+    \snippet android/models/qtabstractitemmodel_java/app/src/main/java/com/example/qtabstractitemmodel_java/MyDataModel.java 1
+
+    The example overrides the \c QtAbstractItemModel methods for different purposes. The
+    columnCount() and rowCount() methods return the count of each in a model. The execution of
+    each rowCount() occurs in both thread contexts, Qt qtMainLoopThread and Android main thread
+    contexts.
+
+    \snippet android/models/qtabstractitemmodel_java/app/src/main/java/com/example/qtabstractitemmodel_java/MyDataModel.java 2
+
+    Method data() provides model data based on the role and index from Java to QML. The
+    roleNames() method returns a hash matching numerical role values to their names as strings;
+    in QML, we use these role names to fetch corresponding data from the model. The index()
+    method returns the new model index. Method parent() should return a parent of the index.
+    Still, as this example focuses on data without parent indices, we override the method and
+    return an empty QtModelIndex(). As the methods are called from QML, the execution occurs in
+    the Qt qtMainLoopThread thread context.
+
+
+    \snippet android/models/qtabstractitemmodel_java/app/src/main/java/com/example/qtabstractitemmodel_java/MyDataModel.java 3
+
+    The example implements methods on the model side for \c MainActivity UI interaction to add
+    and remove rows and columns. Calls begin, end, insert, and remove rows to update model
+    indexes, like beginInsertRow().
+    Because the example uses the \c QtAbstractItemModel, it must call beginInsertRows() and
+    endInsertRows() every time it inserts new rows into the model. The same applies to removal.
+    As the methods are called from the Android side, the execution takes place in the Android
+    main thread context.
+
+    \snippet android/models/qtabstractitemmodel_java/app/src/main/java/com/example/qtabstractitemmodel_java/MyDataModel.java 4
+
+    The example implements methods on the model side for \c MainActivity UI interaction to add
+    and remove columns.  Calls begin, end, insert, and remove columns to update model indexes,
+    like beginRemoveColumn(). The same context awareness applies as with the add and remove row
+    methods.
+
+    \snippet android/models/qtabstractitemmodel_java/app/src/main/java/com/example/qtabstractitemmodel_java/MyDataModel.java 5
+
+    \section2 Main Activity
+
+    \c MainActivity implements the \c QtQmlStatusChangeListener interface to get status updates
+    when the QML is loaded. It is also the main Android activity.
+
+    The example creates and initializes the data model. See also
+    \l {Qt Quick View Android Class}{QtQuickView}
+
+    \snippet android/models/qtabstractitemmodel_java/app/src/main/java/com/example/qtabstractitemmodel_java/MainActivity.java 1
+
+    The example sets the UI button and its listeners to allow the users to interact with the
+    model via the UI.
+
+    \snippet android/models/qtabstractitemmodel_java/app/src/main/java/com/example/qtabstractitemmodel_java/MyDataModel.java 2
+
+    The example starts loading the QML content. Loading happens in the background until the
+    \c ready status is updated.
+
+    \snippet android/models/qtabstractitemmodel_java/app/src/main/java/com/example/qtabstractitemmodel_java/MyDataModel.java 3
+
+    The example sets the data model when the QML content is loaded, and the status is ready.
+
+    \snippet android/models/qtabstractitemmodel_java/app/src/main/java/com/example/qtabstractitemmodel_java/MyDataModel.java 4
+
+*/
