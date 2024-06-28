@@ -167,7 +167,7 @@ void QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
     // returns completions for import statements, ctx is supposed to be in an import statement
     const CompletionContextStrings &ctx = positionInfo.cursorPosition;
     ImportCompletionType importCompletionType = ImportCompletionType::None;
-    QRegularExpression spaceRe(uR"(\W+)"_s);
+    QRegularExpression spaceRe(uR"(\s+)"_s);
     QList<QStringView> linePieces = ctx.preLine().split(spaceRe, Qt::SkipEmptyParts);
     qsizetype effectiveLength = linePieces.size()
             + ((!ctx.preLine().isEmpty() && ctx.preLine().last().isSpace()) ? 1 : 0);
