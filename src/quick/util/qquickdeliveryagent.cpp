@@ -72,30 +72,46 @@ void QQuickDeliveryAgentPrivate::touchToMouseEvent(QEvent::Type type, const QEve
         qWarning() << "Unexpected: synthesized an indistinguishable mouse event" << mouseEvent;
 }
 
-bool QQuickDeliveryAgentPrivate::checkIfDoubleTapped(ulong newPressEventTimestamp, QPoint newPressPos)
+/*!
+    Returns \c false if the time constraint for detecting a double-click is violated.
+*/
+bool QQuickDeliveryAgentPrivate::isWithinDoubleClickInterval(ulong timeInterval)
 {
-    bool doubleClicked = false;
+    return timeInterval < static_cast<ulong>(QGuiApplication::styleHints()->mouseDoubleClickInterval());
+}
 
-    if (touchMousePressTimestamp > 0) {
-        QPoint distanceBetweenPresses = newPressPos - touchMousePressPos;
-        const int doubleTapDistance = QGuiApplication::styleHints()->touchDoubleTapDistance();
-        doubleClicked = (qAbs(distanceBetweenPresses.x()) <= doubleTapDistance) && (qAbs(distanceBetweenPresses.y()) <= doubleTapDistance);
+/*!
+    Returns \c false if the spatial constraint for detecting a touchscreen double-tap is violated.
+*/
+bool QQuickDeliveryAgentPrivate::isWithinDoubleTapDistance(const QPoint &distanceBetweenPresses)
+{
+    auto square = [](qint64 v) { return v * v; };
+    return square(distanceBetweenPresses.x()) + square(distanceBetweenPresses.y()) <
+            square(QGuiApplication::styleHints()->touchDoubleTapDistance());
+}
 
-        if (doubleClicked) {
-            ulong timeBetweenPresses = newPressEventTimestamp - touchMousePressTimestamp;
-            ulong doubleClickInterval = static_cast<ulong>(QGuiApplication::styleHints()->
-                    mouseDoubleClickInterval());
-            doubleClicked = timeBetweenPresses < doubleClickInterval;
-        }
-    }
+bool QQuickDeliveryAgentPrivate::checkIfDoubleTapped(ulong newPressEventTimestamp, const QPoint &newPressPos)
+{
+    const bool doubleClicked = isDeliveringTouchAsMouse() &&
+            isWithinDoubleTapDistance(newPressPos - touchMousePressPos) &&
+            isWithinDoubleClickInterval(newPressEventTimestamp - touchMousePressTimestamp);
     if (doubleClicked) {
         touchMousePressTimestamp = 0;
     } else {
         touchMousePressTimestamp = newPressEventTimestamp;
         touchMousePressPos = newPressPos;
     }
-
     return doubleClicked;
+}
+
+void QQuickDeliveryAgentPrivate::resetIfDoubleTapPrevented(const QEventPoint &pressedPoint)
+{
+    if (touchMousePressTimestamp > 0 &&
+            (!isWithinDoubleTapDistance(pressedPoint.globalPosition().toPoint() - touchMousePressPos) ||
+             !isWithinDoubleClickInterval(pressedPoint.timestamp() - touchMousePressTimestamp))) {
+        touchMousePressTimestamp = 0;
+        touchMousePressPos = QPoint();
+    }
 }
 
 /*! \internal
@@ -196,9 +212,7 @@ bool QQuickDeliveryAgentPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEve
         } else if (touchMouseDevice == device && p.id() == touchMouseId) {
             if (p.state() & QEventPoint::State::Updated) {
                 if (touchMousePressTimestamp != 0) {
-                    const int doubleTapDistance = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::TouchDoubleTapDistance).toInt();
-                    const QPoint moveDelta = p.globalPosition().toPoint() - touchMousePressPos;
-                    if (moveDelta.x() >= doubleTapDistance || moveDelta.y() >= doubleTapDistance)
+                    if (!isWithinDoubleTapDistance(p.globalPosition().toPoint() - touchMousePressPos))
                         touchMousePressTimestamp = 0;   // Got dragged too far, dismiss the double tap
                 }
                 if (QQuickItem *mouseGrabberItem = qmlobject_cast<QQuickItem *>(pointerEvent->exclusiveGrabber(p))) {
@@ -2225,6 +2239,11 @@ bool QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(QPointerEvent *event
     }
     for (int i = 0; i < event->pointCount(); ++i) {
         auto &point = event->point(i);
+        // Regardless whether a touchpoint could later result in a synth-mouse event:
+        // if the double-tap time or space constraint has been violated,
+        // reset state to prevent a double-click event.
+        if (isTouch && point.state() == QEventPoint::Pressed)
+            resetIfDoubleTapPrevented(point);
         QVector<QQuickItem *> targetItemsForPoint = pointerTargets(rootItem, event, point, !isTouch, isTouch);
         if (targetItems.size()) {
             targetItems = mergePointerTargets(targetItems, targetItemsForPoint);

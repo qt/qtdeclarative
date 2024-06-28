@@ -174,7 +174,7 @@ bool QQuickAbstractButtonPrivate::handleRelease(const QPointF &point, ulong time
     pressButtons = Qt::NoButton;
 
     const bool touchDoubleClick = pressTouchId != -1 && lastTouchReleaseTimestamp != 0
-        && timestamp - lastTouchReleaseTimestamp < qApp->styleHints()->mouseDoubleClickInterval()
+        && QQuickDeliveryAgentPrivate::isWithinDoubleClickInterval(timestamp - lastTouchReleaseTimestamp)
         && isDoubleClickConnected();
 
     if (!wasHeld && (keepPressed || q->contains(point)))

@@ -109,7 +109,8 @@ public:
     bool isDeliveringTouchAsMouse() const { return touchMouseId != -1 && touchMouseDevice; }
     void cancelTouchMouseSynthesis();
 
-    bool checkIfDoubleTapped(ulong newPressEventTimestamp, QPoint newPressPos);
+    bool checkIfDoubleTapped(ulong newPressEventTimestamp, const QPoint &newPressPos);
+    void resetIfDoubleTapPrevented(const QEventPoint &pressedPoint);
     QPointingDevicePrivate::EventPointData *mousePointData();
     QPointerEvent *eventInDelivery() const;
 
@@ -148,6 +149,8 @@ public:
     static bool isTabletEvent(const QPointerEvent *ev);
     static bool isEventFromMouseOrTouchpad(const QPointerEvent *ev);
     static bool isSynthMouse(const QPointerEvent *ev);
+    static bool isWithinDoubleClickInterval(ulong timeInterval);
+    static bool isWithinDoubleTapDistance(const QPoint &distanceBetweenPresses);
     static QQuickPointingDeviceExtra *deviceExtra(const QInputDevice *device);
 
     // delivery of pointer events:
