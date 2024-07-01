@@ -142,6 +142,7 @@ private slots:
     void removeBinding();
     void complexObjectArgument();
     void bindingEvaluationOrder();
+    void bindingInRequired();
 
 private:
     QQmlEngine engine;
@@ -1527,6 +1528,24 @@ void tst_qqmlcomponent::bindingEvaluationOrder()
     QCOMPARE(myList[0].toString(), u"dummy"_s);
     QCOMPARE(myList[1].toString(), u"p1"_s);
     QCOMPARE(myList[2].toString(), u"p2"_s);
+}
+
+void tst_qqmlcomponent::bindingInRequired()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("bindingInRequired.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QObject *outer = object->property("outer").value<QObject *>();
+    QVERIFY(outer);
+
+    QObject *inner = object->property("inner").value<QObject *>();
+    QVERIFY(inner);
+
+    QCOMPARE(inner, outer->property("obj").value<QObject *>());
+    QVERIFY(!inner->property("obj").value<QObject *>());
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

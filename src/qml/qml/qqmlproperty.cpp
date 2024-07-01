@@ -1373,18 +1373,6 @@ static ConvertAndAssignResult tryConvertAndAssign(
         return {false, false};
     }
 
-    if (variantMetaType == QMetaType::fromType<QJSValue>()) {
-        // Handle Qt.binding bindings here to avoid mistaken conversion below
-        const QJSValue &jsValue = get<QJSValue>(value);
-        const QV4::FunctionObject *f
-                = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&jsValue);
-        if (f && f->isBinding()) {
-            QV4::QObjectWrapper::setProperty(
-                    f->engine(), object, &property, f->asReturnedValue());
-            return {true, true};
-        }
-    }
-
     // common cases:
     switch (propertyMetaType.id()) {
     case QMetaType::Bool:
@@ -1470,6 +1458,21 @@ bool iterateQObjectContainer(QMetaType metaType, const void *data, Op op)
     return true;
 }
 
+static bool tryAssignBinding(
+        QObject *object, const QQmlPropertyData &property, const QVariant &value,
+        QMetaType variantMetaType) {
+    if (variantMetaType != QMetaType::fromType<QJSValue>())
+        return false;
+
+    const QJSValue &jsValue = get<QJSValue>(value);
+    const QV4::FunctionObject *f = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&jsValue);
+    if (!f || !f->isBinding())
+        return false;
+
+    QV4::QObjectWrapper::setProperty(f->engine(), object, &property, f->asReturnedValue());
+    return true;
+}
+
 bool QQmlPropertyPrivate::write(
         QObject *object, const QQmlPropertyData &property, const QVariant &value,
         const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData::WriteFlags flags)
@@ -1494,6 +1497,10 @@ bool QQmlPropertyPrivate::write(
 
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(context);
     const bool isUrl = propertyMetaType == QMetaType::fromType<QUrl>(); // handled separately
+
+    // Handle Qt.binding bindings here to avoid mistaken conversion below
+    if (tryAssignBinding(object, property, value, variantMetaType))
+        return true;
 
     // The cases below are in approximate order of likelyhood:
     if (propertyMetaType == variantMetaType && !isUrl
