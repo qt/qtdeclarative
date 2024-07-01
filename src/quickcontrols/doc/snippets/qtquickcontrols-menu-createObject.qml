@@ -29,7 +29,7 @@ Row {
             onClicked: {
                 let menuItem = menuItemComponent.createObject(
                     menu.contentItem, { text: qsTr("New item") })
-                menu.addMenu(menuItem)
+                menu.addItem(menuItem)
             }
         }
     }
