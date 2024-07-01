@@ -143,6 +143,7 @@ private slots:
     void complexObjectArgument();
     void bindingEvaluationOrder();
     void compilationUnitsWithSameUrl();
+    void bindingInRequired();
 
 private:
     QQmlEngine engine;
@@ -1563,6 +1564,24 @@ void tst_qqmlcomponent::compilationUnitsWithSameUrl()
         QMetaObject::invokeMethod(o.get(), "returnThing", Q_RETURN_ARG(QString, result));
         QCOMPARE(result, "de_CH");
     }
+}
+
+void tst_qqmlcomponent::bindingInRequired()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("bindingInRequired.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QObject *outer = object->property("outer").value<QObject *>();
+    QVERIFY(outer);
+
+    QObject *inner = object->property("inner").value<QObject *>();
+    QVERIFY(inner);
+
+    QCOMPARE(inner, outer->property("obj").value<QObject *>());
+    QVERIFY(!inner->property("obj").value<QObject *>());
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
