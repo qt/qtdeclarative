@@ -14,6 +14,7 @@
 #include <QtQml/qqmlapplicationengine.h>
 
 #include <QtQuick/qquickwindow.h>
+#include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickwindowcontainer_p.h>
 
 #define TEST_WINDOW_PARENT 0
@@ -40,6 +41,8 @@ private slots:
     void deferredVisibilityWithoutWindow();
     void windowComponent();
 #endif
+
+    void updateStackingOrderPerformance();
 
 private:
     std::unique_ptr<QQmlApplicationEngine> m_engine;
@@ -194,6 +197,21 @@ void tst_QQuickWindowContainer::windowComponent()
     QCOMPARE(qobject_cast<QQuickWindow *>(window_window_parent)->parent(), windowParent);
 }
 #endif // TEST_WINDOW_PARENT
+
+void tst_QQuickWindowContainer::updateStackingOrderPerformance()
+{
+    QQuickWindow quickWindow;
+    for (int i = 0; i < 100; ++i) {
+        QQuickItem *item = new QQuickItem(quickWindow.contentItem());
+        for (int j = 0; j < 100; ++j)
+            item = new QQuickItem(item);
+    }
+
+    QBENCHMARK {
+        quickWindow.contentItem()->polish();
+        QQuickWindowPrivate::get(&quickWindow)->polishItems();
+    }
+}
 
 QTEST_MAIN(tst_QQuickWindowContainer)
 

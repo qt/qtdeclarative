@@ -328,22 +328,6 @@ struct PolishLoopDetector
     int numPolishLoopsInSequence = 0;
 };
 
-static const QQuickItem *firstItemWithDirtyChildrenStacking(const QQuickItem *item)
-{
-    if (QQuickItemPrivate::get(item)->dirtyAttributes
-        & QQuickItemPrivate::ChildrenStackingChanged) {
-        return item;
-    }
-
-    const auto childItems = item->childItems();
-    for (const auto *childItem : childItems) {
-        if (auto *dirtyItem = firstItemWithDirtyChildrenStacking(childItem))
-            return dirtyItem;
-    }
-
-    return nullptr;
-}
-
 void QQuickWindowPrivate::polishItems()
 {
     // An item can trigger polish on another item, or itself for that matter,
@@ -378,9 +362,14 @@ void QQuickWindowPrivate::polishItems()
     }
 #endif
 
-    if (auto *dirtyItem = firstItemWithDirtyChildrenStacking(contentItem)) {
-        qCDebug(lcQuickWindow) << dirtyItem << "has dirty child stacking order";
-        updateChildWindowStackingOrder();
+    for (QQuickItem *dirtyItem = dirtyItemList; dirtyItem;) {
+        QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(dirtyItem);
+        if (itemPriv->dirtyAttributes & QQuickItemPrivate::ChildrenStackingChanged) {
+            qCDebug(lcQuickWindow) << dirtyItem << "has dirty child stacking order";
+            updateChildWindowStackingOrder();
+            break;
+        }
+        dirtyItem = itemPriv->nextDirtyItem;
     }
 }
 
