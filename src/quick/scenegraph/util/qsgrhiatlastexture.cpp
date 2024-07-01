@@ -160,8 +160,19 @@ void AtlasBase::remove(TextureBase *t)
 Atlas::Atlas(QSGDefaultRenderContext *rc, const QSize &size)
     : AtlasBase(rc, size)
 {
-    // use RGBA texture internally as that is the only one guaranteed to be always supported
     m_format = QRhiTexture::RGBA8;
+
+    // Mirror QSGPlainTexture by playing nice with ARGB32[_Pre], because due to
+    // legacy that's what most images come in, not the byte-ordered
+    // RGBA8888[_Pre]. (i.e. with this the behavior matches 5.15) However,
+    // QSGPlainTexture can make a separate decision for each image (texture),
+    // the atlas cannot, so the downside is that now images that come in the
+    // modern byte-ordered formats need a conversion. So perhaps reconsider this
+    // at some point in the future.
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+    if (rc->rhi()->isTextureFormatSupported(QRhiTexture::BGRA8))
+        m_format = QRhiTexture::BGRA8;
+#endif
 
     m_debug_overlay = qt_sg_envInt("QSG_ATLAS_OVERLAY", 0);
 
@@ -211,8 +222,12 @@ void Atlas::enqueueTextureUpload(TextureBase *t, QRhiResourceUpdateBatch *resour
     if (image.isNull())
         return;
 
-    if (image.format() != QImage::Format_RGBA8888_Premultiplied)
+    if (m_format == QRhiTexture::BGRA8) {
+        if (image.format() != QImage::Format_RGB32 && image.format() != QImage::Format_ARGB32_Premultiplied)
+            image = std::move(image).convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    } else if (image.format() != QImage::Format_RGBA8888_Premultiplied) {
         image = std::move(image).convertToFormat(QImage::Format_RGBA8888_Premultiplied);
+    }
 
     if (m_debug_overlay) {
         QPainter p(&image);
