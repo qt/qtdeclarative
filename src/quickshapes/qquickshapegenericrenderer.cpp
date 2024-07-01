@@ -153,7 +153,7 @@ void QQuickShapeGenericRenderer::setStrokeWidth(int index, qreal w)
 {
     ShapePathData &d(m_sp[index]);
     d.strokeWidth = w;
-    if (w >= 0.0f)
+    if (w > 0.0f)
         d.pen.setWidthF(w);
     d.syncDirty |= DirtyStrokeGeom;
 }
@@ -391,7 +391,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
             }
         }
 
-        if ((d.syncDirty & DirtyStrokeGeom) && d.strokeWidth >= 0.0f && d.strokeColor.a) {
+        if ((d.syncDirty & DirtyStrokeGeom) && d.strokeWidth > 0.0f && d.strokeColor.a) {
             if (async) {
                 QQuickShapeStrokeRunnable *r = new QQuickShapeStrokeRunnable;
                 r->setAutoDelete(false);
@@ -575,7 +575,7 @@ void QQuickShapeGenericRenderer::updateNode()
             d.effectiveDirty |= DirtyFillGeom;
         }
 
-        if (d.strokeWidth < 0.0f || d.strokeColor.a == 0) {
+        if (d.strokeWidth <= 0.0f || d.strokeColor.a == 0) {
             delete node->m_strokeNode;
             node->m_strokeNode = nullptr;
         } else if (!node->m_strokeNode) {

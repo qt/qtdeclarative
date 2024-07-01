@@ -42,7 +42,7 @@ void QQuickShapeSoftwareRenderer::setStrokeWidth(int index, qreal w)
 {
     ShapePathGuiData &d(m_sp[index]);
     d.strokeWidth = w;
-    if (w >= 0.0f)
+    if (w > 0.0f)
         d.pen.setWidthF(w);
     d.dirty |= DirtyPen;
     m_accDirty |= DirtyPen;
@@ -249,7 +249,7 @@ void QQuickShapeSoftwareRenderNode::render(const RenderState *state)
     p->setOpacity(inheritedOpacity());
 
     for (const ShapePathRenderData &d : std::as_const(m_sp)) {
-        p->setPen(d.strokeWidth >= 0.0f && d.pen.color() != Qt::transparent ? d.pen : Qt::NoPen);
+        p->setPen(d.strokeWidth > 0.0f && d.pen.color() != Qt::transparent ? d.pen : Qt::NoPen);
         p->setBrush(d.brush.color() != Qt::transparent ? d.brush : Qt::NoBrush);
         p->drawPath(d.path);
     }
