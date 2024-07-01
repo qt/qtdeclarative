@@ -322,6 +322,8 @@ private slots:
 
     void emptyStringLiteralEvaluatesToANonNullString();
 
+    void consoleLogSequence();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6434,6 +6436,37 @@ void tst_QJSEngine::emptyStringLiteralEvaluatesToANonNullString() {
   QVERIFY(result.toString().isEmpty());
 }
 
+
+static unsigned stringListFetchCount = 0;
+class StringListProvider : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QStringList strings READ strings CONSTANT)
+
+public:
+    QStringList strings() const
+    {
+        ++stringListFetchCount;
+        QStringList ret;
+        for (int i = 0; i < 10; ++i)
+            ret.append(QString::number(i));
+        return ret;
+    }
+};
+
+void tst_QJSEngine::consoleLogSequence()
+{
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::ConsoleExtension);
+
+    engine.globalObject().setProperty(
+                QStringLiteral("object"), engine.newQObject(new StringListProvider));
+
+    QTest::ignoreMessage(QtDebugMsg, "[0,1,2,3,4,5,6,7,8,9]");
+
+    engine.evaluate(QStringLiteral("console.log(object.strings)"));
+    QCOMPARE(stringListFetchCount, 1);
+}
 
 QTEST_MAIN(tst_QJSEngine)
 

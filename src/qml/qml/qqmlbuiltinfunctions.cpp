@@ -18,6 +18,7 @@
 #include <private/qv4include_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4sequenceobject_p.h>
 #include <private/qv4stackframe_p.h>
 
 #include <QtQml/qqmlfile.h>
@@ -1786,14 +1787,20 @@ static QString serializeArray(Object *array, ExecutionEngine *v4, QSet<QV4::Heap
     Scope scope(v4);
     ScopedValue val(scope);
     QString result;
-
     alreadySeen.insert(array->d());
+
+    ScopedObject detached(scope);
+    if (Sequence *reference = array->as<Sequence>())
+        detached = ReferenceObject::detached(reference->d());
+    else
+        detached = array;
+
     result += QLatin1Char('[');
-    const uint length = array->getLength();
+    const uint length = detached->getLength();
     for (uint i = 0; i < length; ++i) {
         if (i != 0)
             result += QLatin1Char(',');
-        val = array->get(i);
+        val = detached->get(i);
         if (val->isManaged() && val->managed()->isArrayLike())
             if (!alreadySeen.contains(val->objectValue()->d()))
                 result += serializeArray(val->objectValue(), v4, alreadySeen);
@@ -1803,6 +1810,7 @@ static QString serializeArray(Object *array, ExecutionEngine *v4, QSet<QV4::Heap
             result += val->toQStringNoThrow();
     }
     result += QLatin1Char(']');
+
     alreadySeen.remove(array->d());
     return result;
 };
