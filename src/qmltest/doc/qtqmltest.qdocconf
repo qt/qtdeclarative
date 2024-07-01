@@ -13,7 +13,7 @@ qhp.QtQmlTest.virtualFolder       = qtqmltest
 qhp.QtQmlTest.indexTitle          = Qt Quick Test
 qhp.QtQmlTest.indexRoot           =
 
-qhp.QtQmlTest.subprojects         = qmltypes classes
+qhp.QtQmlTest.subprojects         = qmltypes classes concepts
 qhp.QtQmlTest.subprojects.classes.title = C++ API
 qhp.QtQmlTest.subprojects.classes.indexTitle = Qt Quick Test C++ API
 qhp.QtQmlTest.subprojects.classes.selectors = class namespace doc:headerfile
@@ -22,6 +22,9 @@ qhp.QtQmlTest.subprojects.qmltypes.title = QML Types
 qhp.QtQmlTest.subprojects.qmltypes.indexTitle = Qt Quick Test QML Types
 qhp.QtQmlTest.subprojects.qmltypes.selectors = qmlclass
 qhp.QtQmlTest.subprojects.qmltypes.sortPages = true
+qhp.QtQmlTest.subprojects.concepts.title = Upgrading from Qt 5
+qhp.QtQmlTest.subprojects.concepts.indexTitle = Changes to Qt Quick Test
+qhp.QtQmlTest.subprojects.concepts.selectors = group:none
 
 tagfile      = qtqmltest.tags
 
