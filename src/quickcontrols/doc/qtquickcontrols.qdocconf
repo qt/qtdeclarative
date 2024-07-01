@@ -16,18 +16,26 @@ qhp.QtQuickControls.virtualFolder = qtquickcontrols
 qhp.QtQuickControls.indexTitle    = Qt Quick Controls
 qhp.QtQuickControls.indexRoot     =
 
-qhp.QtQuickControls.subprojects = qmltypes classes examples
+qhp.QtQuickControls.subprojects = manual examples qmltypes classes
+
+qhp.QtQuickControls.subprojects.manual.title = Qt Quick Controls
+qhp.QtQuickControls.subprojects.manual.indexTitle = Qt Quick Controls module topics
+qhp.QtQuickControls.subprojects.manual.type = manual
+
+qhp.QtQuickControls.subprojects.examples.title = Examples
+qhp.QtQuickControls.subprojects.examples.indexTitle = Qt Quick Controls Examples
+qhp.QtQuickControls.subprojects.examples.selectors = example
+qhp.QtQuickControls.subprojects.examples.sortPages = true
+
 qhp.QtQuickControls.subprojects.qmltypes.title = QML Types
 qhp.QtQuickControls.subprojects.qmltypes.indexTitle = Qt Quick Controls QML Types
 qhp.QtQuickControls.subprojects.qmltypes.selectors = qmlclass
 qhp.QtQuickControls.subprojects.qmltypes.sortPages = true
+
 qhp.QtQuickControls.subprojects.classes.title = C++ Classes
 qhp.QtQuickControls.subprojects.classes.indexTitle = Qt Quick Controls C++ Classes
 qhp.QtQuickControls.subprojects.classes.selectors = class fake:headerfile
 qhp.QtQuickControls.subprojects.classes.sortPages = true
-qhp.QtQuickControls.subprojects.examples.title = Examples
-qhp.QtQuickControls.subprojects.examples.indexTitle = Qt Quick Controls Examples
-qhp.QtQuickControls.subprojects.examples.selectors = fake:example
 
 depends = qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtquickdialogs qtsql qtwidgets qtlabsplatform qmake qtcmake qtvirtualkeyboard
 
@@ -111,6 +119,10 @@ manifestmeta.highlighted.names = \
     "QtQuickControls/Qt Quick Controls - Gallery" \
     "QtQuickControls/Qt Quick Controls - Event Calendar" \
     "QtQuickControls/Qt Quick Controls - Contact List"
+
+# Auto-generate navigation linking based on "Qt Quick Controls module topics":
+navigation.toctitles = "Qt Quick Controls module topics"
+navigation.toctitles.inclusive = false
 
 # Enforce zero documentation warnings
 warninglimit = 0

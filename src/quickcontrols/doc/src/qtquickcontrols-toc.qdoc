@@ -1,0 +1,50 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qquickcontrols-toc.html
+    \title Qt Quick Controls module topics
+
+    The following list has links to all the individual topics (HTML files)
+    in the Qt Quick Controls module.
+
+    \list
+    \li \l {Getting Started with Qt Quick Controls}{Getting Started}
+    \li \l {Changes to Qt Quick Controls}{Upgrading from Qt Quick Controls 1}
+    \li \l {Qt Quick Controls Configuration File}{Configuration File}
+    \li \l {Supported Environment Variables in Qt Quick Controls}{Supported Environment Variables}
+    \li \l {Using File Selectors with Qt Quick Controls}{Using File Selectors}
+    \li \l {Focus Management in Qt Quick Controls}{Focus Management}
+    \li \l {Icons in Qt Quick Controls}{Icons}
+    \li \l {Styling Qt Quick Controls}{Styling and Customizing}
+        \list
+            \li \l {Basic Style}
+            \li \l {Fusion Style}
+            \li \l {Imagine Style}
+            \li \l {iOS Style}
+            \li \l {macOS Style}
+            \li \l {Material Style}
+            \li \l {Universal Style}
+            \li \l {Windows Style}
+            \li \l {Customizing Qt Quick Controls}
+        \endlist
+    \li \l {Qt Quick Controls Guidelines}{Controls}
+        \list
+            \li \l {Button Controls}
+            \li \l {Container Controls}
+            \li \l {Delegate Controls}
+            \li \l {Indicator Controls}
+            \li \l {Input Controls}
+            \li \l {Menu Controls}
+            \li \l {Navigation Controls}
+            \li \l {Popup Controls}
+            \li \l {Separator Controls}
+        \endlist
+    \li \l {Qt Quick Templates 2}
+        \list
+            \li \l {Qt Quick Templates 2 QML Types}
+        \endlist
+    \li \l {Deploying Qt Quick Controls Applications}{Deployment}
+    \endlist
+
+*/
