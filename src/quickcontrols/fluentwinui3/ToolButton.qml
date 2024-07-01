@@ -33,12 +33,19 @@ T.ToolButton {
     ].filter(Boolean).join("_") || "normal"
     readonly property var config: Config.controls.toolbutton[__currentState] || {}
 
+    readonly property color __pressedText: (control.checked || control.highlighted)
+                                    ? Application.styleHints.colorScheme == Qt.Light
+                                        ? Qt.rgba(control.palette.highlightedText.r, control.palette.highlightedText.g, control.palette.highlightedText.b, 0.498)
+                                        : Qt.rgba(control.palette.highlightedText.r, control.palette.highlightedText.g, control.palette.highlightedText.b, 0.502)
+                                    : Application.styleHints.colorScheme == Qt.Light
+                                        ? Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.62)
+                                        : Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.7725)
+
     icon.width: config.icon.width
     icon.height: config.icon.height
-    icon.color: (control.checked || control.highlighted)
-                ? (control.down ? (Qt.styleHints.colorScheme == Qt.Light ? "#7FFFFFFF" : "#80000000") //textOnAccentSecondary
-                                : control.palette.highlightedText)
-                : (control.down ? control.palette.brightText : control.palette.buttonText)
+    icon.color: control.down ? __pressedText : (control.checked || control.highlighted)
+                                                ? control.palette.highlightedText
+                                                : control.palette.buttonText
 
     contentItem: IconLabel {
         spacing: control.spacing

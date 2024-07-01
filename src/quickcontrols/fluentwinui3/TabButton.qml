@@ -27,9 +27,7 @@ T.TabButton {
 
     icon.width: 16
     icon.height: 16
-    icon.color: control.down
-                ? Qt.styleHints.colorScheme == Qt.Light? "#72000000" : "#87FFFFFF" // TextFillColorTertiary
-                : control.hovered ? control.palette.brightText : control.palette.buttonText
+    icon.color: control.down ? __pressedText : control.hovered ? __hoveredText : control.palette.buttonText
 
     readonly property string __currentState: [
         checked && "checked",
@@ -39,6 +37,13 @@ T.TabButton {
     ].filter(Boolean).join("_") || "normal"
     readonly property var config: Config.controls.tabbutton[__currentState] || {}
 
+    readonly property color __pressedText: Application.styleHints.colorScheme == Qt.Light
+                                            ? Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.447)
+                                            : Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.529)
+    readonly property color __hoveredText: Application.styleHints.colorScheme == Qt.Light
+                                            ? Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.62)
+                                            : Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.7725)
+
     contentItem: IconLabel {
         spacing: control.spacing
         mirrored: control.mirrored
@@ -47,9 +52,7 @@ T.TabButton {
         text: control.text
         font: control.font
         icon: control.icon
-        color: control.down
-                ? Qt.styleHints.colorScheme == Qt.Light? "#72000000" : "#87FFFFFF" // TextFillColorTertiary
-                : control.hovered ? control.palette.brightText : control.palette.buttonText
+        color: control.icon.color
     }
 
     background: StyleImage {

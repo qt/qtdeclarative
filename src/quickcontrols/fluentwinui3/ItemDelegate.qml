@@ -17,9 +17,9 @@ T.ItemDelegate {
     spacing: config.spacing || 0
 
     topPadding: config.topPadding || 0 + verticalOffset
-    leftPadding: config.leftPadding || 0 + horizontalOffset
-    rightPadding: config.rightPadding || 0 + horizontalOffset
-    bottomPadding: config.bottomPadding || 0 + verticalOffset
+    leftPadding: config.leftPadding || 0 + __horizontalOffset
+    rightPadding: config.rightPadding || 0 + __horizontalOffset
+    bottomPadding: config.bottomPadding || 0 + __verticalOffset
 
     topInset: -config.topInset || 0
     bottomInset: -config.bottomInset || 0
@@ -28,11 +28,14 @@ T.ItemDelegate {
 
     icon.width: 16
     icon.height: 16
-    icon.color: control.down ? control.palette.brightText : control.palette.buttonText
+    icon.color: control.down ? __pressedText : control.palette.buttonText
 
-    readonly property int horizontalOffset: 4
-    readonly property int verticalOffset: 2
+    readonly property int __horizontalOffset: 4
+    readonly property int __verticalOffset: 2
 
+    readonly property color __pressedText: Application.styleHints.colorScheme == Qt.Light
+                                                    ? Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.62)
+                                                    : Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.7725)
     readonly property string __currentState: [
         !control.enabled && "disabled",
         control.highlighted && "highlighted",
@@ -59,10 +62,10 @@ T.ItemDelegate {
         property Item backgroundImage: StyleImage {
             parent: control.background
             imageConfig: control.config.background
-            implicitWidth: parent.width - control.horizontalOffset * 2
-            implicitHeight: parent.height - control.verticalOffset * 2
-            x: control.horizontalOffset
-            y: control.verticalOffset
+            implicitWidth: parent.width - control.__horizontalOffset * 2
+            implicitHeight: parent.height - control.__verticalOffset * 2
+            x: control.__horizontalOffset
+            y: control.__verticalOffset
         }
 
         property Rectangle selector: Rectangle {

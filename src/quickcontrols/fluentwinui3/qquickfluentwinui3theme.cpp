@@ -3,6 +3,9 @@
 
 #include "qquickfluentwinui3theme_p.h"
 
+#include <QtCore/qoperatingsystemversion.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/qcolor.h>
@@ -92,7 +95,6 @@ static void populateSystemPalette(QPalette &palette)
     palette.setColor(QPalette::Disabled, QPalette::Button, WINUI3Colors[colorSchemeIndex][controlDisabled]);
     palette.setColor(QPalette::All, QPalette::ButtonText, WINUI3Colors[colorSchemeIndex][textPrimary]);
     palette.setColor(QPalette::Disabled, QPalette::ButtonText, WINUI3Colors[colorSchemeIndex][textDisabled]);
-    palette.setColor(QPalette::All, QPalette::BrightText, WINUI3Colors[colorSchemeIndex][textSecondary]);
 
     palette.setColor(QPalette::All, QPalette::Highlight, WINUI3Colors[colorSchemeIndex][accentDefault]);
     palette.setColor(QPalette::Disabled, QPalette::Highlight, WINUI3Colors[colorSchemeIndex][accentDisabled]);
@@ -133,9 +135,15 @@ void QQuickFluentWinUI3Theme::updatePalette(QPalette &palette)
 void QQuickFluentWinUI3Theme::initialize(QQuickTheme *theme)
 {
     populateThemeFont(theme);
-
     QPalette systemPalette;
     updatePalette(systemPalette);
+#ifdef Q_OS_WIN
+    if (auto platformTheme = QGuiApplicationPrivate::platformTheme()) {
+        const auto platformPalette = platformTheme->palette();
+        if (platformPalette)
+            systemPalette = platformPalette->resolve(systemPalette);
+    }
+#endif
     theme->setPalette(QQuickTheme::System, systemPalette);
 }
 

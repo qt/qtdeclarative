@@ -80,7 +80,11 @@ T.ComboBox {
         validator: control.validator
         selectByMouse: control.selectTextByMouse
 
-        color: control.down ? control.palette.brightText : control.palette.text
+        readonly property color __pressedText: Application.styleHints.colorScheme == Qt.Light
+                                                ? Qt.rgba(control.palette.text.r, control.palette.text.g, control.palette.text.b, 0.62)
+                                                : Qt.rgba(control.palette.text.r, control.palette.text.g, control.palette.text.b, 0.7725)
+
+        color: control.down ? __pressedText : control.palette.text
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
         horizontalAlignment: control.config.label_text.textHAlignment
