@@ -19,6 +19,11 @@ public:
     TestModel(int _rows, int _cols, QObject *parent = nullptr): QAbstractItemModel(parent),
        fetched(false), rows(_rows), cols(_cols), levels(INT_MAX), wrongIndex(false) { init(); }
 
+    ~TestModel()
+    {
+        delete tree;
+    }
+
     void init() {
         decorationsEnabled = false;
         alternateChildlessRows = true;
