@@ -19,19 +19,26 @@ qhp.QtQuick.virtualFolder       = qtquick
 qhp.QtQuick.indexTitle          = Qt Quick
 qhp.QtQuick.indexRoot           =
 
-qhp.QtQuick.subprojects         = qmltypes classes examples
+qhp.QtQuick.subprojects = manual examples qmltypes classes
+qhp.QtQuick.subprojects.manual.title = Qt Quick
+qhp.QtQuick.subprojects.manual.indexTitle = Qt Quick module topics
+qhp.QtQuick.subprojects.manual.type = manual
+
 qhp.QtQuick.subprojects.qmltypes.title = QML Types
 qhp.QtQuick.subprojects.qmltypes.indexTitle = Qt Quick QML Types
 qhp.QtQuick.subprojects.qmltypes.selectors = qmlclass
 qhp.QtQuick.subprojects.qmltypes.sortPages = true
+
 qhp.QtQuick.subprojects.classes.title = Classes
 qhp.QtQuick.subprojects.classes.title = C++ Classes
 qhp.QtQuick.subprojects.classes.indexTitle = Qt Quick C++ Classes
 qhp.QtQuick.subprojects.classes.selectors = class doc:headerfile
 qhp.QtQuick.subprojects.classes.sortPages = true
+
 qhp.QtQuick.subprojects.examples.title = Examples
 qhp.QtQuick.subprojects.examples.indexTitle = Qt Quick Examples and Tutorials
-qhp.QtQuick.subprojects.examples.selectors = doc:example
+qhp.QtQuick.subprojects.examples.selectors = example
+qhp.QtQuick.subprojects.examples.sortPages = true
 
 tagfile = qtquick.tags
 
@@ -110,6 +117,9 @@ manifestmeta.highlighted.names = \
 navigation.landingpage = "Qt Quick"
 navigation.cppclassespage = "Qt Quick C++ Classes"
 navigation.qmltypespage = "Qt Quick QML Types"
+# Auto-generate navigation linking based on "Qt Quick module topics":
+navigation.toctitles = "Qt Quick module topics"
+navigation.toctitles.inclusive = false
 
 # \svgcolor {#ffdead}
 macro.svgcolor.HTML = "<div style=\"padding:10px;color:#fff;background:\1;\"></div>"
