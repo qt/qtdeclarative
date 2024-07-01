@@ -567,7 +567,7 @@ bool QQuickWindowContainerPrivate::transformChanged(QQuickItem *transformedItem)
 {
     Q_Q(QQuickWindowContainer);
 
-    if (this->window) {
+    if (this->componentComplete && this->window) {
         auto *transformedItemPrivate = QQuickItemPrivate::get(transformedItem);
         qCDebug(lcWindowContainer) << "Transform changed for" << transformedItem
             << "with dirty state" << transformedItemPrivate->dirtyToString();
