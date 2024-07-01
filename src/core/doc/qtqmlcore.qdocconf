@@ -12,7 +12,11 @@ qhp.QtQmlCore.virtualFolder = qtqmlcore
 qhp.QtQmlCore.indexTitle = Qt Qml Core
 qhp.QtQmlCore.indexRoot =
 
-qhp.QtQmlCore.subprojects = qmltypes
+qhp.QtQmlCore.subprojects = permissions qmltypes
+qhp.QtQmlCore.subprojects.permissions.title = Qml Application Permissions
+qhp.QtQmlCore.subprojects.permissions.indexTitle = Qml Application Permissions
+qhp.QtQmlCore.subprojects.permissions.selectors = group:none
+
 qhp.QtQmlCore.subprojects.qmltypes.title = QML Types
 qhp.QtQmlCore.subprojects.qmltypes.indexTitle = Qt Qml Core QML Types
 qhp.QtQmlCore.subprojects.qmltypes.selectors = qmlclass
