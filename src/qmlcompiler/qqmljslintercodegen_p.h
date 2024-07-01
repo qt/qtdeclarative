@@ -56,7 +56,7 @@ public:
 
     QQmlJSTypeResolver *typeResolver() { return &m_typeResolver; }
 
-    void setPassManager(QQmlSA::PassManager *passManager) { m_passManager = passManager; }
+    void setPassManager(QQmlSA::PassManager *passManager);
 
     QQmlSA::PassManager *passManager() { return m_passManager; }
 

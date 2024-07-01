@@ -79,6 +79,13 @@ QQmlJSLinterCodegen::compileFunction(const QV4::Compiler::Context *context,
     return QQmlJSAotFunction {};
 }
 
+void QQmlJSLinterCodegen::setPassManager(QQmlSA::PassManager *passManager)
+{
+    m_passManager = passManager;
+    auto managerPriv = QQmlSA::PassManagerPrivate::get(passManager);
+    managerPriv->m_typeResolver = typeResolver();
+}
+
 bool QQmlJSLinterCodegen::analyzeFunction(const QV4::Compiler::Context *context,
                                           QQmlJSCompilePass::Function *function,
                                           QQmlJS::DiagnosticMessage *error)

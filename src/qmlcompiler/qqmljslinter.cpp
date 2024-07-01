@@ -586,8 +586,11 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
 
             QQmlJSLinterCodegen codegen { &m_importer, resolvedPath, qmldirFiles, m_logger.get() };
             codegen.setTypeResolver(std::move(typeResolver));
-            if (passMan)
+            if (passMan) {
+                // passMan now has a pointer to the moved from type resolver
+                // we fix this in setPassManager
                 codegen.setPassManager(passMan.get());
+            }
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
                                                  const QQmlJSAotFunctionMap &,
                                                  QString *) { return true; };
