@@ -17,7 +17,7 @@ Rectangle {
         transform: [
             Translate { id: translation; x: 50; y: 50 }
         ]
-        //scale: 3 // FIXME: Doesn't work when assigned like this
+        scale: 1.5
 
         Window {
             id: childWindow
