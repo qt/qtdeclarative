@@ -6,7 +6,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(hoverLog, "qt.languageserver.hover")
+Q_STATIC_LOGGING_CATEGORY(hoverLog, "qt.languageserver.hover")
 
 QQmlHover::QQmlHover(QmlLsp::QQmlCodeModel *codeModel)
     : QQmlBaseModule(codeModel), m_helpManager(std::make_unique<HelpManager>())
