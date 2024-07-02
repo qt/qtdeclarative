@@ -2726,6 +2726,8 @@ void tst_QmlCppCodegen::jsArrayMethods()
 
     QCOMPARE(object->property("listPropertyLastIndexOf"), object->property("jsArrayLastIndexOf"));
     QCOMPARE(object->property("listPropertyLastIndexOf").toInt(), 5);
+
+    QCOMPARE(check->property("pushAndJoin").toString(), QStringLiteral("A+B"));
 }
 
 void tst_QmlCppCodegen::jsArrayMethodsWithParams()
