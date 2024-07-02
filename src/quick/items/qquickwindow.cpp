@@ -362,14 +362,9 @@ void QQuickWindowPrivate::polishItems()
     }
 #endif
 
-    for (QQuickItem *dirtyItem = dirtyItemList; dirtyItem;) {
-        QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(dirtyItem);
-        if (itemPriv->dirtyAttributes & QQuickItemPrivate::ChildrenStackingChanged) {
-            qCDebug(lcQuickWindow) << dirtyItem << "has dirty child stacking order";
-            updateChildWindowStackingOrder();
-            break;
-        }
-        dirtyItem = itemPriv->nextDirtyItem;
+    if (needsChildWindowStackingOrderUpdate) {
+        updateChildWindowStackingOrder();
+        needsChildWindowStackingOrderUpdate = false;
     }
 }
 
@@ -859,9 +854,14 @@ QQmlListProperty<QObject> QQuickWindowPrivate::data()
                                      QQuickWindowPrivate::data_removeLast);
 }
 
-void QQuickWindowPrivate::dirtyItem(QQuickItem *)
+void QQuickWindowPrivate::dirtyItem(QQuickItem *item)
 {
     Q_Q(QQuickWindow);
+
+    QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(item);
+    if (itemPriv->dirtyAttributes & QQuickItemPrivate::ChildrenStackingChanged)
+        needsChildWindowStackingOrderUpdate = true;
+
     q->maybeUpdate();
 }
 
