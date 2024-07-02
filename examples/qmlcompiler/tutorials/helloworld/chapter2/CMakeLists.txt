@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt6 REQUIRED COMPONENTS QmlCompiler)
 
 qt_standard_project_setup(
-    REQUIRES 6.6
+    REQUIRES 6.8
 )
 
 qt_add_plugin(HelloWorldPlugin)

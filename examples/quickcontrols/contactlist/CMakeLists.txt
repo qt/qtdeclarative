@@ -7,7 +7,7 @@ project(contactlist LANGUAGES CXX)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick)
 
-qt_standard_project_setup(REQUIRES 6.6)
+qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(contactlistexample WIN32 MACOSX_BUNDLE
     contactmodel.cpp contactmodel.h

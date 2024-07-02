@@ -6,7 +6,7 @@ project(keyinteraction LANGUAGES CXX)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_standard_project_setup(REQUIRES 6.5)
+qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(keyinteractionexample WIN32 MACOSX_BUNDLE
     main.cpp

@@ -6,7 +6,7 @@ project(embeddedinwidgets LANGUAGES CXX)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Widgets)
 
-qt_standard_project_setup(REQUIRES 6.5)
+qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(embeddedinwidgetsexample WIN32 MACOSX_BUNDLE
     main.cpp
