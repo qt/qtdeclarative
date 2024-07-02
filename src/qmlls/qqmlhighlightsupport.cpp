@@ -64,8 +64,7 @@ void SemanticTokenFullHandler::process(
     const auto doc = m_codeModel->openDocumentByUrl(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
     DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
-    Highlights highlights;
-    auto &&encoded = highlights.collectTokens(file, std::nullopt);
+    auto &&encoded = HighlightingUtils::collectTokens(file, std::nullopt);
     auto &registeredTokens = m_codeModel->registeredTokens();
     if (!encoded.isEmpty()) {
         HighlightingUtils::updateResultID(registeredTokens.resultId);
@@ -106,8 +105,7 @@ void SemanticTokenDeltaHandler::process(
     const auto doc = m_codeModel->openDocumentByUrl(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
     DomItem file = doc.snapshot.validDoc.fileObject(GoTo::MostLikely);
-    Highlights highlights;
-    auto newEncoded = highlights.collectTokens(file, std::nullopt);
+    auto newEncoded = HighlightingUtils::collectTokens(file, std::nullopt);
     auto &registeredTokens = m_codeModel->registeredTokens();
     const auto lastResultId = registeredTokens.resultId;
     HighlightingUtils::updateResultID(registeredTokens.resultId);
@@ -163,8 +161,7 @@ void SemanticTokenRangeHandler::process(
     const auto range = request->m_parameters.range;
     int startOffset = int(QQmlLSUtils::textOffsetFrom(code, range.start.line, range.end.character));
     int endOffset = int(QQmlLSUtils::textOffsetFrom(code, range.end.line, range.end.character));
-    Highlights highlights;
-    auto &&encoded = highlights.collectTokens(file, HighlightsRange{startOffset, endOffset});
+    auto &&encoded = HighlightingUtils::collectTokens(file, HighlightsRange{startOffset, endOffset});
     auto &registeredTokens = m_codeModel->registeredTokens();
     if (!encoded.isEmpty()) {
         HighlightingUtils::updateResultID(registeredTokens.resultId);

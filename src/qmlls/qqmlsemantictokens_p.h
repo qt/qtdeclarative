@@ -77,9 +77,6 @@ public:
     void addHighlight(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier = 0);
     void addHighlight(const QMap<QQmlJS::Dom::FileLocationRegion, QQmlJS::SourceLocation> &regions,
                       QQmlJS::Dom::FileLocationRegion region, int tokenModifier = 0);
-    QList<int> collectTokens(const QQmlJS::Dom::DomItem &item,
-                             const std::optional<HighlightsRange> &range);
-
     HighlightsContainer &highlights() { return m_highlights; }
     const HighlightsContainer &highlights() const { return m_highlights; }
 
@@ -87,16 +84,18 @@ private:
     HighlightsContainer m_highlights;
 };
 
-struct HighlightingUtils
+namespace HighlightingUtils
 {
-    static QList<int> encodeSemanticTokens(Highlights &highlights);
-    static QList<QQmlJS::SourceLocation>
+    QList<int> encodeSemanticTokens(Highlights &highlights);
+    QList<QQmlJS::SourceLocation>
     sourceLocationsFromMultiLineToken(QStringView code,
                                       const QQmlJS::SourceLocation &tokenLocation);
-    static void addModifier(QLspSpecification::SemanticTokenModifiers modifier, int *baseModifier);
-    static bool rangeOverlapsWithSourceLocation(const QQmlJS::SourceLocation &loc, const HighlightsRange &r);
-    static QList<QLspSpecification::SemanticTokensEdit> computeDiff(const QList<int> &, const QList<int> &);
-    static void updateResultID(QByteArray &resultID);
+    void addModifier(QLspSpecification::SemanticTokenModifiers modifier, int *baseModifier);
+    bool rangeOverlapsWithSourceLocation(const QQmlJS::SourceLocation &loc, const HighlightsRange &r);
+    QList<QLspSpecification::SemanticTokensEdit> computeDiff(const QList<int> &, const QList<int> &);
+    void updateResultID(QByteArray &resultID);
+    QList<int> collectTokens(const QQmlJS::Dom::DomItem &item,
+                             const std::optional<HighlightsRange> &range);
 };
 
 class HighlightingVisitor
