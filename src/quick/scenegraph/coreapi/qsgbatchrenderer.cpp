@@ -3906,7 +3906,10 @@ void Renderer::beginRenderPass(RenderPassContext *)
                      // we have no choice but to set the flag always
                      // (thus triggering using secondary command
                      // buffers with Vulkan)
-                     QRhiCommandBuffer::ExternalContent);
+                     QRhiCommandBuffer::ExternalContent
+                     // We do not use GPU compute at all at the moment, this means we can
+                     // get a small performance gain with OpenGL by declaring this.
+                     | QRhiCommandBuffer::DoNotTrackResourcesForCompute);
 
     if (m_renderPassRecordingCallbacks.start)
         m_renderPassRecordingCallbacks.start(m_renderPassRecordingCallbacks.userData);
