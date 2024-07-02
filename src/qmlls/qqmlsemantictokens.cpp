@@ -760,17 +760,18 @@ void Highlights::addHighlight(const QMap<FileLocationRegion, QQmlJS::SourceLocat
     return addHighlight(loc, tokenTypeFromRegion(region), modifier);
 }
 
-QList<int> Highlights::collectTokens(const QQmlJS::Dom::DomItem &item,
+QList<int> HighlightingUtils::collectTokens(const QQmlJS::Dom::DomItem &item,
                                      const std::optional<HighlightsRange> &range)
 {
     using namespace QQmlJS::Dom;
-    HighlightingVisitor highlightDomElements(*this, range);
+    Highlights highlights;
+    HighlightingVisitor highlightDomElements(highlights, range);
     // In QmlFile level, visitTree visits even FileLocations tree which takes quite a time to
     // finish. HighlightingFilter is added to prevent unnecessary visits.
     item.visitTree(Path(), highlightDomElements, VisitOption::Default, emptyChildrenVisitor,
                    emptyChildrenVisitor, highlightingFilter());
 
-    return HighlightingUtils::encodeSemanticTokens(*this);
+    return HighlightingUtils::encodeSemanticTokens(highlights);
 }
 
 QT_END_NAMESPACE

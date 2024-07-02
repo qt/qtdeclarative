@@ -1600,7 +1600,7 @@ void tst_qmlls_modules::semanticHighlightingFull()
     QFETCH(QString, filePath);
     const auto item = fileObject(testFile(filePath));
     Highlights highlights;
-    const auto expectedData = highlights.collectTokens(item, std::nullopt);
+    const auto expectedData = HighlightingUtils::collectTokens(item, std::nullopt);
 
     const auto uri = openFile(filePath);
     QVERIFY(uri);
@@ -1647,7 +1647,7 @@ void tst_qmlls_modules::semanticHighlightingRange()
     const auto code = qmlFile->code();
     const int startOffset = int(QQmlLSUtils::textOffsetFrom(code, range.start.line, range.end.character));
     const int endOffset = int(QQmlLSUtils::textOffsetFrom(code, range.end.line, range.end.character));
-    const auto expectedData = highlights.collectTokens(item, HighlightsRange{startOffset, endOffset});
+    const auto expectedData = HighlightingUtils::collectTokens(item, HighlightsRange{startOffset, endOffset});
 
     const auto uri = openFile(filePath);
     QVERIFY(uri);
@@ -1692,9 +1692,8 @@ void tst_qmlls_modules::semanticHighlightingDelta()
 
     const auto fileItem = fileObject(testFile(filePath));
     const auto deltaFileItem = fileObject(testFile(deltaFilePath));
-    Highlights highlights;
-    auto fullDocumentSemanticTokensData = highlights.collectTokens(fileItem, std::nullopt);
-    auto editedDocumentSemanticTokensData = highlights.collectTokens(deltaFileItem, std::nullopt);
+    auto fullDocumentSemanticTokensData = HighlightingUtils::collectTokens(fileItem, std::nullopt);
+    auto editedDocumentSemanticTokensData = HighlightingUtils::collectTokens(deltaFileItem, std::nullopt);
     const auto expectedEdits = HighlightingUtils::computeDiff(fullDocumentSemanticTokensData, editedDocumentSemanticTokensData);
 
     const auto uri = openFile(filePath);
