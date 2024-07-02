@@ -6379,13 +6379,24 @@ void tst_QQuickListView::snapOneItem()
         QCOMPARE(currentIndexSpy.size(), 1);
     }
 
-    // flick to end
-    do {
-        flick(window, flickStart, flickEnd, flickDuration);
-        QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
-    } while (orientation == QQuickListView::Vertical
-           ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYEnd() : !listview->isAtYBeginning()
-           : layoutDirection == Qt::LeftToRight ? !listview->isAtXEnd() : !listview->isAtXBeginning());
+    {
+        auto atEnd = [orientation, listview, verticalLayoutDirection, layoutDirection]() {
+            return orientation == QQuickListView::Vertical
+                    ? verticalLayoutDirection == QQuickItemView::TopToBottom
+                      ? listview->isAtYEnd()
+                      : listview->isAtYBeginning()
+                      : layoutDirection == Qt::LeftToRight
+                        ? listview->isAtXEnd()
+                        : listview->isAtXBeginning();
+        };
+
+        // flick to end
+        for (int i = 0; i < 4 && !atEnd(); ++i) {
+            flick(window, flickStart, flickEnd, flickDuration);
+            QTRY_COMPARE(listview->isMoving(), false); // wait until it stops
+        }
+        QVERIFY(atEnd());
+    }
 
     if (orientation == QQuickListView::Vertical)
         QCOMPARE(listview->contentY(), endExtent);
@@ -6397,13 +6408,24 @@ void tst_QQuickListView::snapOneItem()
         QCOMPARE(currentIndexSpy.size(), 3);
     }
 
-    // flick to start
-    do {
-        flick(window, flickEnd, flickStart, flickDuration);
-        QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
-    } while (orientation == QQuickListView::Vertical
-           ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYBeginning() : !listview->isAtYEnd()
-           : layoutDirection == Qt::LeftToRight ? !listview->isAtXBeginning() : !listview->isAtXEnd());
+    {
+        auto atStart = [orientation, listview, verticalLayoutDirection, layoutDirection]() {
+            return orientation == QQuickListView::Vertical
+                    ? verticalLayoutDirection == QQuickItemView::TopToBottom
+                      ? listview->isAtYBeginning()
+                      : listview->isAtYEnd()
+                      : layoutDirection == Qt::LeftToRight
+                        ? listview->isAtXBeginning()
+                        : listview->isAtXEnd();
+        };
+
+        // flick to start
+        for (int i = 0; i < 4 && !atStart(); ++i) {
+            flick(window, flickEnd, flickStart, flickDuration);
+            QTRY_COMPARE(listview->isMoving(), false); // wait until it stops
+        }
+        QVERIFY(atStart());
+    }
 
     if (orientation == QQuickListView::Vertical)
         QCOMPARE(listview->contentY(), startExtent);
