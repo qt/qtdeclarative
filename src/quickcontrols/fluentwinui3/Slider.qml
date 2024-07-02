@@ -47,9 +47,11 @@ T.Slider {
             radius: diameter * 0.5
             x: (control.config.handle.width - width) / 2
             y: (control.config.handle.height - height) / 2
-            color: control.pressed
-                    ? Application.styleHints.colorScheme == Qt.Light ? "#CC005FB8" : "#CC60CDFF"// AccentFillColorTertiary
-                    : control.palette.accent
+
+            color: control.enabled ? (control.hovered ? Qt.rgba(control.palette.accent.r, control.palette.accent.g, control.palette.accent.b, 0.9020)
+                                   : control.pressed ? Qt.rgba(control.palette.accent.r, control.palette.accent.g, control.palette.accent.b, 0.8)
+                                   : control.palette.accent)
+                                   : control.palette.accent
             Behavior on diameter {
                 // From WindowsUI 3 Animation Values
                 NumberAnimation{

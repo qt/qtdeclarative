@@ -62,9 +62,10 @@ T.RangeSlider {
             radius: diameter * 0.5
             x: (control.secondHandleConfig.first_handle.width - width) / 2
             y: (control.secondHandleConfig.first_handle.height - height) / 2
-            color: control.first.pressed
-                    ? Application.styleHints.colorScheme == Qt.Light ? "#CC005FB8" : "#CC60CDFF"// AccentFillColorTertiary
-                    : control.palette.accent
+            color: control.enabled ? (control.first.hovered ? Qt.rgba(control.palette.accent.r, control.palette.accent.g, control.palette.accent.b, 0.9020)
+                                   : control.first.pressed ? Qt.rgba(control.palette.accent.r, control.palette.accent.g, control.palette.accent.b, 0.8)
+                                   : control.palette.accent)
+                                   : control.palette.accent
             Behavior on diameter {
                 // From WindowsUI 3 Animation Values
                 NumberAnimation {
@@ -93,9 +94,10 @@ T.RangeSlider {
             radius: diameter * 0.5
             x: (control.secondHandleConfig.second_handle.width - width) / 2
             y: (control.secondHandleConfig.second_handle.height - height) / 2
-            color: control.second.pressed
-                    ? Application.styleHints.colorScheme == Qt.Light ? "#CC005FB8" : "#CC60CDFF"// AccentFillColorTertiary
-                    : control.palette.accent
+            color: control.enabled ? (control.second.hovered ? Qt.rgba(control.palette.accent.r, control.palette.accent.g, control.palette.accent.b, 0.9020)
+                                   : control.second.pressed ? Qt.rgba(control.palette.accent.r, control.palette.accent.g, control.palette.accent.b, 0.8)
+                                   : control.palette.accent)
+                                   : control.palette.accent
             Behavior on diameter {
                 // From WindowsUI 3 Animation Values
                 NumberAnimation{
