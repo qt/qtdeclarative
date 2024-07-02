@@ -6,7 +6,7 @@ project(chapter4-customPropertyTypes LANGUAGES CXX)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_standard_project_setup(REQUIRES 6.5)
+qt_standard_project_setup(REQUIRES 6.8)
 
 #![0]
 qt_add_executable(chapter4-customPropertyTypes

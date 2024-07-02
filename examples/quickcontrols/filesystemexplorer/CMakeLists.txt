@@ -10,7 +10,7 @@ if (ANDROID OR IOS)
 endif ()
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2 Svg)
-qt_standard_project_setup(REQUIRES 6.5)
+qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(filesystemexplorer
     main.cpp
