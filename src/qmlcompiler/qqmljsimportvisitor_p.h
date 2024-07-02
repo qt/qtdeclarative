@@ -86,6 +86,8 @@ public:
         QQmlJSScope::BindingTargetSpecifier specifier = QQmlJSScope::SimplePropertyTarget;
     };
 
+    QStringList seenModuleQualifiers() const { return m_seenModuleQualifiers; }
+
 protected:
     // Linter warnings, we might want to move this at some point
     bool visit(QQmlJS::AST::StringLiteral *) override;
@@ -341,6 +343,7 @@ protected:
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
     QSet<QQmlJSScope::ConstPtr> m_literalScopesToCheck;
     QQmlJS::SourceLocation m_pendingSignalHandler;
+    QStringList m_seenModuleQualifiers;
 
 private:
     void checkSignal(

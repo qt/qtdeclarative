@@ -186,6 +186,7 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
     m_objectsByLocation = visitor->scopesBylocation();
     m_signalHandlers = visitor->signalHandlers();
     m_imports = visitor->imports();
+    m_seenModuleQualifiers = visitor->seenModuleQualifiers();
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::mathObject() const

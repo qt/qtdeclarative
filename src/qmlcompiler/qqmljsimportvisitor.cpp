@@ -2401,6 +2401,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
 
             m_importStaticModuleLocationMap[staticModule] = import->firstSourceLocation();
         }
+    } else {
+        m_seenModuleQualifiers.append(prefix);
     }
 
     processImportWarnings(QStringLiteral("module \"%1\"").arg(path), import->firstSourceLocation());
