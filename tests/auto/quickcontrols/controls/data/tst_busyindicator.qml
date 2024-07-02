@@ -78,8 +78,6 @@ TestCase {
 
         let invisibleImage = grabImage(control)
         control.visible = true
-        let visibleImage = grabImage(control)
-
-        verify(!invisibleImage.equals(visibleImage))
+        tryVerify(() => { return !invisibleImage.equals(grabImage(control)); })
     }
 }

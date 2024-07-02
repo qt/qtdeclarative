@@ -1,9 +1,5 @@
 # See qtbase/src/testlib/qtestblacklist.cpp for format
 
-# until adding FluentWinUI3's own BusyIndicator implementation
-[BusyIndicator::test_visibility]
-*
-
 # until adding FluentWinUI3's own Page implementation
 [Page::test_layout]
 *
