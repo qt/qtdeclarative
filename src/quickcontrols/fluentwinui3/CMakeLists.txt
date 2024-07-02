@@ -7,6 +7,7 @@
 
 set(qml_files
     "ApplicationWindow.qml"
+    "BusyIndicator.qml"
     "Button.qml"
     "CheckBox.qml"
     "ComboBox.qml"
