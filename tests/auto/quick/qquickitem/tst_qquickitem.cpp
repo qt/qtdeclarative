@@ -1529,7 +1529,7 @@ void tst_qquickitem::polishLoopDetection_data()
 
     QTest::newRow("test1.100") <<   PolishItemSpans({ {1, 100} }) << 0;
     QTest::newRow("test1.1002") <<  PolishItemSpans({ {1, 1002} }) << 3;
-    QTest::newRow("test1.2020") <<  PolishItemSpans({ {1, 2020} }) << 10;
+    QTest::newRow("test1.2020") <<  PolishItemSpans({ {1, 2020} }) << 5;
 
     QTest::newRow("test5.1") <<    PolishItemSpans({ {5, 1} }) << 0;
     QTest::newRow("test5.10") <<   PolishItemSpans({ {5, 10} }) << 0;
