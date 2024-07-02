@@ -4344,26 +4344,40 @@ void tst_QQuickGridView::snapToRow()
     else
         QCOMPARE(qreal(fmod(gridview->contentX(),80.0)), snapAlignment);
 
-    // flick to end
-    do {
-        flick(window, flickStart, flickEnd, 180);
-        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::FlowLeftToRight
-           ? !gridview->isAtYEnd()
-           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXEnd() : !gridview->isAtXBeginning());
+    {
+        auto atEnd = [flow, gridview, layoutDirection]() {
+            return flow == QQuickGridView::FlowLeftToRight
+                    ? gridview->isAtYEnd()
+                    : layoutDirection == Qt::LeftToRight ? gridview->isAtXEnd() : gridview->isAtXBeginning();
+        };
+
+        // flick to end
+        for (int i = 0; i < 4 && !atEnd(); ++i) {
+            flick(window, flickStart, flickEnd, 180);
+            QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+        }
+        QVERIFY(atEnd());
+    }
 
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), endExtent);
     else
         QCOMPARE(gridview->contentX(), endExtent);
 
-    // flick to start
-    do {
-        flick(window, flickEnd, flickStart, 180);
-        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::FlowLeftToRight
-           ? !gridview->isAtYBeginning()
-           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXBeginning() : !gridview->isAtXEnd());
+    {
+        auto atStart = [flow, gridview, layoutDirection]() {
+            return flow == QQuickGridView::FlowLeftToRight
+                    ? gridview->isAtYBeginning()
+                    : layoutDirection == Qt::LeftToRight ? gridview->isAtXBeginning() : gridview->isAtXEnd();
+        };
+
+        // flick to start
+        for (int i = 0; i < 4 && !atStart(); ++i) {
+            flick(window, flickEnd, flickStart, 180);
+            QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+        }
+        QVERIFY(atStart());
+    }
 
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), startExtent);
@@ -4460,13 +4474,20 @@ void tst_QQuickGridView::snapOneRow()
         QCOMPARE(currentIndexSpy.size(), 1);
     }
 
-    // flick to end
-    do {
-        flick(window, flickStart, flickEnd, flickDuration);
-        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::FlowLeftToRight
-           ? !gridview->isAtYEnd()
-           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXEnd() : !gridview->isAtXBeginning());
+    {
+        auto atEnd = [flow, gridview, layoutDirection]() {
+            return flow == QQuickGridView::FlowLeftToRight
+                    ? gridview->isAtYEnd()
+                    : layoutDirection == Qt::LeftToRight ? gridview->isAtXEnd() : gridview->isAtXBeginning();
+        };
+
+        // flick to end
+        for (int i = 0; i < 4 && !atEnd(); ++i) {
+            flick(window, flickStart, flickEnd, flickDuration);
+            QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+        }
+        QVERIFY(atEnd());
+    }
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(gridview->currentIndex(), 6);
@@ -4478,13 +4499,20 @@ void tst_QQuickGridView::snapOneRow()
     else
         QCOMPARE(gridview->contentX(), endExtent);
 
-    // flick to start
-    do {
-        flick(window, flickEnd, flickStart, flickDuration);
-        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::FlowLeftToRight
-           ? !gridview->isAtYBeginning()
-           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXBeginning() : !gridview->isAtXEnd());
+    {
+        auto atStart = [flow, gridview, layoutDirection]() {
+            return flow == QQuickGridView::FlowLeftToRight
+                    ? gridview->isAtYBeginning()
+                    : layoutDirection == Qt::LeftToRight ? gridview->isAtXBeginning() : gridview->isAtXEnd();
+        };
+
+        // flick to start
+        for (int i = 0; i < 4 && !atStart(); ++i) {
+            flick(window, flickEnd, flickStart, flickDuration);
+            QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+        }
+        QVERIFY(atStart());
+    }
 
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), startExtent);
