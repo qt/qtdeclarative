@@ -105,4 +105,6 @@ private slots:
 #endif
     void urlToString();
     void signalConnections();
+
+    void hpp();
 };

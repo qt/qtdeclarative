@@ -23,9 +23,9 @@ class QmltcVisitor : public QQmlJSImportVisitor
                                   &qmlIrOrderedBindings);
     void setupAliases();
     void checkNamesAndTypes(const QQmlJSScope::ConstPtr &type);
-    void setRootFilePath();
+    QString filePath(const QQmlJSScope::ConstPtr &scope) const;
 
-    QString sourceDirectoryPath(const QString &path);
+    QString sourceDirectoryPath(const QString &path) const;
 
     using InlineComponentOrDocumentRootName = QQmlJSScope::InlineComponentOrDocumentRootName;
 
