@@ -64,6 +64,14 @@ void SemanticTokenFullHandler::process(
     const auto doc = m_codeModel->openDocumentByUrl(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
     DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
+    const auto fileObject = file.ownerAs<QmlFile>();
+    if (!fileObject || !(fileObject && fileObject->isValid())) {
+        guard.setError({
+                int(QLspSpecification::ErrorCodes::RequestCancelled),
+                "Cannot proceed: current QML document is invalid!"_L1,
+        });
+        return;
+    }
     auto &&encoded = HighlightingUtils::collectTokens(file, std::nullopt);
     auto &registeredTokens = m_codeModel->registeredTokens();
     if (!encoded.isEmpty()) {
@@ -104,7 +112,15 @@ void SemanticTokenDeltaHandler::process(
     ResponseScopeGuard guard(result, request->m_response);
     const auto doc = m_codeModel->openDocumentByUrl(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
-    DomItem file = doc.snapshot.validDoc.fileObject(GoTo::MostLikely);
+    DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
+    const auto fileObject = file.ownerAs<QmlFile>();
+    if (!fileObject || !(fileObject && fileObject->isValid())) {
+        guard.setError({
+                int(QLspSpecification::ErrorCodes::RequestCancelled),
+                "Cannot proceed: current QML document is invalid!"_L1,
+        });
+        return;
+    }
     auto newEncoded = HighlightingUtils::collectTokens(file, std::nullopt);
     auto &registeredTokens = m_codeModel->registeredTokens();
     const auto lastResultId = registeredTokens.resultId;
@@ -113,11 +129,11 @@ void SemanticTokenDeltaHandler::process(
     // Return full token list if result ids not align
     // otherwise compute the delta.
     if (lastResultId == request->m_parameters.previousResultId) {
-        result = QLspSpecification::SemanticTokensDelta {
+        result = QLspSpecification::SemanticTokensDelta{
             registeredTokens.resultId,
             HighlightingUtils::computeDiff(registeredTokens.lastTokens, newEncoded)
         };
-    } else if (!newEncoded.isEmpty()){
+    } else if (!newEncoded.isEmpty()) {
         result = QLspSpecification::SemanticTokens{ registeredTokens.resultId, newEncoded };
     } else {
         result = nullptr;
@@ -155,13 +171,20 @@ void SemanticTokenRangeHandler::process(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
     DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
     const auto qmlFile = file.as<QmlFile>();
-    if (!qmlFile)
+    if (!qmlFile || !(qmlFile && qmlFile->isValid())) {
+        guard.setError({
+                int(QLspSpecification::ErrorCodes::RequestCancelled),
+                "Cannot proceed: current QML document is invalid!"_L1,
+        });
         return;
+    }
     const QString &code = qmlFile->code();
     const auto range = request->m_parameters.range;
-    int startOffset = int(QQmlLSUtils::textOffsetFrom(code, range.start.line, range.end.character));
+    int startOffset =
+            int(QQmlLSUtils::textOffsetFrom(code, range.start.line, range.end.character));
     int endOffset = int(QQmlLSUtils::textOffsetFrom(code, range.end.line, range.end.character));
-    auto &&encoded = HighlightingUtils::collectTokens(file, HighlightsRange{startOffset, endOffset});
+    auto &&encoded =
+            HighlightingUtils::collectTokens(file, HighlightsRange{ startOffset, endOffset });
     auto &registeredTokens = m_codeModel->registeredTokens();
     if (!encoded.isEmpty()) {
         HighlightingUtils::updateResultID(registeredTokens.resultId);
