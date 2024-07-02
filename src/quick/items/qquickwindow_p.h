@@ -185,6 +185,7 @@ public:
 
     void clearGrabbers(QPointerEvent *event);
 
+    bool needsChildWindowStackingOrderUpdate = false;
     void updateChildWindowStackingOrder(QQuickItem *item = nullptr);
 
     QSGRenderContext *context;

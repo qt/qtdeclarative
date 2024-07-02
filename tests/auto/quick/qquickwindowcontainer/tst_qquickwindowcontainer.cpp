@@ -193,15 +193,20 @@ void tst_QQuickWindowContainer::windowComponent()
 void tst_QQuickWindowContainer::updateStackingOrderPerformance()
 {
     QQuickWindow quickWindow;
+    auto *contentItem = quickWindow.contentItem();
     for (int i = 0; i < 100; ++i) {
-        QQuickItem *item = new QQuickItem(quickWindow.contentItem());
+        QQuickItem *item = new QQuickItem(contentItem);
         for (int j = 0; j < 100; ++j)
             item = new QQuickItem(item);
     }
 
+    QVERIFY(QQuickTest::qWaitForPolish(&quickWindow));
+
+    auto *windowPrivate = QQuickWindowPrivate::get(&quickWindow);
+
     QBENCHMARK {
-        quickWindow.contentItem()->polish();
-        QQuickWindowPrivate::get(&quickWindow)->polishItems();
+        contentItem->polish();
+        windowPrivate->polishItems();
     }
 }
 
