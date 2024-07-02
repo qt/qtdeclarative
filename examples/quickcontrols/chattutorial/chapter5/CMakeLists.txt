@@ -4,9 +4,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(chapter5 LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Sql)
+
+qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(chattutorial-chapter5 WIN32 MACOSX_BUNDLE
     main.cpp
