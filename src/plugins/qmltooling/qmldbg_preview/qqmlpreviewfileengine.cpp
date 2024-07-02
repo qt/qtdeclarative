@@ -391,10 +391,22 @@ QQmlPreviewFileEngineHandler::QQmlPreviewFileEngineHandler(QQmlPreviewFileLoader
 std::unique_ptr<QAbstractFileEngine> QQmlPreviewFileEngineHandler::create(
         const QString &fileName) const
 {
-    // Don't load compiled QML/JS over the network
-    if (fileName.endsWith(".qmlc") || fileName.endsWith(".jsc") || isRootPath(fileName)) {
-        return nullptr;
+    using namespace Qt::StringLiterals;
+    static QList<QLatin1StringView> prohibitedSuffixes {
+        // Don't load compiled QML/JS over the network
+        ".qmlc"_L1, ".jsc"_L1, ".mjsc"_L1,
+
+        // Don't load plugins over the network
+        ".dll"_L1, ".so"_L1, ".dylib"_L1
+    };
+
+    for (QLatin1StringView suffix : prohibitedSuffixes) {
+        if (fileName.endsWith(suffix))
+            return nullptr;
     }
+
+    if (isRootPath(fileName))
+        return nullptr;
 
     QString relative = fileName;
     while (relative.endsWith('/'))
