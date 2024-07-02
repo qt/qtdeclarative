@@ -203,6 +203,7 @@ public:
     void fireFrameSwapped() { Q_EMIT q_func()->frameSwapped(); }
     void fireAboutToStop() { Q_EMIT q_func()->sceneGraphAboutToStop(); }
 
+    bool needsChildWindowStackingOrderUpdate = false;
     void updateChildWindowStackingOrder(QQuickItem *item = nullptr);
 
     int multiViewCount();
