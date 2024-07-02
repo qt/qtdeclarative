@@ -1625,10 +1625,6 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
     const auto valueContained = baseContained->valueType();
     const auto valueType = m_typeResolver->globalType(valueContained);
 
-    const bool canHaveSideEffects = (baseType.isProperty() && baseType.isWritable())
-            || baseContained->isListProperty()
-            || baseType.isConversion();
-
     const auto setReturnType = [&](const QQmlJSScope::ConstPtr type) {
         setAccumulator(m_typeResolver->returnType(
                 type, QQmlJSRegisterContent::MethodReturnValue, baseContained));
@@ -1643,7 +1639,7 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
         for (int i = 0; i < argc; ++i)
             addReadRegister(argv + i, intType);
 
-        m_state.setHasSideEffects(canHaveSideEffects);
+        m_state.setHasSideEffects(true);
         setReturnType(baseContained);
         return true;
     }
@@ -1662,7 +1658,7 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
         for (int i = 1; i < argc; ++i)
             addReadRegister(argv + i, intType);
 
-        m_state.setHasSideEffects(canHaveSideEffects);
+        m_state.setHasSideEffects(true);
         setReturnType(baseContained);
         return true;
     }
@@ -1694,7 +1690,7 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
     }
 
     if ((name == u"pop" || name == u"shift") && argc == 0) {
-        m_state.setHasSideEffects(canHaveSideEffects);
+        m_state.setHasSideEffects(true);
         setReturnType(valueContained);
         return true;
     }
@@ -1708,13 +1704,13 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
         for (int i = 0; i < argc; ++i)
             addReadRegister(argv + i, valueType);
 
-        m_state.setHasSideEffects(canHaveSideEffects);
+        m_state.setHasSideEffects(true);
         setReturnType(m_typeResolver->int32Type());
         return true;
     }
 
     if (name == u"reverse" && argc == 0) {
-        m_state.setHasSideEffects(canHaveSideEffects);
+        m_state.setHasSideEffects(true);
         setReturnType(baseContained);
         return true;
     }
@@ -1751,7 +1747,7 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
         for (int i = 2; i < argc; ++i)
             addReadRegister(argv + i, valueType);
 
-        m_state.setHasSideEffects(canHaveSideEffects);
+        m_state.setHasSideEffects(true);
         setReturnType(baseContained);
         return true;
     }
