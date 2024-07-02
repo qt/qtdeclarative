@@ -56,6 +56,10 @@ private:
     void adjustTypes();
     bool canMove(int instructionOffset, const RegisterAccess &access) const;
 
+    void removeReadsFromErasedInstructions(const QFlatMap<int, InstructionAnnotation>::const_iterator &it);
+    void removeDeadStoresUntilStable();
+    bool eraseDeadStore(const InstructionAnnotations::iterator &it, bool &erasedReaders);
+
     QHash<int, RegisterAccess> m_readerLocations;
     QList<ObjectOrArrayDefinition> m_objectAndArrayDefinitions;
 };

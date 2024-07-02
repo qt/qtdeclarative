@@ -17,6 +17,7 @@ QQmlJSCompilePass::BlocksAndAnnotations QQmlJSOptimizations::run(const Function 
 
     populateBasicBlocks();
     populateReaderLocations();
+    removeDeadStoresUntilStable();
     adjustTypes();
 
     return { std::move(m_basicBlocks), std::move(m_annotations) };
@@ -68,46 +69,13 @@ private:
 void QQmlJSOptimizations::populateReaderLocations()
 {
     using NewInstructionAnnotations = NewFlatMap<int, InstructionAnnotation>;
-
-    bool erasedReaders = false;
-    auto eraseDeadStore = [&](const InstructionAnnotations::iterator &it) {
-        auto reader = m_readerLocations.find(it.key());
-        if (reader != m_readerLocations.end()
-            && (reader->typeReaders.isEmpty() || reader->registerReadersAndConversions.isEmpty())) {
-
-            if (it->second.isRename) {
-                // If it's a rename, it doesn't "own" its output type. The type may
-                // still be read elsewhere, even if this register isn't. However, we're
-                // not interested in the variant or any other details of the register.
-                // Therefore just delete it.
-                it->second.changedRegisterIndex = InvalidRegister;
-                it->second.changedRegister = QQmlJSRegisterContent();
-            } else {
-                // void the output, rather than deleting it. We still need its variant.
-                const bool adjusted = m_typeResolver->adjustTrackedType(
-                            it->second.changedRegister.containedType(),
-                            m_typeResolver->voidType());
-                Q_ASSERT(adjusted); // Can always convert to void
-            }
-            m_readerLocations.erase(reader);
-
-            // If it's not a label and has no side effects, we can drop the instruction.
-            if (!it->second.hasSideEffects) {
-                if (!it->second.readRegisters.isEmpty()) {
-                    it->second.readRegisters.clear();
-                    erasedReaders = true;
-                }
-                if (m_basicBlocks.find(it.key()) == m_basicBlocks.end())
-                    return true;
-            }
-        }
-        return false;
-    };
-
     NewInstructionAnnotations newAnnotations;
+
     for (auto writeIt = m_annotations.begin(), writeEnd = m_annotations.end();
          writeIt != writeEnd; ++writeIt) {
         const int writtenRegister = writeIt->second.changedRegisterIndex;
+
+        // Instructions that don't write can't be dead stores, no need to populate reader locations
         if (writtenRegister == InvalidRegister) {
             newAnnotations.appendOrdered(writeIt);
             continue;
@@ -186,17 +154,8 @@ void QQmlJSOptimizations::populateReaderLocations()
                 } else if (registerActive && !processed->registerActive) {
                     blocks.append({conversions, blockStart, registerActive});
                 } else {
-
-                    // TODO: Use unite() once it is fixed.
-                    // We don't use unite() here since it would be more expensive. unite()
-                    // effectively loops on only insert() and insert() does a number of checks
-                    // each time. We trade those checks for calculating the hash twice on each
-                    // iteration. Calculating the hash is very cheap for integers.
                     Conversions merged = processed->conversions;
-                    for (const int conversion : std::as_const(conversions)) {
-                        if (!merged.contains(conversion))
-                            merged.insert(conversion);
-                    }
+                    merged.unite(conversions);
 
                     if (merged.size() > processed->conversions.size())
                         blocks.append({std::move(merged), blockStart, registerActive});
@@ -214,45 +173,94 @@ void QQmlJSOptimizations::populateReaderLocations()
                 isFirstBlock = false;
         }
 
-        if (!eraseDeadStore(writeIt))
-            newAnnotations.appendOrdered(writeIt);
+        newAnnotations.appendOrdered(writeIt);
     }
     m_annotations = newAnnotations.take();
+}
 
+bool QQmlJSOptimizations::eraseDeadStore(const InstructionAnnotations::iterator &it,
+                                         bool &erasedReaders)
+{
+    auto reader = m_readerLocations.find(it.key());
+    if (reader != m_readerLocations.end()
+        && (reader->typeReaders.isEmpty() || reader->registerReadersAndConversions.isEmpty())) {
+
+        if (it->second.isRename) {
+            // If it's a rename, it doesn't "own" its output type. The type may
+            // still be read elsewhere, even if this register isn't. However, we're
+            // not interested in the variant or any other details of the register.
+            // Therefore just delete it.
+            it->second.changedRegisterIndex = InvalidRegister;
+            it->second.changedRegister = QQmlJSRegisterContent();
+        } else {
+            // void the output, rather than deleting it. We still need its variant.
+            const bool adjusted = m_typeResolver->adjustTrackedType(
+                    it->second.changedRegister.containedType(), m_typeResolver->voidType());
+            Q_ASSERT(adjusted); // Can always convert to void
+        }
+        m_readerLocations.erase(reader);
+
+        // If it's not a label and has no side effects, we can drop the instruction.
+        if (!it->second.hasSideEffects) {
+            if (!it->second.readRegisters.isEmpty()) {
+                it->second.readRegisters.clear();
+                erasedReaders = true;
+            }
+            if (m_basicBlocks.find(it.key()) == m_basicBlocks.end())
+                return true;
+        }
+    }
+    return false;
+}
+
+void QQmlJSOptimizations::removeDeadStoresUntilStable()
+{
+    using NewInstructionAnnotations = NewFlatMap<int, InstructionAnnotation>;
+    NewInstructionAnnotations newAnnotations;
+
+    bool erasedReaders = true;
     while (erasedReaders) {
         erasedReaders = false;
 
         for (auto it = m_annotations.begin(), end = m_annotations.end(); it != end; ++it) {
             InstructionAnnotation &instruction = it->second;
+
+            // Don't touch the function prolog instructions
             if (instruction.changedRegisterIndex < InvalidRegister) {
                 newAnnotations.appendOrdered(it);
                 continue;
             }
 
-            auto readers = m_readerLocations.find(it.key());
-            if (readers != m_readerLocations.end()) {
-                for (auto typeIt = readers->typeReaders.begin();
-                     typeIt != readers->typeReaders.end();) {
-                    if (m_annotations.contains(typeIt.key()))
-                        ++typeIt;
-                    else
-                        typeIt = readers->typeReaders.erase(typeIt);
-                }
+            removeReadsFromErasedInstructions(it);
 
-                for (auto registerIt = readers->registerReadersAndConversions.begin();
-                     registerIt != readers->registerReadersAndConversions.end();) {
-                    if (m_annotations.contains(registerIt.key()))
-                        ++registerIt;
-                    else
-                        registerIt = readers->registerReadersAndConversions.erase(registerIt);
-                }
-            }
-
-            if (!eraseDeadStore(it))
+            if (!eraseDeadStore(it, erasedReaders))
                 newAnnotations.appendOrdered(it);
         }
 
         m_annotations = newAnnotations.take();
+    }
+}
+
+void QQmlJSOptimizations::removeReadsFromErasedInstructions(
+        const QFlatMap<int, InstructionAnnotation>::const_iterator &it)
+{
+    auto readers = m_readerLocations.find(it.key());
+    if (readers == m_readerLocations.end())
+        return;
+
+    for (auto typeIt = readers->typeReaders.begin(); typeIt != readers->typeReaders.end();) {
+        if (m_annotations.contains(typeIt.key()))
+            ++typeIt;
+        else
+            typeIt = readers->typeReaders.erase(typeIt);
+    }
+
+    for (auto registerIt = readers->registerReadersAndConversions.begin();
+         registerIt != readers->registerReadersAndConversions.end();) {
+        if (m_annotations.contains(registerIt.key()))
+            ++registerIt;
+        else
+            registerIt = readers->registerReadersAndConversions.erase(registerIt);
     }
 }
 
