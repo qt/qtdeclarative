@@ -415,7 +415,8 @@ void QQmlTableModel::doInsert(int rowIndex, const QVariant &row)
 
     // Adding rowAsVariant.toList() will add each invidual variant in the list,
     // which is definitely not what we want.
-    const QVariant rowAsVariant = row.value<QJSValue>().toVariant();
+    const QVariant rowAsVariant = row.userType() == QMetaType::QVariantMap ? row : row.value<QJSValue>().toVariant();
+
     mRows.insert(rowIndex, rowAsVariant);
     ++mRowCount;
 
@@ -955,9 +956,11 @@ bool QQmlTableModel::validateNewRow(const char *functionName, const QVariant &ro
         return true;
     }
 
+    const bool isVariantMap = (row.userType() == QMetaType::QVariantMap);
+
     // Don't require each row to be a QJSValue when setting all rows,
     // as they won't be; they'll be QVariantMap.
-    if (operation != SetRowsOperation && !validateRowType(functionName, row))
+    if (operation != SetRowsOperation && (!isVariantMap && !validateRowType(functionName, row)))
         return false;
 
     if (operation == OtherOperation) {
@@ -974,7 +977,7 @@ bool QQmlTableModel::validateNewRow(const char *functionName, const QVariant &ro
         }
     }
 
-    const QVariant rowAsVariant = operation == SetRowsOperation
+    const QVariant rowAsVariant = operation == SetRowsOperation || isVariantMap
         ? row : row.value<QJSValue>().toVariant();
     if (rowAsVariant.userType() != QMetaType::QVariantMap) {
         qmlWarning(this) << functionName << ": row manipulation functions "
