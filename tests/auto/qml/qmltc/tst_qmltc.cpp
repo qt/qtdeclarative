@@ -92,6 +92,8 @@
 #include "signalconnections.h"
 #include "requiredproperties.h"
 
+#include "hpp.h"
+
 // Qt:
 #include <QtCore/qstring.h>
 #include <QtCore/qbytearray.h>
@@ -3394,6 +3396,13 @@ void tst_qmltc::signalConnections()
     createdByQmltc.setCycleSecond(true);
     QTRY_VERIFY(!createdByQmltc.cycleSecond());
     QCOMPARE(createdByQmltc.objectName(), QLatin1String("second"));
+}
+
+void tst_qmltc::hpp()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(hpp) createdByQmltc(&e);
+    QCOMPARE(createdByQmltc.objectName(), QLatin1String("hpp"));
 }
 
 QTEST_MAIN(tst_qmltc)

@@ -24,6 +24,7 @@ set(cpp_sources
     cpptypes/typewithsignal.h
     cpptypes/custominitialization.h
     cpptypes/typewithrequiredproperties.h
+    cpptypes/hpp.hpp
 )
 
 set(qml_sources
@@ -137,6 +138,8 @@ set(qml_sources
     badFile.qml
 
     requiredProperties.qml
+
+    hpp.qml
 )
 
 set(js_sources

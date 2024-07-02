@@ -89,7 +89,7 @@ void QmltcVisitor::findCppIncludes()
         return false;
     };
     const auto addCppInclude = [this](const QQmlJSScope::ConstPtr &type) {
-        if (QString includeFile = type->filePath(); includeFile.endsWith(u".h"))
+        if (QString includeFile = filePath(type); !includeFile.isEmpty())
             m_cppIncludes.insert(std::move(includeFile));
     };
 
@@ -151,8 +151,8 @@ void QmltcVisitor::findCppIncludes()
             for (const QQmlJSMetaProperty &p : properties) {
                 findInType(p.type());
 
-                if (p.isPrivate() && t->filePath().endsWith(u".h")) {
-                    const QString ownersInclude = t->filePath();
+                if (p.isPrivate()) {
+                    const QString ownersInclude = filePath(t);
                     QString privateInclude = constructPrivateInclude(ownersInclude);
                     if (!privateInclude.isEmpty())
                         m_cppIncludes.insert(std::move(privateInclude));
@@ -174,7 +174,7 @@ void QmltcVisitor::findCppIncludes()
     }
 
     // remove own include
-    m_cppIncludes.remove(m_exportedRootScope->filePath());
+    m_cppIncludes.remove(filePath(m_exportedRootScope));
 }
 
 static void addCleanQmlTypeName(QStringList *names, const QQmlJSScope::ConstPtr &scope)
@@ -191,15 +191,8 @@ static void addCleanQmlTypeName(QStringList *names, const QQmlJSScope::ConstPtr 
 
 bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
 {
-    const bool processingRoot = !rootScopeIsValid();
-
     if (!QQmlJSImportVisitor::visit(object))
         return false;
-
-    if (processingRoot || m_currentScope->isInlineComponent()) {
-        Q_ASSERT(rootScopeIsValid());
-        setRootFilePath();
-    }
 
     // we're not interested in non-QML scopes
     if (m_currentScope->scopeType() != QQmlSA::ScopeType::QMLScope)
@@ -831,14 +824,14 @@ void QmltcVisitor::checkNamesAndTypes(const QQmlJSScope::ConstPtr &type)
 }
 
 /*! \internal
- *  Sets the file paths for the document and the inline components roots.
+ *  Returns the file path for the C++ header of \a scope or the header created
+ *  by qmltc for it and its inline components.
  */
-void QmltcVisitor::setRootFilePath()
+QString QmltcVisitor::filePath(const QQmlJSScope::ConstPtr &scope) const
 {
-    const QString filePath = m_currentScope->filePath();
-    if (filePath.endsWith(u".h")) // assume the correct path is set
-        return;
-    Q_ASSERT(filePath.endsWith(u".qml"_s));
+    const QString filePath = scope->filePath();
+    if (!filePath.endsWith(u".qml")) // assume the correct path is set
+        return scope->filePath();
 
     const QString correctedFilePath = sourceDirectoryPath(filePath);
     const QStringList paths = m_importer->resourceFileMapper()->resourcePaths(
@@ -850,13 +843,13 @@ void QmltcVisitor::setRootFilePath()
         qCDebug(lcQmltcCompiler,
                 "Failed to find a header file name for path %s. Paths checked:\n%s",
                 correctedFilePath.toUtf8().constData(), matchedPaths.toUtf8().constData());
-        return;
+        return QString();
     }
     // NB: get the file name to avoid prefixes
-    m_currentScope->setFilePath(QFileInfo(*firstHeader).fileName());
+    return QFileInfo(*firstHeader).fileName();
 }
 
-QString QmltcVisitor::sourceDirectoryPath(const QString &path)
+QString QmltcVisitor::sourceDirectoryPath(const QString &path) const
 {
     auto result = QQmlJSUtils::sourceDirectoryPath(m_importer, path);
     if (const QString *srcDirPath = std::get_if<QString>(&result))
