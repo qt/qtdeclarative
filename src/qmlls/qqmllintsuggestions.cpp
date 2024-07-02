@@ -18,7 +18,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lintLog, "qt.languageserver.lint")
+Q_STATIC_LOGGING_CATEGORY(lintLog, "qt.languageserver.lint")
 
 using namespace QLspSpecification;
 using namespace QQmlJS::Dom;
