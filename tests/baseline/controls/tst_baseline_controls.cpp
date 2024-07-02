@@ -46,6 +46,8 @@ private Q_SLOTS:
     void imagine() { runTest("Imagine"); }
     void universal_data() { setupTestSuite(); }
     void universal() { runTest("Universal"); }
+    void fluentWinUI3_data() { setupTestSuite(); }
+    void fluentWinUI3() { runTest("FluentWinUI3"); }
 #if defined(Q_OS_DARWIN) // the iOS style only gets build on iOS and macOS
     void ios_data() { setupTestSuite(); }
     void ios() { runTest("iOS"); }
