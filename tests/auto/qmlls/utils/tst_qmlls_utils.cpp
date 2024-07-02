@@ -1843,6 +1843,35 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
             << JSDefinitionsQml << 68 << 28 << BaseTypeQml << 6 << 1 << strlen("Item");
     QTest::addRow("inlineComponentFromDifferentFile")
             << JSDefinitionsQml << 75 << 27 << BaseTypeQml << 9 << 38 << strlen("Item");
+
+    {
+        const QString definitionFile =
+                testFile(u"findDefinition/MyApplicationWindowModule/MyApplicationWindow.qml"_s);
+        const QString qmlComponents = testFile(u"findDefinition/QmlComponents.qml"_s);
+        const QString qualifiedQmlComponents = testFile(u"findDefinition/QualifiedQmlComponents.qml"_s);
+        QTest::addRow("component") << qmlComponents << 7 << 11 << definitionFile << 7 << 1
+                                   << strlen("ApplicationWindow");
+        QTest::addRow("attachedType") << qmlComponents << 9 << 42 << definitionFile << 7 << 1
+                                      << strlen("ApplicationWindow");
+        QTest::addRow("enumValue") << qmlComponents << 10 << 42 << definitionFile << 7 << 1
+                                   << strlen("ApplicationWindow");
+        QTest::addRow("enumName") << qmlComponents << 11 << 42 << definitionFile << 7 << 1
+                                  << strlen("ApplicationWindow");
+
+        QTest::addRow("qualifiedComponent") << qualifiedQmlComponents << 7 << 11 << definitionFile
+                                            << 7 << 1 << strlen("ApplicationWindow");
+        QTest::addRow("qualifiedAttachedType")
+                << qualifiedQmlComponents << 9 << 47 << definitionFile << 7 << 1
+                << strlen("ApplicationWindow");
+        QTest::addRow("qualifiedEnumValue") << qualifiedQmlComponents << 10 << 42 << definitionFile
+                                            << 7 << 1 << strlen("ApplicationWindow");
+        QTest::addRow("qualifiedEnumName") << qualifiedQmlComponents << 11 << 42 << definitionFile
+                                           << 7 << 1 << strlen("ApplicationWindow");
+
+        QTest::addRow("qualifiedModuleName")
+                << qualifiedQmlComponents << 9 << 42 << qualifiedQmlComponents << 5 << 52
+                << strlen("MAWM");
+    }
 }
 
 void tst_qmlls_utils::findDefinitionFromLocation()
@@ -1884,7 +1913,8 @@ void tst_qmlls_utils::findDefinitionFromLocation()
 
     QVERIFY(definition);
 
-    QCOMPARE(definition->filename, expectedFilePath);
+    // don't work with absolute paths, and only compare the end of the file path
+    QCOMPARE(QStringView(definition->filename).last(expectedFilePath.size()), expectedFilePath);
 
     QCOMPARE(definition->sourceLocation.startLine, quint32(expectedLine));
     QCOMPARE(definition->sourceLocation.startColumn, quint32(expectedCharacter));
@@ -2043,6 +2073,41 @@ void tst_qmlls_utils::resolveExpressionType_data()
 
         QTest::addRow("qmlObject")
                 << derivedType << 6 << 4 << ResolveOwnerType << derived2Type << 4 << QmlComponentIdentifier;
+    }
+    {
+        const QString myHeader = u"private/myfile_p.h"_s;
+        const QString file = testFile(u"resolveExpressionType/AttachedComponentMixup.qml"_s);
+        QTest::addRow("ComponentAsComponent")
+                << file << 6 << 9 << ResolveOwnerType << myHeader << noLine
+                << QmlComponentIdentifier;
+        QTest::addRow("ComponentAsAttachedType")
+                << file << 8 << 56 << ResolveOwnerType << myHeader << noLine
+                << AttachedTypeIdentifier;
+        QTest::addRow("ComponentAsEnumName")
+                << file << 9 << 33 << ResolveOwnerType << myHeader << noLine
+                << QmlComponentIdentifier;
+    }
+    {
+        const QString myHeader = u"private/myfile_p.h"_s;
+        const QString file = testFile(u"resolveExpressionType/QualifiedAttachedComponentMixup.qml"_s);
+        QTest::addRow("QualifiedComponentAsComponent")
+                << file << 6 << 9 << ResolveOwnerType << myHeader << noLine
+                << QmlComponentIdentifier;
+        QTest::addRow("QualifiedComponentAsAttachedType")
+                << file << 8 << 56 << ResolveOwnerType << myHeader << noLine
+                << AttachedTypeIdentifier;
+        QTest::addRow("QualifiedComponentAsEnumName")
+                << file << 9 << 35 << ResolveOwnerType << myHeader << noLine
+                << QmlComponentIdentifier;
+
+        QTest::addRow("qualifiedModule") << file << 6 << 1 << ResolveOwnerType << noFile << noLine
+                                         << QualifiedModuleIdentifier;
+        QTest::addRow("qualifiedModule2") << file << 8 << 41 << ResolveOwnerType << noFile << noLine
+                                          << QualifiedModuleIdentifier;
+        QTest::addRow("qualifiedModule3") << file << 9 << 30 << ResolveOwnerType << noFile << noLine
+                                          << QualifiedModuleIdentifier;
+        QTest::addRow("qualifiedModule4") << file << 4 << 42 << ResolveOwnerType << noFile << noLine
+                                          << QualifiedModuleIdentifier;
     }
 }
 

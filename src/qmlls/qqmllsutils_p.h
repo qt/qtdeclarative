@@ -56,6 +56,7 @@ enum IdentifierType : char {
     AttachedTypeIdentifier,
     GroupedPropertyIdentifier,
     QmlComponentIdentifier,
+    QualifiedModuleIdentifier,
 };
 
 struct ErrorMessage
@@ -253,6 +254,7 @@ QPair<QString, QStringList> cmakeBuildCommand(const QString &path);
 
 bool isFieldMemberExpression(const DomItem &item);
 bool isFieldMemberAccess(const DomItem &item);
+bool isFieldMemberBase(const DomItem &item);
 QStringList fieldMemberExpressionBits(const DomItem &item, const DomItem &stopAtChild = {});
 
 QString qualifiersFrom(const DomItem &el);

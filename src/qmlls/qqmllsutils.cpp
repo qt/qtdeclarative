@@ -79,6 +79,31 @@ bool isFieldMemberAccess(const DomItem &item)
 
 /*!
    \internal
+    Helper to check if item is a Field Member Base \c base in
+    \c {base.memberAccess}.
+*/
+bool isFieldMemberBase(const DomItem &item)
+{
+    auto parent = item.directParent();
+    if (!isFieldMemberExpression(parent))
+        return false;
+
+    // First case, checking `a` for being a base in `a.b`: a is the left hand side of the binary
+    // expression B(a,b).
+    const DomItem leftHandSide = parent.field(Fields::left);
+    if (item == leftHandSide)
+        return true;
+
+    // Second case, checking `d` for being a base in `a.b.c.d.e.f.g`: the binary expressions are
+    // nested as following: B(B(B(B(B(B(a,b),c),d),e),f),g) so for `d`, check whether its
+    // grandparent B(B(B(B(a,b),c),d),e), which has `e` on its right hand side, is a binary
+    // expression.
+    const DomItem grandParent = parent.directParent();
+    return isFieldMemberExpression(grandParent) && grandParent.field(Fields::left) == parent;
+}
+
+/*!
+   \internal
     Get the bits of a field member expression, like \c{a}, \c{b} and \c{c} for \c{a.b.c}.
 
    stopAtChild can either be an FieldMemberExpression, a ScriptIdentifierExpression or a default
@@ -1249,6 +1274,47 @@ static QQmlJSScope::ConstPtr findScopeOfSpecialItems(QQmlJSScope::ConstPtr scope
     return {};
 }
 
+/*!
+\internal
+\brief Distinguishes singleton types from attached types and "regular" qml components.
+ */
+static std::optional<ExpressionType>
+resolveTypeName(const std::shared_ptr<QQmlJSTypeResolver> &resolver, const QString &name,
+                const DomItem &item, ResolveOptions options)
+{
+    const auto scope = resolver->typeForName(name);
+    if (!scope)
+        return {};
+
+    if (scope->isSingleton())
+        return ExpressionType{ name, scope, IdentifierType::SingletonIdentifier };
+
+    // A type not followed by a field member expression is just a type. Otherwise, it could either
+    // be a type or an attached type!
+    if (!isFieldMemberBase(item))
+        return ExpressionType{ name, scope, QmlComponentIdentifier };
+
+    // take the right hand side and unwrap in case its a nested fieldmemberexpression
+    const DomItem rightHandSide = [&item]() {
+        const DomItem candidate = item.directParent().field(Fields::right);
+        // case B(a,b) for the right hand side of `a` in `a.b`
+        if (candidate != item)
+            return candidate;
+        // case B(B(a,b),c) for the right hand side of `b` in `a.b.c`
+        return item.directParent().directParent().field(Fields::right);
+    }();
+
+    if (rightHandSide.internalKind() != DomType::ScriptIdentifierExpression)
+        return ExpressionType{ name, scope, QmlComponentIdentifier };
+
+    const QString fieldMemberAccessName = rightHandSide.value().toString();
+    if (fieldMemberAccessName.isEmpty() || !fieldMemberAccessName.front().isLower())
+        return ExpressionType{ name, scope, QmlComponentIdentifier };
+
+    return ExpressionType{ name, options == ResolveOwnerType ? scope : scope->attachedType(),
+                           IdentifierType::AttachedTypeIdentifier };
+}
+
 static std::optional<ExpressionType> resolveFieldMemberExpressionType(const DomItem &item,
                                                                       ResolveOptions options)
 {
@@ -1258,6 +1324,24 @@ static std::optional<ExpressionType> resolveFieldMemberExpressionType(const DomI
                                        ResolveOptions::ResolveActualTypeForFieldMemberExpression);
     if (!owner)
         return {};
+
+    if (!owner->semanticScope) {
+        // JS objects can get new members and methods during runtime and therefore has no
+        // qqmljsscopes. Therefore, just label everything inside a JavaScriptIdentifier as being
+        // another JavaScriptIdentifier.
+        if (owner->type == JavaScriptIdentifier) {
+            return ExpressionType{ name, {}, JavaScriptIdentifier };
+        } else if (owner->type == QualifiedModuleIdentifier) {
+            auto resolver = item.fileObject().as<QmlFile>()->typeResolver();
+            if (auto scope = resolveTypeName(resolver, u"%1.%2"_s.arg(*owner->name, name), item,
+                                             options)) {
+                // remove the qualified module name from the type name
+                scope->name = name;
+                return scope;
+            }
+        }
+        return {};
+    }
 
     if (auto scope = methodFromReferrerScope(owner->semanticScope, name, options))
         return *scope;
@@ -1345,18 +1429,11 @@ static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomIt
     if (auto scope = propertyFromReferrerScope(referrerScope, name, options))
         return *scope;
 
-    // Returns the baseType, can't use it with options.
-    if (auto scope = resolver->typeForName(name)) {
-        if (scope->isSingleton())
-            return ExpressionType{ name, scope, IdentifierType::SingletonIdentifier };
+    if (resolver->seenModuleQualifiers().contains(name))
+        return ExpressionType{ name, {}, QualifiedModuleIdentifier };
 
-        if (auto attachedScope = scope->attachedType()) {
-            return ExpressionType{ name, attachedScope, IdentifierType::AttachedTypeIdentifier };
-        }
-
-        // its a (inline) component!
-        return ExpressionType{ name, scope, QmlComponentIdentifier };
-    }
+    if (const auto scope = resolveTypeName(resolver, name, item, options))
+        return scope;
 
     // check if its an id
     QQmlJSRegisterContent fromId =
@@ -1628,6 +1705,14 @@ std::optional<ExpressionType> resolveExpressionType(const QQmlJS::Dom::DomItem &
 
         Q_UNREACHABLE_RETURN({});
     }
+    case DomType::Import: {
+        // we currently only support qualified module identifiers
+        if (!item[Fields::importId])
+            return {};
+        return ExpressionType{ item[Fields::importId].value().toString(),
+                               {},
+                               QualifiedModuleIdentifier };
+    }
     default: {
         qCDebug(QQmlLSUtilsLog) << "Type" << item.internalKindStr()
                                 << "is unimplemented in QQmlLSUtils::resolveExpressionType";
@@ -1720,7 +1805,9 @@ std::optional<Location> findDefinitionOf(const DomItem &item)
 {
     auto resolvedExpression = resolveExpressionType(item, ResolveOptions::ResolveOwnerType);
 
-    if (!resolvedExpression || !resolvedExpression->name || !resolvedExpression->semanticScope) {
+    if (!resolvedExpression || !resolvedExpression->name
+        || (!resolvedExpression->semanticScope
+            && resolvedExpression->type != QualifiedModuleIdentifier)) {
         qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::findDefinitionOf: Type could not be resolved.";
         return {};
     }
@@ -1771,16 +1858,32 @@ std::optional<Location> findDefinitionOf(const DomItem &item)
         result.filename = domId.canonicalFilePath();
         return result;
     }
+    case AttachedTypeIdentifier:
     case QmlComponentIdentifier: {
         Location result;
         result.sourceLocation = resolvedExpression->semanticScope->sourceLocation();
         result.filename = resolvedExpression->semanticScope->filePath();
         return result;
     }
+    case QualifiedModuleIdentifier: {
+        const DomItem imports = item.fileObject().field(Fields::imports);
+        for (int i = 0; i < imports.indexes(); ++i) {
+            if (imports[i][Fields::importId].value().toString() == resolvedExpression->name) {
+                const auto fileLocations = FileLocations::treeOf(imports[i]);
+                if (!fileLocations)
+                    continue;
+
+                Location result;
+                result.sourceLocation = fileLocations->info().regions[IdNameRegion];
+                result.filename = item.canonicalFilePath();
+                return result;
+            }
+        }
+        return {};
+    }
     case SingletonIdentifier:
     case EnumeratorIdentifier:
     case EnumeratorValueIdentifier:
-    case AttachedTypeIdentifier:
     case GroupedPropertyIdentifier:
         qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::findDefinitionOf was not implemented for type"
                                 << resolvedExpression->type;
@@ -1857,6 +1960,7 @@ static QQmlJSScope::ConstPtr expressionTypeWithDefinition(const ExpressionType &
     case AttachedTypeIdentifier:
     case GroupedPropertyIdentifier:
     case QmlComponentIdentifier:
+    case QualifiedModuleIdentifier:
         return ownerType.semanticScope;
     }
     return {};

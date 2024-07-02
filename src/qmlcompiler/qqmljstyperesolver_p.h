@@ -225,6 +225,7 @@ public:
 
     bool inherits(const QQmlJSScope::ConstPtr &derived, const QQmlJSScope::ConstPtr &base) const;
     QQmlJSLogger *logger() const { return m_logger; }
+    QStringList seenModuleQualifiers() const { return m_seenModuleQualifiers; }
 
 protected:
 
@@ -291,6 +292,7 @@ protected:
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> m_objectsByLocation;
     QQmlJSImporter::ImportedTypes m_imports;
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
+    QStringList m_seenModuleQualifiers;
 
     ParentMode m_parentMode = UseParentProperty;
     CloneMode m_cloneMode = CloneTypes;
