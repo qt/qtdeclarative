@@ -287,37 +287,31 @@ struct PolishLoopDetector
         if (itemsToPolish.size() > itemsRemainingBeforeUpdatePolish) {
             // Detected potential polish loop.
             ++numPolishLoopsInSequence;
-            if (numPolishLoopsInSequence >= 1000) {
+            if (numPolishLoopsInSequence == 10000) {
+                // We have looped 10,000 times without actually reducing the list of items to
+                // polish, give up for now.
+                // This is not a fix, just a remedy so that the application can be somewhat
+                // responsive.
+                numPolishLoopsInSequence = 0;
+                return true;
+            }
+            if (numPolishLoopsInSequence >= 1000 && numPolishLoopsInSequence < 1005) {
                 // Start to warn about polish loop after 1000 consecutive polish loops
-                if (numPolishLoopsInSequence == 100000) {
-                    // We have looped 100,000 times without actually reducing the list of items to
-                    // polish, give up for now.
-                    // This is not a fix, just a remedy so that the application can be somewhat
-                    // responsive.
-                    numPolishLoopsInSequence = 0;
-                    return true;
-                } else if (numPolishLoopsInSequence < 1005) {
-                    // Show the 5 next items involved in the polish loop.
-                    // (most likely they will be the same 5 items...)
-                    QQuickItem *guiltyItem = itemsToPolish.last();
-                    qmlWarning(item) << "possible QQuickItem::polish() loop";
+                // Show the 5 next items involved in the polish loop.
+                // (most likely they will be the same 5 items...)
+                QQuickItem *guiltyItem = itemsToPolish.last();
+                qmlWarning(item) << "possible QQuickItem::polish() loop";
 
-                    auto typeAndObjectName = [](QQuickItem *item) {
-                        QString typeName = QQmlMetaType::prettyTypeName(item);
-                        QString objName = item->objectName();
-                        if (!objName.isNull())
-                            return QLatin1String("%1(%2)").arg(typeName, objName);
-                        return typeName;
-                    };
+                auto typeAndObjectName = [](QQuickItem *item) {
+                    QString typeName = QQmlMetaType::prettyTypeName(item);
+                    QString objName = item->objectName();
+                    if (!objName.isNull())
+                        return QLatin1String("%1(%2)").arg(typeName, objName);
+                    return typeName;
+                };
 
-                    qmlWarning(guiltyItem) << typeAndObjectName(guiltyItem)
-                               << " called polish() inside updatePolish() of " << typeAndObjectName(item);
-
-                    if (numPolishLoopsInSequence == 1004)
-                        // Enough warnings. Reset counter in order to speed things up and re-detect
-                        // more loops
-                        numPolishLoopsInSequence = 0;
-                }
+                qmlWarning(guiltyItem) << typeAndObjectName(guiltyItem)
+                            << " called polish() inside updatePolish() of " << typeAndObjectName(item);
             }
         } else {
             numPolishLoopsInSequence = 0;
