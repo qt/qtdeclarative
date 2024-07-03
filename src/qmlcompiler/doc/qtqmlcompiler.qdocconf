@@ -13,8 +13,12 @@ qhp.QtQmlCompiler.virtualFolder = qtqmlcompiler
 qhp.QtQmlCompiler.indexTitle    = Qt QML Compiler
 qhp.QtQmlCompiler.indexRoot     =
 
-qhp.QtQmlCompiler.subprojects = classes
-qhp.QtQmlCompiler.subprojects.classes.title = Classes
+qhp.QtQmlCompiler.subprojects = manual classes
+qhp.QtQmlCompiler.subprojects.manual.title = Qt QML Compiler
+qhp.QtQmlCompiler.subprojects.manual.indexTitle = Qt QML Compiler module topics
+qhp.QtQmlCompiler.subprojects.manual.type = manual
+
+qhp.QtQmlCompiler.subprojects.classes.title = C++ Classes
 qhp.QtQmlCompiler.subprojects.classes.indexTitle = Qt QML Compiler C++ Classes
 qhp.QtQmlCompiler.subprojects.classes.selectors = namespace class
 qhp.QtQmlCompiler.subprojects.classes.sortPages = true
@@ -42,6 +46,9 @@ sourcedirs  += ..
 
 navigation.landingpage = "Qt QML Compiler"
 navigation.cppclassespage = "Qt QML Compiler C++ Classes"
+# Auto-generate navigation linking based on "Qt Labs Platform module topics":
+navigation.toctitles = "Qt QML Compiler module topics"
+navigation.toctitles.inclusive = false
 
 # Enforce zero documentation warnings
 warninglimit = 0

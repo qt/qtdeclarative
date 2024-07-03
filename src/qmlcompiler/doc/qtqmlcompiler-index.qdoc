@@ -28,6 +28,7 @@
     The Qt QML Compiler module offers the QQmlSA framework which provides tools
     for static analysis of QML code. These tools can help ensure syntactic
     validity and warn about QML anti-patterns.
+
     Adding static analysis to a QML program is done by writing plugins. They
     will run a collection of analysis passes over the elements and properties
     of the QML code. The passes can be registered with a PassManager which
@@ -44,10 +45,12 @@
     the pass over every element it encounters while traversing the children of
     the root element. For each element, if \c shouldRun() evaluated on that
     element returns \c true then \c run() is executed on it.
+
     Passes on properties trigger on three different events, namely when the
     property is bound, when it is read, and when it is written to. These can be
     implemented by overriding the \c onBinding(), \c onRead() and \c onWrite()
     functions respectively.
+
     As the code grows, so does the number of elements and properties.
     Performing the static analysis passes on all of them can become expensive.
     That's why it is good to be granular when deciding which elements and
