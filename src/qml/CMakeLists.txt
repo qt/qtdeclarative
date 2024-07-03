@@ -12,16 +12,6 @@ include(Qt6QmlBuildInternals.cmake)
 # to determine some of the arguments to that command.
 qt_feature_evaluate_features("${CMAKE_CURRENT_SOURCE_DIR}/configure.cmake")
 
-set(module_dynamic_qml_imports
-    QtQml.Models/auto
-)
-
-if (QT_FEATURE_qml_worker_script)
-    list(APPEND module_dynamic_qml_imports
-        QtQml.WorkerScript/auto
-    )
-endif()
-
 set(extra_cmake_files)
 set(extra_cmake_includes)
 if(ANDROID)
@@ -453,13 +443,6 @@ qt_internal_add_qml_module(Qml
 
 _qt_internal_add_qml_deploy_info_finalizer(Qml)
 
-# The targets created by these subdirectories need to exist before they are listed
-# as dependencies of the QmlMeta target.
-add_subdirectory(../qmlmodels ../qmlmodels)
-if(QT_FEATURE_qml_worker_script)
-    add_subdirectory(../qmlworkerscript ../qmlworkerscript)
-endif()
-
 qt_path_join(qml_root_dir "${QT_BUILD_DIR}" "${INSTALL_QMLDIR}")
 get_target_property(qml_build_dir Qml QT_QML_MODULE_OUTPUT_DIRECTORY)
 
@@ -506,48 +489,6 @@ qt_update_ignore_pch_source(Qml "compat/removed_api.cpp")
 set_source_files_properties(compat/removed_api.cpp
                             jsruntime/qv4mathobject.cpp # math.h issues on Windows
                             PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
-
-
-qt_internal_add_qml_module(QmlMeta
-    URI "QtQml"
-    VERSION "${PROJECT_VERSION}"
-    DESIGNER_SUPPORTED
-    __QT_INTERNAL_SYSTEM_MODULE
-    PLUGIN_TARGET qmlplugin
-    CLASS_NAME QtQmlPlugin
-    PAST_MAJOR_VERSIONS 2
-    IMPORTS
-        QML/1.0
-        ${module_dynamic_qml_imports}
-    SOURCES
-        types/qqmlbind.cpp types/qqmlbind_p.h
-        types/qqmlconnections.cpp types/qqmlconnections_p.h
-        types/qqmlloggingcategory.cpp types/qqmlloggingcategory_p.h
-    LIBRARIES
-        Qt::Qml
-        Qt::QmlModels
-)
-
-add_dependencies(QmlMeta BuiltinsOutput)
-
-# Linking to the static qml plugin should also automatically link to the worker script
-# static plugin otherwise you get errors like
-#  module "QtQml.WorkerScript" plugin "workerscriptplugin" not found
-#     import QtQuick 2.0
-#     ^
-if(QT_FEATURE_qml_worker_script)
-    qt_internal_extend_target(QmlMeta
-        LIBRARIES
-            Qt::QmlWorkerScript
-    )
-    _qt_internal_add_qml_static_plugin_dependency(qmlplugin workerscriptplugin)
-endif()
-# Same for the QmlModels qml plugin, otherwise you get
-#  module "QtQuick" version 6.6 cannot be imported because:
-#  module "QtQml.Models" plugin "modelsplugin" not found
-#     import QtQuick
-#     ^
-_qt_internal_add_qml_static_plugin_dependency(qmlplugin modelsplugin)
 
 # special case begin remove the block, handled manually
 # QLALR Grammars:
@@ -644,13 +585,6 @@ qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_animation
         animations
 )
 
-qt_internal_extend_target(QmlMeta CONDITION QT_FEATURE_qml_animation
-    SOURCES
-        types/qqmltimer.cpp types/qqmltimer_p.h
-    INCLUDE_DIRECTORIES
-        animations
-)
-
 qt_internal_extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STREQUAL 5
     COMPILE_OPTIONS
         -fno-strict-aliasing
@@ -708,11 +642,6 @@ qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_xml_http_request
 qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_locale
     SOURCES
         qml/qqmllocale.cpp qml/qqmllocale_p.h
-)
-
-qt_internal_extend_target(QmlMeta CONDITION QT_FEATURE_qml_locale
-    SOURCES
-        types/qqmllocaleenums_p.h
 )
 
 qt_internal_extend_target(Qml CONDITION ANDROID
@@ -806,14 +735,3 @@ if(QT_FEATURE_private_tests AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.19" AND Q
     qt_autogen_tools(qt_target_qml_sources_example ENABLE_AUTOGEN_TOOLS moc)
     qt_autogen_tools(qt_target_qml_sources_exampleplugin ENABLE_AUTOGEN_TOOLS moc)
 endif()
-
-# The Qml_sync_headers target doesn't exist when this CMakeLists is executed. So the qmlplugin
-# plugin target misses the dependency on Qml_sync_headers target. This leads to the
-# "unknown IID" issue when moc processes plugin sources, because of missing header aliases.
-# Qml_sync_headers target is created later by the finalizer in the directory scope so we add this
-# dependency manually instead of relying on qt_internal_add_qml_module logic. Same is applicable
-# for the QmlMeta target.
-set_property(TARGET qmlplugin APPEND PROPERTY AUTOGEN_TARGET_DEPENDS
-    Qml_sync_headers)
-set_property(TARGET QmlMeta APPEND PROPERTY AUTOGEN_TARGET_DEPENDS
-    Qml_sync_headers)
