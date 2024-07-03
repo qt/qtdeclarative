@@ -215,7 +215,7 @@ TestCase {
             control.open()
         else
             control.visible = true
-        tryCompare(control, "opacity", 1)
+        tryCompare(control, "opened", true)
 
         if (data.imperative)
             control.close()
@@ -228,7 +228,7 @@ TestCase {
             control.open()
         else
             control.visible = true
-        tryCompare(control, "opacity", 1)
+        tryCompare(control, "opened", true)
     }
 
     Component {

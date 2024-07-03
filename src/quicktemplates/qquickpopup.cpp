@@ -2441,7 +2441,12 @@ bool QQuickPopup::isVisible() const
 void QQuickPopup::setVisible(bool visible)
 {
     Q_D(QQuickPopup);
-    if (d->visible == visible && d->transitionState != QQuickPopupPrivate::ExitTransition)
+    // During an exit transition, d->visible == true until the transition has completed.
+    // Therefore, this guard must not return early if setting visible to true while
+    // d->visible is true.
+    if (d->visible && visible && d->transitionState != QQuickPopupPrivate::ExitTransition)
+        return;
+    if (!d->visible && !visible)
         return;
 
     if (!d->complete || (visible && !d->window)) {
