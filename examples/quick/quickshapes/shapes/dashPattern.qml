@@ -20,23 +20,12 @@ Rectangle {
             dashPattern: [ 1, 4, 4, 4 ]
             fillColor: "lightBlue"
 
-            property real xr: 70
-            property real yr: 30
-            startX: shape.width / 2 - xr
-            startY: shape.height / 2 - yr
-            PathArc {
-                x: shape.width / 2 + p.xr
-                y: shape.height / 2 + p.yr
-                radiusX: p.xr
-                radiusY: p.yr
-                useLargeArc: true
-            }
-            PathArc {
-                x: shape.width / 2 - p.xr
-                y: shape.height / 2 - p.yr
-                radiusX: p.xr
-                radiusY: p.yr
-                useLargeArc: true
+            PathAngleArc {
+                centerX: shape.width / 2
+                centerY: shape.height / 2
+                radiusX: shape.width / 2.5
+                radiusY: shape.height / 6
+                sweepAngle: 360
             }
         }
     }

@@ -26,7 +26,7 @@ Rectangle {
                 GradientStop { position: 0.7; color: "yellow" }
             }
 
-            property real animRadius: 0
+            property real animRadius
             SequentialAnimation on animRadius {
                 loops: Animation.Infinite
                 NumberAnimation {

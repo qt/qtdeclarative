@@ -39,7 +39,7 @@ Rectangle {
         anchors.margins: 10
         anchors.leftMargin: 100
         property bool zoomedIn: false
-        property rect zoomTarget: "0, 0, 100x100"
+        property rect zoomTarget: Qt.rect(0, 0, 100, 100)
         property rect zoomRect: zoomTarget
         Behavior on zoomRect {
             id: zoomBehavior
@@ -56,7 +56,7 @@ Rectangle {
                 id: loader1
                 x: -zoomView.zoomRect.x
                 y: -zoomView.zoomRect.y
-                property rect br: item ? item.boundingRect : "0,0,100x100"
+                property rect br: item ? item.boundingRect : Qt.rect(0, 0, 100, 100)
                 source: "tiger.qml"
                 asynchronous: true
                 visible: status === Loader.Ready
@@ -107,7 +107,7 @@ Rectangle {
         function doTap(pos) {
             if (zoomView.zoomedIn) {
                 zoomBehavior.enabled = true
-                zoomView.zoomTarget = loader1.item.boundingRect
+                zoomView.zoomTarget = loader1.br
                 zoomView.zoomedIn = false
             } else {
                 let localPos = loader1.mapFromItem(root, pos)

@@ -34,23 +34,11 @@ Rectangle {
                     }
                 }
 
-                startX: 10
-                startY: 10
-                PathLine {
-                    relativeX: 180
-                    relativeY: 0
-                }
-                PathLine {
-                    relativeX: 0
-                    relativeY: 180
-                }
-                PathLine {
-                    relativeX: -180
-                    relativeY: 0
-                }
-                PathLine {
-                    relativeX: 0
-                    relativeY: -180
+                PathRectangle {
+                    x: 10
+                    y: 10
+                    width: 180
+                    height: 180
                 }
             }
         }

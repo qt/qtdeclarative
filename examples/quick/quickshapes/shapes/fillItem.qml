@@ -18,32 +18,20 @@ Rectangle {
 
     Shape {
         id: shape
-        anchors.centerIn: parent
-        width: 200
-        height: 100
+        anchors.fill: parent
 
         ShapePath {
             strokeColor: "black"
             strokeWidth: 1
             fillItem: image
-            fillTransform: PlanarTransform.fromScale(0.5, 0.5)
-            startX: shape.width / 2 - 40
-            startY: shape.height / 2 - 40
+            fillTransform: PlanarTransform.fromRotate(45, shape.width / 2, shape.height / 2)
 
-            PathArc {
-                x: shape.width / 2 + 40
-                y: shape.height / 2 + 40
-                radiusX: 40
-                radiusY: 40
-                useLargeArc: true
-            }
-
-            PathArc {
-                x: shape.width / 2 - 40
-                y: shape.height / 2 - 40
-                radiusX: 40
-                radiusY: 40
-                useLargeArc: true
+            PathAngleArc {
+                centerX: shape.width / 2
+                centerY: shape.height / 2
+                radiusX: 100
+                radiusY: radiusX
+                sweepAngle: 360
             }
         }
     }

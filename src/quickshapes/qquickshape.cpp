@@ -631,9 +631,20 @@ void QQuickShapePath::setPathHints(PathHints newPathHints)
     \qmlproperty matrix4x4 QtQuick.Shapes::ShapePath::fillTransform
     \since 6.8
 
-    This property defines a transform to be applied to the path's fill pattern (gradient). It has
-    no effect if the fill is a solid color or transparent. By default no fill transform is enabled
-    and the value of this property is the \c identity matrix.
+    This property defines a transform to be applied to the path's fill pattern (\l fillGradient or
+    \l fillItem). It has no effect if the fill is a solid color or transparent. By default no fill
+    transform is enabled and the value of this property is the \c identity matrix.
+
+    This example displays a rectangle filled with the contents of \c myImageItem rotated 45 degrees
+    around the center point of \c myShape:
+
+    \qml
+    ShapePath {
+        fillItem: myImageItem
+        fillTransform: PlanarTransform.fromRotate(45, myShape.width / 2, myShape.height / 2)
+        PathRectangle { x: 10; y: 10; width: myShape.width - 20; height: myShape.height - 20 }
+    }
+    \endqml
 */
 
 QMatrix4x4 QQuickShapePath::fillTransform() const

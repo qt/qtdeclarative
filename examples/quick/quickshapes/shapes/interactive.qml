@@ -44,7 +44,7 @@ Rectangle {
                             y: lineShapePath.startY + 1
                         }
                         function finishCreation() {
-                            createStartEndHandles(this, pathSegment);
+                            root.createStartEndHandles(this, pathSegment);
                         }
                     }
                 }
@@ -67,7 +67,7 @@ Rectangle {
                             controlY: quadShapePath.startY + 50
                         }
                         function finishCreation() {
-                            createStartEndHandles(this, pathSegment);
+                            root.createStartEndHandles(this, pathSegment);
                             pointDragHandle.createObject(canvas, {
                                 idleColor: "blue",
                                 target: pathSegment, xprop: "controlX", yprop: "controlY"
@@ -96,7 +96,7 @@ Rectangle {
                             control2Y: cubicShapePath.startY + 50;
                         }
                         function finishCreation() {
-                            createStartEndHandles(this, pathSegment);
+                            root.createStartEndHandles(this, pathSegment);
                             pointDragHandle.createObject(canvas, {
                                 idleColor: "blue",
                                 target: pathSegment, xprop: "control1X", yprop: "control1Y"
