@@ -33,8 +33,10 @@ struct ConstructibleValueType
 public:
     ConstructibleValueType() = default;
     Q_INVOKABLE ConstructibleValueType(int foo) : m_foo(foo) {}
+    Q_INVOKABLE ConstructibleValueType(double foo) : m_foo(foo * 4.0) {}
     Q_INVOKABLE ConstructibleValueType(QObject *) : m_foo(67) {}
     Q_INVOKABLE ConstructibleValueType(const QUrl &) : m_foo(68) {}
+    Q_INVOKABLE ConstructibleValueType(const QString &) : m_foo(69) {}
 
     int foo() const { return m_foo; }
 

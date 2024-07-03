@@ -2152,6 +2152,23 @@ static bool ExactMatch(QMetaType passed, QMetaType required, const void *data)
     return false;
 }
 
+bool QObjectMethod::isExactMatch(
+        const QMetaMethod &method, void **argv, int argc, const QMetaType *types)
+{
+    if (types[0].isValid() && !ExactMatch(method.returnMetaType(), types[0], nullptr))
+        return false;
+
+    if (method.parameterCount() != argc)
+        return false;
+
+    for (int i = 0; i < argc; ++i) {
+        if (!ExactMatch(types[i + 1], method.parameterMetaType(i), argv[i + 1]))
+            return false;
+    }
+
+    return true;
+}
+
 const QQmlPropertyData *QObjectMethod::resolveOverloaded(
         const QQmlPropertyData *methods, int methodCount,
         void **argv, int argc, const QMetaType *types)
@@ -2159,22 +2176,7 @@ const QQmlPropertyData *QObjectMethod::resolveOverloaded(
     // We only accept exact matches here. Everything else goes through the JavaScript conversion.
     for (int i = 0; i < methodCount; ++i) {
         const QQmlPropertyData *attempt = methods + i;
-        if (types[0].isValid() && !ExactMatch(attempt->propType(), types[0], nullptr))
-            continue;
-
-        const QMetaMethod method = attempt->metaMethod();
-        if (method.parameterCount() != argc)
-            continue;
-
-        bool valid = true;
-        for (int i = 0; i < argc; ++i) {
-            if (!ExactMatch(types[i + 1], method.parameterMetaType(i), argv[i + 1])) {
-                valid = false;
-                break;
-            }
-        }
-
-        if (valid)
+        if (isExactMatch(attempt->metaMethod(), argv, argc, types))
             return attempt;
     }
 
