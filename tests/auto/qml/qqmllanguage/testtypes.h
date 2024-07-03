@@ -121,8 +121,10 @@ class MyAttachedObject : public QObject
     Q_OBJECT
     Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged)
     Q_PROPERTY(int value2 READ value2 WRITE setValue2)
+    Q_PROPERTY(int length MEMBER length)
+    Q_PROPERTY(QString name MEMBER name)
 public:
-    MyAttachedObject(QObject *parent) : QObject(parent), m_value(0), m_value2(0) {}
+    MyAttachedObject(QObject *parent) : QObject(parent), m_value(0), m_value2(0), name("attached") {}
 
     int value() const { return m_value; }
     void setValue(int v) { if (m_value != v) { m_value = v; emit valueChanged(); } }
@@ -136,6 +138,8 @@ signals:
 private:
     int m_value;
     int m_value2;
+    int length = 10;
+    QString name;
 };
 
 class SomethingUnknown : public QObject {
