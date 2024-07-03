@@ -12,16 +12,11 @@ add_subdirectory(qmltoolingsettings)
 add_subdirectory(qmltyperegistrar)
 add_subdirectory(qmlintegration)
 add_subdirectory(qml)
-add_subdirectory(qmlmodels)
 
 add_subdirectory(core)
 
 if(QT_FEATURE_qml_network)
     add_subdirectory(qmlnetwork)
-endif()
-
-if(QT_FEATURE_qml_worker_script)
-    add_subdirectory(qmlworkerscript)
 endif()
 
 if(TARGET Qt::Sql)

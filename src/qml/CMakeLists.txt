@@ -453,6 +453,13 @@ qt_internal_add_qml_module(Qml
 
 _qt_internal_add_qml_deploy_info_finalizer(Qml)
 
+# The targets created by these subdirectories need to exist before they are listed
+# as dependencies of the QmlMeta target.
+add_subdirectory(../qmlmodels ../qmlmodels)
+if(QT_FEATURE_qml_worker_script)
+    add_subdirectory(../qmlworkerscript ../qmlworkerscript)
+endif()
+
 qt_path_join(qml_root_dir "${QT_BUILD_DIR}" "${INSTALL_QMLDIR}")
 get_target_property(qml_build_dir Qml QT_QML_MODULE_OUTPUT_DIRECTORY)
 
@@ -517,8 +524,8 @@ qt_internal_add_qml_module(QmlMeta
         types/qqmlconnections.cpp types/qqmlconnections_p.h
         types/qqmlloggingcategory.cpp types/qqmlloggingcategory_p.h
     LIBRARIES
-        Qml
-        QmlModels
+        Qt::Qml
+        Qt::QmlModels
 )
 
 add_dependencies(QmlMeta BuiltinsOutput)
@@ -529,7 +536,10 @@ add_dependencies(QmlMeta BuiltinsOutput)
 #     import QtQuick 2.0
 #     ^
 if(QT_FEATURE_qml_worker_script)
-    target_link_libraries(QmlMeta PRIVATE QmlWorkerScript)
+    qt_internal_extend_target(QmlMeta
+        LIBRARIES
+            Qt::QmlWorkerScript
+    )
     _qt_internal_add_qml_static_plugin_dependency(qmlplugin workerscriptplugin)
 endif()
 # Same for the QmlModels qml plugin, otherwise you get
