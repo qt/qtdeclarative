@@ -378,6 +378,9 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 
     static QPair<QObject *, int> extractQtMethod(const QV4::FunctionObject *function);
 
+    static bool isExactMatch(
+            const QMetaMethod &method, void **argv, int argc, const QMetaType *types);
+
 private:
     friend struct QMetaObjectWrapper;
 

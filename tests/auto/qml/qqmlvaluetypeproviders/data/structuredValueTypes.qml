@@ -14,6 +14,8 @@ MyTypeObject {
     property constructible c2: ({foo: 7})
     property constructible c3
     property constructible c4
+    property constructible c5: "a"
+    property constructible c6: 24.25
 
     property constructibleFromQReal cr1: 11.25
     property constructibleFromQReal cr2: Infinity
