@@ -3385,18 +3385,18 @@ QtObject {
             readonly property QtObject flatbutton: QtObject {
                 readonly property QtObject checked: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9227;3987:9104;3987:9044"
                         readonly property string filePath: "dark/images/flatbutton-background-checked.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-checked"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3315.5
@@ -3455,18 +3455,18 @@ QtObject {
 
                 readonly property QtObject checked_disabled: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9230;3987:9122;3987:9044"
                         readonly property string filePath: "dark/images/flatbutton-background-checked-disabled.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-checked-disabled"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3315.5
@@ -3525,18 +3525,18 @@ QtObject {
 
                 readonly property QtObject checked_hovered: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9229;3987:9113;3987:9044"
                         readonly property string filePath: "dark/images/flatbutton-background-checked-hovered.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-checked-hovered"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3315.5
@@ -3595,18 +3595,18 @@ QtObject {
 
                 readonly property QtObject checked_pressed: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9231;3987:9131;3987:9044"
                         readonly property string filePath: "dark/images/flatbutton-background-checked-pressed.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-checked-pressed"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3315.5
@@ -3665,18 +3665,18 @@ QtObject {
 
                 readonly property QtObject disabled: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9228;3987:9095;3987:9044"
                         readonly property string filePath: "dark/images/flatbutton-background-disabled.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-disabled"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3315.5
@@ -3735,18 +3735,18 @@ QtObject {
 
                 readonly property QtObject hovered: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9225;3987:9077;3987:9044"
                         readonly property string filePath: "dark/images/flatbutton-background-hovered.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-hovered"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3315.5
@@ -3874,18 +3874,18 @@ QtObject {
 
                 readonly property QtObject pressed: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9226;3987:9086;3987:9044"
                         readonly property string filePath: "dark/images/flatbutton-background-pressed.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-pressed"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3315.5
@@ -4368,8 +4368,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5924.5
+                        readonly property real width: 69
+                        readonly property real x: 5928.5
                         readonly property real y: 2018.5
                     }
 
@@ -4422,8 +4422,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5924.5
+                        readonly property real width: 69
+                        readonly property real x: 5928.5
                         readonly property real y: 2085.5
                     }
 
@@ -4476,8 +4476,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5924.5
+                        readonly property real width: 69
+                        readonly property real x: 5928.5
                         readonly property real y: 2145.5
                     }
 
@@ -4530,8 +4530,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5924.5
+                        readonly property real width: 69
+                        readonly property real x: 5928.5
                         readonly property real y: 2219.5
                     }
 
@@ -4584,8 +4584,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5924.5
+                        readonly property real width: 69
+                        readonly property real x: 5928.5
                         readonly property real y: 1884.5
                     }
 
@@ -4637,8 +4637,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5924.5
+                        readonly property real width: 69
+                        readonly property real x: 5928.5
                         readonly property real y: 1817.5
                     }
 
@@ -4691,8 +4691,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5924.5
+                        readonly property real width: 69
+                        readonly property real x: 5928.5
                         readonly property real y: 1951.5
                     }
 
@@ -7762,17 +7762,12 @@ QtObject {
             readonly property QtObject switch_: QtObject {
                 readonly property QtObject checked: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:17204;2531:14856;4350:34538"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-checked"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25798.5
@@ -7792,18 +7787,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 5
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17204;2531:14856;4350:34543"
-                        readonly property string filePath: "dark/images/switch-handle-checked.png"
                         readonly property real height: 14
-                        readonly property real leftOffset: 6
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-checked"
-                        readonly property real rightOffset: 5
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 6
                         readonly property real topShadow: 0
                         readonly property real width: 14
                         readonly property real x: 25825.5
@@ -7811,34 +7800,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17204;2531:14856;4350:34541"
-                        readonly property string filePath: "dark/images/switch-handle-background-checked.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-checked"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25802.5
                         readonly property real y: 2256.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property string alignItems: "MAX"
-                        readonly property real bottomPadding: 3
-                        readonly property string figmaId: "I2557:17204;2531:14856;4350:34542"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 3
-                        readonly property string name: "switch-handle-contentItem-checked"
-                        readonly property real rightPadding: 3
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 3
                     }
 
                     readonly property QtObject label: QtObject {
@@ -7867,17 +7838,12 @@ QtObject {
 
                 readonly property QtObject checked_disabled: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:17212;2531:14900;4350:34538"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-checked-disabled"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25798.5
@@ -7897,18 +7863,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 5
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17212;2531:14900;4350:34543"
-                        readonly property string filePath: "dark/images/switch-handle-checked-disabled.png"
                         readonly property real height: 14
-                        readonly property real leftOffset: 6
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-checked-disabled"
-                        readonly property real rightOffset: 5
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 6
                         readonly property real topShadow: 0
                         readonly property real width: 14
                         readonly property real x: 25825.5
@@ -7916,34 +7876,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17212;2531:14900;4350:34541"
-                        readonly property string filePath: "dark/images/switch-handle-background-checked-disabled.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-checked-disabled"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25802.5
                         readonly property real y: 2460.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property string alignItems: "MAX"
-                        readonly property real bottomPadding: 3
-                        readonly property string figmaId: "I2557:17212;2531:14900;4350:34542"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 3
-                        readonly property string name: "switch-handle-contentItem-checked-disabled"
-                        readonly property real rightPadding: 3
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 3
                     }
 
                     readonly property QtObject label: QtObject {
@@ -7972,17 +7914,12 @@ QtObject {
 
                 readonly property QtObject checked_hovered: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:17208;8664:14952"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-checked-hovered"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25798.5
@@ -8002,53 +7939,29 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 6
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17208;8664:14975"
-                        readonly property string filePath: "dark/images/switch-handle-checked-hovered.png"
-                        readonly property real height: 16
-                        readonly property real leftOffset: 7
+                        readonly property real height: 18
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-checked-hovered"
-                        readonly property real rightOffset: 6
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 7
                         readonly property real topShadow: 0
-                        readonly property real width: 16
-                        readonly property real x: 25824.5
-                        readonly property real y: 2360.5
+                        readonly property real width: 18
+                        readonly property real x: 25823.5
+                        readonly property real y: 2359.5
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17208;8664:14954"
-                        readonly property string filePath: "dark/images/switch-handle-background-checked-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-checked-hovered"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25802.5
                         readonly property real y: 2358.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property string alignItems: "MAX"
-                        readonly property real bottomPadding: 2
-                        readonly property string figmaId: "I2557:17208;8664:14955"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 2
-                        readonly property string name: "switch-handle-contentItem-checked-hovered"
-                        readonly property real rightPadding: 2
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 2
                     }
 
                     readonly property QtObject label: QtObject {
@@ -8077,17 +7990,12 @@ QtObject {
 
                 readonly property QtObject checked_pressed: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:17210;8664:14801"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-checked-pressed"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25798.5
@@ -8107,18 +8015,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 6
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17210;8664:14824"
-                        readonly property string filePath: "dark/images/switch-handle-checked-pressed.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 8
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-checked-pressed"
-                        readonly property real rightOffset: 8
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 7
                         readonly property real topShadow: 0
                         readonly property real width: 19
                         readonly property real x: 25821.5
@@ -8126,34 +8028,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17210;8664:14803"
-                        readonly property string filePath: "dark/images/switch-handle-background-checked-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-checked-pressed"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25802.5
                         readonly property real y: 2409.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property string alignItems: "MAX"
-                        readonly property real bottomPadding: 2
-                        readonly property string figmaId: "I2557:17210;8664:14804"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 2
-                        readonly property string name: "switch-handle-contentItem-checked-pressed"
-                        readonly property real rightPadding: 2
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 2
                     }
 
                     readonly property QtObject label: QtObject {
@@ -8182,17 +8066,12 @@ QtObject {
 
                 readonly property QtObject disabled: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:17206;2531:14867;2942:5449"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-disabled"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25798.5
@@ -8212,18 +8091,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 5
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17206;2531:14867;2531:14816"
-                        readonly property string filePath: "dark/images/switch-handle-disabled.png"
                         readonly property real height: 12
-                        readonly property real leftOffset: 6
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-disabled"
-                        readonly property real rightOffset: 5
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 6
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 25806.5
@@ -8231,33 +8104,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17206;2531:14867;2531:14819"
-                        readonly property string filePath: "dark/images/switch-handle-background-disabled.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-disabled"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25802.5
                         readonly property real y: 2307.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property real bottomPadding: 4
-                        readonly property string figmaId: "I2557:17206;2531:14867;2531:14811"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 4
-                        readonly property string name: "switch-handle-contentItem-disabled"
-                        readonly property real rightPadding: 4
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 4
                     }
 
                     readonly property QtObject label: QtObject {
@@ -8286,17 +8142,12 @@ QtObject {
 
                 readonly property QtObject hovered: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:17200;8664:14878"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-hovered"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25798.5
@@ -8316,18 +8167,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 6
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17200;8664:14900"
-                        readonly property string filePath: "dark/images/switch-handle-hovered.png"
                         readonly property real height: 14
-                        readonly property real leftOffset: 7
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-hovered"
-                        readonly property real rightOffset: 6
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 7
                         readonly property real topShadow: 0
                         readonly property real width: 14
                         readonly property real x: 25805.5
@@ -8335,33 +8180,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17200;8664:14880"
-                        readonly property string filePath: "dark/images/switch-handle-background-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-hovered"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25802.5
                         readonly property real y: 2154.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property real bottomPadding: 3
-                        readonly property string figmaId: "I2557:17200;8664:14881"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 3
-                        readonly property string name: "switch-handle-contentItem-hovered"
-                        readonly property real rightPadding: 3
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 3
                     }
 
                     readonly property QtObject label: QtObject {
@@ -8390,17 +8218,12 @@ QtObject {
 
                 readonly property QtObject normal: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:17198;2531:14823;2942:5449"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25798.5
@@ -8420,18 +8243,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 5
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17198;2531:14823;2531:14816"
-                        readonly property string filePath: "dark/images/switch-handle.png"
                         readonly property real height: 12
-                        readonly property real leftOffset: 6
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle"
-                        readonly property real rightOffset: 5
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 6
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 25806.5
@@ -8439,33 +8256,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17198;2531:14823;2531:14819"
-                        readonly property string filePath: "dark/images/switch-handle-background.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25802.5
                         readonly property real y: 2097.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property real bottomPadding: 4
-                        readonly property string figmaId: "I2557:17198;2531:14823;2531:14811"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 4
-                        readonly property string name: "switch-handle-contentItem"
-                        readonly property real rightPadding: 4
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 4
                     }
 
                     readonly property QtObject label: QtObject {
@@ -8494,17 +8294,12 @@ QtObject {
 
                 readonly property QtObject pressed: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:17202;8664:14715"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-pressed"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25798.5
@@ -8524,18 +8319,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 6
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17202;8664:14737"
-                        readonly property string filePath: "dark/images/switch-handle-pressed.png"
                         readonly property real height: 14
-                        readonly property real leftOffset: 8
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-pressed"
-                        readonly property real rightOffset: 8
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 7
                         readonly property real topShadow: 0
                         readonly property real width: 17
                         readonly property real x: 25805.5
@@ -8543,33 +8332,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17202;8664:14717"
-                        readonly property string filePath: "dark/images/switch-handle-background-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-pressed"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25802.5
                         readonly property real y: 2205.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property real bottomPadding: 3
-                        readonly property string figmaId: "I2557:17202;8664:14718"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 3
-                        readonly property string name: "switch-handle-contentItem-pressed"
-                        readonly property real rightPadding: 3
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 3
                     }
 
                     readonly property QtObject label: QtObject {
@@ -10632,7 +10404,7 @@ QtObject {
                         readonly property real topShadow: 0
                         readonly property real width: 71
                         readonly property real x: 33221
-                        readonly property real y: 1866
+                        readonly property real y: 1864
                     }
 
                     readonly property real bottomPadding: 11
@@ -10658,7 +10430,7 @@ QtObject {
                         readonly property real topShadow: 0
                         readonly property real width: 16
                         readonly property real x: 33232
-                        readonly property real y: 1875
+                        readonly property real y: 1873
                     }
 
                     readonly property QtObject label: QtObject {
@@ -10675,7 +10447,7 @@ QtObject {
                         readonly property real topShadow: 0
                         readonly property real width: 25
                         readonly property real x: 33256
-                        readonly property real y: 1873
+                        readonly property real y: 1871
                     }
 
                     readonly property real leftPadding: 11
@@ -14067,18 +13839,18 @@ QtObject {
             readonly property QtObject flatbutton: QtObject {
                 readonly property QtObject checked: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9165;3987:9104;3987:9044"
                         readonly property string filePath: "light/images/flatbutton-background-checked.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-checked"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3172.5
@@ -14137,18 +13909,18 @@ QtObject {
 
                 readonly property QtObject checked_disabled: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9168;3987:9122;3987:9044"
                         readonly property string filePath: "light/images/flatbutton-background-checked-disabled.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-checked-disabled"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3172.5
@@ -14207,18 +13979,18 @@ QtObject {
 
                 readonly property QtObject checked_hovered: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9167;3987:9113;3987:9044"
                         readonly property string filePath: "light/images/flatbutton-background-checked-hovered.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-checked-hovered"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3172.5
@@ -14277,18 +14049,18 @@ QtObject {
 
                 readonly property QtObject checked_pressed: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9169;3987:9131;3987:9044"
                         readonly property string filePath: "light/images/flatbutton-background-checked-pressed.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-checked-pressed"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3172.5
@@ -14347,18 +14119,18 @@ QtObject {
 
                 readonly property QtObject disabled: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9166;3987:9095;3987:9044"
                         readonly property string filePath: "light/images/flatbutton-background-disabled.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-disabled"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3172.5
@@ -14417,18 +14189,18 @@ QtObject {
 
                 readonly property QtObject hovered: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9163;3987:9077;3987:9044"
                         readonly property string filePath: "light/images/flatbutton-background-hovered.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-hovered"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3172.5
@@ -14556,18 +14328,18 @@ QtObject {
 
                 readonly property QtObject pressed: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 0
+                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9164;3987:9086;3987:9044"
                         readonly property string filePath: "light/images/flatbutton-background-pressed.png"
                         readonly property real height: 32
-                        readonly property real leftOffset: 12
+                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "flatbutton-background-pressed"
-                        readonly property real rightOffset: 12
+                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 16
+                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 96
                         readonly property real x: 3172.5
@@ -15050,8 +14822,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5704.5
+                        readonly property real width: 69
+                        readonly property real x: 5708.5
                         readonly property real y: 2018.5
                     }
 
@@ -15104,8 +14876,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5704.5
+                        readonly property real width: 69
+                        readonly property real x: 5708.5
                         readonly property real y: 2085.5
                     }
 
@@ -15158,8 +14930,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5704.5
+                        readonly property real width: 69
+                        readonly property real x: 5708.5
                         readonly property real y: 2145.5
                     }
 
@@ -15212,8 +14984,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5704.5
+                        readonly property real width: 69
+                        readonly property real x: 5708.5
                         readonly property real y: 2219.5
                     }
 
@@ -15266,8 +15038,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5704.5
+                        readonly property real width: 69
+                        readonly property real x: 5708.5
                         readonly property real y: 1884.5
                     }
 
@@ -15319,8 +15091,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5704.5
+                        readonly property real width: 69
+                        readonly property real x: 5708.5
                         readonly property real y: 1818.5
                     }
 
@@ -15373,8 +15145,8 @@ QtObject {
                         readonly property real textHAlignment: 1
                         readonly property real textVAlignment: 128
                         readonly property real topShadow: 0
-                        readonly property real width: 77
-                        readonly property real x: 5704.5
+                        readonly property real width: 69
+                        readonly property real x: 5708.5
                         readonly property real y: 1951.5
                     }
 
@@ -18444,17 +18216,12 @@ QtObject {
             readonly property QtObject switch_: QtObject {
                 readonly property QtObject checked: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:15580;2531:14856;4350:34538"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-checked"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25618.5
@@ -18474,18 +18241,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 5
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15580;2531:14856;4350:34543"
-                        readonly property string filePath: "light/images/switch-handle-checked.png"
                         readonly property real height: 14
-                        readonly property real leftOffset: 6
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-checked"
-                        readonly property real rightOffset: 5
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 6
                         readonly property real topShadow: 0
                         readonly property real width: 14
                         readonly property real x: 25645.5
@@ -18493,34 +18254,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15580;2531:14856;4350:34541"
-                        readonly property string filePath: "light/images/switch-handle-background-checked.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-checked"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25622.5
                         readonly property real y: 2256.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property string alignItems: "MAX"
-                        readonly property real bottomPadding: 3
-                        readonly property string figmaId: "I2557:15580;2531:14856;4350:34542"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 3
-                        readonly property string name: "switch-handle-contentItem-checked"
-                        readonly property real rightPadding: 3
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 3
                     }
 
                     readonly property QtObject label: QtObject {
@@ -18549,17 +18292,12 @@ QtObject {
 
                 readonly property QtObject checked_disabled: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:15588;2531:14900;4350:34538"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-checked-disabled"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25618.5
@@ -18579,18 +18317,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 5
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15588;2531:14900;4350:34543"
-                        readonly property string filePath: "light/images/switch-handle-checked-disabled.png"
                         readonly property real height: 14
-                        readonly property real leftOffset: 6
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-checked-disabled"
-                        readonly property real rightOffset: 5
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 6
                         readonly property real topShadow: 0
                         readonly property real width: 14
                         readonly property real x: 25645.5
@@ -18598,34 +18330,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15588;2531:14900;4350:34541"
-                        readonly property string filePath: "light/images/switch-handle-background-checked-disabled.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-checked-disabled"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25622.5
                         readonly property real y: 2460.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property string alignItems: "MAX"
-                        readonly property real bottomPadding: 3
-                        readonly property string figmaId: "I2557:15588;2531:14900;4350:34542"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 3
-                        readonly property string name: "switch-handle-contentItem-checked-disabled"
-                        readonly property real rightPadding: 3
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 3
                     }
 
                     readonly property QtObject label: QtObject {
@@ -18654,17 +18368,12 @@ QtObject {
 
                 readonly property QtObject checked_hovered: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:15584;8664:14952"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-checked-hovered"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25618.5
@@ -18684,53 +18393,29 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 6
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15584;8664:14975"
-                        readonly property string filePath: "light/images/switch-handle-checked-hovered.png"
-                        readonly property real height: 16
-                        readonly property real leftOffset: 7
+                        readonly property real height: 18
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-checked-hovered"
-                        readonly property real rightOffset: 6
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 7
                         readonly property real topShadow: 0
-                        readonly property real width: 16
-                        readonly property real x: 25644.5
-                        readonly property real y: 2360.5
+                        readonly property real width: 18
+                        readonly property real x: 25643.5
+                        readonly property real y: 2359.5
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15584;8664:14954"
-                        readonly property string filePath: "light/images/switch-handle-background-checked-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-checked-hovered"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25622.5
                         readonly property real y: 2358.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property string alignItems: "MAX"
-                        readonly property real bottomPadding: 2
-                        readonly property string figmaId: "I2557:15584;8664:14955"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 2
-                        readonly property string name: "switch-handle-contentItem-checked-hovered"
-                        readonly property real rightPadding: 2
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 2
                     }
 
                     readonly property QtObject label: QtObject {
@@ -18759,17 +18444,12 @@ QtObject {
 
                 readonly property QtObject checked_pressed: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:15586;8664:14801"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-checked-pressed"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25618.5
@@ -18789,18 +18469,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 6
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15586;8664:14824"
-                        readonly property string filePath: "light/images/switch-handle-checked-pressed.png"
                         readonly property real height: 16
-                        readonly property real leftOffset: 8
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-checked-pressed"
-                        readonly property real rightOffset: 8
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 7
                         readonly property real topShadow: 0
                         readonly property real width: 19
                         readonly property real x: 25641.5
@@ -18808,34 +18482,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15586;8664:14803"
-                        readonly property string filePath: "light/images/switch-handle-background-checked-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-checked-pressed"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25622.5
                         readonly property real y: 2409.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property string alignItems: "MAX"
-                        readonly property real bottomPadding: 2
-                        readonly property string figmaId: "I2557:15586;8664:14804"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 2
-                        readonly property string name: "switch-handle-contentItem-checked-pressed"
-                        readonly property real rightPadding: 2
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 2
                     }
 
                     readonly property QtObject label: QtObject {
@@ -18864,17 +18520,12 @@ QtObject {
 
                 readonly property QtObject disabled: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:15582;2531:14867;2942:5449"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-disabled"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25618.5
@@ -18894,18 +18545,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 5
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15582;2531:14867;2531:14816"
-                        readonly property string filePath: "light/images/switch-handle-disabled.png"
                         readonly property real height: 12
-                        readonly property real leftOffset: 6
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-disabled"
-                        readonly property real rightOffset: 5
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 6
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 25626.5
@@ -18913,33 +18558,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15582;2531:14867;2531:14819"
-                        readonly property string filePath: "light/images/switch-handle-background-disabled.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-disabled"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25622.5
                         readonly property real y: 2307.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property real bottomPadding: 4
-                        readonly property string figmaId: "I2557:15582;2531:14867;2531:14811"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 4
-                        readonly property string name: "switch-handle-contentItem-disabled"
-                        readonly property real rightPadding: 4
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 4
                     }
 
                     readonly property QtObject label: QtObject {
@@ -18968,17 +18596,12 @@ QtObject {
 
                 readonly property QtObject hovered: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:15576;8664:14878"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-hovered"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25618.5
@@ -18998,18 +18621,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 6
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15576;8664:14900"
-                        readonly property string filePath: "light/images/switch-handle-hovered.png"
                         readonly property real height: 14
-                        readonly property real leftOffset: 7
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-hovered"
-                        readonly property real rightOffset: 6
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 7
                         readonly property real topShadow: 0
                         readonly property real width: 14
                         readonly property real x: 25625.5
@@ -19017,33 +18634,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15576;8664:14880"
-                        readonly property string filePath: "light/images/switch-handle-background-hovered.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-hovered"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25622.5
                         readonly property real y: 2154.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property real bottomPadding: 3
-                        readonly property string figmaId: "I2557:15576;8664:14881"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 3
-                        readonly property string name: "switch-handle-contentItem-hovered"
-                        readonly property real rightPadding: 3
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 3
                     }
 
                     readonly property QtObject label: QtObject {
@@ -19072,17 +18672,12 @@ QtObject {
 
                 readonly property QtObject normal: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:15574;2531:14823;2942:5449"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25618.5
@@ -19102,18 +18697,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 5
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15574;2531:14823;2531:14816"
-                        readonly property string filePath: "light/images/switch-handle.png"
                         readonly property real height: 12
-                        readonly property real leftOffset: 6
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle"
-                        readonly property real rightOffset: 5
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 6
                         readonly property real topShadow: 0
                         readonly property real width: 12
                         readonly property real x: 25626.5
@@ -19121,33 +18710,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15574;2531:14823;2531:14819"
-                        readonly property string filePath: "light/images/switch-handle-background.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25622.5
                         readonly property real y: 2097.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property real bottomPadding: 4
-                        readonly property string figmaId: "I2557:15574;2531:14823;2531:14811"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 4
-                        readonly property string name: "switch-handle-contentItem"
-                        readonly property real rightPadding: 4
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 4
                     }
 
                     readonly property QtObject label: QtObject {
@@ -19176,17 +18748,12 @@ QtObject {
 
                 readonly property QtObject pressed: QtObject {
                     readonly property QtObject background: QtObject {
-                        readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
                         readonly property string figmaId: "I2557:15578;8664:14715"
-                        readonly property string filePath: ""
                         readonly property real height: 32
-                        readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-background-pressed"
-                        readonly property real rightOffset: 4
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 4
                         readonly property real topShadow: 0
                         readonly property real width: 99
                         readonly property real x: 25618.5
@@ -19206,18 +18773,12 @@ QtObject {
                     }
 
                     readonly property QtObject handle: QtObject {
-                        readonly property real bottomOffset: 6
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15578;8664:14737"
-                        readonly property string filePath: "light/images/switch-handle-pressed.png"
                         readonly property real height: 14
-                        readonly property real leftOffset: 8
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-pressed"
-                        readonly property real rightOffset: 8
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 7
                         readonly property real topShadow: 0
                         readonly property real width: 17
                         readonly property real x: 25625.5
@@ -19225,33 +18786,16 @@ QtObject {
                     }
 
                     readonly property QtObject handle_background: QtObject {
-                        readonly property real bottomOffset: 9
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15578;8664:14717"
-                        readonly property string filePath: "light/images/switch-handle-background-pressed.png"
                         readonly property real height: 20
-                        readonly property real leftOffset: 10
                         readonly property real leftShadow: 0
                         readonly property string name: "switch-handle-background-pressed"
-                        readonly property real rightOffset: 10
                         readonly property real rightShadow: 0
-                        readonly property real topOffset: 10
                         readonly property real topShadow: 0
                         readonly property real width: 40
                         readonly property real x: 25622.5
                         readonly property real y: 2205.5
-                    }
-
-                    readonly property QtObject handle_contentItem: QtObject {
-                        readonly property real bottomPadding: 3
-                        readonly property string figmaId: "I2557:15578;8664:14718"
-                        readonly property string layoutMode: "HORIZONTAL"
-                        readonly property real leftPadding: 3
-                        readonly property string name: "switch-handle-contentItem-pressed"
-                        readonly property real rightPadding: 3
-                        readonly property real spacing: 0
-                        readonly property real topPadding: 3
                     }
 
                     readonly property QtObject label: QtObject {

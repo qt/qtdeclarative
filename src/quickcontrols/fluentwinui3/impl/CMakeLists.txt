@@ -4,6 +4,9 @@
 #####################################################################
 ## qtquickcontrols2fluentwinui3styleimplplugin Plugin:
 #####################################################################
+set(qml_files
+    "SwitchIndicator.qml"
+)
 
 qt_internal_add_qml_module(QuickControls2FluentWinUI3StyleImpl
     URI "QtQuick.Controls.FluentWinUI3.impl"
@@ -15,6 +18,8 @@ qt_internal_add_qml_module(QuickControls2FluentWinUI3StyleImpl
     PLUGIN_TARGET qtquickcontrols2fluentwinui3styleimplplugin
     SOURCES
         qquickfluentwinui3focusstroke_p.h qquickfluentwinui3focusstroke.cpp
+    QML_FILES
+        ${qml_files}
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
