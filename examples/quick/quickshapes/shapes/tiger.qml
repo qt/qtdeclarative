@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Shapes
 
 Shape {
+    id: mainshape
     asynchronous: true
     width: 494; height: 510
     property bool highlightOnTap: true
@@ -3576,7 +3577,7 @@ Shape {
 
         TapHandler {
             id: tapHandler
-            enabled: highlightOnTap
+            enabled: mainshape.highlightOnTap
         }
 
         ShapePath {

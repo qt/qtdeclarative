@@ -37,22 +37,13 @@ Rectangle {
                 }
             }
 
-            readonly property real r: 60
-            startX: circ1.width / 2 - r
-            startY: circ1.height / 2 - r
-            PathArc {
-                x: circ1.width / 2 + p1.r
-                y: circ1.height / 2 + p1.r
+            readonly property real r: 85
+            PathAngleArc {
+                centerX: circ1.width / 2
+                centerY: circ1.height / 2
                 radiusX: p1.r
                 radiusY: p1.r
-                useLargeArc: true
-            }
-            PathArc {
-                x: circ1.width / 2 - p1.r
-                y: circ1.height / 2 - p1.r
-                radiusX: p1.r
-                radiusY: p1.r
-                useLargeArc: true
+                sweepAngle: 360
             }
         }
     }
@@ -98,22 +89,13 @@ Rectangle {
                 }
             }
 
-            readonly property real r: 40
-            startX: circ2.width / 2 - r
-            startY: circ2.height / 2 - r
-            PathArc {
-                x: circ2.width / 2 + p2.r
-                y: circ2.height / 2 + p2.r
+            readonly property real r: 55
+            PathAngleArc {
+                centerX: circ2.width / 2
+                centerY: circ2.height / 2
                 radiusX: p2.r
                 radiusY: p2.r
-                useLargeArc: true
-            }
-            PathArc {
-                x: circ2.width / 2 - p2.r
-                y: circ2.height / 2 - p2.r
-                radiusX: p2.r
-                radiusY: p2.r
-                useLargeArc: true
+                sweepAngle: 360
             }
         }
     }

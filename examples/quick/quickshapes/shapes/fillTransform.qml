@@ -28,7 +28,7 @@ Rectangle {
                 GradientStop { position: 1.0; color: "blue" }
             }
 
-            property real fillScale: 1
+            property real fillScale
             NumberAnimation on fillScale {
                 running: true
                 loops: Animation.Infinite
