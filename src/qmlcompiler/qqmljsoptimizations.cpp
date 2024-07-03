@@ -68,18 +68,13 @@ private:
 
 void QQmlJSOptimizations::populateReaderLocations()
 {
-    using NewInstructionAnnotations = NewFlatMap<int, InstructionAnnotation>;
-    NewInstructionAnnotations newAnnotations;
-
     for (auto writeIt = m_annotations.begin(), writeEnd = m_annotations.end();
          writeIt != writeEnd; ++writeIt) {
         const int writtenRegister = writeIt->second.changedRegisterIndex;
 
         // Instructions that don't write can't be dead stores, no need to populate reader locations
-        if (writtenRegister == InvalidRegister) {
-            newAnnotations.appendOrdered(writeIt);
+        if (writtenRegister == InvalidRegister)
             continue;
-        }
 
         RegisterAccess &access = m_readerLocations[writeIt.key()];
         access.trackedRegister = writtenRegister;
@@ -172,10 +167,7 @@ void QQmlJSOptimizations::populateReaderLocations()
             if (isFirstBlock)
                 isFirstBlock = false;
         }
-
-        newAnnotations.appendOrdered(writeIt);
     }
-    m_annotations = newAnnotations.take();
 }
 
 bool QQmlJSOptimizations::eraseDeadStore(const InstructionAnnotations::iterator &it,
