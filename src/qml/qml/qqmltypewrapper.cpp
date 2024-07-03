@@ -658,10 +658,22 @@ ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, 
                 return enumWrapper.asReturnedValue();
             }
             // Fall through to base implementation
+        } else if (w->d()->object) {
+            QObject *ao = qmlAttachedPropertiesObject(
+                    w->d()->object,
+                    type.attachedPropertiesFunction(QQmlEnginePrivate::get(engine->qmlEngine())));
+            if (ao) {
+                // ### QTBUG-126877: Optimize this case
+                lookup->getter = Lookup::getterFallback;
+                return lookup->getter(lookup, engine, *object);
+            }
         }
         // Fall through to base implementation
     }
-    return QV4::Object::virtualResolveLookupGetter(object, engine, lookup);
+    /* ### QTBUG-126877: use QV4::Object::virtualResolveLookupGetter once we can be sure
+       that we don't run into issues related to Function being our prototype  */
+    lookup->getter = Lookup::getterFallback;
+    return lookup->getter(lookup, engine, *object);
 }
 
 bool QQmlTypeWrapper::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value)

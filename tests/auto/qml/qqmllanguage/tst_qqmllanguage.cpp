@@ -1938,6 +1938,11 @@ void tst_qqmllanguage::attachedProperties()
     QVERIFY(attached != nullptr);
     QCOMPARE(attached->property("value"), QVariant(10));
     QCOMPARE(attached->property("value2"), QVariant(13));
+    // verify that we find attached properties instead of Function prototype properties
+    QCOMPARE(attached->property("name").toString(), "modified");
+    QCOMPARE(attached->property("length").toInt(), -42);
+    QCOMPARE(object->property("nameCopy").toString(), "attached");
+    QCOMPARE(object->property("lengthCopy").toInt(), 10);
 
     {
         QQmlComponent component(&engine, testFileUrl("attachedPropertyDerived.qml"));
