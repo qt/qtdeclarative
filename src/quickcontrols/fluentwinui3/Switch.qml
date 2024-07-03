@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 import QtQuick
-import QtQuick.Controls.impl
 import QtQuick.Templates as T
+import QtQuick.Controls.impl
+import QtQuick.Controls.FluentWinUI3.impl
 
 T.Switch {
     id: control
@@ -36,35 +37,12 @@ T.Switch {
     readonly property var config: Config.controls.switch_[__currentState] || {}
     readonly property bool mirroredIndicator: control.mirrored !== (config.mirrored || false)
 
-    indicator: Item {
+    indicator: SwitchIndicator {
         x: control.text ? (control.mirroredIndicator ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-        // If handleBackground is not generated, use the size of the handle
-        implicitWidth: handleBackground.width > 0 ? handleBackground.width : handleBackground.handle.width * 2
-        implicitHeight: handleBackground.height > 0 ? handleBackground.height : handleBackground.handle.height
-
-        property Item handleBackground: StyleImage {
-            parent: control.indicator
-            imageConfig: control.config.handle_background
-
-            property Item handle: StyleImage {
-                parent: control.indicator.handleBackground
-                x: control.config.handle_contentItem.leftPadding
-                    + (control.visualPosition * (parent.width - width
-                        - control.config.handle_contentItem.leftPadding
-                        - control.config.handle_contentItem.rightPadding))
-                y: control.config.handle_contentItem.topPadding
-
-                imageConfig: control.config.handle
-
-                Behavior on x {
-                    enabled: !control.down
-                    SmoothedAnimation {
-                        velocity: 200
-                    }
-                }
-            }
-        }
+        implicitWidth: control.config.handle_background.width
+        implicitHeight: control.config.handle_background.height
+        control: control
     }
 
     contentItem: Text {
