@@ -18,6 +18,8 @@ int main(int argc, char *argv[])
 {
     QGuiApplication::setApplicationName("testbench");
     QGuiApplication::setOrganizationName("QtProject");
+    QGuiApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    QGuiApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
 
     QGuiApplication app(argc, argv);
 
