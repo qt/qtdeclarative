@@ -2938,7 +2938,7 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
         if (!stages)
             continue;
 
-        QVarLengthArray<QSGTexture *, 4> prevTex = pd->textureBindingTable[binding];
+        const QVarLengthArray<QSGTexture *, 4> &prevTex(pd->textureBindingTable[binding]);
         QVarLengthArray<QSGTexture *, 4> nextTex = prevTex;
 
         const int count = pd->combinedImageSamplerCount[binding];
