@@ -38,10 +38,13 @@ public:
     bool showHidden = false;
     bool caseSensitive = true;
     bool sortCaseSensitive = true;
+    bool resettingModel = false;
 
     ~QQuickFolderListModelPrivate() {}
     void init();
     void updateSorting();
+
+    void finishModelReset();
 
     // private slots
     void _q_directoryChanged(const QString &directory, const QList<FileProperty> &list);
@@ -104,6 +107,22 @@ void QQuickFolderListModelPrivate::updateSorting()
     fileInfoThread.setSortFlags(flags);
 }
 
+void QQuickFolderListModelPrivate::finishModelReset()
+{
+    Q_Q(QQuickFolderListModel);
+    const bool wasDataEmpty = data.isEmpty();
+    data.clear();
+    qCDebug(lcFolderListModel) << "about to emit endResetModel";
+    q->endResetModel();
+    if (!wasDataEmpty)
+        emit q->rowCountChanged();
+    if (status != QQuickFolderListModel::Null) {
+        status = QQuickFolderListModel::Null;
+        emit q->statusChanged();
+    }
+    resettingModel = false;
+}
+
 void QQuickFolderListModelPrivate::_q_directoryChanged(const QString &directory, const QList<FileProperty> &list)
 {
     qCDebug(lcFolderListModel) << "_q_directoryChanged called with directory" << directory;
@@ -115,6 +134,7 @@ void QQuickFolderListModelPrivate::_q_directoryChanged(const QString &directory,
     qCDebug(lcFolderListModel) << "- endResetModel called";
     emit q->rowCountChanged();
     emit q->folderChanged();
+    resettingModel = false;
 }
 
 
@@ -417,6 +437,16 @@ void QQuickFolderListModel::setFolder(const QUrl &folder)
     if (folder == d->currentDir)
         return;
 
+    // It's possible for the folder to be set twice in quick succession,
+    // in which case we could still be waiting for FileInfoThread to finish
+    // getting the list of files from the previously set folder. We should
+    // at least ensure that the begin/end model reset routine is followed
+    // in the correct order, and not e.g. call beginResetModel twice.
+    if (d->resettingModel)
+        d->finishModelReset();
+
+    d->resettingModel = true;
+
     QString resolvedPath = QQuickFolderListModelPrivate::resolvePath(folder);
 
     qCDebug(lcFolderListModel) << "about to emit beginResetModel since our folder was set to" << folder;
@@ -430,13 +460,7 @@ void QQuickFolderListModel::setFolder(const QUrl &folder)
 
     QFileInfo info(resolvedPath);
     if (!info.exists() || !info.isDir()) {
-        d->data.clear();
-        endResetModel();
-        emit rowCountChanged();
-        if (d->status != QQuickFolderListModel::Null) {
-            d->status = QQuickFolderListModel::Null;
-            emit statusChanged();
-        }
+        d->finishModelReset();
         return;
     }
 
