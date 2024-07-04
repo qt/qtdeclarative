@@ -65,20 +65,21 @@ QT_BEGIN_NAMESPACE
     among all the menu items inside the same \l menu.
 
     This property can be used by the style to ensure that all MenuItems
-    inside the same Menu end up aligned with respect to the \l text.
+    inside the same Menu end up aligned with respect to the
+    \l {AbstractButton::} {text}.
 
     A \l Menu can consist of meny different MenuItems, some can be checkable,
     some can have an icon, and some will just contain text. And very often,
     a style wants to make sure that the text inside all of them ends up
-    left-aligned (or right-aligned for \l mirrored items).
+    left-aligned (or right-aligned for \l {Control::} {mirrored} items).
     By letting each MenuItem assign its own minimum text padding to
     \l implicitTextPadding (taking icons and checkmarks into account), but
-    using \l textPadding to actually position the \l text, all MenuItems should
-    end up being aligned
+    using \l textPadding to actually position the
+    \l {AbstractButton::} {text}, all MenuItems should end up being aligned
 
     In order for this to work, all MenuItems should set \l implicitTextPadding
-    to be the minimum space needed from the left edge of the \l contentItem to
-    the text.
+    to be the minimum space needed from the left edge of the
+    \l {Control::} {contentItem} to the text.
 
     \sa implicitTextPadding
 */
@@ -88,8 +89,8 @@ QT_BEGIN_NAMESPACE
     \since 6.8
 
     This property holds the minimum space needed from the left edge of the
-    \l contentItem to the text. It's used to calculate a common \l textPadding
-    among all the MenuItems inside a \l Menu.
+    \l {Control::} {contentItem} to the text. It's used to calculate a common
+    \l textPadding among all the MenuItems inside a \l Menu.
 
     \sa textPadding
 */
