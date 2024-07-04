@@ -64,6 +64,7 @@ private slots:
     void ignoredTest();
     void passwordTest();
     void announceTest();
+    void eventTest();
 };
 
 tst_QQuickAccessible::tst_QQuickAccessible()
@@ -717,6 +718,36 @@ void tst_QQuickAccessible::announceTest()
     QVERIFY_EVENT(&event);
 
     QTestAccessibility::clearEvents();
+}
+
+void tst_QQuickAccessible::eventTest()
+{
+    std::unique_ptr<QQuickView, void(*)(QQuickView *)> window(new QQuickView, [](QQuickView *ptr) {
+        delete ptr;
+        QTestAccessibility::clearEvents();
+    });
+    window->setSource(testFileUrl("eventTest.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.get()));
+
+    QQuickItem *contentItem = window->contentItem();
+    QVERIFY(contentItem);
+    QQuickItem *rootItem = contentItem->childItems().first();
+    QVERIFY(rootItem);
+
+    // move an item that is not accessible
+    QQuickItem *textItem = rootItem->findChild<QQuickItem*>(QLatin1String("text"));
+    QTestAccessibility::clearEvents();
+    textItem->setX(textItem->x() + 2);
+    QCOMPARE(QTestAccessibility::events().size(), 0);
+
+    // move an item that is accessible
+    QQuickItem *buttonItem = rootItem->findChild<QQuickItem*>(QLatin1String("button"));
+    QTestAccessibility::clearEvents();
+    buttonItem->setX(buttonItem->x() + 2);
+    QCOMPARE(QTestAccessibility::events().size(), 1);
+    QAccessibleEvent ev(buttonItem, QAccessible::LocationChanged);
+    QTestAccessibility::verifyEvent(&ev);
 }
 
 QTEST_MAIN(tst_QQuickAccessible)
