@@ -42,7 +42,7 @@ T.TreeViewDelegate {
             y: (parent.height - height) / 2
             rotation:  control.expanded ? 90 : (control.mirrored ? 180 : 0)
             source: "qrc:/qt-project.org/imports/QtQuick/Controls/Material/images/arrow-indicator.png"
-            color: control.palette.windowText
+            color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
             defaultColor: "#353637"
         }
     }
@@ -50,9 +50,16 @@ T.TreeViewDelegate {
     background: Rectangle {
         implicitHeight: control.Material.buttonHeight
         color: control.highlighted
-               ? control.palette.highlight
+               ? control.Material.accentColor
                : (control.treeView.alternatingRows && control.row % 2 !== 0
-               ? control.palette.alternateBase : control.palette.base)
+                  ? control.Material.background
+                  // The Material.shade() is used as the alternate background color for rows
+                  // based on the Material.theme value.
+                  : control.Material.shade(control.Material.background,
+                                           control.Material.theme === Material.Dark
+                                           ? Material.Shade100 // the lighter background color
+                                           : Material.Shade700 // the darker background color
+                                           ))
     }
 
     contentItem: Label {
