@@ -15,18 +15,22 @@ QtObject {
     property Component component: MenuBar {
         MenuBarItem {
             text: qsTr("Normal")
+            menu: Menu { Action { text: "action" } }
         }
         MenuBarItem {
             text: qsTr("Pressed")
             down: true
+            menu: Menu { Action { text: "action" } }
         }
         MenuBarItem {
             text: qsTr("Highlighted")
             highlighted: true
+            menu: Menu { Action { text: "action" } }
         }
         MenuBarItem {
             text: qsTr("Disabled")
             enabled: false
+            menu: Menu { Action { text: "action" } }
         }
     }
 }
