@@ -1513,6 +1513,9 @@ void tst_qqmllocale::timeZoneUpdated()
     setTimeZone(QByteArray("Asia/Kolkata"));
 
     QMetaObject::invokeMethod(obj.data(), "check");
+#if QT_POINTER_SIZE == 4
+    QEXPECT_FAIL("", "QTBUG-89889", Continue);
+#endif
     QVERIFY(obj->property("success").toBool());
 }
 #endif // QT_CAN_CHANGE_SYSTEM_ZONE
