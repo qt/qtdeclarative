@@ -1065,8 +1065,7 @@ TestCase {
         compare(control.down, true)
         compare(downSpy.count, 3)
         compare(pressedSpy.count, 2)
-
-        compare(control.popup.y, control.height)
+        tryCompare(control.popup, "y", control.height)
 
         control.down = false
         compare(control.down, false)
