@@ -7,9 +7,7 @@
 #include <QQmlContext>
 #include <qqml.h>
 #include <QMetaMethod>
-#if QT_CONFIG(process)
-#include <QProcess>
-#endif
+#include <setjmp.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -316,33 +314,42 @@ void tst_qqmlnotifier::lotsOfBindings()
 
 void tst_qqmlnotifier::deleteFromHandler()
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("Android seems to have problems with QProcess");
-#endif
-#if !QT_CONFIG(process)
-    QSKIP("Need QProcess support to test qFatal.");
-#else
-    if (qEnvironmentVariableIsSet("TST_QQMLNOTIFIER_DO_CRASH")) {
-        QQmlEngine engine;
-        QQmlComponent component(&engine, testFileUrl("objectRenamer.qml"));
-        QPointer<QObject> mess = component.create();
-        QObject::connect(mess.data(), &QObject::objectNameChanged, [&]() { delete mess; });
-        QTRY_VERIFY(mess.isNull()); // BANG!
-    } else {
-        QProcess process;
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        env.insert("TST_QQMLNOTIFIER_DO_CRASH", "bang");
-        process.setProcessEnvironment(env);
-        process.setProgram(QCoreApplication::applicationFilePath());
-        process.setArguments({"deleteFromHandler"});
-        process.start();
-        const bool ok = process.waitForFinished(90000);
-        QVERIFY(ok);
-        const QByteArray output = process.readAllStandardOutput();
-        QVERIFY(output.contains("QFATAL"));
-        QVERIFY(output.contains("destroyed while one of its QML signal handlers is in progress"));
+    static jmp_buf jumpBuffer;
+    enum {
+        LongJmpSetup = 0,
+        WrongErrorMessage = 1,
+        CorrectErrorMessage = 2
+    };
+    auto myMessageHandler = [](QtMsgType type, const QMessageLogContext &, const QString &msg) {
+        if (type != QtMsgType::QtFatalMsg)
+            return;
+        if (msg.contains("destroyed while one of its QML signal handlers is in progress"))
+            longjmp(jumpBuffer, CorrectErrorMessage);
+        else
+            longjmp(jumpBuffer, WrongErrorMessage);
+    };
+    QtMessageHandler defaultHandler = qInstallMessageHandler(myMessageHandler);
+    auto cleanup = qScopeGuard([&]() {
+        qInstallMessageHandler(defaultHandler);
+    });
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("objectRenamer.qml"));
+    QPointer<QObject> mess = component.create();
+    QObject::connect(mess.data(), &QObject::objectNameChanged, [&]() { delete mess; });
+    switch (setjmp(jumpBuffer)) {
+    case CorrectErrorMessage:
+        return; // success
+    case WrongErrorMessage:
+        QFAIL("Did not receive expected fatal warning");
+        return;
+    case LongJmpSetup:
+        break; // longjmp was not called
+    default:
+        QFAIL("This should never happen");
+        return;
     }
-#endif
+    QTRY_VERIFY(mess.isNull()); // BANG!
+    QFAIL("Did not receive any fatal warning");
 }
 
 QTEST_MAIN(tst_qqmlnotifier)
