@@ -717,7 +717,7 @@ void tst_qqmlcomponent::relativeUrl_data()
 {
     QTest::addColumn<QUrl>("url");
 
-#if !defined(Q_OS_ANDROID)
+#if !defined(Q_OS_ANDROID) && !defined(BUILTIN_TESTDATA)
     QTest::addRow("fromLocalFile") << QUrl::fromLocalFile("data/QtObjectComponent.qml");
     QTest::addRow("fromLocalFileHash") << QUrl::fromLocalFile("data/QtObjectComponent#2.qml");
     QTest::addRow("constructor") << QUrl("data/QtObjectComponent.qml");
@@ -1117,8 +1117,12 @@ void tst_qqmlcomponent::testSetInitialProperties()
 void tst_qqmlcomponent::createInsideJSModule()
 {
     QQmlEngine engine;
+    QString prefix;
+#if defined(Q_OS_ANDROID) || defined(BUILTIN_TESTDATA)
+    prefix = "qrc:/";
+#endif
     QQmlComponent component(&engine, testFileUrl("jsmodule/test.qml"));
-    QScopedPointer<QObject> root(component.create());
+    QScopedPointer<QObject> root(component.createWithInitialProperties({{"prefix", prefix}}));
     QVERIFY2(root, qPrintable(component.errorString()));
     QVERIFY(root->property("ok").toBool());
 }
