@@ -71,6 +71,11 @@ QByteArray QQmlOpenMetaObjectType::propertyName(int idx) const
     return d->mob.property(idx).name();
 }
 
+QQmlPropertyCache::Ptr QQmlOpenMetaObjectType::cache() const
+{
+    return d->cache;
+}
+
 void QQmlOpenMetaObjectType::createProperties(const QVector<QByteArray> &names)
 {
     for (int i = 0; i < names.size(); ++i) {

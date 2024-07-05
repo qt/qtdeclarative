@@ -43,6 +43,7 @@ private slots:
     void testItemReparenting();
     void testPropertyNames();
     void regressionTestAllProperties();
+    void doNotLosePropertyCache();
 };
 
 
@@ -62,7 +63,47 @@ static QVariant objectToVariant(QObject *object)
     return QVariant::fromValue(object);
 }
 
-void addToNewProperty(QObject *object, QObject *newParent, const QByteArray &newParentProperty)
+static QObject *createPrimitiveFromSource(
+        const QByteArray &module, const QByteArray &component, QQmlContext *context)
+{
+    QQmlComponent c(context->engine());
+    c.setData(
+            "import " + module + "\n" + component + " {\n" + "}\n",
+            context->baseUrl().resolved(QUrl("createCustomParserObject.qml")));
+    return c.create(context);
+}
+
+static void createNewDynamicProperty(QObject *object, QQmlEngine *engine, const QString &name)
+{
+    QQmlProperty qmlProp(object, name, engine->contextForObject(object));
+    QVERIFY(!qmlProp.isValid());
+    QQuickDesignerSupportProperties::createNewDynamicProperty(object, engine, name);
+}
+
+static QVariant expression(QQmlContext *context, QObject *object, const QString &expression)
+{
+    return QQmlExpression(context, object, expression).evaluate();
+}
+
+static void setBinding(
+        const QQmlProperty &property, const QString &expression, QObject *item,
+        QQmlContext *context)
+{
+    QVERIFY(property.isProperty());
+    QQmlAnyBinding binding = QQmlAnyBinding::createFromCodeString(
+            property, expression, item, QQmlContextData::get(context), "@designer", 0);
+
+    binding.installOn(property);
+    if (QQmlAbstractBinding *abstractBinding = binding.asAbstractBinding()) {
+        // for new style properties, we will evaluate during setBinding anyway
+        static_cast<QQmlBinding *>(abstractBinding)->refresh();
+        static_cast<QQmlBinding *>(abstractBinding)->update();
+    }
+
+    QVERIFY(!binding.hasError());
+}
+
+static void addToNewProperty(QObject *object, QObject *newParent, const QByteArray &newParentProperty)
 {
     QQmlProperty property(newParent, QString::fromUtf8(newParentProperty));
 
@@ -813,6 +854,112 @@ void tst_qquickdesignersupport::regressionTestAllProperties()
     names = QQuickDesignerSupportProperties::propertyNameListForWritableProperties(component);
     QVERIFY(!names.isEmpty());
     QCOMPARE(names, expectedNames);
+}
+
+void tst_qquickdesignersupport::doNotLosePropertyCache()
+{
+    qmlRegisterSingletonType(testFileUrl("Constants.qml"), "TestImport", 1, 0, "Constants");
+
+    QQmlEngine engine;
+    QQmlComponent importComponent(&engine);
+
+    importComponent.setData(R"(
+        import QtQuick
+        import TestImport
+        Item {}
+    )", {});
+
+    QVERIFY2(importComponent.isReady(), qPrintable(importComponent.errorString()));
+
+    QScopedPointer<QObject> importComponentObject(importComponent.create());
+    QVERIFY(importComponentObject);
+
+    QQmlContext *importComponentContext
+            = QQmlEngine::contextForObject(importComponentObject.data());
+    QVERIFY(importComponentContext);
+
+    QScopedPointer<QObject> rootItem(
+            createPrimitiveFromSource("QtQuick", "Item", importComponentContext));
+    QVERIFY(rootItem);
+
+    engine.rootContext()->setContextProperty("root", rootItem.data());
+
+    rootItem->setProperty("width", 200);
+    QCOMPARE(rootItem->property("width"), QVariant::fromValue<qreal>(200));
+
+    createNewDynamicProperty(rootItem.data(), &engine, "test");
+    QQmlProperty qmlProp(rootItem.data(), "test", importComponentContext);
+    QVERIFY(qmlProp.isValid());
+
+    qmlProp.write(77);
+    QCOMPARE(qmlProp.read(), QVariant::fromValue(77));
+
+    const QQmlData *ddata = QQmlData::get(rootItem.data());
+    QVERIFY(ddata);
+    const QQmlPropertyCache::ConstPtr propCache = ddata->propertyCache;
+    QVERIFY(propCache);
+    QVERIFY(!propCache->property(QLatin1String("aNewProperty"), nullptr, nullptr));
+
+    // This _creates_ a new property since we have an open metaobject
+    // However, it should _not_ drop the property cache.
+    QVariant aNewProperty = rootItem->property("aNewProperty");
+    QVERIFY(!aNewProperty.isValid());
+
+    QCOMPARE(ddata, QQmlData::get(rootItem.data()));
+    QCOMPARE(ddata->propertyCache, propCache);
+    QVERIFY(propCache->property(QLatin1String("aNewProperty"), nullptr, nullptr));
+
+    // the same should hold true when a dynamic property is created via
+    // inexOfPropery -> QAbstractDynamicMetaObject::createProperty
+    int newPropIndex = rootItem->metaObject()->indexOfProperty("anotherNewProperty");
+    QCOMPARE_NE(newPropIndex, -1);
+
+    QCOMPARE(ddata, QQmlData::get(rootItem.data()));
+    QCOMPARE(ddata->propertyCache, propCache);
+    QVERIFY(propCache->property(QLatin1String("anotherNewProperty"), nullptr, nullptr));
+
+    createNewDynamicProperty(rootItem.data(), &engine, "test2");
+    QQmlProperty qmlProp2(rootItem.data(), "test2", importComponentContext);
+    QVERIFY(qmlProp2.isValid());
+    setBinding(qmlProp2, "Constants.width", rootItem.data(), importComponentContext);
+
+    createNewDynamicProperty(rootItem.data(), &engine, "test3");
+    QQmlProperty qmlProp3(rootItem.data(), "test3", importComponentContext);
+    QVERIFY(qmlProp3.isValid());
+    setBinding(qmlProp3, "Constants.width", rootItem.data(), importComponentContext);
+
+    QScopedPointer<QObject> textItem(
+            createPrimitiveFromSource("QtQuick", "Text", importComponentContext));
+    QVERIFY(textItem);
+
+    QScopedPointer<QObject> anotherItem(
+            createPrimitiveFromSource("QtQuick", "Item", importComponentContext));
+    QVERIFY(anotherItem);
+
+    QQmlProperty textProp(textItem.data(), "text", importComponentContext);
+    QVERIFY(textProp.isValid());
+    setBinding(textProp, "root.test3", textItem.data(), importComponentContext);
+    engine.rootContext()->setContextProperty("textItem", textItem.data());
+
+    QCOMPARE(
+            expression(importComponentContext, anotherItem.data(), "root.width"),
+            QVariant::fromValue<qreal>(200));
+
+    QCOMPARE(
+            expression(importComponentContext, anotherItem.data(), "root.width + Constants.width"),
+            QVariant::fromValue<qreal>(2120));
+
+    QCOMPARE(
+            expression(importComponentContext, anotherItem.data(), "root.test  + Constants.width"),
+            QVariant::fromValue<int>(1997));
+
+    QCOMPARE(
+            expression(importComponentContext, anotherItem.data(), "root.test2"),
+            QVariant::fromValue<int>(1920));
+
+    QCOMPARE(
+            expression(importComponentContext, textItem.data(), "textItem.text"),
+            QVariant::fromValue(QStringLiteral("1920")));
 }
 
 QTEST_MAIN(tst_qquickdesignersupport)

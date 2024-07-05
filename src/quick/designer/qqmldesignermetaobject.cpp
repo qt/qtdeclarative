@@ -42,15 +42,6 @@ struct MetaPropertyData {
     QVector<QPair<QVariant, bool> > m_data;
 };
 
-static QQmlPropertyCache::ConstPtr cacheForObject(QObject *object)
-{
-    QQmlVMEMetaObject *metaObject = QQmlVMEMetaObject::get(object);
-    if (metaObject)
-        return metaObject->cache;
-
-    return QQmlMetaType::propertyCache(object);
-}
-
 QQmlDesignerMetaObject* QQmlDesignerMetaObject::getNodeInstanceMetaObject(QObject *object, QQmlEngine *engine)
 {
     //Avoid setting up multiple MetaObjects on the same QObject
@@ -63,68 +54,61 @@ QQmlDesignerMetaObject* QQmlDesignerMetaObject::getNodeInstanceMetaObject(QObjec
 
     QQmlData *ddata = QQmlData::get(object, false);
 
-    const bool hadVMEMetaObject = ddata ? ddata->hasVMEMetaObject : false;
     QQmlDesignerMetaObject *mo = new QQmlDesignerMetaObject(object, engine);
-    //If our parent is not a VMEMetaObject we just set the flag to false again
-    if (ddata)
-        ddata->hasVMEMetaObject = hadVMEMetaObject;
+    ddata->hasVMEMetaObject = false;
+    ddata->hasInterceptorMetaObject = false;
+
     return mo;
 }
 
 void QQmlDesignerMetaObject::init(QObject *object)
 {
-    //Creating QQmlOpenMetaObjectType
-    m_openMetaObject = std::make_unique<QQmlOpenMetaObject>(object, metaObjectParent());
-    //Assigning type to this
-    copyTypeMetaObject();
-
     //Assign this to object
     QObjectPrivate *op = QObjectPrivate::get(object);
     op->metaObject = this;
-
-    m_cache = QQmlPropertyCache::createStandalone(metaObject.data());
-    cache = m_cache;
-
     nodeInstanceMetaObjectList.insert(this, true);
 }
 
+QQmlPropertyCache::Ptr QQmlDesignerMetaObject::cache() const
+{
+    return type()->cache();
+}
+
 QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engine)
-    : QQmlVMEMetaObject(engine->handle(), object, cacheForObject(object), /*qml compilation unit*/nullptr, /*qmlObjectId*/-1),
+    : QQmlOpenMetaObject(object),
       m_context(engine->contextForObject(object)),
       m_data(new MetaPropertyData)
 {
     init(object);
-
-    QQmlData *ddata = QQmlData::get(object, false);
-    //Assign cache to object
-    if (ddata && ddata->propertyCache) {
-        m_cache->setParent(ddata->propertyCache);
-        m_cache->invalidate(metaObject.data());
-        ddata->propertyCache = m_cache;
-    }
-
+    setCached(true);
 }
 
 QQmlDesignerMetaObject::~QQmlDesignerMetaObject()
 {
-    // m_openMetaObject has this metaobject as its parent.
-    // We need to remove it in order to avoid a dtor recursion
-    m_openMetaObject->unparent();
     nodeInstanceMetaObjectList.remove(this);
 }
 
 void QQmlDesignerMetaObject::createNewDynamicProperty(const QString &name)
 {
     int id = type()->createProperty(name.toUtf8());
-    copyTypeMetaObject();
     setValue(id, QVariant());
     Q_ASSERT(id >= 0);
 
     //Updating cache
-    m_cache->invalidate(metaObject.data());
+    cache()->invalidate(this);
 
     QQmlProperty property(myObject(), name, m_context);
     Q_ASSERT(property.isValid());
+}
+
+int QQmlDesignerMetaObject::createProperty(const char *name, const char *passAlong)
+{
+    int ret = QQmlOpenMetaObject::createProperty(name, passAlong);
+    if (ret != -1) {
+        // compare createNewDynamicProperty
+        cache()->invalidate(this);
+    }
+    return ret;
 }
 
 void QQmlDesignerMetaObject::setValue(int id, const QVariant &value)
@@ -142,23 +126,12 @@ QVariant QQmlDesignerMetaObject::propertyWriteValue(int, const QVariant &value)
 
 QDynamicMetaObjectData *QQmlDesignerMetaObject::dynamicMetaObjectParent() const
 {
-    if (QQmlVMEMetaObject::parent.isT1())
-        return QQmlVMEMetaObject::parent.asT1();
-    else
-        return nullptr;
-}
-
-const QMetaObject *QQmlDesignerMetaObject::metaObjectParent() const
-{
-    if (QQmlVMEMetaObject::parent.isT1())
-        return QQmlVMEMetaObject::parent.asT1()->toDynamicMetaObject(QQmlVMEMetaObject::object);
-
-    return QQmlVMEMetaObject::parent.asT2();
+    return parent();
 }
 
 int QQmlDesignerMetaObject::propertyOffset() const
 {
-    return cache->propertyOffset();
+    return cache()->propertyOffset();
 }
 
 int QQmlDesignerMetaObject::openMetaCall(QObject *o, QMetaObject::Call call, int id, void **a)
@@ -195,7 +168,7 @@ int QQmlDesignerMetaObject::metaCall(QObject *o, QMetaObject::Call call, int id,
 
     int metaCallReturnValue = -1;
 
-    const QMetaProperty propertyById = metaObject->property(id);
+    const QMetaProperty propertyById = property(id);
 
     if (call == QMetaObject::WriteProperty
             && propertyById.userType() == QMetaType::QVariant
@@ -225,7 +198,7 @@ int QQmlDesignerMetaObject::metaCall(QObject *o, QMetaObject::Call call, int id,
 
     QDynamicMetaObjectData *dynamicParent = dynamicMetaObjectParent();
     const QMetaObject *staticParent = dynamicParent
-            ? dynamicParent->toDynamicMetaObject(QQmlVMEMetaObject::object)
+            ? dynamicParent->toDynamicMetaObject(object())
             : nullptr;
     if (staticParent && id < staticParent->propertyOffset())
         metaCallReturnValue = dynamicParent->metaCall(o, call, id, a);
@@ -243,7 +216,7 @@ int QQmlDesignerMetaObject::metaCall(QObject *o, QMetaObject::Call call, int id,
 
 void QQmlDesignerMetaObject::notifyPropertyChange(int id)
 {
-    const QMetaProperty propertyById = metaObject->property(id);
+    const QMetaProperty propertyById = property(id);
 
     if (id < propertyOffset()) {
         if (notifyPropertyChangeCallBack)
@@ -262,11 +235,6 @@ int QQmlDesignerMetaObject::count() const
 QByteArray QQmlDesignerMetaObject::name(int idx) const
 {
     return type()->propertyName(idx);
-}
-
-void QQmlDesignerMetaObject::copyTypeMetaObject()
-{
-    metaObject = m_openMetaObject.get();
 }
 
 void QQmlDesignerMetaObject::registerNotifyPropertyChangeCallBack(void (*callback)(QObject *, const QQuickDesignerSupport::PropertyName &))

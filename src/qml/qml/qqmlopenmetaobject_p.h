@@ -18,9 +18,10 @@
 #include <QtCore/QMetaObject>
 #include <QtCore/QObject>
 
+#include <private/qobject_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qtqmlglobal_p.h>
-#include <private/qobject_p.h>
+#include <private/qqmlpropertycache_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -43,6 +44,8 @@ public:
 
     int propertyCount() const;
     QByteArray propertyName(int) const;
+
+    QQmlPropertyCache::Ptr cache() const;
 
 protected:
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
@@ -83,6 +86,7 @@ public:
     void setAutoCreatesProperties(bool autoCreate);
 
     QQmlOpenMetaObjectType *type() const;
+    QDynamicMetaObjectData *parent() const;
 
     void emitPropertyNotification(const QByteArray &propertyName);
     void unparent();
@@ -97,7 +101,6 @@ protected:
     virtual void propertyWritten(int);
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
 
-    QDynamicMetaObjectData *parent() const;
 
     bool checkedSetValue(int index, const QVariant &value, bool force);
 
