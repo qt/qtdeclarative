@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">QtAbstractListModel Kotlin Example</string>
+    <string name="addRowText">Add Row</string>
+    <string name="removeRowText">Remove row</string>
+</resources>
