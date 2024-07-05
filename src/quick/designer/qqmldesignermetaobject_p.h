@@ -30,7 +30,7 @@ QT_BEGIN_NAMESPACE
 
 struct MetaPropertyData;
 
-class QQmlDesignerMetaObject : public QQmlVMEMetaObject
+class QQmlDesignerMetaObject : public QQmlOpenMetaObject
 {
 public:
     ~QQmlDesignerMetaObject();
@@ -41,37 +41,30 @@ protected:
     static QQmlDesignerMetaObject* getNodeInstanceMetaObject(QObject *object, QQmlEngine *engine);
 
     void createNewDynamicProperty(const QString &name);
+    int createProperty(const char *name, const char *passAlong) override;
     int openMetaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a);
     int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a) override;
     void notifyPropertyChange(int id);
     void setValue(int id, const QVariant &value);
-    QVariant propertyWriteValue(int, const QVariant &);
+    QVariant propertyWriteValue(int, const QVariant &) override;
 
-    QObject *myObject() const { return QQmlVMEMetaObject::object; }
+    QObject *myObject() const { return object(); }
 
     QDynamicMetaObjectData *dynamicMetaObjectParent() const;
-
-    const QMetaObject *metaObjectParent() const;
 
     int propertyOffset() const;
 
     int count() const;
     QByteArray name(int) const;
 
-    void copyTypeMetaObject();
-
 private:
     QQmlDesignerMetaObject(QObject *object, QQmlEngine *engine);
     void init(QObject *);
-    QQmlOpenMetaObjectType *type() const { return m_openMetaObject->type(); }
+
+    QQmlPropertyCache::Ptr cache() const;
 
     QPointer<QQmlContext> m_context;
-    std::unique_ptr<QQmlOpenMetaObject> m_openMetaObject;
     QScopedPointer<MetaPropertyData> m_data;
-
-    // This is non-const. You cannot use threads when using the designer metaobject.
-    // Otherwise it's the same as QQmlVMEMetaObject's "cache" member.
-    QQmlPropertyCache::Ptr m_cache;
 
     friend class QQuickDesignerSupportProperties;
 };
