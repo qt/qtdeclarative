@@ -61,8 +61,8 @@ void tst_basicapp::resourceFiles()
 
 void tst_basicapp::fileSystemFiles()
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("This test is not valid for Android, because the files can exist only as resources.");
+#if defined(Q_OS_ANDROID) || defined(BUILTIN_TESTDATA)
+    QSKIP("This test is not valid when the files can exist only as resources.");
 #endif
     const QString basedir = QCoreApplication::applicationDirPath();
     QVERIFY(QFile::exists(basedir + QStringLiteral("/BasicApp/main.qml")));
