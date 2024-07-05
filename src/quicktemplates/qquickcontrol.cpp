@@ -585,22 +585,13 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &font)
 
 QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
 {
-    const QQuickItem *p = item;
-    while (p) {
+    for (const QQuickItem *p = item; p; p = p->parentItem())
         if (const QQuickControl *control = qobject_cast<const QQuickControl *>(p))
             return control->locale();
 
-        QVariant v = p->property("locale");
-        if (v.isValid() && v.userType() == QMetaType::QLocale)
-            return v.toLocale();
-
-        p = p->parentItem();
-    }
-
-    if (item) {
+    if (item)
         if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
             return window->locale();
-    }
 
     return QLocale();
 }
