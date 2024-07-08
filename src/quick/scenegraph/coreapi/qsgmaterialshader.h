@@ -83,12 +83,12 @@ public:
             OneMinusSrc1Alpha
         };
 
-        enum BlendOp {
-            BlendOpAdd,
-            BlendOpSubtract,
-            BlendOpReverseSubtract,
-            BlendOpMin,
-            BlendOpMax
+        enum class BlendOp {
+            Add,
+            Subtract,
+            ReverseSubtract,
+            Min,
+            Max,
         };
 
         enum ColorMaskComponent {
