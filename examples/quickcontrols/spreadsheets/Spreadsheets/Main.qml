@@ -47,6 +47,7 @@ ApplicationWindow {
             clip: true
             interactive: toolbar.panEnabled
             syncView: tableView
+            selectionBehavior: HorizontalHeaderView.SelectionDisabled
 
             selectionModel: HeaderSelectionModel {
                 id: horizontalHeaderSelectionModel
@@ -88,40 +89,58 @@ ApplicationWindow {
                     }
                 }
 
+                function rightClicked() {
+                    columnMenu.column = index
+                    const menu_pos = mapToItem(horizontalHeaderView, -anchors.margins, height + anchors.margins)
+                    columnMenu.popup(menu_pos)
+                }
+
                 Label {
                     id: horizontalTitle
                     anchors.centerIn: parent
                     text: model.columnName
                 }
 
-                MouseArea {
-                    anchors.fill: parent
-                    anchors.leftMargin: horizontalHeaderDelegate.cellPadding / 2
-                    anchors.rightMargin: horizontalHeaderDelegate.cellPadding / 2
+                // handler for reset selection and context menu
+                TapHandler {
+                    acceptedDevices: PointerDevice.Mouse
+                    acceptedModifiers: Qt.NoModifier
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
-
-                    onPressed: function(event) {
-                        if (event.modifiers === Qt.AltModifier) {
-                            event.accepted = false
-                            return
-                        }
-                    }
-
-                    onClicked: function(event) {
-                        switch (event.button) {
+                    longPressThreshold: 0
+                    onTapped: function(event, button) {
+                        switch (button) {
                         case Qt.LeftButton:
-                            if (event.modifiers & Qt.ControlModifier)
-                                selectionModel.toggleColumn(index)
-                            else
-                                selectionModel.selectColumn(index)
+                            selectionModel.selectColumn(index)
+                            horizontalHeaderSelectionModel.setCurrent()
                             break
                         case Qt.RightButton:
-                            columnMenu.column = index
-                            const menu_pos = mapToItem(horizontalHeaderView, -anchors.margins, height + anchors.margins)
-                            columnMenu.popup(menu_pos)
+                            horizontalHeaderDelegate.rightClicked()
                             break
                         }
                     }
+                }
+
+                // handler for toggle selection
+                TapHandler {
+                    acceptedDevices: PointerDevice.Mouse
+                    acceptedModifiers: Qt.ControlModifier
+                    acceptedButtons: Qt.LeftButton
+                    longPressThreshold: 0
+                    onTapped: function(event, button) {
+                        selectionModel.toggleColumn(index)
+                        horizontalHeaderSelectionModel.setCurrent()
+                    }
+                }
+
+                // handler for selection and context menu in touch device
+                TapHandler {
+                    acceptedDevices: PointerDevice.TouchScreen
+                    acceptedModifiers: Qt.NoModifier
+                    onTapped: function(eventPoint, button) {
+                        selectionModel.toggleColumn(index)
+                        horizontalHeaderSelectionModel.setCurrent()
+                    }
+                    onLongPressed: () => horizontalHeaderDelegate.rightClicked()
                 }
             }
             Menu {
@@ -239,6 +258,7 @@ ApplicationWindow {
             syncView: tableView
             interactive: toolbar.panEnabled
             movableRows: true
+            selectionBehavior: VerticalHeaderView.SelectionDisabled
 
             selectionModel: HeaderSelectionModel {
                 id: verticalHeaderSelectionModel
@@ -281,40 +301,58 @@ ApplicationWindow {
                     }
                 }
 
+                function rightClicked() {
+                    rowMenu.row = index
+                    const menu_pos = mapToItem(verticalHeaderView, width + anchors.margins, -anchors.margins)
+                    rowMenu.popup(menu_pos)
+                }
+
                 Label {
                     id: verticalTitle
                     anchors.centerIn: parent
                     text: model.rowName
                 }
 
-                MouseArea {
-                    anchors.fill: parent
-                    anchors.topMargin: verticalHeaderDelegate.cellPadding / 2
-                    anchors.bottomMargin: verticalHeaderDelegate.cellPadding / 2
+                // handler for reset selection and context menu
+                TapHandler {
+                    acceptedDevices: PointerDevice.Mouse
+                    acceptedModifiers: Qt.NoModifier
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
-
-                    onPressed: function(event) {
-                        if (event.modifiers === Qt.AltModifier) {
-                            event.accepted = false
-                            return
-                        }
-                    }
-
-                    onClicked: function(event) {
-                        switch (event.button) {
+                    longPressThreshold: 0
+                    onTapped: function(event, button) {
+                        switch (button) {
                         case Qt.LeftButton:
-                            if (event.modifiers & Qt.ControlModifier)
-                                selectionModel.toggleRow(index)
-                            else
-                                selectionModel.selectRow(index)
+                            selectionModel.selectRow(index)
+                            verticalHeaderSelectionModel.setCurrent()
                             break
                         case Qt.RightButton:
-                            rowMenu.row = index
-                            const menu_pos = mapToItem(verticalHeaderView, width + anchors.margins, -anchors.margins)
-                            rowMenu.popup(menu_pos)
+                            verticalHeaderDelegate.rightClicked()
                             break
                         }
                     }
+                }
+
+                // handler for toggle selection
+                TapHandler {
+                    acceptedDevices: PointerDevice.Mouse
+                    acceptedModifiers: Qt.ControlModifier
+                    acceptedButtons: Qt.LeftButton
+                    longPressThreshold: 0
+                    onTapped: function(event, button) {
+                        selectionModel.toggleRow(index)
+                        verticalHeaderSelectionModel.setCurrent()
+                    }
+                }
+
+                // handler for selection and context menu in touch device
+                TapHandler {
+                    acceptedDevices: PointerDevice.TouchScreen
+                    acceptedModifiers: Qt.NoModifier
+                    onTapped: function(event, button) {
+                        selectionModel.toggleRow(index)
+                        verticalHeaderSelectionModel.setCurrent()
+                    }
+                    onLongPressed: () => verticalHeaderDelegate.rightClicked()
                 }
             }
             Menu {
