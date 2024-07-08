@@ -383,7 +383,7 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, const Q
 
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl, fromOpenGLTexture()
  */
-QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, uint format, const QSize &pixelSize, int sampleCount, int arraySize, Flags flags)
+QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, uint format, QSize pixelSize, int sampleCount, int arraySize, Flags flags)
 {
     QQuickRenderTarget rt;
     QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
@@ -587,7 +587,7 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSi
 
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl, fromD3D11Texture()
  */
-QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, uint format, const QSize &pixelSize, int sampleCount, Flags flags)
+QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, uint format, QSize pixelSize, int sampleCount, Flags flags)
 {
     QQuickRenderTarget rt = fromD3D11Texture(texture, format, pixelSize, sampleCount);
     QQuickRenderTargetPrivate::get(&rt)->multisampleResolve = flags.testFlag(Flag::MultisampleResolve);
@@ -713,7 +713,7 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D12Texture(void *texture,
                                                         int resourceState,
                                                         uint format,
                                                         uint viewFormat,
-                                                        const QSize &pixelSize,
+                                                        QSize pixelSize,
                                                         int sampleCount,
                                                         int arraySize,
                                                         Flags flags)
@@ -890,7 +890,7 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, con
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
 QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uint format, uint viewFormat,
-                                                        const QSize &pixelSize, int sampleCount, int arraySize, Flags flags)
+                                                        QSize pixelSize, int sampleCount, int arraySize, Flags flags)
 {
     QQuickRenderTarget rt;
     QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
@@ -1065,7 +1065,7 @@ QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLay
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
 QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLayout layout, VkFormat format, VkFormat viewFormat,
-                                                       const QSize &pixelSize, int sampleCount, int arraySize, Flags flags)
+                                                       QSize pixelSize, int sampleCount, int arraySize, Flags flags)
 {
     QQuickRenderTarget rt;
     QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
