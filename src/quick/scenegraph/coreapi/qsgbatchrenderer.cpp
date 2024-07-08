@@ -928,7 +928,14 @@ Renderer::~Renderer()
             Element *e = n->element();
             if (!e->removed)
                 m_elementsToDelete.add(e);
+        } else if (n->type() == QSGNode::ClipNodeType) {
+            delete n->clipInfo();
+        } else if (n->type() == QSGNode::RenderNodeType) {
+            RenderNodeElement *e = n->renderNodeElement();
+            if (!e->removed)
+                m_elementsToDelete.add(e);
         }
+
         m_nodeAllocator.release(n);
     }
 
