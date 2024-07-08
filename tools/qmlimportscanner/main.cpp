@@ -81,7 +81,7 @@ void printUsage(const QString &appNameIn)
         << '\n';
 }
 
-QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, const QString &path)
+QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, const QString &filePath)
 {
     QVariantList imports;
 
@@ -101,7 +101,8 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
                 import[typeLiteral()] = directoryLiteral();
             }
 
-            import[pathLiteral()] = QDir::cleanPath(path + QLatin1Char('/') + name);
+            import[pathLiteral()] = QDir::cleanPath(
+                    QFileInfo(filePath).path() + QLatin1Char('/') + name);
         } else {
             // Walk the id chain ("Foo" -> "Bar" -> etc)
             QString  name;

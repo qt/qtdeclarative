@@ -24,6 +24,7 @@ private Q_SLOTS:
     void modules_data();
     void modules();
     void qmldirPreference();
+    void resolveDirectoryImportPath();
 
 private:
     void runQmlimportscanner(const QString &mode, const QString &fileToScan,
@@ -65,6 +66,7 @@ void TestQmlimportscanner::cleanQmlCode_data()
     QTest::newRow("localAndModuleImport")      << QStringLiteral("ListProperty.qml");
     QTest::newRow("versionLessLocalImport")    << QStringLiteral("qmldirImportAndDepend.qml");
     QTest::newRow("versionLessModuleImport")   << QStringLiteral("parentEnum.qml");
+    QTest::newRow("cdUpImport")                << QStringLiteral("cdUpImport.qml");
 }
 
 void TestQmlimportscanner::cleanQmlCode()
@@ -125,6 +127,37 @@ void TestQmlimportscanner::qmldirPreference()
         QVERIFY(output.contains("With/Module"));
         QVERIFY(!output.contains("WithOut/Module"));
     }
+}
+
+void TestQmlimportscanner::resolveDirectoryImportPath()
+{
+    QStringList args { "-qmlFiles", testFile("cdUpImport.qml") };
+    QString errors;
+    QProcess process;
+    process.start(m_qmlimportscannerPath, args);
+    QVERIFY(process.waitForFinished());
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(process.exitCode(), 0);
+    const auto &stdErr = process.readAllStandardError();
+    QVERIFY2(stdErr.isEmpty(), stdErr.constData());
+
+    QJsonParseError error;
+    const QJsonDocument generated = QJsonDocument::fromJson(process.readAllStandardOutput(),
+                                                            &error);
+    QCOMPARE(error.error, QJsonParseError::NoError);
+    QVERIFY(generated.isArray());
+
+    const QJsonArray array = generated.array();
+    QCOMPARE(array.size(), 1);
+
+    const QJsonValue entry = array[0];
+    QVERIFY(entry.isObject());
+
+    const QJsonObject object = entry.toObject();
+    QCOMPARE(
+            object.value("path").toString(),
+            QDir::cleanPath(
+                    QFileInfo(dataDirectory()).absolutePath() + QLatin1Char('/') + "Fake"));
 }
 
 void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QString &pathToScan,
