@@ -26,7 +26,7 @@ class Q_QUICK_EXPORT QQuickRenderTarget
 {
 public:
     enum class Flag {
-        MultisampleResolve = 0x01
+        MultisampleResolve = 0x01,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
