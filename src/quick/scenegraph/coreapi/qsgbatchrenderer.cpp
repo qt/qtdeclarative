@@ -2843,7 +2843,7 @@ static void rendererToMaterialGraphicsState(QSGMaterialShader::GraphicsPipelineS
 
     // the enum values should match, sanity check it
     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::OneMinusSrc1Alpha) == int(QRhiGraphicsPipeline::OneMinusSrc1Alpha));
-    Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::BlendOpMax) == int(QRhiGraphicsPipeline::Max));
+    Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::BlendOp::Max) == int(QRhiGraphicsPipeline::Max));
     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::A) == int(QRhiGraphicsPipeline::A));
     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::CullBack) == int(QRhiGraphicsPipeline::Back));
     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::Line) == int(QRhiGraphicsPipeline::Line));

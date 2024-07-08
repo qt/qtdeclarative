@@ -664,11 +664,11 @@ bool QSGMaterialShader::updateGraphicsPipelineState(RenderState &state, Graphics
     \enum QSGMaterialShader::GraphicsPipelineState::BlendOp
     \since 6.8
 
-    \value BlendOpAdd
-    \value BlendOpSubtract
-    \value BlendOpReverseSubtract
-    \value BlendOpMin
-    \value BlendOpMax
+    \value Add
+    \value Subtract
+    \value ReverseSubtract
+    \value Min
+    \value Max
  */
 
 /*!
