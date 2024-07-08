@@ -1724,13 +1724,19 @@ void Renderer::prepareOpaqueBatches()
 
             QSGGeometryNode *gnj = ej->node;
 
+            const QSGGeometry *gniGeometry = gni->geometry();
+            const QSGMaterial *gniMaterial = gni->activeMaterial();
+            const QSGGeometry *gnjGeometry = gnj->geometry();
+            const QSGMaterial *gnjMaterial = gnj->activeMaterial();
             if (gni->clipList() == gnj->clipList()
-                    && gni->geometry()->drawingMode() == gnj->geometry()->drawingMode()
-                    && (gni->geometry()->drawingMode() != QSGGeometry::DrawLines || gni->geometry()->lineWidth() == gnj->geometry()->lineWidth())
-                    && gni->geometry()->attributes() == gnj->geometry()->attributes()
+                    && gniGeometry->drawingMode() == gnjGeometry->drawingMode()
+                    && (gniGeometry->drawingMode() != QSGGeometry::DrawLines || gniGeometry->lineWidth() == gnjGeometry->lineWidth())
+                    && gniGeometry->attributes() == gnjGeometry->attributes()
+                    && gniGeometry->indexType() == gnjGeometry->indexType()
                     && gni->inheritedOpacity() == gnj->inheritedOpacity()
-                    && gni->activeMaterial()->type() == gnj->activeMaterial()->type()
-                    && gni->activeMaterial()->compare(gnj->activeMaterial()) == 0) {
+                    && gniMaterial->type() == gnjMaterial->type()
+                    && gniMaterial->compare(gnjMaterial) == 0)
+            {
                 ej->batch = batch;
                 next->nextInBatch = ej;
                 next = ej;
@@ -1831,17 +1837,23 @@ void Renderer::prepareAlphaBatches()
             if (gnj->geometry()->vertexCount() == 0)
                 continue;
 
+            const QSGGeometry *gniGeometry = gni->geometry();
+            const QSGMaterial *gniMaterial = gni->activeMaterial();
+            const QSGGeometry *gnjGeometry = gnj->geometry();
+            const QSGMaterial *gnjMaterial = gnj->activeMaterial();
             if (gni->clipList() == gnj->clipList()
-                    && gni->geometry()->drawingMode() == gnj->geometry()->drawingMode()
-                    && (gni->geometry()->drawingMode() != QSGGeometry::DrawLines
-                        || (gni->geometry()->lineWidth() == gnj->geometry()->lineWidth()
+                    && gniGeometry->drawingMode() == gnjGeometry->drawingMode()
+                    && (gniGeometry->drawingMode() != QSGGeometry::DrawLines
+                        || (gniGeometry->lineWidth() == gnjGeometry->lineWidth()
                             // Must not do overlap checks when the line width is not 1,
                             // we have no knowledge how such lines are rasterized.
-                            && gni->geometry()->lineWidth() == 1.0f))
-                    && gni->geometry()->attributes() == gnj->geometry()->attributes()
+                            && gniGeometry->lineWidth() == 1.0f))
+                    && gniGeometry->attributes() == gnjGeometry->attributes()
+                    && gniGeometry->indexType() == gnjGeometry->indexType()
                     && gni->inheritedOpacity() == gnj->inheritedOpacity()
-                    && gni->activeMaterial()->type() == gnj->activeMaterial()->type()
-                    && gni->activeMaterial()->compare(gnj->activeMaterial()) == 0) {
+                    && gniMaterial->type() == gnjMaterial->type()
+                    && gniMaterial->compare(gnjMaterial) == 0)
+            {
                 if (!overlapBounds.intersects(ej->bounds) || !checkOverlap(i+1, j - 1, ej->bounds)) {
                     ej->batch = batch;
                     next->nextInBatch = ej;
@@ -2057,6 +2069,8 @@ void Renderer::uploadBatch(Batch *b)
     int unmergedIndexSize = 0;
     Element *e = b->first;
 
+    // Merged batches always do indexed draw calls. Non-indexed geometry gets
+    // indices generated automatically, when merged.
     while (e) {
         QSGGeometry *eg = e->node->geometry();
         b->vertexCount += eg->vertexCount();
