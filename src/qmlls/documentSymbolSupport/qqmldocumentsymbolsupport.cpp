@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qqmldocumentsymbolsupport_p.h"
+#include "documentSymbolSupport/documentsymbolutils_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -31,11 +32,9 @@ void QQmlDocumentSymbolSupport::process(QQmlDocumentSymbolSupport::RequestPointe
 {
     const auto doc = m_codeModel->openDocumentByUrl(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
-    auto qmlFileItem = doc.snapshot.doc.fileObject(QQmlJS::Dom::GoTo::MostLikely);
+    const auto qmlFileItem = doc.snapshot.doc.fileObject(QQmlJS::Dom::GoTo::MostLikely);
 
-    QList<QLspSpecification::DocumentSymbol> results;
-    results.push_back(QLspSpecification::DocumentSymbol());
-
+    auto results = DocumentSymbolUtils::assembleSymbolsForQmlFile(qmlFileItem);
     ResponseScopeGuard guard(results, request->m_response);
 }
 

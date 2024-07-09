@@ -1812,26 +1812,8 @@ void tst_qmlls_modules::semanticHighlightingDelta()
 
 void tst_qmlls_modules::documentSymbols()
 {
-    const auto uri = openFile("");
-    QVERIFY(uri);
-    QLspSpecification::DocumentSymbolParams params;
-    params.textDocument.uri = *uri;
-
-    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
-    const auto cleanup = [didFinish]() { *didFinish = true; };
-
-    auto &&responseHandler = [&](auto res) {
-        QScopeGuard callAtExit(cleanup);
-        Q_UNUSED(res);
-    };
-
-    auto &&errorHandler = [&](auto &error) {
-        QScopeGuard callAtExit(cleanup);
-        ProtocolBase::defaultResponseErrorHandler(error);
-    };
-
-    m_protocol->requestDocumentSymbol(params, std::move(responseHandler), std::move(errorHandler));
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+    QEXPECT_FAIL(0, "to be implemented", Abort);
+    QVERIFY(false);
 }
 
 QTEST_MAIN(tst_qmlls_modules)

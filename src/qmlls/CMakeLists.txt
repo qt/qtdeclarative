@@ -38,6 +38,8 @@ qt_internal_add_module(QmlLSPrivate
 
         documentSymbolSupport/qqmldocumentsymbolsupport_p.h
         documentSymbolSupport/qqmldocumentsymbolsupport.cpp
+        documentSymbolSupport/documentsymbolutils_p.h
+        documentSymbolSupport/documentsymbolutils.cpp
 
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate
