@@ -38,7 +38,7 @@ ApplicationWindow {
         columnSpacing: 3
         rowSpacing: 3
 
-        HorizontalHeaderView {
+        ColumnHeaderView {
             id: horizontalHeaderView
             Layout.row: 0
             Layout.column: 1
@@ -47,417 +47,27 @@ ApplicationWindow {
             clip: true
             interactive: toolbar.panEnabled
             syncView: tableView
-            selectionBehavior: HorizontalHeaderView.SelectionDisabled
 
-            selectionModel: HeaderSelectionModel {
-                id: horizontalHeaderSelectionModel
-                selectionModel: selectionModel
-                orientation: Qt.Horizontal
-            }
-
-            movableColumns: true
-            onColumnMoved: (index, old_column, new_column) => model.mapColumn(index, new_column)
-
-            delegate: Rectangle {
-                id: horizontalHeaderDelegate
-
-                required property var index
-                required property bool selected
-                required property bool containsDrag
-                readonly property real cellPadding: 8
-                readonly property bool containsMenu: columnMenu.column === column
-
-                implicitWidth: horizontalTitle.implicitWidth + (cellPadding * 2)
-                implicitHeight: Math.max(horizontalHeaderView.height,
-                                         horizontalTitle.implicitHeight + (cellPadding * 2))
-                border {
-                    width: containsDrag || containsMenu ? 1 : 0
-                    color: palette.highlight
-                }
-                color: selected ? palette.highlight : palette.button
-
-                gradient: Gradient {
-                    GradientStop {
-                        position: 0
-                        color: Qt.styleHints.colorScheme === Qt.Light ? horizontalHeaderDelegate.color
-                                                                      : Qt.lighter(horizontalHeaderDelegate.color, 1.3)
-                    }
-                    GradientStop {
-                        position: 1
-                        color: Qt.styleHints.colorScheme === Qt.Light ? Qt.darker(horizontalHeaderDelegate.color, 1.3)
-                                                                      : horizontalHeaderDelegate.color
-                    }
-                }
-
-                function rightClicked() {
-                    columnMenu.column = index
-                    const menu_pos = mapToItem(horizontalHeaderView, -anchors.margins, height + anchors.margins)
-                    columnMenu.popup(menu_pos)
-                }
-
-                Label {
-                    id: horizontalTitle
-                    anchors.centerIn: parent
-                    text: model.columnName
-                }
-
-                // handler for reset selection and context menu
-                TapHandler {
-                    acceptedDevices: PointerDevice.Mouse
-                    acceptedModifiers: Qt.NoModifier
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    longPressThreshold: 0
-                    onTapped: function(event, button) {
-                        switch (button) {
-                        case Qt.LeftButton:
-                            selectionModel.selectColumn(index)
-                            horizontalHeaderSelectionModel.setCurrent()
-                            break
-                        case Qt.RightButton:
-                            horizontalHeaderDelegate.rightClicked()
-                            break
-                        }
-                    }
-                }
-
-                // handler for toggle selection
-                TapHandler {
-                    acceptedDevices: PointerDevice.Mouse
-                    acceptedModifiers: Qt.ControlModifier
-                    acceptedButtons: Qt.LeftButton
-                    longPressThreshold: 0
-                    onTapped: function(event, button) {
-                        selectionModel.toggleColumn(index)
-                        horizontalHeaderSelectionModel.setCurrent()
-                    }
-                }
-
-                // handler for selection and context menu in touch device
-                TapHandler {
-                    acceptedDevices: PointerDevice.TouchScreen
-                    acceptedModifiers: Qt.NoModifier
-                    onTapped: function(eventPoint, button) {
-                        selectionModel.toggleColumn(index)
-                        horizontalHeaderSelectionModel.setCurrent()
-                    }
-                    onLongPressed: () => horizontalHeaderDelegate.rightClicked()
-                }
-            }
-            Menu {
-                id: columnMenu
-
-                property int column: -1
-
-                onOpened: {
-                    horizontalHeaderSelectionModel.setCurrent(column)
-                }
-
-                onClosed: {
-                    horizontalHeaderSelectionModel.setCurrent()
-                    column = -1
-                }
-
-                MenuItem {
-                    text: qsTr("Insert 1 column left")
-                    icon {
-                        source: "icons/insert_column_left.svg"
-                        color: palette.highlightedText
-                    }
-
-                    onClicked: {
-                        if (columnMenu.column < 0)
-                            return
-                        SpreadModel.insertColumn(columnMenu.column)
-                    }
-                }
-
-                MenuItem {
-                    text: qsTr("Insert 1 column right")
-                    icon {
-                        source: "icons/insert_column_right.svg"
-                        color: palette.highlightedText
-                    }
-
-                    onClicked: {
-                        if (columnMenu.column < 0)
-                            return
-                        SpreadModel.insertColumn(columnMenu.column + 1)
-                    }
-                }
-
-                MenuItem {
-                    text: selectionModel.hasSelection ? qsTr("Remove selected columns")
-                                                      : qsTr("Remove column")
-                    icon {
-                        source: "icons/remove_column.svg"
-                        color: palette.text
-                    }
-
-                    onClicked: {
-                        if (selectionModel.hasSelection)
-                            SpreadModel.removeColumns(selectionModel.selectedColumns())
-                        else if (columnMenu.column >= 0)
-                            SpreadModel.removeColumn(columnMenu.column)
-                    }
-                }
-
-                MenuItem {
-                    text: selectionModel.hasSelection ? qsTr("Hide selected columns")
-                                                      : qsTr("Hide column")
-                    icon {
-                        source: "icons/hide.svg"
-                        color: palette.text
-                    }
-
-                    onClicked: {
-                        if (selectionModel.hasSelection) {
-                            let columns = selectionModel.selectedColumns()
-                            columns.sort(function(lhs, rhs){ return rhs.column - lhs.column })
-                            for (let i in columns)
-                                tableView.hideColumn(columns[i].column)
-                            selectionModel.clearSelection()
-                        } else {
-                            tableView.hideColumn(columnMenu.column)
-                        }
-                    }
-                }
-
-                MenuItem {
-                    text: qsTr("Show hidden column(s)")
-                    icon {
-                        source: "icons/show.svg"
-                        color: palette.text
-                    }
-
-                    enabled: tableView.hiddenColumnCount
-
-                    onClicked: {
-                        tableView.showHiddenColumns()
-                        selectionModel.clearSelection()
-                    }
-                }
-
-                MenuItem {
-                    text: qsTr("Reset column reordering")
-                    icon {
-                        source: "icons/reset_reordering.svg"
-                        color: palette.text
-                    }
-
-                    onClicked: tableView.resetColumnReordering()
-                }
-            }
+            spreadSelectionModel: _spreadSelectionModel
+            enableShowHideAction: tableView.hiddenColumnCount
+            onHideRequested: (column) => tableView.hideColumn(column)
+            onShowRequested: () => tableView.showHiddenColumns()
+            onResetReorderingRequested: () => tableView.resetColumnReordering()
         }
 
-        VerticalHeaderView {
+        RowHeaderView {
             id: verticalHeaderView
-
             Layout.fillHeight: true
             implicitWidth: 50
             clip: true
             syncView: tableView
             interactive: toolbar.panEnabled
-            movableRows: true
-            selectionBehavior: VerticalHeaderView.SelectionDisabled
 
-            selectionModel: HeaderSelectionModel {
-                id: verticalHeaderSelectionModel
-                selectionModel: selectionModel
-                orientation: Qt.Vertical
-            }
-
-            onRowMoved: (index, old_row, new_row) => model.mapRow(index, new_row)
-
-            delegate: Rectangle {
-                id: verticalHeaderDelegate
-
-                required property var index
-                required property bool selected
-                required property bool current
-                required property bool containsDrag
-                readonly property real cellPadding: 8
-
-                implicitHeight: verticalTitle.implicitHeight + (cellPadding * 2)
-                implicitWidth: Math.max(verticalHeaderView.width,
-                                        verticalTitle.implicitWidth + (cellPadding * 2))
-
-                border {
-                    width: containsDrag || current ? 1 : 0
-                    color: palette.highlight
-                }
-
-                color: selected ? palette.highlight : palette.button
-
-                gradient: Gradient {
-                    GradientStop {
-                        position: 0
-                        color: Qt.styleHints.colorScheme === Qt.Light ? verticalHeaderDelegate.color
-                                                                      : Qt.lighter(verticalHeaderDelegate.color, 1.3)
-                    }
-                    GradientStop {
-                        position: 1
-                        color: Qt.styleHints.colorScheme === Qt.Light ? Qt.darker(verticalHeaderDelegate.color, 1.3)
-                                                                      : verticalHeaderDelegate.color
-                    }
-                }
-
-                function rightClicked() {
-                    rowMenu.row = index
-                    const menu_pos = mapToItem(verticalHeaderView, width + anchors.margins, -anchors.margins)
-                    rowMenu.popup(menu_pos)
-                }
-
-                Label {
-                    id: verticalTitle
-                    anchors.centerIn: parent
-                    text: model.rowName
-                }
-
-                // handler for reset selection and context menu
-                TapHandler {
-                    acceptedDevices: PointerDevice.Mouse
-                    acceptedModifiers: Qt.NoModifier
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    longPressThreshold: 0
-                    onTapped: function(event, button) {
-                        switch (button) {
-                        case Qt.LeftButton:
-                            selectionModel.selectRow(index)
-                            verticalHeaderSelectionModel.setCurrent()
-                            break
-                        case Qt.RightButton:
-                            verticalHeaderDelegate.rightClicked()
-                            break
-                        }
-                    }
-                }
-
-                // handler for toggle selection
-                TapHandler {
-                    acceptedDevices: PointerDevice.Mouse
-                    acceptedModifiers: Qt.ControlModifier
-                    acceptedButtons: Qt.LeftButton
-                    longPressThreshold: 0
-                    onTapped: function(event, button) {
-                        selectionModel.toggleRow(index)
-                        verticalHeaderSelectionModel.setCurrent()
-                    }
-                }
-
-                // handler for selection and context menu in touch device
-                TapHandler {
-                    acceptedDevices: PointerDevice.TouchScreen
-                    acceptedModifiers: Qt.NoModifier
-                    onTapped: function(event, button) {
-                        selectionModel.toggleRow(index)
-                        verticalHeaderSelectionModel.setCurrent()
-                    }
-                    onLongPressed: () => verticalHeaderDelegate.rightClicked()
-                }
-            }
-            Menu {
-                id: rowMenu
-
-                property int row: -1
-
-                onOpened: {
-                    verticalHeaderSelectionModel.setCurrent(row)
-                }
-
-                onClosed: {
-                    verticalHeaderSelectionModel.setCurrent()
-                    row = -1
-                }
-
-                MenuItem {
-                    text: qsTr("Insert 1 row above")
-                    icon {
-                        source: "icons/insert_row_above.svg"
-                        color: palette.highlightedText
-                    }
-
-                    onClicked: {
-                        if (rowMenu.row < 0)
-                            return
-                        SpreadModel.insertRow(rowMenu.row)
-                    }
-                }
-
-                MenuItem {
-                    text: qsTr("Insert 1 row bellow")
-                    icon {
-                        source: "icons/insert_row_below.svg"
-                        color: palette.text
-                    }
-
-                    onClicked: {
-                        if (rowMenu.row < 0)
-                            return
-                        SpreadModel.insertRow(rowMenu.row + 1)
-                    }
-                }
-
-                MenuItem {
-                    text: selectionModel.hasSelection ? qsTr("Remove selected rows")
-                                                      : qsTr("Remove row")
-                    icon {
-                        source: "icons/remove_row.svg"
-                        color: palette.text
-                    }
-
-                    onClicked: {
-                        if (selectionModel.hasSelection)
-                            SpreadModel.removeRows(selectionModel.selectedRows())
-                        else if (rowMenu.row >= 0)
-                            SpreadModel.removeRow(rowMenu.row)
-                    }
-                }
-
-                MenuItem {
-                    text: selectionModel.hasSelection ? qsTr("Hide selected rows")
-                                                      : qsTr("Hide row")
-                    icon {
-                        source: "icons/hide.svg"
-                        color: palette.text
-                    }
-
-                    onClicked: {
-                        if (selectionModel.hasSelection) {
-                            let rows = selectionModel.selectedRows()
-                            rows.sort(function(lhs, rhs){ return rhs.row - lhs.row })
-                            for (let i in rows)
-                                tableView.hideRow(rows[i].row)
-                            selectionModel.clearSelection()
-                        } else {
-                            tableView.hideRow(rowMenu.row)
-                        }
-                    }
-                }
-
-                MenuItem {
-                    text: qsTr("Show hidden row(s)")
-                    icon {
-                        source: "icons/show.svg"
-                        color: palette.text
-                    }
-                    enabled: tableView.hiddenRowCount
-
-                    onClicked: {
-                        tableView.showHiddenRows()
-                        selectionModel.clearSelection()
-                    }
-                }
-
-                MenuItem {
-                    text: qsTr("Reset row reordering")
-                    icon {
-                        source: "icons/reset_reordering.svg"
-                        color: palette.text
-                    }
-
-                    onClicked: tableView.resetRowReordering()
-                }
-            }
+            spreadSelectionModel: _spreadSelectionModel
+            enableShowHideAction: tableView.hiddenRowCount
+            onHideRequested: (row) => tableView.hideRow(row)
+            onShowRequested: () => tableView.showHiddenRows()
+            onResetReorderingRequested: () => tableView.resetRowReordering()
         }
 
         Item {
@@ -477,7 +87,7 @@ ApplicationWindow {
                 boundsBehavior: Flickable.StopAtBounds
                 selectionBehavior: TableView.SelectCells
                 selectionMode: TableView.ExtendedSelection
-                selectionModel: selectionModel
+                selectionModel: _spreadSelectionModel
                 interactive: toolbar.panEnabled
                 model: SpreadModel
 
@@ -518,12 +128,12 @@ ApplicationWindow {
                 function copyToClipboard()
                 {
                     mimeDataProvider.reset()
-                    if (selectionModel.hasSelection) {
-                        const source_index = selectionModel.selectedIndexes[0]
+                    if (_spreadSelectionModel.hasSelection) {
+                        const source_index = _spreadSelectionModel.selectedIndexes[0]
                         mimeDataProvider.sourceCell = cellAtIndex(source_index)
                         mimeDataProvider.loadSelectedData()
                     } else {
-                        const current_index = selectionModel.currentIndex
+                        const current_index = _spreadSelectionModel.currentIndex
                         const current_cell = cellAtIndex(current_index)
                         mimeDataProvider.sourceCell = current_cell
                         mimeDataProvider.loadDataFromModel(current_cell, current_index, model)
@@ -533,12 +143,12 @@ ApplicationWindow {
                 function cutToClipboard()
                 {
                     mimeDataProvider.reset()
-                    if (selectionModel.hasSelection) {
-                        const source_index = selectionModel.selectedIndexes[0]
+                    if (_spreadSelectionModel.hasSelection) {
+                        const source_index = _spreadSelectionModel.selectedIndexes[0]
                         mimeDataProvider.sourceCell = cellAtIndex(source_index)
                         mimeDataProvider.loadSelectedData()
                     } else {
-                        const current_index = selectionModel.currentIndex
+                        const current_index = _spreadSelectionModel.currentIndex
                         const current_cell = cellAtIndex(current_index)
                         mimeDataProvider.sourceCell = current_cell
                         mimeDataProvider.loadDataFromModel(current_cell, current_index, model)
@@ -549,14 +159,14 @@ ApplicationWindow {
                 function pasteFromClipboard()
                 {
                     visibleCellsConnection.blockConnection(true)
-                    const current_index = selectionModel.currentIndex
+                    const current_index = _spreadSelectionModel.currentIndex
                     const current_cell = cellAtIndex(current_index)
 
                     let target_cells = new Set()
                     if (mimeDataProvider.size() === 1) {
-                        if (selectionModel.hasSelection) {
-                            for (let i in selectionModel.selectedIndexes) {
-                                const selected_index = selectionModel.selectedIndexes[i]
+                        if (_spreadSelectionModel.hasSelection) {
+                            for (let i in _spreadSelectionModel.selectedIndexes) {
+                                const selected_index = _spreadSelectionModel.selectedIndexes[i]
                                 mimeDataProvider.saveDataToModel(0, selected_index, model)
                                 target_cells.add(tableView.cellAtIndex(selected_index))
                             }
@@ -647,10 +257,10 @@ ApplicationWindow {
                         pasteFromClipboard()
                     } else if (event.matches(StandardKey.Delete)) {
                         visibleCellsConnection.blockConnection()
-                        if (selectionModel.hasSelection)
-                            model.clearItemData(selectionModel.selectedIndexes)
+                        if (_spreadSelectionModel.hasSelection)
+                            model.clearItemData(_spreadSelectionModel.selectedIndexes)
                         else
-                            model.clearItemData(selectionModel.currentIndex)
+                            model.clearItemData(_spreadSelectionModel.currentIndex)
                         visibleCellsConnection.blockConnection(false)
                         visibleCellsConnection.updateViewArea()
                     }
@@ -713,10 +323,10 @@ ApplicationWindow {
                             return
                         // check selected indexes
                         const index = tableView.index(cell.y, cell.x)
-                        hadSelection = selectionModel.hasSelection
+                        hadSelection = _spreadSelectionModel.hasSelection
                         if (!hadSelection)
-                            selectionModel.select(index, ItemSelectionModel.Select)
-                        if (!selectionModel.isSelected(index))
+                            _spreadSelectionModel.select(index, ItemSelectionModel.Select)
+                        if (!_spreadSelectionModel.isSelected(index))
                             return
                         // store selected data
                         mimeDataProvider.reset()
@@ -734,7 +344,7 @@ ApplicationWindow {
                         dropArea.stopDragging()
                         // reset selection, if dragging caused the selection
                         if (!hadSelection)
-                            selectionModel.clearSelection()
+                            _spreadSelectionModel.clearSelection()
                         hadSelection = false
                         dragCell = Qt.point(-1, -1)
                     }
@@ -771,7 +381,7 @@ ApplicationWindow {
                     if (dragArea.dragCell === dropCell)
                         return
 
-                    tableView.model.clearItemData(selectionModel.selectedIndexes)
+                    tableView.model.clearItemData(_spreadSelectionModel.selectedIndexes)
                     for (let i = 0; i < mimeDataProvider.size(); ++i) {
                         let cell = mimeDataProvider.cellAt(i)
                         cell.x += dropCell.x - dragArea.dragCell.x
@@ -780,10 +390,10 @@ ApplicationWindow {
                         mimeDataProvider.saveDataToModel(i, index, tableView.model)
                     }
                     mimeDataProvider.reset()
-                    selectionModel.clearSelection()
+                    _spreadSelectionModel.clearSelection()
 
                     const drop_index = tableView.index(dropCell.y, dropCell.x)
-                    selectionModel.setCurrentIndex(drop_index, ItemSelectionModel.Current)
+                    _spreadSelectionModel.setCurrentIndex(drop_index, ItemSelectionModel.Current)
 
                     tableView.model.clearHighlight()
                 }
@@ -812,8 +422,8 @@ ApplicationWindow {
                     // if the dropCell is not the same as the dragging cell and also
                     // is not the same as the cell at the mouse's last position
                     // then highlights the target cells
-                    for (let i in selectionModel.selectedIndexes) {
-                        const old_index = selectionModel.selectedIndexes[i]
+                    for (let i in _spreadSelectionModel.selectedIndexes) {
+                        const old_index = _spreadSelectionModel.selectedIndexes[i]
                         let cell = tableView.cellAtIndex(old_index)
                         cell.x += dropCell.x - dragArea.dragCell.x
                         cell.y += dropCell.y - dragArea.dragCell.y
@@ -850,7 +460,7 @@ ApplicationWindow {
     }
 
     SpreadSelectionModel {
-        id: selectionModel
+        id: _spreadSelectionModel
         behavior: SpreadSelectionModel.SelectCells
     }
 
@@ -862,8 +472,8 @@ ApplicationWindow {
 
         function loadSelectedData()
         {
-            for (let i in selectionModel.selectedIndexes) {
-                const index = selectionModel.selectedIndexes[i]
+            for (let i in _spreadSelectionModel.selectedIndexes) {
+                const index = _spreadSelectionModel.selectedIndexes[i]
                 const cell = tableView.cellAtIndex(index)
                 loadDataFromModel(cell, index, tableView.model)
             }

@@ -15,6 +15,9 @@ qt_add_qml_module(${PROJECT_NAME}
         TableCell.qml
         HeaderToolBar.qml
         HelpDialog.qml
+        ColumnHeaderView.qml
+        RowHeaderView.qml
+        HeaderViewTapHandler.qml
     SOURCES
         datamodel.h datamodel.cpp
         spreadcell.h spreadcell.cpp
