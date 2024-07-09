@@ -36,6 +36,9 @@ qt_internal_add_module(QmlLSPrivate
         qqmllshelpplugininterface_p.h qqmllshelpplugininterface.cpp
         qqmllshelputils_p.h qqmllshelputils.cpp
 
+        documentSymbolSupport/qqmldocumentsymbolsupport_p.h
+        documentSymbolSupport/qqmldocumentsymbolsupport.cpp
+
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate
         Qt::CorePrivate

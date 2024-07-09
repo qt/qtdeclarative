@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include "documentSymbolSupport/qqmldocumentsymbolsupport_p.h"
 #include "qlanguageserver_p.h"
 #include "qqmlcodemodel_p.h"
 #include "qqmlfindusagessupport_p.h"
@@ -75,6 +76,7 @@ private:
     QQmlRangeFormatting m_rangeFormatting;
     QQmlHover m_hover;
     QQmlHighlightSupport m_highlightSupport;
+    QQmlDocumentSymbolSupport m_documentSymbolSupport;
     int m_returnValue = 1;
 };
 
