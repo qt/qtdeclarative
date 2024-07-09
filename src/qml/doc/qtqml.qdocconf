@@ -56,6 +56,9 @@ exampledirs += ../../../examples/qml \
 
 imagedirs   += images
 
+# Exclude documentation for the compiler category: these are not mature enough to be documented
+excludefiles += src/qmllint/compiler.qdoc
+
 # Add a thumbnail for examples that do not have images
 manifestmeta.thumbnail.names += "QtQml/Chapter 4*" \
                                 "QtQml/Chapter 6*" \
