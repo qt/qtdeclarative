@@ -153,7 +153,7 @@ public:
     {
         return a.m_usagesInFile == b.m_usagesInFile && a.m_usagesInFilename == b.m_usagesInFilename;
     }
-    Q_DECLARE_EQUALITY_COMPARABLE(Usages)
+    Q_DECLARE_EQUALITY_COMPARABLE_NON_NOEXCEPT(Usages)
 
     Usages() = default;
     Usages(const QList<Location> &usageInFile, const QList<QString> &usageInFilename);
@@ -192,7 +192,7 @@ public:
         return std::tie(a.m_renamesInFile, a.m_renamesInFilename)
                 == std::tie(b.m_renamesInFile, b.m_renamesInFilename);
     }
-    Q_DECLARE_EQUALITY_COMPARABLE(RenameUsages)
+    Q_DECLARE_EQUALITY_COMPARABLE_NON_NOEXCEPT(RenameUsages)
 
     RenameUsages() = default;
     RenameUsages(const QList<Edit> &renamesInFile, const QList<FileRename> &renamesInFilename);
