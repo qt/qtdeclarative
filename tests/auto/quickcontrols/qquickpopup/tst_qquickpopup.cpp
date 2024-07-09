@@ -1794,7 +1794,6 @@ void tst_QQuickPopup::tabFence()
 
     QQuickPopup *popup = window->property("dialog").value<QQuickPopup*>();
     QVERIFY(popup);
-    popup->setModal(true);
     popup->open();
     QTRY_VERIFY(popup->isOpened());
 
@@ -1806,6 +1805,20 @@ void tst_QQuickPopup::tabFence()
     QVERIFY(dialogButton1);
     QQuickButton *dialogButton2 = window->property("dialogButton2").value<QQuickButton*>();
     QVERIFY(dialogButton2);
+
+    // Dialog is not tab fenced by default
+    outsideButton1->forceActiveFocus();
+    QVERIFY(outsideButton1->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(outsideButton2->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(dialogButton1->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(dialogButton2->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(outsideButton1->hasActiveFocus());
+
+    popup->setModal(true);
 
     // When modal, focus loops between the two external buttons
     outsideButton1->forceActiveFocus();
