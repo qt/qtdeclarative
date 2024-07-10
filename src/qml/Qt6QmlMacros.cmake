@@ -4625,9 +4625,11 @@ endfunction()
 
 function(_qt_internal_collect_qml_module_dependencies target)
     if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
-        cmake_language(EVAL CODE
-            "cmake_language(DEFER CALL _qt_internal_collect_qml_module_dependencies_deferred \"${target}\")"
+        string(JOIN " " collect_qml_module_dependencies_code
+            "cmake_language(DEFER DIRECTORY \"${CMAKE_BINARY_DIR}\""
+            "CALL _qt_internal_collect_qml_module_dependencies_deferred \"${target}\")"
         )
+        cmake_language(EVAL CODE "${collect_qml_module_dependencies_code}")
     else()
         _qt_internal_collect_qml_module_dependencies_deferred("${target}")
     endif()
@@ -4638,15 +4640,15 @@ function(_qt_internal_collect_qml_module_dependencies_deferred target)
     if(NOT deps)
         return()
     endif()
+    get_property(qml_uris GLOBAL PROPERTY _qt_all_qml_uris)
+    get_property(qml_targets GLOBAL PROPERTY _qt_all_qml_targets)
     foreach(dep IN LISTS deps)
         string(REPLACE " " ";" dep "${dep}")
         list(GET dep 0 dep_module_uri)
-        get_property(qml_uris GLOBAL PROPERTY _qt_all_qml_uris)
         list(FIND qml_uris "${dep_module_uri}" index)
         if(index LESS 0)
             continue()
         endif()
-        get_property(qml_targets GLOBAL PROPERTY _qt_all_qml_targets)
         list(GET qml_targets ${index} dep_module)
         # Make the module target dependent on its non-imported QML dependencies.
         if(TARGET "${dep_module}")
