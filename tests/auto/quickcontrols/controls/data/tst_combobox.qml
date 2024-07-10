@@ -951,7 +951,7 @@ TestCase {
                 verify(y === control.innerCombo.popup.y)
             } else {
                 // In some cases on the initial show, y changes more than once
-                verify(popupYSpy.count >= 1)
+                tryVerify(function(){ return popupYSpy.count >= 1 })
                 y = control.innerCombo.popup.y
                 mouseClick(control.innerCombo)
                 compare(control.innerCombo.pressed, false)
