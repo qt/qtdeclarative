@@ -187,6 +187,7 @@ void DataModel::shiftRows(int from, int count)
         QMapIterator i(m_cells);
         i.toBack();
         while (i.hasPrevious()) {
+            i.previous();
             if (i.key().first < from)
                 break;
             SpreadKey key = i.key();
