@@ -47,7 +47,8 @@ depends += \
 
 headerdirs  += ..
 
-sourcedirs  += ..
+sourcedirs  += .. \
+               ../../qmlmeta
 
 exampledirs += ../../../examples/qml \
                ../ \
