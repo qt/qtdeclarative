@@ -3,14 +3,17 @@
 
 #include <qtest.h>
 #include <QtTest/QtTest>
+#include <QtQuick/QQuickView>
 #include <QtQuick/QQuickTextDocument>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/private/qquicktextedit_p.h>
 #include <QtQuick/private/qquicktextdocument_p.h>
 #include <QtGui/QTextDocument>
+#include <QtGui/QTextBlock>
 #include <QtGui/QTextDocumentWriter>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
+#include <QtQuickTest/QtQuickTest>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qquicktextdocument : public QQmlDataTest
@@ -22,6 +25,8 @@ public:
 private slots:
     void textDocumentWriter();
     void textDocumentWithImage();
+    void changeCharFormatInRange_data();
+    void changeCharFormatInRange();
 };
 
 QString text = QStringLiteral("foo bar");
@@ -66,6 +71,53 @@ void tst_qquicktextdocument::textDocumentWithImage()
     format.setName(name);
     QCOMPARE(image, document.image(format));
     QCOMPARE(image, document.resource(QTextDocument::ImageResource, name).value<QImage>());
+}
+
+void tst_qquicktextdocument::changeCharFormatInRange_data()
+{
+    QTest::addColumn<bool>("editBlock");
+
+    QTest::newRow("begin/end") << true;
+    QTest::newRow("no edit block") << false; // QTBUG-126886 : don't crash
+}
+
+void tst_qquicktextdocument::changeCharFormatInRange()
+{
+    QFETCH(bool, editBlock);
+    QQuickView window(testFileUrl("text.qml"));
+    window.showNormal();
+    QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit *>(window.rootObject());
+    QVERIFY(textEdit);
+    QVERIFY(textEdit->textDocument());
+
+    auto *doc = textEdit->textDocument()->textDocument();
+    QVERIFY(doc);
+
+    QSignalSpy contentSpy(doc, &QTextDocument::contentsChanged);
+    const auto data = QStringLiteral("Format String");
+    doc->setPlainText(data);
+    const auto block = doc->findBlockByNumber(0);
+
+    auto formatText = [block, data] {
+         QTextLayout::FormatRange formatText;
+         formatText.start = 0;
+         formatText.length = data.size();
+         formatText.format.setForeground(Qt::green);
+         block.layout()->setFormats({formatText});
+    };
+
+    // change the char format of this block, and verify visual effect
+    if (editBlock) {
+        QTextCursor cursor(doc);
+        cursor.beginEditBlock();
+        formatText();
+        cursor.endEditBlock();
+    } else {
+        formatText();
+    }
+
+    QVERIFY(QQuickTest::qWaitForPolish(textEdit));
+    QCOMPARE(contentSpy.size(), editBlock ? 2 : 1);
 }
 
 QTEST_MAIN(tst_qquicktextdocument)
