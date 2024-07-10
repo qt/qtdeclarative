@@ -3,7 +3,8 @@
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qmetaobject.h>
-#include <QtQuick/private/qandroidtypeconverter_p.h>
+
+#include <QtCore/private/qandroidtypeconverter_p.h>
 #include <QtQuick/private/qandroidviewsignalmanager_p.h>
 
 QT_BEGIN_NAMESPACE

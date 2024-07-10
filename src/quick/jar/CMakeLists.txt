@@ -4,14 +4,9 @@ qt_internal_add_jar(Qt${QtDeclarative_VERSION_MAJOR}AndroidQuick
         ${QT6_INSTALL_PREFIX}/jar/Qt${QtDeclarative_VERSION_MAJOR}Android.jar
     SOURCES
         org/qtproject/qt/android/QtQuickView.java
-        org/qtproject/qt/android/QtSignalListener.java
         org/qtproject/qt/android/QtQmlStatus.java
         org/qtproject/qt/android/QtQmlStatusChangeListener.java
-        org/qtproject/qt/android/QtModelIndex.java
-        org/qtproject/qt/android/QtAbstractItemModel.java
-        org/qtproject/qt/android/QtAbstractItemModelProxy.java
         org/qtproject/qt/android/QtQmlComponent.java
-        org/qtproject/qt/android/QtAbstractListModel.java
     OUTPUT_DIR "${QT_BUILD_DIR}/jar")
 
 qt_path_join(destination ${INSTALL_DATADIR} "jar")

@@ -1,12 +1,10 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+#include <QtCore/private/qandroidtypeconverter_p.h>
+#include <QtCore/private/qandroidtypes_p.h>
 #include <QtQuick/private/qandroidquickviewembedding_p.h>
-#include <QtQuick/private/qandroidtypes_p.h>
-#include <QtQuick/private/qandroidtypeconverter_p.h>
 #include <QtQuick/private/qandroidviewsignalmanager_p.h>
-#include <QtQuick/private/qandroiditemmodelproxy_p.h>
-#include <QtQuick/private/qandroidmodelindexproxy_p.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qjnienvironment.h>
@@ -319,12 +317,6 @@ Q_DECL_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
     if (!env.isValid())
         return JNI_ERR;
     if (!QtAndroidQuickViewEmbedding::registerNatives(env))
-        return JNI_ERR;
-    if (!QAndroidItemModelProxy::registerAbstractNatives(env))
-        return JNI_ERR;
-    if (!QAndroidItemModelProxy::registerProxyNatives(env))
-        return JNI_ERR;
-    if (!QAndroidModelIndexProxy::registerNatives(env))
         return JNI_ERR;
     return JNI_VERSION_1_6;
 }
