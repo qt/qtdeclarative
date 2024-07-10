@@ -142,6 +142,8 @@ int QQuickTextNodeEngine::addText(const QTextBlock &block,
     while (textPos < fragmentEnd) {
         int blockRelativePosition = textPos - block.position();
         QTextLine line = block.layout()->lineForTextPosition(blockRelativePosition);
+        if (!line.isValid())
+            break;
         if (!currentLine().isValid()
                 || line.lineNumber() != currentLine().lineNumber()) {
             setCurrentLine(line);
