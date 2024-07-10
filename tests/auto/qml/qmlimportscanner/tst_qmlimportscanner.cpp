@@ -118,7 +118,8 @@ void TestQmlimportscanner::qmldirPreference()
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
         QCOMPARE(process.exitCode(), 0);
-        QVERIFY(process.readAllStandardError().isEmpty());
+        const auto &stdErr = process.readAllStandardError();
+        QVERIFY2(stdErr.isEmpty(), stdErr.constData());
         auto output = process.readAllStandardOutput();
         // check that the "With" path is used, and the "WithOut" path is ignored
         QVERIFY(output.contains("With/Module"));
@@ -140,7 +141,8 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
     QVERIFY(process.waitForFinished());
     QCOMPARE(process.exitStatus(), QProcess::NormalExit);
     QCOMPARE(process.exitCode(), 0);
-    QVERIFY(process.readAllStandardError().isEmpty());
+    const auto &stdErr = process.readAllStandardError();
+    QVERIFY2(stdErr.isEmpty(), stdErr.constData());
 
     QJsonParseError error;
     const QJsonDocument generated = QJsonDocument::fromJson(process.readAllStandardOutput(),
@@ -185,7 +187,7 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
         }
         QVERIFY2(found, qPrintable(QDebug::toString(object)));
     }
-    QVERIFY(expectedArray.isEmpty());
+    QVERIFY2(expectedArray.isEmpty(), QDebug::toString(expectedArray).toUtf8().constData());
 }
 
 QTEST_MAIN(TestQmlimportscanner)
