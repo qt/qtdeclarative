@@ -6,7 +6,7 @@ qt_internal_add_jar(Qt${QtDeclarative_VERSION_MAJOR}AndroidQuick
         org/qtproject/qt/android/QtQuickView.java
         org/qtproject/qt/android/QtQmlStatus.java
         org/qtproject/qt/android/QtQmlStatusChangeListener.java
-        org/qtproject/qt/android/QtQmlComponent.java
+        org/qtproject/qt/android/QtQuickViewContent.java
     OUTPUT_DIR "${QT_BUILD_DIR}/jar")
 
 qt_path_join(destination ${INSTALL_DATADIR} "jar")
