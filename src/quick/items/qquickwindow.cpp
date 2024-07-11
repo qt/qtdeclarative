@@ -3718,7 +3718,7 @@ void QQuickWindow::endExternalCommands()
     the \l Window::flags property with a suitable \l Qt::WindowType (such as
     \c Qt::Dialog).
 
-    \sa QtQuick::Window::parent
+    \sa {QQuickWindow::}{parent()}
 */
 
 /*!

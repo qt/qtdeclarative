@@ -1090,8 +1090,8 @@
     \since 6.2
 
     Returns the implicit width of the given \a column. This is the largest
-    \l implicitWidth found among the currently \l{isRowLoaded()}{loaded}
-    delegate items inside that column.
+    \l {QtQuick::Item::}{implicitWidth} found among the currently
+    \l{isRowLoaded()}{loaded} delegate items inside that column.
 
     If the \a column is not loaded (and therefore not visible), the return value is \c -1.
 
@@ -1103,8 +1103,8 @@
     \since 6.2
 
     Returns the implicit height of the given \a row. This is the largest
-    \l implicitHeight found among the currently \l{isColumnLoaded()}{loaded}
-    delegate items inside that row.
+    \l {QtQuick::Item::}{implicitHeight} found among the currently
+    \l{isColumnLoaded()}{loaded} delegate items inside that row.
 
     If the \a row is not loaded (and therefore not visible), the return value is \c -1.
 
