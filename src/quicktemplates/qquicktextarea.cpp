@@ -661,7 +661,7 @@ void QQuickTextArea::setPlaceholderTextColor(const QColor &color)
     \value Qt.MenuBarFocusReason       The menu bar took focus.
     \value Qt.OtherFocusReason         Another reason, usually application-specific.
 
-    \note Prefer \l {Item::focusReason} to this property.
+    \note Prefer \l {QtQuick.Controls::Control::focusReason} to this property.
 */
 Qt::FocusReason QQuickTextArea::focusReason() const
 {
