@@ -38,7 +38,7 @@ public:
 
     QQuickPathPrivate()
         : componentComplete(true), isShapePath(false), simplify(false)
-          , processPending(false), asynchronous(false)
+          , processPending(false), asynchronous(false), useCustomPath(false)
     {}
 
     QPainterPath _path;
@@ -59,6 +59,7 @@ public:
     bool simplify : 1;
     bool processPending : 1;
     bool asynchronous : 1;
+    bool useCustomPath : 1;
 };
 
 QT_END_NAMESPACE
