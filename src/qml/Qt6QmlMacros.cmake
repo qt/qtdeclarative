@@ -453,19 +453,15 @@ function(qt6_add_qml_module target)
 
     # Sanity check that we are not trying to have two different QML modules use
     # the same output directory.
-    get_property(dirs GLOBAL PROPERTY _qt_all_qml_output_dirs)
-    if(dirs)
-        list(FIND dirs "${arg_OUTPUT_DIRECTORY}" index)
-        if(NOT index EQUAL -1)
-            get_property(qml_targets GLOBAL PROPERTY _qt_all_qml_targets)
-            list(GET qml_targets ${index} other_target)
-            message(FATAL_ERROR
-                "Output directory for target \"${target}\" is already used by "
-                "another QML module (target \"${other_target}\"). "
-                "Output directory is:\n  ${arg_OUTPUT_DIRECTORY}\n"
-            )
-        endif()
+    _qt_internal_find_qml_module(other_target BY_OUTPUT_DIR "${arg_OUTPUT_DIRECTORY}")
+    if(other_target)
+        message(FATAL_ERROR
+            "Output directory for target \"${target}\" is already used by "
+            "another QML module (target \"${other_target}\"). "
+            "Output directory is:\n  ${arg_OUTPUT_DIRECTORY}\n"
+        )
     endif()
+
     set_property(GLOBAL APPEND PROPERTY _qt_all_qml_uris ${arg_URI})
     set_property(GLOBAL APPEND PROPERTY _qt_all_qml_output_dirs ${arg_OUTPUT_DIRECTORY})
     set_property(GLOBAL APPEND PROPERTY _qt_all_qml_targets     ${target})
@@ -3772,20 +3768,12 @@ function(qt6_import_qml_plugins target)
                 if(NOT entry_PLUGIN)
                     # Check if qml module is built within the build tree, and should have a plugin
                     # target, but its qmldir file is not generated yet.
-                    get_property(dirs GLOBAL PROPERTY _qt_all_qml_output_dirs)
-                    if(dirs)
-                        list(FIND dirs "${entry_PATH}" index)
-                        if(NOT index EQUAL -1)
-                            get_property(qml_targets GLOBAL PROPERTY _qt_all_qml_targets)
-                            list(GET qml_targets ${index} qml_module)
-                            if(qml_module AND TARGET ${qml_module})
-                                get_target_property(entry_LINKTARGET
-                                    ${qml_module} QT_QML_MODULE_PLUGIN_TARGET)
-                                if(entry_LINKTARGET AND TARGET ${entry_LINKTARGET})
-                                    get_target_property(entry_PLUGIN ${entry_LINKTARGET}
-                                        OUTPUT_NAME)
-                                endif()
-                            endif()
+                    _qt_internal_find_qml_module(qml_module BY_OUTPUT_DIRS "${entry_PATH}")
+                    if(qml_module)
+                        get_target_property(entry_LINKTARGET
+                            ${qml_module} QT_QML_MODULE_PLUGIN_TARGET)
+                        if(entry_LINKTARGET AND TARGET ${entry_LINKTARGET})
+                            get_target_property(entry_PLUGIN ${entry_LINKTARGET} OUTPUT_NAME)
                         endif()
                     endif()
                 endif()
@@ -4640,22 +4628,44 @@ function(_qt_internal_collect_qml_module_dependencies_deferred target)
     if(NOT deps)
         return()
     endif()
-    get_property(qml_uris GLOBAL PROPERTY _qt_all_qml_uris)
-    get_property(qml_targets GLOBAL PROPERTY _qt_all_qml_targets)
     foreach(dep IN LISTS deps)
         string(REPLACE " " ";" dep "${dep}")
         list(GET dep 0 dep_module_uri)
-        list(FIND qml_uris "${dep_module_uri}" index)
-        if(index LESS 0)
-            continue()
-        endif()
-        list(GET qml_targets ${index} dep_module)
-        # Make the module target dependent on its non-imported QML dependencies.
-        if(TARGET "${dep_module}")
+        _qt_internal_find_qml_module(dep_module BY_URI "${dep_module_uri}")
+        if(dep_module)
             get_target_property(is_imported ${dep_module} IMPORTED)
             if(NOT is_imported)
                 add_dependencies(${target} ${dep_module})
             endif()
         endif()
     endforeach()
+endfunction()
+
+# Function searches the qml module target by the bound 'by' property.
+#
+# The supported 'by' arguments:
+# BY_OUTPUT_DIR - searches the module using the _qt_all_qml_output_dirs GLOBAL property
+# BY_URI - searches the module using _qt_all_qml_uris GLOBAL property
+function(_qt_internal_find_qml_module out_target by filter)
+    if(NOT by MATCHES "^BY_(URI|OUTPUT_DIR)")
+        message(FATAL_ERROR "Unknow lookup argument ${by}")
+    else()
+        string(TOLOWER "${CMAKE_MATCH_1}" lookup_property)
+        set(lookup_property "_qt_all_qml_${lookup_property}s")
+    endif()
+
+    get_property(lookup_property_value GLOBAL PROPERTY ${lookup_property})
+    if(lookup_property_value)
+        list(FIND lookup_property_value "${filter}" index)
+        if(index GREATER_EQUAL 0)
+            get_property(qml_targets GLOBAL PROPERTY _qt_all_qml_targets)
+            list(GET qml_targets ${index} qml_target)
+            if(TARGET "${qml_target}")
+                set(${out_target} "${qml_target}" PARENT_SCOPE)
+                return()
+            endif()
+        endif()
+    endif()
+
+    set(${out_target} "${out_target}-NOTFOUND" PARENT_SCOPE)
 endfunction()
