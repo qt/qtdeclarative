@@ -1269,11 +1269,18 @@ TestCase {
         verify(overlay.width > 0)
         verify(overlay.height > 0)
 
+        const getCurrentPos = () => {
+            const parentPos = control.parent.mapToGlobal(0, 0)
+            const popupPos = control.contentItem.parent.mapToGlobal(0, 0)
+            return Qt.point(popupPos.x - parentPos.x, popupPos.y - parentPos.y)
+        }
+
         // Center the popup in the window via the overlay.
         control.anchors.centerIn = Qt.binding(function() { return control.parent; })
         compare(centerInSpy.count, 1)
-        compare(control.x, (overlay.width - (control.width * control.scale)) / 2)
-        compare(control.y, (overlay.height - (control.width * control.scale)) / 2)
+        let currentPos = getCurrentPos()
+        compare(currentPos.x, (overlay.width - (control.width * control.scale)) / 2)
+        compare(currentPos.y, (overlay.height - (control.width * control.scale)) / 2)
 
         // Ensure that it warns when trying to set it to an item that's not its parent.
         let anotherItem = createTemporaryObject(rect, applicationWindow.contentItem, { x: 100, y: 100, width: 50, height: 50 })
@@ -1296,29 +1303,36 @@ TestCase {
         compare(control.parent, anotherItem)
         compare(control.anchors.centerIn, anotherItem)
         compare(centerInSpy.count, 4)
-        compare(control.x, (anotherItem.width - (control.width * control.scale)) / 2)
-        compare(control.y, (anotherItem.height - (control.height * control.scale)) / 2)
+        currentPos = getCurrentPos()
+        compare(currentPos.x, (anotherItem.width - (control.width * control.scale)) / 2)
+        compare(currentPos.y, (anotherItem.height - (control.height * control.scale)) / 2)
 
         // Check that anchors.centerIn beats x and y coordinates as it does in QQuickItem.
         control.x = 33;
         control.y = 44;
-        compare(control.x, (anotherItem.width - (control.width * control.scale)) / 2)
-        compare(control.y, (anotherItem.height - (control.height * control.scale)) / 2)
+        currentPos = getCurrentPos()
+        compare(currentPos.x, (anotherItem.width - (control.width * control.scale)) / 2)
+        compare(currentPos.y, (anotherItem.height - (control.height * control.scale)) / 2)
 
         // Check that the popup's x and y coordinates are restored when it's no longer centered.
         control.anchors.centerIn = undefined
         compare(centerInSpy.count, 5)
-        compare(control.x, 33)
-        compare(control.y, 44)
+        currentPos = getCurrentPos()
+        compare(currentPos.x, 33)
+        compare(currentPos.y, 44)
 
         // Test centering in the overlay while having a different parent (anotherItem).
         control.anchors.centerIn = overlay
         compare(centerInSpy.count, 6)
-        compare(control.x, (overlay.width - (control.width * control.scale)) / 2)
-        compare(control.y, (overlay.height - (control.height * control.scale)) / 2)
-
-        // TODO: do this properly by creating a component or something
-        applicationWindow.visible = false
+        currentPos = getCurrentPos()
+        // calculate the correct co-ordinates in the overlay's co-ordinate system
+        let expectedX = (overlay.width - (control.width * control.scale)) / 2
+        let expectedY = (overlay.height - (control.height * control.scale)) / 2
+        // translate to the parent's (anotherItem's) co-ordinate system
+        expectedX -= anotherItem.x
+        expectedY -= anotherItem.y
+        compare(currentPos.x, expectedX)
+        compare(currentPos.y, expectedY)
     }
 
     Component {
