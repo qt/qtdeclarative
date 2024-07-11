@@ -387,6 +387,9 @@ void QQuickPath::doProcessPath()
     if (!d->componentComplete)
         return;
 
+    if (d->useCustomPath)
+        return;
+
     d->_pointCache.clear();
     d->prevBez.isValid = false;
 
@@ -606,6 +609,16 @@ QPainterPath QQuickPath::path() const
 {
     Q_D(const QQuickPath);
     return d->_path;
+}
+
+void QQuickPath::setPath(const QPainterPath &path)
+{
+    Q_D(QQuickPath);
+    d->useCustomPath = !path.isEmpty();
+    d->_pointCache.clear();
+    d->prevBez.isValid = false;
+    d->_path = path;
+    emit changed();
 }
 
 QStringList QQuickPath::attributes() const

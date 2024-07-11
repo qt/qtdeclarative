@@ -587,6 +587,8 @@ public:
     bool isClosed() const;
 
     QPainterPath path() const;
+    void setPath(const QPainterPath &path);
+
     QStringList attributes() const;
     qreal attributeAt(const QString &, qreal) const;
     Q_REVISION(2, 14) Q_INVOKABLE QPointF pointAtPercent(qreal t) const;
