@@ -74,7 +74,7 @@ using namespace Qt::StringLiterals;
     QQuickWindow::setRenderTarget(), QQuickRenderControl, or similar
     functionality.
 
-    \sa {QtQuick::Window::parent}
+    \sa {QQuickWindow::}{parent()}
 */
 
 /*!
