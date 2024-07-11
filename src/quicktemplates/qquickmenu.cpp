@@ -272,7 +272,7 @@ static const int SUBMENU_DELAY = 225;
     Those menus, and all of their contents, will therefore be rendered by the platform, and
     not by QML. This means that the \l delegate will \e not be used for rendering. It will,
     however, always be instantiated (but hidden), so that functions such as
-    \l {Component.onCompleted()} execute regardless of platform and
+    \l [QML] {QtQml::Component::completed}{onCompleted()} execute regardless of platform and
     \l [QML] {Popup::} {popupType}.
 
     \section3 Supported platforms
@@ -287,7 +287,7 @@ static const int SUBMENU_DELAY = 225;
     \li Windows
     \endlist
 
-    \sa {Popup type}, popupType
+    \sa {Popup type}, [QML] {Popup::}{popupType}
 */
 
 /*!
