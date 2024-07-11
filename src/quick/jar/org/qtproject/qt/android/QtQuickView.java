@@ -39,7 +39,7 @@ public class QtQuickView extends QtView {
     private QtQmlStatusChangeListener m_statusChangeListener = null;
     private QtQmlStatus m_lastStatus = QtQmlStatus.NULL;
     private boolean m_hasQueuedStatus = false;
-    private WeakReference<QtQmlComponent> m_loadedComponent;
+    private WeakReference<QtQuickViewContent> m_loadedComponent;
 
     native void createQuickView(String qmlUri, int width, int height, long parentWindowReference,
                                 long viewReference, String[] qmlImportPaths);
@@ -105,19 +105,19 @@ public class QtQuickView extends QtView {
     }
 
     /**
-     * Loads a QML component represented by a QtQmlComponent. The library name and the qrc path of
-     * the QML component will be extracted from the QtQmlComponent to load the QML component.
-     * This overload accepts an array of strings in the case where the QML component should load
+     * Loads a QML content represented by a QtQuickViewContent. The library name and the qrc path
+     * of the QML content will be extracted from the QtQuickViewContent to load the QML content.
+     * This overload accepts an array of strings in the case where the QML content should load
      * QML modules from custom paths.
      * <p>
-     * @param qmlComponent   an instance of an object that extends QtQmlComponent
+     * @param qmlComponent   an instance of an object that extends QtQuickViewContent
      * @param qmlImportPaths an array of strings for additional import paths to be passed to
      *                       QQmlEngine, or null if additional import paths are not required
-     * @throws InvalidParameterException if QtQmlComponent does not contain valid information
+     * @throws InvalidParameterException if QtQuickViewContent does not contain valid information
      * about the module name, and the qrc path.
      */
     // TODO: QTBUG-125620 -- Refresh/reset import paths when loading a new component
-    public <T extends QtQmlComponent> void loadComponent(T qmlComponent, String[] qmlImportPaths)
+    public <T extends QtQuickViewContent> void loadComponent(T qmlComponent, String[] qmlImportPaths)
             throws InvalidParameterException
     {
         String libName = qmlComponent.getLibraryName();
@@ -125,12 +125,12 @@ public class QtQuickView extends QtView {
 
         if (libName == null || libName.isEmpty()) {
             throw new InvalidParameterException(
-                    "QtQmlComponent: return value of getLibraryName() may not be empty or null");
+                    "QtQuickViewContent: return value of getLibraryName() may not be empty or null");
         }
 
         if (qmlUri == null || qmlUri.isEmpty()) {
             throw new InvalidParameterException(
-                    "QtQmlComponent: return value of getFilePath() may not be empty or null");
+                    "QtQuickViewContent: return value of getFilePath() may not be empty or null");
         }
 
         m_qmlUri = qmlUri;
@@ -155,14 +155,14 @@ public class QtQuickView extends QtView {
     }
 
     /**
-     * Loads a QML component represented by a QtQmlComponent. The library name and the qrc path of
-     * the QML component will be extracted from the QtQmlComponent to load the QML component.
+     * Loads QML content represented by a QtQuickViewContent. The library name and the qrc path of
+     * the QML content will be extracted from the QtQuickViewContent to load the QML component.
      * <p>
-     * @param qmlComponent an instance of a class that extends QtQmlComponent
-     * @throws InvalidParameterException if QtQmlComponent does not contain valid information
+     * @param qmlComponent an instance of a class that extends QtQuickViewContent
+     * @throws InvalidParameterException if QtQuickViewContent does not contain valid information
      * about the module name, and the qrc path.
      */
-    public <T extends QtQmlComponent> void loadComponent(T qmlComponent)
+    public <T extends QtQuickViewContent> void loadComponent(T qmlComponent)
             throws InvalidParameterException
     {
         loadComponent(qmlComponent, null);
