@@ -311,6 +311,8 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_fillItemDestroyed())
 };
 
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickShapePath::PathHints)
+
 class Q_QUICKSHAPES_EXPORT QQuickShape : public QQuickItem
 {
     Q_OBJECT
