@@ -895,12 +895,26 @@ TestCase {
 
         var leftLayoutMargin = control.background.layoutMargins === undefined ? 0 : control.popup.layoutMargins.left
         // follow the control outside the horizontal window bounds
+        const prevX = control.popup.contentItem.parent.mapToGlobal(0, 0).x
         control.x = -control.width / 2
         compare(control.x, -control.width / 2)
-        compare(control.popup.contentItem.parent.x, -control.width / 2 + leftLayoutMargin)
+
+        if(control.popup.popupType === Popup.Item) {
+            compare(control.popup.contentItem.parent.x, -control.width / 2 + leftLayoutMargin)
+        } else if (control.popup.popupType === Popup.Window) {
+            const x = control.popup.contentItem.parent.mapToGlobal(0, 0).x
+            compare(x - prevX, -control.width / 2 + leftLayoutMargin)
+        }
+
         control.x = testCase.width - control.width / 2
         compare(control.x, testCase.width - control.width / 2)
-        compare(control.popup.contentItem.parent.x, testCase.width - control.width / 2 + leftLayoutMargin)
+
+        if (control.popup.popupType === Popup.Item) {
+            compare(control.popup.contentItem.parent.x, testCase.width - control.width / 2 + leftLayoutMargin)
+        } else if (control.popup.popupType === Popup.Window) {
+            const x = control.popup.contentItem.parent.mapToGlobal(0, 0).x
+            compare(x - prevX, testCase.width - control.width / 2 + leftLayoutMargin)
+        }
 
         // close the popup when hidden (QTBUG-67684)
         control.popup.open()
