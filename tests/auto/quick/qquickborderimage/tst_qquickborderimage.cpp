@@ -575,8 +575,7 @@ void tst_qquickborderimage::progressAndStatusChanges()
 #if QT_CONFIG(opengl)
 void tst_qquickborderimage::borderImageMesh()
 {
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
+    SKIP_IF_NO_WINDOW_GRAB
 
     QQuickView *window = new QQuickView;
 
@@ -608,8 +607,7 @@ void tst_qquickborderimage::multiFrame_data()
 
 void tst_qquickborderimage::multiFrame()
 {
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
+    SKIP_IF_NO_WINDOW_GRAB
 
     QFETCH(QString, qmlfile);
     QFETCH(bool, asynchronous);

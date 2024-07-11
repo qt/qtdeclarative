@@ -980,6 +980,8 @@ static inline QByteArray msgNotLessThan(int n1, int n2)
 
 void tst_qquicktextedit::hAlignVisual()
 {
+    SKIP_IF_NO_WINDOW_GRAB
+
     QQuickView view(testFileUrl("hAlignVisual.qml"));
     view.setFlags(view.flags() | Qt::WindowStaysOnTopHint); // Prevent being obscured by other windows.
     view.showNormal();
@@ -1000,9 +1002,6 @@ void tst_qquicktextedit::hAlignVisual()
     const int centeredSection3End = centeredSection3 + sectionWidth;
 
     {
-        if (QGuiApplication::platformName() == QLatin1String("minimal"))
-            QSKIP("Skipping due to grabWindow not functional on minimal platforms");
-
         // Left Align
         QImage image = view.grabWindow();
         const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
@@ -6352,8 +6351,7 @@ void tst_qquicktextedit::keys_shortcutoverride()
 
 void tst_qquicktextedit::transparentSelectionColor()
 {
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
+    SKIP_IF_NO_WINDOW_GRAB
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("transparentSelectionColor.qml")));

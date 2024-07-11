@@ -1626,8 +1626,7 @@ public:
 
 void tst_qquickwindow::earlyGrab()
 {
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
+    SKIP_IF_NO_WINDOW_GRAB
 
     qmlRegisterType<Grabber>("Test", 1, 0, "Grabber");
     QQmlEngine engine;

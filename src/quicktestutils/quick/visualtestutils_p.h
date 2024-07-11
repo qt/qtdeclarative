@@ -232,6 +232,10 @@ namespace QQuickVisualTestUtils
 if (!(QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation))) \
     QSKIP("Window activation is not supported on this platform");
 
+#define SKIP_IF_NO_WINDOW_GRAB \
+if (QGuiApplication::platformName() == QLatin1String("minimal")) \
+    QSKIP("grabWindow is not supported on the minimal platform");
+
 QT_END_NAMESPACE
 
 #endif // QQUICKVISUALTESTUTILS_P_H

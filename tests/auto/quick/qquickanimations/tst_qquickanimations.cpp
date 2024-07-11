@@ -22,6 +22,8 @@
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
 
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 
@@ -1851,8 +1853,7 @@ void tst_qquickanimations::fastFlickingBug()
 
 void tst_qquickanimations::opacityAnimationFromZero()
 {
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
+    SKIP_IF_NO_WINDOW_GRAB
 
     // not easy to verify this in threaded render loop
     // since it's difficult to capture the first frame when scene graph

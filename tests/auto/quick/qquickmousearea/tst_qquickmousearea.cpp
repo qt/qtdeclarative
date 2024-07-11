@@ -13,6 +13,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/QCursor>
 #include <QtGui/QScreen>
@@ -1375,8 +1376,7 @@ void tst_QQuickMouseArea::hoverPropagation()
 
 void tst_QQuickMouseArea::hoverVisible()
 {
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
+    SKIP_IF_NO_WINDOW_GRAB
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("hoverVisible.qml")));

@@ -254,14 +254,13 @@ void tst_QQuickShape::changeSignals()
 
 void tst_QQuickShape::render()
 {
+    SKIP_IF_NO_WINDOW_GRAB
+
     QScopedPointer<QQuickView> window(createView());
 
     window->setSource(testFileUrl("pathitem3.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
-
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -277,14 +276,13 @@ void tst_QQuickShape::render()
 
 void tst_QQuickShape::renderWithMultipleSp()
 {
+    SKIP_IF_NO_WINDOW_GRAB
+
     QScopedPointer<QQuickView> window(createView());
 
     window->setSource(testFileUrl("pathitem4.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
-
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -300,14 +298,13 @@ void tst_QQuickShape::renderWithMultipleSp()
 
 void tst_QQuickShape::radialGrad()
 {
+    SKIP_IF_NO_WINDOW_GRAB
+
     QScopedPointer<QQuickView> window(createView());
 
     window->setSource(testFileUrl("pathitem5.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
-
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -323,14 +320,13 @@ void tst_QQuickShape::radialGrad()
 
 void tst_QQuickShape::conicalGrad()
 {
+    SKIP_IF_NO_WINDOW_GRAB
+
     QScopedPointer<QQuickView> window(createView());
 
     window->setSource(testFileUrl("pathitem6.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
-
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -346,14 +342,13 @@ void tst_QQuickShape::conicalGrad()
 
 void tst_QQuickShape::renderPolyline()
 {
+    SKIP_IF_NO_WINDOW_GRAB
+
     QScopedPointer<QQuickView> window(createView());
 
     window->setSource(testFileUrl("pathitem7.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
-
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -374,14 +369,13 @@ void tst_QQuickShape::renderPolyline()
 
 void tst_QQuickShape::renderMultiline()
 {
+    SKIP_IF_NO_WINDOW_GRAB
+
     QScopedPointer<QQuickView> window(createView());
 
     window->setSource(testFileUrl("pathitem8.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
-
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -435,6 +429,8 @@ void tst_QQuickShape::polylineDataTypes_data()
 
 void tst_QQuickShape::polylineDataTypes()
 {
+    SKIP_IF_NO_WINDOW_GRAB
+
     QFETCH(QVariant, path);
 
     QScopedPointer<QQuickView> window(createView());
@@ -444,9 +440,6 @@ void tst_QQuickShape::polylineDataTypes()
     shape->setProperty("path", path);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
-
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -585,6 +578,8 @@ void tst_QQuickShape::multilineDataTypes_data()
 
 void tst_QQuickShape::multilineDataTypes()
 {
+    SKIP_IF_NO_WINDOW_GRAB
+
     QFETCH(QVariant, paths);
 
     QScopedPointer<QQuickView> window(createView());
@@ -594,9 +589,6 @@ void tst_QQuickShape::multilineDataTypes()
     shape->setProperty("paths", paths);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
-
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -632,6 +624,8 @@ void tst_QQuickShape::multilineDataTypes()
 
 void tst_QQuickShape::multilineStronglyTyped()
 {
+    SKIP_IF_NO_WINDOW_GRAB
+
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("multilineStronglyTyped.qml"));
     QQuickShape *shape = qobject_cast<QQuickShape *>(window->rootObject());
@@ -641,9 +635,6 @@ void tst_QQuickShape::multilineStronglyTyped()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     provider->setPaths(m_lowPolyLogo);
-
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
