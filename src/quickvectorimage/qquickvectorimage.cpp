@@ -101,6 +101,7 @@ QQuickVectorImagePrivate::Format QQuickVectorImagePrivate::formatFromFilePath(co
 /*!
     \qmltype VectorImage
     \inqmlmodule QtQuick.VectorImage
+    \inherits Item
     \brief Loads a vector image file and displays it in a Qt Quick scene.
     \since 6.8
 
