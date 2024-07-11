@@ -110,18 +110,18 @@ public class QtQuickView extends QtView {
      * This overload accepts an array of strings in the case where the QML content should load
      * QML modules from custom paths.
      * <p>
-     * @param qmlComponent   an instance of an object that extends QtQuickViewContent
+     * @param qmlContent   an instance of an object that extends QtQuickViewContent
      * @param qmlImportPaths an array of strings for additional import paths to be passed to
      *                       QQmlEngine, or null if additional import paths are not required
      * @throws InvalidParameterException if QtQuickViewContent does not contain valid information
      * about the module name, and the qrc path.
      */
     // TODO: QTBUG-125620 -- Refresh/reset import paths when loading a new component
-    public <T extends QtQuickViewContent> void loadComponent(T qmlComponent, String[] qmlImportPaths)
+    public <T extends QtQuickViewContent> void loadContent(T qmlContent, String[] qmlImportPaths)
             throws InvalidParameterException
     {
-        String libName = qmlComponent.getLibraryName();
-        String qmlUri = qmlComponent.getFilePath();
+        String libName = qmlContent.getLibraryName();
+        String qmlUri = qmlContent.getFilePath();
 
         if (libName == null || libName.isEmpty()) {
             throw new InvalidParameterException(
@@ -139,9 +139,9 @@ public class QtQuickView extends QtView {
         if (m_loadedComponent != null)
             m_loadedComponent.clear();
 
-        m_loadedComponent = new WeakReference<>(qmlComponent);
-        qmlComponent.detachView();
-        qmlComponent.attachView(this);
+        m_loadedComponent = new WeakReference<>(qmlContent);
+        qmlContent.detachView();
+        qmlContent.attachView(this);
         // The first QQuickView creation happen after first libs loading
         // and windowReference() returns a reference to native QQuickView
         // instance, after that. We don't load library again if the view
@@ -158,14 +158,14 @@ public class QtQuickView extends QtView {
      * Loads QML content represented by a QtQuickViewContent. The library name and the qrc path of
      * the QML content will be extracted from the QtQuickViewContent to load the QML component.
      * <p>
-     * @param qmlComponent an instance of a class that extends QtQuickViewContent
+     * @param qmlContent an instance of a class that extends QtQuickViewContent
      * @throws InvalidParameterException if QtQuickViewContent does not contain valid information
      * about the module name, and the qrc path.
      */
-    public <T extends QtQuickViewContent> void loadComponent(T qmlComponent)
+    public <T extends QtQuickViewContent> void loadContent(T qmlContent)
             throws InvalidParameterException
     {
-        loadComponent(qmlComponent, null);
+        loadContent(qmlContent, null);
     }
 
     @Override
