@@ -1115,7 +1115,7 @@ void QQuickAbstractButton::click()
     All signals associated with a click are emitted as appropriate.
 
     If the \l [QML] {Item::} {focusPolicy} includes \c Qt.ClickFocus,
-    \l activeFocus will become \c true.
+    \l [QML] {Item::}{activeFocus} will become \c true.
 
     This function does nothing if the button is
     \l [QML] {Item::enabled} {disabled}.
