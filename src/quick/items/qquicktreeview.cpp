@@ -46,6 +46,9 @@
 
     \snippet qml/treeview/qml-customdelegate.qml 0
 
+    More information on how to create and use a custom tree model can be found
+    in the example \l {Qt Quick Controls - Table of Contents}
+
     The properties that are marked as \c required will be filled in by
     TreeView, and are similar to attached properties. By marking them as
     required, the delegate indirectly informs TreeView that it should take
