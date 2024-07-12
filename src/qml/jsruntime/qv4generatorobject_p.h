@@ -75,6 +75,8 @@ struct GeneratorFunction : ArrowFunction
     V4_OBJECT2(GeneratorFunction, ArrowFunction)
     V4_INTERNALCLASS(GeneratorFunction)
 
+    static inline constexpr quint8 IsTailCallable = false;
+
     static Heap::FunctionObject *create(ExecutionContext *scope, Function *function);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
@@ -83,6 +85,8 @@ struct MemberGeneratorFunction : MemberFunction
 {
     V4_OBJECT2(MemberGeneratorFunction, MemberFunction)
     V4_INTERNALCLASS(MemberGeneratorFunction)
+
+    static inline constexpr quint8 IsTailCallable = false;
 
     static Heap::FunctionObject *create(ExecutionContext *scope, Function *function, Object *homeObject, String *name);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);

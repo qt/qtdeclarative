@@ -324,6 +324,9 @@ private slots:
 
     void consoleLogSequence();
 
+    void generatorFunctionInTailCallPosition();
+    void generatorMethodInTailCallPosition();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6466,6 +6469,40 @@ void tst_QJSEngine::consoleLogSequence()
 
     engine.evaluate(QStringLiteral("console.log(object.strings)"));
     QCOMPARE(stringListFetchCount, 1);
+}
+
+void tst_QJSEngine::generatorFunctionInTailCallPosition() {
+  QJSEngine engine;
+  QJSValue result = engine.evaluate(R"(
+    "use strict";
+    function* gen() {
+        yield 0;
+    }
+    function caller() { return gen(); }
+    caller();
+  )");
+
+  QVERIFY(!result.isError());
+  QVERIFY(!result.isUndefined());
+}
+
+void tst_QJSEngine::generatorMethodInTailCallPosition() {
+  QJSEngine engine;
+  QJSValue result = engine.evaluate(R"(
+    "use strict";
+    class Class {
+        *gen() {
+            yield 0;
+        }
+
+        caller() { return this.gen(); }
+    }
+    var c = new Class();
+    c.caller();
+  )");
+
+  QVERIFY(!result.isError());
+  QVERIFY(!result.isUndefined());
 }
 
 QTEST_MAIN(tst_QJSEngine)
