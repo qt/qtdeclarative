@@ -317,6 +317,9 @@ private slots:
     void deleteDefineCycle();
     void deleteFromSparseArray();
 
+    void generatorFunctionInTailCallPosition();
+    void generatorMethodInTailCallPosition();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6378,6 +6381,40 @@ void tst_QJSEngine::deleteFromSparseArray()
     QCOMPARE(result.property("length").toNumber(), 20001);
     QVERIFY(result.property(10000).isUndefined());
     QVERIFY(result.property(20000).isUndefined());
+}
+
+void tst_QJSEngine::generatorFunctionInTailCallPosition() {
+  QJSEngine engine;
+  QJSValue result = engine.evaluate(R"(
+    "use strict";
+    function* gen() {
+        yield 0;
+    }
+    function caller() { return gen(); }
+    caller();
+  )");
+
+  QVERIFY(!result.isError());
+  QVERIFY(!result.isUndefined());
+}
+
+void tst_QJSEngine::generatorMethodInTailCallPosition() {
+  QJSEngine engine;
+  QJSValue result = engine.evaluate(R"(
+    "use strict";
+    class Class {
+        *gen() {
+            yield 0;
+        }
+
+        caller() { return this.gen(); }
+    }
+    var c = new Class();
+    c.caller();
+  )");
+
+  QVERIFY(!result.isError());
+  QVERIFY(!result.isUndefined());
 }
 
 QTEST_MAIN(tst_QJSEngine)

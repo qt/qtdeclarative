@@ -52,6 +52,7 @@ Heap::FunctionObject *GeneratorFunction::create(ExecutionContext *context, Funct
     proto->setPrototypeOf(scope.engine->generatorPrototype());
     g->defineDefaultProperty(scope.engine->id_prototype(), proto, Attr_NotConfigurable|Attr_NotEnumerable);
     g->setPrototypeOf(ScopedObject(scope, scope.engine->generatorFunctionCtor()->get(scope.engine->id_prototype())));
+    g->d()->canBeTailCalled = false;
     return g->d();
 }
 
@@ -213,6 +214,7 @@ Heap::FunctionObject *MemberGeneratorFunction::create(ExecutionContext *context,
     proto->setPrototypeOf(scope.engine->generatorPrototype());
     g->defineDefaultProperty(scope.engine->id_prototype(), proto, Attr_NotConfigurable|Attr_NotEnumerable);
     g->setPrototypeOf(ScopedObject(scope, scope.engine->generatorFunctionCtor()->get(scope.engine->id_prototype())));
+    g->d()->canBeTailCalled = false;
     return g->d();
 }
 
