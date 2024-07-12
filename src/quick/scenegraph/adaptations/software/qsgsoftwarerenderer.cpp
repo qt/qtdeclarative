@@ -60,24 +60,32 @@ void QSGSoftwareRenderer::render()
         return;
 
     QPaintDevice *paintDevice = m_paintDevice ? m_paintDevice : m_rt.paintDevice;
-    QBackingStore *backingStore = nullptr;
-    // If no paint device and there is a backingstore, set the current paint device
-    if (!paintDevice && m_backingStore) {
-        // For HiDPI QBackingStores, the paint device is not valid
-        // until begin() has been called. See: QTBUG-55875
+    QSize paintSize;
+    qreal paintDevicePixelRatio = 1.0;
+
+    if (paintDevice) {
+        paintSize = QSize(paintDevice->width(), paintDevice->height());
+        paintDevicePixelRatio = paintDevice->devicePixelRatio();
+    } else {
+        // For HiDPI QBackingStores, the paint device is valid between calls to
+        // beginPaint() and endPaint(). See: QTBUG-55875
+
         m_backingStore->beginPaint(QRegion());
-        paintDevice = m_backingStore->paintDevice();
+
+        const QPaintDevice *backingStorePaintDevice = m_backingStore->paintDevice();
+        paintSize = QSize(backingStorePaintDevice->width(), backingStorePaintDevice->height());
+        paintDevicePixelRatio = backingStorePaintDevice->devicePixelRatio();
+
         m_backingStore->endPaint();
-        backingStore = m_backingStore;
     }
 
     QElapsedTimer renderTimer;
 
     setBackgroundColor(clearColor());
     setBackgroundRect(QRect(0, 0,
-                            paintDevice->width() / paintDevice->devicePixelRatio(),
-                            paintDevice->height() / paintDevice->devicePixelRatio()),
-                      paintDevice->devicePixelRatio());
+                            paintSize.width() / paintDevicePixelRatio,
+                            paintSize.height() / paintDevicePixelRatio),
+                      paintDevicePixelRatio);
 
     // Build Renderlist
     // The renderlist is created by visiting each node in the tree and when a
@@ -102,11 +110,11 @@ void QSGSoftwareRenderer::render()
     qint64 optimizeRenderListTime = renderTimer.restart();
 
     // If Rendering to a backingstore, prepare it to be updated
-    if (backingStore != nullptr) {
-        backingStore->beginPaint(updateRegion);
-        // It is possible that a QBackingStore's paintDevice() will change
-        // when begin() is called.
-        paintDevice = backingStore->paintDevice();
+    bool usingBackingStore = false;
+    if (!paintDevice) {
+        m_backingStore->beginPaint(updateRegion);
+        paintDevice = m_backingStore->paintDevice();
+        usingBackingStore = true;
     }
 
     QPainter painter(paintDevice);
@@ -120,8 +128,8 @@ void QSGSoftwareRenderer::render()
     qint64 renderTime = renderTimer.elapsed();
 
     painter.end();
-    if (backingStore != nullptr)
-        backingStore->endPaint();
+    if (usingBackingStore)
+        m_backingStore->endPaint();
 
     rc->m_activePainter = prevPainter;
     qCDebug(lcRenderer) << "render" << m_flushRegion << buildRenderListTime << optimizeRenderListTime << renderTime;
