@@ -362,7 +362,8 @@ void HighlightingVisitor::highlightScriptLiteral(const DomItem &item)
     const auto regions = fLocs->info().regions;
     if (std::holds_alternative<QString>(literal->literalValue())) {
         const auto file = item.containingFile().as<QmlFile>();
-        Q_ASSERT(file);
+        if (!file)
+            return;
         const auto &code = file->engine()->code();
         const auto offset = regions[MainRegion].offset;
         const auto length = regions[MainRegion].length;
