@@ -1,4 +1,4 @@
-The V4 Garbage Collector
+The V4 Garbage Collector                                   {#v4-garbage-collector}
 ========================
 
 ChangeLog

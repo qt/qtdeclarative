@@ -1,5 +1,25 @@
 /*! \internal
-    \mainpage Qt Quick Pointer Event Delivery
+    \page qq-event-delivery Qt Quick Event Delivery
+
+    Every QQuickItem subclass needs to handle various kinds of events.
+    To put it very generally and naively, the Window needs to dispatch
+    every event recursively to all the relevant items, until event propagation
+    is stopped by one means or another. The Window delegates most of the work
+    to QQuickDeliveryAgent.
+
+    From an item perspective, dispatching begins in QQuickItem::event().
+
+    There are also specialized
+    <a href="https://doc.qt.io/qt-6/qtquickhandlers-index.html">Input Handler</a>
+    classes which don't inherit QQuickItem but can be added as children of an Item.
+
+    \subsection qq-pointer-event-delivery Qt Quick Pointer Event Delivery
+
+    Input events are a large subset of all the kinds of events that items need
+    to handle; and to support the complexity of interaction that is possible
+    and has come to be expected by users over the years, the event delivery
+    code is more specialized than for other event types. Here we go into some
+    details about how that is done.
 
     QPointerEvent instances are stack-allocated in
     QGuiApplicationPrivate::processMouseEvent(),
