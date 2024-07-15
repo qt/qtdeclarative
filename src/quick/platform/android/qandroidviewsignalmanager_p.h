@@ -15,8 +15,10 @@
 // We mean it.
 //
 
-#include <QtCore/qobject.h>
+#include <QtCore/qhash.h>
 #include <QtCore/qjnitypes.h>
+#include <QtCore/qmap.h>
+#include <QtCore/qobject.h>
 
 QT_BEGIN_NAMESPACE
 
