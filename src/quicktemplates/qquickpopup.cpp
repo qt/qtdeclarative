@@ -1132,7 +1132,7 @@ void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
     }
 }
 
-static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQuickItem *parent)
+QQuickItem *QQuickPopupPrivate::createDimmer(QQmlComponent *component, QQuickPopup *popup, QQuickItem *parent) const
 {
     QQuickItem *item = nullptr;
     if (component) {
@@ -1149,7 +1149,8 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
 
     if (item) {
         item->setParentItem(parent);
-        item->stackBefore(popup->popupItem());
+        if (resolvedPopupType() != QQuickPopup::PopupType::Window)
+            item->stackBefore(popup->popupItem());
         item->setZ(popup->z());
         // needed for the virtual keyboard to set a containment mask on the dimmer item
         qCDebug(lcDimmer) << "dimmer" << item << "registered with" << parent;
