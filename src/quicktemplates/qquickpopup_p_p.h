@@ -102,6 +102,7 @@ public:
     bool usePopupWindow() const;
     void adjustPopupItemParentAndWindow();
     void createOverlay();
+    QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQuickItem *parent) const;
     void destroyDimmer();
     void toggleOverlay();
     void updateContentPalettes(const QPalette& parentPalette);
