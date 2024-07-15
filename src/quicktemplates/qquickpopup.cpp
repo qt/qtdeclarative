@@ -1341,6 +1341,9 @@ QQuickPopup::~QQuickPopup()
     d->popupItem = nullptr;
     delete d->positioner;
     d->positioner = nullptr;
+    if (d->popupWindow)
+        delete d->popupWindow;
+    d->popupWindow = nullptr;
 }
 
 /*!

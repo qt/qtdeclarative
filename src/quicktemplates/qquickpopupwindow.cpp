@@ -70,8 +70,10 @@ QQuickPopupWindow::~QQuickPopupWindow()
     disconnect(d->m_popup, &QQuickPopup::windowChanged, this, &QQuickPopupWindow::windowChanged);
     disconnect(d->m_popup, &QQuickPopup::implicitWidthChanged, this, &QQuickPopupWindow::implicitWidthChanged);
     disconnect(d->m_popup, &QQuickPopup::implicitHeightChanged, this, &QQuickPopupWindow::implicitHeightChanged);
-    disconnect(d->m_popup->window(), &QWindow::xChanged, this, &QQuickPopupWindow::parentWindowXChanged);
-    disconnect(d->m_popup->window(), &QWindow::yChanged, this, &QQuickPopupWindow::parentWindowYChanged);
+    if (d->m_popup->window()) {
+        disconnect(d->m_popup->window(), &QWindow::xChanged, this, &QQuickPopupWindow::parentWindowXChanged);
+        disconnect(d->m_popup->window(), &QWindow::yChanged, this, &QQuickPopupWindow::parentWindowYChanged);
+    }
 }
 
 QQuickPopup *QQuickPopupWindow::popup() const
