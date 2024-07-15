@@ -128,6 +128,7 @@ private slots:
     void popupTypeChangeFromItemToWindow();
     void resetHoveredStateForItemsWithinPopup();
     void noInfiniteRecursionOnParentWindowDestruction();
+    void popupWindowDestructedBeforeQQuickPopup();
 
 private:
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -2907,12 +2908,52 @@ void tst_QQuickPopup::noInfiniteRecursionOnParentWindowDestruction()
     auto *popup = helper.window->contentItem()->findChild<QQuickPopup *>();
     QVERIFY(popup);
     popup->setPopupType(QQuickPopup::PopupType::Window);
-
     // The popup won't actually open, since the parent window is still invisible.
     popup->open();
     QTRY_VERIFY(popup->isOpened());
 
     // Dont crash on destruction
+}
+
+void tst_QQuickPopup::popupWindowDestructedBeforeQQuickPopup()
+{
+    if (!popupWindowsSupported)
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
+    QQuickControlsApplicationHelper helper(this, "simplepopup.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    QVERIFY(window);
+
+    auto *popup = helper.window->contentItem()->findChild<QQuickPopup *>();
+    QVERIFY(popup);
+    auto *popupPrivate = QQuickPopupPrivate::get(popup);
+    popup->setPopupType(QQuickPopup::PopupType::Window);
+
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+    QTRY_VERIFY(popupPrivate->popupWindow);
+
+    QSignalSpy popupDestroyedSpy(popup, SIGNAL(destroyed()));
+    QVERIFY(popupDestroyedSpy.isValid());
+
+    QSignalSpy popupWindowDestroyedSpy(popupPrivate->popupWindow, SIGNAL(destroyed()));
+    QVERIFY(popupWindowDestroyedSpy.isValid());
+
+    popup->deleteLater();
+    QTRY_COMPARE(popupDestroyedSpy.size(), 1);
+    // Check that the popup window has been destroyed after the popup has been destroyed
+    QCOMPARE(popupWindowDestroyedSpy.size(), 1);
+
+    // Check geometry changes don't cause a crash from hanging connections
+    window->setX(10);
+    window->hide();
+
+    // Doesn't crash on destruction
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
