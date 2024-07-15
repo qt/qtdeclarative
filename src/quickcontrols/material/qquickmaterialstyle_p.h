@@ -350,6 +350,7 @@ private:
     bool m_hasForeground = false;
     bool m_hasBackground = false;
     // The actual values for this item, whether explicit, inherited or globally set.
+    bool m_systemTheme = false;
     Theme m_theme = Light;
     uint m_primary = 0;
     uint m_accent = 0;

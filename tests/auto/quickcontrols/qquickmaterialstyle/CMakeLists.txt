@@ -26,6 +26,9 @@ qt_internal_add_test(tst_qquickmaterialstyle
         tst_qquickmaterialstyle.cpp
     LIBRARIES
         Qt::Gui
+        Qt::GuiPrivate
+        Qt::QuickControls2MaterialPrivate
+        Qt::QmlPrivate
     TESTDATA ${test_data}
 )
 

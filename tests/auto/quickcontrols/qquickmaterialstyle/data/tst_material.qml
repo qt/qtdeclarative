@@ -9,6 +9,8 @@ import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Controls.Material.impl as MaterialImpl
 
+import Qt.test
+
 TestCase {
     id: testCase
     width: 200
@@ -1364,5 +1366,29 @@ TestCase {
 
         let headerItem = window.listView.headerItem
         compare(headerItem.Material.theme, Material.Dark)
+    }
+
+    Component {
+        id: systemThemeComponent
+
+        ApplicationWindow {
+            width: 200
+            height: 200
+            visible: true
+            Material.theme: Material.System
+        }
+    }
+
+    function test_systemTheme() {
+        let window = createTemporaryObject(systemThemeComponent, testCase)
+        verify(window)
+
+        const toggleTheme = (theme) => (theme === Material.Dark) ? Material.Light : Material.Dark
+
+        TestHelper.platformTheme = toggleTheme(TestHelper.platformTheme)
+        tryCompare(window.Material, "theme", TestHelper.platformTheme)
+
+        TestHelper.platformTheme = toggleTheme(TestHelper.platformTheme)
+        tryCompare(window.Material, "theme", TestHelper.platformTheme)
     }
 }
