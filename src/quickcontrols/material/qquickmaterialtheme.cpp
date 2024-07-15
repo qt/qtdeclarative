@@ -8,8 +8,47 @@
 #include <QtGui/qfont.h>
 #include <QtGui/qfontdatabase.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
-
+#include <QtCore/qmutex.h>
 QT_BEGIN_NAMESPACE
+
+struct QQuickMaterialThemePrivate
+{
+    static inline void addSystemStyle(QPointer<QQuickMaterialStyle> style);
+    static inline void removeSystemStyle(QPointer<QQuickMaterialStyle> style);
+    static inline void updateSystemStyles();
+
+    static inline std::vector<QPointer<QQuickMaterialStyle>> systemStyles = {};
+    static inline QMutex mutex;
+};
+
+void QQuickMaterialThemePrivate::addSystemStyle(QPointer<QQuickMaterialStyle> style)
+{
+    QMutexLocker locker{&mutex};
+    auto it = std::find(systemStyles.begin(), systemStyles.end(), style);
+    if (it == systemStyles.end())
+        systemStyles.push_back(style);
+}
+
+void QQuickMaterialThemePrivate::removeSystemStyle(QPointer<QQuickMaterialStyle> style)
+{
+    QMutexLocker locker{&mutex};
+    auto it = std::find(systemStyles.begin(), systemStyles.end(), style);
+    if (it != systemStyles.end())
+        systemStyles.erase(it);
+}
+
+void QQuickMaterialThemePrivate::updateSystemStyles()
+{
+    QMutexLocker locker{&mutex};
+    for (auto it = systemStyles.begin(); it != systemStyles.end(); ) {
+        if (it->isNull()) {
+            it = systemStyles.erase(it);
+        } else {
+            (*it)->setTheme(QQuickMaterialStyle::System);
+            ++it;
+        }
+    }
+}
 
 void QQuickMaterialTheme::initialize(QQuickTheme *theme)
 {
@@ -72,6 +111,21 @@ void QQuickMaterialTheme::initialize(QQuickTheme *theme)
     theme->setFont(QQuickTheme::TextArea, editorFont);
     theme->setFont(QQuickTheme::TextField, editorFont);
     theme->setFont(QQuickTheme::SpinBox, editorFont);
+}
+
+void QQuickMaterialTheme::registerSystemStyle(QQuickMaterialStyle *style)
+{
+    QQuickMaterialThemePrivate::addSystemStyle(QPointer{style});
+}
+
+void QQuickMaterialTheme::unregisterSystemStyle(QQuickMaterialStyle *style)
+{
+    QQuickMaterialThemePrivate::removeSystemStyle(QPointer{style});
+}
+
+void QQuickMaterialTheme::updateTheme()
+{
+    QQuickMaterialThemePrivate::updateSystemStyles();
 }
 
 QT_END_NAMESPACE
