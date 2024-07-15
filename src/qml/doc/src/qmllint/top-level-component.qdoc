@@ -5,22 +5,32 @@
 \page qmllint-warnings-and-errors-top-level-component.html
 \ingroup qmllint-warnings-and-errors
 
-\title top-level-component
-\brief BRIEF
+\title Top level component
+\brief Root QML type is a component
 
-\section1 top-level-component
+\section1 QML top level type can't be \e Component
 
 \section2 What happened?
-TODO
+You used the \l{qml-qtqml-component.html}{Component} type as top level type for your
+QML file.
 
 \section2 Why is this bad?
-TODO
+Your QML file already defines a component by itself. Using a \c Component type as
+a top level type will wrap your component into another unnecessary component.
 
 \section2 Example
 \qml
+import QtQuick
+
+Component {
+    Item { ... }
+}
 \endqml
-You can fix this warning by TODO
+To fix this warning, remove the extra Component wrapping:
 \qml
+import QtQuick
+
+Item { ... }
 \endqml
 */
 
