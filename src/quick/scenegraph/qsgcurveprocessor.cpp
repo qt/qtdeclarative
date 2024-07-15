@@ -94,7 +94,7 @@ static void fixWinding(TrianglePoints &p)
 // Return true if the determinant is negative, i.e. if the winding order is opposite of the triangle p1,p2,p3.
 // This means that p is strictly on the other side of p1-p2 relative to p3 [where p1,p2,p3 is a triangle with
 // a positive determinant].
-bool checkEdge(QVector2D &p1, QVector2D &p2, QVector2D &p, float epsilon)
+bool checkEdge(const QVector2D &p1, const QVector2D &p2, const QVector2D &p, float epsilon)
 {
     return determinant(p1, p2, p) <= epsilon;
 }
@@ -163,8 +163,8 @@ bool checkLineTriangleOverlap(TrianglePoints &triangle, LinePoints &line, float 
 {
     // See if all vertices of the triangle are on the same side of the line
     bool s1 = determinant(line[0], line[1], triangle[0]) < 0;
-    auto s2 = determinant(line[0], line[1], triangle[1]) < 0;
-    auto s3 = determinant(line[0], line[1], triangle[2]) < 0;
+    bool s2 = determinant(line[0], line[1], triangle[1]) < 0;
+    bool s3 = determinant(line[0], line[1], triangle[2]) < 0;
     // If all determinants have the same sign, then there is no overlap
     if (s1 == s2 && s2 == s3) {
         return false;

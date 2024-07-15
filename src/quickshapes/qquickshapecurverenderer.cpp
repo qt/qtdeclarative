@@ -518,8 +518,6 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
     node->reserve(approxDataCount);
 
     NodeList ret;
-    QPainterPath internalHull;
-    internalHull.setFillRule(path.fillRule());
 
     bool visualizeDebug = debugVisualization() & DebugCurves;
     const float dbg = visualizeDebug  ? 0.5f : 0.0f;
@@ -618,7 +616,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStr
 
     static bool disableExtraTriangles = qEnvironmentVariableIntValue("QT_QUICKSHAPES_WIP_DISABLE_EXTRA_STROKE_TRIANGLES");
 
-    auto addStrokeTriangle = [&](const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, bool){
+    auto addStrokeTriangle = [&](const QVector2D &p1, const QVector2D &p2, const QVector2D &p3){
         if (p1 == p2 || p2 == p3) {
             return;
         }
@@ -654,8 +652,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStr
         for (int j = 0; j < 3; ++j) {
             p[j] = QVector2D(verts[(i+j)*2], verts[(i+j)*2 + 1]);
         }
-        bool isOdd = i % 2;
-        addStrokeTriangle(p[0], p[1], p[2], isOdd);
+        addStrokeTriangle(p[0], p[1], p[2]);
     }
 
     QVector<quint32> indices = node->uncookedIndexes();
@@ -751,7 +748,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addCurveStrokeNodes
     auto indexCopy = node->uncookedIndexes(); // uncookedIndexes get delete on cooking
 
     node->setColor(color);
-    node->setStrokeWidth(pathData.pen.widthF());
+    node->setStrokeWidth(penWidth);
     node->cookGeometry();
     ret.append(node);
 
