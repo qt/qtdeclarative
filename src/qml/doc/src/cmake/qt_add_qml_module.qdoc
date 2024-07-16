@@ -44,6 +44,7 @@ qt_add_qml_module(
     [NO_GENERATE_PLUGIN_SOURCE]
     [NO_GENERATE_QMLTYPES]
     [NO_GENERATE_QMLDIR]
+    [NO_GENERATE_EXTRA_QMLDIRS]
     [NO_LINT]
     [NO_CACHEGEN]
     [NO_RESOURCE_TARGET_PATH]
@@ -445,6 +446,12 @@ generated \l{Module Definition qmldir Files}{qmldir} file by default.
 \c NO_GENERATE_QMLDIR can be given to disable the automatic generation of the
 \c qmldir file. This should normally be avoided, but for cases where the
 project needs to provide its own \c qmldir file, this option can be used.
+Since Qt 6.8, when \l{QTP0004} is enabled,  \c qt_add_qml_module will
+create additional \c qmldir files for each subdirectory in the QML module,
+which ensure that each QML file will import its own module via the implicit
+import. This behavior can be turned off for a QML module by passing the
+\c NO_GENERATE_EXTRA_QMLDIRS flag to it.
+The \c NO_GENERATE_QMLDIR implies \c NO_GENERATE_EXTRA_QMLDIRS.
 
 \note See \l{qt6_target_qml_sources}{qt_target_qml_sources()} for further details on
 how to add qmlfiles after \c qt_add_qml_module() was called.
