@@ -227,6 +227,7 @@ function(qt6_add_qml_module target)
         NO_GENERATE_PLUGIN_SOURCE
         NO_GENERATE_QMLTYPES
         NO_GENERATE_QMLDIR
+        NO_GENERATE_EXTRA_QMLDIRS
         NO_LINT
         NO_CACHEGEN
         NO_RESOURCE_TARGET_PATH
@@ -728,6 +729,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         QT_QML_MODULE_NO_LINT "${arg_NO_LINT}"
         QT_QML_MODULE_NO_CACHEGEN "${arg_NO_CACHEGEN}"
         QT_QML_MODULE_NO_GENERATE_QMLDIR "${arg_NO_GENERATE_QMLDIR}"
+        QT_QML_MODULE_NO_GENERATE_EXTRA_QMLDIRS "${arg_NO_GENERATE_EXTRA_QMLDIRS}"
         QT_QML_MODULE_NO_PLUGIN "${arg_NO_PLUGIN}"
         QT_QML_MODULE_NO_PLUGIN_OPTIONAL "${arg_NO_PLUGIN_OPTIONAL}"
         QT_QML_MODULE_NO_IMPORT_SCAN "${arg_NO_IMPORT_SCAN}"
@@ -2687,6 +2689,7 @@ function(qt6_target_qml_sources target)
 
     get_target_property(no_cachegen            ${target} QT_QML_MODULE_NO_CACHEGEN)
     get_target_property(no_qmldir              ${target} QT_QML_MODULE_NO_GENERATE_QMLDIR)
+    get_target_property(no_extra_qmldirs       ${target} QT_QML_MODULE_NO_GENERATE_EXTRA_QMLDIRS)
     get_target_property(resource_prefix        ${target} QT_QML_MODULE_RESOURCE_PREFIX)
     get_target_property(qml_module_version     ${target} QT_QML_MODULE_VERSION)
     get_target_property(past_major_versions    ${target} QT_QML_MODULE_PAST_MAJOR_VERSIONS)
@@ -3219,7 +3222,8 @@ function(qt6_target_qml_sources target)
 Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0004.html for policy details."
         )
         qt6_policy(GET QTP0004 generate_extra_qmldirs_policy)
-        if ("${generate_extra_qmldirs_policy}" STREQUAL "NEW")
+        if ("${generate_extra_qmldirs_policy}" STREQUAL "NEW"
+            AND NOT no_qmldir AND NOT no_extra_qmldirs)
             foreach(extra_qmldir IN LISTS extra_qmldirs)
                 set(__qt_qmldir_content "prefer :${arg_PREFIX}")
                 configure_file(
