@@ -28,6 +28,9 @@ class QQuickPopupWindowPrivate : public QQuickWindowQmlImplPrivate
 public:
     QPointer<QQuickItem> m_popupItem;
     QPointer<QQuickPopup> m_popup;
+    bool m_inHideEvent = false;
+
+    void setVisible(bool visible) override;
 
     void forwardEventToParentMenuOrMenuBar(QEvent *event);
 };
@@ -81,6 +84,8 @@ void QQuickPopupWindow::hideEvent(QHideEvent *e)
 {
     Q_D(QQuickPopupWindow);
     QQuickWindow::hideEvent(e);
+    // Avoid potential infinite recursion, between QWindowPrivate::setVisible(false) and this function.
+    QScopedValueRollback<bool>inHideEventRollback(d->m_inHideEvent, true);
     if (QQuickPopup *popup = d->m_popup)
         popup->setVisible(false);
 }
@@ -102,6 +107,14 @@ void QQuickPopupWindow::resizeEvent(QResizeEvent *e)
     const QMarginsF windowInsets = QQuickPopupPrivate::get(d->m_popup)->windowInsets();
     d->m_popupItem->setWidth(e->size().width() - windowInsets.left() - windowInsets.right());
     d->m_popupItem->setHeight(e->size().height() - windowInsets.top() - windowInsets.bottom());
+}
+
+void QQuickPopupWindowPrivate::setVisible(bool visible)
+{
+    if (m_inHideEvent)
+        return;
+
+    QQuickWindowQmlImplPrivate::setVisible(visible);
 }
 
 /*! \internal
