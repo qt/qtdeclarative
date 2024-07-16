@@ -1430,6 +1430,8 @@ TestCase {
         // Tests that Popup ignores mouse events that it doesn't handle itself
         // so that they propagate correctly.
         let window = createTemporaryObject(mousePropagationComponent, testCase)
+        if (window.popup.popupType === Popup.Window)
+            skip("It is not necessary to test mouse propagation for Popup Window types.")
         window.requestActivate()
         tryCompare(window, "active", true)
 
