@@ -307,6 +307,8 @@ TestCase {
     function test_negativeMargins() {
         let control = createTemporaryObject(popupControl, testCase, {implicitWidth: testCase.width, implicitHeight: testCase.height})
         verify(control)
+        if (control.popupType === Popup.Window)
+            skip("Margins are not supported for Popup Window types.")
 
         control.open()
         verify(control.visible)
@@ -329,6 +331,8 @@ TestCase {
     function test_margins() {
         let control = createTemporaryObject(popupTemplate, testCase, {width: 100, height: 100})
         verify(control)
+        if (control.popupType === Popup.Window)
+            skip("Margins are not supported for Popup Window types.")
 
         control.open()
         verify(control.visible)
