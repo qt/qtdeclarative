@@ -10,7 +10,46 @@
 QT_BEGIN_NAMESPACE
 
 namespace DocumentSymbolUtils {
+using QLspSpecification::SymbolKind;
 using namespace QQmlJS::Dom;
+
+struct TypeSymbolRelation
+{
+    DomType domType;
+    SymbolKind symbolKind;
+};
+
+constexpr static std::array<TypeSymbolRelation, 9> s_TypeSymbolRelations = { {
+        { DomType::Binding, SymbolKind::Variable },
+        { DomType::PropertyDefinition, SymbolKind::Property },
+        { DomType::MethodInfo, SymbolKind::Method }, // BEWARE.
+        // Even though it's just a relation MethodInfo -> Method for the sake of simplicity,
+        // atm SymbolKind for MethodInfo requires special handling:
+        // in cases when MethodInfo is Signal, the SymbolKind will be Event,
+        // this is explicitly handled in the symbolKindOf() helper
+        { DomType::Id, SymbolKind::Key },
+        { DomType::QmlObject, SymbolKind::Object },
+        { DomType::EnumDecl, SymbolKind::Enum },
+        { DomType::EnumItem, SymbolKind::EnumMember },
+        { DomType::QmlComponent, SymbolKind::Module },
+        { DomType::QmlFile, SymbolKind::File },
+} };
+
+[[nodiscard]] constexpr static inline SymbolKind symbolKindFor(const DomType &type)
+{
+    // constexpr std::find_if is only from c++20
+    for (const auto &mapping : s_TypeSymbolRelations) {
+        if (mapping.domType == type) {
+            return mapping.symbolKind;
+        }
+    }
+    return SymbolKind::Null;
+}
+
+constexpr static inline bool documentSymbolNotSupportedFor(const DomType &type)
+{
+    return symbolKindFor(type) == SymbolKind::Null;
+}
 
 /*! \internal
  * Constructs a \c DocumentSymbol for an \c Item with the provided \c children.
@@ -18,32 +57,19 @@ using namespace QQmlJS::Dom;
  */
 SymbolsList buildSymbolOrReturnChildren(const DomItem &item, SymbolsList &&children)
 {
-    switch (item.internalKind()) {
-    // TODO cover all relevant and properly
-    case DomType::QmlFile:
-    case DomType::QmlObject:
-    case DomType::Id:
-    case DomType::PropertyDefinition:
-    case DomType::Binding:
-    case DomType::MethodInfo:
-    case DomType::EnumDecl:
-    case DomType::EnumItem:
-    case DomType::QmlComponent: {
-        // TODO proper implementation
-        QLspSpecification::DocumentSymbol symbol;
-        symbol.name = symbolNameOf(item);
-        std::tie(symbol.range, symbol.selectionRange) = symbolRangesOf(item);
-        if (!children.empty()) {
-            symbol.children.emplace(std::move(children));
-        }
-        return SymbolsList{ std::move(symbol) };
-    }
-    default: {
-        // DocumentSymbol is not supported for this item
-        // hence, just returning children
+    if (documentSymbolNotSupportedFor(item.internalKind())) {
+        // nothing to build, just returning children
         return std::move(children);
     }
+
+    QLspSpecification::DocumentSymbol symbol;
+    symbol.kind = symbolKindOf(item);
+    symbol.name = symbolNameOf(item);
+    std::tie(symbol.range, symbol.selectionRange) = symbolRangesOf(item);
+    if (!children.empty()) {
+        symbol.children.emplace(std::move(children));
     }
+    return SymbolsList{ std::move(symbol) };
 }
 
 std::pair<QLspSpecification::Range, QLspSpecification::Range> symbolRangesOf(const DomItem &item)
@@ -69,6 +95,18 @@ QByteArray symbolNameOf(const DomItem &item)
         return "id";
     }
     return (item.name().isEmpty() ? item.internalKindStr() : item.name()).toUtf8();
+}
+
+QLspSpecification::SymbolKind symbolKindOf(const DomItem &item)
+{
+    if (item.internalKind() == DomType::MethodInfo) {
+        const auto *methodInfoPtr = item.as<MethodInfo>();
+        Q_ASSERT(methodInfoPtr);
+        return methodInfoPtr->methodType == MethodInfo::MethodType::Signal
+                ? SymbolKind::Event
+                : symbolKindFor(DomType::MethodInfo);
+    }
+    return symbolKindFor(item.internalKind());
 }
 
 /*! \internal

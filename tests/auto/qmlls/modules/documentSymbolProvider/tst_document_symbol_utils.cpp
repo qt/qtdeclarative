@@ -5,6 +5,7 @@
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtQmlDom/private/qqmldomelements_p.h>
 #include <QtQmlLS/private/documentsymbolutils_p.h>
+#include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 
 #include "tst_document_symbol_utils.h"
 
@@ -15,13 +16,18 @@ using SymbolsList = QList<DocumentSymbol>;
 QT_BEGIN_NAMESPACE
 // TODO move out somewhere?
 template <typename DomClass>
-static inline DomItem domItem(DomClass &c)
+static inline DomItem domItem(DomClass &&c)
 {
-    if constexpr (domTypeIsDomElement(DomClass::kindValue)) {
+    constexpr auto kind = std::decay<DomClass>::type::kindValue;
+    if constexpr (domTypeIsDomElement(kind)) {
         c.updatePathFromOwner(
                 Path::Root()); // necessary for querying fields, a.k.a. init DomElement
         // For the "DomElement"-s owners are required,
         // hence creating Env as an owner and then call copy on it
+        DomItem domEnv(DomEnvironment::create({}));
+        return domEnv.copy(&c);
+    }
+    if constexpr (kind == DomType::QmlFile) {
         DomItem domEnv(DomEnvironment::create({}));
         return domEnv.copy(&c);
     }
@@ -253,6 +259,36 @@ void tst_document_symbol_utils::symbolNameOf()
         const auto name = DocumentSymbolUtils::symbolNameOf(domItem(cmp));
         QCOMPARE(name, cmpName.toUtf8());
     }
+}
+
+void tst_document_symbol_utils::symbolKindOf()
+{
+    { // Method && signal
+        MethodInfo mInfo;
+        auto kind = DocumentSymbolUtils::symbolKindOf(domItem(mInfo));
+        QCOMPARE(kind, QLspSpecification::SymbolKind::Method);
+
+        mInfo.methodType = MethodInfo::Signal;
+        kind = DocumentSymbolUtils::symbolKindOf(domItem(mInfo));
+        QCOMPARE(kind, QLspSpecification::SymbolKind::Event);
+    }
+
+    QCOMPARE(DocumentSymbolUtils::symbolKindOf(domItem(Binding())),
+             QLspSpecification::SymbolKind::Variable);
+    QCOMPARE(DocumentSymbolUtils::symbolKindOf(domItem(PropertyDefinition())),
+             QLspSpecification::SymbolKind::Property);
+    QCOMPARE(DocumentSymbolUtils::symbolKindOf(domItem(Id())), QLspSpecification::SymbolKind::Key);
+    QCOMPARE(DocumentSymbolUtils::symbolKindOf(domItem(EnumDecl())),
+             QLspSpecification::SymbolKind::Enum);
+    QCOMPARE(DocumentSymbolUtils::symbolKindOf(domItem(EnumItem())),
+             QLspSpecification::SymbolKind::EnumMember);
+    QCOMPARE(DocumentSymbolUtils::symbolKindOf(domItem(QmlObject())),
+             QLspSpecification::SymbolKind::Object);
+    QCOMPARE(DocumentSymbolUtils::symbolKindOf(domItem(QmlComponent())),
+             QLspSpecification::SymbolKind::Module);
+    QCOMPARE(DocumentSymbolUtils::symbolKindOf(domItem(QmlFile())),
+             QLspSpecification::SymbolKind::File);
+    QCOMPARE(DocumentSymbolUtils::symbolKindOf(DomItem()), QLspSpecification::SymbolKind::Null);
 }
 
 QTEST_MAIN(tst_document_symbol_utils)

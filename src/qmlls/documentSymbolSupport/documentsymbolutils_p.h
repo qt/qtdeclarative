@@ -23,6 +23,7 @@ QT_BEGIN_NAMESPACE
 namespace QLspSpecification {
 class DocumentSymbol;
 class Range;
+enum class SymbolKind;
 } // namespace QLspSpecification
 
 namespace DocumentSymbolUtils {
@@ -39,10 +40,11 @@ symbolRangesOf(const DomItem &item);
 
 [[nodiscard]] QByteArray symbolNameOf(const DomItem &item);
 
+[[nodiscard]] QLspSpecification::SymbolKind symbolKindOf(const DomItem &item);
+
 [[nodiscard]] SymbolsList
 assembleSymbolsForQmlFile(const DomItem &item,
                           const AssemblingFunction af = buildSymbolOrReturnChildren);
-
 } // namespace DocumentSymbolUtils
 
 QT_END_NAMESPACE
