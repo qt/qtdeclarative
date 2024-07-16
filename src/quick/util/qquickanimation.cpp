@@ -130,7 +130,8 @@ void QQuickAbstractAnimationPrivate::commence()
     QQmlProperties properties;
 
     auto *newInstance = q->transition(actions, properties, QQuickAbstractAnimation::Forward);
-    Q_ASSERT(newInstance != animationInstance);
+    // transition can return a nullptr; that's the only allowed case were old and new have the same value
+    Q_ASSERT(newInstance != animationInstance || !newInstance);
     delete animationInstance;
     animationInstance = newInstance;
 
