@@ -1379,7 +1379,7 @@ QTypeRevision QQmlImports::updateQmldirContent(
     Q_ASSERT(database);
     Q_ASSERT(errors);
 
-    qDebug(lcQmlImport)
+    qCDebug(lcQmlImport)
             << "updateQmldirContent:" << qPrintable(baseUrl().toString())
             << uri << "to" << qmldirUrl << "as" << prefix;
 

@@ -1496,7 +1496,7 @@ void QQuickPixmapData::addToCache()
             qCDebug(lcImg) << "adding" << key << "to total" << QQuickPixmapCache::instance()->m_cache.size();
             for (auto it = QQuickPixmapCache::instance()->m_cache.keyBegin(); it != QQuickPixmapCache::instance()->m_cache.keyEnd(); ++it) {
                 if (*(it->url) == url && it->frame == frame)
-                    qDebug(lcImg) << "    similar pre-existing:" << *it;
+                    qCDebug(lcImg) << "    similar pre-existing:" << *it;
             }
         }
         QQuickPixmapCache::instance()->m_cache.insert(key, this);
