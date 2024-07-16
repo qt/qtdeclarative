@@ -248,6 +248,7 @@ private slots:
     void unstoredUndefined();
     void unusedAttached();
     void urlString();
+    void valueTypeArgument();
     void valueTypeBehavior();
     void valueTypeLists();
     void valueTypeProperty();
@@ -4954,6 +4955,18 @@ void tst_QmlCppCodegen::urlString()
     QCOMPARE(qvariant_cast<QUrl>(rootObject->property("d")), QUrl(u"http://aaaaaa.com"_s));
     QCOMPARE(qvariant_cast<QUrl>(rootObject->property("e")), QUrl(u"http://a112233.de"_s));
     QCOMPARE(rootObject->objectName(), QLatin1String("http://dddddd.com"));
+}
+
+void tst_QmlCppCodegen::valueTypeArgument()
+{
+    QTest::ignoreMessage(QtMsgType::QtDebugMsg, "Reading l.i=5");
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/ValueTypeArgument.qml"_s));
+
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> rootObject(component.create());
+    QVERIFY(rootObject);
 }
 
 void tst_QmlCppCodegen::valueTypeBehavior()

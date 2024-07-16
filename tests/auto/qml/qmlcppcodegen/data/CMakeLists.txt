@@ -14,6 +14,7 @@ set(cpp_sources
     getOptionalLookup.h
     gadgetwithenum.h
     invisible.h
+    largeValueType.h
     listprovider.h
     multiforeign.h
     objectwithmethod.h
@@ -73,6 +74,7 @@ set(qml_files
     StoreMetaEnum.qml
     Test.qml
     TestCase.qml
+    ValueTypeArgument.qml
     Variable.qml
     WindowDerived.qml
     aliasLookup.qml

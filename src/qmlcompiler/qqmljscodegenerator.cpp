@@ -238,9 +238,19 @@ QT_WARNING_POP
 
             result.code += registerIt->variableName + u" = "_s;
 
-            const QString originalValue
-                    = u"(*static_cast<"_s + castTargetName(originalArgument.storedType())
-                    + u"*>(argv["_s + QString::number(argumentIndex + 1) + u"]))"_s;
+            const auto originalContained = m_typeResolver->originalContainedType(argument);
+            QString originalValue;
+            const bool needsQVariantWrapping = !m_typeResolver->globalType(storedType).isList()
+                    && !originalContained->isReferenceType()
+                    && m_typeResolver->equals(storedType, m_typeResolver->varType())
+                    && !m_typeResolver->equals(originalContained, m_typeResolver->varType());
+            if (needsQVariantWrapping) {
+                originalValue = u"QVariant(%1, argv[%2])"_s.arg(metaTypeFromName(originalContained))
+                                        .arg(QString::number(argumentIndex + 1));
+            } else {
+                originalValue = u"(*static_cast<"_s + castTargetName(originalArgument.storedType())
+                        + u"*>(argv["_s + QString::number(argumentIndex + 1) + u"]))"_s;
+            }
 
             if (needsConversion)
                 result.code += conversion(originalArgument, argument, originalValue);
