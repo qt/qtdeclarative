@@ -5,6 +5,7 @@
 #include "documentsymbolutils_p.h"
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
+#include <QtQmlDom/private/qqmldomoutwriter_p.h>
 #include <stack>
 
 QT_BEGIN_NAMESPACE
@@ -22,11 +23,11 @@ struct TypeSymbolRelation
 constexpr static std::array<TypeSymbolRelation, 9> s_TypeSymbolRelations = { {
         { DomType::Binding, SymbolKind::Variable },
         { DomType::PropertyDefinition, SymbolKind::Property },
-        { DomType::MethodInfo, SymbolKind::Method }, // BEWARE.
-        // Even though it's just a relation MethodInfo -> Method for the sake of simplicity,
-        // atm SymbolKind for MethodInfo requires special handling:
-        // in cases when MethodInfo is Signal, the SymbolKind will be Event,
-        // this is explicitly handled in the symbolKindOf() helper
+        // Although MethodInfo simply relates to Method, SymbolKind requires special handling:
+        // When MethodInfo represents a Signal, its SymbolKind is set to Event.
+        // This distinction is explicitly managed in the symbolKindOf() helper function.
+        // see also QTBUG-128423
+        { DomType::MethodInfo, SymbolKind::Method },
         { DomType::Id, SymbolKind::Key },
         { DomType::QmlObject, SymbolKind::Object },
         { DomType::EnumDecl, SymbolKind::Enum },
@@ -51,6 +52,69 @@ constexpr static inline bool documentSymbolNotSupportedFor(const DomType &type)
     return symbolKindFor(type) == SymbolKind::Null;
 }
 
+static std::optional<QByteArray> tryGetQmlObjectDetail(const DomItem &qmlObj)
+{
+    using namespace QQmlJS::Dom;
+    Q_ASSERT(qmlObj.internalKind() == DomType::QmlObject);
+    bool hasId = !qmlObj.idStr().isEmpty();
+    if (hasId) {
+        return qmlObj.idStr().toUtf8();
+    }
+    const bool isRootObject = qmlObj.component().field(Fields::objects).index(0) == qmlObj;
+    if (isRootObject) {
+        return "root";
+    }
+    return std::nullopt;
+}
+
+static std::optional<QByteArray> tryGetBindingDetail(const DomItem &bItem)
+{
+    const auto *bindingPtr = bItem.as<Binding>();
+    Q_ASSERT(bindingPtr);
+    switch (bindingPtr->valueKind()) {
+    case BindingValueKind::ScriptExpression: {
+        auto exprCode = bindingPtr->scriptExpressionValue()->code();
+        if (exprCode.length() > 25) {
+            return QStringView(exprCode).first(22).toUtf8().append("...");
+        }
+        if (exprCode.endsWith(QStringLiteral(";"))) {
+            exprCode.chop(1);
+        }
+        return exprCode.toUtf8();
+    }
+    default:
+        // Value is QmlObject or QList<QmlObject> => no detail
+        return std::nullopt;
+    }
+}
+
+static inline QByteArray getMethodDetail(const DomItem &mItem)
+{
+    const auto *methodInfoPtr = mItem.as<MethodInfo>();
+    Q_ASSERT(methodInfoPtr);
+    return methodInfoPtr->signature(mItem).toUtf8();
+}
+
+std::optional<QByteArray> tryGetDetailOf(const DomItem &item)
+{
+    switch (item.internalKind()) {
+    case DomType::Id: {
+        const auto name = item.name();
+        return name.isEmpty() ? std::nullopt : std::make_optional(name.toUtf8());
+    }
+    case DomType::EnumItem:
+        return QByteArray::number(item.as<EnumItem>()->value());
+    case DomType::QmlObject:
+        return tryGetQmlObjectDetail(item);
+    case DomType::MethodInfo:
+        return getMethodDetail(item);
+    case DomType::Binding:
+        return tryGetBindingDetail(item);
+    default:
+        return std::nullopt;
+    }
+}
+
 /*! \internal
  * Constructs a \c DocumentSymbol for an \c Item with the provided \c children.
  * Returns \c children if the current \c Item should not be represented via a \c DocumentSymbol.
@@ -65,6 +129,7 @@ SymbolsList buildSymbolOrReturnChildren(const DomItem &item, SymbolsList &&child
     QLspSpecification::DocumentSymbol symbol;
     symbol.kind = symbolKindOf(item);
     symbol.name = symbolNameOf(item);
+    symbol.detail = tryGetDetailOf(item);
     std::tie(symbol.range, symbol.selectionRange) = symbolRangesOf(item);
     if (!children.empty()) {
         symbol.children.emplace(std::move(children));

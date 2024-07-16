@@ -42,6 +42,8 @@ symbolRangesOf(const DomItem &item);
 
 [[nodiscard]] QLspSpecification::SymbolKind symbolKindOf(const DomItem &item);
 
+[[nodiscard]] std::optional<QByteArray> tryGetDetailOf(const DomItem &item);
+
 [[nodiscard]] SymbolsList
 assembleSymbolsForQmlFile(const DomItem &item,
                           const AssemblingFunction af = buildSymbolOrReturnChildren);

@@ -18,20 +18,21 @@ QT_BEGIN_NAMESPACE
 template <typename DomClass>
 static inline DomItem domItem(DomClass &&c)
 {
+    DomItem domEnv(DomEnvironment::create({}));
     constexpr auto kind = std::decay<DomClass>::type::kindValue;
     if constexpr (domTypeIsDomElement(kind)) {
         c.updatePathFromOwner(
-                Path::Root()); // necessary for querying fields, a.k.a. init DomElement
+                Path::Current()); // necessary for querying fields, a.k.a. init DomElement
         // For the "DomElement"-s owners are required,
         // hence creating Env as an owner and then call copy on it
-        DomItem domEnv(DomEnvironment::create({}));
         return domEnv.copy(&c);
     }
     if constexpr (kind == DomType::QmlFile) {
-        DomItem domEnv(DomEnvironment::create({}));
         return domEnv.copy(&c);
     }
-    return DomItem().wrap(QQmlJS::Dom::PathEls::PathComponent(), c);
+    // it's helpful to use wrap on DomEnv instead of just DomItem() to make
+    // .canonicalPath() usable
+    return domEnv.wrap(QQmlJS::Dom::PathEls::PathComponent(), c);
 }
 QT_END_NAMESPACE
 
@@ -289,6 +290,114 @@ void tst_document_symbol_utils::symbolKindOf()
     QCOMPARE(DocumentSymbolUtils::symbolKindOf(domItem(QmlFile())),
              QLspSpecification::SymbolKind::File);
     QCOMPARE(DocumentSymbolUtils::symbolKindOf(DomItem()), QLspSpecification::SymbolKind::Null);
+}
+
+void tst_document_symbol_utils::tryGetDetailOf()
+{
+    { // Id
+        Id id;
+        auto detail = DocumentSymbolUtils::tryGetDetailOf(domItem(id));
+        QVERIFY(!detail.has_value());
+
+        const QString name("name");
+        id.name = name;
+        const auto expectedDetail = name.toUtf8();
+        detail = DocumentSymbolUtils::tryGetDetailOf(domItem(id));
+        QVERIFY(detail.has_value());
+        QCOMPARE(detail, expectedDetail);
+    }
+    { // EnumItem
+        const int value = 4;
+        const auto expectedDetail = QByteArray::number(value);
+        EnumItem enumItem("a", value);
+        const auto detail = DocumentSymbolUtils::tryGetDetailOf(domItem(enumItem));
+        QCOMPARE(detail, expectedDetail);
+    }
+    { // Binding
+        Binding b;
+        auto detail = DocumentSymbolUtils::tryGetDetailOf(domItem(b));
+        QCOMPARE(detail, std::nullopt);
+
+        b.setValue(std::make_unique<BindingValue>());
+        detail = DocumentSymbolUtils::tryGetDetailOf(domItem(b));
+        QCOMPARE(detail, std::nullopt);
+
+        b.setValue(std::make_unique<BindingValue>(QmlObject()));
+        detail = DocumentSymbolUtils::tryGetDetailOf(domItem(b));
+        QCOMPARE(detail, std::nullopt);
+
+        b.setValue(std::make_unique<BindingValue>(QList<QmlObject>()));
+        detail = DocumentSymbolUtils::tryGetDetailOf(domItem(b));
+        QCOMPARE(detail, std::nullopt);
+
+        {
+            const QString bindingValue("4");
+            const auto expectedDetail = bindingValue.toUtf8();
+            const QString bindingExpr = bindingValue + ";";
+            const auto exprPtr = std::make_shared<ScriptExpression>(
+                    bindingExpr, ScriptExpression::ExpressionType::BindingExpression);
+            b.setValue(std::make_unique<BindingValue>(exprPtr));
+            detail = DocumentSymbolUtils::tryGetDetailOf(domItem(b));
+            QCOMPARE(detail, expectedDetail);
+        }
+        {
+            const QString bindingExpr("12345678901234567890123456"); // 26 symbols
+            const auto expectedDetail = QString("1234567890123456789012...").toUtf8();
+            const auto exprPtr = std::make_shared<ScriptExpression>(
+                    bindingExpr, ScriptExpression::ExpressionType::BindingExpression);
+            b.setValue(std::make_unique<BindingValue>(exprPtr));
+            detail = DocumentSymbolUtils::tryGetDetailOf(domItem(b));
+            QCOMPARE(detail, expectedDetail);
+        }
+    }
+    { // MethodInfo
+        { // Method
+            MethodParameter intA;
+            intA.name = "a";
+            intA.typeName = "int";
+            MethodParameter stringB;
+            stringB.name = "b";
+            stringB.typeName = "string";
+            MethodInfo method;
+            method.parameters = { intA, stringB };
+            method.typeName = "bool";
+
+            const auto expectedDetail = QString("(a: int, b: string): bool").toUtf8();
+            const auto detail = DocumentSymbolUtils::tryGetDetailOf(domItem(method));
+            QVERIFY(detail.has_value());
+            QCOMPARE(detail.value(), expectedDetail);
+        }
+        { // Signal
+            MethodParameter intA;
+            intA.name = "a";
+            intA.typeName = "int";
+            MethodInfo method;
+            method.methodType = MethodInfo::MethodType::Signal;
+            method.parameters = { intA };
+
+            const auto expectedDetail = QString("(a: int)").toUtf8();
+            const auto detail = DocumentSymbolUtils::tryGetDetailOf(domItem(method));
+            QVERIFY(detail.has_value());
+            QCOMPARE(detail.value(), expectedDetail);
+        }
+    }
+    { // QmlObject
+        QmlObject obj;
+        auto detail = DocumentSymbolUtils::tryGetDetailOf(domItem(obj));
+        QCOMPARE(detail, std::nullopt);
+
+        const QString objId("objId");
+        obj.setIdStr(objId);
+        detail = DocumentSymbolUtils::tryGetDetailOf(domItem(obj));
+        QCOMPARE(detail, objId.toUtf8());
+
+        /*
+         * Unfortunately because of the way DomItem::component() and filterUp() are working
+         * (using full path from the root(env/top) and non-trivially trimming it)
+         * I can't properly construct a fake hierarchy of components and objects
+         * to verify the "root" case.
+         */
+    }
 }
 
 QTEST_MAIN(tst_document_symbol_utils)

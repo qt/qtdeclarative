@@ -27,4 +27,5 @@ private slots:
     void assembleSymbolsForQmlFile();
     void symbolNameOf();
     void symbolKindOf();
+    void tryGetDetailOf();
 };

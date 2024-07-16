@@ -745,6 +745,10 @@ public:
     TypeAnnotationStyle typeAnnotationStyle = TypeAnnotationStyle::Suffix;
 };
 
+// TODO (QTBUG-128423)
+// Refactor to differentiate between Signals and Methods easily,
+// considering their distinct handling and formatting needs.
+// Explore separating Signal functionality or unifying shared methods.
 class QMLDOM_EXPORT MethodInfo : public AttributeInfo
 {
     Q_GADGET
