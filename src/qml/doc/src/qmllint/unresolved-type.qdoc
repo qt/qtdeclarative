@@ -5,22 +5,134 @@
 \page qmllint-warnings-and-errors-unresolved-type.html
 \ingroup qmllint-warnings-and-errors
 
-\title unresolved-type
-\brief BRIEF
+\title Unresolved type
+\brief A used type was not found.
 
-\section1 unresolved-type
+This category contains following warnings:
+\list
+\li Type is used but is not resolved
+\li Type was not found for the return type of method
+\li Type was not found for the type of parameter in method
+\li Property has incomplete type; You may be missing an import
+\li Type of property not found; This is likely due to a missing dependency entry or a type not being exposed declaratively
+\li Type of property not fully resolved; This is likely due to a missing dependency entry or a type not being exposed declaratively
+\li Type not found in namespace
+\endlist
+
+These warnings usually indicate missing imports or faulty QML modules, depending
+on whether you are using or writing a QML module.
+
+This page is split in two parts:
+\list
+ \li \l{For QML module users}
+ \li \l{For QML module authors}
+\endlist
+
+\section1 For QML module users
 
 \section2 What happened?
-TODO
+You used a type that was not found by QML tooling.
+It usually indicates a potential typo, a missing \l{qtqml-syntax-imports.html}{import},
+or improperly set up import paths.
 
 \section2 Why is this bad?
-TODO
+The type can't be found by QML tooling, and most likely not by the QML engine.
 
-\section2 Example
+\section2 Examples
+\section3 Typo
 \qml
+import QtQuick
+
+Itme { ... }
 \endqml
-You can fix this warning by TODO
+To fix this warning, correct the typo:
 \qml
+import QtQuick
+
+Item { ... }
 \endqml
+
+\section3 Missing import statement
+\qml
+
+Item { ... }
+\endqml
+To fix this warning, import the module that exposes \c Item:
+\qml
+import QtQuick
+
+Item { ... }
+\endqml
+
+If adding the import statement does not help, take a look at your
+\l{import paths}{qtqml-syntax-imports.html#qml-import-path}.
+
+If you get this warning via \QMLLS, your
+\l{qtqml-tooling-qmlls.html#setting-up-the-qml-language-server-in-your-editor}{setup}
+might be incomplete.
+
+\section1 For QML module authors
+
+\section2 What happened?
+The QML tooling can't find a type in your QML module. It can be a type that you expose to QML
+directly or indirectly by using it as a:
+\list
+    \li Base type
+    \li Property type
+    \li Signal, slot, or \c Q_INVOKABLE parameter type
+    \li \c Q_INVOKABLE return type
+\endlist
+
+You might be missing a \l{qtqml-cppintegration-definetypes.html}{declarative type registration}
+if the unresolved type is exposed by your module.
+
+Otherwise, your QML module might have undeclared
+\l{qt-add-qml-module.html#declaring-module-dependencies}{dependencies}
+to the QML module exposing the unresolved type.
+
+\section2 Why is this bad?
+The QML tooling will not work on your types and users of your QML module will get
+spurious warnings that they can't fix.
+
+\section2 Examples
+
+\section3 Missing type registration
+
+Refer to \l{Defining QML Types from C++} on how to register your types
+declaratively. Make sure that all types and enums exposed directly and
+indirectly to QML are registered.
+
+\section3 Missing QML module dependency
+
+Let \c MyItem be a C++ type in your QML module:
+\code
+class MyItem: public QQuickItem {
+    ...
+    QML_ELEMENT
+    ...
+    Q_PROPERTY(SomeType someProperty READ someProperty WRITE setSomeProperty NOTIFY somePropertyChanged)
+    ...
+}
+\endcode
+
+The QML tooling can't resolve \c MyItem correctly if it can't resolve \c QQuickItem
+or \c SomeType first. If \c QQuickItem lives in the \c QtQuick QML module and \c SomeType
+in \c SomeModule, then you need to state these C++ dependencies in the QML module definition.
+
+To achieve that, \l{qt-add-qml-module.html#declaring-module-dependencies}{add the dependencies}
+to the QML module definition. This can be done with \c DEPENDENCIES, for example:
+\code
+qt_add_qml_module(
+    ...
+    DEPENDENCIES
+        QtQuick # for QQuickItem to be resolved
+        SomeModule # for SomeType to be resolved
+)
+\endcode
+
+Refer to
+\l{qt-add-qml-module.html#declaring-module-dependencies}{declaring C++ dependencies between QML modules}
+for more information.
+
 */
 
