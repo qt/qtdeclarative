@@ -125,8 +125,8 @@ private slots:
     void popupWindowFocus();
     void popupTypeChangeFromWindowToItem();
     void popupTypeChangeFromItemToWindow();
-
     void resetHoveredStateForItemsWithinPopup();
+    void noInfiniteRecursionOnParentWindowDestruction();
 
 private:
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -2861,6 +2861,21 @@ void tst_QQuickPopup::resetHoveredStateForItemsWithinPopup()
 
     // Control item hovered shall be disabled once we open the modal popup
     QTRY_VERIFY(!controlItem->isHovered());
+}
+
+void tst_QQuickPopup::noInfiniteRecursionOnParentWindowDestruction()
+{
+    QQuickControlsApplicationHelper helper(this, "simplepopup.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    auto *popup = helper.window->contentItem()->findChild<QQuickPopup *>();
+    QVERIFY(popup);
+    popup->setPopupType(QQuickPopup::PopupType::Window);
+
+    // The popup won't actually open, since the parent window is still invisible.
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+
+    // Dont crash on destruction
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
