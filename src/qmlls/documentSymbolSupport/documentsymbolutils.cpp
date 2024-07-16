@@ -1,6 +1,7 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+#include "qqmllsutils_p.h"
 #include "documentsymbolutils_p.h"
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
@@ -30,7 +31,8 @@ SymbolsList buildSymbolOrReturnChildren(const DomItem &item, SymbolsList &&child
     case DomType::QmlComponent: {
         // TODO proper implementation
         QLspSpecification::DocumentSymbol symbol;
-        symbol.name = (item.name().isEmpty() ? item.internalKindStr() : item.name()).toUtf8();
+        symbol.name = symbolNameOf(item);
+        std::tie(symbol.range, symbol.selectionRange) = symbolRangesOf(item);
         if (!children.empty()) {
             symbol.children.emplace(std::move(children));
         }
@@ -42,6 +44,31 @@ SymbolsList buildSymbolOrReturnChildren(const DomItem &item, SymbolsList &&child
         return std::move(children);
     }
     }
+}
+
+std::pair<QLspSpecification::Range, QLspSpecification::Range> symbolRangesOf(const DomItem &item)
+{
+    const auto &fLoc = FileLocations::treeOf(item)->info();
+    const auto fullRangeSourceloc = fLoc.fullRegion;
+    const auto selectionRangeSourceLoc = fLoc.regions[IdentifierRegion].isValid()
+            ? fLoc.regions[IdentifierRegion]
+            : fullRangeSourceloc;
+
+    auto fItem = item.containingFile();
+    Q_ASSERT(fItem);
+    const QString &code = fItem.ownerAs<QmlFile>()->code();
+    return { QQmlLSUtils::qmlLocationToLspLocation(
+                     QQmlLSUtils::Location::from({}, fullRangeSourceloc, code)),
+             QQmlLSUtils::qmlLocationToLspLocation(
+                     QQmlLSUtils::Location::from({}, selectionRangeSourceLoc, code)) };
+}
+
+QByteArray symbolNameOf(const DomItem &item)
+{
+    if (item.internalKind() == DomType::Id) {
+        return "id";
+    }
+    return (item.name().isEmpty() ? item.internalKindStr() : item.name()).toUtf8();
 }
 
 /*! \internal
@@ -153,7 +180,7 @@ const FieldFilter &DocumentSymbolVisitor::fieldsFilter()
     return ff;
 }
 
-[[nodiscard]] SymbolsList DocumentSymbolVisitor::assembleSymbols()
+SymbolsList DocumentSymbolVisitor::assembleSymbols()
 {
     using namespace QQmlJS::Dom;
     auto openingVisitor = [this](const Path &, const DomItem &, bool) -> bool {
@@ -176,7 +203,7 @@ const FieldFilter &DocumentSymbolVisitor::fieldsFilter()
     return popAndAssembleSymbolsFor(m_refToRootItem);
 }
 
-[[nodiscard]] SymbolsList DocumentSymbolVisitor::popAndAssembleSymbolsFor(const DomItem &item)
+SymbolsList DocumentSymbolVisitor::popAndAssembleSymbolsFor(const DomItem &item)
 {
     Q_ASSERT(!m_stackOfChildrenSymbols.empty());
     auto atEnd = qScopeGuard([this]() { m_stackOfChildrenSymbols.pop(); });
@@ -195,7 +222,6 @@ SymbolsList assembleSymbolsForQmlFile(const DomItem &item, const AssemblingFunct
     DocumentSymbolVisitor visitor(item, af);
     return visitor.assembleSymbols();
 }
-
 } // namespace DocumentSymbolUtils
 
 QT_END_NAMESPACE

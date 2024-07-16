@@ -22,6 +22,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QLspSpecification {
 class DocumentSymbol;
+class Range;
 } // namespace QLspSpecification
 
 namespace DocumentSymbolUtils {
@@ -32,6 +33,11 @@ using AssemblingFunction =
         qxp::function_ref<SymbolsList(const QQmlJS::Dom::DomItem &item, SymbolsList &&) const>;
 
 [[nodiscard]] SymbolsList buildSymbolOrReturnChildren(const DomItem &item, SymbolsList &&children);
+
+[[nodiscard]] std::pair<QLspSpecification::Range, QLspSpecification::Range>
+symbolRangesOf(const DomItem &item);
+
+[[nodiscard]] QByteArray symbolNameOf(const DomItem &item);
 
 [[nodiscard]] SymbolsList
 assembleSymbolsForQmlFile(const DomItem &item,
