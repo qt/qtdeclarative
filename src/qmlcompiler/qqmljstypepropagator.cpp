@@ -526,7 +526,7 @@ bool QQmlJSTypePropagator::isCallingProperty(QQmlJSScope::ConstPtr scope, const 
         }
     } else if (m_typeResolver->equals(property.type(), m_typeResolver->varType())) {
         errorType =
-                u"a variant property. It may or may not be a method. Use a regular function instead."_s;
+                u"a var property. It may or may not be a method. Use a regular function instead."_s;
     } else if (m_typeResolver->equals(property.type(), m_typeResolver->jsValueType())) {
         errorType =
                 u"a QJSValue property. It may or may not be a method. Use a regular Q_INVOKABLE instead."_s;
