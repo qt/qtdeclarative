@@ -131,6 +131,7 @@ if(TARGET Qt::Qml)
         PASS_REGULAR_EXPRESSION "Bad\.js is not an ECMAScript module"
     )
 
+    _qt_internal_test_expect_fail(test_invalid_qml_uri)
 endif()
 
 if(TARGET Qt::Quick)
