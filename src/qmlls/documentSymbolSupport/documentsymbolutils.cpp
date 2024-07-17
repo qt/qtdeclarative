@@ -52,6 +52,26 @@ constexpr static inline bool documentSymbolNotSupportedFor(const DomType &type)
     return symbolKindFor(type) == SymbolKind::Null;
 }
 
+static bool propertyBoundAtDefinitionLine(const DomItem &propertyDefinition)
+{
+    Q_ASSERT(propertyDefinition.internalKind() == DomType::PropertyDefinition);
+    return FileLocations::treeOf(propertyDefinition)->info().regions[ColonTokenRegion].isValid();
+}
+
+static inline bool shouldFilterOut(const DomItem &item)
+{
+    const auto itemType = item.internalKind();
+    if (documentSymbolNotSupportedFor(itemType)) {
+        return true;
+    }
+    if (itemType == DomType::PropertyDefinition && propertyBoundAtDefinitionLine(item)) {
+        // without this check there is a "duplication" of symbols.
+        // one representing PropertyDefinition another one - Binding
+        return true;
+    }
+    return false;
+}
+
 static std::optional<QByteArray> tryGetQmlObjectDetail(const DomItem &qmlObj)
 {
     using namespace QQmlJS::Dom;
@@ -121,7 +141,7 @@ std::optional<QByteArray> tryGetDetailOf(const DomItem &item)
  */
 SymbolsList buildSymbolOrReturnChildren(const DomItem &item, SymbolsList &&children)
 {
-    if (documentSymbolNotSupportedFor(item.internalKind())) {
+    if (shouldFilterOut(item)) {
         // nothing to build, just returning children
         return std::move(children);
     }
