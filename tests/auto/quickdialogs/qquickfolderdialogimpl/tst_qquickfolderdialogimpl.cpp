@@ -150,6 +150,7 @@ void tst_QQuickFolderDialogImpl::cleanupTestCase()
 
 void tst_QQuickFolderDialogImpl::defaults()
 {
+    QTest::failOnWarning(QRegularExpression(".*"));
     QQuickApplicationHelper helper(this, "folderDialog.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 

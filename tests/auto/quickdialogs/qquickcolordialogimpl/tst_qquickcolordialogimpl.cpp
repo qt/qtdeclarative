@@ -46,7 +46,7 @@ public:
     }
 
 private slots:
-    void defaultValues();
+    void defaults();
     void moveColorPickerHandle();
     void alphaChannel_data();
     void alphaChannel();
@@ -102,8 +102,9 @@ private:
 
 tst_QQuickColorDialogImpl::tst_QQuickColorDialogImpl() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 
-void tst_QQuickColorDialogImpl::defaultValues()
+void tst_QQuickColorDialogImpl::defaults()
 {
+    QTest::failOnWarning(QRegularExpression(".*"));
     DialogTestHelper<QQuickColorDialog, QQuickColorDialogImpl> dialogHelper(this, "colorDialog.qml");
     QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
     QVERIFY(dialogHelper.waitForWindowActive());
