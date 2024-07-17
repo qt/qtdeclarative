@@ -610,7 +610,7 @@ void QQmlJSImportVisitor::processDefaultProperties()
                                          "missing an import.")
                                   .arg(defaultPropertyName)
                                   .arg(defaultProp.typeName()),
-                          qmlMissingProperty, it.value().constFirst()->sourceLocation());
+                          qmlUnresolvedType, it.value().constFirst()->sourceLocation());
         };
 
         if (propType.isNull()) {
