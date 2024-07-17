@@ -50,6 +50,7 @@ include(src/qml/Qt6QmlMacros.cmake)
 if(ANDROID)
     include("${CMAKE_CURRENT_LIST_DIR}/src/qml/Qt6AndroidQmlMacros.cmake")
 endif()
+include("${CMAKE_CURRENT_LIST_DIR}/src/qml/Qt6QmlPublicCMakeHelpers.cmake")
 # special case end
 
 if(NOT QT_FEATURE_commandlineparser)

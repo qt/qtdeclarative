@@ -240,6 +240,8 @@ function(qt6_add_qml_module target)
         )
     endif()
 
+    _qt_internal_require_qml_uri_valid("${arg_URI}")
+
     if (NOT arg_VERSION)
         set(arg_VERSION "254.254")
     elseif ("${arg_VERSION}" MATCHES "^([0-9]+\\.[0-9]+)\\.[0-9]+$")
@@ -2178,6 +2180,8 @@ function(qt6_add_qml_plugin target)
             )
         endif()
     endif()
+
+    _qt_internal_require_qml_uri_valid("${arg_URI}")
 
     # TODO: Probably should remove TARGET_PATH as a supported keyword now
     if(NOT arg_TARGET_PATH AND TARGET "${arg_BACKING_TARGET}")
