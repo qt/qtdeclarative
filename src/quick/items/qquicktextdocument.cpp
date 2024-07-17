@@ -309,7 +309,8 @@ void QQuickTextDocumentPrivate::load()
 #if QT_CONFIG(mimetype)
         QMimeType mimeType = QMimeDatabase().mimeTypeForFile(filePath);
         const bool isHtml = mimeType.inherits("text/html"_L1);
-        const bool isMarkdown = mimeType.inherits("text/markdown"_L1);
+        const bool isMarkdown = mimeType.inherits("text/markdown"_L1)
+                             || mimeType.inherits("text/x-web-markdown"_L1);    //Tika database
 #else
         const bool isHtml = filePath.endsWith(".html"_L1, Qt::CaseInsensitive) ||
                 filePath.endsWith(".htm"_L1, Qt::CaseInsensitive);
