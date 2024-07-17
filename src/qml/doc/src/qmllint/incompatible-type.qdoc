@@ -95,6 +95,34 @@ Item {
 
 \endqml
 
+\section1 Construction from string is deprecated; Use structured value type construction instead
+
+\section2 What happened?
+You constructed a \l{qqmlengine.html#QML_STRUCTURED_VALUE}{structured value type} using a string.
+
+\section2 Why is this bad?
+This is deprecated and prone to typos.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    property point p: "5, 6"
+}
+
+\endqml
+To fix this warning, populate the structured value type as explained
+\l{qqmlengine.html#QML_STRUCTURED_VALUE}{here} instead of binding a string to the property:
+\qml
+import QtQuick
+
+Item {
+    property point p: ({ x: 5, y: 6 })
+}
+
+\endqml
+
 \section1 Function without return type annotation returns
 
 \section2 What happened?
