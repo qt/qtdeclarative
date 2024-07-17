@@ -5,22 +5,161 @@
 \page qmllint-warnings-and-errors-incompatible-type.html
 \ingroup qmllint-warnings-and-errors
 
-\title incompatible-type
-\brief BRIEF
+\title Incompatible type
+\brief An object, value, or expression is used on an incompatible type.
 
-\section1 incompatible-type
+\qmllintwarningcategory incompatible-type
+
+\section1 Cannot assign to default property of incompatible type
 
 \section2 What happened?
-TODO
+You assigned an object to a
+\l{qtqml-syntax-objectattributes.html#default-properties}{default property}
+of an incompatible type.
 
 \section2 Why is this bad?
-TODO
+The QML engine will not be able to assign the object at runtime.
 
 \section2 Example
 \qml
+import QtQuick
+
+Item {
+    component MyType: QtObject {
+        default property list<Item> myDefaultProperty
+    }
+
+    MyType {
+        QtObject {} // note: QtObject does not inherit from Item
+    }
+}
+
 \endqml
-You can fix this warning by TODO
+To fix this warning, bind a compatible type to the property or, if
+you are the author of the default property, change the type in
+the definition:
 \qml
+import QtQuick
+
+Item {
+    component MyType: QtObject {
+        default property list<Item> myDefaultProperty
+    }
+
+    MyType {
+        Item {}
+    }
+
+    component AlternativeMyType: QtObject {
+        default property list<QtObject> myDefaultProperty
+    }
+
+    AlternativeMyType {
+        QtObject {} // is ok for AlternativeMyType
+    }
+}
+
 \endqml
+
+\section1 On-binding for property has wrong type
+
+\section2 What happened?
+You used an invalid
+\l{qtqml-cppintegration-definetypes.html#property-modifier-types}{property modifier type}.
+
+\section2 Why is this bad?
+The QML engine will not be able to use the property modifier type at runtime.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    property int xxx
+    Item on xxx { ... }
+}
+
+\endqml
+To fix this warning, remove the \c on or use a valid
+\l{qtqml-cppintegration-definetypes.html#property-modifier-types}{property modifier type}:
+\qml
+import QtQuick
+
+Item {
+    property int xxx
+    Item { ... }
+
+    // Alternative: use a valid property modifier type
+    NumberAnimation on xxx { ... }
+}
+
+\endqml
+
+\section1 Function without return type annotation returns
+
+\section2 What happened?
+You returned a value from a function without return type annotation.
+
+\section2 Why is this bad?
+You annotated the function to not return anything so the function should not return anything.
+The QML tooling will not be able to process the method and the QML engine will ignore the
+returned value in a future Qt version.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    function f(x: int) {
+        ...
+        return x
+    }
+}
+
+\endqml
+To fix this warning, adapt the function signature to the new return type or remove the return value:
+\qml
+import QtQuick
+
+Item {
+    function f(x: int): int {
+        ...
+        return x
+    }
+    function alternativeF(x: int) {
+        ...
+        return
+    }
+}
+
+\endqml
+
+\section1 Cannot assign binding/object/literal
+
+\section2 What happened?
+You bound an object, literal, or expression to a property of an incompatible type.
+
+\section2 Why is this bad?
+The QML engine will not be able to assign the object, literal, or expression at runtime.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    property date xxx: 42
+}
+
+\endqml
+To fix this warning, bind an object, value, or expression of a compatible type:
+\qml
+import QtQuick
+
+Item {
+    property date xxx: new Date()
+}
+
+\endqml
+
 */
 
