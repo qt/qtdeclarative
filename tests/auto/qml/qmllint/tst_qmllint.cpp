@@ -1072,7 +1072,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("callVarProp")
             << QStringLiteral("callVarProp.qml")
             << Result { { Message { QStringLiteral(
-                       "Property \"foo\" is a variant property. It may or may not be a "
+                       "Property \"foo\" is a var property. It may or may not be a "
                        "method. Use a regular function instead.") } } };
     QTest::newRow("callJSValue")
             << QStringLiteral("callJSValueProp.qml")
