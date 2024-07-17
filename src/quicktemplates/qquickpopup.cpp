@@ -666,7 +666,8 @@ QMarginsF QQuickPopupPrivate::windowInsets() const
     // whenever we resize or position the menu, so that the top-left of the popup ends
     // up at the requested position, and not the top-left of the window.
 
-    if (!usePopupWindow() || (q->background() && q->background()->clip())) {
+    const auto *popupItemPrivate = QQuickControlPrivate::get(popupItem);
+    if (!usePopupWindow() || (popupItemPrivate->background.isExecuting() && popupItemPrivate->background->clip())) {
         // Items in the scene are allowed to draw out-of-bounds, so we don't
         // need to do anything if we're not using popup windows. The same is
         // also true for popup windows if the background is clipped.

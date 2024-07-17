@@ -42,6 +42,7 @@ public:
     }
 
 private slots:
+    void defaults();
     void changingWritingSystem();
     void clickAroundInTheFamilyListView();
     void settingUnderlineAndStrikeoutEffects();
@@ -49,7 +50,6 @@ private slots:
     void changeDialogTitle();
     void searchFamily();
     void setCurrentFontFromApi();
-    void sensibleDefaults();
 
 private:
     QQuickAbstractButton *findDialogButton(QQuickDialogButtonBox *box, const QString &buttonText)
@@ -114,6 +114,45 @@ private:
 tst_QQuickFontDialogImpl::tst_QQuickFontDialogImpl()
     : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::DoNotFailOnWarnings)
 {
+}
+
+void tst_QQuickFontDialogImpl::defaults()
+{
+    QTest::failOnWarning(QRegularExpression(".*"));
+    CREATE_DIALOG_TEST_HELPER
+
+    // Open the dialog.
+    QVERIFY(dialogHelper.openDialog());
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
+    QQuickListView *fontFamilyListView = dialogHelper.quickDialog->findChild<QQuickListView *>("familyListView");
+    QVERIFY(fontFamilyListView);
+    QQuickListView *fontStyleListView = dialogHelper.quickDialog->findChild<QQuickListView *>("styleListView");
+    QVERIFY(fontStyleListView);
+    QQuickListView *fontSizeListView = dialogHelper.quickDialog->findChild<QQuickListView *>("sizeListView");
+    QVERIFY(fontSizeListView);
+    QQuickTextField *fontFamilyTextField = dialogHelper.quickDialog->findChild<QQuickTextField *>("familyEdit");
+    QVERIFY(fontFamilyTextField);
+    QQuickTextField *fontStyleTextField = dialogHelper.quickDialog->findChild<QQuickTextField *>("styleEdit");
+    QVERIFY(fontStyleTextField);
+
+    // The indexes should initially be 0.
+    QCOMPARE(fontFamilyListView->currentIndex(), 0);
+    QCOMPARE(fontStyleListView->currentIndex(), 0);
+    QCOMPARE(fontSizeListView->currentIndex(), 0);
+
+    // Setting the family to an empty model
+    fontFamilyListView->setModel(QStringList());
+
+    // The listviews for font family and style should now have an empty model with indexes set to -1
+    QVERIFY(fontFamilyListView->model().toStringList().isEmpty());
+    QVERIFY(fontStyleListView->model().toStringList().isEmpty());
+    QCOMPARE(fontFamilyListView->currentIndex(), -1);
+    QCOMPARE(fontStyleListView->currentIndex(), -1);
+    QVERIFY(fontFamilyTextField->text().isEmpty());
+    QVERIFY(fontStyleTextField->text().isEmpty());
+
+    CLOSE_DIALOG("Ok");
 }
 
 void tst_QQuickFontDialogImpl::changingWritingSystem()
@@ -550,49 +589,6 @@ void tst_QQuickFontDialogImpl::setCurrentFontFromApi()
             QCOMPARE(selectedFontSpy.size(), ++spyCounter);
         }
     }
-
-    CLOSE_DIALOG("Ok");
-}
-
-void tst_QQuickFontDialogImpl::sensibleDefaults()
-{
-    CREATE_DIALOG_TEST_HELPER
-
-    // Open the dialog.
-    QVERIFY(dialogHelper.openDialog());
-    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
-
-    QQuickListView *fontFamilyListView =
-            dialogHelper.quickDialog->findChild<QQuickListView *>("familyListView");
-    QVERIFY(fontFamilyListView);
-    QQuickListView *fontStyleListView =
-            dialogHelper.quickDialog->findChild<QQuickListView *>("styleListView");
-    QVERIFY(fontStyleListView);
-    QQuickListView *fontSizeListView =
-            dialogHelper.quickDialog->findChild<QQuickListView *>("sizeListView");
-    QVERIFY(fontSizeListView);
-    QQuickTextField *fontFamilyTextField =
-            dialogHelper.quickDialog->findChild<QQuickTextField *>("familyEdit");
-    QVERIFY(fontFamilyTextField);
-    QQuickTextField *fontStyleTextField =
-            dialogHelper.quickDialog->findChild<QQuickTextField *>("styleEdit");
-    QVERIFY(fontStyleTextField);
-
-    // The indexes should initially be 0.
-    QCOMPARE(fontFamilyListView->currentIndex(), 0);
-    QCOMPARE(fontStyleListView->currentIndex(), 0);
-    QCOMPARE(fontSizeListView->currentIndex(), 0);
-
-    // Setting the family to an empty model
-    fontFamilyListView->setModel(QStringList());
-
-    // The listviews for font family and style should now have an empty model with indexes set to -1
-    QVERIFY(fontFamilyListView->model().toStringList().isEmpty());
-    QVERIFY(fontStyleListView->model().toStringList().isEmpty());
-    QCOMPARE(fontFamilyListView->currentIndex(), -1);
-    QCOMPARE(fontStyleListView->currentIndex(), -1);
-    QVERIFY(fontFamilyTextField->text().isEmpty());
-    QVERIFY(fontStyleTextField->text().isEmpty());
 
     CLOSE_DIALOG("Ok");
 }

@@ -61,6 +61,7 @@ void tst_QQuickMessageDialogImpl::changeText_data()
 
 void tst_QQuickMessageDialogImpl::changeText()
 {
+    QTest::failOnWarning(QRegularExpression(".*"));
     QFETCH(QString, testString1);
     QFETCH(QString, testString2);
     DialogTestHelper<QQuickMessageDialog, QQuickMessageDialogImpl> dialogHelper(
