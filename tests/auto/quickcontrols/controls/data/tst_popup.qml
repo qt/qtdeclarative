@@ -1556,8 +1556,15 @@ TestCase {
         tryCompare(control, "opened", true)
 
         // Verify popup position
-        compare(control.x, 0)
-        compare(control.y, control.parent.height / 2 - control.height / 2)
+        if (control.popupType === Popup.Window) {
+            // popup windows don't have edge constraints.
+            tryVerify(function(){ return control.x < 0 })
+            compare(control.y, Math.round(control.parent.height / 2 - control.height / 2))
+        } else {
+            // popup items have edge constraints.
+            compare(control.x, 0)
+            compare(control.y, control.parent.height / 2 - control.height / 2)
+        }
         control.close()
     }
 
