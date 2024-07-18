@@ -17,60 +17,79 @@ using namespace QQmlJS::AST;
 using namespace QQmlJS::Dom;
 using namespace QLspSpecification;
 
-static int tokenTypeFromRegion(QQmlJS::Dom::FileLocationRegion region)
+static int fromQmlHighlightingKindToLspTokenType(QmlHighlightKind highlightKind)
+
 {
-    switch (region) {
-    case AsTokenRegion:
-    case BreakKeywordRegion:
-    case DoKeywordRegion:
-    case CaseKeywordRegion:
-    case CatchKeywordRegion:
-    case ComponentKeywordRegion:
-    case ContinueKeywordRegion:
-    case ElseKeywordRegion:
-    case EnumKeywordRegion:
-    case ForKeywordRegion:
-    case FinallyKeywordRegion:
-    case FunctionKeywordRegion:
-    case ImportTokenRegion:
-    case OnTokenRegion:
-    case PragmaKeywordRegion:
-    case ReturnKeywordRegion:
-    case SignalKeywordRegion:
-    case ThrowKeywordRegion:
-    case TryKeywordRegion:
-    case WhileKeywordRegion:
-    case PropertyKeywordRegion:
-    case InOfTokenRegion:
-    case DefaultKeywordRegion:
-    case ReadonlyKeywordRegion:
-    case RequiredKeywordRegion:
-    case IfKeywordRegion:
-    case SwitchKeywordRegion:
-    case YieldKeywordRegion:
+    switch (highlightKind) {
+    case QmlHighlightKind::Comment:
+        return int(SemanticTokenTypes::Comment);
+    case QmlHighlightKind::QmlKeyword:
         return int(SemanticTokenTypes::Keyword);
-    case QuestionMarkTokenRegion:
-    case EllipsisTokenRegion:
-    case OperatorTokenRegion:
-        return int(SemanticTokenTypes::Operator);
-    case QQmlJS::Dom::TypeIdentifierRegion:
+    case QmlHighlightKind::QmlType:
         return int(SemanticTokenTypes::Type);
-    case PragmaValuesRegion:
-    case IdentifierRegion:
-    case IdNameRegion:
-        return int(SemanticTokenTypes::Variable);
-    case ImportUriRegion:
+    case QmlHighlightKind::QmlImportId:
+    case QmlHighlightKind::QmlNamespace:
         return int(SemanticTokenTypes::Namespace);
-    case IdTokenRegion:
-    case OnTargetRegion:
+    case QmlHighlightKind::QmlLocalId:
+    case QmlHighlightKind::QmlExternalId:
+        return int(SemanticTokenTypes::Variable);
+    case QmlHighlightKind::QmlProperty:
+    case QmlHighlightKind::QmlScopeObjectProperty:
+    case QmlHighlightKind::QmlRootObjectProperty:
+    case QmlHighlightKind::QmlExternalObjectProperty:
         return int(SemanticTokenTypes::Property);
-    case VersionRegion:
-    case EnumValueRegion:
+    case QmlHighlightKind::QmlMethod:
+        return int(SemanticTokenTypes::Method);
+    case QmlHighlightKind::QmlMethodParameter:
+        return int(SemanticTokenTypes::Parameter);
+    case QmlHighlightKind::QmlSignal:
+        return int(SemanticTokenTypes::Method);
+    case QmlHighlightKind::QmlSignalHandler:
+        return int(SemanticTokenTypes::Method);
+    case QmlHighlightKind::QmlEnumName:
+        return int(SemanticTokenTypes::Enum);
+    case QmlHighlightKind::QmlEnumMember:
+        return int(SemanticTokenTypes::EnumMember);
+    case QmlHighlightKind::QmlPragmaName:
+    case QmlHighlightKind::QmlPragmaValue:
+        return int(SemanticTokenTypes::Variable);
+    case QmlHighlightKind::JsImport:
+    case QmlHighlightKind::JsGlobalVar:
+    case QmlHighlightKind::JsScopeVar:
+        return int(SemanticTokenTypes::Variable);
+    case QmlHighlightKind::JsLabel:
+        return int(SemanticTokenTypes::Variable);
+    case QmlHighlightKind::Number:
         return int(SemanticTokenTypes::Number);
+    case QmlHighlightKind::String:
+        return int(SemanticTokenTypes::String);
+    case QmlHighlightKind::Operator:
+        return int(SemanticTokenTypes::Operator);
+    case QmlHighlightKind::Unknown:
     default:
         return int(SemanticTokenTypes::Variable);
     }
-    Q_UNREACHABLE_RETURN({});
+}
+
+static int fromQmlModifierKindToLspTokenType(QmlHighlightModifiers highlightModifier)
+{
+    using namespace QLspSpecification;
+    using namespace HighlightingUtils;
+    int modifier = 0;
+
+    if (highlightModifier.testFlag(QmlHighlightModifier::QmlPropertyDefinition))
+        addModifier(SemanticTokenModifiers::Definition, &modifier);
+
+    if (highlightModifier.testFlag(QmlHighlightModifier::QmlDefaultProperty))
+        addModifier(SemanticTokenModifiers::DefaultLibrary, &modifier);
+
+    if (highlightModifier.testFlag(QmlHighlightModifier::QmlRequiredProperty))
+        addModifier(SemanticTokenModifiers::Abstract, &modifier);
+
+    if (highlightModifier.testFlag(QmlHighlightModifier::QmlReadonlyProperty))
+        addModifier(SemanticTokenModifiers::Readonly, &modifier);
+
+    return modifier;
 }
 
 static FieldFilter highlightingFilter()
@@ -167,7 +186,7 @@ void HighlightingVisitor::highlightComment(const DomItem &item)
     const auto locs = HighlightingUtils::sourceLocationsFromMultiLineToken(
             comment->info().comment(), comment->info().sourceLocation());
     for (const auto &loc : locs)
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Comment));
+        m_highlights.addHighlight(loc, QmlHighlightKind::Comment);
 }
 
 void HighlightingVisitor::highlightImport(const DomItem &item)
@@ -178,16 +197,16 @@ void HighlightingVisitor::highlightImport(const DomItem &item)
     const auto regions = fLocs->info().regions;
     const auto import = item.as<Import>();
     Q_ASSERT(import);
-    m_highlights.addHighlight(regions, ImportTokenRegion);
+    m_highlights.addHighlight(regions[ImportTokenRegion], QmlHighlightKind::QmlKeyword);
     if (import->uri.isModule())
-        m_highlights.addHighlight(regions[ImportUriRegion], int(SemanticTokenTypes::Namespace));
+        m_highlights.addHighlight(regions[ImportUriRegion], QmlHighlightKind::QmlImportId);
     else
-        m_highlights.addHighlight(regions[ImportUriRegion], int(SemanticTokenTypes::String));
+        m_highlights.addHighlight(regions[ImportUriRegion], QmlHighlightKind::String);
     if (regions.contains(VersionRegion))
-        m_highlights.addHighlight(regions, VersionRegion);
+        m_highlights.addHighlight(regions[VersionRegion], QmlHighlightKind::Number);
     if (regions.contains(AsTokenRegion)) {
-        m_highlights.addHighlight(regions, AsTokenRegion);
-        m_highlights.addHighlight(regions[IdNameRegion], int(SemanticTokenTypes::Namespace));
+        m_highlights.addHighlight(regions[AsTokenRegion], QmlHighlightKind::QmlKeyword);
+        m_highlights.addHighlight(regions[IdNameRegion], QmlHighlightKind::QmlNamespace);
     }
 }
 
@@ -206,8 +225,8 @@ void HighlightingVisitor::highlightBinding(const DomItem &item)
         return;
 
     if (binding->bindingType() != BindingType::Normal) {
-        m_highlights.addHighlight(regions, OnTokenRegion);
-        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Property));
+        m_highlights.addHighlight(regions[OnTokenRegion], QmlHighlightKind::QmlKeyword);
+        m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlProperty);
         return;
     }
 
@@ -220,13 +239,13 @@ void HighlightingVisitor::highlightPragma(const DomItem &item)
     if (!fLocs)
         return;
     const auto regions = fLocs->info().regions;
-    m_highlights.addHighlight(regions, PragmaKeywordRegion);
-    m_highlights.addHighlight(regions, IdentifierRegion);
+    m_highlights.addHighlight(regions[PragmaKeywordRegion], QmlHighlightKind::QmlKeyword);
+    m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlPragmaName );
     const auto pragma = item.as<Pragma>();
     for (auto i = 0; i < pragma->values.size(); ++i) {
         DomItem value = item.field(Fields::values).index(i);
         const auto valueRegions = FileLocations::treeOf(value)->info().regions;
-        m_highlights.addHighlight(valueRegions, PragmaValuesRegion);
+        m_highlights.addHighlight(valueRegions[PragmaValuesRegion], QmlHighlightKind::QmlPragmaValue);
     }
     return;
 }
@@ -237,8 +256,8 @@ void HighlightingVisitor::highlightEnumDecl(const DomItem &item)
     if (!fLocs)
         return;
     const auto regions = fLocs->info().regions;
-    m_highlights.addHighlight(regions, EnumKeywordRegion);
-    m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Enum));
+    m_highlights.addHighlight(regions[EnumKeywordRegion], QmlHighlightKind::QmlKeyword);
+    m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlEnumName);
 }
 
 void HighlightingVisitor::highlightEnumItem(const DomItem &item)
@@ -247,9 +266,9 @@ void HighlightingVisitor::highlightEnumItem(const DomItem &item)
     if (!fLocs)
         return;
     const auto regions = fLocs->info().regions;
-    m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::EnumMember));
+    m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlEnumMember);
     if (regions.contains(EnumValueRegion))
-        m_highlights.addHighlight(regions, EnumValueRegion);
+        m_highlights.addHighlight(regions[EnumValueRegion], QmlHighlightKind::Number);
 }
 
 void HighlightingVisitor::highlightQmlObject(const DomItem &item)
@@ -262,14 +281,14 @@ void HighlightingVisitor::highlightQmlObject(const DomItem &item)
     const auto regions = fLocs->info().regions;
     // Handle ids here
     if (!qmlObject->idStr().isEmpty()) {
-        m_highlights.addHighlight(regions, IdTokenRegion);
-        m_highlights.addHighlight(regions, IdNameRegion);
+        m_highlights.addHighlight(regions[IdTokenRegion], QmlHighlightKind::QmlProperty);
+        m_highlights.addHighlight(regions[IdNameRegion], QmlHighlightKind::QmlLocalId);
     }
     // If dotted name, then defer it to be handled in ScriptIdentifierExpression
     if (qmlObject->name().contains("."_L1))
         return;
 
-    m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Type));
+    m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlType);
 }
 
 void HighlightingVisitor::highlightComponent(const DomItem &item)
@@ -278,8 +297,8 @@ void HighlightingVisitor::highlightComponent(const DomItem &item)
     if (!fLocs)
         return;
     const auto regions = fLocs->info().regions;
-    m_highlights.addHighlight(regions, ComponentKeywordRegion);
-    m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Type));
+    m_highlights.addHighlight(regions[ComponentKeywordRegion], QmlHighlightKind::QmlKeyword);
+    m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlType);
 }
 
 void HighlightingVisitor::highlightPropertyDefinition(const DomItem &item)
@@ -290,31 +309,25 @@ void HighlightingVisitor::highlightPropertyDefinition(const DomItem &item)
     if (!fLocs)
         return;
     const auto regions = fLocs->info().regions;
-    int modifier = 0;
-    HighlightingUtils::addModifier(SemanticTokenModifiers::Definition, &modifier);
+    QmlHighlightModifiers modifier = QmlHighlightModifier::QmlPropertyDefinition;
     if (propertyDef->isDefaultMember) {
-        HighlightingUtils::addModifier(SemanticTokenModifiers::DefaultLibrary,
-                                                &modifier);
-        m_highlights.addHighlight(regions[DefaultKeywordRegion],
-                                    int(SemanticTokenTypes::Keyword));
+        modifier |= QmlHighlightModifier::QmlDefaultProperty;
+        m_highlights.addHighlight(regions[DefaultKeywordRegion], QmlHighlightKind::QmlKeyword);
     }
     if (propertyDef->isRequired) {
-        HighlightingUtils::addModifier(SemanticTokenModifiers::Abstract, &modifier);
-        m_highlights.addHighlight(regions[RequiredKeywordRegion],
-                                    int(SemanticTokenTypes::Keyword));
+        modifier |= QmlHighlightModifier::QmlRequiredProperty;
+        m_highlights.addHighlight(regions[RequiredKeywordRegion], QmlHighlightKind::QmlKeyword);
     }
     if (propertyDef->isReadonly) {
-        HighlightingUtils::addModifier(SemanticTokenModifiers::Readonly, &modifier);
-        m_highlights.addHighlight(regions[ReadonlyKeywordRegion],
-                                    int(SemanticTokenTypes::Keyword));
+        modifier |= QmlHighlightModifier::QmlReadonlyProperty;
+        m_highlights.addHighlight(regions[ReadonlyKeywordRegion], QmlHighlightKind::QmlKeyword);
     }
-    m_highlights.addHighlight(regions, PropertyKeywordRegion);
+    m_highlights.addHighlight(regions[PropertyKeywordRegion], QmlHighlightKind::QmlKeyword);
     if (propertyDef->isAlias())
-        m_highlights.addHighlight(regions[TypeIdentifierRegion],
-                                    int(SemanticTokenTypes::Keyword));
+        m_highlights.addHighlight(regions[TypeIdentifierRegion], QmlHighlightKind::QmlKeyword);
     else
-        m_highlights.addHighlight(regions, TypeIdentifierRegion);
-    m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Property),
+        m_highlights.addHighlight(regions[TypeIdentifierRegion], QmlHighlightKind::QmlType);
+    m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlProperty,
                                 modifier);
 }
 
@@ -328,14 +341,14 @@ void HighlightingVisitor::highlightMethod(const DomItem &item)
     const auto regions = fLocs->info().regions;
     switch (method->methodType) {
     case MethodInfo::Signal: {
-        m_highlights.addHighlight(regions, SignalKeywordRegion);
-        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Method));
+        m_highlights.addHighlight(regions[SignalKeywordRegion], QmlHighlightKind::QmlKeyword);
+        m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlMethod);
         break;
     }
     case MethodInfo::Method: {
-        m_highlights.addHighlight(regions, FunctionKeywordRegion);
-        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Method));
-        m_highlights.addHighlight(regions[TypeIdentifierRegion], int(SemanticTokenTypes::Type));
+        m_highlights.addHighlight(regions[FunctionKeywordRegion], QmlHighlightKind::QmlKeyword);
+        m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlMethod);
+        m_highlights.addHighlight(regions[TypeIdentifierRegion], QmlHighlightKind::QmlType);
         break;
     }
     default:
@@ -346,8 +359,8 @@ void HighlightingVisitor::highlightMethod(const DomItem &item)
         DomItem parameter = item.field(Fields::parameters).index(i);
         const auto paramRegions = FileLocations::treeOf(parameter)->info().regions;
         m_highlights.addHighlight(paramRegions[IdentifierRegion],
-                                    int(SemanticTokenTypes::Parameter));
-        m_highlights.addHighlight(paramRegions[TypeIdentifierRegion], int(SemanticTokenTypes::Type));
+                                    QmlHighlightKind::QmlMethodParameter);
+        m_highlights.addHighlight(paramRegions[TypeIdentifierRegion], QmlHighlightKind::QmlType);
     }
     return;
 }
@@ -371,13 +384,13 @@ void HighlightingVisitor::highlightScriptLiteral(const DomItem &item)
         const auto &locs = HighlightingUtils::sourceLocationsFromMultiLineToken(
                 literalCode, regions[MainRegion]);
         for (const auto &loc : locs)
-            m_highlights.addHighlight(loc, int(SemanticTokenTypes::String));
+            m_highlights.addHighlight(loc, QmlHighlightKind::String);
     } else if (std::holds_alternative<double>(literal->literalValue()))
-        m_highlights.addHighlight(regions[MainRegion], int(SemanticTokenTypes::Number));
+        m_highlights.addHighlight(regions[MainRegion], QmlHighlightKind::Number);
     else if (std::holds_alternative<bool>(literal->literalValue()))
-        m_highlights.addHighlight(regions[MainRegion], int(SemanticTokenTypes::Keyword));
+        m_highlights.addHighlight(regions[MainRegion], QmlHighlightKind::QmlKeyword);
     else if (std::holds_alternative<std::nullptr_t>(literal->literalValue()))
-        m_highlights.addHighlight(regions[MainRegion], int(SemanticTokenTypes::Keyword));
+        m_highlights.addHighlight(regions[MainRegion], QmlHighlightKind::QmlKeyword);
     else
         qCWarning(semanticTokens) << "Invalid literal variant";
 }
@@ -403,72 +416,70 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
             item, QQmlLSUtils::ResolveOptions::ResolveOwnerType);
 
     if (!expression) {
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Variable));
+        m_highlights.addHighlight(loc, QmlHighlightKind::Unknown);
         return;
     }
     switch (expression->type) {
     case QQmlLSUtils::QmlComponentIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Type));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlType);
         return;
     case QQmlLSUtils::JavaScriptIdentifier: {
-        SemanticTokenTypes tokenType = SemanticTokenTypes::Variable;
-        int modifier = 0;
+        QmlHighlightKind tokenType = QmlHighlightKind::JsScopeVar;
+        QmlHighlightModifiers modifier = QmlHighlightModifier::None;
         if (const auto scope = expression->semanticScope) {
             if (const auto jsIdentifier = scope->jsIdentifier(*expression->name)) {
                 if (jsIdentifier->kind == QQmlJSScope::JavaScriptIdentifier::Parameter)
-                    tokenType = SemanticTokenTypes::Parameter;
+                    tokenType = QmlHighlightKind::QmlMethodParameter;
                 if (jsIdentifier->isConst) {
-                    HighlightingUtils::addModifier(SemanticTokenModifiers::Readonly, &modifier);
+                    modifier |= QmlHighlightModifier::QmlReadonlyProperty;
                 }
             }
         }
-        m_highlights.addHighlight(loc, int(tokenType), modifier);
+        m_highlights.addHighlight(loc, tokenType, modifier);
         return;
     }
     case QQmlLSUtils::PropertyIdentifier: {
         if (const auto scope = expression->semanticScope) {
             const auto property = scope->property(expression->name.value());
-            int modifier = 0;
-            if (!property.isWritable()) {
-                HighlightingUtils::addModifier(SemanticTokenModifiers::Readonly,
-                                                    &modifier);
-            }
-            m_highlights.addHighlight(loc, int(SemanticTokenTypes::Property), modifier);
+            QmlHighlightModifiers modifier = QmlHighlightModifier::None;
+            if (!property.isWritable())
+                modifier |= QmlHighlightModifier::QmlReadonlyProperty;
+            m_highlights.addHighlight(loc, QmlHighlightKind::QmlProperty, modifier);
         }
         return;
     }
     case QQmlLSUtils::PropertyChangedSignalIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlSignal);
         return;
     case QQmlLSUtils::PropertyChangedHandlerIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlSignalHandler);
         return;
     case QQmlLSUtils::SignalIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlSignal);
         return;
     case QQmlLSUtils::SignalHandlerIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlSignalHandler);
         return;
     case QQmlLSUtils::MethodIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Method));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlMethod);
         return;
     case QQmlLSUtils::QmlObjectIdIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Variable));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlLocalId);
         return;
     case QQmlLSUtils::SingletonIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Type));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlType);
         return;
     case QQmlLSUtils::EnumeratorIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Enum));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlEnumName);
         return;
     case QQmlLSUtils::EnumeratorValueIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::EnumMember));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlEnumMember);
         return;
     case QQmlLSUtils::AttachedTypeIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Type));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlType);
         return;
     case QQmlLSUtils::GroupedPropertyIdentifier:
-        m_highlights.addHighlight(loc, int(SemanticTokenTypes::Property));
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlProperty);
         return;
     default:
         qCWarning(semanticTokens)
@@ -489,81 +500,80 @@ void HighlightingVisitor::highlightScriptExpressions(const DomItem &item)
         highlightScriptLiteral(item);
         return;
     case DomType::ScriptForStatement:
-        m_highlights.addHighlight(regions, ForKeywordRegion);
+        m_highlights.addHighlight(regions[ForKeywordRegion], QmlHighlightKind::QmlKeyword);
         m_highlights.addHighlight(regions[TypeIdentifierRegion],
-                                    int(SemanticTokenTypes::Keyword));
+                                    QmlHighlightKind::QmlKeyword);
         return;
 
     case DomType::ScriptVariableDeclaration: {
         m_highlights.addHighlight(regions[TypeIdentifierRegion],
-                                    int(SemanticTokenTypes::Keyword));
+                                   QmlHighlightKind::QmlKeyword);
         return;
     }
     case DomType::ScriptReturnStatement:
-        m_highlights.addHighlight(regions, ReturnKeywordRegion);
+        m_highlights.addHighlight(regions[ReturnKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptCaseClause:
-        m_highlights.addHighlight(regions, CaseKeywordRegion);
+        m_highlights.addHighlight(regions[CaseKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptDefaultClause:
-        m_highlights.addHighlight(regions, DefaultKeywordRegion);
+        m_highlights.addHighlight(regions[DefaultKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptSwitchStatement:
-        m_highlights.addHighlight(regions, SwitchKeywordRegion);
+        m_highlights.addHighlight(regions[SwitchKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptWhileStatement:
-        m_highlights.addHighlight(regions, WhileKeywordRegion);
+        m_highlights.addHighlight(regions[WhileKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptDoWhileStatement:
-        m_highlights.addHighlight(regions, DoKeywordRegion);
-        m_highlights.addHighlight(regions, WhileKeywordRegion);
+        m_highlights.addHighlight(regions[DoKeywordRegion], QmlHighlightKind::QmlKeyword);
+        m_highlights.addHighlight(regions[WhileKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptTryCatchStatement:
-        m_highlights.addHighlight(regions, TryKeywordRegion);
-        m_highlights.addHighlight(regions, CatchKeywordRegion);
-        m_highlights.addHighlight(regions, FinallyKeywordRegion);
+        m_highlights.addHighlight(regions[TryKeywordRegion], QmlHighlightKind::QmlKeyword);
+        m_highlights.addHighlight(regions[CatchKeywordRegion], QmlHighlightKind::QmlKeyword);
+        m_highlights.addHighlight(regions[FinallyKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptForEachStatement:
-        m_highlights.addHighlight(regions[TypeIdentifierRegion],
-                                    int(SemanticTokenTypes::Keyword));
-        m_highlights.addHighlight(regions, ForKeywordRegion);
-        m_highlights.addHighlight(regions, InOfTokenRegion);
+        m_highlights.addHighlight(regions[TypeIdentifierRegion], QmlHighlightKind::QmlKeyword);
+        m_highlights.addHighlight(regions[ForKeywordRegion], QmlHighlightKind::QmlKeyword);
+        m_highlights.addHighlight(regions[InOfTokenRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptThrowStatement:
-        m_highlights.addHighlight(regions, ThrowKeywordRegion);
+        m_highlights.addHighlight(regions[ThrowKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptBreakStatement:
-        m_highlights.addHighlight(regions, BreakKeywordRegion);
+        m_highlights.addHighlight(regions[BreakKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptContinueStatement:
-        m_highlights.addHighlight(regions, ContinueKeywordRegion);
+        m_highlights.addHighlight(regions[ContinueKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptIfStatement:
-        m_highlights.addHighlight(regions, IfKeywordRegion);
-        m_highlights.addHighlight(regions, ElseKeywordRegion);
+        m_highlights.addHighlight(regions[IfKeywordRegion], QmlHighlightKind::QmlKeyword);
+        m_highlights.addHighlight(regions[ElseKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     case DomType::ScriptLabelledStatement:
-        m_highlights.addHighlight(regions, IdentifierRegion);
+        m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::JsLabel);
         return;
     case DomType::ScriptConditionalExpression:
-        m_highlights.addHighlight(regions, QuestionMarkTokenRegion);
-        m_highlights.addHighlight(regions, ColonTokenRegion);
+        m_highlights.addHighlight(regions[QuestionMarkTokenRegion], QmlHighlightKind::Operator);
+        m_highlights.addHighlight(regions[ColonTokenRegion], QmlHighlightKind::Operator);
         return;
     case DomType::ScriptUnaryExpression:
     case DomType::ScriptPostExpression:
-        m_highlights.addHighlight(regions, OperatorTokenRegion);
+        m_highlights.addHighlight(regions[OperatorTokenRegion], QmlHighlightKind::Operator);
         return;
     case DomType::ScriptType:
-        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Type));
-        m_highlights.addHighlight(regions[TypeIdentifierRegion], int(SemanticTokenTypes::Type));
+        m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlType);
+        m_highlights.addHighlight(regions[TypeIdentifierRegion], QmlHighlightKind::QmlType);
         return;
     case DomType::ScriptFunctionExpression: {
-        m_highlights.addHighlight(regions, FunctionKeywordRegion);
-        m_highlights.addHighlight(regions[IdentifierRegion], int(SemanticTokenTypes::Method));
+        m_highlights.addHighlight(regions[FunctionKeywordRegion], QmlHighlightKind::QmlKeyword);
+        m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlMethod);
         return;
     }
     case DomType::ScriptYieldExpression:
-        m_highlights.addHighlight(regions, YieldKeywordRegion);
+        m_highlights.addHighlight(regions[YieldKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
     default:
         qCDebug(semanticTokens)
@@ -737,30 +747,26 @@ QList<SemanticTokensEdit> HighlightingUtils::computeDiff(const QList<int> &oldDa
     return { std::move(edit) };
 }
 
+void Highlights::addHighlight(const QQmlJS::SourceLocation &loc, QmlHighlightKind highlightKind,
+                              QmlHighlightModifiers modifierKind)
+{
+    int tokenType = fromQmlHighlightingKindToLspTokenType(highlightKind);
+    int modifierType = fromQmlModifierKindToLspTokenType(modifierKind);
+    return addHighlightImpl(loc, tokenType, modifierType);
+}
 
-void Highlights::addHighlight(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier)
+void Highlights::addHighlightImpl(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier)
 {
     if (!loc.isValid()) {
         qCDebug(semanticTokens) << "Invalid locations: Cannot add highlight to token";
         return;
     }
 
-    if (!m_highlights.contains(loc.offset))
-        m_highlights.insert(loc.offset, QT_PREPEND_NAMESPACE(Token)(loc, tokenType, tokenModifier));
-}
-
-void Highlights::addHighlight(const QMap<FileLocationRegion, QQmlJS::SourceLocation> &regions,
-                              FileLocationRegion region, int modifier)
-{
-    if (!regions.contains(region)) {
-        qCDebug(semanticTokens) << "Invalid region: Cannot add highlight to token";
-        return;
-    }
-
-    const auto loc = regions.value(region);
     if (loc.length == 0)
         return;
-    return addHighlight(loc, tokenTypeFromRegion(region), modifier);
+
+    if (!m_highlights.contains(loc.offset))
+        m_highlights.insert(loc.offset, QT_PREPEND_NAMESPACE(Token)(loc, tokenType, tokenModifier));
 }
 
 QList<int> HighlightingUtils::collectTokens(const QQmlJS::Dom::DomItem &item,
