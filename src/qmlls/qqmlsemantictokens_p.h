@@ -24,6 +24,50 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(semanticTokens)
 
+// Protocol agnostic highlighting kinds
+// Use this enum while visiting dom tree to define the highlighting kinds for the semantic tokens
+// Then map it to the protocol specific token types and modifiers
+// This can be as much as detailed as needed
+enum class QmlHighlightKind {
+    QmlKeyword, // Qml keyword
+    QmlType, // Qml type name
+    QmlImportId, // Qml import module name
+    QmlNamespace, // Qml module namespace, i.e import QtQuick as Namespace
+    QmlLocalId, // Object id within the same file
+    QmlExternalId, // Object id defined in another file. [UNUSED FOR NOW]
+    QmlProperty, // Qml property. For now used for all kind of properties
+    QmlScopeObjectProperty, // Qml property defined in the current scope
+    QmlRootObjectProperty, // Qml property defined in the parent scopes
+    QmlExternalObjectProperty, // Qml property defined in the root object of another file
+    QmlMethod,
+    QmlMethodParameter,
+    QmlSignal,
+    QmlSignalHandler,
+    QmlEnumName, // Enum type name
+    QmlEnumMember, // Enum field names
+    QmlPragmaName, // Qml pragma name
+    QmlPragmaValue, // Qml pragma value
+    JsImport, // Js imported name
+    JsGlobalVar, // Js global variable or objects
+    JsScopeVar, // Js variable defined in the current scope
+    JsLabel, // js label
+    Number,
+    String,
+    Comment,
+    Operator,
+    Unknown, // Used for the unknown tokens
+};
+
+enum class QmlHighlightModifier {
+    None = 0,
+    QmlPropertyDefinition = 1 << 0,
+    QmlDefaultProperty = 1 << 1,
+    QmlRequiredProperty = 1 << 2,
+    QmlReadonlyProperty = 1 << 3,
+};
+Q_DECLARE_FLAGS(QmlHighlightModifiers, QmlHighlightModifier)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QmlHighlightModifiers)
+
 // Represents a semantic highlighting token
 // startLine and startColumn are 0-based as in LSP spec.
 struct Token
@@ -74,13 +118,13 @@ struct HighlightsRange
 class Highlights
 {
 public:
-    void addHighlight(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier = 0);
-    void addHighlight(const QMap<QQmlJS::Dom::FileLocationRegion, QQmlJS::SourceLocation> &regions,
-                      QQmlJS::Dom::FileLocationRegion region, int tokenModifier = 0);
+    void addHighlight(const QQmlJS::SourceLocation &loc, QmlHighlightKind,
+                      QmlHighlightModifiers modifiers = QmlHighlightModifier::None);
     HighlightsContainer &highlights() { return m_highlights; }
     const HighlightsContainer &highlights() const { return m_highlights; }
 
 private:
+    void addHighlightImpl(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier = 0);
     HighlightsContainer m_highlights;
 };
 
@@ -96,7 +140,8 @@ namespace HighlightingUtils
     void updateResultID(QByteArray &resultID);
     QList<int> collectTokens(const QQmlJS::Dom::DomItem &item,
                              const std::optional<HighlightsRange> &range);
-};
+
+} // namespace HighlightingUtils
 
 class HighlightingVisitor
 {
