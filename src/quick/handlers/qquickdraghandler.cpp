@@ -99,7 +99,7 @@ void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDe
     The snap mode configures snapping of the \l target item's center to the \l eventPoint.
 
     Possible values:
-    \value DragHandler.SnapNever Never snap
+    \value DragHandler.NoSnap Never snap
     \value DragHandler.SnapAuto The \l target snaps if the \l eventPoint was pressed outside of the \l target
                                 item \e and the \l target is a descendant of \l {PointerHandler::}{parent} item (default)
     \value DragHandler.SnapWhenPressedOutsideTarget The \l target snaps if the \l eventPoint was pressed outside of the \l target
