@@ -2024,21 +2024,21 @@ void TestQmllint::valueTypesFromString()
     runTest("valueTypesFromString.qml",
             Result{ {
                             Message{
-                                    u"Binding is not supported: Type QPointF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QPointF\""_s },
                             Message{
-                                    u"Binding is not supported: Type QSizeF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QSizeF\""_s },
                             Message{
-                                    u"Binding is not supported: Type QRectF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QRectF\""_s },
                             Message{
-                                    u"Binding is not supported: Type QVector2D should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QVector2D\""_s },
                             Message{
-                                    u"Binding is not supported: Type QVector3D should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QVector3D\""_s },
                             Message{
-                                    u"Binding is not supported: Type QVector4D should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QVector4D\""_s },
                             Message{
-                                    u"Binding is not supported: Type QQuaternion should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QQuaternion\""_s },
                             Message{
-                                    u"Binding is not supported: Type QMatrix4x4 should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QMatrix4x4\""_s },
                     },
                     { /*bad messages */ },
                     {

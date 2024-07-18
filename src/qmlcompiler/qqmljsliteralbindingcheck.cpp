@@ -116,9 +116,8 @@ void LiteralBindingCheckBase::onBinding(const QQmlSA::Element &element, const QS
         auto construction = check(propertyType.internalId(), binding.stringValue());
         if (construction.isValid()) {
             const QString warningMessage =
-                    u"Binding is not supported: Type %1 should be constructed using"
-                    u" QML_STRUCTURED_VALUE's construction mechanism, instead of a "
-                    u"string."_s.arg(propertyType.internalId());
+                    u"Construction from string is deprecated. Use structured value type "
+                    u"construction instead for type \"%1\""_s.arg(propertyType.internalId());
 
             if (!construction.code.isNull()) {
                 QQmlSA::FixSuggestion suggestion(
