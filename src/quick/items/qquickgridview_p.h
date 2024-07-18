@@ -92,10 +92,20 @@ protected:
 class QQuickGridViewAttached : public QQuickItemViewAttached
 {
     Q_OBJECT
+    Q_PROPERTY(QQuickGridView *view READ view NOTIFY viewChanged FINAL)
 public:
     QQuickGridViewAttached(QObject *parent)
         : QQuickItemViewAttached(parent) {}
     ~QQuickGridViewAttached() {}
+    QQuickGridView *view() const { return m_view; }
+    void setView(QQuickGridView *view) {
+        if (view != m_view) {
+            m_view = view;
+            Q_EMIT viewChanged();
+        }
+    }
+private:
+    QPointer<QQuickGridView> m_view;
 };
 
 
