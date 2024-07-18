@@ -681,7 +681,7 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                            "Accessible must be attached to an Item or an Action");
         addAttachedWarning({ "QtQuick", "LayoutMirroring" },
                            { { "QtQuick", "Item" }, { "QtQuick", "Window" } },
-                           "LayoutDirection attached property only works with Items and Windows");
+                           "LayoutMirroring attached property only works with Items and Windows");
         addAttachedWarning({ "QtQuick", "EnterKey" }, { { "QtQuick", "Item" } },
                            "EnterKey attached property only works with Items");
     }
