@@ -1042,6 +1042,19 @@ void tst_qqmlcomponent::testSetInitialProperties()
 
     }
     {
+        // setInitialProperties: reject setting nested properties
+        auto r = QRegularExpression(".*Setting initial properties failed: Cannot initialize "
+                                    "nested property. To set a.b as an initial property, create a"
+                                    ", set its property b, and pass a as an initial property.");
+        QTest::ignoreMessage(QtWarningMsg, r);
+
+        ComponentWithPublicSetInitial comp(&eng);
+        comp.loadUrl(testFileUrl("allJSONTypes.qml")); // Any valid QML file
+        QScopedPointer<QObject> obj { comp.beginCreate(eng.rootContext()) };
+        comp.setInitialProperties(obj.get(), { { "a.b", 1 } });
+        comp.completeCreate();
+    }
+    {
         // createWithInitialProperties convenience function
         QQmlComponent comp(&eng);
         comp.loadUrl(testFileUrl("requiredNotSet.qml"));

@@ -165,7 +165,8 @@ public:
         CreateWarnAboutRequiredProperties,
     };
     QObject *createWithProperties(QObject *parent, const QVariantMap &properties,
-                                  QQmlContext *context, CreateBehavior behavior = CreateDefault);
+                                  QQmlContext *context, CreateBehavior behavior = CreateDefault,
+                                  bool createFromQml = false);
 
     bool isBound() const { return compilationUnit && (compilationUnit->componentsAreBound()); }
     LoadHelper::ResolveTypeResult prepareLoadFromModule(QAnyStringView uri,

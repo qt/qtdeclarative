@@ -938,7 +938,8 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent); // forward
 /*! \internal
  */
 QObject *QQmlComponentPrivate::createWithProperties(QObject *parent, const QVariantMap &properties,
-                                                    QQmlContext *context, CreateBehavior behavior)
+                                                    QQmlContext *context, CreateBehavior behavior,
+                                                    bool createFromQml)
 {
     Q_Q(QQmlComponent);
 
@@ -957,7 +958,12 @@ QObject *QQmlComponentPrivate::createWithProperties(QObject *parent, const QVari
 
     QQmlComponent_setQmlParent(rv, parent); // internally checks if parent is nullptr
 
-    q->setInitialProperties(rv, properties);
+    if (createFromQml) {
+        for (auto it = properties.cbegin(), end = properties.cend(); it != end; ++it)
+            setInitialProperty(rv, it.key(), it.value());
+    } else {
+        q->setInitialProperties(rv, properties);
+    }
     q->completeCreate();
 
     if (state.hasUnsetRequiredProperties()) {
@@ -1489,22 +1495,47 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context, QQmlC
 }
 
 /*!
-   Set top-level \a properties of the \a component.
+    Set top-level \a properties of the \a component.
 
-   This method provides advanced control over component instance creation.
-   In general, programmers should use
-   \l QQmlComponent::createWithInitialProperties to create a component.
+    This method provides advanced control over component instance creation.
+    In general, programmers should use
+    \l QQmlComponent::createWithInitialProperties to create a component.
 
-   Use this method after beginCreate and before completeCreate has been called.
-   If a provided property does not exist, a warning is issued.
+    Use this method after beginCreate and before completeCreate has been called.
+    If a provided property does not exist, a warning is issued.
 
-   \since 5.14
+    This method does not allow setting initial nested properties directly.
+    Instead, setting an initial value for value type properties with nested
+    properties can be achieved by creating that value type, assigning its nested
+    property and then passing the value type as an initial property of the
+    object to be constructed.
+
+    For example, in order to set fond.bold, you can create a QFont, set its
+    weight to bold and then pass the font as an initial property.
+
+    \since 5.14
 */
 void QQmlComponent::setInitialProperties(QObject *component, const QVariantMap &properties)
 {
     Q_D(QQmlComponent);
-    for (auto it = properties.constBegin(); it != properties.constEnd(); ++it)
+    for (auto it = properties.constBegin(); it != properties.constEnd(); ++it) {
+        if (it.key().contains(u'.')) {
+            auto segments = it.key().split(u'.');
+            QString description = u"Setting initial properties failed: Cannot initialize nested "_s
+                                  u"property."_s;
+            if (segments.size() >= 2) {
+                QString s = u" To set %1.%2 as an initial property, create %1, set its "_s
+                            u"property %2, and pass %1 as an initial property."_s;
+                description += s.arg(segments[0], segments[1]);
+            }
+            QQmlError error{};
+            error.setUrl(url());
+            error.setDescription(description);
+            qmlWarning(component, error);
+            return;
+        }
         d->setInitialProperty(component, it.key(), it.value());
+    }
 }
 
 /*
@@ -1847,7 +1878,8 @@ QObject *QQmlComponent::createObject(QObject *parent, const QVariantMap &propert
     Q_D(QQmlComponent);
     Q_ASSERT(d->engine);
     QObject *rv = d->createWithProperties(parent, properties, creationContext(),
-                                          QQmlComponentPrivate::CreateWarnAboutRequiredProperties);
+                                          QQmlComponentPrivate::CreateWarnAboutRequiredProperties,
+                                          true);
     if (rv) {
         QQmlData *qmlData = QQmlData::get(rv);
         Q_ASSERT(qmlData);
