@@ -752,9 +752,8 @@ void TestQmllint::dirtyQmlCode_data()
                        QStringLiteral("Cannot assign literal of type string to int") } } };
     QTest::newRow("badAttachedPropertyTypeQtObject")
             << QStringLiteral("badAttachedPropertyTypeQtObject.qml")
-            << Result { { Message { QStringLiteral(
-                       "Property \"count\" of type \"int\" is assigned an incompatible type "
-                       "\"QtObject\"") } } };
+            << Result{ { Message{
+                                  QStringLiteral("Cannot assign object of type QtObject to int") } } };
     // should succeed, but it does not:
     QTest::newRow("attachedPropertyAccess")
             << QStringLiteral("goodAttachedPropertyAccess.qml") << Result::clean();
