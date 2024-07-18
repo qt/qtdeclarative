@@ -264,15 +264,6 @@ quint16 tst_Scenegraph::checksumFileOrDir(const QString &path)
     return 0;
 }
 
-
-#define main _realmain
-QTEST_MAIN(tst_Scenegraph)
-#undef main
-
-int main(int argc, char *argv[])
-{
-    QBaselineTest::handleCmdLineArgs(&argc, &argv);
-    return _realmain(argc, argv);
-}
+QBASELINETEST_MAIN(tst_Scenegraph)
 
 #include "tst_baseline_scenegraph.moc"

@@ -251,14 +251,6 @@ bool tst_Baseline_Controls::renderAndGrab(const QString& qmlFile, const QStringL
     return true;
 }
 
-#define main _realmain
-QTEST_MAIN(tst_Baseline_Controls)
-#undef main
-
-int main(int argc, char *argv[])
-{
-    QBaselineTest::handleCmdLineArgs(&argc, &argv);
-    return _realmain(argc, argv);
-}
+QBASELINETEST_MAIN(tst_Baseline_Controls)
 
 #include "tst_baseline_controls.moc"
