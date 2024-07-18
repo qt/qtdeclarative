@@ -767,13 +767,10 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
         }
 
         if (!objectBinding.onToken && !property.type()->canAssign(childScope)) {
-            // the type is incompatible
-            m_logger->log(QStringLiteral("Property \"%1\" of type \"%2\" is assigned an "
-                                         "incompatible type \"%3\"")
-                                  .arg(propertyName)
-                                  .arg(property.typeName())
-                                  .arg(getScopeName(childScope, QQmlSA::ScopeType::QMLScope)),
-                          qmlIncompatibleType, objectBinding.location);
+            m_logger->log(QStringLiteral("Cannot assign object of type %1 to %2")
+                                  .arg(getScopeName(childScope, QQmlSA::ScopeType::QMLScope))
+                                  .arg(property.typeName()),
+                          qmlIncompatibleType, childScope->sourceLocation());
             continue;
         }
 
