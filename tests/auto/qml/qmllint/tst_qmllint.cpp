@@ -1356,6 +1356,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("dontCheckJSTypes") << QStringLiteral("dontCheckJSTypes.qml");
     QTest::newRow("jsonObjectIsRecognized") << QStringLiteral("jsonObjectIsRecognized.qml");
     QTest::newRow("jsonArrayIsRecognized") << QStringLiteral("jsonArrayIsRecognized.qml");
+    QTest::newRow("itemviewattached") << QStringLiteral("itemViewAttached.qml");
 }
 
 void TestQmllint::cleanQmlCode()

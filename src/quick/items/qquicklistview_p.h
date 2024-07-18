@@ -174,14 +174,23 @@ protected:
 class Q_QUICK_EXPORT QQuickListViewAttached : public QQuickItemViewAttached
 {
     Q_OBJECT
-
+    Q_PROPERTY(QQuickListView *view READ view NOTIFY viewChanged FINAL)
 public:
     QQuickListViewAttached(QObject *parent)
         : QQuickItemViewAttached(parent), m_sectionItem(nullptr) {}
     ~QQuickListViewAttached() {}
+    QQuickListView *view() const { return m_view; }
+    void setView(QQuickListView *view) {
+        if (view != m_view) {
+            m_view = view;
+            Q_EMIT viewChanged();
+        }
+    }
 
 public:
     QPointer<QQuickItem> m_sectionItem;
+private:
+    QPointer<QQuickListView> m_view;
 };
 
 

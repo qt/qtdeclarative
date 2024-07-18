@@ -287,7 +287,6 @@ class Q_QUICK_EXPORT QQuickItemViewAttached : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickItemView *view READ view NOTIFY viewChanged FINAL)
     Q_PROPERTY(bool isCurrentItem READ isCurrentItem NOTIFY currentItemChanged FINAL)
     Q_PROPERTY(bool delayRemove READ delayRemove WRITE setDelayRemove NOTIFY delayRemoveChanged FINAL)
 
@@ -299,14 +298,6 @@ public:
     QQuickItemViewAttached(QObject *parent)
         : QObject(parent), m_isCurrent(false), m_delayRemove(false) {}
     ~QQuickItemViewAttached() {}
-
-    QQuickItemView *view() const { return m_view; }
-    void setView(QQuickItemView *view) {
-        if (view != m_view) {
-            m_view = view;
-            Q_EMIT viewChanged();
-        }
-    }
 
     bool isCurrentItem() const { return m_isCurrent; }
     void setIsCurrentItem(bool c) {
@@ -382,7 +373,6 @@ Q_SIGNALS:
     void reused();
 
 public:
-    QPointer<QQuickItemView> m_view;
     bool m_isCurrent : 1;
     bool m_delayRemove : 1;
 
