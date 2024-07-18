@@ -47,6 +47,8 @@ symbolRangesOf(const DomItem &item);
 [[nodiscard]] SymbolsList
 assembleSymbolsForQmlFile(const DomItem &item,
                           const AssemblingFunction af = buildSymbolOrReturnChildren);
+
+void reorganizeForOutlineView(SymbolsList &symbols);
 } // namespace DocumentSymbolUtils
 
 QT_END_NAMESPACE

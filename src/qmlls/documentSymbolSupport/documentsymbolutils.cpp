@@ -135,6 +135,138 @@ std::optional<QByteArray> tryGetDetailOf(const DomItem &item)
     }
 }
 
+// TODO move to qmllsUtils?
+static inline bool isSubRange(const QLspSpecification::Range &potentialSubRange,
+                              const QLspSpecification::Range &range)
+{
+    // Check if the start of a is greater than or equal to the start of b
+    bool startContained = (potentialSubRange.start.line > range.start.line
+                           || (potentialSubRange.start.line == range.start.line
+                               && potentialSubRange.start.character >= range.start.character));
+
+    // Check if the end of a is less than or equal to the end of b
+    bool endContained = (potentialSubRange.end.line < range.end.line
+                         || (potentialSubRange.end.line == range.end.line
+                             && potentialSubRange.end.character <= range.end.character));
+
+    return startContained && endContained;
+}
+
+using MutableRefToDocumentSymbol = QLspSpecification::DocumentSymbol &;
+[[nodiscard]] static MutableRefToDocumentSymbol
+findDirectParentFor(const QLspSpecification::DocumentSymbol &child,
+                    MutableRefToDocumentSymbol currentParent)
+{
+    const auto containsChildRange =
+            [&range = child.range](const QLspSpecification::DocumentSymbol &symbol) {
+                return isSubRange(range, symbol.range);
+            };
+    // Parent's Range covers children's Ranges
+    // all children, grand-children, grand-grand-children and so forth
+    // are not supposed to have overlapping Ranges, hence it's just "gready" approach
+    // 1. find a Symbol among children, containing a Range
+    // 2. set it as currentCandidate
+    // 3. repeat
+    std::reference_wrapper<QLspSpecification::DocumentSymbol> currentCandidate(currentParent);
+    while (containsChildRange(currentCandidate) && currentCandidate.get().children.has_value()) {
+        auto newCandidate =
+                std::find_if(currentCandidate.get().children->begin(),
+                             currentCandidate.get().children->end(), containsChildRange);
+        if (newCandidate == currentCandidate.get().children->end()) {
+            break;
+        }
+        currentCandidate = std::ref(*newCandidate);
+    }
+    return currentCandidate;
+}
+
+using DocumentSymbolPredicate =
+        qxp::function_ref<bool(const QLspSpecification::DocumentSymbol &) const>;
+[[nodiscard]] static SymbolsList extractChildrenIf(const DocumentSymbolPredicate shouldBeReadopted,
+                                                   MutableRefToDocumentSymbol currentParent)
+{
+    if (!currentParent.children.has_value()) {
+        return {};
+    }
+    auto &parentsChildren = currentParent.children.value();
+    SymbolsList extractedChildren;
+    extractedChildren.reserve(parentsChildren.size());
+    auto [_, toBeRemoved] = std::partition_copy(parentsChildren.cbegin(), parentsChildren.cend(),
+                                                std::back_inserter(extractedChildren),
+                                                parentsChildren.begin(), shouldBeReadopted);
+    parentsChildren.erase(toBeRemoved, parentsChildren.end());
+    return extractedChildren;
+}
+
+static inline void adopt(QLspSpecification::DocumentSymbol &&child,
+                         MutableRefToDocumentSymbol parent)
+{
+    if (!parent.children.has_value()) {
+        parent.children.emplace({ std::move(child) });
+        return;
+    }
+    parent.children->emplace_back(std::move(child));
+}
+
+static void readoptChildrenIf(const DocumentSymbolPredicate unaryPred,
+                              MutableRefToDocumentSymbol currentParent)
+{
+    auto childrenToBeReadopted = extractChildrenIf(unaryPred, currentParent);
+    for (auto &&child : childrenToBeReadopted) {
+        auto &newParentRef = findDirectParentFor(child, currentParent);
+        adopt(std::move(child), newParentRef);
+    }
+}
+
+// Readopts all Enum-s and Id-s
+static void reorganizeQmlComponentSymbol(MutableRefToDocumentSymbol qmlCompSymbol)
+{
+    Q_ASSERT(qmlCompSymbol.kind == symbolKindFor(DomType::QmlComponent));
+    if (!qmlCompSymbol.children.has_value()) {
+        // nothing to reorganize
+        return;
+    }
+
+    constexpr auto idSymbolKind = symbolKindFor(DomType::Id);
+    constexpr auto enumDeclSymbolKind = symbolKindFor(DomType::EnumDecl);
+    const auto symbolIsEnumDeclOrId = [](const QLspSpecification::DocumentSymbol &symbol) -> bool {
+        return symbol.kind == idSymbolKind || symbol.kind == enumDeclSymbolKind;
+    };
+    readoptChildrenIf(symbolIsEnumDeclOrId, qmlCompSymbol);
+}
+
+/*! \internal
+ *  This function reorganizes \c qmlFileSymbols (result of assembleSymbolsForQmlFile)
+ *  in the following way:
+ *  1. Moves Symbol-s representing Enum-s, Id-s and inline QmlComponent-s
+ * to their respective range-containing parents , a.k.a. direct structural parents.
+ *  2. Reassignes head to the DocumentSymbol representing root QmlObject of the main
+ * QmlComponent
+ */
+void reorganizeForOutlineView(SymbolsList &qmlFileSymbols)
+{
+    Q_ASSERT(qmlFileSymbols.at(0).kind == symbolKindFor(DomType::QmlFile)
+             && qmlFileSymbols.at(0).children.has_value());
+
+    auto &qmlFileSymbol = qmlFileSymbols[0];
+    constexpr auto qmlCompSymbolKind = symbolKindFor(DomType::QmlComponent);
+    for (auto &childSymbol : qmlFileSymbol.children.value()) {
+        if (childSymbol.kind == qmlCompSymbolKind) {
+            reorganizeQmlComponentSymbol(childSymbol);
+        }
+    }
+
+    const auto symbolIsInlineComp = [](const QLspSpecification::DocumentSymbol &symbol) -> bool {
+        return symbol.kind == qmlCompSymbolKind && symbol.name.contains(".");
+    };
+    readoptChildrenIf(symbolIsInlineComp, qmlFileSymbol);
+
+    // move pointer from the documentSymbol representing QmlFile
+    // to the documentSymbols representing children of main QmlComponent
+    // a.k.a. ignore / not to show QmlFile and mainComponent symbols
+    qmlFileSymbols = qmlFileSymbol.children->at(0).children.value();
+}
+
 /*! \internal
  * Constructs a \c DocumentSymbol for an \c Item with the provided \c children.
  * Returns \c children if the current \c Item should not be represented via a \c DocumentSymbol.

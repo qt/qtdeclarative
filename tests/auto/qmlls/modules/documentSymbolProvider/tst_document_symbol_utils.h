@@ -28,4 +28,5 @@ private slots:
     void symbolNameOf();
     void symbolKindOf();
     void tryGetDetailOf();
+    void reorganizeForOutlineView();
 };

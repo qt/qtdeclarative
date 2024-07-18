@@ -400,4 +400,103 @@ void tst_document_symbol_utils::tryGetDetailOf()
     }
 }
 
+static std::pair<QList<QLspSpecification::DocumentSymbol>, QList<QLspSpecification::DocumentSymbol>>
+reorganizeForOutlineViewTestData()
+{
+    /* The following fake QmlFile is used as testing data:
+     * 0|12345678901234567890123456789012345678901234
+     * 1|Item1 { Enum{}
+     * 2|component c.1{Item2{}}
+     * 3|Item3{Item4{ id: item4; component c.2{} } }
+     *
+     * inside DOM, SourceLocations, hence Ranges, of all objects/components, etc
+     * are adhearing "structural" view, meaning that even though they are not
+     * in "structural" hierarchy inside DOM, their Locations following "structural" hierarchy
+     * order of children will be fixed/sorted by the client
+     */
+
+    using QLspSpecification::DocumentSymbol;
+    using QLspSpecification::SymbolKind;
+
+    DocumentSymbol enumSymbol;
+    enumSymbol.name = "Enum";
+    enumSymbol.kind = DocumentSymbolUtils::symbolKindOf(domItem(EnumDecl()));
+    enumSymbol.range = { { 1, 9 }, { 1, 14 } };
+
+    DocumentSymbol item4Id;
+    item4Id.name = "item4";
+    item4Id.kind = DocumentSymbolUtils::symbolKindOf(domItem(Id()));
+    item4Id.range = { { 3, 14 }, { 3, 23 } };
+
+    DocumentSymbol item4;
+    item4.range = { { 3, 1 }, { 3, 41 } };
+    item4.kind = DocumentSymbolUtils::symbolKindOf(domItem(QmlObject()));
+    item4.name = "Item4";
+
+    DocumentSymbol item3;
+    item3.range = { { 3, 1 }, { 3, 43 } };
+    item3.kind = DocumentSymbolUtils::symbolKindOf(domItem(QmlObject()));
+    item3.name = "Item3";
+    item3.children.emplace({ item4 });
+
+    DocumentSymbol item1;
+    item1.range = { { 1, 1 }, { 3, 43 } };
+    item1.kind = DocumentSymbolUtils::symbolKindOf(domItem(QmlObject()));
+    item1.name = "Item1";
+    item1.children.emplace({ item3 });
+
+    DocumentSymbol mainCmp;
+    mainCmp.range = { { 1, 1 }, { 3, 43 } };
+    mainCmp.kind = DocumentSymbolUtils::symbolKindOf(domItem(QmlComponent()));
+    mainCmp.name = "mainCmp";
+    mainCmp.children.emplace({ enumSymbol, item4Id, item1 });
+
+    DocumentSymbol item2;
+    item2.range = { { 2, 15 }, { 3, 21 } };
+    item2.kind = DocumentSymbolUtils::symbolKindOf(domItem(QmlObject()));
+    item2.name = "Item2";
+
+    DocumentSymbol cmpC1;
+    cmpC1.range = { { 2, 1 }, { 3, 22 } };
+    cmpC1.kind = DocumentSymbolUtils::symbolKindOf(domItem(QmlComponent()));
+    cmpC1.name = "c.1";
+    cmpC1.children.emplace({ item2 });
+
+    DocumentSymbol cmpC2;
+    cmpC2.range = { { 3, 25 }, { 3, 39 } };
+    cmpC2.kind = DocumentSymbolUtils::symbolKindOf(domItem(QmlComponent()));
+    cmpC2.name = "c.2";
+
+    DocumentSymbol qmlFile;
+    qmlFile.range = { { 1, 1 }, { 3, 43 } };
+    qmlFile.kind = DocumentSymbolUtils::symbolKindOf(domItem(QmlFile()));
+    qmlFile.name = "fakeQmlFile";
+    qmlFile.children.emplace({ mainCmp, cmpC1, cmpC2 });
+
+    QList<DocumentSymbol> fakeQmlFileSymbols{ qmlFile };
+    //-----------------------------------------------------------------------
+    // should contain item4Id and cmpC2 as a child
+    DocumentSymbol reorganizedItem4(item4);
+    reorganizedItem4.children = { item4Id, cmpC2 };
+
+    // should contain reorganizedItem4 as child
+    DocumentSymbol reorganizedItem3(item3);
+    reorganizedItem3.children = { reorganizedItem4 };
+
+    // should contain reorganizedItem3, enum, id, cmpC1 as children
+    DocumentSymbol reorganizedItem1(item1);
+    reorganizedItem1.children = { reorganizedItem3, enumSymbol, cmpC1 };
+
+    QList<DocumentSymbol> reorganizedFakeQmlFileSymbols{ reorganizedItem1 };
+    return std::make_pair(fakeQmlFileSymbols, reorganizedFakeQmlFileSymbols);
+}
+
+void tst_document_symbol_utils::reorganizeForOutlineView()
+{
+    auto [fakeQmlFileSymbols, expectedReorganizedFakeQmlFileSymbols] =
+            reorganizeForOutlineViewTestData();
+    DocumentSymbolUtils::reorganizeForOutlineView(fakeQmlFileSymbols);
+    QVERIFY(compareDocumentSymbolsLists(fakeQmlFileSymbols, expectedReorganizedFakeQmlFileSymbols));
+}
+
 QTEST_MAIN(tst_document_symbol_utils)
