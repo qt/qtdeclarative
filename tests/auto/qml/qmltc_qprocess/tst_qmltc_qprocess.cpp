@@ -312,9 +312,8 @@ void tst_qmltc_qprocess::constructFromString()
 {
     const auto errors = runQmltc(u"constructFromString.qml"_s, false);
     const QString warningMessage =
-            u"constructFromString.qml:%1:%2: Binding is not supported: Type %3 should be"
-            u" constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a"
-            u" string."_s;
+            u"constructFromString.qml:%1:%2: Construction from string is deprecated. "
+            u"Use structured value type construction instead for type \"%3\""_s;
     QVERIFY(errors.contains(warningMessage.arg(4).arg(23).arg(u"QPointF")));
     QVERIFY(errors.contains(warningMessage.arg(5).arg(23).arg(u"QRectF")));
     QVERIFY(errors.contains(warningMessage.arg(6).arg(23).arg(u"QSizeF")));

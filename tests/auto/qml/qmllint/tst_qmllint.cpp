@@ -2068,11 +2068,11 @@ void TestQmllint::valueTypesFromString()
     runTest("valueTypesFromString.qml",
             Result{ {
                             Message{
-                                    u"Binding is not supported: Type QSizeF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QPointF\""_s },
                             Message{
-                                    u"Binding is not supported: Type QRectF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QSizeF\""_s },
                             Message{
-                                    u"Binding is not supported: Type QPointF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QRectF\""_s },
                     },
                     { /*bad messages */ },
                     {
