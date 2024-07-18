@@ -2080,7 +2080,7 @@ void TestQmllint::quickPlugin()
                       Message { u"Accessible must be attached to an Item"_s },
                       Message { u"EnterKey attached property only works with Items"_s },
                       Message {
-                              u"LayoutDirection attached property only works with Items and Windows"_s },
+                              u"LayoutMirroring attached property only works with Items and Windows"_s },
                       Message { u"Layout must be attached to Item elements"_s },
                       Message { u"StackView attached property only works with Items"_s },
                       Message { u"TextArea must be attached to a Flickable"_s },
