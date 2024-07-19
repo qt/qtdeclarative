@@ -248,7 +248,15 @@ void QQuickImageSelector::updateSource()
 
 void QQuickImageSelector::setUrl(const QUrl &url)
 {
-    QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(url));
+    // Allow passing a relative path as e.g. QQuickImageBase::loadPixmap does.
+    QUrl resolvedUrl = url;
+    if (url.isRelative()) {
+        auto *ourQmlcontext = qmlContext(this);
+        if (ourQmlcontext)
+            resolvedUrl = ourQmlcontext->resolvedUrl(url);
+    }
+
+    const QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(resolvedUrl));
     setName(fileInfo.fileName());
     setPath(fileInfo.path());
 }
