@@ -10,13 +10,12 @@ find_package(Qt6 6.7 REQUIRED COMPONENTS Quick)
 
 qt_standard_project_setup(REQUIRES 6.6)
 
-
 qt_add_executable(qml_in_android_service
     main.cpp
 )
 
 qt_add_qml_module(qml_in_android_service
-    URI qml_in_android_service
+    URI qml_floating_view
     VERSION 1.0
     QML_FILES Main.qml
 )

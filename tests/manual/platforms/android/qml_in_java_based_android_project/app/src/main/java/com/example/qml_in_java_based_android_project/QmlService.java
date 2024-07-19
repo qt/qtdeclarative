@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 import org.qtproject.qt.android.QtQuickView;
 import org.qtproject.qt.android.QtQmlStatus;
 import org.qtproject.qt.android.QtQmlStatusChangeListener;
-import org.qtproject.example.qml_in_android_service.Qml_in_android_service.Main;
+import org.qtproject.example.qml_in_android_service.Qml_floating_view.Main;
 
 @SuppressLint("UseSwitchCompatOrMaterialCode")
 public class QmlService extends Service implements QtQmlStatusChangeListener
