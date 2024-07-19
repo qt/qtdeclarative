@@ -36,6 +36,7 @@ private slots:
     void implicitSize();
     void hwCompressedImages_data();
     void hwCompressedImages();
+    void relativeSource();
 };
 
 static QImage grabItemToImage(QQuickItem *item)
@@ -292,6 +293,19 @@ void tst_qquickninepatchimage::hwCompressedImages()
 
     QQuickImagePrivate *ninePatchImagePrivate = static_cast<QQuickImagePrivate *>(QQuickItemPrivate::get(ninePatchImage));
     QVERIFY(ninePatchImagePrivate->paintNode);
+}
+
+void tst_qquickninepatchimage::relativeSource()
+{
+    QQuickView view(testFileUrl("relativeSource.qml"));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    auto *ninePatchImage = qobject_cast<QQuickImage *>(view.rootObject());
+    QVERIFY(ninePatchImage);
+    QVERIFY2(ninePatchImage->source().isValid(), qPrintable(QLatin1String("source: ") + ninePatchImage->source().toString()));
+    QVERIFY2(!ninePatchImage->source().isRelative(), qPrintable(QLatin1String("source: ") + ninePatchImage->source().toString()));
 }
 
 QTEST_MAIN(tst_qquickninepatchimage)
