@@ -679,18 +679,18 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                              { { "columnWidthProvider", { "", "function" } },
                                { "rowHeightProvider", { "", "function" } } });
         addAttachedWarning({ "QtQuick", "Accessible" }, { { "QtQuick", "Item" } },
-                           "Accessible must be attached to an Item or an Action");
+                           "Accessible attached property must be attached to an object deriving from Item or Action");
         addAttachedWarning({ "QtQuick", "LayoutMirroring" },
                            { { "QtQuick", "Item" }, { "QtQuick", "Window" } },
-                           "LayoutMirroring attached property only works with Items and Windows");
+                           "LayoutMirroring attached property must be attached to an object deriving from Item or Window");
         addAttachedWarning({ "QtQuick", "EnterKey" }, { { "QtQuick", "Item" } },
-                           "EnterKey attached property only works with Items");
+                           "EnterKey attached property must be attached to an object deriving from Item");
     }
     if (hasQuickLayouts) {
         addAttachedWarning({ "QtQuick.Layouts", "Layout" }, { { "QtQuick", "Item" } },
-                           "Layout must be attached to Item elements");
+                           "Layout attached property must be attached to an object deriving from Item");
         addAttachedWarning({ "QtQuick.Layouts", "StackLayout" }, { { "QtQuick", "Item" } },
-                           "StackLayout must be attached to an Item");
+                           "StackLayout attached property must be attached to an object deriving from Item");
     }
 
 
@@ -701,22 +701,22 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
 
         addAttachedWarning({ "QtQuick.Templates", "ScrollBar" },
                            { { "QtQuick", "Flickable" }, { "QtQuick.Templates", "ScrollView" } },
-                           "ScrollBar must be attached to a Flickable or ScrollView");
+                           "ScrollBar attached property must be attached to an object deriving from Flickable or ScrollView");
         addAttachedWarning({ "QtQuick.Templates", "ScrollIndicator" },
                            { { "QtQuick", "Flickable" } },
-                           "ScrollIndicator must be attached to a Flickable");
+                           "ScrollIndicator attached property must be attached to an object deriving from Flickable");
         addAttachedWarning({ "QtQuick.Templates", "TextArea" }, { { "QtQuick", "Flickable" } },
-                           "TextArea must be attached to a Flickable");
+                           "TextArea attached property must be attached to an object deriving from Flickable");
         addAttachedWarning({ "QtQuick.Templates", "SplitView" }, { { "QtQuick", "Item" } },
-                           "SplitView attached property only works with Items");
+                           "SplitView attached property must be attached to an object deriving from Item");
         addAttachedWarning({ "QtQuick.Templates", "StackView" }, { { "QtQuick", "Item" } },
-                           "StackView attached property only works with Items");
+                           "StackView attached property must be attached to an object deriving from Item");
         addAttachedWarning({ "QtQuick.Templates", "ToolTip" }, { { "QtQuick", "Item" } },
-                           "ToolTip must be attached to an Item");
+                           "ToolTip attached property must be attached to an object deriving from Item");
         addAttachedWarning({ "QtQuick.Templates", "SwipeDelegate" }, { { "QtQuick", "Item" } },
-                           "Attached properties of SwipeDelegate must be accessed through an Item");
+                           "SwipeDelegate attached property must be attached to an object deriving from Item");
         addAttachedWarning({ "QtQuick.Templates", "SwipeView" }, { { "QtQuick", "Item" } },
-                           "SwipeView must be attached to an Item");
+                           "SwipeView attached property must be attached to an object deriving from Item");
         addAttachedWarning(
                 { "QtQuick.Templates", "Tumbler" }, { { "QtQuick", "Tumbler" } },
                 "Tumbler: attached properties of Tumbler must be accessed through a delegate item",

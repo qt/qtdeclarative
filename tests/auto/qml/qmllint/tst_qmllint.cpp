@@ -2279,23 +2279,22 @@ void TestQmllint::quickPlugin()
                               u"Cannot specify y for items inside Flow. Flow will not function."_s } } });
     runTest("pluginQuick_attached.qml",
             Result {
-                    { Message { u"ToolTip must be attached to an Item"_s },
-                      Message { u"SplitView attached property only works with Items"_s },
-                      Message { u"ScrollIndicator must be attached to a Flickable"_s },
-                      Message { u"ScrollBar must be attached to a Flickable or ScrollView"_s },
-                      Message { u"Accessible must be attached to an Item or an Action"_s },
-                      Message { u"EnterKey attached property only works with Items"_s },
+                    { Message { u"ToolTip attached property must be attached to an object deriving from Item"_s },
+                      Message { u"SplitView attached property must be attached to an object deriving from Item"_s },
+                      Message { u"ScrollIndicator attached property must be attached to an object deriving from Flickable"_s },
+                      Message { u"ScrollBar attached property must be attached to an object deriving from Flickable or ScrollView"_s },
+                      Message { u"Accessible attached property must be attached to an object deriving from Item or Action"_s },
+                      Message { u"EnterKey attached property must be attached to an object deriving from Item"_s },
                       Message {
-                              u"LayoutMirroring attached property only works with Items and Windows"_s },
-                      Message { u"Layout must be attached to Item elements"_s },
-                      Message { u"StackView attached property only works with Items"_s },
-                      Message { u"TextArea must be attached to a Flickable"_s },
-                      Message { u"StackLayout must be attached to an Item"_s },
+                              u"LayoutMirroring attached property must be attached to an object deriving from Item or Window"_s },
+                      Message { u"Layout attached property must be attached to an object deriving from Item"_s },
+                      Message { u"StackView attached property must be attached to an object deriving from Item"_s },
+                      Message { u"TextArea attached property must be attached to an object deriving from Flickable"_s },
+                      Message { u"StackLayout attached property must be attached to an object deriving from Item"_s },
                       Message {
                               u"Tumbler: attached properties of Tumbler must be accessed through a delegate item"_s },
-                      Message {
-                              u"Attached properties of SwipeDelegate must be accessed through an Item"_s },
-                      Message { u"SwipeView must be attached to an Item"_s } } });
+                      Message { u"SwipeDelegate attached property must be attached to an object deriving from Item"_s },
+                      Message { u"SwipeView attached property must be attached to an object deriving from Item"_s } } });
 
     runTest("pluginQuick_swipeDelegate.qml",
             Result { {

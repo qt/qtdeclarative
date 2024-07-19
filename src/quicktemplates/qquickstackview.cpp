@@ -1696,7 +1696,7 @@ QQuickStackViewAttached::QQuickStackViewAttached(QObject *parent)
         QQuickItemPrivate::get(item)->addItemChangeListener(d, QQuickItemPrivate::Parent);
         d->itemParentChanged(item, item->parentItem());
     } else if (parent) {
-        qmlWarning(parent) << "StackView must be attached to an Item";
+        qmlWarning(parent) << "StackView attached property must be attached to an object deriving from Item";
     }
 }
 

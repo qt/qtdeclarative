@@ -1633,7 +1633,7 @@ void tst_QmlCppCodegen::enums()
     QVERIFY2(!component.isError(), component.errorString().toUtf8());
 
     QTest::ignoreMessage(QtWarningMsg, "qrc:/qt/qml/TestTypes/Enums.qml:4:1: "
-                                       "QML Enums: Layout must be attached to Item elements");
+                                       "QML Enums: Layout attached property must be attached to an object deriving from Item");
     QScopedPointer<QObject> object(component.create());
 
     QVERIFY(!object.isNull());
@@ -1678,7 +1678,7 @@ void tst_QmlCppCodegen::enumsInOtherObject()
 {
     QQmlEngine engine;
     QTest::ignoreMessage(QtWarningMsg, "qrc:/qt/qml/TestTypes/enumsInOtherObject.qml:4:25: "
-                                       "QML Enums: Layout must be attached to Item elements");
+                                       "QML Enums: Layout attached property must be attached to an object deriving from Item");
     QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enumsInOtherObject.qml"_s));
     QVERIFY2(!component.isError(), component.errorString().toUtf8());
     QScopedPointer<QObject> object(component.create());

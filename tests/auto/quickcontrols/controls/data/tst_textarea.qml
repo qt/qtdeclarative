@@ -351,7 +351,7 @@ TestCase {
     }
 
     function test_warning() {
-        ignoreWarning(/QML TestCase: TextArea must be attached to a Flickable/)
+        ignoreWarning(/QML TestCase: TextArea attached property must be attached to an object deriving from Flickable/)
         testCase.TextArea.flickable = null
     }
 

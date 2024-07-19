@@ -759,7 +759,7 @@ QQuickLayout *QQuickLayoutAttached::parentLayout() const
         parentItem = parentItem->parentItem();
         return qobject_cast<QQuickLayout *>(parentItem);
     } else {
-        qmlWarning(parent()) << "Layout must be attached to Item elements";
+        qmlWarning(parent()) << "Layout attached property must be attached to an object deriving from Item";
     }
     return nullptr;
 }

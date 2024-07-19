@@ -495,7 +495,7 @@ QQuickScrollIndicatorAttached::QQuickScrollIndicatorAttached(QObject *parent)
     if (d->flickable)
         QQuickItemPrivate::get(d->flickable)->updateOrAddGeometryChangeListener(d, QQuickGeometryChange::Size);
     else if (parent)
-        qmlWarning(parent) << "ScrollIndicator must be attached to a Flickable";
+        qmlWarning(parent) << "ScrollIndicator attached property must be attached to an object deriving from Flickable";
 }
 
 QQuickScrollIndicatorAttached::~QQuickScrollIndicatorAttached()

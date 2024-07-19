@@ -180,7 +180,7 @@ TestCase {
     }
 
     function test_warning() {
-        ignoreWarning(new RegExp(".*QML QtObject: ToolTip must be attached to an Item"))
+        ignoreWarning(new RegExp(".*QML QtObject: ToolTip attached property must be attached to an object deriving from Item"))
         object.ToolTip.show("") // don't crash (QTBUG-56243)
     }
 

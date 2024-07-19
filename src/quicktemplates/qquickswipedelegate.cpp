@@ -1411,7 +1411,7 @@ QQuickSwipeDelegateAttached::QQuickSwipeDelegateAttached(QObject *object)
         // the first one with an attached object.
         item->setAcceptedMouseButtons(Qt::AllButtons);
     } else {
-        qWarning() << "Attached properties of SwipeDelegate must be accessed through an Item";
+        qWarning() << "SwipeDelegate attached property must be attached to an object deriving from Item";
     }
 }
 

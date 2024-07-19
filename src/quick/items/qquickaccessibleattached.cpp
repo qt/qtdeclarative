@@ -318,7 +318,7 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     } else {
         const QLatin1StringView className(QQmlData::ensurePropertyCache(parent)->firstCppMetaObject()->className());
         if (className != QLatin1StringView("QQuickAction")) {
-            qmlWarning(parent) << "Accessible must be attached to an Item or an Action";
+            qmlWarning(parent) << "Accessible attached property must be attached to an object deriving from Item or Action";
             return;
         }
     }

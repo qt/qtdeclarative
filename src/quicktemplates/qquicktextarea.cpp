@@ -1117,7 +1117,7 @@ void QQuickTextAreaAttached::setFlickable(QQuickTextArea *control)
     Q_D(QQuickTextAreaAttached);
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(parent());
     if (!flickable) {
-        qmlWarning(parent()) << "TextArea must be attached to a Flickable";
+        qmlWarning(parent()) << "TextArea attached property must be attached to an object deriving from Flickable";
         return;
     }
 

@@ -149,7 +149,7 @@ TestCase {
     }
 
     function test_warning() {
-        ignoreWarning(/QML TestCase: ScrollIndicator must be attached to a Flickable/)
+        ignoreWarning(/QML TestCase: ScrollIndicator attached property must be attached to an object deriving from Flickable/)
         testCase.ScrollIndicator.vertical = null
     }
 

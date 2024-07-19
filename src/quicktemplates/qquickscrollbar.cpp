@@ -1171,7 +1171,7 @@ QQuickScrollBarAttached::QQuickScrollBarAttached(QObject *parent)
     d->setFlickable(qobject_cast<QQuickFlickable *>(parent));
 
     if (parent && !d->flickable && !qobject_cast<QQuickScrollView *>(parent))
-        qmlWarning(parent) << "ScrollBar must be attached to a Flickable or ScrollView";
+        qmlWarning(parent) << "ScrollBar attached property must be attached to an object deriving from Flickable or ScrollView";
 }
 
 QQuickScrollBarAttached::~QQuickScrollBarAttached()

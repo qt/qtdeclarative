@@ -527,7 +527,7 @@ TestCase {
     }
 
     function test_warning() {
-        ignoreWarning(/.*QML TestCase: ScrollBar must be attached to a Flickable or ScrollView/)
+        ignoreWarning(/.*QML TestCase: ScrollBar attached property must be attached to an object deriving from Flickable or ScrollView/)
         testCase.ScrollBar.vertical = null
     }
 
