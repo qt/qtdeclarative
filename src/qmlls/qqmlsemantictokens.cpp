@@ -60,6 +60,8 @@ static int mapToProtocolForQtCreator(QmlHighlightKind highlightKind)
         return int(SemanticTokenProtocolTypes::Namespace);
     case QmlHighlightKind::JsGlobalVar:
         return int(SemanticTokenProtocolTypes::JsGlobalVar);
+    case QmlHighlightKind::JsGlobalMethod:
+        return int(SemanticTokenProtocolTypes::Method);
     case QmlHighlightKind::JsScopeVar:
         return int(SemanticTokenProtocolTypes::JsScopeVar);
     case QmlHighlightKind::JsLabel:
@@ -117,6 +119,8 @@ static int mapToProtocolDefault(QmlHighlightKind highlightKind)
         return int(SemanticTokenProtocolTypes::Namespace);
     case QmlHighlightKind::JsGlobalVar:
         return int(SemanticTokenProtocolTypes::Variable);
+    case QmlHighlightKind::JsGlobalMethod:
+        return int(SemanticTokenProtocolTypes::Method);
     case QmlHighlightKind::JsScopeVar:
         return int(SemanticTokenProtocolTypes::Variable);
     case QmlHighlightKind::JsLabel:
@@ -133,6 +137,48 @@ static int mapToProtocolDefault(QmlHighlightKind highlightKind)
     default:
         return int(SemanticTokenProtocolTypes::Variable);
     }
+}
+
+/*!
+\internal
+\brief Further resolves the type of a JavaScriptIdentifier
+A global object can be in the object form or in the function form.
+For example, Date can be used as a constructor function (like new Date())
+or as a object (like Date.now()).
+*/
+static std::optional<QmlHighlightKind> resolveJsGlobalObjectKind(const DomItem &item,
+                                                                 const QString &name)
+{
+    // Some objects are not constructable, they are always objects.
+    static QSet<QString> noConstructorObjects = { u"Math"_s, u"JSON"_s, u"Atomics"_s, u"Reflect"_s,
+                                                  u"console"_s };
+    // if the method name is in the list of noConstructorObjects, then it is a global object. Do not
+    // perform further checks.
+    if (noConstructorObjects.contains(name))
+        return QmlHighlightKind::JsGlobalVar;
+    // Check if the method is called with new, then it is a constructor function
+    if (item.directParent().internalKind() == DomType::ScriptNewMemberExpression) {
+        return QmlHighlightKind::JsGlobalMethod;
+    }
+    if (DomItem containingCallExpression = item.filterUp(
+                [](DomType k, const DomItem &) { return k == DomType::ScriptCallExpression; },
+                FilterUpOptions::ReturnOuter)) {
+        // Call expression
+        // if callee is binary expression, then the rightest part is the method name
+        const auto callee = containingCallExpression.field(Fields::callee);
+        if (callee.internalKind() == DomType::ScriptBinaryExpression) {
+            const auto right = callee.field(Fields::right);
+            if (right.internalKind() == DomType::ScriptIdentifierExpression
+                && right.field(Fields::identifier).value().toString() == name) {
+                return QmlHighlightKind::JsGlobalMethod;
+            } else {
+                return QmlHighlightKind::JsGlobalVar;
+            }
+        } else {
+            return QmlHighlightKind::JsGlobalVar;
+        }
+    }
+    return std::nullopt;
 }
 
 static int fromQmlModifierKindToLspTokenType(QmlHighlightModifiers highlightModifier)
@@ -499,9 +545,14 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
                 if (jsIdentifier->isConst) {
                     modifier |= QmlHighlightModifier::QmlReadonlyProperty;
                 }
+                m_highlights.addHighlight(loc, tokenType, modifier);
+                return;
             }
         }
-        m_highlights.addHighlight(loc, tokenType, modifier);
+        if (const auto name = expression->name) {
+            if (const auto highlightKind = resolveJsGlobalObjectKind(item, *name))
+                return m_highlights.addHighlight(loc, *highlightKind);
+        }
         return;
     }
     case QQmlLSUtils::PropertyIdentifier: {

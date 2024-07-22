@@ -53,6 +53,7 @@ enum class QmlHighlightKind {
     QmlTypeModifier, // list<QtObject>, list is the modifier, QtObject is the type
     JsImport, // Js imported name
     JsGlobalVar, // Js global variable or objects
+    JsGlobalMethod, // Js global method
     JsScopeVar, // Js variable defined in the current scope
     JsLabel, // js label
     Number,
