@@ -1077,7 +1077,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("callJSValue")
             << QStringLiteral("callJSValueProp.qml")
             << Result { { Message { QStringLiteral(
-                       "Property \"gradient\" is a QJSValue property. It may or may not be "
+                       "Property \"jsValue\" is a QJSValue property. It may or may not be "
                        "a method. Use a regular Q_INVOKABLE instead.") } } };
     QTest::newRow("assignNonExistingTypeToVarProp")
             << QStringLiteral("assignNonExistingTypeToVarProp.qml")

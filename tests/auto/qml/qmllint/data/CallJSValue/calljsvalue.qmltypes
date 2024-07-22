@@ -1,0 +1,12 @@
+import QtQuick.tooling 1.2
+
+Module {
+    Component {
+        file: "typewithqjsvalue.h"
+        name: "TypeWithQJSValue"
+        exports: ["QmlLintTestLib/TypeWithQJSValue 1.0"]
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "jsValue"; type: "QJSValue"; read: "getJSValue"; index: 0; }
+    }
+}

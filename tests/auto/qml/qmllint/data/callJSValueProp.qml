@@ -1,6 +1,6 @@
-import QtQuick
+import CallJSValue
 
-Rectangle {
-    // Note: gradient is not actually callable
-    Component.onCompleted: gradient(42);
+TypeWithQJSValue {
+    // Note: jsValue is not actually callable
+    Component.onCompleted: jsValue(42);
 }
