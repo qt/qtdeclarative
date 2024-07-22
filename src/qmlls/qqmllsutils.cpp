@@ -1586,12 +1586,16 @@ static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomIt
 
     const QQmlJSScope::ConstPtr jsGlobal = resolver->jsGlobalObject();
     // check if its a JS global method
-    if (auto scope = methodFromReferrerScope(jsGlobal, name, options))
+    if (auto scope = methodFromReferrerScope(jsGlobal, name, options)) {
+        scope->type = JavaScriptIdentifier;
         return scope;
+    }
 
     // check if its an JS global property
-    if (auto scope = propertyFromReferrerScope(jsGlobal, name, options))
-        return *scope;
+    if (auto scope = propertyFromReferrerScope(jsGlobal, name, options)) {
+        scope->type = JavaScriptIdentifier;
+        return scope;
+    }
 
     return {};
 }

@@ -645,6 +645,24 @@ void tst_qmlls_highlighting::highlights_data()
         QTest::addRow("typeModifiers") << fileItem
                                    << Token(QQmlJS::SourceLocation(147, 4, 6, 14),
                                    int(SemanticTokenProtocolTypes::Decorator), 0);
+        QTest::addRow("globalVar") << fileItem
+                                   << Token(QQmlJS::SourceLocation(234, 4, 9, 19),
+                                            int(SemanticTokenProtocolTypes::Variable), 0);
+        QTest::addRow("globalMethod") << fileItem
+                                      << Token(QQmlJS::SourceLocation(239, 3, 9, 24),
+                                               int(SemanticTokenProtocolTypes::Method), 0);
+        QTest::addRow("globalMethodNewMember") << fileItem
+                                               << Token(QQmlJS::SourceLocation(267, 4, 10, 23),
+                                                        int(SemanticTokenProtocolTypes::Method), 0);
+        QTest::addRow("globalMethodCallExpr") << fileItem
+                                              << Token(QQmlJS::SourceLocation(310, 4, 11, 36),
+                                                       int(SemanticTokenProtocolTypes::Method), 0);
+        QTest::addRow("globalVarCallExpr") << fileItem
+                                           << Token(QQmlJS::SourceLocation(300, 9, 11, 26),
+                                                    int(SemanticTokenProtocolTypes::Variable), 0);
+        QTest::addRow("globalVarMath") << fileItem
+                                       << Token(QQmlJS::SourceLocation(337, 4, 12, 20),
+                                                int(SemanticTokenProtocolTypes::Variable), 0);
     }
 }
 

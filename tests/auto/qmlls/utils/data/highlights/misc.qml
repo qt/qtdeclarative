@@ -4,4 +4,11 @@
 import QtQuick
 Item {
     property list<QtObject> objects: [QtObject{}, QtObject{}]
+
+    function a() {
+        const t = Date.now()
+        const a = new Date();
+        const aa = Array.prototype.push(1)
+        const KK = Math.random();
+    }
 }
