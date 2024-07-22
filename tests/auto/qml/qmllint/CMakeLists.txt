@@ -60,3 +60,10 @@ if (TARGET qmljsrootgen)
 
     add_dependencies(tst_qmllint Qt::qmljsrootgen)
 endif()
+
+if(QT_FEATURE_process)
+    add_subdirectory(importRelScript)
+    add_dependencies(tst_qmllint tst_qmllint_import_rel_script)
+    target_compile_definitions(tst_qmllint PUBLIC
+        TST_QMLLINT_IMPORT_REL_SCRIPT_ARGS="@${CMAKE_CURRENT_BINARY_DIR}/importRelScript/.rcc/qmllint/tst_qmllint_import_rel_script.rsp")
+endif()
