@@ -2308,10 +2308,12 @@ void QQmlJSImportVisitor::importFromHost(const QString &path, const QString &pre
 void QQmlJSImportVisitor::importFromQrc(const QString &path, const QString &prefix,
                                         const QQmlJS::SourceLocation &location)
 {
+    Q_ASSERT(path.startsWith(u':'));
     if (const QQmlJSResourceFileMapper *mapper = m_importer->resourceFileMapper()) {
-        if (mapper->isFile(path)) {
+        const auto pathNoColon = path.mid(1);
+        if (mapper->isFile(pathNoColon)) {
             const auto entry = m_importer->resourceFileMapper()->entry(
-                    QQmlJSResourceFileMapper::resourceFileFilter(path));
+                    QQmlJSResourceFileMapper::resourceFileFilter(pathNoColon));
             const auto scope = m_importer->importFile(entry.filePath);
             const QString actualPrefix =
                     prefix.isEmpty() ? QFileInfo(entry.resourcePath).baseName() : prefix;
