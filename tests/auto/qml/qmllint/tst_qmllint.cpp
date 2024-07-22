@@ -104,6 +104,10 @@ private Q_SLOTS:
     void quickPlugin();
 #endif
 
+#if QT_CONFIG(process)
+    void importRelScript();
+#endif
+
 private:
     enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
     enum ContainOption { StringNotContained, StringContained };
@@ -2209,6 +2213,17 @@ void TestQmllint::backslashedQmldirPath()
             testFile(u"something.qml"_s), true, QStringList{ u"-i"_s, qmldirPath });
     QVERIFY(output.isEmpty());
 }
+
+#if QT_CONFIG(process)
+void TestQmllint::importRelScript()
+{
+    QProcess proc;
+    proc.start(m_qmllintPath, { QStringLiteral(TST_QMLLINT_IMPORT_REL_SCRIPT_ARGS) });
+    QVERIFY(proc.waitForFinished());
+    QVERIFY(proc.readAllStandardOutput().isEmpty());
+    QVERIFY(proc.readAllStandardError().isEmpty());
+}
+#endif
 
 QTEST_MAIN(TestQmllint)
 #include "tst_qmllint.moc"
