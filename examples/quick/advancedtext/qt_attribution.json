@@ -1,0 +1,14 @@
+[
+    {
+        "Id": "georama-font",
+        "Name": "Georama",
+        "QDocModule": "qtquick",
+        "QtUsage": "Used in the Advanced Text example",
+        "QtParts": [ "examples" ],
+        "Files": "fonts/Georama-VariableFont_wdth,wght.ttf",
+        "LicenseId": "OFL-1.1",
+        "License": "SIL Open Font License 1.1",
+        "Homepage": "https://github.com/productiontype/Georama",
+        "Copyright": "Copyright 2020 The Georama Project Authors"
+    }
+]
