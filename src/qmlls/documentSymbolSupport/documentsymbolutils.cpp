@@ -227,18 +227,17 @@ static void reorganizeQmlComponentSymbol(MutableRefToDocumentSymbol qmlCompSymbo
         return;
     }
 
-    constexpr auto idSymbolKind = symbolKindFor(DomType::Id);
     constexpr auto enumDeclSymbolKind = symbolKindFor(DomType::EnumDecl);
-    const auto symbolIsEnumDeclOrId = [](const QLspSpecification::DocumentSymbol &symbol) -> bool {
-        return symbol.kind == idSymbolKind || symbol.kind == enumDeclSymbolKind;
+    const auto symbolIsEnumDecl = [](const QLspSpecification::DocumentSymbol &symbol) -> bool {
+        return symbol.kind == enumDeclSymbolKind;
     };
-    readoptChildrenIf(symbolIsEnumDeclOrId, qmlCompSymbol);
+    readoptChildrenIf(symbolIsEnumDecl, qmlCompSymbol);
 }
 
 /*! \internal
  *  This function reorganizes \c qmlFileSymbols (result of assembleSymbolsForQmlFile)
  *  in the following way:
- *  1. Moves Symbol-s representing Enum-s, Id-s and inline QmlComponent-s
+ *  1. Moves Symbol-s representing Enum-s and inline QmlComponent-s
  * to their respective range-containing parents , a.k.a. direct structural parents.
  *  2. Reassignes head to the DocumentSymbol representing root QmlObject of the main
  * QmlComponent
@@ -278,13 +277,32 @@ SymbolsList buildSymbolOrReturnChildren(const DomItem &item, SymbolsList &&child
         return std::move(children);
     }
 
-    QLspSpecification::DocumentSymbol symbol;
-    symbol.kind = symbolKindOf(item);
-    symbol.name = symbolNameOf(item);
-    symbol.detail = tryGetDetailOf(item);
-    std::tie(symbol.range, symbol.selectionRange) = symbolRangesOf(item);
+    const auto buildPartialSymbol = [](const DomItem &item) {
+        QLspSpecification::DocumentSymbol symbol;
+        symbol.kind = symbolKindOf(item);
+        symbol.name = symbolNameOf(item);
+        symbol.detail = tryGetDetailOf(item);
+        std::tie(symbol.range, symbol.selectionRange) = symbolRangesOf(item);
+        return symbol;
+    };
+
+    auto symbol = buildPartialSymbol(item);
     if (!children.empty()) {
         symbol.children.emplace(std::move(children));
+    }
+    /*
+     To avoid pushing down Id items through the DocumentSymbol tree,
+     as part of rearrangement step, it was decided to handle them here explicitly.
+     That Id issue atm only affects objects
+     If / when Id is moving from component level to Object level this should be reflected
+     also in the visiting logic.
+     TODO(QTBUG-128274)
+     */
+    if (const auto objPtr = item.as<QmlObject>()) {
+        if (const auto idItem = item.component().field(Fields::ids).key(objPtr->idStr()).index(0)) {
+            auto idSymbol = buildPartialSymbol(idItem);
+            adopt(std::move(idSymbol), symbol);
+        }
     }
     return SymbolsList{ std::move(symbol) };
 }
@@ -421,9 +439,11 @@ const FieldFilter &DocumentSymbolVisitor::fieldsFilter()
                 { QString(), QString::fromUtf16(Fields::expressionType) },
                 // components
                 { QString(), QString::fromUtf16(Fields::subComponents) },
-                // TODO we actually need these, but should later be re-arranged?
-                //{ QString(), QString::fromUtf16(Fields::ids) },
-                // however idStr of the object should be ignored though?
+                // BEWARE
+                // Ids and IdStr are filtered out during the visit, because
+                // documentSymbol-s for them will be explicitly handled as part of the
+                // creation of symbol for QmlObject
+                { QString(), QString::fromUtf16(Fields::ids) },
                 { QString(), QString::fromUtf16(Fields::idStr) },
 
                 // id

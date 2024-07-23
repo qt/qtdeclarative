@@ -64,6 +64,7 @@ static bool compareDocumentSymbolsLists(const QList<DocumentSymbol> &actual,
  * fakeQmlFileItem returns a DomItem representing a pseudo QmlFile like the following
  *
  * {
+ *     id: fakeId
  *     property var
  *
  *     // bindings
@@ -117,6 +118,7 @@ QQmlJS::Dom::DomItem tst_document_symbol_utils::fakeQmlFileItem()
 
     // add root QmlObject to root component
     auto rootCmp = QmlComponent();
+    rootCmp.addId(Id("fakeId"));
     rootCmp.addObject(rootQmlObject);
     qmlFile->addComponent(rootCmp);
 
@@ -160,7 +162,12 @@ SymbolsList tst_document_symbol_utils::expectedSymbolsOfFakeQmlFile()
     };
 
     DocumentSymbol mainQmlCompSymbol = fakeSymbol(DomType::QmlComponent);
-    mainQmlCompSymbol.children = { std::move(rootQmlObjectSymbol) };
+    mainQmlCompSymbol.children = { // BEWARE
+                                   // because Id is manually handled
+                                   // outside of visiting logic, before it becomes a child of
+                                   // Object, it's not present here
+                                   std::move(rootQmlObjectSymbol)
+    };
 
     // Inline Component
 
@@ -417,7 +424,7 @@ reorganizeForOutlineViewTestData()
 
     using QLspSpecification::DocumentSymbol;
     using QLspSpecification::SymbolKind;
-
+    // Construct Document Symbols, corresponding to the fakeQmlFile, that needs to be reorganized
     DocumentSymbol enumSymbol;
     enumSymbol.name = "Enum";
     enumSymbol.kind = DocumentSymbolUtils::symbolKindOf(domItem(EnumDecl()));
@@ -429,9 +436,10 @@ reorganizeForOutlineViewTestData()
     item4Id.range = { { 3, 14 }, { 3, 23 } };
 
     DocumentSymbol item4;
-    item4.range = { { 3, 1 }, { 3, 41 } };
+    item4.range = { { 3, 7 }, { 3, 41 } };
     item4.kind = DocumentSymbolUtils::symbolKindOf(domItem(QmlObject()));
     item4.name = "Item4";
+    item4.children.emplace({ item4Id });
 
     DocumentSymbol item3;
     item3.range = { { 3, 1 }, { 3, 43 } };
@@ -449,7 +457,9 @@ reorganizeForOutlineViewTestData()
     mainCmp.range = { { 1, 1 }, { 3, 43 } };
     mainCmp.kind = DocumentSymbolUtils::symbolKindOf(domItem(QmlComponent()));
     mainCmp.name = "mainCmp";
-    mainCmp.children.emplace({ enumSymbol, item4Id, item1 });
+    // Create and add an fictional Id just to verify that it's not touched by the reorganisation
+    auto fictionalId(item4Id);
+    mainCmp.children.emplace({ enumSymbol, fictionalId, item1 });
 
     DocumentSymbol item2;
     item2.range = { { 2, 15 }, { 3, 21 } };
@@ -475,19 +485,20 @@ reorganizeForOutlineViewTestData()
 
     QList<DocumentSymbol> fakeQmlFileSymbols{ qmlFile };
     //-----------------------------------------------------------------------
-    // should contain item4Id and cmpC2 as a child
+    // during reorganization cmpC2 should be added as a child
     DocumentSymbol reorganizedItem4(item4);
-    reorganizedItem4.children = { item4Id, cmpC2 };
+    reorganizedItem4.children->push_back(cmpC2);
 
-    // should contain reorganizedItem4 as child
+    // should contain reorganizedItem4
     DocumentSymbol reorganizedItem3(item3);
     reorganizedItem3.children = { reorganizedItem4 };
 
-    // should contain reorganizedItem3, enum, id, cmpC1 as children
+    // should contain reorganizedItem3, enum, cmpC1 as children
     DocumentSymbol reorganizedItem1(item1);
     reorganizedItem1.children = { reorganizedItem3, enumSymbol, cmpC1 };
 
-    QList<DocumentSymbol> reorganizedFakeQmlFileSymbols{ reorganizedItem1 };
+    // verify fictionalId stays where it was added, not touched by the reorg
+    QList<DocumentSymbol> reorganizedFakeQmlFileSymbols{ fictionalId, reorganizedItem1 };
     return std::make_pair(fakeQmlFileSymbols, reorganizedFakeQmlFileSymbols);
 }
 
