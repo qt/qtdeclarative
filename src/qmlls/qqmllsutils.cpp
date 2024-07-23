@@ -3,6 +3,7 @@
 
 #include "qqmllsutils_p.h"
 
+#include <QtCore/qassert.h>
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtCore/qthreadpool.h>
 #include <QtCore/private/qduplicatetracker_p.h>
@@ -657,7 +658,14 @@ static std::optional<SignalOrProperty> resolveNameInQmlScope(const QString &name
 
     if (const auto propertyName = QQmlSignalNames::changedHandlerNameToPropertyName(name)) {
         if (owner->hasProperty(*propertyName)) {
-            return SignalOrProperty{ *propertyName, PropertyChangedHandlerIdentifier };
+            const QString signalName = *QQmlSignalNames::changedHandlerNameToSignalName(name);
+            const QQmlJSMetaMethod signal = owner->methods(signalName).front();
+            // PropertyChangedHandlers don't have parameters: treat all other as regular signal
+            // handlers. Even if they appear in the notify of the property.
+            if (signal.parameterNames().size() == 0)
+                return SignalOrProperty{ *propertyName, PropertyChangedHandlerIdentifier };
+            else
+                return SignalOrProperty{ signalName, SignalHandlerIdentifier };
         }
     }
 
@@ -1398,6 +1406,106 @@ static std::optional<ExpressionType> resolveFieldMemberExpressionType(const DomI
     return owner;
 }
 
+/*!
+\internal
+Resolves the expression type of a binding for signal handlers, like the function expression
+\c{(x) => ...} in
+
+\qml
+onHelloSignal: (x) => ...
+\endqml
+
+would be resolved to the \c{onHelloSignal} expression type, for example.
+*/
+static std::optional<ExpressionType> resolveBindingIfSignalHandler(const DomItem &functionExpression)
+{
+    if (functionExpression.internalKind() != DomType::ScriptFunctionExpression)
+        return {};
+
+    const DomItem parent = functionExpression.directParent();
+    if (parent.internalKind() != DomType::ScriptExpression)
+        return {};
+
+    const DomItem grandParent = parent.directParent();
+    if (grandParent.internalKind() != DomType::Binding)
+        return {};
+
+    auto bindingType = resolveExpressionType(grandParent, ResolveOwnerType);
+    return bindingType;
+}
+
+/*!
+\internal
+In a signal handler
+
+\qml
+    onSomeSignal: (x, y, z) => ....
+\endqml
+
+the parameters \c x, \c y and \c z are not allowed to have type annotations: instead, their type is
+defined by the signal definition itself.
+
+This code detects signal handler parameters and resolves their type using the signal's definition.
+*/
+static std::optional<ExpressionType>
+resolveSignalHandlerParameterType(const DomItem &parameterDefinition, const QString &name,
+                                  ResolveOptions options)
+{
+    const std::optional<QQmlJSScope::JavaScriptIdentifier> jsIdentifier =
+            parameterDefinition.semanticScope()->jsIdentifier(name);
+    if (!jsIdentifier || jsIdentifier->kind != QQmlJSScope::JavaScriptIdentifier::Parameter)
+        return {};
+
+    const DomItem handlerFunctionExpression =
+            parameterDefinition.internalKind() == DomType::ScriptBlockStatement
+            ? parameterDefinition.directParent()
+            : parameterDefinition;
+
+    const std::optional<ExpressionType> bindingType =
+            resolveBindingIfSignalHandler(handlerFunctionExpression);
+    if (!bindingType)
+        return {};
+
+    if (bindingType->type == PropertyChangedHandlerIdentifier)
+        return ExpressionType{};
+
+    if (bindingType->type != SignalHandlerIdentifier)
+        return {};
+
+    const DomItem parameters = handlerFunctionExpression[Fields::parameters];
+    const int indexOfParameter = [&parameters, &name]() {
+        for (int i = 0; i < parameters.indexes(); ++i) {
+            if (parameters[i][Fields::identifier].value().toString() == name)
+                return i;
+        }
+        Q_ASSERT_X(false, "resolveSignalHandlerParameter",
+                   "can't find JS identifier with Parameter kind in the parameters");
+        Q_UNREACHABLE_RETURN(-1);
+    }();
+
+    const std::optional<QString> signalName =
+            QQmlSignalNames::handlerNameToSignalName(*bindingType->name);
+    Q_ASSERT_X(signalName.has_value(), "resolveSignalHandlerParameterType",
+               "handlerNameToSignalName failed on a SignalHandler");
+
+    const QQmlJSMetaMethod signalDefinition =
+            bindingType->semanticScope->methods(*signalName).front();
+    const QList<QQmlJSMetaParameter> parameterList = signalDefinition.parameters();
+
+    // not a signal handler parameter after all
+    if (parameterList.size() <= indexOfParameter)
+        return {};
+
+    // now we can return an ExpressionType, even if the indexOfParameter calculation result is only
+    // needed to check whether this is a signal handler parameter or not.
+    if (options == ResolveOwnerType)
+        return ExpressionType{ name, bindingType->semanticScope, JavaScriptIdentifier };
+    else {
+        const QQmlJSScope::ConstPtr parameterType = parameterList[indexOfParameter].type();
+        return ExpressionType{ name, parameterType, JavaScriptIdentifier };
+    }
+}
+
 static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomItem &item,
                                                                      ResolveOptions options)
 {
@@ -1413,6 +1521,9 @@ static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomIt
                     "QQmlLSUtils::findDefinitionOf",
                     "JS definition does not actually define the JS identifer. "
                     "It should be empty.");
+        if (auto parameter = resolveSignalHandlerParameterType(definitionOfItem, name, options))
+            return parameter;
+
         const auto scope = definitionOfItem.semanticScope();
         return ExpressionType{ name,
                                options == ResolveOwnerType
@@ -1507,7 +1618,7 @@ resolveSignalOrPropertyExpressionType(const QString &name, const QQmlJSScope::Co
     case MethodIdentifier:
         switch (options) {
         case ResolveOwnerType: {
-            return ExpressionType{ name, findDefiningScopeForMethod(scope, name),
+            return ExpressionType{ name, findDefiningScopeForMethod(scope, signalOrProperty->name),
                                    signalOrProperty->type };
         }
         case ResolveActualTypeForFieldMemberExpression:
