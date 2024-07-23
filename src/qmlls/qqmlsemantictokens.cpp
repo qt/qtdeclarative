@@ -549,6 +549,9 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
     case QQmlLSUtils::GroupedPropertyIdentifier:
         m_highlights.addHighlight(loc, QmlHighlightKind::QmlProperty);
         return;
+    case QQmlLSUtils::QualifiedModuleIdentifier:
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlNamespace);
+        return;
     default:
         qCWarning(semanticTokens)
                 << QString::fromLatin1("Semantic token for %1 has not been implemented yet")

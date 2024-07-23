@@ -603,6 +603,16 @@ void tst_qmlls_highlighting::highlights_data()
                          int(SemanticTokenProtocolTypes::Variable),
                          (1 << int(SemanticTokenModifiers::Readonly)));
     }
+    { // namespaced items
+        const auto filePath = m_highlightingDataDir + "/namespace.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("namespace") << fileItem
+                                   << Token(QQmlJS::SourceLocation(134, 3, 5, 1),
+                                   int(SemanticTokenProtocolTypes::Namespace), 0);
+        QTest::addRow("type") << fileItem
+                                   << Token(QQmlJS::SourceLocation(138, 4, 5, 5),
+                                   int(SemanticTokenProtocolTypes::Type), 0);
+    }
 }
 
 void tst_qmlls_highlighting::highlights()
