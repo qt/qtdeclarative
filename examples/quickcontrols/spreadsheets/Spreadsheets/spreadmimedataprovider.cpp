@@ -4,8 +4,10 @@
 #include "spreadmimedataprovider.h"
 
 #include <QMimeData>
+#ifndef QT_NO_CLIPBOARD
 #include <QGuiApplication>
 #include <QClipboard>
+#endif
 
 namespace {
 static inline constexpr auto MIMETYPE_SPREADMODEL = "application/x-qtexamplespreadmodel";
@@ -54,21 +56,31 @@ bool SpreadMimeDataProvider::loadFromMimeData(const QMimeData *mimeData)
 
 bool SpreadMimeDataProvider::saveToClipboard()
 {
+#ifdef QT_NO_CLIPBOARD
+    qWarning() << "Clipboard is not supported";
+    return false;
+#else
     QMimeData *mime_data = saveToMimeData();
     if (!mime_data)
         return false;
 
     QGuiApplication::clipboard()->setMimeData(mime_data);
     return true;
+#endif
 }
 
 bool SpreadMimeDataProvider::loadFromClipboard()
 {
+#ifdef QT_NO_CLIPBOARD
+    qWarning() << "Clipboard is not supported";
+    return false;
+#else
     const QMimeData *mime_data = QGuiApplication::clipboard()->mimeData();
     if (!mime_data)
         return false;
 
     return loadFromMimeData(mime_data);
+#endif
 }
 
 bool SpreadMimeDataProvider::saveDataToModel(int index,
