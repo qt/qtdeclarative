@@ -53,7 +53,7 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSResourceFileMapper
     QQmlJSResourceFileMapper(const QStringList &resourceFiles);
 
     bool isEmpty() const;
-    bool isFile(const QString &resourcePath) const;
+    bool isFile(QStringView resourcePath) const;
 
     QList<Entry> filter(const Filter &filter) const;
     QStringList filePaths(const Filter &filter) const;

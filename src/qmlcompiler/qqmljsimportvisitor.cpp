@@ -2300,10 +2300,10 @@ void QQmlJSImportVisitor::importFromQrc(const QString &path, const QString &pref
 {
     Q_ASSERT(path.startsWith(u':'));
     if (const QQmlJSResourceFileMapper *mapper = m_importer->resourceFileMapper()) {
-        const auto pathNoColon = path.mid(1);
+        const auto pathNoColon = QStringView(path).mid(1);
         if (mapper->isFile(pathNoColon)) {
             const auto entry = m_importer->resourceFileMapper()->entry(
-                    QQmlJSResourceFileMapper::resourceFileFilter(pathNoColon));
+                    QQmlJSResourceFileMapper::resourceFileFilter(pathNoColon.toString()));
             const auto scope = m_importer->importFile(entry.filePath);
             const QString actualPrefix =
                     prefix.isEmpty() ? QFileInfo(entry.resourcePath).baseName() : prefix;

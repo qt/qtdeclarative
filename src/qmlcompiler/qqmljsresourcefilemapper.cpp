@@ -60,7 +60,7 @@ bool QQmlJSResourceFileMapper::isEmpty() const
     return qrcPathToFileSystemPath.isEmpty();
 }
 
-bool QQmlJSResourceFileMapper::isFile(const QString &resourcePath) const
+bool QQmlJSResourceFileMapper::isFile(QStringView resourcePath) const
 {
     for (const auto &entry : qrcPathToFileSystemPath) {
         if (entry.resourcePath == resourcePath)
