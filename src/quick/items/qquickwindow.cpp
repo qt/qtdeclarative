@@ -591,15 +591,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
                 renderer->setDevicePixelRatio(1);
             }
         } else {
-            QSize pixelSize;
-            QSizeF logicalSize;
-            if (surfaceSize.isEmpty()) {
-                pixelSize = size * devicePixelRatio;
-                logicalSize = size;
-            } else {
-                pixelSize = surfaceSize;
-                logicalSize = QSizeF(surfaceSize) / devicePixelRatio;
-            }
+            const QSize pixelSize = surfaceSize.isEmpty() ? size * devicePixelRatio : surfaceSize;
             QRect rect(QPoint(0, 0), pixelSize);
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
@@ -607,7 +599,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
             if (flipY)
                 matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
-            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), matrixFlags);
+            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), size), matrixFlags);
             renderer->setDevicePixelRatio(devicePixelRatio);
         }
 
@@ -2673,7 +2665,7 @@ QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, QQui
     QPointF itemPos = item->mapFromScene(point->scenePosition());
     // if the item clips, we can potentially return early
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
-        if (!item->contains(itemPos))
+        if (!item->clipRect().contains(itemPos))
             return targets;
     }
 
@@ -2901,6 +2893,14 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     if (itemPrivate->wasDeleted)
         return;
 #endif
+    // QTBUG-114475 - handlers shouldn't get events if their item was taken out of the scene
+    // by a previous event-handling mechanism.
+    if (item->window() != q) {
+        qCDebug(DBG_TOUCH) << "Not delivering " << pointerEvent << " to " << item
+                           << "- item has been parented away";
+        return;
+    }
+
     pointerEvent->localize(item);
 
     // Let the Item's handlers (if any) have the event first.

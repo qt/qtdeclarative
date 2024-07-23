@@ -87,7 +87,7 @@ public:
     inline void *allocate(size_t size)
     {
         size = (size + 7) & ~size_t(7);
-        if (Q_LIKELY(_ptr && (_ptr + size < _end))) {
+        if (Q_LIKELY(_ptr && size < size_t(_end - _ptr))) {
             void *addr = _ptr;
             _ptr += size;
             return addr;

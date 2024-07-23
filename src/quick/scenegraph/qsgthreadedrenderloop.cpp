@@ -368,6 +368,7 @@ public:
 
     QQuickWindow *window; // Will be 0 when window is not exposed
     QSize windowSize;
+    QSize windowPixelSize;
     float dpr = 1;
     int rhiSampleCount = 1;
     bool rhiDeviceLost = false;
@@ -406,6 +407,13 @@ bool QSGRenderThread::event(QEvent *e)
             stopEventProcessing = true;
         window = se->window;
         windowSize = se->size;
+        if (window) {
+            // Use platform window geometry to avoid introducing rounding errors
+            // due to fractonal Qt Gui scale factors.
+            QPlatformWindow *pw = window->handle();
+            windowPixelSize = pw->geometry().size() * pw->devicePixelRatio();
+        }
+
         dpr = se->dpr;
 
         pendingUpdate |= SyncRequest;
@@ -833,7 +841,8 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         }
     }
     if (current) {
-        d->renderSceneGraph(windowSize, rhi ? cd->swapchain->currentPixelSize() : QSize());
+        const QSize surfaceSize = rhi ? cd->swapchain->currentPixelSize() : windowPixelSize;
+        d->renderSceneGraph(windowSize, surfaceSize);
 
         if (profileFrames)
             renderTime = threadTimer.nsecsElapsed();

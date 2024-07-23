@@ -672,7 +672,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             return;
     }
 
-    QSize effectiveOutputSize; // always prefer what the surface tells us, not the QWindow
+    QSize effectiveOutputSize; // always prefer what the surface or platform window tells us, not the QWindow
     if (cd->swapchain) {
         effectiveOutputSize = cd->swapchain->surfacePixelSize();
         // An update request could still be delivered right before we get an
@@ -680,6 +680,11 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         // leads to failures at this stage since the surface size is already 0.
         if (effectiveOutputSize.isEmpty())
             return;
+    } else {
+        // Use platform window geometry to avoid introducing rounding errors
+        // due to fractonal Qt Gui scale factors.
+        QPlatformWindow *pw = window->handle();
+        effectiveOutputSize = pw->geometry().size() * pw->devicePixelRatio();
     }
 
     Q_TRACE_SCOPE(QSG_renderWindow);

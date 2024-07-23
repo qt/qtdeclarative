@@ -70,6 +70,7 @@
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #include <QtQuick/private/qquickhoverhandler_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
+#include <QtQuick/private/qquickpointerhandler_p_p.h>
 
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
@@ -6341,6 +6342,15 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     }
     case QQuickItem::ItemSceneChange:
         q->itemChange(change, data);
+        if (hasPointerHandlers()) {
+            for (QQuickPointerHandler *handler : qAsConst(extra->pointerHandlers)) {
+                if (auto *currentEvent = handler->currentEvent()) {
+                    for (int i = 0; i < currentEvent->pointCount(); ++i)
+                        currentEvent->point(i)->cancelAllGrabs(handler);
+                }
+            }
+        }
+
         break;
     case QQuickItem::ItemVisibleHasChanged: {
         q->itemChange(change, data);
