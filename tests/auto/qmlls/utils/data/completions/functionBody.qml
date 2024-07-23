@@ -10,5 +10,7 @@ Item {
     function g(x: IC) {
         x.helloProperty
         let f = () => x.helloProperty;
+        let xxx = 42
+        let g = () => xx
     }
 }

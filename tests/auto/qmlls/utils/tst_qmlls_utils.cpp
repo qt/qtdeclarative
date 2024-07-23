@@ -2191,6 +2191,41 @@ void tst_qmlls_utils::resolveExpressionType_data()
         QTest::addRow("letWithLambda")
                 << file << 9 << 13 << ResolveOwnerType << file << 6 << JavaScriptIdentifier;
     }
+    {
+        const QString myHeader = u"private/myfile_p.h"_s;
+        const QString file = testFile(u"resolveExpressionType/parameterTypeFromBinding.qml"_s);
+        QTest::addRow("invalidPropertyChangedHandlerParameter")
+                << file << 9 << 23 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
+                << JavaScriptIdentifier;
+        QTest::addRow("invalidPropertyChangedHandlerParameter2")
+                << file << 9 << 49 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
+                << JavaScriptIdentifier;
+        QTest::addRow("signalHandlerParameter")
+                << file << 12 << 30 << ResolveActualTypeForFieldMemberExpression << myHeader
+                << noLine << JavaScriptIdentifier;
+        QTest::addRow("signalHandlerParameter2")
+                << file << 12 << 63 << ResolveActualTypeForFieldMemberExpression << myHeader
+                << noLine << JavaScriptIdentifier;
+        QTest::addRow("invalidSignalParameter")
+                << file << 12 << 39 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
+                << JavaScriptIdentifier;
+        QTest::addRow("invalidSignalParameter2")
+                << file << 12 << 85 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
+                << JavaScriptIdentifier;
+        QTest::addRow("unrelatedToHandlerParameter")
+                << file << 16 << 17 << ResolveOwnerType << file << 15 << JavaScriptIdentifier;
+        QTest::addRow("unrelatedToHandlerParameter2")
+                << file << 17 << 26 << ResolveOwnerType << file << 15 << JavaScriptIdentifier;
+        QTest::addRow("signalHandlerParameterNonArrow")
+                << file << 21 << 37 << ResolveActualTypeForFieldMemberExpression << myHeader
+                << noLine << JavaScriptIdentifier;
+        QTest::addRow("onColorChangedHandlerParameter")
+                << file << 12 << 30 << ResolveActualTypeForFieldMemberExpression << myHeader
+                << noLine << JavaScriptIdentifier;
+        QTest::addRow("onFakePropertyChangedSignal")
+                << file << 26 << 18 << ResolveOwnerType << myHeader << noLine
+                << SignalHandlerIdentifier;
+    }
 }
 
 void tst_qmlls_utils::resolveExpressionType()
@@ -3903,6 +3938,11 @@ void tst_qmlls_utils::completions_data()
                                     { forStatementCompletion, CompletionItemKind::Snippet } }
             << QStringList{ u"helloProperty"_s };
 
+    QTest::newRow("insideArrowBody")
+            << testFile(u"completions/functionBody.qml"_s) << 14 << 24
+            << ExpectedCompletions{ { u"xxx"_s, CompletionItemKind::Variable } }
+            << QStringList{ u"helloProperty"_s };
+
     QTest::newRow("noBreakInMethodBody")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 8 << 8
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable } }
@@ -4260,6 +4300,23 @@ void tst_qmlls_utils::completions_data()
             << testFile("completions/thisExpression.qml") << 5 << 14
             << ExpectedCompletions{ }
             << QStringList{ forStatementCompletion, u"f"_s };
+
+    QTest::newRow("unexistingSignalParameter")
+            << testFile("completions/parameterTypeFromBinding.qml") << 8 << 46
+            << ExpectedCompletions{} << QStringList{};
+
+    QTest::newRow("signalParameter")
+            << testFile("completions/parameterTypeFromBinding.qml") << 11 << 59
+            << ExpectedCompletions{ { u"helloData"_s, CompletionItemKind::Property } }
+            << QStringList{};
+    QTest::newRow("signalParameter2")
+            << testFile("completions/parameterTypeFromBinding.qml") << 11 << 38
+            << ExpectedCompletions{ { u"console"_s, CompletionItemKind::Property } }
+            << QStringList{};
+    QTest::newRow("fakePropertyChangedSignal")
+            << testFile("completions/parameterTypeFromBinding.qml") << 14 << 65
+            << ExpectedCompletions{ { u"helloData"_s, CompletionItemKind::Property } }
+            << QStringList{ u"mySomeType"_s };
 }
 
 void tst_qmlls_utils::completions()

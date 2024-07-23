@@ -2,35 +2,6 @@ import QtQuick.tooling 1.2
 Module {
     Component {
         file: "private/myfile_p.h"
-        name: "TypeWithAttachedAndEnum"
-        accessSemantics: "reference"
-        prototype: "QObject"
-        exports: ["resolveExpressionType.CppTypes/TypeWithAttachedAndEnum 254.0"]
-        attachedType: "TypeWithAttachedAndEnumAttached"
-        Enum {
-            name: "MyEnum"
-            values: [
-                "Hello",
-                "World",
-            ]
-        }
-        Property {
-            name: "sameAsAttached"
-            type: "var"
-        }
-    }
-    Component {
-        file: "private/myfile_p.h"
-        name: "TypeWithAttachedAndEnumAttached"
-        accessSemantics: "reference"
-        prototype: "QObject"
-        Property {
-            name: "sameAsAttached"
-            type: "var"
-        }
-    }
-    Component {
-        file: "private/myfile_p.h"
         name: "SomeType"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -44,7 +15,7 @@ Module {
         name: "WithSignal"
         accessSemantics: "reference"
         prototype: "QObject"
-        exports: ["resolveExpressionType.CppTypes/WithSignal 254.0"]
+        exports: ["completions.CppTypes/WithSignal 254.0"]
         Signal {
             name: "helloSignal"
             Parameter { name: "data"; type: "SomeType" }
