@@ -50,6 +50,7 @@ enum class QmlHighlightKind {
     QmlEnumMember, // Enum field names
     QmlPragmaName, // Qml pragma name
     QmlPragmaValue, // Qml pragma value
+    QmlTypeModifier, // list<QtObject>, list is the modifier, QtObject is the type
     JsImport, // Js imported name
     JsGlobalVar, // Js global variable or objects
     JsScopeVar, // Js variable defined in the current scope
@@ -95,7 +96,7 @@ enum class SemanticTokenProtocolTypes {
     Number,
     Regexp,
     Operator,
-    Modifier,
+    Decorator,
 
     // Additional token types for the extended semantic highlighting
     QmlLocalId, // object id within the same file

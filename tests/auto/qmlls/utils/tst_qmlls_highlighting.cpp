@@ -613,6 +613,13 @@ void tst_qmlls_highlighting::highlights_data()
                                    << Token(QQmlJS::SourceLocation(138, 4, 5, 5),
                                    int(SemanticTokenProtocolTypes::Type), 0);
     }
+    { // miscellaneous
+        const auto filePath = m_highlightingDataDir + "/misc.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("typeModifiers") << fileItem
+                                   << Token(QQmlJS::SourceLocation(147, 4, 6, 14),
+                                   int(SemanticTokenProtocolTypes::Decorator), 0);
+    }
 }
 
 void tst_qmlls_highlighting::highlights()

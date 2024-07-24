@@ -533,6 +533,8 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
         FileLocations::addRegion(nodeStack.last().fileLocations, TypeIdentifierRegion,
                                  el->typeToken);
         FileLocations::addRegion(nodeStack.last().fileLocations, ColonTokenRegion, el->colonToken);
+        if (el->typeModifierToken.isValid())
+            FileLocations::addRegion(nodeStack.last().fileLocations, TypeModifierRegion, el->typeModifierToken);
         if (p.name == u"id")
             qmlFile.addError(std::move(astParseErrors()
                                      .warning(tr("id is a special attribute, that should not be "
