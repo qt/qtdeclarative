@@ -24,6 +24,9 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(semanticTokens)
 
+namespace HighlightingUtils {
+Q_NAMESPACE
+
 // Protocol agnostic highlighting kinds
 // Use this enum while visiting dom tree to define the highlighting kinds for the semantic tokens
 // Then map it to the protocol specific token types and modifiers
@@ -67,6 +70,47 @@ enum class QmlHighlightModifier {
 };
 Q_DECLARE_FLAGS(QmlHighlightModifiers, QmlHighlightModifier)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QmlHighlightModifiers)
+
+enum class HighlightingMode { Default, QtCHighlighting };
+
+// Protocol specific token types
+// The values in this enum are converted to relevant strings and sent to the client as server
+// capabilities The convention is that the first letter in the enum value is decapitalized and the
+// rest is unchanged i.e Namespace -> "namespace" This is handled in enumToByteArray() helper
+// function.
+enum class SemanticTokenProtocolTypes {
+    // Subset of the QLspSpefication::SemanticTokenTypes enum
+    // We register only the token types used in the qml semantic highlighting
+    Namespace,
+    Type,
+    Enum,
+    Parameter,
+    Variable,
+    Property,
+    EnumMember,
+    Method,
+    Keyword,
+    Comment,
+    String,
+    Number,
+    Regexp,
+    Operator,
+    Modifier,
+
+    // Additional token types for the extended semantic highlighting
+    QmlLocalId, // object id within the same file
+    QmlExternalId, // object id defined in another file
+    QmlRootObjectProperty, // qml property defined in the parent scopes
+    QmlScopeObjectProperty, // qml property defined in the current scope
+    QmlExternalObjectProperty, // qml property defined in the root object of another file
+    JsScopeVar, // js variable defined in the current file
+    JsImportVar, // js import name that is imported in the qml file
+    JsGlobalVar, // js global variables
+    QmlStateName, // name of a qml state
+};
+Q_ENUM_NS(SemanticTokenProtocolTypes)
+
+} // namespace HighlightingUtils
 
 // Represents a semantic highlighting token
 // startLine and startColumn are 0-based as in LSP spec.
@@ -118,14 +162,18 @@ struct HighlightsRange
 class Highlights
 {
 public:
-    void addHighlight(const QQmlJS::SourceLocation &loc, QmlHighlightKind,
-                      QmlHighlightModifiers modifiers = QmlHighlightModifier::None);
+    using QmlHighlightKindToLspKind = int (*)(HighlightingUtils::QmlHighlightKind);
+    Highlights(HighlightingUtils::HighlightingMode mode = HighlightingUtils::HighlightingMode::Default);
+    void addHighlight(const QQmlJS::SourceLocation &loc, HighlightingUtils::QmlHighlightKind,
+                      HighlightingUtils::QmlHighlightModifiers =
+                              HighlightingUtils::QmlHighlightModifier::None);
     HighlightsContainer &highlights() { return m_highlights; }
     const HighlightsContainer &highlights() const { return m_highlights; }
 
 private:
     void addHighlightImpl(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier = 0);
     HighlightsContainer m_highlights;
+    QmlHighlightKindToLspKind m_mapToProtocol;
 };
 
 namespace HighlightingUtils
@@ -139,8 +187,8 @@ namespace HighlightingUtils
     QList<QLspSpecification::SemanticTokensEdit> computeDiff(const QList<int> &, const QList<int> &);
     void updateResultID(QByteArray &resultID);
     QList<int> collectTokens(const QQmlJS::Dom::DomItem &item,
-                             const std::optional<HighlightsRange> &range);
-
+                             const std::optional<HighlightsRange> &range,
+                             HighlightingMode mode = HighlightingMode::Default);
 } // namespace HighlightingUtils
 
 class HighlightingVisitor
