@@ -593,6 +593,7 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("wrongType (int for url)") << "wrongType.15.qml" << "wrongType.15.errors.txt" << false;
     QTest::newRow("wrongType (invalid object)") << "wrongType.16.qml" << "wrongType.16.errors.txt" << false;
     QTest::newRow("wrongType (int for enum)") << "wrongType.17.qml" << "wrongType.17.errors.txt" << false;
+    QTest::newRow("wrongType(non-num/qsizetype)") << "wrongType.18.qml" << "wrongType.18.errors.txt" << false;
 
     QTest::newRow("readOnly.1") << "readOnly.1.qml" << "readOnly.1.errors.txt" << false;
     QTest::newRow("readOnly.2") << "readOnly.2.qml" << "readOnly.2.errors.txt" << false;
@@ -925,6 +926,7 @@ void tst_qqmllanguage::assignValueTypes()
     QCOMPARE(object->stringProperty(), QString("Hello World!"));
     QCOMPARE(object->uintProperty(), uint(10));
     QCOMPARE(object->intProperty(), -19);
+    QCOMPARE(object->qsizetypeProperty(), -4294967297);
     QCOMPARE((float)object->realProperty(), float(23.2));
     QCOMPARE((float)object->doubleProperty(), float(-19.7));
     QCOMPARE((float)object->floatProperty(), float(8.5));
