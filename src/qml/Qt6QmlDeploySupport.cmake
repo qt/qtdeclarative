@@ -117,6 +117,16 @@ function(_qt_internal_deploy_qml_imports_for_target)
 
     if(__QT_DEPLOY_POST_BUILD)
         message(STATUS "Running macOS bundle QML support POST_BUILD routine.")
+
+        # Unset the DESTDIR environment variable if it's set during a post build step, otherwise
+        # file(INSTALL) will install to the wrong location, which will not coincide with where
+        # symlinks will be created using file(CREATE_LINK) + the overridden QT_DEPLOY_PREFIX that
+        # will NOT contain DESTDIR.
+        if(DEFINED ENV{DESTDIR})
+            message(STATUS "Clearing DESTDIR environment variable, because it's not "
+                "supposed to be set during the post build step.")
+            set(ENV{DESTDIR} "")
+        endif()
     endif()
 
     # Parse the generated cmake file. It is possible for the scanner to find no
