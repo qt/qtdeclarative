@@ -34,10 +34,13 @@ static int mapToProtocolForQtCreator(QmlHighlightKind highlightKind)
     case QmlHighlightKind::QmlExternalId:
         return int(SemanticTokenProtocolTypes::QmlLocalId);
     case QmlHighlightKind::QmlProperty:
-    case QmlHighlightKind::QmlScopeObjectProperty:
-    case QmlHighlightKind::QmlRootObjectProperty:
-    case QmlHighlightKind::QmlExternalObjectProperty:
         return int(SemanticTokenProtocolTypes::Property);
+    case QmlHighlightKind::QmlScopeObjectProperty:
+        return int(SemanticTokenProtocolTypes::QmlScopeObjectProperty);
+    case QmlHighlightKind::QmlRootObjectProperty:
+        return int(SemanticTokenProtocolTypes::QmlRootObjectProperty);
+    case QmlHighlightKind::QmlExternalObjectProperty:
+        return int(SemanticTokenProtocolTypes::QmlExternalObjectProperty);
     case QmlHighlightKind::QmlMethod:
         return int(SemanticTokenProtocolTypes::Method);
     case QmlHighlightKind::QmlMethodParameter:
@@ -497,11 +500,19 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
     }
     case QQmlLSUtils::PropertyIdentifier: {
         if (const auto scope = expression->semanticScope) {
+            QmlHighlightKind tokenType = QmlHighlightKind::QmlProperty;
+            if (scope == item.qmlObject().semanticScope()) {
+                tokenType = QmlHighlightKind::QmlScopeObjectProperty;
+            } else if (scope == item.rootQmlObject(GoTo::MostLikely).semanticScope()) {
+                tokenType = QmlHighlightKind::QmlRootObjectProperty;
+            } else {
+                tokenType = QmlHighlightKind::QmlExternalObjectProperty;
+            }
             const auto property = scope->property(expression->name.value());
             QmlHighlightModifiers modifier = QmlHighlightModifier::None;
             if (!property.isWritable())
                 modifier |= QmlHighlightModifier::QmlReadonlyProperty;
-            m_highlights.addHighlight(loc, QmlHighlightKind::QmlProperty, modifier);
+            m_highlights.addHighlight(loc, tokenType, modifier);
         }
         return;
     }
