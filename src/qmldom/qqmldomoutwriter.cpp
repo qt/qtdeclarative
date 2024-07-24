@@ -268,6 +268,7 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region)
     case MainRegion:
     case OnTargetRegion:
     case TypeIdentifierRegion:
+    case TypeModifierRegion:
     case FirstSemicolonTokenRegion:
     case SecondSemicolonRegion:
     case InOfTokenRegion:

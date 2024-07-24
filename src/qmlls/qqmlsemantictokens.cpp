@@ -70,6 +70,8 @@ static int mapToProtocolForQtCreator(QmlHighlightKind highlightKind)
         return int(SemanticTokenProtocolTypes::String);
     case QmlHighlightKind::Operator:
         return int(SemanticTokenProtocolTypes::Operator);
+    case QmlHighlightKind::QmlTypeModifier:
+        return int(SemanticTokenProtocolTypes::Decorator);
     case QmlHighlightKind::Unknown:
     default:
         return int(SemanticTokenProtocolTypes::JsScopeVar);
@@ -125,6 +127,8 @@ static int mapToProtocolDefault(QmlHighlightKind highlightKind)
         return int(SemanticTokenProtocolTypes::String);
     case QmlHighlightKind::Operator:
         return int(SemanticTokenProtocolTypes::Operator);
+    case QmlHighlightKind::QmlTypeModifier:
+        return int(SemanticTokenProtocolTypes::Decorator);
     case QmlHighlightKind::Unknown:
     default:
         return int(SemanticTokenProtocolTypes::Variable);
@@ -387,6 +391,8 @@ void HighlightingVisitor::highlightPropertyDefinition(const DomItem &item)
         m_highlights.addHighlight(regions[TypeIdentifierRegion], QmlHighlightKind::QmlKeyword);
     else
         m_highlights.addHighlight(regions[TypeIdentifierRegion], QmlHighlightKind::QmlType);
+
+    m_highlights.addHighlight(regions[TypeModifierRegion], QmlHighlightKind::QmlTypeModifier);
     m_highlights.addHighlight(regions[IdentifierRegion], QmlHighlightKind::QmlProperty,
                                 modifier);
 }

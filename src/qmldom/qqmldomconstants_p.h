@@ -406,6 +406,7 @@ enum FileLocationRegion : int {
     ThrowKeywordRegion,
     TryKeywordRegion,
     TypeIdentifierRegion,
+    TypeModifierRegion,
     VersionRegion,
     WhileKeywordRegion,
     YieldKeywordRegion,
