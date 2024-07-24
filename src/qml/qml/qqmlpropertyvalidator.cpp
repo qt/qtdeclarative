@@ -455,12 +455,11 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
         return warnOrError(tr("Invalid property assignment: int expected"));
     }
     break;
-    case QMetaType::Float: {
-        if (bindingType != QV4::CompiledData::Binding::Type_Number) {
-            return warnOrError(tr("Invalid property assignment: number expected"));
-        }
-    }
-    break;
+    case QMetaType::LongLong:
+    case QMetaType::ULongLong:
+    case QMetaType::Long:
+    case QMetaType::ULong:
+    case QMetaType::Float:
     case QMetaType::Double: {
         if (bindingType != QV4::CompiledData::Binding::Type_Number) {
             return warnOrError(tr("Invalid property assignment: number expected"));

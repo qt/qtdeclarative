@@ -313,6 +313,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(qreal realProperty READ realProperty WRITE setRealProperty NOTIFY realPropertyChanged)
     Q_PROPERTY(double doubleProperty READ doubleProperty WRITE setDoubleProperty NOTIFY doublePropertyChanged)
     Q_PROPERTY(float floatProperty READ floatProperty WRITE setFloatProperty NOTIFY floatPropertyChanged)
+    Q_PROPERTY(qsizetype qsizetypeProperty READ qsizetypeProperty WRITE setQsizetypeProperty NOTIFY qsizetypePropertyChanged)
     Q_PROPERTY(QColor colorProperty READ colorProperty WRITE setColorProperty NOTIFY colorPropertyChanged)
     Q_PROPERTY(QDate dateProperty READ dateProperty WRITE setDateProperty NOTIFY datePropertyChanged)
     Q_PROPERTY(QTime timeProperty READ timeProperty WRITE setTimeProperty NOTIFY timePropertyChanged)
@@ -464,6 +465,15 @@ public:
     void setIntProperty(const int &v) {
         intPropertyValue = v;
         emit intPropertyChanged();
+    }
+
+    qsizetype qsizetypePropertyValue;
+    qsizetype qsizetypeProperty() const {
+        return qsizetypePropertyValue;
+    }
+    void setQsizetypeProperty(const qsizetype &v) {
+        qsizetypePropertyValue = v;
+        emit qsizetypePropertyChanged();
     }
 
     qreal realPropertyValue;
@@ -682,6 +692,7 @@ signals:
     void byteArrayPropertyChanged();
     void uintPropertyChanged();
     void intPropertyChanged();
+    void qsizetypePropertyChanged();
     void realPropertyChanged();
     void doublePropertyChanged();
     void floatPropertyChanged();

@@ -10,6 +10,7 @@ MyTypeObject {
     stringProperty: "Hello World!"
     uintProperty: 10
     intProperty: -19
+    qsizetypeProperty: -4294967297
     realProperty: 23.2
     doubleProperty: -19.7
     floatProperty: 8.5
