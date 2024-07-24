@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include <qqmlhighlightsupport_p.h>
-#include <qqmlsemantictokens_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -30,14 +29,14 @@ static QList<QByteArray> enumToByteArray()
     return result;
 }
 
-static QList<QByteArray> tokenTypesList()
+QList<QByteArray> defaultTokenModifiersList()
 {
-    return enumToByteArray<SemanticTokenTypes>();
+    return enumToByteArray<QLspSpecification::SemanticTokenModifiers>();
 }
 
-static QList<QByteArray> tokenModifiersList()
+QList<QByteArray> extendedTokenTypesList()
 {
-    return enumToByteArray<SemanticTokenModifiers>();
+    return enumToByteArray<HighlightingUtils::SemanticTokenProtocolTypes>();
 }
 
 /*!
@@ -47,7 +46,7 @@ https://microsoft.github.io/language-server-protocol/specifications/specificatio
 Sends a QLspSpecification::SemanticTokens data as response that is generated for the entire file.
 */
 SemanticTokenFullHandler::SemanticTokenFullHandler(QmlLsp::QQmlCodeModel *codeModel)
-    : QQmlBaseModule(codeModel)
+    : QQmlBaseModule(codeModel), m_mode(HighlightingUtils::HighlightingMode::Default)
 {
 }
 
@@ -72,7 +71,7 @@ void SemanticTokenFullHandler::process(
         });
         return;
     }
-    auto &&encoded = HighlightingUtils::collectTokens(file, std::nullopt);
+    auto &&encoded = HighlightingUtils::collectTokens(file, std::nullopt, m_mode);
     auto &registeredTokens = m_codeModel->registeredTokens();
     if (!encoded.isEmpty()) {
         HighlightingUtils::updateResultID(registeredTokens.resultId);
@@ -96,7 +95,7 @@ Sends either SemanticTokens or SemanticTokensDelta data as response.
 This is generally requested when the text document is edited after receiving full highlighting data.
 */
 SemanticTokenDeltaHandler::SemanticTokenDeltaHandler(QmlLsp::QQmlCodeModel *codeModel)
-    : QQmlBaseModule(codeModel)
+    : QQmlBaseModule(codeModel), m_mode(HighlightingUtils::HighlightingMode::Default)
 {
 }
 
@@ -121,7 +120,7 @@ void SemanticTokenDeltaHandler::process(
         });
         return;
     }
-    auto newEncoded = HighlightingUtils::collectTokens(file, std::nullopt);
+    auto newEncoded = HighlightingUtils::collectTokens(file, std::nullopt, m_mode);
     auto &registeredTokens = m_codeModel->registeredTokens();
     const auto lastResultId = registeredTokens.resultId;
     HighlightingUtils::updateResultID(registeredTokens.resultId);
@@ -153,7 +152,7 @@ https://microsoft.github.io/language-server-protocol/specifications/specificatio
 Sends a QLspSpecification::SemanticTokens data as response that is generated for a range of file.
 */
 SemanticTokenRangeHandler::SemanticTokenRangeHandler(QmlLsp::QQmlCodeModel *codeModel)
-    : QQmlBaseModule(codeModel)
+    : QQmlBaseModule(codeModel), m_mode(HighlightingUtils::HighlightingMode::Default)
 {
 }
 
@@ -183,8 +182,8 @@ void SemanticTokenRangeHandler::process(
     int startOffset =
             int(QQmlLSUtils::textOffsetFrom(code, range.start.line, range.end.character));
     int endOffset = int(QQmlLSUtils::textOffsetFrom(code, range.end.line, range.end.character));
-    auto &&encoded =
-            HighlightingUtils::collectTokens(file, HighlightsRange{ startOffset, endOffset });
+    auto &&encoded = HighlightingUtils::collectTokens(
+            file, HighlightsRange{ startOffset, endOffset }, m_mode);
     auto &registeredTokens = m_codeModel->registeredTokens();
     if (!encoded.isEmpty()) {
         HighlightingUtils::updateResultID(registeredTokens.resultId);
@@ -217,15 +216,24 @@ void QQmlHighlightSupport::registerHandlers(QLanguageServer *server, QLanguageSe
 }
 
 void QQmlHighlightSupport::setupCapabilities(
-        const QLspSpecification::InitializeParams &,
+        const QLspSpecification::InitializeParams &clientCapabilities,
         QLspSpecification::InitializeResult &serverCapabilities)
 {
     QLspSpecification::SemanticTokensOptions options;
     options.range = true;
     options.full = QJsonObject({ { u"delta"_s, true } });
-    options.legend.tokenTypes = tokenTypesList();
-    options.legend.tokenModifiers = tokenModifiersList();
 
+    if (auto clientInitOptions = clientCapabilities.initializationOptions) {
+        auto object = *clientInitOptions;
+        if (object[u"qtCreatorHighlighting"_s].toBool(false)) {
+            const auto mode = HighlightingUtils::HighlightingMode::QtCHighlighting;
+            m_delta.setHighlightingMode(mode);
+            m_full.setHighlightingMode(mode);
+            m_range.setHighlightingMode(mode);
+        }
+    }
+    options.legend.tokenTypes = extendedTokenTypesList();
+    options.legend.tokenModifiers = defaultTokenModifiersList();
     serverCapabilities.capabilities.semanticTokensProvider = options;
 }
 

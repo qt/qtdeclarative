@@ -145,6 +145,7 @@ void tst_qmlls_highlighting::sourceLocationsFromMultiLineToken()
 void tst_qmlls_highlighting::highlights_data()
 {
     using namespace QQmlJS::Dom;
+    using namespace HighlightingUtils;
     QTest::addColumn<DomItem>("fileItem");
     QTest::addColumn<Token>("expectedHighlightedToken");
 
@@ -178,95 +179,117 @@ void tst_qmlls_highlighting::highlights_data()
         // Copyright (C) 2023 The Qt Company Ltd.
         QTest::addRow("single-line-1")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(0, 41, 1, 1), int(SemanticTokenTypes::Comment), 0);
+                << Token(QQmlJS::SourceLocation(0, 41, 1, 1),
+                         int(SemanticTokenProtocolTypes::Comment), 0);
 
         /* single line comment    */
-        QTest::addRow("single-line-2") << fileItem
-                                       << Token(QQmlJS::SourceLocation(162, 28, 9, 1),
-                                                int(SemanticTokenTypes::Comment), 0);
+        QTest::addRow("single-line-2")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(162, 28, 9, 1),
+                         int(SemanticTokenProtocolTypes::Comment), 0);
 
         // Multiline comments are split into multiple locations
         QTest::addRow("multiline-first-line")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(133, 2, 5, 1), int(SemanticTokenTypes::Comment), 0);
-        QTest::addRow("multiline-second-line") << fileItem
-                                               << Token(QQmlJS::SourceLocation(136, 21, 6, 1),
-                                                        int(SemanticTokenTypes::Comment), 0);
+                << Token(QQmlJS::SourceLocation(133, 2, 5, 1),
+                         int(SemanticTokenProtocolTypes::Comment), 0);
+        QTest::addRow("multiline-second-line")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(136, 21, 6, 1),
+                         int(SemanticTokenProtocolTypes::Comment), 0);
         QTest::addRow("multiline-third-line")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(158, 2, 7, 1), int(SemanticTokenTypes::Comment), 0);
+                << Token(QQmlJS::SourceLocation(158, 2, 7, 1),
+                         int(SemanticTokenProtocolTypes::Comment), 0);
 
         // Comments Inside Js blocks
-        QTest::addRow("inside-js") << fileItem
-                                   << Token(QQmlJS::SourceLocation(232, 5, 13, 9),
-                                            int(SemanticTokenTypes::Comment), 0);
+        QTest::addRow("inside-js")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(232, 5, 13, 9),
+                         int(SemanticTokenProtocolTypes::Comment), 0);
     }
     { // Imports
         const auto filePath = m_highlightingDataDir + "/imports.qml";
         const auto fileItem = fileObject(filePath);
         QTest::addRow("import-keyword")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(112, 6, 4, 1), int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("module-uri") << fileItem
-                                    << Token(QQmlJS::SourceLocation(119, 7, 4, 8),
-                                             int(SemanticTokenTypes::Namespace), 0);
+                << Token(QQmlJS::SourceLocation(112, 6, 4, 1),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("module-uri")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(119, 7, 4, 8),
+                         int(SemanticTokenProtocolTypes::Namespace), 0);
         QTest::addRow("directory-uri")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(152, 3, 6, 8), int(SemanticTokenTypes::String), 0);
-        QTest::addRow("as-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(156, 2, 6, 12),
-                                             int(SemanticTokenTypes::Keyword), 0);
+                << Token(QQmlJS::SourceLocation(152, 3, 6, 8),
+                         int(SemanticTokenProtocolTypes::String), 0);
+        QTest::addRow("as-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(156, 2, 6, 12),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("version-number")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(140, 4, 5, 14), int(SemanticTokenTypes::Number), 0);
-        QTest::addRow("qualified-namespace") << fileItem
-                                             << Token(QQmlJS::SourceLocation(159, 6, 6, 15),
-                                                      int(SemanticTokenTypes::Namespace), 0);
+                << Token(QQmlJS::SourceLocation(140, 4, 5, 14),
+                         int(SemanticTokenProtocolTypes::Number), 0);
+        QTest::addRow("qualified-namespace")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(159, 6, 6, 15),
+                         int(SemanticTokenProtocolTypes::Namespace), 0);
     }
     { // Bindings
         const auto filePath = m_highlightingDataDir + "/bindings.qml";
         const auto fileItem = fileObject(filePath);
 
         // normal binding
-        QTest::addRow("normalBinding") << fileItem
-                                       << Token(QQmlJS::SourceLocation(189, 1, 11, 5),
-                                                int(SemanticTokenTypes::Property), 0);
+        QTest::addRow("normalBinding")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(189, 1, 11, 5),
+                         int(SemanticTokenProtocolTypes::Property), 0);
         // on binding
-        QTest::addRow("on-binding") << fileItem
-                                    << Token(QQmlJS::SourceLocation(175, 5, 9, 17),
-                                             int(SemanticTokenTypes::Property), 0);
-        QTest::addRow("on-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(172, 2, 9, 14),
-                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("on-binding")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(175, 5, 9, 17),
+                         int(SemanticTokenProtocolTypes::Property), 0);
+        QTest::addRow("on-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(172, 2, 9, 14),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
     }
     { // Pragmas
         const auto filePath = m_highlightingDataDir + "/pragmas.qml";
         const auto fileItem = fileObject(filePath);
         QTest::addRow("pragma-keyword")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(112, 6, 4, 1), int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("pragma-name") << fileItem
-                                     << Token(QQmlJS::SourceLocation(136, 25, 5, 8),
-                                              int(SemanticTokenTypes::Variable), 0);
-        QTest::addRow("pragma-value") << fileItem
-                                      << Token(QQmlJS::SourceLocation(198, 4, 6, 27),
-                                               int(SemanticTokenTypes::Variable), 0);
+                << Token(QQmlJS::SourceLocation(112, 6, 4, 1),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("pragma-name")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(136, 25, 5, 8),
+                         int(SemanticTokenProtocolTypes::Variable), 0);
+        QTest::addRow("pragma-value")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(198, 4, 6, 27),
+                         int(SemanticTokenProtocolTypes::Variable), 0);
     }
     { // Enums
         const auto filePath = m_highlightingDataDir + "/enums.qml";
         const auto fileItem = fileObject(filePath);
         QTest::addRow("enum-keyword")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(141, 4, 7, 5), int(SemanticTokenTypes::Keyword), 0);
+                << Token(QQmlJS::SourceLocation(141, 4, 7, 5),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("enum-name")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(146, 3, 7, 10), int(SemanticTokenTypes::Enum), 0);
-        QTest::addRow("enum-item") << fileItem
-                                   << Token(QQmlJS::SourceLocation(160, 3, 8, 9),
-                                            int(SemanticTokenTypes::EnumMember), 0);
+                << Token(QQmlJS::SourceLocation(146, 3, 7, 10),
+                         int(SemanticTokenProtocolTypes::Enum), 0);
+        QTest::addRow("enum-item")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(160, 3, 8, 9),
+                         int(SemanticTokenProtocolTypes::EnumMember), 0);
         QTest::addRow("enum-value")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(179, 1, 9, 15), int(SemanticTokenTypes::Number), 0);
+                << Token(QQmlJS::SourceLocation(179, 1, 9, 15),
+                         int(SemanticTokenProtocolTypes::Number), 0);
     }
     { // objects and inline components
         const auto filePath = m_highlightingDataDir + "/objectAndComponent.qml";
@@ -275,21 +298,26 @@ void tst_qmlls_highlighting::highlights_data()
         // object
         QTest::addRow("object-identifier")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(169, 4, 8, 5), int(SemanticTokenTypes::Type), 0);
-        QTest::addRow("object-id-property") << fileItem
-                                            << Token(QQmlJS::SourceLocation(184, 2, 9, 9),
-                                                     int(SemanticTokenTypes::Property), 0);
-        QTest::addRow("object-id-name") << fileItem
-                                        << Token(QQmlJS::SourceLocation(188, 5, 9, 13),
-                                                 int(SemanticTokenTypes::Variable), 0);
+                << Token(QQmlJS::SourceLocation(169, 4, 8, 5),
+                         int(SemanticTokenProtocolTypes::Type), 0);
+        QTest::addRow("object-id-property")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(184, 2, 9, 9),
+                         int(SemanticTokenProtocolTypes::Property), 0);
+        QTest::addRow("object-id-name")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(188, 5, 9, 13),
+                         int(SemanticTokenProtocolTypes::Variable), 0);
 
         // component
         QTest::addRow("component-keyword")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(139, 9, 7, 5), int(SemanticTokenTypes::Keyword), 0);
+                << Token(QQmlJS::SourceLocation(139, 9, 7, 5),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("component-name")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(149, 6, 7, 15), int(SemanticTokenTypes::Type), 0);
+                << Token(QQmlJS::SourceLocation(149, 6, 7, 15),
+                         int(SemanticTokenProtocolTypes::Type), 0);
     }
     { // property definition
         const auto filePath = m_highlightingDataDir + "/properties.qml";
@@ -298,39 +326,47 @@ void tst_qmlls_highlighting::highlights_data()
         int definitionModifier = 1 << int(SemanticTokenModifiers::Definition);
         QTest::addRow("property-keyword")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(154, 8, 8, 9), int(SemanticTokenTypes::Keyword), 0);
+                << Token(QQmlJS::SourceLocation(154, 8, 8, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("property-type")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(163, 3, 8, 18), int(SemanticTokenTypes::Type), 0);
+                << Token(QQmlJS::SourceLocation(163, 3, 8, 18),
+                         int(SemanticTokenProtocolTypes::Type), 0);
         QTest::addRow("property-name")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(167, 1, 8, 22), int(SemanticTokenTypes::Property),
+                << Token(QQmlJS::SourceLocation(167, 1, 8, 22),
+                         int(SemanticTokenProtocolTypes::Property),
                          definitionModifier);
         int readOnlyModifier = definitionModifier | (1 << int(SemanticTokenModifiers::Readonly));
         QTest::addRow("readonly-keyword")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(177, 8, 9, 9), int(SemanticTokenTypes::Keyword), 0);
+                << Token(QQmlJS::SourceLocation(177, 8, 9, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("readonly-modifier")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(199, 2, 9, 31), int(SemanticTokenTypes::Property),
+                << Token(QQmlJS::SourceLocation(199, 2, 9, 31),
+                         int(SemanticTokenProtocolTypes::Property),
                          readOnlyModifier);
         int requiredModifier = definitionModifier | (1 << int(SemanticTokenModifiers::Abstract));
-        QTest::addRow("required-keyword") << fileItem
-                                          << Token(QQmlJS::SourceLocation(210, 8, 10, 9),
-                                                   int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("required-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(210, 8, 10, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("required-modifier")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(232, 3, 10, 31), int(SemanticTokenTypes::Property),
+                << Token(QQmlJS::SourceLocation(232, 3, 10, 31),
+                         int(SemanticTokenProtocolTypes::Property),
                          requiredModifier);
         int defaultModifier =
                 definitionModifier | (1 << int(SemanticTokenModifiers::DefaultLibrary));
-        QTest::addRow("default-keyword") << fileItem
-                                         << Token(QQmlJS::SourceLocation(244, 7, 11, 9),
-                                                  int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("default-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(244, 7, 11, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("default-modifier")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(265, 4, 11, 30), int(SemanticTokenTypes::Property),
-                         defaultModifier);
+                << Token(QQmlJS::SourceLocation(265, 4, 11, 30),
+                         int(SemanticTokenProtocolTypes::Property), defaultModifier);
     }
     {
         // methods and signals, lambda functions
@@ -339,50 +375,65 @@ void tst_qmlls_highlighting::highlights_data()
 
         QTest::addRow("signal-keyword")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(139, 6, 7, 5), int(SemanticTokenTypes::Keyword), 0);
+                << Token(QQmlJS::SourceLocation(139, 6, 7, 5),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("signal-name")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(146, 1, 7, 12), int(SemanticTokenTypes::Method), 0);
+                << Token(QQmlJS::SourceLocation(146, 1, 7, 12),
+                         int(SemanticTokenProtocolTypes::Method), 0);
         QTest::addRow("signal-type")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(163, 3, 8, 14), int(SemanticTokenTypes::Type), 0);
+                << Token(QQmlJS::SourceLocation(163, 3, 8, 14),
+                         int(SemanticTokenProtocolTypes::Type), 0);
         QTest::addRow("signal-type-2")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(186, 3, 9, 17), int(SemanticTokenTypes::Type), 0);
-        QTest::addRow("function-keyword") << fileItem
-                                          << Token(QQmlJS::SourceLocation(195, 8, 10, 5),
-                                                   int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("function-name") << fileItem
-                                       << Token(QQmlJS::SourceLocation(204, 1, 10, 14),
-                                                int(SemanticTokenTypes::Method), 0);
+                << Token(QQmlJS::SourceLocation(186, 3, 9, 17),
+                         int(SemanticTokenProtocolTypes::Type), 0);
+        QTest::addRow("function-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(195, 8, 10, 5),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("function-name")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(204, 1, 10, 14),
+                         int(SemanticTokenProtocolTypes::Method), 0);
         QTest::addRow("function-prm-type")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(209, 3, 10, 19), int(SemanticTokenTypes::Type), 0);
-        QTest::addRow("function-prm-name") << fileItem
-                                           << Token(QQmlJS::SourceLocation(206, 1, 10, 16),
-                                                    int(SemanticTokenTypes::Parameter), 0);
+                << Token(QQmlJS::SourceLocation(209, 3, 10, 19),
+                         int(SemanticTokenProtocolTypes::Type), 0);
+        QTest::addRow("function-prm-name")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(206, 1, 10, 16),
+                         int(SemanticTokenProtocolTypes::Parameter), 0);
         QTest::addRow("function-rtn-type")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(216, 3, 10, 26), int(SemanticTokenTypes::Type), 0);
+                << Token(QQmlJS::SourceLocation(216, 3, 10, 26),
+                         int(SemanticTokenProtocolTypes::Type), 0);
         // lambda function keywords
         QTest::addRow("function-keyword-rhs")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(344, 8, 16, 24), int(SemanticTokenTypes::Keyword), 0);
+                << Token(QQmlJS::SourceLocation(344, 8, 16, 24),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("function-keyword-rhs-1")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(441, 8, 19, 20), int(SemanticTokenTypes::Keyword), 0);
+                << Token(QQmlJS::SourceLocation(441, 8, 19, 20),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("function-keyword-in-function-body")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(536, 8, 21, 9), int(SemanticTokenTypes::Keyword), 0);
+                << Token(QQmlJS::SourceLocation(536, 8, 21, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("nested-function-identifier")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(545, 6, 21, 18), int(SemanticTokenTypes::Method), 0);
+                << Token(QQmlJS::SourceLocation(545, 6, 21, 18),
+                         int(SemanticTokenProtocolTypes::Method), 0);
         QTest::addRow("lambda-undefined-arg")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(409, 1, 17, 33), int(SemanticTokenTypes::Variable), 0);
+                << Token(QQmlJS::SourceLocation(409, 1, 17, 33),
+                         int(SemanticTokenProtocolTypes::Variable), 0);
         QTest::addRow("yield-keyword")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(697, 5, 25, 50), int(SemanticTokenTypes::Keyword), 0);
+                << Token(QQmlJS::SourceLocation(697, 5, 25, 50),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
     }
     { // literals
         const auto filePath = m_highlightingDataDir + "/literals.qml";
@@ -390,131 +441,166 @@ void tst_qmlls_highlighting::highlights_data()
 
         QTest::addRow("number") << fileItem
                                 << Token(QQmlJS::SourceLocation(155, 3, 7, 21),
-                                         int(SemanticTokenTypes::Number), 0);
+                                         int(SemanticTokenProtocolTypes::Number), 0);
         QTest::addRow("singleline-string")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(182, 8, 8, 24), int(SemanticTokenTypes::String), 0);
+                << Token(QQmlJS::SourceLocation(182, 8, 8, 24),
+                         int(SemanticTokenProtocolTypes::String), 0);
         QTest::addRow("multiline-string-first")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(214, 6, 9, 24), int(SemanticTokenTypes::String), 0);
-        QTest::addRow("multiline-string-second") << fileItem
-                                                 << Token(QQmlJS::SourceLocation(221, 16, 10, 1),
-                                                          int(SemanticTokenTypes::String), 0);
-        QTest::addRow("multiline-with-newlines-l1") << fileItem
-                                                 << Token(QQmlJS::SourceLocation(313, 10, 13, 24),
-                                                          int(SemanticTokenTypes::String), 0);
-        QTest::addRow("multiline-with-newlines-l2") << fileItem
-                                                 << Token(QQmlJS::SourceLocation(324, 16, 14, 1),
-                                                          int(SemanticTokenTypes::String), 0);
+                << Token(QQmlJS::SourceLocation(214, 6, 9, 24),
+                         int(SemanticTokenProtocolTypes::String), 0);
+        QTest::addRow("multiline-string-second")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(221, 16, 10, 1),
+                         int(SemanticTokenProtocolTypes::String), 0);
+        QTest::addRow("multiline-with-newlines-l1")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(313, 10, 13, 24),
+                         int(SemanticTokenProtocolTypes::String), 0);
+        QTest::addRow("multiline-with-newlines-l2")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(324, 16, 14, 1),
+                         int(SemanticTokenProtocolTypes::String), 0);
         QTest::addRow("boolean") << fileItem
                                  << Token(QQmlJS::SourceLocation(260, 4, 11, 22),
-                                          int(SemanticTokenTypes::Keyword), 0);
+                                          int(SemanticTokenProtocolTypes::Keyword),
+                                          0);
         QTest::addRow("null") << fileItem
                               << Token(QQmlJS::SourceLocation(285, 4, 12, 21),
-                                       int(SemanticTokenTypes::Keyword), 0);
+                                       int(SemanticTokenProtocolTypes::Keyword), 0);
     }
     { // identifiers
         const auto filePath = m_highlightingDataDir + "/Identifiers.qml";
         const auto fileItem = fileObject(filePath);
-        QTest::addRow("js-property") << fileItem
-                                     << Token(QQmlJS::SourceLocation(222, 3, 10, 13),
-                                              int(SemanticTokenTypes::Variable), 0);
+        QTest::addRow("js-property")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(222, 3, 10, 13),
+                         int(SemanticTokenProtocolTypes::Variable), 0);
         QTest::addRow("property-id")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(302, 4, 12, 19), int(SemanticTokenTypes::Property),
+                << Token(QQmlJS::SourceLocation(302, 4, 12, 19),
+                         int(SemanticTokenProtocolTypes::Property),
                          (1 << int(SemanticTokenModifiers::Readonly)));
-        QTest::addRow("property-changed") << fileItem
-                                          << Token(QQmlJS::SourceLocation(451, 11, 18, 9),
-                                                   int(SemanticTokenTypes::Method), 0);
+        QTest::addRow("property-changed")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(451, 11, 18, 9),
+                         int(SemanticTokenProtocolTypes::Method), 0);
         QTest::addRow("signal") << fileItem
                                 << Token(QQmlJS::SourceLocation(474, 7, 19, 9),
-                                         int(SemanticTokenTypes::Method), 0);
+                                         int(SemanticTokenProtocolTypes::Method), 0);
 
         QTest::addRow("attached-id")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(512, 4, 23, 5), int(SemanticTokenTypes::Type), 0);
-        QTest::addRow("attached-signalhandler") << fileItem
-                                                << Token(QQmlJS::SourceLocation(517, 9, 23, 10),
-                                                         int(SemanticTokenTypes::Method), 0);
-        QTest::addRow("propchanged-handler") << fileItem
-                                             << Token(QQmlJS::SourceLocation(572, 13, 27, 5),
-                                                      int(SemanticTokenTypes::Method), 0);
+                << Token(QQmlJS::SourceLocation(512, 4, 23, 5),
+                         int(SemanticTokenProtocolTypes::Type), 0);
+        QTest::addRow("attached-signalhandler")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(517, 9, 23, 10),
+                         int(SemanticTokenProtocolTypes::Method), 0);
+        QTest::addRow("propchanged-handler")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(572, 13, 27, 5),
+                         int(SemanticTokenProtocolTypes::Method), 0);
         QTest::addRow("method-id")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(597, 1, 28, 9), int(SemanticTokenTypes::Method), 0);
+                << Token(QQmlJS::SourceLocation(597, 1, 28, 9),
+                         int(SemanticTokenProtocolTypes::Method), 0);
         QTest::addRow("signal-handler")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(656, 9, 32, 5), int(SemanticTokenTypes::Method), 0);
+                << Token(QQmlJS::SourceLocation(656, 9, 32, 5),
+                         int(SemanticTokenProtocolTypes::Method), 0);
     }
     { // script expressions
         const auto filePath = m_highlightingDataDir + "/scriptExpressions.qml";
         const auto fileItem = fileObject(filePath);
 
-        QTest::addRow("var-keyword") << fileItem
-                                     << Token(QQmlJS::SourceLocation(192, 3, 11, 9),
-                                              int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("const-keyword") << fileItem
-                                       << Token(QQmlJS::SourceLocation(217, 5, 12, 9),
-                                                int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("var-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(192, 3, 11, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("const-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(217, 5, 12, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         const auto modifier = (1 << int(SemanticTokenModifiers::Readonly));
-        QTest::addRow("const-name") << fileItem
-                                    << Token(QQmlJS::SourceLocation(223, 10, 12, 15),
-                                             int(SemanticTokenTypes::Variable), modifier);
-        QTest::addRow("do-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(248, 2, 13, 9),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("if-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(287, 2, 15, 13),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("continue-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(319, 8, 16, 17),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("else-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(341, 4, 17, 13),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("while-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(382, 5, 19, 11),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("switch-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(418, 6, 20, 9),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("case-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(444, 4, 21, 9),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("return-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(464, 6, 22, 13),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("default-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(483, 7, 23, 9),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("break-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(504, 5, 24, 13),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("try-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(529, 3, 26, 9),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("catch-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(560, 5, 28, 11),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("finally-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(601, 7, 30, 11),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("for-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(620, 3, 31, 9),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("throw-keyword") << fileItem
-                                    << Token(QQmlJS::SourceLocation(661, 5, 32, 13),
-                                             int(SemanticTokenTypes::Keyword), 0);
-        QTest::addRow("for-declaration") << fileItem
-                                    << Token(QQmlJS::SourceLocation(625, 5, 31, 14),
-                                             int(SemanticTokenTypes::Keyword), 0);
+        QTest::addRow("const-name")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(223, 10, 12, 15),
+                         int(SemanticTokenProtocolTypes::Variable), modifier);
+        QTest::addRow("do-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(248, 2, 13, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("if-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(287, 2, 15, 13),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("continue-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(319, 8, 16, 17),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("else-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(341, 4, 17, 13),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("while-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(382, 5, 19, 11),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("switch-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(418, 6, 20, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("case-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(444, 4, 21, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("return-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(464, 6, 22, 13),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("default-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(483, 7, 23, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("break-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(504, 5, 24, 13),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("try-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(529, 3, 26, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("catch-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(560, 5, 28, 11),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("finally-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(601, 7, 30, 11),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("for-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(620, 3, 31, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("throw-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(661, 5, 32, 13),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("for-declaration")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(625, 5, 31, 14),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
         QTest::addRow("destructuring")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(1511, 2, 73, 16), int(SemanticTokenTypes::Variable),
+                << Token(QQmlJS::SourceLocation(1511, 2, 73, 16),
+                         int(SemanticTokenProtocolTypes::Variable),
                          (1 << int(SemanticTokenModifiers::Readonly)));
         QTest::addRow("obj-destructuring")
                 << fileItem
-                << Token(QQmlJS::SourceLocation(1589, 2, 76, 17), int(SemanticTokenTypes::Variable),
+                << Token(QQmlJS::SourceLocation(1589, 2, 76, 17),
+                         int(SemanticTokenProtocolTypes::Variable),
                          (1 << int(SemanticTokenModifiers::Readonly)));
     }
 }

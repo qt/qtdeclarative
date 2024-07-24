@@ -16,58 +16,115 @@ Q_LOGGING_CATEGORY(semanticTokens, "qt.languageserver.semanticTokens")
 using namespace QQmlJS::AST;
 using namespace QQmlJS::Dom;
 using namespace QLspSpecification;
+using namespace HighlightingUtils;
 
-static int fromQmlHighlightingKindToLspTokenType(QmlHighlightKind highlightKind)
-
+static int mapToProtocolForQtCreator(QmlHighlightKind highlightKind)
 {
     switch (highlightKind) {
     case QmlHighlightKind::Comment:
-        return int(SemanticTokenTypes::Comment);
+        return int(SemanticTokenProtocolTypes::Comment);
     case QmlHighlightKind::QmlKeyword:
-        return int(SemanticTokenTypes::Keyword);
+        return int(SemanticTokenProtocolTypes::Keyword);
     case QmlHighlightKind::QmlType:
-        return int(SemanticTokenTypes::Type);
+        return int(SemanticTokenProtocolTypes::Type);
     case QmlHighlightKind::QmlImportId:
     case QmlHighlightKind::QmlNamespace:
-        return int(SemanticTokenTypes::Namespace);
+        return int(SemanticTokenProtocolTypes::Namespace);
     case QmlHighlightKind::QmlLocalId:
     case QmlHighlightKind::QmlExternalId:
-        return int(SemanticTokenTypes::Variable);
+        return int(SemanticTokenProtocolTypes::QmlLocalId);
     case QmlHighlightKind::QmlProperty:
     case QmlHighlightKind::QmlScopeObjectProperty:
     case QmlHighlightKind::QmlRootObjectProperty:
     case QmlHighlightKind::QmlExternalObjectProperty:
-        return int(SemanticTokenTypes::Property);
+        return int(SemanticTokenProtocolTypes::Property);
     case QmlHighlightKind::QmlMethod:
-        return int(SemanticTokenTypes::Method);
+        return int(SemanticTokenProtocolTypes::Method);
     case QmlHighlightKind::QmlMethodParameter:
-        return int(SemanticTokenTypes::Parameter);
+        return int(SemanticTokenProtocolTypes::Parameter);
     case QmlHighlightKind::QmlSignal:
-        return int(SemanticTokenTypes::Method);
+        return int(SemanticTokenProtocolTypes::Method);
     case QmlHighlightKind::QmlSignalHandler:
-        return int(SemanticTokenTypes::Method);
+        return int(SemanticTokenProtocolTypes::Property);
     case QmlHighlightKind::QmlEnumName:
-        return int(SemanticTokenTypes::Enum);
+        return int(SemanticTokenProtocolTypes::Enum);
     case QmlHighlightKind::QmlEnumMember:
-        return int(SemanticTokenTypes::EnumMember);
+        return int(SemanticTokenProtocolTypes::EnumMember);
     case QmlHighlightKind::QmlPragmaName:
     case QmlHighlightKind::QmlPragmaValue:
-        return int(SemanticTokenTypes::Variable);
+        return int(SemanticTokenProtocolTypes::Variable);
     case QmlHighlightKind::JsImport:
+        return int(SemanticTokenProtocolTypes::Namespace);
     case QmlHighlightKind::JsGlobalVar:
+        return int(SemanticTokenProtocolTypes::JsGlobalVar);
     case QmlHighlightKind::JsScopeVar:
-        return int(SemanticTokenTypes::Variable);
+        return int(SemanticTokenProtocolTypes::JsScopeVar);
     case QmlHighlightKind::JsLabel:
-        return int(SemanticTokenTypes::Variable);
+        return int(SemanticTokenProtocolTypes::Variable);
     case QmlHighlightKind::Number:
-        return int(SemanticTokenTypes::Number);
+        return int(SemanticTokenProtocolTypes::Number);
     case QmlHighlightKind::String:
-        return int(SemanticTokenTypes::String);
+        return int(SemanticTokenProtocolTypes::String);
     case QmlHighlightKind::Operator:
-        return int(SemanticTokenTypes::Operator);
+        return int(SemanticTokenProtocolTypes::Operator);
     case QmlHighlightKind::Unknown:
     default:
-        return int(SemanticTokenTypes::Variable);
+        return int(SemanticTokenProtocolTypes::JsScopeVar);
+    }
+}
+
+static int mapToProtocolDefault(QmlHighlightKind highlightKind)
+{
+    switch (highlightKind) {
+    case QmlHighlightKind::Comment:
+        return int(SemanticTokenProtocolTypes::Comment);
+    case QmlHighlightKind::QmlKeyword:
+        return int(SemanticTokenProtocolTypes::Keyword);
+    case QmlHighlightKind::QmlType:
+        return int(SemanticTokenProtocolTypes::Type);
+    case QmlHighlightKind::QmlImportId:
+    case QmlHighlightKind::QmlNamespace:
+        return int(SemanticTokenProtocolTypes::Namespace);
+    case QmlHighlightKind::QmlLocalId:
+    case QmlHighlightKind::QmlExternalId:
+        return int(SemanticTokenProtocolTypes::Variable);
+    case QmlHighlightKind::QmlProperty:
+    case QmlHighlightKind::QmlScopeObjectProperty:
+    case QmlHighlightKind::QmlRootObjectProperty:
+    case QmlHighlightKind::QmlExternalObjectProperty:
+        return int(SemanticTokenProtocolTypes::Property);
+    case QmlHighlightKind::QmlMethod:
+        return int(SemanticTokenProtocolTypes::Method);
+    case QmlHighlightKind::QmlMethodParameter:
+        return int(SemanticTokenProtocolTypes::Parameter);
+    case QmlHighlightKind::QmlSignal:
+        return int(SemanticTokenProtocolTypes::Method);
+    case QmlHighlightKind::QmlSignalHandler:
+        return int(SemanticTokenProtocolTypes::Method);
+    case QmlHighlightKind::QmlEnumName:
+        return int(SemanticTokenProtocolTypes::Enum);
+    case QmlHighlightKind::QmlEnumMember:
+        return int(SemanticTokenProtocolTypes::EnumMember);
+    case QmlHighlightKind::QmlPragmaName:
+    case QmlHighlightKind::QmlPragmaValue:
+        return int(SemanticTokenProtocolTypes::Variable);
+    case QmlHighlightKind::JsImport:
+        return int(SemanticTokenProtocolTypes::Namespace);
+    case QmlHighlightKind::JsGlobalVar:
+        return int(SemanticTokenProtocolTypes::Variable);
+    case QmlHighlightKind::JsScopeVar:
+        return int(SemanticTokenProtocolTypes::Variable);
+    case QmlHighlightKind::JsLabel:
+        return int(SemanticTokenProtocolTypes::Variable);
+    case QmlHighlightKind::Number:
+        return int(SemanticTokenProtocolTypes::Number);
+    case QmlHighlightKind::String:
+        return int(SemanticTokenProtocolTypes::String);
+    case QmlHighlightKind::Operator:
+        return int(SemanticTokenProtocolTypes::Operator);
+    case QmlHighlightKind::Unknown:
+    default:
+        return int(SemanticTokenProtocolTypes::Variable);
     }
 }
 
@@ -747,10 +804,16 @@ QList<SemanticTokensEdit> HighlightingUtils::computeDiff(const QList<int> &oldDa
     return { std::move(edit) };
 }
 
+Highlights::Highlights(HighlightingMode mode)
+    : m_mapToProtocol(mode == HighlightingMode::QtCHighlighting ? mapToProtocolForQtCreator
+                                                                : mapToProtocolDefault)
+{
+}
+
 void Highlights::addHighlight(const QQmlJS::SourceLocation &loc, QmlHighlightKind highlightKind,
                               QmlHighlightModifiers modifierKind)
 {
-    int tokenType = fromQmlHighlightingKindToLspTokenType(highlightKind);
+    int tokenType = m_mapToProtocol(highlightKind);
     int modifierType = fromQmlModifierKindToLspTokenType(modifierKind);
     return addHighlightImpl(loc, tokenType, modifierType);
 }
@@ -770,10 +833,11 @@ void Highlights::addHighlightImpl(const QQmlJS::SourceLocation &loc, int tokenTy
 }
 
 QList<int> HighlightingUtils::collectTokens(const QQmlJS::Dom::DomItem &item,
-                                     const std::optional<HighlightsRange> &range)
+                                     const std::optional<HighlightsRange> &range,
+                                     HighlightingMode mode)
 {
     using namespace QQmlJS::Dom;
-    Highlights highlights;
+    Highlights highlights(mode);
     HighlightingVisitor highlightDomElements(highlights, range);
     // In QmlFile level, visitTree visits even FileLocations tree which takes quite a time to
     // finish. HighlightingFilter is added to prevent unnecessary visits.
