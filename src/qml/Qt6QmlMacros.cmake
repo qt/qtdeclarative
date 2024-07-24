@@ -4167,7 +4167,6 @@ endif()")
                 COMMAND ${CMAKE_COMMAND}
                 -D "${post_build_install_prefix}"
                 -D "${post_build_deploy_prefix}"
-                -D "__QT_DEPLOY_IMPL_DIR=${deploy_impl_dir}"
                 -D "__QT_DEPLOY_POST_BUILD=TRUE"
                 -P "${post_build_deploy_script}"
                 VERBATIM
