@@ -131,8 +131,11 @@ protected:
 QQuickShapeCurveRenderer::~QQuickShapeCurveRenderer()
 {
     for (const PathData &pd : std::as_const(m_paths)) {
-        if (pd.currentRunner)
+        if (pd.currentRunner) {
             pd.currentRunner->orphaned = true;
+            if (!pd.currentRunner->isAsync || pd.currentRunner->isDone)
+                delete pd.currentRunner;
+        }
     }
 }
 
@@ -357,7 +360,7 @@ void QQuickShapeCurveRenderer::createRunner(PathData *pathData)
                      [this](QQuickShapeCurveRunnable *r) {
                          r->isDone = true;
                          if (r->orphaned) {
-                             r->deleteLater(); // Renderer was destroyed
+                             delete r; // Renderer was destroyed
                          } else if (r->isAsync) {
                              maybeUpdateAsyncItem();
                          }
@@ -374,6 +377,12 @@ void QQuickShapeCurveRenderer::maybeUpdateAsyncItem()
         m_item->update();
     if (m_asyncCallback)
         m_asyncCallback(m_asyncCallbackData);
+}
+
+QQuickShapeCurveRunnable::~QQuickShapeCurveRunnable()
+{
+    qDeleteAll(pathData.fillNodes);
+    qDeleteAll(pathData.strokeNodes);
 }
 
 void QQuickShapeCurveRunnable::run()
@@ -417,7 +426,7 @@ void QQuickShapeCurveRenderer::updateNode()
                 nextNode = pd.fillNodes.isEmpty() ? pd.strokeNodes.value(0) : pd.fillNodes.value(0);
             }
 
-            const PathData &newData = pathData.currentRunner->pathData;
+            PathData &newData = pathData.currentRunner->pathData;
             if (newData.m_dirty & PathDirty)
                 pathData.path = newData.path;
             if (newData.m_dirty & FillDirty) {
@@ -430,6 +439,7 @@ void QQuickShapeCurveRenderer::updateNode()
                 }
                 toBeDeleted += pathData.fillNodes;
                 pathData.fillNodes = newData.fillNodes;
+                newData.fillNodes.clear();
             }
             if (newData.m_dirty & StrokeDirty) {
                 for (auto *node : std::as_const(newData.strokeNodes)) {
@@ -440,6 +450,7 @@ void QQuickShapeCurveRenderer::updateNode()
                 }
                 toBeDeleted += pathData.strokeNodes;
                 pathData.strokeNodes = newData.strokeNodes;
+                newData.strokeNodes.clear();
             }
 
             if (newData.m_dirty & UniformsDirty)
@@ -543,6 +554,9 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
     if (indices.size() > 0) {
         node->cookGeometry();
         ret.append(node);
+    } else {
+        delete node;
+        return ret;
     }
 
     const bool wireFrame = debugVisualization() & DebugWireframe;
