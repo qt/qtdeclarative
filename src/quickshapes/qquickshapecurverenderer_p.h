@@ -145,6 +145,7 @@ class QQuickShapeCurveRunnable : public QObject, public QRunnable
     Q_OBJECT
 
 public:
+    ~QQuickShapeCurveRunnable() override;
     void run() override;
 
     bool isAsync = false;
