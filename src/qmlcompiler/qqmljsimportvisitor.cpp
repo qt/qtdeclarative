@@ -1024,30 +1024,21 @@ void QQmlJSImportVisitor::checkSignal(
     }
 
     if (!signalMethod.has_value()) { // haven't found anything
-        std::optional<QQmlJSFixSuggestion> fix;
-
         // There is a small chance of suggesting this fix for things that are not actually
         // QtQml/Connections elements, but rather some other thing that is also called
         // "Connections". However, I guess we can live with this.
         if (signalScope->baseTypeName() == QStringLiteral("Connections")) {
-
-            // Cut to the end of the line to avoid hairy issues with pre-existing function()
-            // and the colon.
-            const qsizetype newLength = m_logger->code().indexOf(u'\n', location.end())
-                    - location.offset;
-
-            fix = QQmlJSFixSuggestion{
-                "Implicitly defining %1 as signal handler in Connections is deprecated. "
-                "Create a function instead."_L1.arg(handlerName),
-                QQmlJS::SourceLocation(location.offset, newLength, location.startLine,
-                                       location.startColumn),
-                "function %1(%2) { ... }"_L1.arg(handlerName, handlerParameters.join(u", "))
-            };
+            m_logger->log(
+                    u"Implicitly defining \"%1\" as signal handler in Connections is deprecated. "
+                    u"Create a function instead: \"function %2(%3) { ... }\"."_s.arg(
+                            handlerName, handlerName, handlerParameters.join(u", ")),
+                    qmlUnqualified, location, true, true);
+            return;
         }
 
-        m_logger->log(QStringLiteral("no matching signal found for handler \"%1\"")
-                              .arg(handlerName),
-                      qmlUnqualified, location, true, true, fix);
+        m_logger->log(
+                QStringLiteral("no matching signal found for handler \"%1\"").arg(handlerName),
+                qmlUnqualified, location, true, true);
         return;
     }
 
