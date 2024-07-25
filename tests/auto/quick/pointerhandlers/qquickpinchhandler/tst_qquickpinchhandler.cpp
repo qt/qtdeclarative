@@ -43,6 +43,8 @@ private slots:
     void cancel();
     void transformedpinchHandler_data();
     void transformedpinchHandler();
+    void dragVsPinch_data();
+    void dragVsPinch();
 
 private:
     QScopedPointer<QPointingDevice> touchscreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -1078,6 +1080,95 @@ void tst_QQuickPinchHandler::transformedpinchHandler()
         QQuickTouchUtils::flush(view);
         QCOMPARE(pinchHandler->active(), false);
     }
+}
+
+void tst_QQuickPinchHandler::dragVsPinch_data()
+{
+    // ptId is QEventPoint::id and also a 1-based index:
+    // 1, 2, 3 activate DragHandlers; 4, 5 are for the PinchHandler.
+    QTest::addColumn<int>("ptId1");
+    QTest::addColumn<int>("ptId2");
+    QTest::addColumn<QQuickPointerHandler::GrabPermission>("pinchGrabPermission");
+    QTest::addColumn<int>("expectedPinchActivations");
+
+    QTest::newRow("top two DragHandlers")
+            << 1 << 2 << QQuickPointerHandler::TakeOverForbidden << 0;
+    QTest::newRow("different DragHandlers")
+            << 2 << 3 << QQuickPointerHandler::TakeOverForbidden << 0;
+    QTest::newRow("one on DH, one on PH, TakeOverForbidden")
+            << 3 << 4 << QQuickPointerHandler::TakeOverForbidden << 0;
+    QTest::newRow("one on DH, one on PH, CanTakeOverFromAnything")
+            << 3 << 4 << QQuickPointerHandler::CanTakeOverFromAnything << 2;
+    QTest::newRow("both on PH")
+            << 4 << 5 << QQuickPointerHandler::TakeOverForbidden << 2;
+}
+
+void tst_QQuickPinchHandler::dragVsPinch()
+{
+    QFETCH(int, ptId1);
+    QFETCH(int, ptId2);
+    QFETCH(QQuickPointerHandler::GrabPermission, pinchGrabPermission);
+    QFETCH(int, expectedPinchActivations);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("pinchAndDragHandlers.qml")));
+    QQuickItem *root = qobject_cast<QQuickItem*>(window.rootObject());
+    QVERIFY(root);
+    QQuickPinchHandler *pinchHandler = root->findChild<QQuickPinchHandler*>();
+    QVERIFY(pinchHandler);
+    pinchHandler->setGrabPermissions(pinchGrabPermission);
+    QSignalSpy pinchActiveSpy(pinchHandler, &QQuickPinchHandler::activeChanged);
+    QQuickMultiPointHandler *dh1 = root->findChild<QQuickMultiPointHandler*>("dh1");
+    QVERIFY(dh1);
+    QQuickMultiPointHandler *dh2 = root->findChild<QQuickMultiPointHandler*>("dh2");
+    QVERIFY(dh2);
+    QQuickMultiPointHandler *dh3 = root->findChild<QQuickMultiPointHandler*>("dh3");
+    QVERIFY(dh3);
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    const QPoint rect1pos = dh1->parentItem()->position().toPoint();
+    const QPoint rect2pos = dh2->parentItem()->position().toPoint();
+    const QPoint rect3pos = dh3->parentItem()->position().toPoint();
+    const QPoint off = {10, 10}; // how far to press inside
+    const QList<QPoint> rectPos = {rect1pos, rect2pos, rect3pos};
+    const QList<QPoint> pointPos = {rect1pos + off, rect2pos + off, rect3pos + off,
+                                     rect2pos + QPoint(0, dh2->parentItem()->height() + 10),
+                                     rect3pos + QPoint(0, dh3->parentItem()->height() + 10)};
+    const QList<QQuickMultiPointHandler *> handlers = {dh1, dh2, dh3, pinchHandler, pinchHandler};
+
+    // press two points, one in each DragHandler's parent Rectangle
+    QPoint p1 = pointPos[ptId1 - 1];
+    QPoint p2 = pointPos[ptId2 - 1];
+    QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(&window, touchscreen.get());
+    pinchSequence.press(ptId1, p1, &window).press(ptId2, p2, &window).commit();
+    QQuickTouchUtils::flush(&window);
+
+    qCDebug(lcPointerTests) << "press pts" << p1 << p2;
+    // drag outwards horizontally
+    for (int i = 1; i <= 4; ++i) {
+        p1 -= QPoint(dragThreshold, 0);
+        p2 += QPoint(dragThreshold, 0);
+        if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+        pinchSequence.move(ptId1, p1, &window).move(ptId2, p2, &window).commit();
+        QQuickTouchUtils::flush(&window);
+        qCDebug(lcPointerTests) << i << "active" << dh1->active() << dh2->active() << dh3->active() << pinchHandler->active() << "pts" << p1 << p2
+                                << "rects @" << dh1->parentItem()->position() << dh2->parentItem()->position() << dh3->parentItem()->position();
+        if (i > 1 && !expectedPinchActivations) {
+            // We don't expect the PinchHandler to be active.  Check which DragHandlers are active.
+            if (ptId1 <= 3) {
+                QVERIFY(handlers[ptId1 - 1]->active());
+                QCOMPARE(handlers[ptId1 - 1]->parentItem()->position().x(), rectPos[ptId1 - 1].x() - dragThreshold * i);
+            }
+            if (ptId2 <= 3) {
+                QVERIFY(handlers[ptId2 - 1]->active());
+                QCOMPARE(handlers[ptId2 - 1]->parentItem()->position().x(), rectPos[ptId2 - 1].x() + dragThreshold * i);
+            }
+        }
+    }
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+    pinchSequence.release(ptId1, p1, &window).release(ptId2, p2, &window).commit();
+    // whether PinchHandler is activated depends on pinchHandler.grabPermissions
+    // and whether DragHandlers handle either or both points
+    QCOMPARE(pinchActiveSpy.size(), expectedPinchActivations);
 }
 
 QTEST_MAIN(tst_QQuickPinchHandler)
