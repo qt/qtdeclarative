@@ -8,13 +8,6 @@
 \title Unqualified
 \brief Accessing an outer scope without its id.
 
-This warning category has multiple warnings:
-\list
-    \li \l{Unqualified access}
-    \li \l{Unknown Attached/Grouped Property Scope}
-    \li \l{No Matching Signal Found For Handler}
-\endlist
-
 \section1 Unqualified access
 
 \section2 What happened?
@@ -118,4 +111,44 @@ Item {
 
 Indeed, this \l{Item} does not have any signal called \c{mySignal}. To fix this warning,
 remove the signal handler or add the missing signal.
+
+\section1 Implicitly defining signal handler in Connections is deprecated
+
+\section2 What happened?
+You used a signal handler on a \l{qml-qtqml-connections.html}{Connections type}.
+
+\section2 Why is this bad?
+This is deprecated.
+
+\section2 Example
+
+\qml
+import QtQuick
+
+Window {
+    id: root
+    property int myInt
+
+    Connections {
+        target: root
+        onMyIntChanged: console.log("new int", myInt)
+    }
+}
+\endqml
+
+To fix this warning, replace the signal handler binding with a function:
+
+\qml
+import QtQuick
+
+Window {
+    id: root
+    property int myInt
+
+    Connections {
+        target: root
+        function onMyIntChanged() { console.log("new int", myInt) }
+    }
+}
+\endqml
 */
