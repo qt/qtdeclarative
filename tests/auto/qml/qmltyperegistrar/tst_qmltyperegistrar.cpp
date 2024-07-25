@@ -457,6 +457,7 @@ void tst_qmltyperegistrar::consistencyWarnings()
                   "but cannot be found.");
     expectWarning("Warning: tst_qmltyperegistrar.h:: NotAnUnderlyingType is used as enum type "
                   "but cannot be found.");
+    QTest::failOnWarning();
 
     processor.postProcessForeignTypes();
 

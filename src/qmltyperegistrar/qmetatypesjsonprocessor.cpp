@@ -536,6 +536,8 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         for (const Method::Container &methods
              : {context.methods(), context.constructors(), context.sigs() }) {
             for (const Method &methodObject : methods) {
+                if (methodObject.access != Access::Public)
+                    continue;
                 for (const Argument &argument : std::as_const(methodObject.arguments)) {
                     ResolvedTypeAlias resolved(argument.type, m_usingDeclarations);
                     if (!resolved.type.isEmpty())
