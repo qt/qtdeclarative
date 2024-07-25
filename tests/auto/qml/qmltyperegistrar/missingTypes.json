@@ -116,8 +116,17 @@
                         ],
                         "name": "createAThing",
                         "returnType": "NotAReturnType"
-                    }
-                ],
+                    },
+                    {
+                        "access": "private",
+                        "arguments": [
+                            {
+                                "type": "NotAnArgumentType2"
+                            }
+                        ],
+                        "name": "createAThing",
+                        "returnType": "NotAReturnType"
+                    }               ],
                 "qualifiedClassName": "AddedInLateVersion",
                 "superClasses": [
                     {
