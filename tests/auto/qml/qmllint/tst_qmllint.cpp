@@ -152,15 +152,17 @@ private:
                         ContainOption shouldContain = StringContained,
                         ReplacementOption searchReplacements = NoReplacementSearch);
 
-    template<typename ExpectedMessageFailureHandler, typename BadMessageFailureHandler>
+    template<typename ExpectedMessageFailureHandler, typename BadMessageFailureHandler,
+             typename ReplacementFailureHandler>
     void checkResult(const QJsonArray &warnings, const Result &result,
                      ExpectedMessageFailureHandler onExpectedMessageFailures,
-                     BadMessageFailureHandler onBadMessageFailures);
+                     BadMessageFailureHandler onBadMessageFailures,
+                     ReplacementFailureHandler onReplacementFailures);
 
     void checkResult(const QJsonArray &warnings, const Result &result)
     {
         checkResult(
-                warnings, result, [] {}, [] {});
+                warnings, result, [] {}, [] {}, [] {});
     }
 
     void runTest(const QString &testFile, const Result &result, QStringList importDirs = {},
@@ -499,9 +501,11 @@ void TestQmllint::dirtyQmlCode_data()
             << Result { { Message { QStringLiteral("Unqualified access"), 12, 36 } } };
     QTest::newRow("AutomatchedSignalHandler2")
             << QStringLiteral("AutomatchedSignalHandler.qml")
-            << Result { { Message {
-                       QStringLiteral("Implicitly defining onClicked as signal handler"), 0, 0,
-                       QtInfoMsg } } };
+            << Result{ { Message{
+                       QStringLiteral(
+                               "Implicitly defining \"onClicked\" as signal handler in Connections "
+                               "is deprecated. "
+                               "Create a function instead: \"function onClicked() { ... }\"")} } };
     QTest::newRow("MemberNotFound")
             << QStringLiteral("memberNotFound.qml")
             << Result { { Message {
@@ -1167,6 +1171,35 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                        Message{ u"Member \"deleteLater\" not found on type \"QtObject\""_s },
                        Message{ u"Member \"destroyed\" not found on type \"QtObject\""_s },
                } };
+    QTest::newRow("connectionsBinding")
+            << QStringLiteral("autofix/ConnectionsHandler.qml")
+            << Result{
+                   { Message{
+                             u"Implicitly defining \"onWidthChanged\" as signal handler in "
+                             u"Connections is deprecated. "
+                             u"Create a function instead: \"function onWidthChanged() { ... }\"."_s },
+                     Message{
+                             u"Implicitly defining \"onColorChanged\" as signal handler in "
+                             u"Connections is deprecated. "
+                             u"Create a function instead: \"function onColorChanged(collie) { ... }\"."_s } },
+               };
+    QTest::newRow("autoFixConnectionsBinding")
+            << QStringLiteral("autofix/ConnectionsHandler.qml")
+            << Result{
+                   { Message{
+                             u"Implicitly defining \"onWidthChanged\" as signal handler in "
+                             u"Connections is deprecated. "
+                             u"Create a function instead: \"function onWidthChanged() { ... }\"."_s },
+                     Message{
+                             u"Implicitly defining \"onColorChanged\" as signal handler in "
+                             u"Connections is deprecated. "
+                             u"Create a function instead: \"function onColorChanged(collie) { ... }\"."_s } },
+                   {},
+                   {
+                           Message{ u"function onWidthChanged() { console.log(\"new width:\", width) }"_s },
+                           Message{ u"function onColorChanged(col) { console.log(\"new color:\", col) }"_s },
+                   },
+                   };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1200,6 +1233,10 @@ void TestQmllint::dirtyQmlCode()
             [] {
                 QEXPECT_FAIL("badAttachedPropertyNested",
                              "We cannot discern between types and instances", Abort);
+            },
+            [] {
+                QEXPECT_FAIL("autoFixConnectionsBinding",
+                             "We can't autofix the code without the Dom.", Abort);
             });
 }
 
@@ -1660,10 +1697,12 @@ void TestQmllint::runTest(const QString &testFile, const Result &result, QString
     checkResult(warnings, result);
 }
 
-template<typename ExpectedMessageFailureHandler, typename BadMessageFailureHandler>
+template<typename ExpectedMessageFailureHandler, typename BadMessageFailureHandler,
+         typename ReplacementFailureHandler>
 void TestQmllint::checkResult(const QJsonArray &warnings, const Result &result,
                               ExpectedMessageFailureHandler onExpectedMessageFailures,
-                              BadMessageFailureHandler onBadMessageFailures)
+                              BadMessageFailureHandler onBadMessageFailures,
+                              ReplacementFailureHandler onReplacementFailures)
 {
     if (result.flags.testFlag(Result::Flag::NoMessages))
         QVERIFY2(warnings.isEmpty(), qPrintable(QJsonDocument(warnings).toJson()));
@@ -1683,6 +1722,7 @@ void TestQmllint::checkResult(const QJsonArray &warnings, const Result &result,
     }
 
     for (const Message &replacement : result.expectedReplacements) {
+        onReplacementFailures();
         searchWarnings(warnings, replacement.text, replacement.severity, replacement.line,
                        replacement.column, StringContained, DoReplacementSearch);
     }
