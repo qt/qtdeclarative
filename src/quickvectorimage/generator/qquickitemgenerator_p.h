@@ -39,7 +39,7 @@ protected:
     void outputShapePath(const PathNodeInfo &info, const QPainterPath *path, const QQuadPath *quadPath, QQuickVectorImageGenerator::PathSelector pathSelector, const QRectF &boundingRect) override;
 
 private:
-    void generateGradient(const QGradient *grad, QQuickShapePath *shapePath, const QRectF &boundingRect);
+    void generateGradient(const QGradient *grad, QQuickShapePath *shapePath);
     QQuickItem *currentItem();
     void addCurrentItem(QQuickItem *item, const NodeInfo &info);
 

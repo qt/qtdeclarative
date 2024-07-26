@@ -153,16 +153,24 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
         }
     }
 
-    if (!(pathSelector & QQuickVectorImageGenerator::FillPath))
+    QTransform fillTransform = info.fillTransform;
+    if (!(pathSelector & QQuickVectorImageGenerator::FillPath)) {
         shapePath->setFillColor(Qt::transparent);
-    else if (info.grad.type() != QGradient::NoGradient)
-        generateGradient(&info.grad, shapePath, boundingRect);
-    else
+    } else if (info.grad.type() != QGradient::NoGradient) {
+        generateGradient(&info.grad, shapePath);
+        if (info.grad.coordinateMode() == QGradient::ObjectMode) {
+            QTransform objectToUserSpace;
+            objectToUserSpace.translate(boundingRect.x(), boundingRect.y());
+            objectToUserSpace.scale(boundingRect.width(), boundingRect.height());
+            fillTransform *= objectToUserSpace;
+        }
+    } else {
         shapePath->setFillColor(info.fillColor);
+    }
 
     shapePath->setFillRule(fillRule);
-    if (!info.fillTransform.isIdentity())
-        shapePath->setFillTransform(info.fillTransform);
+    if (!fillTransform.isIdentity())
+        shapePath->setFillTransform(fillTransform);
 
     QString svgPathString = painterPath ? QQuickVectorImageGenerator::Utils::toSvgString(*painterPath) : QQuickVectorImageGenerator::Utils::toSvgString(*quadPath);
 
@@ -178,7 +186,7 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     shapeDataProp.append(&shapeDataProp, shapePath);
 }
 
-void QQuickItemGenerator::generateGradient(const QGradient *grad, QQuickShapePath *shapePath, const QRectF &boundingRect)
+void QQuickItemGenerator::generateGradient(const QGradient *grad, QQuickShapePath *shapePath)
 {
     if (!shapePath)
         return;
@@ -196,14 +204,11 @@ void QQuickItemGenerator::generateGradient(const QGradient *grad, QQuickShapePat
     if (grad->type() == QGradient::LinearGradient) {
         auto *linGrad = static_cast<const QLinearGradient *>(grad);
 
-        QRectF gradRect(linGrad->start(), linGrad->finalStop());
-        QRectF logRect = linGrad->coordinateMode() == QGradient::LogicalMode ? gradRect : QQuickVectorImageGenerator::Utils::mapToQtLogicalMode(gradRect, boundingRect);
-
         auto *quickGrad = new QQuickShapeLinearGradient(shapePath);
-        quickGrad->setX1(logRect.left());
-        quickGrad->setY1(logRect.top());
-        quickGrad->setX2(logRect.right());
-        quickGrad->setY2(logRect.bottom());
+        quickGrad->setX1(linGrad->start().x());
+        quickGrad->setY1(linGrad->start().y());
+        quickGrad->setX2(linGrad->finalStop().x());
+        quickGrad->setY2(linGrad->finalStop().y());
         setStops(quickGrad, linGrad->stops());
 
         shapePath->setFillGradient(quickGrad);
