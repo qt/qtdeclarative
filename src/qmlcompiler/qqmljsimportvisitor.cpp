@@ -951,8 +951,7 @@ void QQmlJSImportVisitor::processPropertyBindings()
                     }
                 }
 
-                m_logger->log(QStringLiteral("Binding assigned to \"%1\", but no property \"%1\" "
-                                             "exists in the current element.")
+                m_logger->log(QStringLiteral("Property \"%1\" does not exist.")
                                       .arg(name),
                               qmlMissingProperty, location, true, true, fixSuggestion);
                 continue;
