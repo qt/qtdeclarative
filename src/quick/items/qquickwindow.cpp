@@ -3582,8 +3582,8 @@ void QQuickWindow::endExternalCommands()
     visibility property you will always get the actual state, never
     \c AutomaticVisibility.
 
-    When a window is not visible, its visibility is \c Hidden, and setting
-    visibility to \l {QWindow::}{Hidden} is the same as setting \l visible to \c false.
+    When a window is not \l visible, its visibility is \c Hidden.
+    Setting visibility to \l {QWindow::}{Hidden} is the same as setting \l visible to \c false.
 
     The default value is \l {QWindow::}{Hidden}
 
