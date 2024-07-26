@@ -3585,6 +3585,8 @@ void QQuickWindow::endExternalCommands()
     When a window is not visible, its visibility is \c Hidden, and setting
     visibility to \l {QWindow::}{Hidden} is the same as setting \l visible to \c false.
 
+    The default value is \l {QWindow::}{Hidden}
+
     \snippet qml/windowVisibility.qml entire
 
     \sa visible, {Qt Quick Examples - Window and Screen}
