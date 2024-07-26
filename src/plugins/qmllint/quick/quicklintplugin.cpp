@@ -714,10 +714,6 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                            "Attached properties of SwipeDelegate must be accessed through an Item");
         addAttachedWarning({ "QtQuick.Templates", "SwipeView" }, { { "QtQuick", "Item" } },
                            "SwipeView must be attached to an Item");
-        addAttachedWarning(
-                { "QtQuick.Templates", "Tumbler" }, { { "QtQuick", "Tumbler" } },
-                "Tumbler: attached properties of Tumbler must be accessed through a delegate item",
-                true);
         addVarBindingWarning("QtQuick.Templates", "Tumbler",
                              { { "contentItem", { "QtQuick", "PathView" } },
                                { "contentItem", { "QtQuick", "ListView" } } });
