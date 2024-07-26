@@ -2291,10 +2291,13 @@ void TestQmllint::quickPlugin()
                       Message { u"StackView attached property must be attached to an object deriving from Item"_s },
                       Message { u"TextArea attached property must be attached to an object deriving from Flickable"_s },
                       Message { u"StackLayout attached property must be attached to an object deriving from Item"_s },
-                      Message {
-                              u"Tumbler: attached properties of Tumbler must be accessed through a delegate item"_s },
                       Message { u"SwipeDelegate attached property must be attached to an object deriving from Item"_s },
                       Message { u"SwipeView attached property must be attached to an object deriving from Item"_s } } });
+
+    {
+        const Result result{ {}, { Message{ u"Tumbler"_s }, }, };
+        runTest("pluginQuick_tumblerGood.qml", result);
+    }
 
     runTest("pluginQuick_swipeDelegate.qml",
             Result { {
