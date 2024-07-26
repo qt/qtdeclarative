@@ -2135,10 +2135,13 @@ void TestQmllint::quickPlugin()
                       Message { u"TextArea must be attached to a Flickable"_s },
                       Message { u"StackLayout must be attached to an Item"_s },
                       Message {
-                              u"Tumbler: attached properties of Tumbler must be accessed through a delegate item"_s },
-                      Message {
                               u"Attached properties of SwipeDelegate must be accessed through an Item"_s },
                       Message { u"SwipeView must be attached to an Item"_s } } });
+
+    {
+        const Result result{ {}, { Message{ u"Tumbler"_s }, }, };
+        runTest("pluginQuick_tumblerGood.qml", result);
+    }
 
     runTest("pluginQuick_swipeDelegate.qml",
             Result { {

@@ -21,7 +21,6 @@ Item {
         property int swipeView: SwipeView.index // Read-only
         TextArea.flickable: TextArea {}
         ToolTip.delay: 50
-        property bool tumbler: Tumbler.displacement // Read-only
         property bool swipeDelegate: SwipeDelegate.pressed // Read-only
     }
 }
