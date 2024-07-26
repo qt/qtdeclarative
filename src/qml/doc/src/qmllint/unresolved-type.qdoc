@@ -65,7 +65,7 @@ Item { ... }
 \endqml
 
 If adding the import statement does not help, take a look at your
-\l{import paths}{qtqml-syntax-imports.html#qml-import-path}.
+\l{Import Statements#QML Import Path}{import paths}.
 
 If you get this warning via \QMLLS, your
 \l{qtqml-tooling-qmlls.html#setting-up-the-qml-language-server-in-your-editor}{setup}

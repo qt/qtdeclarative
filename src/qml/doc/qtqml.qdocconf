@@ -43,6 +43,7 @@ depends += \
     qtwidgets \
     qtquickcontrols \
     qmake \
+    qtsvg \
     qtcmake
 
 headerdirs  += ..

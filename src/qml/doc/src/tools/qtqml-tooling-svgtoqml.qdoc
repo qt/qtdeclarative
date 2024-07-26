@@ -58,8 +58,8 @@ In addition, it supports the following options:
 There are multiple options for including SVG content in Qt Quick. The following will give an
 overview of where \c svgtoqml fits into the story.
 
-\section2 Comparison to Qt Svg
-\l{Qt Svg} is a module which provides a parser and software renderer for SVG files. In addition, it
+\section2 Comparison to Qt SVG
+\l{Qt SVG} is a module which provides a parser and software renderer for SVG files. In addition, it
 includes an image loader plugin, so that SVG files can be loaded directly by the \l{Image} element
 in Qt Quick. The SVG will then be rasterized and cached at a specified size and redrawing it will
 be quite cheap. But zooming into the image without pixelation will involve reloading it at a
