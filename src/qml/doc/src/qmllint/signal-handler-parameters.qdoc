@@ -8,13 +8,7 @@
 \title Signal Handler Parameters
 \brief The signal handler does not satisfy the signal types.
 
-This warning category has multiple warnings:
-\list
-    \li \l{Type Of Parameter In Signal Was Not Found}
-    \li \l{Type Of Parameter In Signal Cannot Be Used}
-    \li \l{The Signal Has A Parameter Of The Same Name}
-\endlist
-
+This warning category has multiple warnings, described in the sections below:
 
 \section1 Type Of Parameter In Signal Was Not Found
 
@@ -31,9 +25,8 @@ actually installed, and that their modules end up in an
 \l{Import Statements#qml-import-path}{import path}.
 
 The warning might also indicate that the parameter type of the C++ defined signal does not have
-a QML counterpart. The parameter type might be missing the
-\l{QQmlEngine Class#QML_ELEMENT}{QML_ELEMENT} macro, for example. Refer to
-\l{Defining QML Types from C++} or \l{Overview - QML and C++ Integration} in this case.
+a QML counterpart. The parameter type might be missing the \l QML_ELEMENT macro, for example.
+Refer to \l{Defining QML Types from C++} or \l{Overview - QML and C++ Integration} in this case.
 
 \section2 Why is this bad?
 In the first case, the module with the C++ signal has an undeclared dependency on the QML module

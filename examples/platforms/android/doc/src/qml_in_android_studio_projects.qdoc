@@ -184,7 +184,7 @@
     object of the m_mainQmlComponent and then show it to the user on the
     Java/Kotlin Android side of the application.
 
-    \c m_secondQmlComponent has a \l {Grid QML Type}{Grid} QML component
+    \c m_secondQmlComponent has a \l [QML] {Grid} QML component
     which we can rotate from the Java side with the generated
     \c m_secondQmlComponent.setGridRotation() method.
 

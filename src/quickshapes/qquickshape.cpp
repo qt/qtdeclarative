@@ -25,6 +25,7 @@ QT_BEGIN_NAMESPACE
 Q_STATIC_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
 
 /*!
+    \keyword Qt Quick Shapes
     \qmlmodule QtQuick.Shapes 1.\QtMinorVersion
     \title Qt Quick Shapes QML Types
     \ingroup qmlmodules
@@ -531,8 +532,8 @@ void QQuickShapePathPrivate::_q_fillGradientChanged()
     \l{Image}). If it is not a valid texture provider, this property will be ignored.
 
     \note When using a layered item as a \c fillItem, you may see pixelation effects when
-    transforming the fill. Setting the \l layer.smooth property to true will give better visual
-    results in this case.
+    transforming the fill. Setting the \l {QtQuick::Item::}{layer.smooth} property to true will
+    give better visual results in this case.
 
     By default no fill item is set and the value is \c null.
 

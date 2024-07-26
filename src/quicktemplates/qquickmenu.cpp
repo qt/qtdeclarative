@@ -1909,7 +1909,7 @@ void QQuickMenu::setOverlap(qreal overlap)
     }
     \endcode
 
-    \note delegates will only be visible when using a \l {Native Menus}
+    \note delegates will only be visible when using a \l {Menu types}
     {non-native Menu}.
 
     \sa Action
@@ -2116,7 +2116,7 @@ void QQuickMenu::popup(QQmlV4FunctionPtr args)
     Closes all menus in the hierarchy that this menu belongs to.
 
     \note Unlike \l {Popup::}{close()} that only closes a menu and its
-    sub-menus (when using \l {Native Menus}{non-native menus}), \c dismiss()
+    sub-menus (when using \l {Menu types}{non-native menus}), \c dismiss()
     closes the whole hierarchy of menus, including the parent menus. In
     practice, \c close() is suitable e.g. for implementing navigation in a
     hierarchy of menus, and \c dismiss() is the appropriate method for closing

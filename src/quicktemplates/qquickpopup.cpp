@@ -222,12 +222,12 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickPopup, "qt.quick.controls.popup")
      }
     \endcode
 
-    \note When using \l {Popup Items}, the popup's \l{contentItem}{content item} gets parented to the
-    \l{Overlay::overlay}{overlay}, and does not live within the popup's parent.
-    Because of that, a \l{Item::scale}{scale} applied to the tree in which
-    the popup lives does not apply to the visual popup. To make the popup
-    of e.g. a \l{ComboBox} follow the scale of the combobox, apply the same scale
-    to the \l{Overlay::overlay}{overlay} as well:
+    \note When using \l {Showing a popup as an item}{popup items}, the popup's
+    \l{contentItem}{content item} gets parented to the \l{Overlay::}{overlay},
+    and does not live within the popup's parent. Because of that, a \l{Item::}
+    {scale} applied to the tree in which the popup lives does not apply to the
+    visual popup. To make the popup of e.g. a \l{ComboBox} follow the scale of
+    the combobox, apply the same scale to the \l{Overlay::}{overlay} as well:
 
     \code
     Window {
@@ -2908,11 +2908,15 @@ void QQuickPopup::resetBottomInset()
     This property determines the type of popup that is preferred.
 
     Available options:
-    \value Item         The popup will be embedded into the \l{Popup Items}{same scene as the parent}, without the use of a separate window.
-    \value Window       The popup will be presented in a \l {Popup Windows}{separate window}. If the platform doesn't support multiple windows,
-                        \c Popup.Item will be used instead.
-    \value Native       The popup will be native to the platform. If the platform doesn't support native popups,
-                        \c Popup.Window will be used instead.
+    \value Item         The popup will be embedded into the
+                        \l{Showing a popup as an item}{same scene as the parent},
+                        without the use of a separate window.
+    \value Window       The popup will be presented in a \l {Popup type}
+                        {separate window}. If the platform doesn't support
+                        multiple windows, \c Popup.Item will be used instead.
+    \value Native       The popup will be native to the platform. If the
+                        platform doesn't support native popups, \c Popup.Window
+                        will be used instead.
 
     Whether a popup will be able to use the preferred type depends on the platform.
     \c Popup.Item is supported on all platforms, but \c Popup.Window and \c Popup.Native
