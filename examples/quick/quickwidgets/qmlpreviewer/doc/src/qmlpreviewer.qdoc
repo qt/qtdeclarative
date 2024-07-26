@@ -1,0 +1,21 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \title QML Previewer Example
+    \example quickwidgets/qmlpreviewer
+    \brief Demonstrates how to mix QML with a Qt Widgets application using the QQuickWidget class.
+    \examplecategory {User Interface Components}
+
+    \image qmlpreviewer-example.png
+
+    The example demonstrates how you can embed Qt Quick inside a widgets application, and how
+    different UI aspects integrate between Qt Widgets and Qt Quick. This includes:
+
+    \list
+        \li Tab focusing between widgets and Qt Quick
+        \li Drag and drop between widgets and Qt Quick
+        \li Shortcuts defined in the embedded QML file
+        \li Embedding a QQuickWidget inside a layout
+    \endlist
+*/
