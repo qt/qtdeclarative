@@ -77,7 +77,7 @@ protected:
     void outputShapePath(const PathNodeInfo &info, const QPainterPath *path, const QQuadPath *quadPath, QQuickVectorImageGenerator::PathSelector pathSelector, const QRectF &boundingRect) override;
 
 private:
-    void generateGradient(const QGradient *grad, const QRectF &boundingRect);
+    void generateGradient(const QGradient *grad);
     void generateTransform(const QTransform &xf);
 
     QStringView indent();

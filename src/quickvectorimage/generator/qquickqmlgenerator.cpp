@@ -177,7 +177,7 @@ void QQuickQmlGenerator::generatePath(const PathNodeInfo &info)
     }
 }
 
-void QQuickQmlGenerator::generateGradient(const QGradient *grad, const QRectF &boundingRect)
+void QQuickQmlGenerator::generateGradient(const QGradient *grad)
 {
     if (grad->type() == QGradient::LinearGradient) {
         auto *linGrad = static_cast<const QLinearGradient *>(grad);
@@ -185,12 +185,11 @@ void QQuickQmlGenerator::generateGradient(const QGradient *grad, const QRectF &b
         m_indentLevel++;
 
         QRectF gradRect(linGrad->start(), linGrad->finalStop());
-        QRectF logRect = linGrad->coordinateMode() == QGradient::LogicalMode ? gradRect : QQuickVectorImageGenerator::Utils::mapToQtLogicalMode(gradRect, boundingRect);
 
-        stream() << "x1: " << logRect.left();
-        stream() << "y1: " << logRect.top();
-        stream() << "x2: " << logRect.right();
-        stream() << "y2: " << logRect.bottom();
+        stream() << "x1: " << gradRect.left();
+        stream() << "y1: " << gradRect.top();
+        stream() << "x2: " << gradRect.right();
+        stream() << "y2: " << gradRect.bottom();
         for (auto &stop : linGrad->stops())
             stream() << "GradientStop { position: " << stop.first << "; color: \"" << stop.second.name(QColor::HexArgb) << "\" }";
         m_indentLevel--;
@@ -280,16 +279,23 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
         }
     }
 
+    QTransform fillTransform = info.fillTransform;
     if (!(pathSelector & QQuickVectorImageGenerator::FillPath)) {
         stream() << "fillColor: \"transparent\"";
     } else if (info.grad.type() != QGradient::NoGradient) {
-        generateGradient(&info.grad, boundingRect);
+        generateGradient(&info.grad);
+        if (info.grad.coordinateMode() == QGradient::ObjectMode) {
+            QTransform objectToUserSpace;
+            objectToUserSpace.translate(boundingRect.x(), boundingRect.y());
+            objectToUserSpace.scale(boundingRect.width(), boundingRect.height());
+            fillTransform *= objectToUserSpace;
+        }
     } else {
         stream() << "fillColor: \"" << info.fillColor.name(QColor::HexArgb) << "\"";
     }
 
-    if (!info.fillTransform.isIdentity()) {
-        const QTransform &xf = info.fillTransform;
+    if (!fillTransform.isIdentity()) {
+        const QTransform &xf = fillTransform;
         stream() << "fillTransform: ";
         if (info.fillTransform.type() == QTransform::TxTranslate)
             stream(SameLine) << "PlanarTransform.fromTranslate(" << xf.dx() << ", " << xf.dy() << ")";
