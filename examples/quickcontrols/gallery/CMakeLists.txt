@@ -72,7 +72,6 @@ qt_add_qml_module(galleryexample
         "images/qt-logo@2x.png"
         "images/qt-logo@3x.png"
         "images/qt-logo@4x.png"
-        "qmldir"
         "qtquickcontrols2.conf"
 )
 
