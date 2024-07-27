@@ -1,0 +1,23 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url "https://android.qt.io/maven/snapshots"
+        }
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url "https://android.qt.io/maven/snapshots"
+        }
+    }
+}
+
+rootProject.name = "qtquickview_java"
+include ':app'
