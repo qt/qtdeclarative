@@ -26,16 +26,16 @@
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java onCreate
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java onCreate
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt onCreate
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt onCreate
 
     \note in the Kotlin project we use \l {Android: View binding}{View binding}
     to access the UI components of the application:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt binding
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt binding
 
     Inside the \c onCreate() method, a previously declared variable
     \c m_qtQuickView is initialized with a new
@@ -46,11 +46,11 @@
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java m_qtQuickView
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java m_qtQuickView
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt m_qtQuickView
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt m_qtQuickView
 
     The \c Main and \c Second Java classes inherit from the \c QtQmlComponent
     class. These classes are generated from the QML project that we've
@@ -59,11 +59,11 @@
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java qmlComponent
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java qmlComponent
 
     For a Kotlin-based project (initialized when declared):
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt qmlComponent
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt qmlComponent
 
     The \c m_mainQmlComponent is loaded into the \c m_qtQuickView through the
     \c QtQuickView.loadComponent() method, which takes \c QtQmlComponent as an
@@ -71,22 +71,22 @@
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java loadComponent
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java loadComponent
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt loadComponent
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt loadComponent
 
     The \c m_qtQuickView is added to Android FrameLayout ViewGroup with
     appropriate layout parameters.
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java layoutParams
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java layoutParams
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt layoutParams
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt layoutParams
 
     \section1 Interacting with the QML component
 
@@ -116,11 +116,11 @@
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java onStatusChanged
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java onStatusChanged
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt onStatusChanged
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt onStatusChanged
 
     The \c onStatusChanged listener is set as the \c statusChangeListener
     of the \c m_mainQmlComponent and \c m_secondQmlComponent with
@@ -129,11 +129,11 @@
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java setStatusChangeListener
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java setStatusChangeListener
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt setStatusChangeListener
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt setStatusChangeListener
 
     The overridden callback function \c onStatusChanged() receives
     \c StatusChanged() signal containing the current
@@ -152,11 +152,11 @@
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java switchLoadedComponent
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java switchLoadedComponent
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt switchLoadedComponent
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt switchLoadedComponent
 
     \section1 Getting and setting QML component property values
 
@@ -168,11 +168,11 @@
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java onClickListener
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java onClickListener
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt onClickListener
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt onClickListener
 
     With the \c m_mainQmlComponent.setColorStringProperty()
     method we set the \c colorStringFormat property value of the
@@ -190,11 +190,11 @@
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java gridRotate
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java gridRotate
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt gridRotate
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt gridRotate
 
     \section1 Signal listeners
 
@@ -211,11 +211,11 @@
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java qml signal listener
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java qml signal listener
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt qml signal listener
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt qml signal listener
 
     The \c onClicked() signal is emitted every time the button on the
     QML component is clicked.
@@ -229,10 +229,10 @@
 
     For a Java-based project:
 
-    \snippet android/qml_in_java_based_android_project/app/src/main/java/com/example/qml_in_java_based_android_project/MainActivity.java disconnect qml signal listener
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java disconnect qml signal listener
 
     For a Kotlin-based project:
 
-    \snippet android/qml_in_kotlin_based_android_project/app/src/main/java/com/example/qml_in_kotlin_based_android_project/MainActivity.kt disconnect qml signal listener
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt disconnect qml signal listener
 
 */
