@@ -686,11 +686,18 @@ QMimeData *QQuickDragAttachedPrivate::createMimeData() const
             } else if (mimeType == u"text/html"_s) {
                 mimeData->setHtml(text);
             } else if (mimeType == u"text/uri-list"_s) {
-                const QUrl url(text);
-                if (url.isValid())
-                    mimeData->setUrls({url});
-                else
-                    qmlWarning(q) << text << " is not a valid URI";
+                QList<QUrl> urls;
+                // parse and split according to RFC2483
+                const auto lines = text.split(u"\r\n"_s, Qt::SkipEmptyParts);
+                for (const auto &line : lines) {
+                    const QUrl url(line);
+                    if (url.isValid())
+                        urls.push_back(url);
+                    else
+                        qmlWarning(q) << line << " is not a valid URI";
+
+                }
+                mimeData->setUrls(urls);
             } else if (mimeType.startsWith(u"text/"_s)) {
                 if (qsizetype charsetIdx = mimeType.lastIndexOf(u";charset="_s); charsetIdx != -1) {
                     charsetIdx += sizeof(";charset=") - 1;
