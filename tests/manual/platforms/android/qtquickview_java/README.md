@@ -31,5 +31,5 @@ The app-level build.gradle already includes and configures the plugin, but it re
 2) Add the following information to the file:
     ```
     qtKitDir=/path/to/your/android/kit/
-    qtPath=/path/to/your/Qt/installation // e.g. /etc/Qt/
+    qtPath=/path/to/your/Qt/installation // e.g. /etc/Qt/6.8.0
     ```

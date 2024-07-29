@@ -13,9 +13,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven {
-            url "https://android.qt.io/maven/snapshots"
-        }
     }
 }
 
