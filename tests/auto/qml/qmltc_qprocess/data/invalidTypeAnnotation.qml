@@ -17,4 +17,5 @@ Item {
     function alpha(a: int, b) {}
     function beta(a: int, b): Item {}
     function gamma(a: Qt.point, b) {}
+    function delta(a: bool) : Nope {}
 }
