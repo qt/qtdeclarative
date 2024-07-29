@@ -19,6 +19,7 @@
 #include <QtQuickTemplates2/private/qquicktumbler_p.h>
 
 #include <QtCore/qpointer.h>
+#include <QtQml/private/qqmlpropertyutils_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -87,7 +88,7 @@ public:
     void setCurrentIndex(int newCurrentIndex, PropertyChangeReason changeReason = InternalChange);
     void setCount(int newCount);
     void setWrapBasedOnCount();
-    void setWrap(bool shouldWrap, bool isExplicit);
+    void setWrap(bool shouldWrap, QQml::PropertyUtils::State propertyState);
     void beginSetModel();
     void endSetModel();
 

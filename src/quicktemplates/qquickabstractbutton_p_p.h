@@ -23,6 +23,8 @@
 
 #include <QtCore/qpointer.h>
 
+#include <QtQml/private/qqmlpropertyutils_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickAction;
@@ -67,7 +69,7 @@ public:
     QList<QQuickAbstractButton *> findExclusiveButtons() const;
 
     void actionTextChange();
-    void setText(const QString &text, bool isExplicit);
+    void setText(const QString &text, QQml::PropertyUtils::State propertyState);
     void init();
 
     void updateEffectiveIcon();

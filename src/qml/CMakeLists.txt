@@ -344,6 +344,7 @@ qt_internal_add_qml_module(Qml
         qtqmlcompilerglobal.h qtqmlcompilerglobal_p.h
         qtqmlglobal.h qtqmlglobal_p.h
         util/qqmlpropertymap.cpp util/qqmlpropertymap.h
+        util/qqmlpropertyutils_p.h
 
         qmltc/qqmltcobjectcreationhelper_p.h
         qmltc/qqmltcobjectcreationhelper.cpp

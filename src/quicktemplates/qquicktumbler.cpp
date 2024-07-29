@@ -436,7 +436,7 @@ bool QQuickTumbler::wrap() const
 void QQuickTumbler::setWrap(bool wrap)
 {
     Q_D(QQuickTumbler);
-    d->setWrap(wrap, true);
+    d->setWrap(wrap, QQml::PropertyUtils::State::ExplicitlySet);
 }
 
 void QQuickTumbler::resetWrap()
@@ -756,14 +756,14 @@ void QQuickTumblerPrivate::setWrapBasedOnCount()
     if (count == 0 || explicitWrap || modelBeingSet)
         return;
 
-    setWrap(count >= visibleItemCount, false);
+    setWrap(count >= visibleItemCount, QQml::PropertyUtils::State::ImplicitlySet);
 }
 
-void QQuickTumblerPrivate::setWrap(bool shouldWrap, bool isExplicit)
+void QQuickTumblerPrivate::setWrap(bool shouldWrap, QQml::PropertyUtils::State propertyState)
 {
-    qCDebug(lcTumbler) << "setting wrap to" << shouldWrap << "- explicit?" << isExplicit;
-    if (isExplicit)
+    if (isExplicitlySet(propertyState))
         explicitWrap = true;
+    qCDebug(lcTumbler) << "setting wrap to" << shouldWrap << "- explicit?" << explicitWrap;
 
     Q_Q(QQuickTumbler);
     if (q->isComponentComplete() && shouldWrap == wrap)

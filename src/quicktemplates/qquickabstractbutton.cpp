@@ -334,11 +334,11 @@ void QQuickAbstractButtonPrivate::actionTextChange()
     q->buttonChange(QQuickAbstractButton::ButtonTextChange);
 }
 
-void QQuickAbstractButtonPrivate::setText(const QString &newText, bool isExplicit)
+void QQuickAbstractButtonPrivate::setText(const QString &newText, QQml::PropertyUtils::State propertyState)
 {
     Q_Q(QQuickAbstractButton);
     const QString oldText = q->text();
-    explicitText = isExplicit;
+    explicitText = isExplicitlySet(propertyState);
     text = newText;
     if (oldText == q->text())
         return;
@@ -531,13 +531,13 @@ QString QQuickAbstractButton::text() const
 void QQuickAbstractButton::setText(const QString &text)
 {
     Q_D(QQuickAbstractButton);
-    d->setText(text, true);
+    d->setText(text, QQml::PropertyUtils::State::ExplicitlySet);
 }
 
 void QQuickAbstractButton::resetText()
 {
     Q_D(QQuickAbstractButton);
-    d->setText(QString(), false);
+    d->setText(QString(), QQml::PropertyUtils::State::ImplicitlySet);
 }
 
 /*!
