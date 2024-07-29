@@ -669,32 +669,28 @@ void QQmlJSImportVisitor::processPropertyTypes()
 
 void QQmlJSImportVisitor::processMethodTypes()
 {
-    for (const auto &type : m_pendingMethodTypes) {
+    for (const auto &method : m_pendingMethodTypeAnnotations) {
+        for (auto [it, end] = method.scope->mutableOwnMethodsRange(method.methodName); it != end; ++it) {
+            const auto [parameterBegin, parameterEnd] = it->mutableParametersRange();
+            for (auto parameter = parameterBegin; parameter != parameterEnd; ++parameter) {
+                if (const auto parameterType =
+                    QQmlJSScope::findType(parameter->typeName(), m_rootScopeImports) .scope) {
+                    parameter->setType({ parameterType });
+                } else {
+                    m_logger->log(
+                            u"\"%1\" was not found for the type of parameter \"%2\" in method \"%3\"."_s
+                                    .arg(parameter->typeName(), parameter->name(), it->methodName()),
+                            qmlUnresolvedType, method.locations[parameter - parameterBegin]);
+                }
+            }
 
-        for (auto [it, end] = type.scope->mutableOwnMethodsRange(type.methodName); it != end;
-             ++it) {
             if (const auto returnType =
                         QQmlJSScope::findType(it->returnTypeName(), m_rootScopeImports).scope) {
                 it->setReturnType({ returnType });
             } else {
                 m_logger->log(u"\"%1\" was not found for the return type of method \"%2\"."_s.arg(
                                       it->returnTypeName(), it->methodName()),
-                              qmlUnresolvedType, type.location);
-            }
-
-            for (auto [parameter, parameterEnd] = it->mutableParametersRange();
-                 parameter != parameterEnd; ++parameter) {
-                if (const auto parameterType =
-                            QQmlJSScope::findType(parameter->typeName(), m_rootScopeImports)
-                                    .scope) {
-                    parameter->setType({ parameterType });
-                } else {
-                    m_logger->log(
-                            u"\"%1\" was not found for the type of parameter \"%2\" in method \"%3\"."_s
-                                    .arg(parameter->typeName(), parameter->name(),
-                                         it->methodName()),
-                            qmlUnresolvedType, type.location);
-                }
+                              qmlUnresolvedType, method.locations.last());
             }
         }
     }
@@ -1709,7 +1705,6 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
 {
     using namespace QQmlJS::AST;
     auto name = fexpr->name.toString();
-    bool pending = false;
     if (!name.isEmpty()) {
         QQmlJSMetaMethod method(name);
         method.setMethodType(QQmlJSMetaMethodType::Method);
@@ -1724,6 +1719,8 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
 
         bool formalsFullyTyped = parseTypes;
         bool anyFormalTyped = false;
+        PendingMethodTypeAnnotations pending{ m_currentScope, name, {} };
+
         if (const auto *formals = parseTypes ? fexpr->formals : nullptr) {
             const auto parameters = formals->formals();
             for (const auto &parameter : parameters) {
@@ -1733,18 +1730,13 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
                 if (type.isEmpty()) {
                     formalsFullyTyped = false;
                     method.addParameter(QQmlJSMetaParameter(parameter.id, QStringLiteral("var")));
+                    pending.locations.emplace_back();
                 }  else {
                     anyFormalTyped = true;
                     method.addParameter(QQmlJSMetaParameter(parameter.id, type));
-                    if (!pending) {
-                        m_pendingMethodTypes << PendingMethodType{
-                            m_currentScope,
-                            name,
+                    pending.locations.append(
                             combine(parameter.typeAnnotation->firstSourceLocation(),
-                                    parameter.typeAnnotation->lastSourceLocation())
-                        };
-                        pending = true;
-                    }
+                                    parameter.typeAnnotation->lastSourceLocation()));
                 }
             }
         }
@@ -1758,18 +1750,17 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
         // In order to make a function without arguments return void, you have to specify that.
         if (parseTypes && fexpr->typeAnnotation) {
             method.setReturnTypeName(fexpr->typeAnnotation->type->toString());
-            if (!pending) {
-                m_pendingMethodTypes << PendingMethodType{
-                    m_currentScope, name,
-                    combine(fexpr->typeAnnotation->firstSourceLocation(),
-                            fexpr->typeAnnotation->lastSourceLocation())
-                };
-                pending = true;
-            }
-        } else if (anyFormalTyped)
+            pending.locations.append(combine(fexpr->typeAnnotation->firstSourceLocation(),
+                                             fexpr->typeAnnotation->lastSourceLocation()));
+        } else if (anyFormalTyped) {
             method.setReturnTypeName(QStringLiteral("void"));
-        else
+        } else {
             method.setReturnTypeName(QStringLiteral("var"));
+        }
+
+        const auto &locs = pending.locations;
+        if (std::any_of(locs.cbegin(), locs.cend(), [](const auto &loc) { return loc.isValid(); }))
+            m_pendingMethodTypeAnnotations << pending;
 
         method.setJsFunctionIndex(addFunctionOrExpression(m_currentScope, method.methodName()));
         m_currentScope->addOwnMethod(method);

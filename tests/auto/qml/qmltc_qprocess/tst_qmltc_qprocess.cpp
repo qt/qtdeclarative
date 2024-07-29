@@ -289,6 +289,8 @@ void tst_qmltc_qprocess::invalidTypeAnnotation()
                 u"invalidTypeAnnotation.qml:5:17: \"Qt.point\" was not found for the return type of method \"f\"."_s));
         QVERIFY(errors.contains(
                 u"invalidTypeAnnotation.qml:19:21: \"Qt.point\" was not found for the type of parameter \"a\" in method \"gamma\"."_s));
+        QVERIFY(errors.contains(
+                u"invalidTypeAnnotation.qml:20:29: \"Nope\" was not found for the return type of method \"delta\"."_s));
         QVERIFY(!errors.contains(u"\"var\""_s));
         QVERIFY(!errors.contains(u"\"void\""_s));
     }

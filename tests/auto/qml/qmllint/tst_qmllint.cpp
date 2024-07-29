@@ -1129,6 +1129,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                        Message{ u"Member \"deleteLater\" not found on type \"QtObject\""_s },
                        Message{ u"Member \"destroyed\" not found on type \"QtObject\""_s },
                } };
+
     QTest::newRow("connectionsBinding")
             << QStringLiteral("autofix/ConnectionsHandler.qml")
             << Result{
@@ -1158,6 +1159,17 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                            Message{ u"function onColorChanged(col) { console.log(\"new color:\", col) }"_s },
                    },
                    };
+    QTest::newRow("unresolvedTypeAnnotation")
+            << QStringLiteral("unresolvedTypeAnnotations.qml")
+            << Result{{
+                       { uR"("A" was not found for the type of parameter "a" in method "f".)"_s, 4, 17 },
+                       { uR"("B" was not found for the type of parameter "b" in method "f".)"_s, 4, 23 },
+                       { uR"("R" was not found for the return type of method "g".)"_s, 5, 18 },
+                       { uR"("C" was not found for the type of parameter "c" in method "h".)"_s, 6, 17 },
+                       { uR"("R" was not found for the return type of method "h".)"_s, 6, 22 },
+                       { uR"("D" was not found for the type of parameter "d" in method "i".)"_s, 7, 17 },
+                       { uR"("G" was not found for the type of parameter "g" in method "i".)"_s, 7, 26 },
+               }};
 }
 
 void TestQmllint::dirtyQmlCode()
