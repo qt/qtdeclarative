@@ -85,6 +85,10 @@ private:
 
     EnvironmentAndFile createEnvironmentAndLoadFile(const QString &file);
 
+    ExpectedCompletions quickSnippets(const QStringView firstPrefix,
+                                      const QStringView secondPrefix) const;
+    ExpectedCompletions quickBindingSnippets(const QStringView firstPrefix) const;
+
     using CacheKey = QString;
     // avoid loading the same file over and over when running all the tests
     QHash<CacheKey, std::shared_ptr<QQmlJS::Dom::DomEnvironment>> cache;

@@ -45,7 +45,7 @@ void QQmlLSQuickCompletionPlugin::suggestSnippetsForLeftHandSideOfBinding(
     const QByteArray prefixForSnippet =
             userTypedQualifier.isEmpty() ? it->importId.toUtf8() : QByteArray();
     const QByteArray prefixWithDotForSnippet =
-            prefixForSnippet.isEmpty() ? QByteArray() : QByteArray(prefixForSnippet).append(u'.');
+            it->importId.isEmpty() ? QByteArray() : it->importId.toUtf8().append(u'.');
 
     auto resolver = file->typeResolver();
     if (!resolver)
@@ -106,7 +106,7 @@ void QQmlLSQuickCompletionPlugin::suggestSnippetsForRightHandSideOfBinding(
     const QByteArray prefixForSnippet =
             userTypedQualifier.isEmpty() ? it->importId.toUtf8() : QByteArray();
     const QByteArray prefixWithDotForSnippet =
-            prefixForSnippet.isEmpty() ? QByteArray() : QByteArray(prefixForSnippet).append(u'.');
+            it->importId.isEmpty() ? QByteArray() : it->importId.toUtf8().append(u'.');
 
     // Quick completions from Qt Creator's code model
     result = QQmlLSCompletion::makeSnippet(prefixForSnippet, "BorderImage snippet",

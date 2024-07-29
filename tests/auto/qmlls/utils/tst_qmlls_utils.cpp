@@ -2287,6 +2287,109 @@ using namespace QLspSpecification;
 
 enum InsertOption { None, InsertColon };
 
+tst_qmlls_utils::ExpectedCompletions
+tst_qmlls_utils::quickSnippets(const QStringView firstPrefix, const QStringView secondPrefix) const
+{
+    const ExpectedCompletions result{
+        { u"%1BorderImage snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1BorderImage {\n"
+                    u"\tid: ${1:name}\n"
+                    u"\tsource: \"${2:file}\"\n"
+                    u"\twidth: ${3:100}; height: ${4:100}\n"
+                    u"\tborder.left: ${5: 5}; border.top: ${5}\n"
+                    u"\tborder.right: ${5}; border.bottom: ${5}\n"
+                    u"}"_s.arg(firstPrefix) },
+        { u"%1ColorAnimation snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1ColorAnimation {\n"
+                    u"\tfrom: \"${1:white}\"\n"
+                    u"\tto: \"${2:black}\"\n"
+                    u"\tduration: ${3:200}\n"
+                    u"}"_s.arg(firstPrefix) },
+        { u"%1Image snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1Image {\n"
+                    u"\tid: ${1:name}\n"
+                    u"\tsource: \"${2:file}\"\n"
+                    u"}"_s.arg(firstPrefix) },
+        { u"%1Item snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1Item {\n"
+                    u"\tid: ${1:name}\n"
+                    u"}"_s.arg(firstPrefix) },
+        { u"%1NumberAnimation snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1NumberAnimation {\n"
+                    u"\ttarget: ${1:object}\n"
+                    u"\tproperty: \"${2:name}\"\n"
+                    u"\tduration: ${3:200}\n"
+                    u"\teasing.type: %2Easing.${4:InOutQuad}\n"
+                    u"}"_s.arg(firstPrefix, secondPrefix)  },
+        { u"%1NumberAnimation with targets snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1NumberAnimation {\n"
+                    u"\ttargets: [${1:object}]\n"
+                    u"\tproperties: \"${2:name}\"\n"
+                    u"\tduration: ${3:200}\n"
+                    u"}"_s.arg(firstPrefix)  },
+        { u"%1PauseAnimation snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1PauseAnimation {\n"
+                    u"\tduration: ${1:200}\n"
+                    u"}"_s.arg(firstPrefix)  },
+        { u"%1PropertyAction snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1PropertyAction {\n"
+                    u"\ttarget: ${1:object}\n"
+                    u"\tproperty: \"${2:name}\"\n"
+                    "}"_s.arg(firstPrefix)  },
+        { u"%1PropertyAction with targets snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1PropertyAction {\n"
+                    u"\ttargets: [${1:object}]\n"
+                    u"\tproperties: \"${2:name}\"\n"
+                    u"}"_s.arg(firstPrefix)  },
+        { u"%1PropertyChanges snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1PropertyChanges {\n"
+                    u"\ttarget: ${1:object}\n"
+                    u"}"_s.arg(firstPrefix)  },
+        { u"%1State snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1State {\n"
+                    u"\tname: ${1:name}\n"
+                    u"\t%2PropertyChanges {\n"
+                    u"\t\ttarget: ${2:object}\n"
+                    u"\t}\n"
+                    u"}"_s.arg(firstPrefix, secondPrefix)  },
+        { u"%1Text snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1Text {\n"
+                    u"\tid: ${1:name}\n"
+                    u"\ttext: qsTr(\"${2:text}\")\n"
+                    u"}"_s.arg(firstPrefix)  },
+        { u"%1Transition snippet"_s.arg(firstPrefix), CompletionItemKind::Snippet,
+                    u"%1Transition {\n"
+                    u"\tfrom: \"${1:fromState}\"\n"
+                    u"\tto: \"${2:toState}\"\n"
+                    u"}"_s.arg(firstPrefix)  }
+    };
+    return result;
+}
+
+tst_qmlls_utils::ExpectedCompletions
+tst_qmlls_utils::quickBindingSnippets(const QStringView firstPrefix) const
+{
+    const ExpectedCompletions result{
+        { { u"states binding with PropertyChanges in State"_s, CompletionItemKind::Snippet,
+            u"states: [\n"
+            u"\t%1State {\n"
+            u"\t\tname: \"${1:name}\"\n"
+            u"\t\t%1PropertyChanges {\n"
+            u"\t\t\ttarget: ${2:object}\n"
+            u"\t\t}\n"
+            u"\t}\n"
+            u"]"_s.arg(firstPrefix) },
+          { u"transitions binding with Transition"_s, CompletionItemKind::Snippet,
+            u"transitions: [\n"
+            u"\t%1Transition {\n"
+            u"\t\tfrom: \"${1:fromState}\"\n"
+            u"\t\tto: \"${2:fromState}\"\n"
+            u"\t}\n"
+            u"]"_s.arg(firstPrefix) } }
+    };
+    return result;
+}
+
 void tst_qmlls_utils::completions_data()
 {
     QTest::addColumn<QString>("filePath");
@@ -2342,186 +2445,16 @@ void tst_qmlls_utils::completions_data()
     const QString propertyCompletion = u"property type name: value;"_s;
     const QString functionCompletion = u"function name(args...): returnType { statements...}"_s;
 
-    const ExpectedCompletions quickSnippetsWithQualifier{
-        { u"QQ.BorderImage snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.BorderImage {\n"
-          u"\tid: ${1:name}\n"
-          u"\tsource: \"${2:file}\"\n"
-          u"\twidth: ${3:100}; height: ${4:100}\n"
-          u"\tborder.left: ${5: 5}; border.top: ${5}\n"
-          u"\tborder.right: ${5}; border.bottom: ${5}\n"
-          u"}"_s },
-        { u"QQ.ColorAnimation snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.ColorAnimation {\n"
-          u"\tfrom: \"${1:white}\"\n"
-          u"\tto: \"${2:black}\"\n"
-          u"\tduration: ${3:200}\n"
-          u"}"_s },
-        { u"QQ.Image snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.Image {\n"
-          u"\tid: ${1:name}\n"
-          u"\tsource: \"${2:file}\"\n"
-          u"}"_s },
-        { u"QQ.Item snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.Item {\n"
-          u"\tid: ${1:name}\n"
-          u"}"_s },
-        { u"QQ.NumberAnimation snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.NumberAnimation {\n"
-          u"\ttarget: ${1:object}\n"
-          u"\tproperty: \"${2:name}\"\n"
-          u"\tduration: ${3:200}\n"
-          u"\teasing.type: QQ.Easing.${4:InOutQuad}\n"
-          u"}"_s },
-        { u"QQ.NumberAnimation with targets snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.NumberAnimation {\n"
-          u"\ttargets: [${1:object}]\n"
-          u"\tproperties: \"${2:name}\"\n"
-          u"\tduration: ${3:200}\n"
-          u"}"_s },
-        { u"QQ.PauseAnimation snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.PauseAnimation {\n"
-          u"\tduration: ${1:200}\n"
-          u"}"_s },
-        { u"QQ.PropertyAction snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.PropertyAction {\n"
-          u"\ttarget: ${1:object}\n"
-          u"\tproperty: \"${2:name}\"\n"
-          "}"_s },
-        { u"QQ.PropertyAction with targets snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.PropertyAction {\n"
-          u"\ttargets: [${1:object}]\n"
-          u"\tproperties: \"${2:name}\"\n"
-          u"}"_s },
-        { u"QQ.PropertyChanges snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.PropertyChanges {\n"
-          u"\ttarget: ${1:object}\n"
-          u"}"_s },
-        { u"QQ.State snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.State {\n"
-          u"\tname: ${1:name}\n"
-          u"\tQQ.PropertyChanges {\n"
-          u"\t\ttarget: ${2:object}\n"
-          u"\t}\n"
-          u"}"_s },
-        { u"QQ.Text snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.Text {\n"
-          u"\tid: ${1:name}\n"
-          u"\ttext: qsTr(\"${2:text}\")\n"
-          u"}"_s },
-        { u"QQ.Transition snippet"_s, CompletionItemKind::Snippet,
-          u"QQ.Transition {\n"
-          u"\tfrom: \"${1:fromState}\"\n"
-          u"\tto: \"${2:toState}\"\n"
-          u"}"_s },
-        { u"states binding with PropertyChanges in State"_s, CompletionItemKind::Snippet,
-          u"states: [\n"
-          u"\tQQ.State {\n"
-          u"\t\tname: \"${1:name}\"\n"
-          u"\t\tQQ.PropertyChanges {\n"
-          u"\t\t\ttarget: ${2:object}\n"
-          u"\t\t}\n"
-          u"\t}\n"
-          u"]"_s },
-        { u"transitions binding with Transition"_s, CompletionItemKind::Snippet,
-          u"transitions: [\n"
-          u"\tQQ.Transition {\n"
-          u"\t\tfrom: \"${1:fromState}\"\n"
-          u"\t\tto: \"${2:fromState}\"\n"
-          u"\t}\n"
-          u"]"_s }
-    };
-    const ExpectedCompletions quickSnippetsWithoutQualifier{
-        { { u"BorderImage snippet"_s, CompletionItemKind::Snippet,
-            u"BorderImage {\n"
-            u"\tid: ${1:name}\n"
-            u"\tsource: \"${2:file}\"\n"
-            u"\twidth: ${3:100}; height: ${4:100}\n"
-            u"\tborder.left: ${5: 5}; border.top: ${5}\n"
-            u"\tborder.right: ${5}; border.bottom: ${5}\n"
-            u"}"_s },
-          { u"ColorAnimation snippet"_s, CompletionItemKind::Snippet,
-            u"ColorAnimation {\n"
-            u"\tfrom: \"${1:white}\"\n"
-            u"\tto: \"${2:black}\"\n"
-            u"\tduration: ${3:200}\n"
-            u"}"_s },
-          { u"Image snippet"_s, CompletionItemKind::Snippet,
-            u"Image {\n"
-            u"\tid: ${1:name}\n"
-            u"\tsource: \"${2:file}\"\n"
-            u"}"_s },
-          { u"Item snippet"_s, CompletionItemKind::Snippet,
-            u"Item {\n"
-            u"\tid: ${1:name}\n"
-            u"}"_s },
-          { u"NumberAnimation snippet"_s, CompletionItemKind::Snippet,
-            u"NumberAnimation {\n"
-            u"\ttarget: ${1:object}\n"
-            u"\tproperty: \"${2:name}\"\n"
-            u"\tduration: ${3:200}\n"
-            u"\teasing.type: Easing.${4:InOutQuad}\n"
-            u"}"_s },
-          { u"NumberAnimation with targets snippet"_s, CompletionItemKind::Snippet,
-            u"NumberAnimation {\n"
-            u"\ttargets: [${1:object}]\n"
-            u"\tproperties: \"${2:name}\"\n"
-            u"\tduration: ${3:200}\n"
-            u"}"_s },
-          { u"PauseAnimation snippet"_s, CompletionItemKind::Snippet,
-            u"PauseAnimation {\n"
-            u"\tduration: ${1:200}\n"
-            u"}"_s },
-          { u"PropertyAction snippet"_s, CompletionItemKind::Snippet,
-            u"PropertyAction {\n"
-            u"\ttarget: ${1:object}\n"
-            u"\tproperty: \"${2:name}\"\n"
-            "}"_s },
-          { u"PropertyAction with targets snippet"_s, CompletionItemKind::Snippet,
-            u"PropertyAction {\n"
-            u"\ttargets: [${1:object}]\n"
-            u"\tproperties: \"${2:name}\"\n"
-            u"}"_s },
-          { u"PropertyChanges snippet"_s, CompletionItemKind::Snippet,
-            u"PropertyChanges {\n"
-            u"\ttarget: ${1:object}\n"
-            u"}"_s },
-          { u"State snippet"_s, CompletionItemKind::Snippet,
-            u"State {\n"
-            u"\tname: ${1:name}\n"
-            u"\tPropertyChanges {\n"
-            u"\t\ttarget: ${2:object}\n"
-            u"\t}\n"
-            u"}"_s },
-          { u"Text snippet"_s, CompletionItemKind::Snippet,
-            u"Text {\n"
-            u"\tid: ${1:name}\n"
-            u"\ttext: qsTr(\"${2:text}\")\n"
-            u"}"_s },
-          { u"Transition snippet"_s, CompletionItemKind::Snippet,
-            u"Transition {\n"
-            u"\tfrom: \"${1:fromState}\"\n"
-            u"\tto: \"${2:toState}\"\n"
-            u"}"_s } }
-    };
-    const ExpectedCompletions quickSnippetsWithoutQualifierWithBindings = ExpectedCompletions{
-        { { u"states binding with PropertyChanges in State"_s, CompletionItemKind::Snippet,
-            u"states: [\n"
-            u"\tState {\n"
-            u"\t\tname: \"${1:name}\"\n"
-            u"\t\tPropertyChanges {\n"
-            u"\t\t\ttarget: ${2:object}\n"
-            u"\t\t}\n"
-            u"\t}\n"
-            u"]"_s },
-          { u"transitions binding with Transition"_s, CompletionItemKind::Snippet,
-            u"transitions: [\n"
-            u"\tTransition {\n"
-            u"\t\tfrom: \"${1:fromState}\"\n"
-            u"\t\tto: \"${2:fromState}\"\n"
-            u"\t}\n"
-            u"]"_s } }
-    } += quickSnippetsWithoutQualifier;
+    const ExpectedCompletions quickSnippetsWithQualifier = quickSnippets(u"QQ.", u"QQ.");
+    const ExpectedCompletions quickSnippetsWithQualifierInside = quickSnippets(u"", u"QQ.");
+    const ExpectedCompletions quickSnippetsWithoutQualifier = quickSnippets(u"", u"");
+    const ExpectedCompletions quickSnippetsWithoutQualifierWithBindings =
+            quickBindingSnippets(u"") += quickSnippetsWithoutQualifier;
+    const ExpectedCompletions quickSnippetsWithQualifierWithBindings =
+            quickBindingSnippets(u"QQ.") += quickSnippetsWithQualifier;
+    const ExpectedCompletions quickSnippetsWithQualifierInsideWithBindings =
+            quickBindingSnippets(u"QQ.") += quickSnippetsWithQualifierInside;
+
     QTest::newRow("objEmptyLineSnippets")
             << file << 9 << 1
             << (ExpectedCompletions({
@@ -2571,25 +2504,24 @@ void tst_qmlls_utils::completions_data()
             << QStringList({ u"readonly property type name;"_s });
 
     QTest::newRow("quickSnippetsForQualifiedQuickImportBeforeDot")
-            << testFile("qualifiedModule.qml") << 5 << 7
-            << quickSnippetsWithQualifier
-            // not allowed because required properties need an initializer
+            << testFile("qualifiedModule.qml") << 5 << 6
+            << quickSnippetsWithQualifierWithBindings
+               // not allowed because required properties need an initializer
             << QStringList({ u"readonly property type name;"_s });
 
     QTest::newRow("quickSnippetsForQualifiedQuickImportAfterDot")
-            << testFile("qualifiedModule.qml") << 5 << 8
-            << quickSnippetsWithoutQualifier
+            << testFile("qualifiedModule.qml") << 5 << 7
+            << quickSnippetsWithQualifierInsideWithBindings
             // not allowed because required properties need an initializer
-            << QStringList({ u"readonly property type name;"_s,
-                             u"states binding with PropertyChanges in State"_s,
-                             u"transitions binding with Transition"_s });
+            << QStringList({ u"readonly property type name;"_s });
 
     QTest::newRow("quickSnippetsForQualifiedQuickImportBeforeDotInBinding")
-            << testFile("qualifiedModule.qml") << 4 << 33 << quickSnippetsWithQualifier
-            << QStringList();
+            << testFile("qualifiedModule.qml") << 4 << 32 << quickSnippetsWithQualifier
+            << QStringList({ u"states binding with PropertyChanges in State"_s,
+                             u"transitions binding with Transition"_s });
 
     QTest::newRow("quickSnippetsForQualifiedQuickImportAfterDotInBinding")
-            << testFile("qualifiedModule.qml") << 4 << 34 << quickSnippetsWithoutQualifier
+            << testFile("qualifiedModule.qml") << 4 << 33 << quickSnippetsWithQualifierInside
             << QStringList({ u"states binding with PropertyChanges in State"_s,
                              u"transitions binding with Transition"_s });
 
@@ -2786,7 +2718,7 @@ void tst_qmlls_utils::completions_data()
             << QStringList({ u"foo"_s, u"import"_s, u"lala"_s });
 
     QTest::newRow("qualifiedTypeCompletionAfterDotInDefaultBinding")
-            << testFile(u"qualifiedModule.qml"_s) << 5 << 8
+            << testFile(u"qualifiedModule.qml"_s) << 5 << 7
             << ExpectedCompletions({
                        { u"Rectangle"_s, CompletionItemKind::Constructor },
                })
@@ -4446,8 +4378,6 @@ void tst_qmlls_utils::completions()
 
     for (const ExpectedCompletion &exp : expected) {
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
-        QEXPECT_FAIL("quickSnippetsForQualifiedQuickImportBeforeDotInBinding", "To be fixed in QTBUG-127609!", Abort);
-        QEXPECT_FAIL("quickSnippetsForQualifiedQuickImportBeforeDot", "To be fixed in QTBUG-127609!", Abort);
 
         QVERIFY2(labels.contains(exp.label),
                  u"no %1 in %2"_s.arg(exp.label, labelsForPrinting).toUtf8());

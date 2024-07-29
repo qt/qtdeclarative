@@ -727,7 +727,10 @@ void QQmlLSCompletion::insideQmlObjectCompletion(const DomItem &parentForContext
         options.setFlag(LocalSymbolsType::ObjectType);
         suggestReachableTypes(positionInfo.itemAtPosition, options, CompletionItemKind::Constructor,
                               result);
-        suggestSnippetsForLeftHandSideOfBinding(positionInfo.itemAtPosition, result);
+        if (parentForContext.directParent().internalKind() == DomType::Binding)
+            suggestSnippetsForRightHandSideOfBinding(positionInfo.itemAtPosition, result);
+        else
+            suggestSnippetsForLeftHandSideOfBinding(positionInfo.itemAtPosition, result);
 
         if (QQmlLSUtils::isFieldMemberExpression(positionInfo.itemAtPosition)) {
             /*!
@@ -793,9 +796,7 @@ void QQmlLSCompletion::insideQmlObjectCompletion(const DomItem &parentForContext
         result = makeSnippet("component Name: BaseType { ... }",
                              "component ${1:name}: ${2:baseType} {\n\t$0\n}");
 
-        // add bindings
-        const DomItem containingObject = parentForContext.qmlObject();
-        suggestBindingCompletion(containingObject, result);
+        suggestBindingCompletion(positionInfo.itemAtPosition, result);
 
         // add Qml Types for default binding
         const DomItem containingFile = parentForContext.containingFile();
