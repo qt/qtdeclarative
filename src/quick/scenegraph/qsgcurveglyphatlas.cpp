@@ -18,10 +18,10 @@ QSGCurveGlyphAtlas::QSGCurveGlyphAtlas(const QRawFont &font)
     // The font size used for the curve atlas currently affects the outlines, since we don't
     // really support cosmetic outlines. Therefore we need to pick one which gives large enough
     // triangles relative to glyph size that we can reuse the same triangles for any font size.
-    // When experimenting, 10 works for all font sizes we tested, so we currently default to this
-    // but allow overriding it.
+    // 64 is used as a "base font size" by the distance field renderer and other places in Qt
+    // because this also has the benefit it's big enough that hinting will be disabled.
     static int curveGlyphAtlasFontSize = qEnvironmentVariableIntValue("QSGCURVEGLYPHATLAS_FONT_SIZE");
-    m_font.setPixelSize(curveGlyphAtlasFontSize > 0 ? qreal(curveGlyphAtlasFontSize) : 10.0);
+    m_font.setPixelSize(curveGlyphAtlasFontSize > 0 ? qreal(curveGlyphAtlasFontSize) : 64.0);
 }
 
 QSGCurveGlyphAtlas::~QSGCurveGlyphAtlas()
