@@ -88,6 +88,11 @@ private:
     void suggestVariableDeclarationStatementCompletion(
             BackInsertIterator it, AppendOption option = AppendSemicolon) const;
 
+    void suggestEnumerationsAndEnumerationValues(const QQmlJSScope::ConstPtr &scope,
+                                                 const QString &enumName,
+                                                 QDuplicateTracker<QString> &usedNames,
+                                                 BackInsertIterator result) const;
+    DomItem ownerOfQualifiedExpression(const DomItem &qualifiedExpression) const;
     void suggestJSExpressionCompletion(const DomItem &context, BackInsertIterator it) const;
 
     void suggestBindingCompletion(const DomItem &itemAtPosition, BackInsertIterator it) const;

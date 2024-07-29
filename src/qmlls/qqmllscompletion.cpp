@@ -143,14 +143,19 @@ QQmlLSCompletion::suggestBindingCompletion(const DomItem &itemAtPosition, BackIn
     suggestReachableTypes(itemAtPosition, LocalSymbolsType::AttachedType, CompletionItemKind::Class,
                           it);
 
-    const QQmlJSScope::ConstPtr scope = [&]() {
-        if (!QQmlLSUtils::isFieldMemberAccess(itemAtPosition))
+    const auto scope = [&]() -> QQmlJSScope::ConstPtr {
+        const DomItem owner = ownerOfQualifiedExpression(itemAtPosition);
+        if (!owner)
             return itemAtPosition.qmlObject().semanticScope();
 
-        const DomItem owner = itemAtPosition.directParent().field(Fields::left);
-        auto expressionType = QQmlLSUtils::resolveExpressionType(
+        const auto expressionType = QQmlLSUtils::resolveExpressionType(
                 owner, QQmlLSUtils::ResolveActualTypeForFieldMemberExpression);
-        return expressionType ? expressionType->semanticScope : QQmlJSScope::ConstPtr{};
+
+        // no properties nor signal handlers inside a qualified import
+        if (!expressionType || expressionType->type == QQmlLSUtils::QualifiedModuleIdentifier)
+            return {};
+
+        return expressionType->semanticScope;
     }();
 
     if (!scope)
@@ -468,6 +473,56 @@ void collectFromAllJavaScriptParents(const F &&f, const QQmlJSScope::ConstPtr &s
 
 /*!
 \internal
+Suggest enumerations (if applicable) and enumeration values from \c scope, for example \c
+Asynchronous from the \c CompilationMode enum:
+
+\qml
+property var xxx: Component.Asynchronous // Component contains the \c CompilationMode enum
+property var xxx2: CompilationMode.Asynchronous
+\endqml
+*/
+void QQmlLSCompletion::suggestEnumerationsAndEnumerationValues(
+        const QQmlJSScope::ConstPtr &scope, const QString &enumName,
+        QDuplicateTracker<QString> &usedNames, BackInsertIterator result) const
+{
+    enumerationValueCompletion(scope, enumName, result);
+
+    // skip enumeration types if already inside an enumeration type
+    if (auto enumerator = scope->enumeration(enumName); !enumerator.isValid()) {
+        enumerationCompletion(scope, &usedNames, result);
+    }
+}
+
+/*!
+\internal
+
+Returns the owner of a qualified expression for further resolving, for example:
+1. \c owner from the \c member ScriptExpression in \c {owner.member}. This happens when completion
+is requested on \c member.
+2. \c owner from the ScriptBinaryExpression \c {owner.member}. This happens when completion is
+requested on the dot between \c owner and \c member.
+3. An empty DomItem otherwise.
+*/
+DomItem QQmlLSCompletion::ownerOfQualifiedExpression(const DomItem &qualifiedExpression) const
+{
+    // note: there is an edge case, where the user asks for completion right after the dot
+    // of some qualified expression like `root.hello`. In this case, scriptIdentifier is actually
+    // the BinaryExpression instead of the left-hand-side that has not be written down yet.
+    const bool askForCompletionOnDot = QQmlLSUtils::isFieldMemberExpression(qualifiedExpression);
+    const bool hasQualifier =
+            QQmlLSUtils::isFieldMemberAccess(qualifiedExpression) || askForCompletionOnDot;
+
+    if (!hasQualifier)
+        return {};
+
+    const DomItem owner =
+            (askForCompletionOnDot ? qualifiedExpression : qualifiedExpression.directParent())
+                    .field(Fields::left);
+    return owner;
+}
+
+/*!
+\internal
 Generate autocompletions for JS expressions, suggest possible properties, methods, etc.
 
 If scriptIdentifier is inside a Field Member Expression, like \c{onCompleted} in
@@ -481,14 +536,9 @@ void QQmlLSCompletion::suggestJSExpressionCompletion(const DomItem &scriptIdenti
     QDuplicateTracker<QString> usedNames;
     QQmlJSScope::ConstPtr nearestScope;
 
-    // note: there is an edge case, where the user asks for completion right after the dot
-    // of some qualified expression like `root.hello`. In this case, scriptIdentifier is actually
-    // the BinaryExpression instead of the left-hand-side that has not be written down yet.
-    const bool askForCompletionOnDot = QQmlLSUtils::isFieldMemberExpression(scriptIdentifier);
-    const bool hasQualifier =
-            QQmlLSUtils::isFieldMemberAccess(scriptIdentifier) || askForCompletionOnDot;
+    const DomItem owner = ownerOfQualifiedExpression(scriptIdentifier);
 
-    if (!hasQualifier) {
+    if (!owner) {
         for (QUtf8StringView view : std::array<QUtf8StringView, 3>{ "null", "false", "true" }) {
             CompletionItem completion;
             completion.label = view.data();
@@ -507,30 +557,37 @@ void QQmlLSCompletion::suggestJSExpressionCompletion(const DomItem &scriptIdenti
 
         enumerationCompletion(nearestScope, &usedNames, result);
     } else {
-        const DomItem owner =
-                (askForCompletionOnDot ? scriptIdentifier : scriptIdentifier.directParent())
-                        .field(Fields::left);
-        auto expressionType = QQmlLSUtils::resolveExpressionType(
+        auto ownerExpressionType = QQmlLSUtils::resolveExpressionType(
                 owner, QQmlLSUtils::ResolveActualTypeForFieldMemberExpression);
-        if (!expressionType || !expressionType->semanticScope)
+        if (!ownerExpressionType || !ownerExpressionType->semanticScope)
             return;
-        nearestScope = expressionType->semanticScope;
-        // Use root element scope to use find the enumerations
-        // This should be changed when we support usages in external files
-        if (expressionType->type == QQmlLSUtils::QmlComponentIdentifier)
-            nearestScope = owner.rootQmlObject(GoTo::MostLikely).semanticScope();
-        if (expressionType->name) {
-            // note: you only get enumeration values in qualified expressions, never alone
-            enumerationValueCompletion(nearestScope, *expressionType->name, result);
+        nearestScope = ownerExpressionType->semanticScope;
 
-            // skip enumeration types if already inside an enumeration type
-            if (auto enumerator = nearestScope->enumeration(*expressionType->name);
-                !enumerator.isValid()) {
-                enumerationCompletion(nearestScope, &usedNames, result);
+        switch (ownerExpressionType->type) {
+        case QQmlLSUtils::EnumeratorValueIdentifier:
+            return;
+        case QQmlLSUtils::EnumeratorIdentifier:
+            suggestEnumerationsAndEnumerationValues(nearestScope, *ownerExpressionType->name,
+                                                    usedNames, result);
+            return;
+        case QQmlLSUtils::QmlComponentIdentifier:
+            // Suggest members of the attached type, for example suggest `progress` in
+            // `property real p: Component.progress`.
+            if (QQmlJSScope::ConstPtr attachedType =
+                ownerExpressionType->semanticScope->attachedType()) {
+                methodCompletion(attachedType, &usedNames, result);
+                propertyCompletion(attachedType, &usedNames, result);
+                suggestEnumerationsAndEnumerationValues(
+                        attachedType, *ownerExpressionType->name, usedNames, result);
             }
-
-            if (expressionType->type == QQmlLSUtils::EnumeratorIdentifier)
-                return;
+            Q_FALLTHROUGH();
+        case QQmlLSUtils::SingletonIdentifier:
+            if (ownerExpressionType->name)
+                suggestEnumerationsAndEnumerationValues(nearestScope, *ownerExpressionType->name,
+                                                        usedNames, result);
+            break;
+        default:
+            break;
         }
     }
 
@@ -539,7 +596,7 @@ void QQmlLSCompletion::suggestJSExpressionCompletion(const DomItem &scriptIdenti
     methodCompletion(nearestScope, &usedNames, result);
     propertyCompletion(nearestScope, &usedNames, result);
 
-    if (!hasQualifier) {
+    if (!owner) {
         // collect all of the stuff from parents
         collectFromAllJavaScriptParents(
                 [this, &usedNames, result](const QQmlJSScope::ConstPtr &scope) {
@@ -1016,8 +1073,9 @@ void QQmlLSCompletion::suggestJSStatementCompletion(const DomItem &itemAtPositio
                                                     BackInsertIterator result) const
 {
     suggestJSExpressionCompletion(itemAtPosition, result);
-    
-    if (QQmlLSUtils::isFieldMemberAccess(itemAtPosition))
+
+    if (QQmlLSUtils::isFieldMemberAccess(itemAtPosition)
+        || QQmlLSUtils::isFieldMemberExpression(itemAtPosition))
         return;
 
     // expression statements
