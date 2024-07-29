@@ -134,6 +134,8 @@ private slots:
     void touchTapHandler();
     void touchMultipleWidgets();
     void tabKey();
+    void focusChain_data();
+    void focusChain();
     void resizeOverlay();
     void controls();
     void focusOnClick();
@@ -804,7 +806,98 @@ void tst_qquickwidget::tabKey()
     QVERIFY(topItem2->property("activeFocus").toBool());
     QTest::keyClick(qqw2, Qt::Key_Tab);
     QTRY_VERIFY(qqw->hasFocus());
-    QVERIFY(middleItem->property("activeFocus").toBool());
+    // Focus-in by tab/backtab events makes the first/last focusable item to be focused
+    QVERIFY(topItem->property("activeFocus").toBool());
+}
+
+void tst_qquickwidget::focusChain_data()
+{
+    if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
+        QSKIP("This function doesn't support NOT iterating all.");
+
+    QTest::addColumn<bool>("forward");
+
+    QTest::addRow("Forward") << true;
+    QTest::addRow("Backward") << false;
+}
+
+void tst_qquickwidget::focusChain()
+{
+    QFETCH(bool, forward);
+
+    QWidget window;
+    window.resize(300, 300);
+    QHBoxLayout layout(&window);
+    QQuickWidget qqw1;
+    qqw1.setObjectName("qqw1");
+    qqw1.setResizeMode(QQuickWidget::SizeRootObjectToView);
+    qqw1.setSource(testFileUrl("activeFocusOnTab.qml"));
+    QWidget middleWidget;
+    middleWidget.setObjectName("middleWidget");
+    middleWidget.setFocusPolicy(Qt::FocusPolicy::TabFocus);
+    QQuickWidget qqw2;
+    qqw2.setObjectName("qqw2");
+    qqw1.setResizeMode(QQuickWidget::SizeRootObjectToView);
+    qqw2.setSource(testFileUrl("activeFocusOnTab.qml"));
+    layout.addWidget(&qqw1);
+    layout.addWidget(&middleWidget);
+    layout.addWidget(&qqw2);
+    window.show();
+    window.windowHandle()->requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QQuickItem *root1 = qqw1.rootObject();
+    QVERIFY(root1);
+    QQuickItem *topItem1 = root1->findChild<QQuickItem *>("topRect");
+    topItem1->setObjectName("topRect1");
+    QVERIFY(topItem1);
+    QQuickItem *middleItem1 = root1->findChild<QQuickItem *>("middleRect");
+    middleItem1->setObjectName("middleRect1");
+    QVERIFY(middleItem1);
+    QQuickItem *bottomItem1 = root1->findChild<QQuickItem *>("bottomRect");
+    bottomItem1->setObjectName("bottomRect1");
+    QVERIFY(bottomItem1);
+
+    QQuickItem *root2 = qqw2.rootObject();
+    QVERIFY(root2);
+    QQuickItem *topItem2 = root2->findChild<QQuickItem *>("topRect");
+    topItem2->setObjectName("topRect2");
+    QVERIFY(topItem2);
+    QQuickItem *middleItem2 = root2->findChild<QQuickItem *>("middleRect");
+    middleItem2->setObjectName("middleRect2");
+    QVERIFY(middleItem2);
+    QQuickItem *bottomItem2 = root2->findChild<QQuickItem *>("bottomRect");
+    bottomItem2->setObjectName("bottomRect2");
+    QVERIFY(bottomItem2);
+
+    qqw1.setFocus();
+    QTRY_VERIFY(qqw1.hasFocus());
+
+    auto hasActiveFocus = [](const QObject *targetObject) -> bool
+    {
+        if (const QQuickItem *targetItem = qobject_cast<const QQuickItem *>(targetObject))
+            return targetItem->hasActiveFocus();
+        else if (const QWidget *targetWidget = qobject_cast<const QWidget *>(targetObject))
+            return targetWidget->hasFocus();
+        return false;
+    };
+
+    QList<QObject *> expectedFocusChain;
+    if (forward) {
+        expectedFocusChain << topItem1 << middleItem1 << bottomItem1 << &middleWidget << topItem2
+                           << middleItem2 << bottomItem2 << topItem1;
+    } else {
+        expectedFocusChain << topItem1 << bottomItem2 << middleItem2 << topItem2 << &middleWidget
+                           << bottomItem1 << middleItem1 << topItem1;
+    }
+
+    const Qt::Key tabKey = forward ? Qt::Key_Tab : Qt::Key_Backtab;
+
+    for (QObject *expectedFocusTarget : expectedFocusChain) {
+        const QByteArray objectName = expectedFocusTarget->objectName().toLatin1();
+        QTRY_VERIFY2(hasActiveFocus(expectedFocusTarget), "expectedFocusTarget: " + objectName);
+        QTest::keyClick(QGuiApplication::focusWindow(), tabKey);
+    }
 }
 
 class Overlay : public QQuickItem, public QQuickItemChangeListener
@@ -1008,6 +1101,16 @@ void tst_qquickwidget::focusPreserved()
     root->setFlag(QQuickItem::ItemHasContents);
     content->setParentItem(root);
 
+    // added content2 and content3 to test more complicated case
+    QScopedPointer<QQuickItem> content2(new QQuickItem());
+    content2->setActiveFocusOnTab(true);
+    content2->setFocus(true);
+    content2->setParentItem(root);
+    QScopedPointer<QQuickItem> content3(new QQuickItem());
+    content3->setActiveFocusOnTab(true);
+    content3->setFocus(true);
+    content3->setParentItem(root);
+
     quick->setGeometry(0, 0, 200, 200);
     quick->show();
     quick->setFocus();
@@ -1016,6 +1119,10 @@ void tst_qquickwidget::focusPreserved()
     QTRY_VERIFY(quick->hasFocus());
     QTRY_VERIFY(content->hasFocus());
     QTRY_VERIFY(content->hasActiveFocus());
+
+    content2->forceActiveFocus();
+    QVERIFY(content2->hasFocus());
+    QVERIFY(content2->hasActiveFocus());
 
     widget->show();
     widget->setFocus();
@@ -1029,8 +1136,8 @@ void tst_qquickwidget::focusPreserved()
     quick->setFocus();
     quick->activateWindow();
     QTRY_VERIFY(quick->hasFocus());
-    QTRY_VERIFY(content->hasFocus());
-    QTRY_VERIFY(content->hasActiveFocus());
+    QTRY_VERIFY(content2->hasFocus());
+    QTRY_VERIFY(content2->hasActiveFocus());
 }
 
 /*

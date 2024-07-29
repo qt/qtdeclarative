@@ -1448,15 +1448,28 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
 bool QQuickWidget::focusNextPrevChild(bool next)
 {
     Q_D(QQuickWidget);
-    QKeyEvent event(QEvent::KeyPress, next ? Qt::Key_Tab : Qt::Key_Backtab, Qt::NoModifier);
-    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Key, QQuickProfiler::InputKeyPress, event.key(),
-                          Qt::NoModifier);
+
+    const auto *da = QQuickWindowPrivate::get(d->offscreenWindow)->deliveryAgentPrivate();
+    Q_ASSERT(da);
+
+    auto *currentTarget = da->focusTargetItem();
+    Q_ASSERT(currentTarget);
+
+    auto *nextTarget = QQuickItemPrivate::nextPrevItemInTabFocusChain(currentTarget, next, false);
+    // If no child to focus, behaves like its base class (QWidget)
+    if (!nextTarget)
+        return QWidget::focusNextPrevChild(next);
+
+    // Otherwise, simulates focus event for the offscreen window (QQuickWindow)
+    const Qt::Key k = next ? Qt::Key_Tab : Qt::Key_Backtab;
+    QKeyEvent event(QEvent::KeyPress, k, Qt::NoModifier);
+    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Key, QQuickProfiler::InputKeyPress, k, Qt::NoModifier);
     QCoreApplication::sendEvent(d->offscreenWindow, &event);
 
-    QKeyEvent releaseEvent(QEvent::KeyRelease, next ? Qt::Key_Tab : Qt::Key_Backtab, Qt::NoModifier);
-    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Key, QQuickProfiler::InputKeyRelease, releaseEvent.key(),
-                          Qt::NoModifier);
+    QKeyEvent releaseEvent(QEvent::KeyRelease, k, Qt::NoModifier);
+    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Key, QQuickProfiler::InputKeyRelease, k, Qt::NoModifier);
     QCoreApplication::sendEvent(d->offscreenWindow, &releaseEvent);
+
     return event.isAccepted();
 }
 
@@ -1613,6 +1626,24 @@ void QQuickWidget::wheelEvent(QWheelEvent *e)
 void QQuickWidget::focusInEvent(QFocusEvent * event)
 {
     Q_D(QQuickWidget);
+
+    using FocusTarget = QWindowPrivate::FocusTarget;
+    const Qt::FocusReason reason = event->reason();
+
+    switch (reason) {
+    // if there has been an item focused:
+    // set the first item focused, when the reason is TabFocusReason
+    // set the last item focused, when the reason is BacktabFocusReason
+    case Qt::TabFocusReason:
+    case Qt::BacktabFocusReason: {
+        const bool forward = reason == Qt::FocusReason::TabFocusReason;
+        const FocusTarget target = forward ? FocusTarget::First : FocusTarget::Last;
+        QQuickWindowPrivate::get(d->offscreenWindow)->setFocusToTarget(target, reason);
+    } break;
+    default:
+        break;
+    }
+
     d->offscreenWindow->focusInEvent(event);
 }
 
