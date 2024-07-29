@@ -16,6 +16,7 @@
 //
 
 #include <QtCore/qdebug.h>
+#include <QtCore/qvariantmap.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -25,6 +26,7 @@ class QQuickStackElement;
 class QQuickStackViewPrivate;
 class QQuickStackViewAttached;
 class QQuickStackViewAttachedPrivate;
+class QQmlComponent;
 
 /*!
     \internal

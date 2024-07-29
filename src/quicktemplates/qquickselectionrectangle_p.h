@@ -25,6 +25,7 @@ QT_BEGIN_NAMESPACE
 class QQuickSelectionRectanglePrivate;
 class QQuickSelectable;
 class QQuickSelectionRectangleAttached;
+class QQmlComponent;
 
 class Q_QUICKTEMPLATES2_EXPORT QQuickSelectionRectangle : public QQuickControl
 {

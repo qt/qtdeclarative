@@ -25,6 +25,8 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickTextInputPrivate;
+class QQmlComponent;
+
 class Q_QUICK_EXPORT QQuickTextInput : public QQuickImplicitSizeItem, public QQuickTextInterface
 {
     Q_OBJECT

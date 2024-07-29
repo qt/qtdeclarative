@@ -3,6 +3,7 @@
 
 #include <QtTest/QtTest>
 #include <QtCore/qstringlistmodel.h>
+#include <QtGui/qaccessible.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuickTest/QtQuickTest>
 #include <QtQml/qqmlengine.h>

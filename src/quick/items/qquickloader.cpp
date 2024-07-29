@@ -4,6 +4,7 @@
 #include "qquickloader_p_p.h"
 
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlcomponent.h>
 
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>

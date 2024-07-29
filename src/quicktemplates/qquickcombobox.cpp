@@ -17,6 +17,7 @@
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQml/private/qlazilyallocated_p.h>
 #include <private/qqmldelegatemodel_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>

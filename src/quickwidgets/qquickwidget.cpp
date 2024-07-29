@@ -19,6 +19,7 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlcomponent.h>
 #include <private/qqmlengine_p.h>
 #include <QtCore/qbasictimer.h>
 #include <QtGui/QOffscreenSurface>

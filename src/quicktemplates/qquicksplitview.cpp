@@ -11,6 +11,7 @@
 #include <QtCore/qcbormap.h>
 #include <QtCore/qcborvalue.h>
 #include <QtQml/QQmlInfo>
+#include <QtQml/qqmlcomponent.h>
 
 QT_BEGIN_NAMESPACE
 

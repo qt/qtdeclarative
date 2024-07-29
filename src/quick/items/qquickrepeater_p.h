@@ -24,6 +24,7 @@ QT_REQUIRE_CONFIG(quick_repeater);
 QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;
+class QQmlComponent;
 
 class QQuickRepeaterPrivate;
 class Q_QUICK_EXPORT QQuickRepeater : public QQuickItem

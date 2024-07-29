@@ -13,6 +13,7 @@
 #include <QtQuick/QQuickItem>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QQmlApplicationEngine>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 
 #ifdef Q_OS_WIN

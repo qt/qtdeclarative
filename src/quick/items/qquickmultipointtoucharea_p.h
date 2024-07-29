@@ -27,6 +27,8 @@
 #include <QtCore/qmap.h>
 #include <QtCore/qpointer.h>
 
+#include <QtQml/qqmllist.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickMultiPointTouchArea;

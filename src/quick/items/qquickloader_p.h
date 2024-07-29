@@ -20,6 +20,8 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickLoaderPrivate;
+class QQmlComponent;
+
 class Q_QUICK_EXPORT QQuickLoader : public QQuickImplicitSizeItem
 {
     Q_OBJECT

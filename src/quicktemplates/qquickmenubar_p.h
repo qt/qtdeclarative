@@ -23,6 +23,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickMenu;
 class QQuickMenuBarPrivate;
+class QQmlComponent;
 
 class Q_QUICKTEMPLATES2_EXPORT QQuickMenuBar : public QQuickContainer
 {

@@ -29,6 +29,7 @@ class QValidator;
 class QQuickPopup;
 class QQmlInstanceModel;
 class QQuickComboBoxPrivate;
+class QQmlComponent;
 
 class Q_QUICKTEMPLATES2_EXPORT QQuickComboBox : public QQuickControl
 {

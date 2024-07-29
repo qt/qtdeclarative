@@ -45,6 +45,9 @@
 #include <QtCore/qpointer.h>
 
 #include <QtGui/private/qlayoutpolicy_p.h>
+#if QT_CONFIG(accessibility)
+#include <QtGui/qaccessible_base.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 

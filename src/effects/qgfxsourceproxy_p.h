@@ -18,6 +18,7 @@
 
 #include <QtQuick/QQuickItem>
 #include <QtCore/private/qglobal_p.h>
+#include <QtCore/qrect.h>
 
 QT_BEGIN_NAMESPACE
 

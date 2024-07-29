@@ -8,6 +8,7 @@
 #include <QtQuickTest/QtQuickTest>
 #include <QStringListModel>
 #include <QQmlApplicationEngine>
+#include <QtQml/QQmlComponent>
 
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>

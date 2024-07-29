@@ -6,6 +6,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/qwindow.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuickTemplates2/private/qquickdialog_p.h>

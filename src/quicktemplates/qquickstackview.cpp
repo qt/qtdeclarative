@@ -12,6 +12,7 @@
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlcomponent.h>
 
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmlengine_p.h>

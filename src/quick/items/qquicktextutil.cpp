@@ -4,6 +4,7 @@
 #include "qquicktextutil_p.h"
 
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlcomponent.h>
 
 #include <private/qqmlglobal_p.h>
 #include <private/qquickitem_p.h>

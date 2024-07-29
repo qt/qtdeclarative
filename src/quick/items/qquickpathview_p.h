@@ -27,6 +27,7 @@ QT_REQUIRE_CONFIG(quick_pathview);
 QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;
+class QQmlComponent;
 
 class QQuickPathViewPrivate;
 class QQuickPathViewAttached;

@@ -9,6 +9,7 @@
 #include <private/qqmldelegatemodel_p.h>
 
 #include <QtQml/QQmlInfo>
+#include <QtQml/qqmlcomponent.h>
 
 QT_BEGIN_NAMESPACE
 

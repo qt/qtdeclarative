@@ -24,6 +24,7 @@
 #include <QtCore/qmimedata.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qurl.h>
+#include <QtGui/qevent.h>
 
 QT_REQUIRE_CONFIG(quick_draganddrop);
 

@@ -23,6 +23,7 @@ QT_REQUIRE_CONFIG(quick_canvas);
 #include <private/qqmlrefcount_p.h>
 #include <QtCore/QThread>
 #include <QtCore/qmutex.h>
+#include <QtCore/qvariantmap.h>
 #include <QtGui/QImage>
 
 QT_BEGIN_NAMESPACE
@@ -31,6 +32,7 @@ class QQuickCanvasContext;
 
 class QQuickCanvasItemPrivate;
 class QQuickPixmap;
+class QQmlEngine;
 
 class QQuickCanvasPixmap final : public QQmlRefCounted<QQuickCanvasPixmap>
 {

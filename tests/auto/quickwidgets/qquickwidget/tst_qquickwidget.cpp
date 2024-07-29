@@ -17,6 +17,7 @@
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtGui/QWindow>
 #include <QtGui/QScreen>
+#include <QtGui/QAccessible>
 #include <QtGui/QImage>
 #include <QtCore/QDebug>
 #include <QtQml/qqmlengine.h>

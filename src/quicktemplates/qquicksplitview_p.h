@@ -27,6 +27,7 @@ class QQuickSplitViewAttached;
 class QQuickSplitViewAttachedPrivate;
 class QQuickSplitHandleAttached;
 class QQuickSplitHandleAttachedPrivate;
+class QQmlComponent;
 
 class Q_QUICKTEMPLATES2_EXPORT QQuickSplitView : public QQuickContainer
 {

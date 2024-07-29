@@ -6,6 +6,7 @@
 #include "qquickflickablebehavior_p.h" //Contains flicking behavior defines
 #include "qquicktext_p.h"
 
+#include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlopenmetaobject_p.h>

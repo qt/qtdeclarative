@@ -4,6 +4,8 @@
 #include "qquickdesignersupportitems_p.h"
 #include "qquickdesignersupportproperties_p.h"
 
+#include <QtQml/qqmlcomponent.h>
+
 #include <private/qabstractanimation_p.h>
 #include <private/qobject_p.h>
 #include <private/qquickbehavior_p.h>

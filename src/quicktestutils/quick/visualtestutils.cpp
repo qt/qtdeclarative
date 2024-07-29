@@ -8,6 +8,7 @@
 #include <QtCore/private/qvariantanimation_p.h>
 #include <QtCore/QDebug>
 #include <QtQuick/QQuickItem>
+#include <QtQml/qqmlcomponent.h>
 #if QT_CONFIG(quick_itemview)
 #include <QtQuick/private/qquickitemview_p.h>
 #endif

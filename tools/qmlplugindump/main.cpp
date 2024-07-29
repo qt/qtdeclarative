@@ -31,6 +31,7 @@
 #include <QtCore/private/qmetaobject_p.h>
 #include <QtQmlTypeRegistrar/private/qqmljsstreamwriter_p.h>
 #include <QtQml/private/qqmlsignalnames_p.h>
+#include <QtQml/qqmlcomponent.h>
 
 #include <QRegularExpression>
 #include <iostream>

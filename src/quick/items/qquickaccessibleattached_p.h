@@ -24,6 +24,7 @@
 
 #include <QtGui/qaccessible.h>
 #include <private/qtquickglobal_p.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 

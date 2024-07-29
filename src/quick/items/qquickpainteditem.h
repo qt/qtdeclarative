@@ -6,10 +6,12 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtGui/qcolor.h>
+#include <QtCore/qrect.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPaintedItemPrivate;
+class QPainter;
 class Q_QUICK_EXPORT QQuickPaintedItem : public QQuickItem
 {
     Q_OBJECT

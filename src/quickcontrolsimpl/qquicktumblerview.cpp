@@ -4,6 +4,7 @@
 #include "qquicktumblerview_p.h"
 
 #include <QtCore/qloggingcategory.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquickpathview_p.h>

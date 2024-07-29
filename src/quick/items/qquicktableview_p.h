@@ -19,8 +19,11 @@
 QT_REQUIRE_CONFIG(quick_tableview);
 
 #include <QtCore/qpointer.h>
+#include <QtCore/qpoint.h>
+#include <QtCore/qrect.h>
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQml/private/qqmlnullablevalue_p.h>
 #include <QtQml/private/qqmlfinalizer_p.h>
 #include <QtQml/private/qqmlguard_p.h>

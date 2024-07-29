@@ -15,11 +15,11 @@
 // We mean it.
 //
 
-#include <QtQml/qqml.h>
 #include <QtQml/qqmlincubator.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtCore/private/qglobal_p.h>
+#include <QtQml/qqmlcomponent.h>
 
 QT_BEGIN_NAMESPACE
 

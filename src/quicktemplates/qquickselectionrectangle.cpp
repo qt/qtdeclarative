@@ -5,6 +5,7 @@
 #include "qquickselectionrectangle_p_p.h"
 
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquickdraghandler_p.h>
 #include <QtQuick/private/qquickhoverhandler_p.h>
 

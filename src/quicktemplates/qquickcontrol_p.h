@@ -17,6 +17,9 @@
 
 #include <QtCore/qlocale.h>
 #include <QtGui/qpalette.h>
+#if QT_CONFIG(accessibility)
+#include <QtGui/qaccessible_base.h>
+#endif
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickpalette_p.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>

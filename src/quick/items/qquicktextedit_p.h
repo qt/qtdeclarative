@@ -27,6 +27,7 @@ class QQuickTextDocument;
 class QQuickTextEditPrivate;
 class QQuickTextSelection;
 class QTextBlock;
+class QQmlComponent;
 
 class QQuickTextBlockForeign
 {
