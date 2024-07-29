@@ -9,4 +9,6 @@ Item {
     Text {
         font.f: ""
     }
+
+    property bool xxx: Component.a
 }

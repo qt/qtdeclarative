@@ -4153,10 +4153,18 @@ void tst_qmlls_utils::completions_data()
                        { u"onCompleted"_s, CompletionItemKind::Method },
                })
             << QStringList{ u"QtQuick"_s, u"vector4d"_s, attachedTypeName, u"Rectangle"_s,
-                            u"bad"_s };
+                            u"bad"_s, u"x"_s };
+
+    QTest::newRow("attachedPropertyAfterDot2")
+            << testFile("completions/attachedAndGroupedProperty.qml") << 13 << 34
+            << ExpectedCompletions({
+                       { u"completed"_s, CompletionItemKind::Method },
+               })
+            << QStringList{ u"QtQuick"_s, u"vector4d"_s, attachedTypeName, u"Rectangle"_s,
+                            u"bad"_s, u"progress"_s, u"status"_s, u"createObject"_s, u"x"_s };
 
     QTest::newRow("groupedPropertyAfterDot")
-            << testFile("completions/attachedAndGroupedProperty.qml") << 10 << 15
+            << testFile("completions/attachedAndGroupedProperty.qml") << 10 << 14
             << ExpectedCompletions({
                        { u"family"_s, CompletionItemKind::Property },
                })
@@ -4164,12 +4172,22 @@ void tst_qmlls_utils::completions_data()
                             u"bad"_s, u"onCompleted"_s };
 
     QTest::newRow("attachedPropertyAfterDotMissingRHS")
-            << testFile("completions/attachedPropertyMissingRHS.qml") << 7 << 17
+            << testFile("completions/attachedPropertyMissingRHS.qml") << 7 << 16
             << ExpectedCompletions({
                        { u"onCompleted"_s, CompletionItemKind::Method },
                })
             << QStringList{ u"QtQuick"_s, u"vector4d"_s, attachedTypeName, u"Rectangle"_s,
                             u"bad"_s };
+
+    QTest::newRow("QTBUG-127586")
+            << testFile("completions/attachedPropertyQTBUG127586.qml") << 4 << 31
+            << ExpectedCompletions({
+                       { u"completed"_s, CompletionItemKind::Method },
+                       { u"destruction"_s, CompletionItemKind::Method },
+                       { u"Asynchronous"_s, CompletionItemKind::EnumMember },
+                       { u"loadFromModule"_s, CompletionItemKind::Method},
+               })
+            << QStringList{ u"ItemClipsChildrenToState"_s, u"Top"_s, u"parent"_s };
 
     QTest::newRow("groupedPropertyAfterDotMissingRHS")
             << testFile("completions/groupedPropertyMissingRHS.qml") << 7 << 11
@@ -4196,7 +4214,7 @@ void tst_qmlls_utils::completions_data()
                             attachedTypeName, u"Rectangle"_s, u"onCompleted"_s };
 
     QTest::newRow("dotFollowedByForStatement")
-            << testFile("completions/afterDots.qml") << 16 << 17
+            << testFile("completions/afterDots.qml") << 16 << 16
             << ExpectedCompletions({
                        { u"good"_s, CompletionItemKind::Property },
                })
@@ -4352,9 +4370,28 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{ { u"console"_s, CompletionItemKind::Property } }
             << QStringList{};
     QTest::newRow("fakePropertyChangedSignal")
-            << testFile("completions/parameterTypeFromBinding.qml") << 14 << 65
+            << testFile("completions/parameterTypeFromBinding.qml") << 14 << 64
             << ExpectedCompletions{ { u"helloData"_s, CompletionItemKind::Property } }
-            << QStringList{ u"mySomeType"_s };
+            << QStringList{};
+
+    QTest::newRow("enumMemberFromRoot")
+            << testFile("completions/Enumerations.qml") << 12 << 52
+            << ExpectedCompletions{ { u"World"_s, CompletionItemKind::EnumMember } }
+            << QStringList{};
+    QTest::newRow("enumMemberInRoot")
+            << testFile("completions/Enumerations.qml") << 18 << 40
+            << ExpectedCompletions{ { u"World"_s, CompletionItemKind::EnumMember } }
+            << QStringList{};
+    QTest::newRow("enumFromRoot")
+            << testFile("completions/Enumerations.qml") << 12 << 46
+            << ExpectedCompletions{ { u"World"_s, CompletionItemKind::EnumMember },
+                                    { u"Hello"_s, CompletionItemKind::Enum } }
+                                  << QStringList{};
+    QTest::newRow("enumInRoot")
+            << testFile("completions/Enumerations.qml") << 18 << 34
+            << ExpectedCompletions{ { u"World"_s, CompletionItemKind::EnumMember },
+                                    { u"Hello"_s, CompletionItemKind::Enum } }
+            << QStringList{};
 }
 
 void tst_qmlls_utils::completions()
@@ -4447,6 +4484,8 @@ void tst_qmlls_utils::completions()
 
     for (const ExpectedCompletion &exp : expected) {
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
+        QEXPECT_FAIL("quickSnippetsForQualifiedQuickImportBeforeDotInBinding", "To be fixed in QTBUG-127609!", Abort);
+        QEXPECT_FAIL("quickSnippetsForQualifiedQuickImportBeforeDot", "To be fixed in QTBUG-127609!", Abort);
 
         QVERIFY2(labels.contains(exp.label),
                  u"no %1 in %2"_s.arg(exp.label, labelsForPrinting).toUtf8());

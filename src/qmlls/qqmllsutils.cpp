@@ -339,12 +339,20 @@ static QList<ItemLocation> filterItemsFromTextLocation(const QList<ItemLocation>
 }
 
 /*!
-    \internal
-    \brief Find the DomItem representing the object situated in file at given line and
-   character/column.
+\internal
+\brief Find the DomItem representing the object situated in file at given line and
+character/column.
 
-    If line and character point between two objects, two objects might be returned.
-    If line and character point to whitespace, it might return an inner node of the QmlDom-Tree.
+If line and character point between two objects, two objects might be returned.
+If line and character point to whitespace, it might return an inner node of the QmlDom-Tree.
+
+We usually assume that sourcelocations have inclusive ends, for example
+we assume that auto-completion on `\n` in `someName\n` wants suggestions
+for `someName`, even if its technically one position "outside" the
+sourcelocation of `someName`. This is not true for
+ScriptBinaryExpressions, where auto-completion on `.` in `someName.` should
+not return suggestions for `someName`.
+The same also applies to all other binary expressions `+`, `-`, and so on.
  */
 QList<ItemLocation> itemsFromTextLocation(const DomItem &file, int line, int character)
 {
@@ -358,14 +366,16 @@ QList<ItemLocation> itemsFromTextLocation(const DomItem &file, int line, int cha
     QList<ItemLocation> toDo;
     qsizetype targetPos = textOffsetFrom(code, line, character);
     Q_ASSERT(targetPos >= 0);
-    auto containsTarget = [targetPos](QQmlJS::SourceLocation l) {
+
+    enum ComparisonOption { Normal, ExcludePositionAfterLast };
+    auto containsTarget = [targetPos](QQmlJS::SourceLocation l, ComparisonOption c) {
         if constexpr (sizeof(qsizetype) <= sizeof(quint32)) {
-            return l.begin() <= quint32(targetPos) && quint32(targetPos) <= l.end();
+            return l.begin() <= quint32(targetPos) && quint32(targetPos) < l.end() + (c == Normal ? 1 : 0) ;
         } else {
-            return l.begin() <= targetPos && targetPos <= l.end();
+            return l.begin() <= targetPos && targetPos < l.end() + (c == Normal ? 1 : 0);
         }
     };
-    if (containsTarget(t->info().fullRegion)) {
+    if (containsTarget(t->info().fullRegion, Normal)) {
         ItemLocation loc;
         loc.domItem = file;
         loc.fileLocation = t;
@@ -377,12 +387,20 @@ QList<ItemLocation> itemsFromTextLocation(const DomItem &file, int line, int cha
 
         bool inParentButOutsideChildren = true;
 
+        // Exclude the position behind the source location in ScriptBinaryExpressions to avoid
+        // returning `owner` in `owner.member` when completion is triggered on the \c{.}. This
+        // tells the code for the completion if the completion was triggered on `owner` or on `.`.
+        const ComparisonOption comparisonOption =
+                iLoc.domItem.internalKind() == QQmlJS::Dom::DomType::ScriptBinaryExpression
+                ? ExcludePositionAfterLast
+                : Normal;
+
         auto subEls = iLoc.fileLocation->subItems();
         for (auto it = subEls.begin(); it != subEls.end(); ++it) {
             auto subLoc = std::static_pointer_cast<AttachedInfoT<FileLocations>>(it.value());
             Q_ASSERT(subLoc);
 
-            if (containsTarget(subLoc->info().fullRegion)) {
+            if (containsTarget(subLoc->info().fullRegion, comparisonOption)) {
                 ItemLocation subItem;
                 subItem.domItem = iLoc.domItem.path(it.key());
                 if (!subItem.domItem) {
@@ -1509,7 +1527,7 @@ resolveSignalHandlerParameterType(const DomItem &parameterDefinition, const QStr
 static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomItem &item,
                                                                      ResolveOptions options)
 {
-    if (isFieldMemberAccess(item)) {
+    if (isFieldMemberAccess(item) || isFieldMemberExpression(item)) {
         return resolveFieldMemberExpressionType(item, options);
     }
 
