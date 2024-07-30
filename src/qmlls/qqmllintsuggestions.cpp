@@ -320,9 +320,19 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
     const QStringList qmltypesFiles;
     const QStringList resourceFiles = resourceFilesFromBuildFolders(imports);
 
-    QList<QQmlJS::LoggerCategory> categories;
+    QList<QQmlJS::LoggerCategory> categories = QQmlJSLogger::defaultCategories();
 
     QQmlJSLinter linter(imports);
+
+    for (const QQmlJSLinter::Plugin &plugin : linter.plugins()) {
+        for (const QQmlJS::LoggerCategory &category : plugin.categories())
+            categories.append(category);
+    }
+
+    QQmlToolingSettings settings(QLatin1String("qmllint"));
+    if (settings.search(filename)) {
+        QQmlJS::LoggingUtils::updateLogLevels(categories, settings, nullptr);
+    }
 
     linter.lintFile(filename, &fileContents, silent, nullptr, imports, qmltypesFiles,
                     resourceFiles, categories);
