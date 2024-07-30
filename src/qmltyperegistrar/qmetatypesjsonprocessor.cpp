@@ -803,6 +803,7 @@ MetaTypePrivate::MetaTypePrivate(const QCborMap &cbor, const QString &inputFile)
     , inputFile(inputFile)
 {
     className = toStringView(cbor, S_CLASS_NAME);
+    lineNumber = cbor[S_LINENUMBER].toInteger(0);
     qualifiedClassName = toStringView(cbor, S_QUALIFIED_CLASS_NAME);
 
     const QCborArray cborSuperClasses = cbor[S_SUPER_CLASSES].toArray();

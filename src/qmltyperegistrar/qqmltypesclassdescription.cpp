@@ -98,7 +98,9 @@ FoundType QmlTypesClassDescription::findType(
                             : FoundType::ForeignTypes;
                 } else {
                     warning(result.native)
-                            << "Multiple C++ types called" << qualifiedName << "found!"
+                            << "Multiple C++ types called" << qualifiedName << "found!\n"
+                            << "(other occurrence in :"
+                            << it->inputFile() << ":" << it->lineNumber() << ")\n"
                             << "This violates the One Definition Rule!";
                 }
             }
