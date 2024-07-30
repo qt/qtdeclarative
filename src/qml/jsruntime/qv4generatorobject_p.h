@@ -104,7 +104,7 @@ struct GeneratorObject : Object {
     V4_INTERNALCLASS(GeneratorObject)
     V4_PROTOTYPE(generatorPrototype)
 
-    ReturnedValue resume(ExecutionEngine *engine, const Value &arg) const;
+    ReturnedValue resume(ExecutionEngine *engine, const Value &arg, std::optional<Value>) const;
 };
 
 }
