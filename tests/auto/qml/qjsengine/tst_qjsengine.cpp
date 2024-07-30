@@ -327,6 +327,10 @@ private slots:
     void generatorFunctionInTailCallPosition();
     void generatorMethodInTailCallPosition();
 
+    void generatorStackOverflow_data();
+    void generatorStackOverflow();
+    void generatorInfiniteRecursion();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6503,6 +6507,60 @@ void tst_QJSEngine::generatorMethodInTailCallPosition() {
 
   QVERIFY(!result.isError());
   QVERIFY(!result.isUndefined());
+}
+
+void tst_QJSEngine::generatorStackOverflow_data() {
+    QTest::addColumn<QString>("code");
+    QTest::addColumn<int>("callDepth");
+
+    auto makeCode = [](QString method) {
+        return uR"(
+            function* gen() { yield 1; yield 2; }
+            function indirection(g) { return g.%1(); }
+
+            var g = gen();
+            g.next() // used to trigger a resume in return and throw
+            indirection(g);
+          )"_s.arg(method);
+    };
+
+    QTest::addRow("Stack Overflow on calling a generator function")
+        << u"function* gen(){}; gen()"_s << 1;
+    QTest::addRow("Stack Overflow on next") << makeCode(u"next"_s) << 2;
+    QTest::addRow("Stack Overflow on return") << makeCode(u"return"_s) << 2;
+    QTest::addRow("Stack Overflow on throw") << makeCode(u"throw"_s) << 2;
+}
+
+void tst_QJSEngine::generatorStackOverflow() {
+    QFETCH(QString, code);
+    QFETCH(int, callDepth);
+
+    const auto guard = qScopeGuard([maxCallDepth = QV4::ExecutionEngine::maxCallDepth()]() {
+        QV4::ExecutionEngine::setMaxCallDepth(maxCallDepth);
+    });
+
+    QJSEngine engine;
+
+    QV4::ExecutionEngine::setMaxCallDepth(callDepth);
+    engine.handle()->callDepth = 0;
+
+    QJSValue result = engine.evaluate(code);
+
+    QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::RangeError);
+    QCOMPARE(result.toString(), "RangeError: Maximum call stack size exceeded.");
+}
+
+void tst_QJSEngine::generatorInfiniteRecursion() {
+    QJSEngine engine;
+    QJSValue result = engine.evaluate(R"(
+        function* gen() { yield* gen() }
+        for (const nothing of gen()) {}
+    )");
+
+    QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::RangeError);
+    QCOMPARE(result.toString(), "RangeError: Maximum call stack size exceeded.");
 }
 
 QTEST_MAIN(tst_QJSEngine)
