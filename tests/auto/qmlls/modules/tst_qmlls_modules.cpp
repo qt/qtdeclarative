@@ -1145,6 +1145,51 @@ void tst_qmlls_modules::linting()
     }
 }
 
+void tst_qmlls_modules::warnings_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<QString>("expectedWarning");
+
+    const QString noWarningExpected;
+
+    QTest::addRow("unqualifiedAccess") << u"warnings/withoutQmllintIni/unqualifiedAccess.qml"_s
+                                       << u"Unqualified access"_s;
+
+    QTest::addRow("disableUnqualifiedEnabledCompiler")
+            << u"warnings/disableUnqualifiedEnableCompiler/unqualifiedAccess.qml"_s
+            << u"Could not compile binding for i: Cannot access value for name unqualifiedAccess"_s;
+}
+
+void tst_qmlls_modules::warnings()
+{
+    QFETCH(QString, filePath);
+    QFETCH(QString, expectedWarning);
+
+    bool diagnosticOk = false;
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    m_protocol->registerPublishDiagnosticsNotificationHandler(
+            [&expectedWarning, &diagnosticOk, &uri](const QByteArray &,
+                                                    const PublishDiagnosticsParams &p) -> void {
+                if (p.uri != *uri || !p.version)
+                    return;
+
+                if (expectedWarning.isEmpty()) {
+                    for (const auto& x: p.diagnostics)
+                        qDebug() << "Received unexpected message:" << x.message;
+                    QCOMPARE(p.diagnostics.size(), 0);
+                    diagnosticOk = true;
+                    return;
+                }
+
+                QCOMPARE(p.diagnostics.size(), 1);
+                QCOMPARE(p.diagnostics.front().message, expectedWarning.toUtf8());
+                diagnosticOk = true;
+            });
+
+    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 3000);
+}
+
 void tst_qmlls_modules::rangeFormatting_data()
 {
     QTest::addColumn<QString>("filePath");

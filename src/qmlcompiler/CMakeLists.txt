@@ -48,9 +48,10 @@ qt_internal_add_module(QmlCompiler
         Qt::Qml
     LIBRARIES
         Qt::QmlPrivate
+        Qt::QmlToolingSettingsPrivate
     PRIVATE_MODULE_INTERFACE
         Qt::QmlPrivate
-
+        Qt::QmlToolingSettingsPrivate
 )
 
 qt_path_join(qml_build_dir "${QT_BUILD_DIR}" "${INSTALL_QMLDIR}")
