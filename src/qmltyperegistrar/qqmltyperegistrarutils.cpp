@@ -49,10 +49,10 @@ QDebug warning(QAnyStringView fileName, int lineNumber)
 
 QDebug warning(const MetaType &classDef)
 {
-    // TODO: Once we have line numbers, use them
     const QAnyStringView file = classDef.inputFile();
+    int lineNo = classDef.lineNumber();
     if (!file.isEmpty())
-        return warning(file);
+        return warning(file, lineNo);
 
     return warning(classDef.qualifiedClassName());
 }

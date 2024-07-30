@@ -169,6 +169,7 @@ struct MetaTypePrivate
     Enum::Container enums;
 
     Kind kind = Unknown;
+    int lineNumber = 0;
 };
 
 class MetaType
@@ -182,6 +183,7 @@ public:
     bool isEmpty() const { return d == &s_empty; }
 
     QString inputFile() const { return d->inputFile; }
+    int lineNumber() const { return d->lineNumber; }
     QAnyStringView className() const { return d->className; }
     QAnyStringView qualifiedClassName() const { return d->qualifiedClassName; }
     const BaseType::Container &superClasses() const { return d->superClasses; }

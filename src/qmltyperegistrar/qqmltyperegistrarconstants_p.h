@@ -109,6 +109,7 @@ static constexpr QLatin1StringView S_IS_CLONED                    { "isCloned" }
 static constexpr QLatin1StringView S_IS_CONSTRUCTOR               { "isConstructor" };
 static constexpr QLatin1StringView S_IS_FLAG                      { "isFlag" };
 static constexpr QLatin1StringView S_IS_JAVASCRIPT_FUNCTION       { "isJavaScriptFunction" };
+static constexpr QLatin1StringView S_LINENUMBER                   { "lineNumber" };
 static constexpr QLatin1StringView S_MEMBER                       { "member" };
 static constexpr QLatin1StringView S_METHOD                       { "method" };
 static constexpr QLatin1StringView S_METHODS                      { "methods" };
