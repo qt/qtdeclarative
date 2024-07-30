@@ -3,8 +3,12 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-    }
+        maven {
+            url "https://android.qt.io/maven/snapshots"
+        }
+     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
