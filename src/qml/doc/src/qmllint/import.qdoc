@@ -5,18 +5,12 @@
 \page qmllint-warnings-and-errors-import.html
 \ingroup qmllint-warnings-and-errors
 
-\title Warnings Occurred While Importing
+\title Warnings occurred while importing
 \brief The imported module was not found.
 
-This warning category contains multiple warnings:
-\list
-\li \l{Failed To Import Module}
-\li \l{Component Was Not Found}
-\li \l{Import Qualifier Must Start With A Capital Letter}
-\li \l{Unknown Import Syntax}
-\endlist
+\qmllintwarningcategory import
 
-\section1 Failed To Import Module
+\section1 Failed to import module
 
 \section2 What happened?
 The module imported via \l{Import Statements}{import statement} was not found.
@@ -41,7 +35,7 @@ import QtQuicky // not ok: typo in module name
 Item {
 }
 \endqml
-You can fix this warning by correcting the typo:
+To fix this warning, correct the typo:
 \qml
 import QtQuick // ok: no typo in module name
 
@@ -49,7 +43,7 @@ Item {
 }
 \endqml
 
-\section3 User-Defined Module That Was Not Built
+\section3 User-defined module that was not built
 
 Some tooling like \l{\QMLLS Reference}{\QMLLS} or \l{qmllint Reference}{qmllint}
 can't find user-defined modules when they
@@ -61,20 +55,20 @@ instructions in
 \l{Setting up the QML Language Server in Your Editor}{\QMLLS setup instructions}
 and make sure that you communicate the correct build folder to \QMLLS.
 
-\section3 Wrong Import Path
+\section3 Wrong import path
 
 Please refer to \l{Import Statements#qml-import-path}{the QML import path documentation} and to
 \l{Debugging QML Applications#debugging-module-imports}{the debugging module import documentation}
 for more information about import paths.
 
-\section3 Missing Module
+\section3 Missing module
 
 If the previous sections did not help to find the imported module, it might be missing.
 This might be caused by a missing dependency. When using external libraries, verify that they are
 actually installed, and that their modules end up in an
 \l{Import Statements#qml-import-path}{import path}.
 
-\section1 Component Was Not Found
+\section1 Component was not found
 
 \section2 What happened?
 Some component was not found.
@@ -84,7 +78,7 @@ The application can't run because it can't instantiate the non-found component.
 
 \section2 Examples
 
-\section3 Typo In The Component Name
+\section3 Typo in the component name
 \qml
 import QtQuick
 
@@ -92,7 +86,7 @@ Item {
     Itemy {} // not ok: typo in name
 }
 \endqml
-You can fix this warning by correcting the typo:
+To fix this warning, correct the typo:
 \qml
 import QtQuick
 
@@ -101,14 +95,14 @@ Item {
 }
 \endqml
 
-\section3 Missing Import Statement
+\section3 Missing import statement
 
 \qml
 
 Item { // not ok: must be imported from QtQuick first
 }
 \endqml
-You can fix this warning by adding the missing module import:
+To fix this warning, add the missing module import:
 \qml
 import QtQuick
 
@@ -116,7 +110,7 @@ Item { // ok: was imported from QtQuick
 }
 \endqml
 
-\section1 Import Qualifier must start with a capital letter
+\section1 Import qualifier must start with a capital letter
 
 \section2 What happened?
 Some imported module has an invalid qualifier.
@@ -132,7 +126,7 @@ import QtQuick as qq
 qq.Item {
 }
 \endqml
-You can fix this warning by making the import qualifier start with an upper case letter:
+To fix this warning, make the import qualifier start with an upper case letter:
 \qml
 import QtQuick as Qq
 
@@ -140,7 +134,7 @@ Qq.Item {
 }
 \endqml
 
-\section1 Unknown Import Syntax
+\section1 Unknown import syntax
 
 \section2 What happened?
 An import statement is using an invalid \l{Import Statements}{import syntax}.
@@ -157,7 +151,7 @@ import QtQuick
 Item {
 }
 \endqml
-You can fix this warning by using URLs that have an allowed scheme:
+To fix this warning, use URLs that have an allowed scheme:
 \qml
 import "qrc:/path/to/Module"
 import QtQuick

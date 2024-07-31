@@ -8,6 +8,8 @@
 \title Top level component
 \brief Root QML type is a component
 
+\qmllintwarningcategory top-level-component
+
 \section1 QML top level type can't be \e Component
 
 \section2 What happened?

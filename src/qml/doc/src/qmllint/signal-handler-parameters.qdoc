@@ -5,18 +5,12 @@
 \page qmllint-warnings-and-errors-signal-handler-parameters.html
 \ingroup qmllint-warnings-and-errors
 
-\title Signal Handler Parameters
+\title Signal handler parameters
 \brief The signal handler does not satisfy the signal types.
 
-This warning category has multiple warnings:
-\list
-    \li \l{Type Of Parameter In Signal Was Not Found}
-    \li \l{Type Of Parameter In Signal Cannot Be Used}
-    \li \l{The Signal Has A Parameter Of The Same Name}
-\endlist
+\qmllintwarningcategory signal-handler-parameters
 
-
-\section1 Type Of Parameter In Signal Was Not Found
+\section1 Type of parameter in signal was not found
 
 \section2 What happened?
 A signal handler tried to handle a signal with parameters of unknown QML types.
@@ -31,9 +25,8 @@ actually installed, and that their modules end up in an
 \l{Import Statements#qml-import-path}{import path}.
 
 The warning might also indicate that the parameter type of the C++ defined signal does not have
-a QML counterpart. The parameter type might be missing the
-\l{QQmlEngine Class#QML_ELEMENT}{QML_ELEMENT} macro, for example. Refer to
-\l{Defining QML Types from C++} or \l{Overview - QML and C++ Integration} in this case.
+a QML counterpart. The parameter type might be missing the \l QML_ELEMENT macro, for example.
+Refer to \l{Defining QML Types from C++} or \l{Overview - QML and C++ Integration} in this case.
 
 \section2 Why is this bad?
 In the first case, the module with the C++ signal has an undeclared dependency on the QML module
@@ -42,7 +35,8 @@ hidden dependencies.
 
 In both cases, QML tooling is not able to find the QML counterpart of the
 C++ type: the \l{Qt Quick Compiler}{compiler} can't compile this signal handler to
-C++ and \l{qmllint} as well as \l{QML Language Server} can't analyze this handler.
+C++ and \l{qmllint Reference}{qmllint} as well as \l{\QMLLS Reference}{\QMLLS}
+can't analyze this handler.
 
 \section2 Example
 
@@ -121,7 +115,7 @@ Now, the QML code should be fine again!
 \omit
 TODO: QML Lint cannot detect if you pass signal parameters by value, reference or pointer!
 Therefore, it will never print that warning.
-\section1 Type Of Parameter In Signal Should Be Passed By Pointer
+\section1 Type of parameter in signal should be passed by pointer
 \section2 What happened?
 TODO
 
@@ -137,8 +131,7 @@ You can fix this warning by TODO
 
 TODO: QML Lint cannot detect if you pass signal parameters by value, reference or pointer!
 Therefore, it will never print that warning.
-that warning
-\section1 Type Of Parameter In Signal Should Be Passed By Value Or Const Reference
+\section1 Type of parameter in signal should be passed by value or const reference
 \section2 What happened?
 TODO
 
@@ -154,7 +147,7 @@ You can fix this warning by TODO
 
 \endomit
 
-\section1 Signal Handler Has More Formal Parameters Than The Signal It Handles
+\section1 Signal handler has more formal parameters than the signal it handles
 \section2 What happened?
 A signal handler expects more parameters than what the signal will actually provide.
 
@@ -171,7 +164,8 @@ Item {
     onHelloWorld: function (x,y,z) {} // not ok: signal handler handles three parameters
 }
 \endqml
-You can fix this warning by removing the extra parameters of the signal handler:
+To fix this warning, remove the extra parameters of the signal handler or
+add the missing parameters to the signal's declaration:
 \qml
 import QtQuick
 
@@ -179,21 +173,14 @@ Item {
     signal helloWorld(x: QtObject)  // signal expects only one parameter
 
     onHelloWorld: function (x) {} // ok: signal handler handles one parameter
+
+    signal alternativeHelloWorld(x: QtObject, y: int, y: int)  // signal expects three parameters
+
+    onAlternativeHelloWorld: function (x,y,z) {} // ok: signal handler handles three parameters
 }
 \endqml
 
-It can also be fixed by adding the missing parameters to the signal's declaration:
-\qml
-import QtQuick
-
-Item {
-    signal helloWorld(x: QtObject, y: int, y: int)  // signal expects three parameters
-
-    onHelloWorld: function (x,y,z) {} // ok: signal handler handles three parameters
-}
-\endqml
-
-\section1 The Signal Has A Parameter Of The Same Name
+\section1 The signal has a parameter of the same name
 \section2 What happened?
 The signal or signal handler might have swapped some of its arguments, or some arguments might be
 missing.
@@ -213,7 +200,7 @@ Item {
 }
 
 \endqml
-You can fix this warning by adding the missing parameters:
+To fix this warning, add the missing parameters or rename the first parameter:
 \qml
 import QtQuick
 
@@ -221,20 +208,14 @@ Item {
     signal helloWorld(x: QtObject, y: int)
 
     onHelloWorld: function (x, y) {} // ok: parameters have the same order as in helloWorld
-}
-\endqml
-or by renaming the first parameter:
-\qml
-import QtQuick
 
-Item {
-    signal helloWorld(x: QtObject, y: int)
+    signal alternativeHelloWorld(x: QtObject, y: int)
 
-    onHelloWorld: function (x) {} // ok: parameters have the same order as in helloWorld, even if y is missing
+    onAlternativeHelloWorld: function (x) {} // ok: parameters have the same order as in helloWorld, even if y is missing
 }
 \endqml
 
-\section3 Swapped Arguments
+\section3 Swapped arguments
 \qml
 import QtQuick
 
@@ -245,7 +226,7 @@ Item {
 }
 
 \endqml
-You can fix this warning by reordering the parameters in the correct order
+To fix this warning, reorder the parameters in the correct order:
 \qml
 import QtQuick
 

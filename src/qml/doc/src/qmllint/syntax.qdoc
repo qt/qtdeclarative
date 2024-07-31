@@ -8,18 +8,7 @@
 \title Syntax
 \brief Various syntactic errors.
 
-This warning category has multiple warnings:
-\list
- \li \l{Nested inline components are not supported}
- \li \l{Inline component declaration must be followed by a typename}
- \li \l{Invalid alias expression: an initializer is needed}
- \li \l{Invalid alias expression: only ids and field member expressions can be aliased}
- \li \l{Id must be followed by an identifier}
- \li \l{Failed to parse id}
- \li \l{Declaring an object which is not a QML object as a list member}
- \li \l{Enums declared inside of inline components are ignored}
- \li \l{Unknown argument to pragma}
-\endlist
+\qmllintwarningcategory syntax
 
 \section1 Nested inline components are not supported
 

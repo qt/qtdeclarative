@@ -5,10 +5,12 @@
 \page qmllint-warnings-and-errors-required.html
 \ingroup qmllint-warnings-and-errors
 
-\title Component is Missing a Required Property
+\title Component is missing a required property
 \brief A component's required property was not bound.
 
-\section1 Component is Missing a Required Property
+\qmllintwarningcategory required
+
+\section1 Component is missing a required property
 
 \section2 What happened?
 The \l{QML Object Attributes#required-properties}{required property} of a component was not set.
@@ -37,7 +39,7 @@ Item {
     }
 }
 \endqml
-You can fix this warning by setting the required properties
+To fix this warning, set the required properties:
 \qml
 import QtQuick
 
