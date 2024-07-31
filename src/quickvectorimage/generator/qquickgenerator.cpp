@@ -46,11 +46,12 @@ bool QQuickGenerator::generate()
     return m_generationSucceeded;
 }
 
-void QQuickGenerator::optimizePaths(const PathNodeInfo &info)
+void QQuickGenerator::optimizePaths(const PathNodeInfo &info, const QRectF &overrideBoundingRect)
 {
     QPainterPath pathCopy = info.painterPath;
     pathCopy.setFillRule(info.fillRule);
 
+    const QRectF &boundingRect = overrideBoundingRect.isNull() ? pathCopy.boundingRect() : overrideBoundingRect;
     if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::OptimizePaths)) {
         QQuadPath strokePath = QQuadPath::fromPainterPath(pathCopy);
         bool fillPathNeededClose;
@@ -59,14 +60,15 @@ void QQuickGenerator::optimizePaths(const PathNodeInfo &info)
         fillPath.addCurvatureData();
         QSGCurveProcessor::solveOverlaps(fillPath);
         const bool compatibleStrokeAndFill = !fillPathNeededClose && !intersectionsFound;
+
         if (compatibleStrokeAndFill || m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::OutlineStrokeMode)) {
-            outputShapePath(info, nullptr, &fillPath, QQuickVectorImageGenerator::FillAndStroke, pathCopy.boundingRect());
+            outputShapePath(info, nullptr, &fillPath, QQuickVectorImageGenerator::FillAndStroke, boundingRect);
         } else {
-            outputShapePath(info, nullptr, &fillPath, QQuickVectorImageGenerator::FillPath, pathCopy.boundingRect());
-            outputShapePath(info, nullptr, &strokePath, QQuickVectorImageGenerator::StrokePath, pathCopy.boundingRect());
+            outputShapePath(info, nullptr, &fillPath, QQuickVectorImageGenerator::FillPath, boundingRect);
+            outputShapePath(info, nullptr, &strokePath, QQuickVectorImageGenerator::StrokePath, boundingRect);
         }
     } else {
-        outputShapePath(info, &pathCopy, nullptr, QQuickVectorImageGenerator::FillAndStroke, pathCopy.boundingRect());
+        outputShapePath(info, &pathCopy, nullptr, QQuickVectorImageGenerator::FillAndStroke, boundingRect);
     }
 }
 

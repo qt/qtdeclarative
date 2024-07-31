@@ -30,7 +30,7 @@ protected:
     void generateNodeBase(const NodeInfo &info) override;
     bool generateDefsNode(const NodeInfo &info) override;
     void generateImageNode(const ImageNodeInfo &info) override;
-    void generatePath(const PathNodeInfo &info) override;
+    void generatePath(const PathNodeInfo &info, const QRectF &overrideBoundingRect) override;
     void generateNode(const NodeInfo &info) override;
     void generateTextNode(const TextNodeInfo &info) override;
     void generateUseNode(const UseNodeInfo &info) override;

@@ -788,6 +788,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         QTextBlock block = document.firstBlock();
         while (block.isValid()) {
             QTextLayout *lout = block.layout();
+            QRectF boundingRect = lout->boundingRect();
 
             if (lout != nullptr) {
                 // If this block has requested the current SVG font, we override it
@@ -842,7 +843,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 
                     info.fillTransform = styleResolver->currentFillTransform();
 
-                    m_generator->generatePath(info);
+                    m_generator->generatePath(info, boundingRect);
 
                     if (strokeGradient != nullptr) {
                         PathNodeInfo strokeInfo;
@@ -852,7 +853,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 
                         QPainterPathStroker stroker(pen);
                         strokeInfo.painterPath = stroker.createStroke(p);
-                        m_generator->generatePath(strokeInfo);
+                        m_generator->generatePath(strokeInfo, boundingRect);
                     }
                 };
 

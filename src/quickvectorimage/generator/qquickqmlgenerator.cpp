@@ -152,7 +152,7 @@ void QQuickQmlGenerator::generateImageNode(const ImageNodeInfo &info)
     stream() << "}";
 }
 
-void QQuickQmlGenerator::generatePath(const PathNodeInfo &info)
+void QQuickQmlGenerator::generatePath(const PathNodeInfo &info, const QRectF &overrideBoundingRect)
 {
     if (!isNodeVisible(info))
         return;
@@ -160,7 +160,7 @@ void QQuickQmlGenerator::generatePath(const PathNodeInfo &info)
     if (m_inShapeItem) {
         if (!info.isDefaultTransform)
             qWarning() << "Skipped transform for node" << info.nodeId << "type" << info.typeName << "(this is not supposed to happen)";
-        optimizePaths(info);
+        optimizePaths(info, overrideBoundingRect);
     } else {
         m_inShapeItem = true;
         stream() << shapeName() << " {";
@@ -171,7 +171,7 @@ void QQuickQmlGenerator::generatePath(const PathNodeInfo &info)
         m_indentLevel++;
         if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer))
             stream() << "preferredRendererType: Shape.CurveRenderer";
-        optimizePaths(info);
+        optimizePaths(info, overrideBoundingRect);
         //qCDebug(lcQuickVectorGraphics) << *node->qpath();
         m_indentLevel--;
         stream() << "}";

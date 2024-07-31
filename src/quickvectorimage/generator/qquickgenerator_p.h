@@ -17,6 +17,7 @@
 
 #include <private/qquickvectorimageglobal_p.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qrect.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -51,14 +52,14 @@ protected:
     virtual void generateNodeBase(const NodeInfo &info) = 0;
     virtual bool generateDefsNode(const NodeInfo &info) = 0;
     virtual void generateImageNode(const ImageNodeInfo &info) = 0;
-    virtual void generatePath(const PathNodeInfo &info) = 0;
+    virtual void generatePath(const PathNodeInfo &info, const QRectF &overrideBoundingRect = QRectF{}) = 0;
     virtual void generateNode(const NodeInfo &info) = 0;
     virtual void generateTextNode(const TextNodeInfo &info) = 0;
     virtual void generateUseNode(const UseNodeInfo &info) = 0;
     virtual bool generateStructureNode(const StructureNodeInfo &info) = 0;
     virtual bool generateRootNode(const StructureNodeInfo &info) = 0;
     virtual void outputShapePath(const PathNodeInfo &info, const QPainterPath *path, const QQuadPath *quadPath, QQuickVectorImageGenerator::PathSelector pathSelector, const QRectF &boundingRect) = 0;
-    void optimizePaths(const PathNodeInfo &info);
+    void optimizePaths(const PathNodeInfo &info, const QRectF &overrideBoundingRect);
     bool isNodeVisible(const NodeInfo &info);
 
 protected:
