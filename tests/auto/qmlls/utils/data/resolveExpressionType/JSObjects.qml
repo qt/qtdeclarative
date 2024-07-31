@@ -10,4 +10,9 @@ Item {
 
         return object.a + object.b
     }
+
+    function newObject() {
+        const date = new Date().getTime();
+        return date;
+    }
 }

@@ -2165,6 +2165,9 @@ void tst_qmlls_utils::resolveExpressionType_data()
         QTest::addRow("jsObjectMemberForFieldMemberExpression")
                 << file << 11 << 23 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
                 << JavaScriptIdentifier << u"a"_s;
+        QTest::addRow("jsNewMemberExpression")
+                << file << 15 << 26 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
+                << JavaScriptIdentifier << u"Date"_s;
     }
     {
         const QString file = testFile(u"resolveExpressionType/lambdas.qml"_s);
