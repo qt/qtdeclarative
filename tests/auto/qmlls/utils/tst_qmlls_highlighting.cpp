@@ -616,6 +616,18 @@ void tst_qmlls_highlighting::highlights_data()
                 << Token(QQmlJS::SourceLocation(1589, 2, 76, 17),
                          int(SemanticTokenProtocolTypes::Variable),
                          (1 << int(SemanticTokenModifiers::Readonly)));
+        QTest::addRow("this-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(2661, 4, 115, 19),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("super-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(2677, 5, 116, 9),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("new-keyword")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(2718, 3, 118, 16),
+                         int(SemanticTokenProtocolTypes::Keyword), 0);
     }
     { // namespaced items
         const auto filePath = m_highlightingDataDir + "/namespace.qml";

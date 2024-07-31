@@ -652,6 +652,16 @@ void HighlightingVisitor::highlightScriptExpressions(const DomItem &item)
     case DomType::ScriptYieldExpression:
         m_highlights.addHighlight(regions[YieldKeywordRegion], QmlHighlightKind::QmlKeyword);
         return;
+    case DomType::ScriptThisExpression:
+        m_highlights.addHighlight(regions[ThisKeywordRegion], QmlHighlightKind::QmlKeyword);
+        return;
+    case DomType::ScriptSuperLiteral:
+        m_highlights.addHighlight(regions[SuperKeywordRegion], QmlHighlightKind::QmlKeyword);
+        return;
+    case DomType::ScriptNewMemberExpression:
+    case DomType::ScriptNewExpression:
+        m_highlights.addHighlight(regions[NewKeywordRegion], QmlHighlightKind::QmlKeyword);
+        return;
     default:
         qCDebug(semanticTokens)
                 << "Script Expressions with kind" << item.internalKind() << "not implemented";
