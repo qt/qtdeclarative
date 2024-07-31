@@ -8,6 +8,8 @@
 \title Id quotation
 \brief Id has quotation marks.
 
+\qmllintwarningcategory syntax.id-quotation
+
 \section1 Ids do not need quotation marks
 
 \section2 What happened?

@@ -5,10 +5,12 @@
 \page qmllint-warnings-and-errors-read-only-property.html
 \ingroup qmllint-warnings-and-errors
 
-\title Readonly Property
+\title Readonly property
 \brief A readonly property was written.
 
-\section1 Cannot Assign To Read-Only Property
+\qmllintwarningcategory read-only-property
+
+\section1 Cannot assign to read-only property
 
 \section2 What happened?
 A \l{Read-Only Properties}{read-only property} was written.
@@ -29,10 +31,9 @@ Item {
     }
 }
 \endqml
-You can fix this warning by removing the write to the read-only property, by writing to another
-non-read-only property, or by removing the readonly modifier if the property should no longer be
-considered constant.
-
+To fix this warning, remove the write to the read-only property, write to another
+non-read-only property, or remove the readonly modifier if you are the author of
+the property definition.
 \sa{Read-Only Properties}
 */
 

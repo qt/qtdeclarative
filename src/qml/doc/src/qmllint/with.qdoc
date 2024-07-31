@@ -5,10 +5,12 @@
 \page qmllint-warnings-and-errors-with.html
 \ingroup qmllint-warnings-and-errors
 
-\title With Statements
+\title With
 \brief With statements are strongly discouraged in QML.
 
-\section1 With Statements
+\qmllintwarningcategory with
+
+\section1 With statements
 
 \section2 What happened?
 The JavaScript \c{with} statement was used.
@@ -30,8 +32,7 @@ Item {
     }
 }
 \endqml
-You can fix this warning by replacing the \c{with} statement with a destructuring property,
-for example:
+To fix this warning, replace the \c{with} statement with a destructuring property:
 \qml
 import QtQuick
 

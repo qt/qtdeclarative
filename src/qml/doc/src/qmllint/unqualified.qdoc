@@ -8,6 +8,8 @@
 \title Unqualified
 \brief Accessing an outer scope without its id.
 
+\qmllintwarningcategory unqualified
+
 \section1 Unqualified access
 
 \section2 What happened?

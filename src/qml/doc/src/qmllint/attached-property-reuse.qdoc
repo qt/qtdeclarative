@@ -8,6 +8,8 @@
 \title Attached property reuse
 \brief Attached type was initialized multiple times.
 
+\qmllintwarningcategory attached-property-reuse
+
 \section1 Using attached type already initialized in a parent scope
 
 \section2 What happened?

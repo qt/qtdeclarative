@@ -8,6 +8,8 @@
 \title Duplicate id
 \brief An id is not unique.
 
+\qmllintwarningcategory syntax.duplicate-ids
+
 \section1 Found a duplicated id
 
 \section2 What happened?

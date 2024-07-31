@@ -8,12 +8,7 @@
 \title Missing property
 \brief Binding a value to a non-existing property.
 
-This category has multiple warnings:
-\list
-\li \l{Can't assign to non-existent default property}
-\li \l{Property does not exist}
-\li \l{Member not found on type}
-\endlist
+\qmllintwarningcategory missing-property
 
 \section1 Can't assign to non-existent default property
 

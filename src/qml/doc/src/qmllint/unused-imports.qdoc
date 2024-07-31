@@ -8,6 +8,8 @@
 \title Unused imports
 \brief Types of the imported module were not used.
 
+\qmllintwarningcategory unused-imports
+
 \section1 Unused import
 
 \section2 What happened?

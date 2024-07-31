@@ -5,16 +5,12 @@
 \page qmllint-warnings-and-errors-missing-type.html
 \ingroup qmllint-warnings-and-errors
 
-\title Missing Type
+\title Missing type
 \brief A type used in a binding or alias was not found.
 
-This warning category has multiple warnings:
-\list
- \li \l{Cannot Deduce Type of Alias}
- \li \l{No Type Found For Property}
-\endlist
+\qmllintwarningcategory missing-type
 
-\section1 Cannot Deduce Type of Alias
+\section1 Cannot deduce type of alias
 
 \section2 What happened?
 An alias property points to a property with a C++ type whose QML counterpart was not found. This can
@@ -108,7 +104,7 @@ in your QML file. This is because the same type can be exposed multiple times wi
 attributes in different modules: \c{mymodule} actually has to be precise about the QML type of
 \c{myProperty}.
 
-You can fix this warning by adding the dependency in the \c{CMakeLists.txt}:
+To fix this warning, add the dependency in the \c{CMakeLists.txt}:
 \badcode
 qt_add_qml_module(mymodule
     URI mymodule
@@ -123,7 +119,7 @@ Now, the warning should be gone!
 
 \b {See also} \l {Declaring module dependencies}.
 
-\section1 No Type Found For Property
+\section1 No type found for property
 
 \section2 What happened?
 A binding was set on a property whose QML type was not found. This can be caused by a QML module
@@ -222,7 +218,7 @@ The reason for the warning message is that in the QML code, the type \c{QQuickIt
 and its QML counterpart \c{Item} are not known: the dependency 'QtQuick' of mymodule was not
 declared in the \c{CMakeLists.txt}.
 
-You can fix this warning by adding the dependency in the \c{CMakeLists.txt}:
+To fix this warning, add the dependency in the \c{CMakeLists.txt}:
 \badcode
 qt_add_qml_module(mymodule
     URI mymodule

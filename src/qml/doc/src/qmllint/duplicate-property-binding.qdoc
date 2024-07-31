@@ -5,17 +5,12 @@
 \page qmllint-warnings-and-errors-duplicate-property-binding.html
 \ingroup qmllint-warnings-and-errors
 
-\title Duplicate Bindings
+\title Duplicate bindings
 \brief A property was bound multiple times.
 
-This warning category has multiple warnings:
-\list
-    \li \l{Duplicate Interceptor On Property}
-    \li \l{Cannot Combine Value Source And Binding}
-    \li \l{Duplicate Value Source On Property}
-\endlist
+\qmllintwarningcategory duplicate-property-binding
 
-\section1 Duplicate Interceptor On Property
+\section1 Duplicate interceptor on property
 
 \section2 What happened?
 One property has multiple \l{Property Modifier Types}{interceptors}.
@@ -38,7 +33,7 @@ Rectangle {
     }
 }
 \endqml
-You can fix this warning by removing all but one \l{Behavior}:
+To fix this warning, remove all but one \l{Behavior}:
 \qml
 import QtQuick
 
@@ -51,7 +46,7 @@ Rectangle {
 
 \b {See also} \l {Property Modifier Types}.
 
-\section1 Duplicate Value Source On Property
+\section1 Duplicate value source on property
 
 \section2 What happened?
 One property has multiple \l{Property Value Sources}{value sources}.
@@ -75,7 +70,7 @@ Rectangle {
 
 If you check the output of that program, you will see that the two NumberAnimation will interleave
 each other, which is probably not the effect that was intended.
-You can fix this warning by removing all but one \l{NumberAnimation}:
+To fix this warning, remove all but one \l{NumberAnimation}:
 \qml
 import QtQuick
 
@@ -85,7 +80,7 @@ Rectangle {
 \endqml
 
 
-\section1 Cannot Combine Value Source And Binding
+\section1 Cannot combine value source and binding
 
 \section2 What happened?
 One property has a \l{Property Value Sources}{value source} and a binding on the same property.

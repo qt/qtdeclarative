@@ -8,6 +8,8 @@
 \title Missing enum entry
 \brief Enum value is missing from its declaration.
 
+\qmllintwarningcategory missing-enum-entry
+
 \section1 Is not an entry of enum
 
 \section2 What happened?

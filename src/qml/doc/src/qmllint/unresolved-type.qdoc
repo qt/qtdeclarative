@@ -22,11 +22,7 @@ This category contains following warnings:
 These warnings usually indicate missing imports or faulty QML modules, depending
 on whether you are using or writing a QML module.
 
-This page is split in two parts:
-\list
- \li \l{For QML module users}
- \li \l{For QML module authors}
-\endlist
+\qmllintwarningcategory unresolved-type
 
 \section1 For QML module users
 

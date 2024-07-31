@@ -5,10 +5,12 @@
 \page qmllint-warnings-and-errors-inheritance-cycle.html
 \ingroup qmllint-warnings-and-errors
 
-\title Inheritance Cycle
+\title Inheritance cycle
 \brief A component inherits from itself.
 
-\section1 Component Is Part Of An Inheritance Cycle
+\qmllintwarningcategory inheritance-cycle
+
+\section1 Component is part of an inheritance cycle
 
 \section2 What happened?
 A component inherited directly or indirectly from itself.
@@ -32,7 +34,7 @@ Item {
     component C2: C{}
 }
 \endqml
-You can fix this warning by breaking up the inheritance cycle
+To fix this warning, break up the inheritance cycle:
 \qml
 import QtQuick
 
