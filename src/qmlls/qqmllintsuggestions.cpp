@@ -141,10 +141,10 @@ static Diagnostic createMissingBuildDirDiagnostic()
     Position &positionEnd = range.end;
     positionEnd.line = 1;
     diagnostic.message =
-            "qmlls could not find a build directory, without a build directory "
-            "containing a current build there could be spurious warnings, you might "
-            "want to pass the --build-dir <buildDir> option to qmlls, or set the "
-            "environment variable QMLLS_BUILD_DIRS.";
+            "qmlls couldn't find a build directory. Pass the \"--build-dir <buildDir>\" option to "
+            "qmlls, set the environment variable \"QMLLS_BUILD_DIRS\", or create a .qmlls.ini "
+            "configuration file with a \"buildDir\" value in your project's source folder to avoid "
+            "spurious warnings";
     diagnostic.source = QByteArray("qmllint");
     return diagnostic;
 }
