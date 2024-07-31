@@ -28,11 +28,14 @@ class MyListModel : QtAbstractListModel() {
     private val m_dataList = ArrayList<String>()
 
     init {
-        for (row in 0..4) {
-            m_dataList.add(UUID.randomUUID().toString())
+        synchronized(this) {
+            for (row in 0..4) {
+                m_dataList.add(UUID.randomUUID().toString())
+            }
         }
     }
 
+    @Synchronized
     override fun data(qtModelIndex: QtModelIndex, role: Int): Any {
         return when (DataRole.valueOf(role)) {
             DataRole.UUID -> "UUID: " + m_dataList[qtModelIndex.row()]
@@ -41,10 +44,12 @@ class MyListModel : QtAbstractListModel() {
         }
     }
 
+    @Synchronized
     override fun rowCount(qtModelIndex: QtModelIndex?): Int {
         return m_dataList.size
     }
 
+    @Synchronized
     override fun roleNames(): HashMap<Int, String> {
         val m_roles = HashMap<Int, String>()
         m_roles[DataRole.UUID.value()] = "id"
@@ -52,12 +57,14 @@ class MyListModel : QtAbstractListModel() {
         return m_roles
     }
 
+    @Synchronized
     fun addRow() {
         beginInsertRows(QtModelIndex(), m_dataList.size, m_dataList.size)
         m_dataList.add(UUID.randomUUID().toString())
         endInsertRows()
     }
 
+    @Synchronized
     fun removeRow() {
         if (!m_dataList.isEmpty()) {
             beginRemoveRows(QtModelIndex(), m_dataList.size - 1, m_dataList.size - 1)
