@@ -48,17 +48,18 @@ public class MyDataModel extends QtAbstractItemModel {
     public MyDataModel() {
     //! [1]
         final int initializingRowAndColumnCount = m_columns;
-        for (int rows = 0 ; rows < initializingRowAndColumnCount; rows++) {
-            ArrayList<Cell> newRow = new ArrayList<>();
-            for (int columns = 0; columns < initializingRowAndColumnCount; columns++) {
-                String column = String.valueOf((char) (m_firstLatinLetter+columns));
-                Cell newCell = new Cell((rows+1), column);
-                newRow.add(newCell);
+        synchronized (this) {
+            for (int rows = 0; rows < initializingRowAndColumnCount; rows++) {
+                ArrayList<Cell> newRow = new ArrayList<>();
+                for (int columns = 0; columns < initializingRowAndColumnCount; columns++) {
+                    String column = String.valueOf((char) (m_firstLatinLetter + columns));
+                    Cell newCell = new Cell((rows + 1), column);
+                    newRow.add(newCell);
+                }
+                m_dataList.add(newRow);
             }
-            m_dataList.add(newRow);
         }
     }
-
     //! [2]
     /*
     * Returns the count of columns.
@@ -66,7 +67,7 @@ public class MyDataModel extends QtAbstractItemModel {
     * Threading: called in Qt qtMainLoopThread thread context.
     */
     @Override
-    public int columnCount(QtModelIndex qtModelIndex) {
+    synchronized public int columnCount(QtModelIndex qtModelIndex) {
         return m_columns;
     }
 
@@ -76,7 +77,7 @@ public class MyDataModel extends QtAbstractItemModel {
     * Threading: called in Qt qtMainLoopThread thread context.
     */
     @Override
-    public int rowCount(QtModelIndex qtModelIndex) {
+    synchronized public int rowCount(QtModelIndex qtModelIndex) {
         return m_dataList.size();
     }
     //! [2]
@@ -87,7 +88,7 @@ public class MyDataModel extends QtAbstractItemModel {
     * Threading: called in Qt qtMainLoopThread thread context.
     */
     @Override
-    public Object data(QtModelIndex qtModelIndex, int role) {
+    synchronized public Object data(QtModelIndex qtModelIndex, int role) {
         switch (role) {
             case ROLE_ROW:
                 Cell elementForRow = m_dataList.get(qtModelIndex.row()).get(qtModelIndex.column());
@@ -108,7 +109,7 @@ public class MyDataModel extends QtAbstractItemModel {
     * Threading: called in Qt qtMainLoopThread thread context.
     */
     @Override
-    public HashMap<Integer, String> roleNames() {
+    synchronized public HashMap<Integer, String> roleNames() {
         HashMap<Integer, String> roles = new HashMap<>();
         roles.put(ROLE_ROW, "row");
         roles.put(ROLE_COLUMN, "column");
@@ -120,7 +121,7 @@ public class MyDataModel extends QtAbstractItemModel {
     * Threading: called in Qt qtMainLoopThread thread context.
     */
     @Override
-    public QtModelIndex index(int row, int column, QtModelIndex parent) {
+    synchronized public QtModelIndex index(int row, int column, QtModelIndex parent) {
         return createIndex(row, column, 0);
     }
 
@@ -129,7 +130,7 @@ public class MyDataModel extends QtAbstractItemModel {
     * Threading: not used called in this example.
     */
     @Override
-    public QtModelIndex parent(QtModelIndex qtModelIndex) {
+    synchronized public QtModelIndex parent(QtModelIndex qtModelIndex) {
         return new QtModelIndex();
     }
     //! [3]
@@ -139,7 +140,7 @@ public class MyDataModel extends QtAbstractItemModel {
     * Adds a row.
     * Threading: called in Android main thread context.
     */
-    public void addRow() {
+    synchronized public void addRow() {
         if (m_columns > 0 && m_dataList.size() < MAX_ROWS_AND_COLUMNS) {
             beginInsertRows(new QtModelIndex(), m_dataList.size(), m_dataList.size());
             m_dataList.add(generateRow());
@@ -151,7 +152,7 @@ public class MyDataModel extends QtAbstractItemModel {
     * Removes a row.
     * Threading: called in Android main thread context.
     */
-    public void removeRow() {
+    synchronized public void removeRow() {
         if (m_dataList.size() > 1) {
             beginRemoveRows(new QtModelIndex(), m_dataList.size() - 1, m_dataList.size() - 1);
             m_dataList.remove(m_dataList.size() - 1);
@@ -165,7 +166,7 @@ public class MyDataModel extends QtAbstractItemModel {
     * Adds a column.
     * Threading: called in Android main thread context.
     */
-    public void addColumn() {
+    synchronized public void addColumn() {
         if (!m_dataList.isEmpty() && m_columns < MAX_ROWS_AND_COLUMNS) {
             beginInsertColumns(new QtModelIndex(), m_columns, m_columns);
             generateColumn();
@@ -178,7 +179,7 @@ public class MyDataModel extends QtAbstractItemModel {
     * Removes a column.
     * Threading: called in Android main thread context.
     */
-    public void removeColumn() {
+    synchronized public void removeColumn() {
         if (m_columns > 1) {
             int columnToRemove = m_columns - 1;
             beginRemoveColumns(new QtModelIndex(), columnToRemove, columnToRemove);
@@ -188,7 +189,7 @@ public class MyDataModel extends QtAbstractItemModel {
     }
     //! [5]
 
-    private void generateColumn() {
+    synchronized private void generateColumn() {
         int amountOfRows = m_dataList.size();
         ArrayList<Cell> lastRow = m_dataList.get(amountOfRows-1);
         String lastColumn = "";
@@ -212,7 +213,7 @@ public class MyDataModel extends QtAbstractItemModel {
         }
     }
 
-    private ArrayList<Cell> generateRow() {
+    synchronized private ArrayList<Cell> generateRow() {
         ArrayList<Cell> newRow = null;
         int amountOfRows = m_dataList.size();
         if (amountOfRows == 0) {
@@ -223,7 +224,7 @@ public class MyDataModel extends QtAbstractItemModel {
         }
         return newRow;
     }
-    private ArrayList<Cell> generateFirstRow(int amountOfRows){
+    synchronized private ArrayList<Cell> generateFirstRow(int amountOfRows){
         ArrayList<Cell> newRow = new ArrayList<Cell>();
         for (int count = 0; count < m_columns; count++) {
             String column = String.valueOf((char) (m_firstLatinLetter + count));
@@ -233,7 +234,7 @@ public class MyDataModel extends QtAbstractItemModel {
         return newRow;
     }
 
-    private ArrayList<Cell> generateNewRow(int amountOfRows){
+    synchronized private ArrayList<Cell> generateNewRow(int amountOfRows){
         ArrayList<Cell> newRow = new ArrayList<Cell>();
         ArrayList<Cell> lastRow = m_dataList.get(amountOfRows-1);
         for (Cell column : lastRow) {
