@@ -5,10 +5,12 @@
 \page qmllint-warnings-and-errors-unresolved-alias.html
 \ingroup qmllint-warnings-and-errors
 
-\title Unresolved Alias
+\title Unresolved alias
 \brief Property of property alias was not found.
 
-\section1 Unresolved Alias
+\qmllintwarningcategory unresolved-alias
+
+\section1 Unresolved alias
 
 \section2 What happened?
 A property alias should hold a reference to another property, see also
@@ -33,7 +35,7 @@ Item {
 }
 
 \endqml
-You can fix this warning by making sure that the id and the properties of the alias property
+To fix this warning, make sure that the id and the property of the alias property
 really do exist:
 \qml
 import QtQuick

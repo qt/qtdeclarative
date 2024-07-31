@@ -8,15 +8,7 @@
 \title Use proper function
 \brief Calling something that might not be a function.
 
-This warning category has multiple warnings:
-\list
- \li \l{Property is a variant property: It may or may not be a method}
- \li \l{Property is a QJSValue property: It may or may not be a method}
- \li \l{Signal is shadowed by a property}
- \li \l{Method is shadowed by a property}
- \li \l{Slot is shadowed by a property}
- \li \l{Property is not a method}
-\endlist
+\qmllintwarningcategory use-proper-function
 
 \section1 Property is a variant property: It may or may not be a method
 

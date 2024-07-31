@@ -8,6 +8,8 @@
 \title Restricted type
 \brief A restricted type was accessed.
 
+\qmllintwarningcategory restricted-type
+
 \section1 You can't access an unscoped enum from here
 
 \section2 What happened?

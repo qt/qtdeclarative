@@ -8,6 +8,8 @@
 \title Invalid qmllint directives
 \brief Invalid qmllint comments.
 
+\qmllintwarningcategory invalid-lint-directive
+
 \section1 Invalid qmllint directive provided
 
 \section2 What happened?

@@ -8,13 +8,7 @@
 \title Uncreatable type
 \brief Types that can't be created.
 
-This warning category has multiple warnings:
-\list
- \li \l{Namespace must start with an upper case letter}
- \li \l{Singleton type is not creatable}
- \li \l{Type is not creatable}
-\endlist
-
+\qmllintwarningcategory uncreatable-type
 
 \section1 Namespace must start with an upper case letter
 

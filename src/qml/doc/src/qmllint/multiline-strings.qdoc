@@ -8,6 +8,8 @@
 \title Multiline strings
 \brief A string is spanning over multiple lines.
 
+\qmllintwarningcategory multiline-strings
+
 \section1 String contains unescaped line terminator, which is deprecated
 
 \section2 What happened?
