@@ -18,6 +18,8 @@
 #include <QtGui/qkeysequence.h>
 #endif
 
+#include <QtGui/qfontvariableaxis.h>
+
 #include <QtQml/qqml.h>
 
 //
@@ -113,6 +115,14 @@ namespace QEventPointForeignNamespace
     QML_FOREIGN_NAMESPACE(QEventPointDerived)
     QML_NAMED_ELEMENT(EventPoint)
     QML_ADDED_IN_VERSION(6, 6)
+};
+
+struct QFontVariableAxisForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(6, 9)
+    QML_FOREIGN(QFontVariableAxis)
 };
 
 QT_END_NAMESPACE

@@ -413,6 +413,13 @@ enum HintingPreference {
     PreferFullHinting = QFont::PreferFullHinting
 };
 Q_ENUM_NS(HintingPreference)
+
+enum Style {
+    StyleNormal = QFont::StyleNormal,
+    StyleItalic = QFont::StyleItalic,
+    StyleOblique = QFont::StyleOblique,
+};
+Q_ENUM_NS(Style)
 };
 
 class Q_QUICK_EXPORT QQuickFontValueType
