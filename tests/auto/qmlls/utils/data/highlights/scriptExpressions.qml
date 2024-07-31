@@ -111,6 +111,11 @@ function createComplexExpression(...objects) {
         const { patron, b: { mafik, d: { e, f: [ , secondF, ...restF ] } }, g: [ firstG, ...restG ] } = complicatedObject;
     }
 
-
+    function someKeywords() {
+        const a = this.x;
+        super()
+        super.f()
+        return new Date ();
+    }
 }
 
