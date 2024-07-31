@@ -1863,6 +1863,10 @@ std::optional<ExpressionType> resolveExpressionType(const QQmlJS::Dom::DomItem &
                                {},
                                QualifiedModuleIdentifier };
     }
+    case DomType::ScriptNewMemberExpression: {
+        const auto name = item.field(Fields::base).value().toString();
+        return ExpressionType{ name, {}, JavaScriptIdentifier };
+    }
     default: {
         qCDebug(QQmlLSUtilsLog) << "Type" << item.internalKindStr()
                                 << "is unimplemented in QQmlLSUtils::resolveExpressionType";
