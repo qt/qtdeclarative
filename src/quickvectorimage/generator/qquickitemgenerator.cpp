@@ -86,7 +86,7 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
     m_items.pop();
 }
 
-void QQuickItemGenerator::generatePath(const PathNodeInfo &info)
+void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &overrideBoundingRect)
 {
     if (!isNodeVisible(info))
         return;
@@ -94,7 +94,7 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info)
     if (m_inShapeItem) {
         if (!info.isDefaultTransform)
             qCWarning(lcQuickVectorImage) << "Skipped transform for node" << info.nodeId << "type" << info.typeName << "(this is not supposed to happen)";
-        optimizePaths(info);
+        optimizePaths(info, overrideBoundingRect);
     } else {
         auto *shapeItem = new QQuickShape;
         if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer))
@@ -106,7 +106,7 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info)
 
         generateNodeBase(info);
 
-        optimizePaths(info);
+        optimizePaths(info, overrideBoundingRect);
         //qCDebug(lcQuickVectorGraphics) << *node->qpath();
         m_items.pop();
         m_inShapeItem = false;
