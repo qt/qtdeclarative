@@ -9,7 +9,7 @@ import android.widget.Button
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 
-import org.qtproject.example.abstractlistmodel_qml.QmlModule.Main
+import org.qtproject.example.qtabstractlistmodel.QmlModule.Main
 import org.qtproject.qt.android.QtQmlStatus
 import org.qtproject.qt.android.QtQmlStatusChangeListener
 import org.qtproject.qt.android.QtQuickView

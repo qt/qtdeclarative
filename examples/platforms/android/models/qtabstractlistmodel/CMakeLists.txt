@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 cmake_minimum_required(VERSION 3.16)
 
-project(abstractlistmodel_qml VERSION 0.1 LANGUAGES CXX)
+project(qtabstractlistmodel VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -10,22 +10,22 @@ find_package(Qt6 6.8 REQUIRED COMPONENTS Quick)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-qt_add_executable(abstractlistmodel_qml
+qt_add_executable(qtabstractlistmodel
     main.cpp
 )
 
-qt_add_qml_module(abstractlistmodel_qml
+qt_add_qml_module(qtabstractlistmodel
     URI QmlModule
     VERSION 1.0
     QML_FILES Main.qml
 )
 
-target_link_libraries(abstractlistmodel_qml PRIVATE
+target_link_libraries(qtabstractlistmodel PRIVATE
     Qt6::Quick
 )
 
 include(GNUInstallDirs)
-install(TARGETS abstractlistmodel_qml
+install(TARGETS qtabstractlistmodel
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
