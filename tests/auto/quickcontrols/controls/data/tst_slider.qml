@@ -692,7 +692,9 @@ TestCase {
     function test_wheel_data() {
         return [
             { tag: "horizontal", orientation: Qt.Horizontal, dx: 120, dy: 0 },
-            { tag: "vertical", orientation: Qt.Vertical, dx: 0, dy: 120 }
+            { tag: "vertical", orientation: Qt.Vertical, dx: 0, dy: 120 },
+            { tag: "mostlyHorizontal", orientation: Qt.Horizontal, dx: 120, dy: 1 },
+            { tag: "mostlyVertical", orientation: Qt.Vertical, dx: 1, dy: 120 },
         ]
     }
 
