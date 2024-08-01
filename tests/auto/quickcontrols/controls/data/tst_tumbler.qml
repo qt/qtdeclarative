@@ -1237,15 +1237,46 @@ TestCase {
             height: 200
             delegate: Text {text: modelData}
             model: 10
-            currentIndex: 4
+            currentIndex: 1
+        }
+    }
+    //QTBUG-127315
+    Component {
+        id: initialCurrentIndexTumblerNoDelegate
+
+        Tumbler {
+            anchors.centerIn: parent
+            width: 60
+            height: 200
+            model: 10
         }
     }
 
-    function test_initialCurrentIndex() {
-        var tumbler = createTemporaryObject(initialCurrentIndexTumbler, testCase, {wrap: true});
-        compare(tumbler.currentIndex, 4);
-        tumbler = createTemporaryObject(initialCurrentIndexTumbler, testCase, {wrap: false});
-        compare(tumbler.currentIndex, 4);
+    function test_initialCurrentIndex_data() {
+        return [
+            { tag: "delegate: true, wrap: true, currentIndex: 1",
+                component: initialCurrentIndexTumbler, wrap: true, currentIndex: 1 },
+            { tag: "delegate: true, wrap: false, currentIndex: 1",
+                component: initialCurrentIndexTumbler, wrap: false, currentIndex: 1 },
+            { tag: "delegate: false, wrap: true, currentIndex: 1",
+                component: initialCurrentIndexTumblerNoDelegate, wrap: true, currentIndex: 1 },
+            { tag: "delegate: false, wrap: false, currentIndex: 1",
+                component: initialCurrentIndexTumblerNoDelegate, wrap: false, currentIndex: 1 },
+            { tag: "delegate: true, wrap: true, currentIndex: 4",
+                component: initialCurrentIndexTumbler, wrap: true, currentIndex: 4 },
+            { tag: "delegate: true, wrap: false, currentIndex: 4",
+                component: initialCurrentIndexTumbler, wrap: false, currentIndex: 4 },
+            { tag: "delegate: false, wrap: true, currentIndex: 4",
+                component: initialCurrentIndexTumblerNoDelegate, wrap: true, currentIndex: 4 },
+            { tag: "delegate: false, wrap: false, currentIndex: 4",
+                component: initialCurrentIndexTumblerNoDelegate, wrap: false, currentIndex: 4 },
+        ]
+    }
+
+    function test_initialCurrentIndex(data) {
+        let tumbler = createTemporaryObject(data.component, testCase,
+                                            {wrap: data.wrap, currentIndex: data.currentIndex});
+        compare(tumbler.currentIndex, data.currentIndex);
     }
 
     // QTBUG-109995
