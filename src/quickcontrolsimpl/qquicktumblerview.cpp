@@ -159,9 +159,25 @@ void QQuickTumblerView::createView()
             // the view animates any potential currentIndex change over one second,
             // which we don't want when the contentItem has just been created.
             m_listView->setDelegate(m_delegate);
+
+            QQuickTumblerPrivate *tumblerPrivate = QQuickTumblerPrivate::get(m_tumbler);
+            // Ignore currentIndex change:
+            // If the view's currentIndex is changed by setHighlightRangeMode(),
+            // it will be reset later.
+            tumblerPrivate->ignoreCurrentIndexChanges = true;
             // Set this after setting the delegate to avoid unexpected currentIndex changes: QTBUG-79150
             m_listView->setHighlightRangeMode(QQuickListView::StrictlyEnforceRange);
             m_listView->setHighlightMoveDuration(1000);
+            tumblerPrivate->ignoreCurrentIndexChanges = false;
+
+            // Reset the view's current index when creating the view:
+            // Setting highlight range mode causes geometry change, and
+            // then the view considers the viewport has moved (viewportMoved()).
+            // The view will update the currentIndex due to the viewport movement.
+            // Here, we check that if the view's currentIndex is not the same as it is
+            // supposed to be (the initial value), and then reset the view's currentIndex.
+            if (m_listView->currentIndex() != tumblerPrivate->currentIndex)
+                m_listView->setCurrentIndex(tumblerPrivate->currentIndex);
 
             qCDebug(lcTumblerView) << "finished creating ListView";
         }
