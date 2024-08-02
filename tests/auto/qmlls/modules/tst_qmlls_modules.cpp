@@ -4,6 +4,7 @@
 #include "tst_qmlls_modules.h"
 #include "QtQmlLS/private/qqmllsutils_p.h"
 #include "QtQmlLS/private/qqmlsemantictokens_p.h"
+#include "QtQmlLS/private/documentsymbolutils_p.h"
 #include <algorithm>
 #include <memory>
 #include <optional>
@@ -1810,10 +1811,231 @@ void tst_qmlls_modules::semanticHighlightingDelta()
     }
 }
 
+static bool compareRanges(const Range &lhs, const Range &rhs)
+{
+    return lhs.start.line == rhs.start.line && lhs.start.character == rhs.start.character
+            && lhs.end.line == rhs.end.line && lhs.end.character == rhs.end.character;
+}
+
+static void debugPrint(const Range &range)
+{
+    qDebug() << '{' << range.start.line << ',' << range.start.character << '}' << ',' << '{'
+             << range.end.line << ',' << range.end.character << '}';
+}
+
+static bool compareDocumentSymbols(const DocumentSymbol &current, const DocumentSymbol &expected)
+{
+    // For details about comparison see comment in documentSymbolsExpectedResult
+
+    if (current.name.isEmpty() || current.kind == SymbolKind{})
+        return false;
+
+    if (current.tags != expected.tags || current.deprecated != expected.deprecated) {
+        return false;
+    }
+
+    using namespace QQmlJS::Dom;
+    QmlObject qmlObj;
+    DomItem qmlObjectItem = DomItem(DomEnvironment::create({})).copy(&qmlObj);
+    const auto qmlObjectKind = DocumentSymbolUtils::symbolKindOf(qmlObjectItem);
+    if (current.kind == qmlObjectKind) {
+        if (current.detail != expected.detail) {
+            qDebug() << "Current " << current.detail << " Expected " << expected.detail;
+            return false;
+        }
+    } else {
+        if (expected.detail.has_value() != current.detail.has_value()) {
+            qDebug() << current.name;
+            return false;
+        }
+    }
+    if (!compareRanges(current.range, expected.range)) {
+        qDebug() << "Current Range: ";
+        debugPrint(current.range);
+        qDebug() << " Expected ";
+        debugPrint(expected.range);
+    }
+    if (!compareRanges(current.selectionRange, expected.selectionRange)) {
+        qDebug() << "Current Selection Range: ";
+        debugPrint(current.selectionRange);
+        qDebug() << " Expected ";
+        debugPrint(expected.selectionRange);
+    }
+    // Compare children
+    if (current.children.has_value() != expected.children.has_value()) {
+        return false;
+    }
+    if (!current.children.has_value()) {
+        return true;
+    }
+    return std::equal(current.children->cbegin(), current.children->cend(),
+                      expected.children->cbegin(), expected.children->cend(),
+                      compareDocumentSymbols);
+}
+
+static bool compareDocumentSymbolsLists(const QList<DocumentSymbol> &current,
+                                        const QList<DocumentSymbol> &expected)
+{
+    return std::equal(current.cbegin(), current.cend(), expected.cbegin(), expected.cend(),
+                      compareDocumentSymbols);
+}
+
+static QList<DocumentSymbol> documentSymbolsExpectedResult()
+{
+    // What essentially needs to be compared / verified are:
+    // - ranges
+    // - there is no duplication of symbols for properties bound at definition
+    // - tags, deprecated
+    // - other detail-s, name, kind are not empty or default when they need to be present*
+    //
+    //* The last one is a bit of a short-cut**, relying that
+    // "correctness" of the assigned data is covered by unit-tests (tst_document_symbol_utils).
+    // However it still needs to be tested, that the relevant data is indeed being
+    // assigned when it should.
+    // ** I find this short-cut fair, because the feature is not so critical
+
+    // TODO(QTBUG-128277)
+
+    using namespace QQmlJS::Dom;
+    DocumentSymbol propDefA;
+    propDefA.range = { { 4, 4 }, { 4, 18 } };
+    propDefA.selectionRange = { { 4, 17 }, { 4, 18 } };
+
+    // Simple bindings---------------------------------------------------
+    DocumentSymbol bindingA;
+    bindingA.range = { { 5, 4 }, { 5, 19 } };
+    bindingA.selectionRange = { { 5, 4 }, { 5, 5 } };
+    bindingA.detail = QByteArray{};
+
+    DocumentSymbol bindingB;
+    bindingB.range = bindingB.selectionRange = { { 6, 4 }, { 6, 22 } };
+    bindingB.detail = QByteArray{};
+
+    DocumentSymbol bindingC;
+    bindingC.range = bindingC.selectionRange = { { 7, 4 }, { 7, 47 } };
+    bindingC.detail = QByteArray{};
+
+    // list<Rectangle> binding-------------------------------------------
+    DocumentSymbol bindingColorRed;
+    bindingColorRed.range = { { 11, 20 }, { 11, 32 } };
+    bindingColorRed.selectionRange = { { 11, 20 }, { 11, 25 } };
+    bindingColorRed.detail = QByteArray{};
+
+    DocumentSymbol redRect;
+    redRect.range = redRect.selectionRange = { { 11, 8 }, { 11, 34 } };
+    redRect.children = { bindingColorRed };
+
+    DocumentSymbol bindingColorBlue;
+    bindingColorBlue.range = { { 12, 20 }, { 12, 33 } };
+    bindingColorBlue.selectionRange = { { 12, 20 }, { 12, 25 } };
+    bindingColorBlue.detail = QByteArray{};
+
+    DocumentSymbol blueRect;
+    blueRect.range = blueRect.selectionRange = { { 12, 8 }, { 12, 34 } };
+    blueRect.children = { bindingColorBlue };
+
+    DocumentSymbol bindingD;
+    bindingD.range = bindingD.selectionRange = { { 10, 29 }, { 13, 5 } };
+    bindingD.children = { redRect, blueRect };
+
+    // Binding : Item{}-------------------------------------------------
+    DocumentSymbol itemE;
+    itemE.range = itemE.selectionRange = { { 14, 20 }, { 14, 26 } };
+    DocumentSymbol bindingE;
+    bindingE.range = { { 14, 17 }, { 14, 26 } };
+    bindingE.selectionRange = { { 14, 17 }, { 14, 18 } };
+    bindingE.children = { itemE };
+
+    // Methods and Signals----------------------------------------------
+    DocumentSymbol f;
+    f.range = { { 17, 4 }, { 17, 18 } };
+    f.selectionRange = { { 17, 13 }, { 17, 14 } };
+    f.detail = QByteArray{};
+
+    DocumentSymbol signalG;
+    signalG.range = { { 18, 4 }, { 18, 20 } };
+    signalG.selectionRange = { { 18, 11 }, { 18, 12 } };
+    signalG.detail = QByteArray{};
+
+    DocumentSymbol h;
+    h.range = { { 19, 4 }, { 19, 39 } };
+    h.selectionRange = { { 19, 13 }, { 19, 14 } };
+    h.detail = QByteArray{};
+
+    // Child obj & hierarchy----------------------------------------------
+    DocumentSymbol inlCmpRootObj;
+    inlCmpRootObj.detail = QString("root").toUtf8();
+    inlCmpRootObj.range = { { 23, 26 }, { 23, 33 } };
+    inlCmpRootObj.selectionRange = { { 23, 26 }, { 23, 30 } };
+
+    DocumentSymbol inlCmp;
+    inlCmp.range = { { 23, 8 }, { 23, 33 } };
+    inlCmp.selectionRange = { { 23, 18 }, { 23, 24 } };
+    inlCmp.children = { inlCmpRootObj };
+
+    // Button and Enum----------------------------------------------
+    DocumentSymbol enumMember;
+    enumMember.range = enumMember.selectionRange = { { 27, 31 }, { 27, 36 } };
+    enumMember.detail = QByteArray{};
+    DocumentSymbol enumDecl;
+    enumDecl.range = { { 27, 12 }, { 27, 38 } };
+    enumDecl.selectionRange = { { 27, 17 }, { 27, 28 } };
+    enumDecl.children = { enumMember };
+
+    DocumentSymbol buttonId;
+    // TODO(QTBUG-128277) Why there is no IdentifierRegion for this???
+    buttonId.range = buttonId.selectionRange = { { 25, 12 }, { 25, 22 } };
+    buttonId.detail = QByteArray{};
+
+    DocumentSymbol button;
+    button.detail = QString("button").toUtf8();
+    button.range = { { 24, 8 }, { 28, 9 } };
+    button.selectionRange = { { 24, 8 }, { 24, 14 } };
+    button.children = { buttonId, enumDecl };
+
+    DocumentSymbol childObj;
+    childObj.range = { { 22, 4 }, { 29, 5 } };
+    childObj.selectionRange = { { 22, 4 }, { 22, 13 } };
+    childObj.children = {
+        button, inlCmp
+    }; // during rearrangement cmp is pushed down only after button is added
+
+    DocumentSymbol rootItem;
+    rootItem.detail = QString("root").toUtf8();
+    rootItem.range = { { 2, 0 }, { 30, 1 } };
+    rootItem.selectionRange = { { 2, 0 }, { 2, 4 } };
+    rootItem.children = { propDefA, bindingA, bindingB, bindingC, bindingD,
+                          bindingE, f,        signalG,  h,        childObj };
+
+    return { rootItem };
+}
+
 void tst_qmlls_modules::documentSymbols()
 {
-    QEXPECT_FAIL(0, "to be implemented", Abort);
-    QVERIFY(false);
+    QString filePath("documentSymbol/DocumentSymbolTest.qml");
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    QLspSpecification::DocumentSymbolParams params;
+    params.textDocument.uri = *uri;
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    const auto cleanup = [didFinish]() { *didFinish = true; };
+
+    auto &&responseHandler = [&](auto res) {
+        QScopeGuard callAtExit(cleanup);
+        const auto result = std::get_if<QList<DocumentSymbol>>(&res);
+        QVERIFY(result);
+        auto expectedResult = documentSymbolsExpectedResult();
+        compareDocumentSymbolsLists(*result, expectedResult);
+    };
+
+    auto &&errorHandler = [&](auto &error) {
+        QScopeGuard callAtExit(cleanup);
+        ProtocolBase::defaultResponseErrorHandler(error);
+    };
+
+    m_protocol->requestDocumentSymbol(params, std::move(responseHandler), std::move(errorHandler));
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
 }
 
 QTEST_MAIN(tst_qmlls_modules)
