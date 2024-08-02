@@ -1149,25 +1149,46 @@ TestCase {
         }
     }
 
-    function test_setCurrentIndexOnImperativeModelChange() {
-        var tumbler = createTemporaryObject(setCurrentIndexOnImperativeModelChangeComponent, testCase);
-        verify(tumbler);
+    function test_setCurrentIndexOnImperativeModelChange_data() {
+        return [
+            { tag: "default wrap", setWrap: false, initialWrap: false, newWrap: true },
+            { tag: "wrap=false", setWrap: true, initialWrap: false, newWrap: false },
+            { tag: "wrap=true", setWrap: true, initialWrap: true, newWrap: true },
+        ]
+    }
 
-        tumbler.model = 4
-        compare(tumbler.count, 4);
-        tumblerView = findView(tumbler);
-        tryCompare(tumblerView, "count", 4);
+    function test_setCurrentIndexOnImperativeModelChange(data) {
+        let tumbler = createTemporaryObject(setCurrentIndexOnImperativeModelChangeComponent, testCase,
+                                            data.setWrap ? {wrap: data.initialWrap} : {})
+        verify(tumbler)
 
-        // 4 - 2 = 2
-        compare(tumbler.currentIndex, 2);
+        let model = 4
+        let expectedCurrentIndex = model - 2
 
-        ++tumbler.model;
-        compare(tumbler.count, 5);
-        compare(tumbler.wrap, true);
-        tumblerView = findView(tumbler);
-        tryCompare(tumblerView, "count", 5);
-        // 5 - 2 = 3
-        compare(tumbler.currentIndex, 3);
+        tumbler.model = model
+
+        compare(tumbler.count, model)
+        compare(tumbler.wrap, data.initialWrap)
+        compare(tumbler.currentIndex, expectedCurrentIndex)
+
+        let tumblerView = findView(tumbler)
+        verify(tumblerView)
+        tryCompare(tumblerView, "count", model)
+        tryCompare(tumblerView, "currentIndex", expectedCurrentIndex)
+
+        model = 5
+        expectedCurrentIndex = model - 2
+
+        tumbler.model = model
+
+        compare(tumbler.count, model)
+        compare(tumbler.wrap, data.newWrap)
+        compare(tumbler.currentIndex, expectedCurrentIndex)
+
+        tumblerView = findView(tumbler)
+        verify(tumblerView)
+        tryCompare(tumblerView, "count", model)
+        tryCompare(tumblerView, "currentIndex", expectedCurrentIndex)
     }
 
     Component {
@@ -1176,35 +1197,59 @@ TestCase {
         Item {
             property alias tumbler: tumbler
 
-            property int setting: 4
+            required property int modelValue
+            property alias tumblerWrap: tumbler.wrap
 
             Tumbler {
                 id: tumbler
-                model: setting
+                model: modelValue
                 onModelChanged: currentIndex = model - 2
             }
         }
     }
 
-    function test_setCurrentIndexOnDeclarativeModelChange() {
-        var root = createTemporaryObject(setCurrentIndexOnDeclarativeModelChangeComponent, testCase);
-        verify(root);
+    function test_setCurrentIndexOnDeclarativeModelChange_data() {
+        return [
+            { tag: "default wrap", setWrap: false, initialWrap: false, newWrap: true },
+            { tag: "wrap=false", setWrap: true, initialWrap: false, newWrap: false },
+            { tag: "wrap=true", setWrap: true, initialWrap: true, newWrap: true },
+        ]
+    }
 
-        var tumbler = root.tumbler;
-        compare(tumbler.count, 4);
-        compare(tumbler.wrap, false);
-        tumblerView = findView(tumbler);
-        tryCompare(tumblerView, "count", 4);
-        // 4 - 2 = 2
-        compare(tumbler.currentIndex, 2);
+    function test_setCurrentIndexOnDeclarativeModelChange(data) {
+        let model = 4
+        let expectedCurrentIndex = model - 2
 
-        ++root.setting;
-        compare(tumbler.count, 5);
-        compare(tumbler.wrap, true);
-        tumblerView = findView(tumbler);
-        tryCompare(tumblerView, "count", 5);
-        // 5 - 2 = 3
-        compare(tumbler.currentIndex, 3);
+        let root = createTemporaryObject(setCurrentIndexOnDeclarativeModelChangeComponent, testCase,
+                                         data.setWrap ? {modelValue: model, tumblerWrap: data.initialWrap}
+                                                      : {modelValue: model})
+        verify(root)
+
+        let tumbler = root.tumbler
+        verify(tumbler)
+
+        compare(tumbler.count, model)
+        compare(tumbler.wrap, data.initialWrap)
+        compare(tumbler.currentIndex, expectedCurrentIndex)
+
+        let tumberView = findView(tumbler)
+        verify(tumbler)
+        tryCompare(tumberView, "count", model)
+        tryCompare(tumberView, "currentIndex", expectedCurrentIndex)
+
+        model = 5
+        expectedCurrentIndex = model - 2
+
+        root.modelValue = model
+
+        compare(tumbler.count, model)
+        compare(tumbler.wrap, data.newWrap)
+        compare(tumbler.currentIndex, expectedCurrentIndex)
+
+        tumberView = findView(tumbler)
+        verify(tumbler)
+        tryCompare(tumberView, "count", model)
+        tryCompare(tumberView, "currentIndex", expectedCurrentIndex)
     }
 
     function test_displacementAfterResizing() {
