@@ -9,6 +9,7 @@
 #include <QtQmlCompiler/private/qqmljslinter_p.h>
 #include <QtQmlCompiler/private/qqmlsa_p.h>
 #include <QtCore/qplugin.h>
+#include <QtCore/qcomparehelpers.h>
 
 Q_IMPORT_PLUGIN(LintPlugin)
 
@@ -30,7 +31,7 @@ public:
 
     struct Result
     {
-        enum Flag { ExitsNormally = 0x1, NoMessages = 0x2, AutoFixable = 0x4 };
+        enum Flag { ExitsNormally = 0x1, NoMessages = 0x2, AutoFixable = 0x4, HasDuplicates = 0x8 };
 
         Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -613,14 +614,23 @@ void TestQmllint::dirtyQmlCode_data()
             << Result { { Message { QStringLiteral(
                        "Cannot assign binding of type QQuickItem to QQuickAnchorLine") } } };
     QTest::newRow("nanchors1") << QStringLiteral("nanchors1.qml")
-                               << Result { { Message { QStringLiteral(
-                                          "unknown grouped property scope nanchors.") } } };
+                               << Result{ { Message{ QStringLiteral(
+                                                  "unknown grouped property scope nanchors.") } },
+                                          {},
+                                          {},
+                                          Result::HasDuplicates };
     QTest::newRow("nanchors2") << QStringLiteral("nanchors2.qml")
-                               << Result { { Message { QStringLiteral(
-                                          "unknown grouped property scope nanchors.") } } };
+                               << Result{ { Message{ QStringLiteral(
+                                                  "unknown grouped property scope nanchors.") } },
+                                          {},
+                                          {},
+                                          Result::HasDuplicates };
     QTest::newRow("nanchors3") << QStringLiteral("nanchors3.qml")
-                               << Result { { Message { QStringLiteral(
-                                          "unknown grouped property scope nanchors.") } } };
+                               << Result{ { Message{ QStringLiteral(
+                                                  "unknown grouped property scope nanchors.") } },
+                                          {},
+                                          {},
+                                          Result::HasDuplicates };
     QTest::newRow("badAliasObject")
             << QStringLiteral("badAliasObject.qml")
             << Result { { Message { QStringLiteral("Member \"wrongwrongwrong\" not "
@@ -783,8 +793,10 @@ void TestQmllint::dirtyQmlCode_data()
                                     6, 37 } } };
     QTest::newRow("badAttachedPropertyTypeString")
             << QStringLiteral("badAttachedPropertyTypeString.qml")
-            << Result { { Message {
-                       QStringLiteral("Cannot assign literal of type string to int") } } };
+            << Result{ { Message{ QStringLiteral("Cannot assign literal of type string to int") } },
+                       {},
+                       {},
+                       Result::HasDuplicates };
     QTest::newRow("badAttachedPropertyTypeQtObject")
             << QStringLiteral("badAttachedPropertyTypeQtObject.qml")
             << Result{ { Message{
@@ -926,8 +938,12 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                        "Cannot use a non-QObject type QRectF to access prefixed import") } } };
     QTest::newRow("AssignToReadOnlyProperty")
             << QStringLiteral("assignToReadOnlyProperty.qml")
-            << Result { { Message {
-                       QStringLiteral("Cannot assign to read-only property activeFocus") } } };
+            << Result{
+                   { Message{ QStringLiteral("Cannot assign to read-only property activeFocus") } },
+                   {},
+                   {},
+                   Result::HasDuplicates
+               };
     QTest::newRow("AssignToReadOnlyProperty")
             << QStringLiteral("assignToReadOnlyProperty2.qml")
             << Result { { Message {
@@ -1098,7 +1114,10 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("unresolvedArrayBinding")
             << QStringLiteral("unresolvedArrayBinding.qml")
             << Result{ { Message{ QStringLiteral(u"Declaring an object which is not an Qml object"
-                          " as a list member.") } } };
+                                                 " as a list member.") } },
+                       {},
+                       {},
+                       Result::HasDuplicates };
     QTest::newRow("duplicatedPropertyName")
             << QStringLiteral("duplicatedPropertyName.qml")
             << Result{ { Message{ QStringLiteral("Duplicated property name \"cat\"."), 5, 5 } } };
@@ -1141,24 +1160,36 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
 
     QTest::newRow("lowerCaseQualifiedImport")
             << QStringLiteral("lowerCaseQualifiedImport.qml")
-            << Result{ {
-                       Message{ u"Import qualifier 'test' must start with a capital letter."_s },
-                       Message{
-                               u"Namespace 'test' of 'test.Rectangle' must start with an upper case letter."_s },
-               } };
+            << Result{
+                   {
+                           Message{
+                                   u"Import qualifier 'test' must start with a capital letter."_s },
+                           Message{
+                                   u"Namespace 'test' of 'test.Rectangle' must start with an upper case letter."_s },
+                   },
+                   {},
+                   {},
+                   Result::HasDuplicates
+               };
     QTest::newRow("lowerCaseQualifiedImport2")
             << QStringLiteral("lowerCaseQualifiedImport2.qml")
-            << Result{ {
-                       Message{ u"Import qualifier 'test' must start with a capital letter."_s },
-                       Message{
-                               u"Namespace 'test' of 'test.Item' must start with an upper case letter."_s },
-                       Message{
-                               u"Namespace 'test' of 'test.Rectangle' must start with an upper case letter."_s },
-                       Message{
-                               u"Namespace 'test' of 'test.color' must start with an upper case letter."_s },
-                       Message{
-                               u"Namespace 'test' of 'test.Grid' must start with an upper case letter."_s },
-               } };
+            << Result{
+                   {
+                           Message{
+                                   u"Import qualifier 'test' must start with a capital letter."_s },
+                           Message{
+                                   u"Namespace 'test' of 'test.Item' must start with an upper case letter."_s },
+                           Message{
+                                   u"Namespace 'test' of 'test.Rectangle' must start with an upper case letter."_s },
+                           Message{
+                                   u"Namespace 'test' of 'test.color' must start with an upper case letter."_s },
+                           Message{
+                                   u"Namespace 'test' of 'test.Grid' must start with an upper case letter."_s },
+                   },
+                   {},
+                   {},
+                   Result::HasDuplicates
+               };
     QTest::newRow("notQmlRootMethods")
             << QStringLiteral("notQmlRootMethods.qml")
             << Result{ {
@@ -1702,6 +1733,54 @@ void TestQmllint::runTest(const QString &testFile, const Result &result, QString
     checkResult(warnings, result);
 }
 
+static QtMsgType typeStringToMsgType(const QString &type)
+{
+    if (type == u"debug")
+        return QtDebugMsg;
+    if (type == u"info")
+        return QtInfoMsg;
+    if (type == u"warning")
+        return QtWarningMsg;
+    if (type == u"critical")
+        return QtCriticalMsg;
+    if (type == u"fatal")
+        return QtFatalMsg;
+
+    Q_UNREACHABLE();
+}
+
+struct SimplifiedWarning
+{
+    QString message;
+    quint32 line;
+    quint32 column;
+    QtMsgType type;
+
+    SimplifiedWarning(QJsonValueConstRef warning)
+        : message(warning[u"message"].toString()),
+          line(warning[u"line"].toInt()),
+          column(warning[u"column"].toInt()),
+          type(typeStringToMsgType(warning[u"type"].toString()))
+    {
+    }
+
+    QString toString() const { return u"%1:%2: %3"_s.arg(line).arg(column).arg(message); }
+
+    std::tuple<QString, quint32, quint32, QtMsgType> asTuple() const
+    {
+        return std::make_tuple(message, line, column, type);
+    }
+
+    friend bool comparesEqual(const SimplifiedWarning& a, const SimplifiedWarning& b) noexcept
+    {
+        return a.asTuple() == b.asTuple();
+    }
+    friend Qt::strong_ordering compareThreeWay(const SimplifiedWarning& a, const SimplifiedWarning& b) noexcept {
+        return QtOrderingPrivate::compareThreeWayMulti(a.asTuple(), b.asTuple());
+    }
+    Q_DECLARE_STRONGLY_ORDERED(SimplifiedWarning)
+};
+
 template<typename ExpectedMessageFailureHandler, typename BadMessageFailureHandler,
          typename ReplacementFailureHandler>
 void TestQmllint::checkResult(const QJsonArray &warnings, const Result &result,
@@ -1731,6 +1810,20 @@ void TestQmllint::checkResult(const QJsonArray &warnings, const Result &result,
         searchWarnings(warnings, replacement.text, replacement.severity, replacement.line,
                        replacement.column, StringContained, DoReplacementSearch);
     }
+
+    // check for duplicates
+    QList<SimplifiedWarning> sortedWarnings;
+    std::transform(warnings.begin(), warnings.end(), std::back_inserter(sortedWarnings),
+                   [](QJsonValueConstRef ref) { return SimplifiedWarning(ref); });
+    std::sort(sortedWarnings.begin(), sortedWarnings.end());
+    const auto firstDuplicate =
+            std::adjacent_find(sortedWarnings.constBegin(), sortedWarnings.constEnd());
+    for (auto it = firstDuplicate; it != sortedWarnings.constEnd();
+         it = std::adjacent_find(it + 1, sortedWarnings.constEnd()))
+        qDebug() << "Found duplicate warning: " << it->toString();
+    if (result.flags.testFlag(Result::HasDuplicates))
+        QEXPECT_FAIL("", "TODO: remove duplicate warnings", Continue);
+    QVERIFY2(firstDuplicate == sortedWarnings.constEnd(), "Found duplicate warnings!");
 }
 
 void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &substring,
@@ -1739,33 +1832,15 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
 {
     bool contains = false;
 
-    auto typeStringToMsgType = [](const QString &type) -> QtMsgType {
-        if (type == u"debug")
-            return QtDebugMsg;
-        if (type == u"info")
-            return QtInfoMsg;
-        if (type == u"warning")
-            return QtWarningMsg;
-        if (type == u"critical")
-            return QtCriticalMsg;
-        if (type == u"fatal")
-            return QtFatalMsg;
+    for (const QJsonValueConstRef warningJson : warnings) {
+        SimplifiedWarning warning(warningJson);
 
-        Q_UNREACHABLE();
-    };
-
-    for (const QJsonValueConstRef warning : warnings) {
-        QString warningMessage = warning[u"message"].toString();
-        quint32 warningLine = warning[u"line"].toInt();
-        quint32 warningColumn = warning[u"column"].toInt();
-        QtMsgType warningType = typeStringToMsgType(warning[u"type"].toString());
-
-        if (warningMessage.contains(substring)) {
-            if (warningType != type) {
+        if (warning.message.contains(substring)) {
+            if (warning.type != type) {
                 continue;
             }
             if (line != 0 || column != 0) {
-                if (warningLine != line || warningColumn != column) {
+                if (warning.line != line || warning.column != column) {
                     continue;
                 }
             }
@@ -1774,7 +1849,7 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
             break;
         }
 
-        for (const QJsonValueConstRef fix : warning[u"suggestions"].toArray()) {
+        for (const QJsonValueConstRef fix : warningJson[u"suggestions"].toArray()) {
             const QString fixMessage = fix[u"message"].toString();
             if (fixMessage.contains(substring)) {
                 contains = true;
@@ -2121,27 +2196,29 @@ void TestQmllint::testPlugin()
 
     runTest("elementpass_pluginTest.qml", Result { { Message { u"ElementTest OK"_s, 4, 5 } } });
     runTest("propertypass_pluginTest.qml",
-            Result {
-                    { // Specific binding for specific property
-                      Message {
+            Result{ { // Specific binding for specific property
+                      Message{
                               u"Saw binding on Text property text with value NULL (and type 3) in scope Text"_s },
 
                       // Property on any type
-                      Message { u"Saw read on Text property x in scope Text"_s },
-                      Message {
+                      Message{ u"Saw read on Text property x in scope Text"_s },
+                      Message{
                               u"Saw binding on Text property x with value NULL (and type 2) in scope Text"_s },
-                      Message { u"Saw read on Text property x in scope Item"_s },
-                      Message { u"Saw write on Text property x with value int in scope Item"_s },
-                      Message {
+                      Message{ u"Saw read on Text property x in scope Item"_s },
+                      Message{ u"Saw write on Text property x with value int in scope Item"_s },
+                      Message{
                               u"Saw binding on Item property x with value NULL (and type 2) in scope Item"_s },
                       // JavaScript
-                      Message { u"Saw read on ObjectPrototype property log in scope Item"_s },
-                      Message { u"Saw read on ObjectPrototype property log in scope Item"_s },
+                      Message{ u"Saw read on ObjectPrototype property log in scope Item"_s },
+                      Message{ u"Saw read on ObjectPrototype property log in scope Item"_s },
                       // ListModel
-                      Message {
+                      Message{
                               u"Saw binding on ListView property model with value ListModel (and type 8) in scope ListView"_s },
-                      Message {
-                              u"Saw binding on ListView property height with value NULL (and type 2) in scope ListView"_s } } });
+                      Message{
+                              u"Saw binding on ListView property height with value NULL (and type 2) in scope ListView"_s } },
+                    {},
+                    {},
+                    Result::HasDuplicates });
     runTest("controlsWithQuick_pluginTest.qml",
             Result { { Message { u"QtQuick.Controls, QtQuick and QtQuick.Window present"_s } } });
     runTest("controlsWithoutQuick_pluginTest.qml",
