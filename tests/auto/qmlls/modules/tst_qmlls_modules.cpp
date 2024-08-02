@@ -1153,11 +1153,11 @@ void tst_qmlls_modules::warnings_data()
     const QString noWarningExpected;
 
     QTest::addRow("unqualifiedAccess") << u"warnings/withoutQmllintIni/unqualifiedAccess.qml"_s
-                                       << u"Unqualified access"_s;
+                                       << u"Unqualified access [unqualified]"_s;
 
     QTest::addRow("disableUnqualifiedEnabledCompiler")
             << u"warnings/disableUnqualifiedEnableCompiler/unqualifiedAccess.qml"_s
-            << u"Could not compile binding for i: Cannot access value for name unqualifiedAccess"_s;
+            << u"Could not compile binding for i: Cannot access value for name unqualifiedAccess [compiler]"_s;
 }
 
 void tst_qmlls_modules::warnings()
