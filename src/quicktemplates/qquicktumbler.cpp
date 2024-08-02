@@ -301,6 +301,12 @@ void QQuickTumbler::setModel(const QVariant &model)
 
     d->endSetModel();
 
+    if (d->view && d->currentIndexSetDuringModelChange) {
+        const int viewCurrentIndex = d->view->property("currentIndex").toInt();
+        if (viewCurrentIndex != d->currentIndex)
+            d->view->setProperty("currentIndex", d->currentIndex);
+    }
+
     d->currentIndexSetDuringModelChange = false;
 
     // Don't try to correct the currentIndex if count() isn't known yet.
