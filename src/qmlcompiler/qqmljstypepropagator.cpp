@@ -28,25 +28,32 @@ using namespace Qt::StringLiterals;
 
 QQmlJSTypePropagator::QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                                            const QQmlJSTypeResolver *typeResolver,
-                                           QQmlJSLogger *logger, BasicBlocks basicBlocks,
+                                           QQmlJSLogger *logger,
+                                           QList<QQmlJS::DiagnosticMessage> *errors,
+                                           BasicBlocks basicBlocks,
                                            InstructionAnnotations annotations,
                                            QQmlSA::PassManager *passManager)
-    : QQmlJSCompilePass(unitGenerator, typeResolver, logger, basicBlocks, annotations),
+    : QQmlJSCompilePass(unitGenerator, typeResolver, logger, errors, basicBlocks, annotations),
       m_passManager(passManager)
 {
 }
 
-QQmlJSCompilePass::BlocksAndAnnotations QQmlJSTypePropagator::run(
-        const Function *function, QQmlJS::DiagnosticMessage *error)
+QQmlJSCompilePass::BlocksAndAnnotations QQmlJSTypePropagator::run(const Function *function)
 {
     m_function = function;
-    m_error = error;
     m_returnType = m_function->returnType;
+
+    QList<QQmlJS::DiagnosticMessage> oldErrors;
+    std::swap(oldErrors, *m_errors);
+    auto restoreErrors = qScopeGuard([&]() {
+        oldErrors << *std::move(m_errors);
+        *m_errors = std::move(oldErrors);
+    });
 
     do {
         // Reset the error if we need to do another pass
         if (m_state.needsMorePasses)
-            *m_error = QQmlJS::DiagnosticMessage();
+            m_errors->clear();
 
         m_prevStateAnnotations = m_state.annotations;
         m_state = PassState();
@@ -65,7 +72,7 @@ QQmlJSCompilePass::BlocksAndAnnotations QQmlJSTypePropagator::run(
 }
 
 #define INSTR_PROLOGUE_NOT_IMPLEMENTED()                                              \
-  setError(u"Instruction \"%1\" not implemented"_s.arg(QString::fromUtf8(__func__))); \
+  addError(u"Instruction \"%1\" not implemented"_s.arg(QString::fromUtf8(__func__))); \
   return;
 
 #define INSTR_PROLOGUE_NOT_IMPLEMENTED_IGNORE()                                                    \
@@ -96,7 +103,7 @@ void QQmlJSTypePropagator::generate_Ret()
                        m_state.accumulatorIn(), m_typeResolver->voidType())) {
         // You can always return undefined.
     } else if (!m_returnType.isValid() && m_state.accumulatorIn().isValid()) {
-        setError(u"function without return type annotation returns %1. This may prevent proper "_s
+        addError(u"function without return type annotation returns %1. This may prevent proper "_s
                  u"compilation to Cpp."_s.arg(m_state.accumulatorIn().descriptiveName()));
 
         if (m_function->isFullyTyped) {
@@ -107,7 +114,7 @@ void QQmlJSTypePropagator::generate_Ret()
         }
         return;
     } else if (!canConvertFromTo(m_state.accumulatorIn(), m_returnType)) {
-        setError(u"cannot convert from %1 to %2"_s
+        addError(u"cannot convert from %1 to %2"_s
                          .arg(m_state.accumulatorIn().descriptiveName(),
                               m_returnType.descriptiveName()));
 
@@ -263,7 +270,7 @@ void QQmlJSTypePropagator::generate_LoadName(int nameIndex)
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
     setAccumulator(m_typeResolver->scopedType(m_function->qmlScope, name));
     if (!m_state.accumulatorOut().isValid())
-        setError(u"Cannot find name "_s + name);
+        addError(u"Cannot find name "_s + name);
 }
 
 void QQmlJSTypePropagator::generate_LoadGlobalLookup(int index)
@@ -583,7 +590,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     checkDeprecated(qmlScope, name, false);
 
     if (!m_state.accumulatorOut().isValid()) {
-        setError(u"Cannot access value for name "_s + name);
+        addError(u"Cannot access value for name "_s + name);
         handleUnqualifiedAccess(name, false);
         return;
     }
@@ -591,7 +598,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     const QQmlJSRegisterContent accumulatorOut = m_state.accumulatorOut();
     if (accumulatorOut.variant() == QQmlJSRegisterContent::ObjectById
             && !m_typeResolver->genericType(accumulatorOut.containedType())->isReferenceType()) {
-        setError(u"Cannot retrieve a non-object type by ID: "_s + name);
+        addError(u"Cannot retrieve a non-object type by ID: "_s + name);
         return;
     }
 
@@ -632,7 +639,7 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
 
     if (!type.isValid()) {
         handleUnqualifiedAccess(name, false);
-        setError(u"Cannot find name "_s + name);
+        addError(u"Cannot find name "_s + name);
         return;
     }
 
@@ -643,12 +650,12 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
         // and we lack a better fitting category. We might want to revisit this later.
         m_logger->log(message.arg(name), qmlReadOnlyProperty,
                       getCurrentSourceLocation());
-        setError(u"Cannot assign to non-property "_s + name);
+        addError(u"Cannot assign to non-property "_s + name);
         return;
     }
 
     if (!type.isWritable()) {
-        setError(u"Can't assign to read-only property %1"_s.arg(name));
+        addError(u"Can't assign to read-only property %1"_s.arg(name));
 
         m_logger->log(u"Cannot assign to read-only property %1"_s.arg(name), qmlReadOnlyProperty,
                       getCurrentSourceLocation());
@@ -657,7 +664,7 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
     }
 
     if (!canConvertFromTo(in, type)) {
-        setError(u"cannot convert from %1 to %2"_s
+        addError(u"cannot convert from %1 to %2"_s
                  .arg(in.descriptiveName(), type.descriptiveName()));
     }
 
@@ -697,7 +704,7 @@ bool QQmlJSTypePropagator::checkForEnumProblems(
                                                          getCurrentSourceLocation());
             const QString error = u"\"%1\" is not an entry of enum \"%2\"."_s
                                           .arg(propertyName, metaEn.name());
-            setError(error);
+            addError(error);
             m_logger->log(
                     error, qmlMissingEnumEntry, getCurrentSourceLocation(), true, true,
                     fixSuggestion);
@@ -708,7 +715,7 @@ bool QQmlJSTypePropagator::checkForEnumProblems(
         if (metaEn.isValid() && !metaEn.isScoped() && !metaEn.isQml()) {
             const QString error
                     = u"You cannot access unscoped enum \"%1\" from here."_s.arg(propertyName);
-            setError(error);
+            addError(error);
             m_logger->log(error, qmlRestrictedType, getCurrentSourceLocation());
             return true;
         }
@@ -859,7 +866,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
         if (checkForEnumProblems(m_state.accumulatorIn(), propertyName))
             return;
 
-        setError(u"Cannot load property %1 from %2."_s
+        addError(u"Cannot load property %1 from %2."_s
                          .arg(propertyName, m_state.accumulatorIn().descriptiveName()));
 
         const QString typeName = m_state.accumulatorIn().containedTypeName();
@@ -906,7 +913,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
     }
 
     if (m_state.accumulatorOut().isMethod() && m_state.accumulatorOut().method().size() != 1) {
-        setError(u"Cannot determine overloaded method on loadProperty"_s);
+        addError(u"Cannot determine overloaded method on loadProperty"_s);
         return;
     }
 
@@ -929,7 +936,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
 
         if (m_typeResolver->registerContains(
                     m_state.accumulatorOut(), m_typeResolver->voidType())) {
-            setError(u"Type %1 does not have a property %2 for reading"_s
+            addError(u"Type %1 does not have a property %2 for reading"_s
                              .arg(m_state.accumulatorIn().descriptiveName(), propertyName));
             return;
         }
@@ -1009,19 +1016,19 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
 
     QQmlJSRegisterContent property = m_typeResolver->memberType(callBase, propertyName);
     if (!property.isProperty()) {
-        setError(u"Type %1 does not have a property %2 for writing"_s
+        addError(u"Type %1 does not have a property %2 for writing"_s
                          .arg(callBase.descriptiveName(), propertyName));
         return;
     }
 
     if (property.containedType().isNull()) {
-        setError(u"Cannot determine type for property %1 of type %2"_s.arg(
+        addError(u"Cannot determine type for property %1 of type %2"_s.arg(
                 propertyName, callBase.descriptiveName()));
         return;
     }
 
     if (!property.isWritable() && !property.containedType()->isListProperty()) {
-        setError(u"Can't assign to read-only property %1"_s.arg(propertyName));
+        addError(u"Can't assign to read-only property %1"_s.arg(propertyName));
 
         m_logger->log(u"Cannot assign to read-only property %1"_s.arg(propertyName),
                       qmlReadOnlyProperty, getCurrentSourceLocation());
@@ -1030,7 +1037,7 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
     }
 
     if (!canConvertFromTo(m_state.accumulatorIn(), property)) {
-        setError(u"cannot convert from %1 to %2"_s
+        addError(u"cannot convert from %1 to %2"_s
                          .arg(m_state.accumulatorIn().descriptiveName(), property.descriptiveName()));
         return;
     }
@@ -1224,7 +1231,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
             return;
         }
 
-        setError(u"Type %1 does not have a property %2 for calling"_s
+        addError(u"Type %1 does not have a property %2 for calling"_s
                          .arg(callBase.descriptiveName(), propertyName));
 
         if (callBase.isType() && isCallingProperty(callBase.type(), propertyName))
@@ -1432,11 +1439,11 @@ void QQmlJSTypePropagator::propagateCall(
         if (methods.size() == 1) {
             // Cannot have multiple fuzzy matches if there is only one method
             Q_ASSERT(errors.size() == 1);
-            setError(errors.first());
+            addError(errors.first());
         } else if (errors.size() < methods.size()) {
-            setError(u"Multiple matching overrides found. Cannot determine the right one."_s);
+            addError(u"Multiple matching overrides found. Cannot determine the right one."_s);
         } else {
-            setError(u"No matching override found. Candidates:\n"_s + errors.join(u'\n'));
+            addError(u"No matching override found. Candidates:\n"_s + errors.join(u'\n'));
         }
         return;
     }
@@ -1451,7 +1458,7 @@ void QQmlJSTypePropagator::propagateCall(
                     : QQmlJSRegisterContent::MethodReturnValue,
             scope));
     if (!m_state.accumulatorOut().isValid())
-        setError(u"Cannot store return type of method %1()."_s.arg(match.methodName()));
+        addError(u"Cannot store return type of method %1()."_s.arg(match.methodName()));
 
     const auto types = match.parameters();
     for (int i = 0; i < argc; ++i) {
@@ -1806,10 +1813,10 @@ void QQmlJSTypePropagator::propagateScopeLookupCall(const QString &functionName,
         }
     }
 
-    setError(u"method %1 cannot be resolved."_s.arg(functionName));
+    addError(u"method %1 cannot be resolved."_s.arg(functionName));
     setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
 
-    setError(u"Cannot find function '%1'"_s.arg(functionName));
+    addError(u"Cannot find function '%1'"_s.arg(functionName));
 
     handleUnqualifiedAccess(functionName, true);
 }
@@ -1946,7 +1953,7 @@ void QQmlJSTypePropagator::generate_UnwindToLabel(int level, int offset)
 void QQmlJSTypePropagator::generate_DeadTemporalZoneCheck(int name)
 {
     const auto fail = [this, name]() {
-        setError(u"Cannot statically assert the dead temporal zone check for %1"_s.arg(
+        addError(u"Cannot statically assert the dead temporal zone check for %1"_s.arg(
                 name ? m_jsUnitGenerator->stringForIndex(name) : u"the anonymous accumulator"_s));
     };
 
@@ -2199,7 +2206,7 @@ void QQmlJSTypePropagator::generate_JumpTrue(int offset)
 {
     if (!canConvertFromTo(m_state.accumulatorIn(),
                           m_typeResolver->globalType(m_typeResolver->boolType()))) {
-        setError(u"cannot convert from %1 to boolean"_s
+        addError(u"cannot convert from %1 to boolean"_s
                          .arg(m_state.accumulatorIn().descriptiveName()));
         return;
     }
@@ -2212,7 +2219,7 @@ void QQmlJSTypePropagator::generate_JumpFalse(int offset)
 {
     if (!canConvertFromTo(m_state.accumulatorIn(),
                           m_typeResolver->globalType(m_typeResolver->boolType()))) {
-        setError(u"cannot convert from %1 to boolean"_s
+        addError(u"cannot convert from %1 to boolean"_s
                          .arg(m_state.accumulatorIn().descriptiveName()));
         return;
     }
@@ -2446,7 +2453,7 @@ void QQmlJSTypePropagator::generate_As(int lhs)
         else
             output = m_typeResolver->cast(input, outContained);
     } else if (!m_typeResolver->canAddressValueTypes()) {
-        setError(u"invalid cast from %1 to %2. You can only cast object types."_s
+        addError(u"invalid cast from %1 to %2. You can only cast object types."_s
                  .arg(input.descriptiveName(), m_state.accumulatorIn().descriptiveName()));
         return;
     } else {
@@ -2470,7 +2477,7 @@ void QQmlJSTypePropagator::checkConversion(
         const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to)
 {
     if (!canConvertFromTo(from, to)) {
-        setError(u"cannot convert from %1 to %2"_s
+        addError(u"cannot convert from %1 to %2"_s
                  .arg(from.descriptiveName(), to.descriptiveName()));
     }
 }
@@ -2652,7 +2659,7 @@ void QQmlJSTypePropagator::generate_GetTemplateObject(int index)
 QV4::Moth::ByteCodeHandler::Verdict
 QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
 {
-    if (m_error->isValid())
+    if (!m_errors->isEmpty())
         return SkipInstruction;
 
     if (m_state.jumpTargets.contains(currentInstructionOffset())) {
@@ -2691,7 +2698,7 @@ QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
 
             auto newType = registerIt.value().content;
             if (!newType.isValid()) {
-                setError(u"When reached from offset %1, %2 is undefined"_s
+                addError(u"When reached from offset %1, %2 is undefined"_s
                                  .arg(stateToMerge.originatingOffset)
                                  .arg(registerName(registerIndex)));
                 return SkipInstruction;
@@ -2743,8 +2750,8 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
     case QV4::Moth::Instr::Type::DeadTemporalZoneCheck:
     case QV4::Moth::Instr::Type::IteratorNext:
     case QV4::Moth::Instr::Type::IteratorNextForYieldStar:
-        if (m_state.changedRegisterIndex() == Accumulator && !m_error->isValid()) {
-            setError(u"Instruction is not expected to populate the accumulator"_s);
+        if (m_state.changedRegisterIndex() == Accumulator && m_errors->isEmpty()) {
+            addError(u"Instruction is not expected to populate the accumulator"_s);
             return;
         }
         break;
@@ -2752,21 +2759,22 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
         // If the instruction is expected to produce output, save it in the register set
         // for the next instruction.
         if ((!m_state.changedRegister().isValid() || m_state.changedRegisterIndex() != Accumulator)
-                && !m_error->isValid()) {
-            setError(u"Instruction is expected to populate the accumulator"_s);
+            && m_errors->isEmpty()) {
+            addError(u"Instruction is expected to populate the accumulator"_s);
             return;
         }
     }
 
-    if (!(m_error->isValid() && m_error->isError())
-        && instr != QV4::Moth::Instr::Type::DeadTemporalZoneCheck) {
+    const auto noError = std::none_of(m_errors->cbegin(), m_errors->cend(),
+                                      [](const auto &e) { return e.isError(); });
+    if (noError && instr != QV4::Moth::Instr::Type::DeadTemporalZoneCheck) {
         // An instruction needs to have side effects or write to another register otherwise it's a
         // noop. DeadTemporalZoneCheck is not needed by the compiler and is ignored.
         Q_ASSERT(m_state.hasSideEffects() || m_state.changedRegisterIndex() != -1);
     }
 
     if (m_state.changedRegisterIndex() != InvalidRegister) {
-        Q_ASSERT(m_error->isValid() || m_state.changedRegister().isValid());
+        Q_ASSERT(!m_errors->isEmpty() || m_state.changedRegister().isValid());
         VirtualRegister &r = m_state.registers[m_state.changedRegisterIndex()];
         r.content = m_state.changedRegister();
         r.canMove = false;
@@ -2838,7 +2846,7 @@ QQmlJSRegisterContent QQmlJSTypePropagator::checkedInputRegister(int reg)
         if (isArgument(reg))
             return argumentType(reg);
 
-        setError(u"Type error: could not infer the type of an expression"_s);
+        addError(u"Type error: could not infer the type of an expression"_s);
         return {};
     }
     return regIt.value().content;

@@ -33,11 +33,11 @@ public:
     QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
                         const QV4::Compiler::JSUnitGenerator *unitGenerator,
                         const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                        BasicBlocks basicBlocks, InstructionAnnotations annotations);
+                        QList<QQmlJS::DiagnosticMessage> *errors, BasicBlocks basicBlocks,
+                        InstructionAnnotations annotations);
     ~QQmlJSCodeGenerator() = default;
 
-    QQmlJSAotFunction run(const Function *function, QQmlJS::DiagnosticMessage *error,
-                          bool basicBlocksValidationFailed);
+    QQmlJSAotFunction run(const Function *function, bool basicBlocksValidationFailed);
 
 protected:
     struct CodegenState : public State

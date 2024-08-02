@@ -70,10 +70,10 @@ public:
 
     virtual void setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document);
     virtual void setScope(const QmlIR::Object *object, const QmlIR::Object *scope);
-    virtual std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> compileBinding(
+    virtual std::variant<QQmlJSAotFunction, QList<QQmlJS::DiagnosticMessage>> compileBinding(
             const QV4::Compiler::Context *context, const QmlIR::Binding &irBinding,
             QQmlJS::AST::Node *astNode);
-    virtual std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> compileFunction(
+    virtual std::variant<QQmlJSAotFunction, QList<QQmlJS::DiagnosticMessage>> compileFunction(
             const QV4::Compiler::Context *context, const QString &name, QQmlJS::AST::Node *astNode);
 
     virtual QQmlJSAotFunction globalCode() const;
@@ -100,10 +100,10 @@ protected:
 private:
     QQmlJSAotFunction doCompile(const QV4::Compiler::Context *context,
                                 QQmlJSCompilePass::Function *function,
-                                QQmlJS::DiagnosticMessage *error);
+                                QList<QQmlJS::DiagnosticMessage> *error);
     QQmlJSAotFunction doCompileAndRecordAotStats(const QV4::Compiler::Context *context,
                                                  QQmlJSCompilePass::Function *function,
-                                                 QQmlJS::DiagnosticMessage *error,
+                                                 QList<QQmlJS::DiagnosticMessage> *erros,
                                                  const QString &name,
                                                  QQmlJS::SourceLocation location);
 };

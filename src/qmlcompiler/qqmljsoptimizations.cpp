@@ -9,11 +9,9 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::Literals::StringLiterals;
 
-QQmlJSCompilePass::BlocksAndAnnotations QQmlJSOptimizations::run(const Function *function,
-                                                                 QQmlJS::DiagnosticMessage *error)
+QQmlJSCompilePass::BlocksAndAnnotations QQmlJSOptimizations::run(const Function *function)
 {
     m_function = function;
-    m_error = error;
 
     populateBasicBlocks();
     populateReaderLocations();
@@ -329,7 +327,7 @@ void QQmlJSOptimizations::adjustTypes()
             return; // Constructed something else.
 
         if (!m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values()))
-            setError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
+            addError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
 
         // Now we don't adjust the type we store, but rather the type we expect to read. We
         // can do this because we've tracked the read type when we defined the array in
@@ -342,7 +340,7 @@ void QQmlJSOptimizations::adjustTypes()
             if (mode != ObjectOrArrayDefinition::ArrayConstruct1ArgId
                     || !m_typeResolver->equals(contained, m_typeResolver->realType())) {
                 if (!m_typeResolver->adjustTrackedType(contained, valueType))
-                    setError(adjustErrorMessage(contained, valueType));
+                    addError(adjustErrorMessage(contained, valueType));
             }
         }
 
@@ -366,7 +364,7 @@ void QQmlJSOptimizations::adjustTypes()
         Q_ASSERT(!annotation.readRegisters.isEmpty());
 
         if (!m_typeResolver->adjustTrackedType(resultType, it->typeReaders.values()))
-            setError(adjustErrorMessage(resultType, it->typeReaders.values()));
+            addError(adjustErrorMessage(resultType, it->typeReaders.values()));
 
         if (m_typeResolver->equals(resultType, m_typeResolver->varType())
                 || m_typeResolver->equals(resultType, m_typeResolver->variantMapType())) {
@@ -385,19 +383,19 @@ void QQmlJSOptimizations::adjustTypes()
             const QString propName = m_jsUnitGenerator->jsClassMember(object.internalClassId, i);
             const QQmlJSMetaProperty property = resultType->property(propName);
             if (!property.isValid()) {
-                setError(resultType->internalName() + QLatin1String(" has no property called ")
+                addError(resultType->internalName() + QLatin1String(" has no property called ")
                          + propName);
                 continue;
             }
             const QQmlJSScope::ConstPtr propType = property.type();
             if (propType.isNull()) {
-                setError(QLatin1String("Cannot resolve type of property ") + propName);
+                addError(QLatin1String("Cannot resolve type of property ") + propName);
                 continue;
             }
             const QQmlJSRegisterContent content = annotation.readRegisters[object.argv + i].content;
             const QQmlJSScope::ConstPtr contained = content.containedType();
             if (!m_typeResolver->adjustTrackedType(contained, propType))
-                setError(adjustErrorMessage(contained, propType));
+                addError(adjustErrorMessage(contained, propType));
         }
 
         // The others cannot be adjusted. We don't know their names, yet.
@@ -433,7 +431,7 @@ void QQmlJSOptimizations::adjustTypes()
             continue;
 
         if (!m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values()))
-            setError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
+            addError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
     }
 
 
@@ -453,7 +451,7 @@ void QQmlJSOptimizations::adjustTypes()
                 for (const auto &origin : conversionOrigins)
                     newResult = m_typeResolver->merge(newResult, origin);
                 if (!m_typeResolver->adjustTrackedType(conversionResult, newResult))
-                    setError(adjustErrorMessage(conversionResult, newResult));
+                    addError(adjustErrorMessage(conversionResult, newResult));
             }
             newRegisters.appendOrdered(conversion);
         }

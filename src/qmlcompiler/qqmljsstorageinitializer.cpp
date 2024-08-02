@@ -16,18 +16,16 @@ QT_BEGIN_NAMESPACE
  * operates only on the annotations and the function description.
  */
 
-QQmlJSCompilePass::BlocksAndAnnotations
-QQmlJSStorageInitializer::run(Function *function, QQmlJS::DiagnosticMessage *error)
+QQmlJSCompilePass::BlocksAndAnnotations QQmlJSStorageInitializer::run(Function *function)
 {
     m_function = function;
-    m_error = error;
 
     if (QQmlJSRegisterContent &returnType = function->returnType; returnType.isValid()) {
         if (const QQmlJSScope::ConstPtr stored
                 = m_typeResolver->storedType(returnType.containedType())) {
             returnType = returnType.storedIn(m_typeResolver->trackedType(stored));
         } else {
-            setError(QStringLiteral("Cannot store the return type %1.")
+            addError(QStringLiteral("Cannot store the return type %1.")
                              .arg(returnType.containedType()->internalName()));
             return {};
         }
@@ -47,7 +45,7 @@ QQmlJSStorageInitializer::run(Function *function, QQmlJS::DiagnosticMessage *err
                 = m_typeResolver->storedType(content.containedType());
 
         if (!m_typeResolver->adjustTrackedType(originalTracked, adjustedStored)) {
-            setError(QStringLiteral("Cannot adjust stored type for %1.")
+            addError(QStringLiteral("Cannot adjust stored type for %1.")
                              .arg(content.containedType()->internalName()));
         }
     };

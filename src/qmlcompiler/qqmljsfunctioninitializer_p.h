@@ -31,20 +31,19 @@ public:
         , m_objectType(typeResolver->scopeForLocation(objectLocation))
     {}
 
-    QQmlJSCompilePass::Function run(
-            const QV4::Compiler::Context *context,
-            const QString &propertyName, QQmlJS::AST::Node *astNode,
-            const QmlIR::Binding &irBinding,
-            QQmlJS::DiagnosticMessage *error);
+    QQmlJSCompilePass::Function run(const QV4::Compiler::Context *context,
+                                    const QString &propertyName, QQmlJS::AST::Node *astNode,
+                                    const QmlIR::Binding &irBinding,
+                                    QList<QQmlJS::DiagnosticMessage> *errors);
     QQmlJSCompilePass::Function run(
             const QV4::Compiler::Context *context,
             const QString &functionName, QQmlJS::AST::Node *astNode,
-            QQmlJS::DiagnosticMessage *error);
+            QList<QQmlJS::DiagnosticMessage> *errors);
 
 private:
     void populateSignature(
             const QV4::Compiler::Context *context, QQmlJS::AST::FunctionExpression *ast,
-            QQmlJSCompilePass::Function *function, QQmlJS::DiagnosticMessage *error);
+            QQmlJSCompilePass::Function *function, QList<QQmlJS::DiagnosticMessage> *errors);
 
     const QQmlJSTypeResolver *m_typeResolver = nullptr;
     const QQmlJSScope::ConstPtr m_scopeType;

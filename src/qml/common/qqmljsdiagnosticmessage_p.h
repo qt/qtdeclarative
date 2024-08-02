@@ -41,11 +41,6 @@ struct DiagnosticMessage
     {
         return type == QtWarningMsg;
     }
-
-    bool isValid() const
-    {
-        return !message.isEmpty();
-    }
 };
 } // namespace QQmlJS
 

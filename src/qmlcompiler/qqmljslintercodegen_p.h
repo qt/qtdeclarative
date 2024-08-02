@@ -42,10 +42,10 @@ public:
                         const QStringList &qmldirFiles, QQmlJSLogger *logger);
 
     void setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document) override;
-    std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
+    std::variant<QQmlJSAotFunction, QList<QQmlJS::DiagnosticMessage>>
     compileBinding(const QV4::Compiler::Context *context, const QmlIR::Binding &irBinding,
                    QQmlJS::AST::Node *astNode) override;
-    std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
+    std::variant<QQmlJSAotFunction, QList<QQmlJS::DiagnosticMessage>>
     compileFunction(const QV4::Compiler::Context *context, const QString &name,
                     QQmlJS::AST::Node *astNode) override;
 
@@ -64,7 +64,8 @@ private:
     QQmlSA::PassManager *m_passManager = nullptr;
 
     bool analyzeFunction(const QV4::Compiler::Context *context,
-                         QQmlJSCompilePass::Function *function, QQmlJS::DiagnosticMessage *error);
+                         QQmlJSCompilePass::Function *function,
+                         QList<QQmlJS::DiagnosticMessage> *errors);
 };
 
 QT_END_NAMESPACE

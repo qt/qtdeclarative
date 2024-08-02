@@ -55,9 +55,11 @@ QString QQmlJSCodeGenerator::castTargetName(const QQmlJSScope::ConstPtr &type) c
 QQmlJSCodeGenerator::QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
                                          const QV4::Compiler::JSUnitGenerator *unitGenerator,
                                          const QQmlJSTypeResolver *typeResolver,
-                                         QQmlJSLogger *logger, BasicBlocks basicBlocks,
+                                         QQmlJSLogger *logger,
+                                         QList<QQmlJS::DiagnosticMessage> *errors,
+                                         BasicBlocks basicBlocks,
                                          InstructionAnnotations annotations)
-    : QQmlJSCompilePass(unitGenerator, typeResolver, logger, basicBlocks, annotations)
+    : QQmlJSCompilePass(unitGenerator, typeResolver, logger, errors, basicBlocks, annotations)
     , m_context(compilerContext)
 {}
 
@@ -126,12 +128,9 @@ QString QQmlJSCodeGenerator::metaType(const QQmlJSScope::ConstPtr &type)
             : metaTypeFromName(type);
 }
 
-QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function,
-                                           QQmlJS::DiagnosticMessage *error,
-                                           bool basicBlocksValidationFailed)
+QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function, bool basicBlocksValidationFailed)
 {
     m_function = function;
-    m_error = error;
 
     QHash<int, int> numRegisterVariablesPerIndex;
 
@@ -2423,7 +2422,7 @@ void QQmlJSCodeGenerator::generate_Construct(int func, int argc, int argv)
                               registerType(argv).storedType(), m_typeResolver->sizeType(),
                               consumedRegisterVariable(argv))
                     + u");\n"_s;
-        } else if (!m_error->isValid()) {
+        } else if (m_errors->isEmpty()) {
             generateArrayInitializer(argc, argv);
         }
         return;
@@ -2672,7 +2671,7 @@ void QQmlJSCodeGenerator::generate_DefineArray(int argc, int args)
     INJECT_TRACE_INFO(generate_DefineArray);
 
     rejectIfBadArray();
-    if (!m_error->isValid())
+    if (m_errors->isEmpty())
         generateArrayInitializer(argc, args);
 }
 
@@ -3247,8 +3246,8 @@ void QQmlJSCodeGenerator::generate_Exp(int lhs)
                 m_state.accumulatorIn(), m_state.readAccumulator(),
                 consumedAccumulatorVariableIn());
 
-    Q_ASSERT(m_error->isValid() || !lhsString.isEmpty());
-    Q_ASSERT(m_error->isValid() || !rhsString.isEmpty());
+    Q_ASSERT(!m_errors->isEmpty() || !lhsString.isEmpty());
+    Q_ASSERT(!m_errors->isEmpty() || !rhsString.isEmpty());
 
     const QQmlJSRegisterContent originalOut = original(m_state.accumulatorOut());
     m_body += m_state.accumulatorVariableOut + u" = "_s;
@@ -3280,8 +3279,8 @@ void QQmlJSCodeGenerator::generate_Mod(int lhs)
     const auto rhsVar = convertStored(
                 m_state.accumulatorIn().storedType(), m_typeResolver->jsPrimitiveType(),
                 consumedAccumulatorVariableIn());
-    Q_ASSERT(m_error->isValid() || !lhsVar.isEmpty());
-    Q_ASSERT(m_error->isValid() || !rhsVar.isEmpty());
+    Q_ASSERT(!m_errors->isEmpty() || !lhsVar.isEmpty());
+    Q_ASSERT(!m_errors->isEmpty() || !rhsVar.isEmpty());
 
     m_body += m_state.accumulatorVariableOut;
     m_body += u" = "_s;
@@ -3641,8 +3640,8 @@ void QQmlJSCodeGenerator::generateShiftOperation(int lhs, const QString &cppOper
 void QQmlJSCodeGenerator::generateArithmeticOperation(
         const QString &lhs, const QString &rhs, const QString &cppOperator)
 {
-    Q_ASSERT(m_error->isValid() || !lhs.isEmpty());
-    Q_ASSERT(m_error->isValid() || !rhs.isEmpty());
+    Q_ASSERT(!m_errors->isEmpty() || !lhs.isEmpty());
+    Q_ASSERT(!m_errors->isEmpty() || !rhs.isEmpty());
 
     const QQmlJSRegisterContent originalOut = original(m_state.accumulatorOut());
     m_body += m_state.accumulatorVariableOut;
@@ -4301,7 +4300,7 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
 
 void QQmlJSCodeGenerator::reject(const QString &thing)
 {
-    setError(u"Cannot generate efficient code for %1"_s.arg(thing));
+    addError(u"Cannot generate efficient code for %1"_s.arg(thing));
 }
 
 QQmlJSCodeGenerator::AccumulatorConverter::AccumulatorConverter(QQmlJSCodeGenerator *generator)

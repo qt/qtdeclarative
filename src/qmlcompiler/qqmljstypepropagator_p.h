@@ -28,10 +28,11 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSTypePropagator : public QQmlJSCompilePass
 {
     QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                          const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                         BasicBlocks basicBlocks = {}, InstructionAnnotations annotations = {},
+                         QList<QQmlJS::DiagnosticMessage> *errors, BasicBlocks basicBlocks = {},
+                         InstructionAnnotations annotations = {},
                          QQmlSA::PassManager *passManager = nullptr);
 
-    BlocksAndAnnotations run(const Function *m_function, QQmlJS::DiagnosticMessage *error);
+    BlocksAndAnnotations run(const Function *m_function);
 
     void generate_Ret() override;
     void generate_Debug() override;

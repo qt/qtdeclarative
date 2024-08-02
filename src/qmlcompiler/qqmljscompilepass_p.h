@@ -264,10 +264,12 @@ public:
 
     QQmlJSCompilePass(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
                       const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                      BasicBlocks basicBlocks = {}, InstructionAnnotations annotations = {})
+                      QList<QQmlJS::DiagnosticMessage> *errors, BasicBlocks basicBlocks = {},
+                      InstructionAnnotations annotations = {})
         : m_jsUnitGenerator(jsUnitGenerator)
         , m_typeResolver(typeResolver)
         , m_logger(logger)
+        , m_errors(errors)
         , m_basicBlocks(basicBlocks)
         , m_annotations(annotations)
     {}
@@ -278,9 +280,9 @@ protected:
     QQmlJSLogger *m_logger = nullptr;
 
     const Function *m_function = nullptr;
+    QList<QQmlJS::DiagnosticMessage> *m_errors;
     BasicBlocks m_basicBlocks;
     InstructionAnnotations m_annotations;
-    QQmlJS::DiagnosticMessage *m_error = nullptr;
 
     int firstRegisterIndex() const
     {
@@ -369,18 +371,17 @@ protected:
         return sourceLocation(currentInstructionOffset());
     }
 
-    void setError(const QString &message, int instructionOffset)
+    void addError(const QString &message, int instructionOffset)
     {
-        Q_ASSERT(m_error);
-        if (m_error->isValid())
-            return;
-        m_error->message = message;
-        m_error->loc = sourceLocation(instructionOffset);
+        QQmlJS::DiagnosticMessage diagnostic;
+        diagnostic.message = message;
+        diagnostic.loc = sourceLocation(instructionOffset);
+        m_errors->append(diagnostic);
     }
 
-    void setError(const QString &message)
+    void addError(const QString &message)
     {
-        setError(message, currentInstructionOffset());
+        addError(message, currentInstructionOffset());
     }
 
     static bool instructionManipulatesContext(QV4::Moth::Instr::Type type)

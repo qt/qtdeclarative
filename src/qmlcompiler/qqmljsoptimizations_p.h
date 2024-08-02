@@ -25,16 +25,17 @@ public:
 
     QQmlJSOptimizations(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                         const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                        BasicBlocks basicBlocks, InstructionAnnotations annotations,
+                        QList<QQmlJS::DiagnosticMessage> *errors, BasicBlocks basicBlocks,
+                        InstructionAnnotations annotations,
                         QList<ObjectOrArrayDefinition> objectAndArrayDefinitions)
-        : QQmlJSCompilePass(unitGenerator, typeResolver, logger, basicBlocks, annotations),
+        : QQmlJSCompilePass(unitGenerator, typeResolver, logger, errors, basicBlocks, annotations),
           m_objectAndArrayDefinitions{ objectAndArrayDefinitions }
     {
     }
 
     ~QQmlJSOptimizations() = default;
 
-    BlocksAndAnnotations run(const Function *function, QQmlJS::DiagnosticMessage *error);
+    BlocksAndAnnotations run(const Function *function);
 
 private:
     struct RegisterAccess

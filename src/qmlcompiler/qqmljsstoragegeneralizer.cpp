@@ -19,18 +19,16 @@ QT_BEGIN_NAMESPACE
  * operates only on the annotations and the function description.
  */
 
-QQmlJSCompilePass::BlocksAndAnnotations
-QQmlJSStorageGeneralizer::run(Function *function, QQmlJS::DiagnosticMessage *error)
+QQmlJSCompilePass::BlocksAndAnnotations QQmlJSStorageGeneralizer::run(Function *function)
 {
     m_function = function;
-    m_error = error;
 
     if (QQmlJSRegisterContent &returnType = function->returnType; returnType.isValid()) {
         if (QQmlJSScope::ConstPtr stored = m_typeResolver->genericType(
                     returnType.storedType(), QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
             returnType = returnType.storedIn(stored);
         } else {
-            setError(QStringLiteral("Cannot store the return type %1.")
+            addError(QStringLiteral("Cannot store the return type %1.")
                      .arg(returnType.storedType()->internalName()));
             return {};
         }

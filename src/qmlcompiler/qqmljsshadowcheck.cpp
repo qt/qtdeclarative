@@ -34,11 +34,9 @@ using namespace Qt::StringLiterals;
  * arguments and return types into "var".
  */
 
-QQmlJSCompilePass::BlocksAndAnnotations QQmlJSShadowCheck::run(const Function *function,
-                                                               QQmlJS::DiagnosticMessage *error)
+QQmlJSCompilePass::BlocksAndAnnotations QQmlJSShadowCheck::run(const Function *function)
 {
     m_function = function;
-    m_error = error;
     m_state = initialState(function);
     decode(m_function->code.constData(), static_cast<uint>(m_function->code.size()));
 
@@ -237,7 +235,7 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkBaseType(
 {
     if (!m_adjustedTypes.contains(baseType))
         return NotShadowable;
-    setError(u"Cannot use shadowable base type for further lookups: %1"_s.arg(baseType.descriptiveName()));
+    addError(u"Cannot use shadowable base type for further lookups: %1"_s.arg(baseType.descriptiveName()));
     return Shadowable;
 }
 
