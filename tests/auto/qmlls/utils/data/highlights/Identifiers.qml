@@ -33,5 +33,6 @@ Item {
 
     enum K { Plus}
     property int tt: Identifiers.Plus // component and enum value
+    property int tt2: Identifiers.K.Plus
 
 }
