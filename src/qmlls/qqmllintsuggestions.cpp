@@ -168,13 +168,11 @@ static Diagnostic messageToDiagnostic_helper(AdvanceFunc advancePositionPastLoca
     }
 
     if (message.fixSuggestion && !message.fixSuggestion->fixDescription().isEmpty()) {
-        diagnostic.message = QString(message.message)
-                                     .append(u": "_s)
-                                     .append(message.fixSuggestion->fixDescription())
+        diagnostic.message = u"%1: %2 [%3]"_s.arg(message.message, message.fixSuggestion->fixDescription(), message.id.toString())
                                      .simplified()
                                      .toUtf8();
     } else {
-        diagnostic.message = message.message.toUtf8();
+        diagnostic.message = u"%1 [%2]"_s.arg(message.message, message.id.toString()).toUtf8();
     }
 
     diagnostic.source = QByteArray("qmllint");
