@@ -259,7 +259,7 @@ void QQuickPopupWindow::handlePopupPositionChangeFromWindowSystem(const QPoint &
 {
     Q_D(QQuickPopupWindow);
     QQuickPopup *popup = d->m_popup;
-    if (!popup)
+    if (!popup || !popup->window())
         return;
     QQuickPopupPrivate *popupPrivate = QQuickPopupPrivate::get(popup);
 
