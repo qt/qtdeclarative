@@ -552,6 +552,7 @@ void AttachedPropertyReuse::onRead(const QQmlSA::Element &element, const QString
             emitWarning("Using attached type %1 already initialized in a parent scope."_L1.arg(
                                 element.name()),
                         category, attachedLocation, suggestion);
+            return;
         }
 
         return;
