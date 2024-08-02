@@ -1947,6 +1947,10 @@ void TestQmllint::attachedPropertyReuse()
         },
         Result::AutoFixable
     });
+    runTest("pluginQuick_multipleAttachedPropertyReuse.qml",
+            Result{ { Message{ QStringLiteral(
+                    "Using attached type Test already initialized in a parent scope") } } },
+            {}, {}, {}, UseDefaultImports, &categories);
 }
 
 void TestQmllint::missingBuiltinsNoCrash()
