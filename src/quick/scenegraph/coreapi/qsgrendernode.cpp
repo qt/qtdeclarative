@@ -358,7 +358,7 @@ const QMatrix4x4 *QSGRenderNode::projectionMatrix() const
 /*!
     \internal
  */
-const QMatrix4x4 *QSGRenderNode::projectionMatrix(int index) const
+const QMatrix4x4 *QSGRenderNode::projectionMatrix(qsizetype index) const
 {
     return &d->m_projectionMatrix[index];
 }

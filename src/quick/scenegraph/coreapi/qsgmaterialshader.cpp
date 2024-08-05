@@ -824,7 +824,7 @@ QMatrix4x4 QSGMaterialShader::RenderState::combinedMatrix() const
 /*!
     \internal
  */
-QMatrix4x4 QSGMaterialShader::RenderState::combinedMatrix(int index) const
+QMatrix4x4 QSGMaterialShader::RenderState::combinedMatrix(qsizetype index) const
 {
     Q_ASSERT(m_data);
     return static_cast<const QSGRenderer *>(m_data)->currentCombinedMatrix(index);
@@ -872,7 +872,7 @@ QMatrix4x4 QSGMaterialShader::RenderState::projectionMatrix() const
 /*!
     \internal
  */
-QMatrix4x4 QSGMaterialShader::RenderState::projectionMatrix(int index) const
+QMatrix4x4 QSGMaterialShader::RenderState::projectionMatrix(qsizetype index) const
 {
     Q_ASSERT(m_data);
     return static_cast<const QSGRenderer *>(m_data)->currentProjectionMatrix(index);
@@ -881,7 +881,7 @@ QMatrix4x4 QSGMaterialShader::RenderState::projectionMatrix(int index) const
 /*!
     \internal
  */
-int QSGMaterialShader::RenderState::projectionMatrixCount() const
+qsizetype QSGMaterialShader::RenderState::projectionMatrixCount() const
 {
     Q_ASSERT(m_data);
     return static_cast<const QSGRenderer *>(m_data)->projectionMatrixCount();
