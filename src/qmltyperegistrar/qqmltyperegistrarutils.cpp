@@ -37,6 +37,7 @@ QAnyStringView interfaceName(const Interface &iface)
 
 static QDebug message(QDebug base, QAnyStringView message, QAnyStringView fileName, int lineNumber)
 {
+    // Formatted such that it becomes a link in QtCreator (even with "::" ending)
     const QString lineString = lineNumber ? QString::number(lineNumber) : QString();
     return (base.noquote().nospace()
             << message << ": " << fileName << ":" << lineString << ":").space();
