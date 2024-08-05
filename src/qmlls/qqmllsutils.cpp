@@ -1344,9 +1344,12 @@ static std::optional<ExpressionType> resolveFieldMemberExpressionType(const DomI
         if (owner->type == JavaScriptIdentifier) {
             return ExpressionType{ name, {}, JavaScriptIdentifier };
         } else if (owner->type == QualifiedModuleIdentifier) {
-            auto resolver = item.fileObject().as<QmlFile>()->typeResolver();
-            if (auto scope = resolveTypeName(resolver, u"%1.%2"_s.arg(*owner->name, name), item,
-                                             options)) {
+            const QmlFile *qmlFile = item.fileObject().as<QmlFile>();
+            if (!qmlFile)
+                return {};
+            if (auto scope = resolveTypeName(
+                        qmlFile->typeResolver(), u"%1.%2"_s.arg(*owner->name, name), item,
+                        options)) {
                 // remove the qualified module name from the type name
                 scope->name = name;
                 return scope;
