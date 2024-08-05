@@ -224,8 +224,7 @@ void QQmlHighlightSupport::setupCapabilities(
     options.full = QJsonObject({ { u"delta"_s, true } });
 
     if (auto clientInitOptions = clientCapabilities.initializationOptions) {
-        auto object = *clientInitOptions;
-        if (object[u"qtCreatorHighlighting"_s].toBool(false)) {
+        if ((*clientInitOptions)[u"qtCreatorHighlighting"_s].toBool(false)) {
             const auto mode = HighlightingUtils::HighlightingMode::QtCHighlighting;
             m_delta.setHighlightingMode(mode);
             m_full.setHighlightingMode(mode);
