@@ -2383,12 +2383,32 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
                 Scoped<QObjectWrapper> qobjectWrapper(scope);
 
                 uint length = array->getLength();
+                qlistPtr->reserve(length);
                 for (uint ii = 0; ii < length; ++ii)  {
                     QObject *o = nullptr;
                     qobjectWrapper = array->get(ii);
                     if (!!qobjectWrapper)
                         o = qobjectWrapper->object();
                     qlistPtr->append(o);
+                }
+                return true;
+            }
+
+            if (const auto sequence = value.as<QV4::Sequence>()) {
+                QV4::ReferenceObject::readReference(sequence->d());
+                uint length = sequence->size();
+                if (sequence->d()->listType() == QMetaType::fromType<QList<QObject *>>()) {
+                    *qlistPtr = *static_cast<QList<QObject *> *>(sequence->getRawContainerPtr());
+                } else {
+                    qlistPtr->reserve(length);
+                    Scoped<QObjectWrapper> qobjectWrapper(scope);
+                    for (uint ii = 0; ii < length; ++ii) {
+                        QObject *o = nullptr;
+                        qobjectWrapper = sequence->get(ii);
+                        if (!!qobjectWrapper)
+                            o = qobjectWrapper->object();
+                        qlistPtr->append(o);
+                    }
                 }
                 return true;
             }
