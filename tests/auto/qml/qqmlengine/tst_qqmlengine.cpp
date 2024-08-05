@@ -82,6 +82,7 @@ private slots:
     void lockedRootObject();
     void crossReferencingSingletonsDeletion();
     void bindingInstallUseAfterFree();
+    void objectListArgumentMethod();
     void variantListQJsonConversion();
 
 public slots:
@@ -1734,6 +1735,17 @@ void tst_qqmlengine::bindingInstallUseAfterFree()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("bindingInstallUseAfterFree.qml"));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o{ c.create() };
+    QVERIFY(o);
+}
+
+void tst_qqmlengine::objectListArgumentMethod()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("objectListArgumentMethod.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtMsgType::QtDebugMsg, "5");
     std::unique_ptr<QObject> o{ c.create() };
     QVERIFY(o);
 }
