@@ -43,6 +43,7 @@
         QT_QUICK_CONTROLS_STYLE=Imagine $app 0 400 &
         QT_QUICK_CONTROLS_STYLE=iOS $app 400 0 &
         QT_QUICK_CONTROLS_STYLE=Universal $app 800 400 &
+        QT_QUICK_CONTROLS_STYLE=FluentWinUI3 $app 1200 400 &
         #QT_QUICK_CONTROLS_STYLE=Windows $app 1200 400 &
 
     Step 2
@@ -58,6 +59,8 @@
         mogrify -resize 50% qtquickcontrols-basic.png
         mogrify -resize 50% qtquickcontrols-fusion-light.png
         mogrify -resize 50% qtquickcontrols-fusion-dark.png
+        mogrify -resize 50% qtquickcontrols-fluentwinui3-light.png
+        mogrify -resize 50% qtquickcontrols-fluentwinui3-dark.png
         mogrify -resize 50% qtquickcontrols-imagine.png
         mogrify -resize 50% qtquickcontrols-ios-light.png
         mogrify -resize 50% qtquickcontrols-ios-dark.png
