@@ -607,6 +607,10 @@ TestCase {
     }
 
     function test_overlappingHandles() {
+        if ((Qt.platform.pluginName === "offscreen")
+            || (Qt.platform.pluginName === "minimal"))
+            skip("Mouse hovering not functional on offscreen/minimal platforms")
+
         let control = createTemporaryObject(sliderComponent, testCase)
         verify(control)
 
