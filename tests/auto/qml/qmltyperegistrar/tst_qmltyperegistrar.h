@@ -917,6 +917,7 @@ private slots:
     void usingDeclaration();
     void enumsRegistered();
     void doNotDuplicateQtNamespace();
+    void doNotDuplicateQObject();
     void slotsBeforeInvokables();
 
     void omitQQmlV4FunctionPtrArg();

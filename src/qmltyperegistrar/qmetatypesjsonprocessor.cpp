@@ -365,7 +365,6 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 ResolvedTypeAlias foreign(obj.value, m_usingDeclarations);
                 if (!addRelatedName(foreign.type, namespaces(foreignType)))
                     unresolvedForeignNames.insert(foreign.type);
-                break;
             }
         }
     }
