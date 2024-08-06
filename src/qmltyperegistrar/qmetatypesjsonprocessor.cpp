@@ -790,8 +790,10 @@ Method::Method(const QCborMap &cbor, bool isConstructor)
 
     if (arguments.size() == 1) {
         const QAnyStringView type = arguments[0].type;
-        if (type == "QQmlV4FunctionPtr"_L1 || type == "QQmlV4Function*"_L1)
+        if (type == "QQmlV4FunctionPtr"_L1 || type == "QQmlV4Function*"_L1) {
             isJavaScriptFunction = true;
+            arguments.clear();
+        }
     }
 }
 
