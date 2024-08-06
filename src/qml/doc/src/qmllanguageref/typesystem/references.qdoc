@@ -46,7 +46,7 @@ written back.
 
 Sequences of object types are passed as \l{QQmlListProperty} by default.
 \l{QQmlListProperty} is not an actual container, but only a view, or reference, to
-some sequential storage. Therefore, \{QQmlListProperty} is not affected by this
+some sequential storage. Therefore, \l{QQmlListProperty} is not affected by this
 effect. You can, however, register other sequence types for objects using
 \l{QML_SEQUENTIAL_CONTAINER}. Those will be affected.
 
