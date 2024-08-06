@@ -1104,4 +1104,34 @@ void tst_qmltyperegistrar::omitQQmlV4FunctionPtrArg()
     })"));
 }
 
+void tst_qmltyperegistrar::preserveVoidStarPropTypes()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "VoidProperties"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["QmlTypeRegistrarTest/VoidProperties 1.0"]
+        exportMetaObjectRevisions: [256]
+        Property {
+            name: "void1"
+            type: "void"
+            isPointer: true
+            read: "void1"
+            index: 0
+            isReadonly: true
+            isPropertyConstant: true
+        }
+        Property {
+            name: "void2"
+            type: "void"
+            isPointer: true
+            read: "void2"
+            index: 1
+            isReadonly: true
+            isPropertyConstant: true
+        }
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

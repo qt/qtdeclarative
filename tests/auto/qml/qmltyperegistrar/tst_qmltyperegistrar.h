@@ -841,6 +841,27 @@ public:
     Q_INVOKABLE void jsfunc(QQmlV4FunctionPtr) {}
 };
 
+struct UsingVoid {};
+struct UsingVoidForeign
+{
+    Q_GADGET
+    QML_FOREIGN(UsingVoid)
+    QML_USING(void)
+};
+
+class VoidProperties : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(void* void1 READ void1 CONSTANT)
+    Q_PROPERTY(UsingVoid* void2 READ void2 CONSTANT)
+    QML_ELEMENT
+public:
+    VoidProperties(QObject *parent = nullptr) : QObject(parent) {}
+
+    void *void1() const { return nullptr; }
+    UsingVoid *void2() const { return nullptr; }
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -921,6 +942,7 @@ private slots:
     void slotsBeforeInvokables();
 
     void omitQQmlV4FunctionPtrArg();
+    void preserveVoidStarPropTypes();
 
 private:
     QByteArray qmltypesData;
