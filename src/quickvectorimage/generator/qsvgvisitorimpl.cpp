@@ -161,15 +161,15 @@ inline bool isPathContainer(const QSvgStructureNode *node)
         case QSvgNode::Animation:
         case QSvgNode::Use:
         case QSvgNode::Video:
+        case QSvgNode::Image:
+        case QSvgNode::Textarea:
+        case QSvgNode::Text:
+        case QSvgNode::Tspan:
             //qCDebug(lcQuickVectorGraphics) << "NOT path container because" << node->typeName() ;
             return false;
 
             // nodes that could go inside Shape{}
         case QSvgNode::Defs:
-        case QSvgNode::Image:
-        case QSvgNode::Textarea:
-        case QSvgNode::Text:
-        case QSvgNode::Tspan:
             break;
 
             // nodes that are done as pure ShapePath{}
