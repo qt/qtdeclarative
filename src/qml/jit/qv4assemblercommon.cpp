@@ -15,6 +15,8 @@
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>
 
+#include <cstdio>
+
 #if QT_CONFIG(qml_jit)
 
 #undef ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES
@@ -44,7 +46,7 @@ public:
 
     void vprintf(const char* format, va_list argList) override WTF_ATTRIBUTE_PRINTF(2, 0)
     {
-        const int printed = qvsnprintf(buf.data(), buf.size(), format, argList);
+        const int printed = std::vsnprintf(buf.data(), buf.size(), format, argList);
         Q_ASSERT(printed <= buf.size());
 
         qint64 written = 0;
