@@ -4,6 +4,7 @@
 #include "visualtestutils_p.h"
 
 #include <QtCore/QCoreApplication>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/private/qvariantanimation_p.h>
 #include <QtCore/QDebug>
 #include <QtQuick/QQuickItem>
@@ -14,6 +15,8 @@
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_STATIC_LOGGING_CATEGORY(lcCompareImages, "qt.quicktestutils.compareimages")
 
 QQuickItem *QQuickVisualTestUtils::findVisibleChild(QQuickItem *parent, const QString &objectName)
 {
@@ -133,6 +136,9 @@ bool QQuickVisualTestUtils::isDelegateVisible(QQuickItem *item)
     distance field glyph pixels have a measurable, but not visible
     pixel error. This was GT-216 with the ubuntu "nvidia-319" driver package.
     llvmpipe does not show the same issue.
+
+    To see the actual and expected images upon failure, enable the
+    \c qt.quicktestutils.compareimages debug logging category.
 */
 bool QQuickVisualTestUtils::compareImages(const QImage &ia, const QImage &ib, QString *errorMessage)
 {
@@ -161,8 +167,32 @@ bool QQuickVisualTestUtils::compareImages(const QImage &ia, const QImage &ib, QS
                 || qAbs(qRed(a) - qRed(b)) > tolerance
                 || qAbs(qGreen(a) - qGreen(b)) > tolerance
                 || qAbs(qBlue(a) - qBlue(b)) > tolerance) {
-                QDebug(errorMessage) << "Mismatch at:" << x << y << ':'
+                QDebug debug(errorMessage);
+                debug << "Mismatch at:" << x << y << ':'
                     << Qt::hex << Qt::showbase << a << b;
+
+                if (lcCompareImages().isDebugEnabled()) {
+                    const QDir saveDir(QCoreApplication::applicationDirPath());
+                    QString imageFileNamePrefix = QString::fromUtf8("%1-%2").arg(
+                        QTest::currentAppName(), QTest::currentTestFunction());
+                    if (QTest::currentDataTag())
+                        imageFileNamePrefix.append("-" + QString::fromUtf8(QTest::currentDataTag()));
+
+                    const QString actualImageFilePath = saveDir.filePath(imageFileNamePrefix + QLatin1String("-actual.png"));
+                    const bool actualImageSaved = ia.save(actualImageFilePath);
+                    if (!actualImageSaved)
+                        qWarning() << "Failed to save actual image to" << actualImageFilePath;
+
+                    const QString expectedImageFilePath = saveDir.filePath(imageFileNamePrefix + QLatin1String("-expected.png"));
+                    const bool expectedImageSaved = ib.save(expectedImageFilePath);
+                    if (!expectedImageSaved)
+                        qWarning() << "Failed to save expected image to" << expectedImageFilePath;
+
+                    if (actualImageSaved && expectedImageSaved) {
+                        debug << "\nActual image saved to:" << actualImageFilePath;
+                        debug << "\nExpected image saved to:" << expectedImageFilePath;
+                    }
+                }
                 return false;
             }
         }
