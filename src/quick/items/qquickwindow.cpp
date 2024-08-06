@@ -43,6 +43,7 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qsgdefaultrendercontext_p.h>
+#include <private/qsgsoftwarerenderer_p.h>
 #if QT_CONFIG(opengl)
 #include <private/qopengl_p.h>
 #include <QOpenGLContext>
@@ -519,6 +520,7 @@ void QQuickWindowPrivate::syncSceneGraph()
 {
     Q_Q(QQuickWindow);
 
+    const bool wasRtDirty = redirect.renderTargetDirty;
     ensureCustomRenderTarget();
 
     QRhiCommandBuffer *cb = nullptr;
@@ -540,7 +542,7 @@ void QQuickWindowPrivate::syncSceneGraph()
         invalidateFontData(contentItem);
     }
 
-    if (!renderer) {
+    if (Q_UNLIKELY(!renderer)) {
         forceUpdate(contentItem);
 
         QSGRootNode *rootNode = new QSGRootNode;
@@ -550,6 +552,10 @@ void QQuickWindowPrivate::syncSceneGraph()
                                                                      : QSGRendererInterface::RenderMode2DNoDepthBuffer;
         renderer = context->createRenderer(renderMode);
         renderer->setRootNode(rootNode);
+    } else if (Q_UNLIKELY(wasRtDirty)
+               && q->rendererInterface()->graphicsApi() == QSGRendererInterface::Software) {
+        auto softwareRenderer = static_cast<QSGSoftwareRenderer *>(renderer);
+        softwareRenderer->markDirty();
     }
 
     updateDirtyNodes();
