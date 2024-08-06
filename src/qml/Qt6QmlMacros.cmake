@@ -3018,7 +3018,7 @@ function(qt6_target_qml_sources target)
 
                 if(ANDROID AND QT_ANDROID_GENERATE_JAVA_QML_COMPONENTS)
                     get_source_file_property(qml_file_generate_java_classes ${qml_file_src}
-                        QT_QML_GENERATE_JAVA_CLASS
+                        QT_QML_GENERATE_ANDROID_JAVA_CLASS
                     )
                     if(qml_file_generate_java_classes)
                         get_target_property(qml_module_uri ${target} QT_QML_MODULE_URI)
