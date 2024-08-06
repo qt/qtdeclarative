@@ -512,7 +512,7 @@ ResolvedTypeAlias::ResolvedTypeAlias(
 
 void ResolvedTypeAlias::handleVoid()
 {
-    if (type == "void")
+    if (!isPointer && type == "void")
         type = "";
 }
 
