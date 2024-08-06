@@ -1059,6 +1059,11 @@ void tst_qmltyperegistrar::doNotDuplicateQtNamespace()
     QVERIFY(!qmltypesData.contains(R"(file: "qnamespace.h")"));
 }
 
+void tst_qmltyperegistrar::doNotDuplicateQObject()
+{
+    QVERIFY(!qmltypesData.contains(R"(file: "qobject.h")"));
+}
+
 void tst_qmltyperegistrar::slotsBeforeInvokables()
 {
     QVERIFY(qmltypesData.contains(R"(Component {
