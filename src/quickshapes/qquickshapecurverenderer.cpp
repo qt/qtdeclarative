@@ -92,6 +92,7 @@ public:
 
     QQuickShapeWireFrameNode()
     {
+        isDebugNode = true;
         setFlag(OwnsGeometry, true);
         setGeometry(new QSGGeometry(attributes(), 0, 0));
         activateMaterial();
@@ -398,6 +399,8 @@ void QQuickShapeCurveRenderer::updateNode()
 
     auto updateUniforms = [](const PathData &pathData) {
         for (auto &pathNode : std::as_const(pathData.fillNodes)) {
+            if (pathNode->isDebugNode)
+                continue;
             QSGCurveFillNode *fillNode = static_cast<QSGCurveFillNode *>(pathNode);
             fillNode->setColor(pathData.fillColor);
             fillNode->setGradientType(pathData.gradientType);
