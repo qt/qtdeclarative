@@ -16,8 +16,8 @@ application.
 \section1 Chapter 1: Setting Up
 
 When setting up a new project, it's easiest to use
-\l {Qt Creator Manual}{Qt Creator}. For this project, we chose the
-\l {Qt Creator: Creating Qt Quick Projects}{Qt Quick application} template, which creates a
+\l {\QC Documentation}{\QC}. For this project, we chose the
+\l {\QC: Creating Qt Quick Projects}{Qt Quick application} template, which creates a
 basic "Hello World" application with the following files:
 
 \list
