@@ -2230,14 +2230,15 @@ QString GlobalExtensions::currentTranslationContext(ExecutionEngine *engine)
     otherwise returns \a sourceText itself if no appropriate translated string
     is available.
 
-    If the same \a sourceText is used in different roles within the
-    same translation context, an additional identifying string may be passed in
-    for \a disambiguation.
-
     Example:
     \snippet qml/qsTr.qml 0
 
-    \sa {Internationalization with Qt}
+    If the same \a sourceText is used in different roles within the
+    same translation context, an additional identifying string may be passed in
+    for \a disambiguation. For more information and examples, refer to
+    \l{Disambiguate Identical Text}.
+
+    \sa {Internationalization with Qt},{Writing Source Code for Translation}
 */
 ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
