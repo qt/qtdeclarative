@@ -527,44 +527,43 @@ void QQuickShapeCurveRenderer::processPath(PathData *pathData)
 
 QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const QQuadPath &path)
 {
-    auto *node = new QSGCurveFillNode;
+    NodeList ret;
+    std::unique_ptr<QSGCurveFillNode> node(new QSGCurveFillNode);
+    std::unique_ptr<QQuickShapeWireFrameNode> wfNode;
+
     const qsizetype approxDataCount = 20 * path.elementCount();
     node->reserve(approxDataCount);
 
-    NodeList ret;
+    const int debugFlags = debugVisualization();
+    const bool wireFrame = debugFlags & DebugWireframe;
 
-    bool visualizeDebug = debugVisualization() & DebugCurves;
-    const float dbg = visualizeDebug  ? 0.5f : 0.0f;
-    node->setDebug(dbg);
-
-    QVector<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
-    wfVertices.reserve(approxDataCount);
-
-    QSGCurveProcessor::processFill(path,
-                                   path.fillRule(),
-                                   [&wfVertices, &node](const std::array<QVector2D, 3> &v,
-                                                        const std::array<QVector2D, 3> &n,
-                                                        QSGCurveProcessor::uvForPointCallback uvForPoint)
-                                   {
-                                       node->appendTriangle(v, n, uvForPoint);
-
-                                       wfVertices.append({v.at(0).x(), v.at(0).y(), 1.0f, 0.0f, 0.0f}); // 0
-                                       wfVertices.append({v.at(1).x(), v.at(1).y(), 0.0f, 1.0f, 0.0f}); // 1
-                                       wfVertices.append({v.at(2).x(), v.at(2).y(), 0.0f, 0.0f, 1.0f}); // 2
-                                   });
-
-    QVector<quint32> indices = node->uncookedIndexes();
-    if (indices.size() > 0) {
-        node->cookGeometry();
-        ret.append(node);
+    if (Q_LIKELY(!wireFrame)) {
+        QSGCurveProcessor::processFill(path,
+                                       path.fillRule(),
+                                       [&node](const std::array<QVector2D, 3> &v,
+                                               const std::array<QVector2D, 3> &n,
+                                               QSGCurveProcessor::uvForPointCallback uvForPoint)
+                                       {
+                                           node->appendTriangle(v, n, uvForPoint);
+                                       });
     } else {
-        delete node;
-        return ret;
-    }
+        QVector<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
+        wfVertices.reserve(approxDataCount);
+        QSGCurveProcessor::processFill(path,
+                                       path.fillRule(),
+                                       [&wfVertices, &node](const std::array<QVector2D, 3> &v,
+                                                            const std::array<QVector2D, 3> &n,
+                                                            QSGCurveProcessor::uvForPointCallback uvForPoint)
+                                       {
+                                           node->appendTriangle(v, n, uvForPoint);
 
-    const bool wireFrame = debugVisualization() & DebugWireframe;
-    if (wireFrame) {
-        QQuickShapeWireFrameNode *wfNode = new QQuickShapeWireFrameNode;
+                                           wfVertices.append({v.at(0).x(), v.at(0).y(), 1.0f, 0.0f, 0.0f}); // 0
+                                           wfVertices.append({v.at(1).x(), v.at(1).y(), 0.0f, 1.0f, 0.0f}); // 1
+                                           wfVertices.append({v.at(2).x(), v.at(2).y(), 0.0f, 0.0f, 1.0f}); // 2
+                                       });
+
+        wfNode.reset(new QQuickShapeWireFrameNode);
+        const QVector<quint32> indices = node->uncookedIndexes();
         QSGGeometry *wfg = new QSGGeometry(QQuickShapeWireFrameNode::attributes(),
                                            wfVertices.size(),
                                            indices.size(),
@@ -578,8 +577,16 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
         memcpy(wfg->vertexData(),
                wfVertices.data(),
                wfg->vertexCount() * wfg->sizeOfVertex());
+    }
 
-        ret.append(wfNode);
+    if (Q_UNLIKELY(debugFlags & DebugCurves))
+        node->setDebug(0.5f);
+
+    if (node->uncookedIndexes().size() > 0) {
+        node->cookGeometry();
+        ret.append(node.release());
+        if (wireFrame)
+            ret.append(wfNode.release());
     }
 
     return ret;
