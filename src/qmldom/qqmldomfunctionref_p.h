@@ -17,7 +17,7 @@
 
 #include <QtCore/private/qglobal_p.h>
 
-#if !defined(Q_CC_MSVC) || Q_CC_MSVC >= 1930
+#if !defined(Q_CC_MSVC) || (Q_CC_MSVC >= 1930 && !defined(QML_DOM_MSVC2019_COMPAT))
 #include <QtCore/qxpfunctional.h>
 
 QT_BEGIN_NAMESPACE
