@@ -515,9 +515,26 @@ return all the found file paths.
 
 This is an overapproximation and might find unrelated files with the same name.
 */
-QStringList QQmlCodeModel::findFilePathsFromFileNames(const QStringList &fileNames) const
+QStringList QQmlCodeModel::findFilePathsFromFileNames(const QStringList &_fileNamesToSearch)
 {
+    QStringList fileNamesToSearch{ _fileNamesToSearch };
+
+    // ignore files that were not found last time
+    fileNamesToSearch.erase(std::remove_if(fileNamesToSearch.begin(), fileNamesToSearch.end(),
+                                           [this](const QString &fileName) {
+                                               return m_ignoreForWatching.contains(fileName);
+                                           }),
+                            fileNamesToSearch.end());
+
+    // early return:
+    if (fileNamesToSearch.isEmpty())
+        return {};
+
+    QSet<QString> foundFiles;
+    foundFiles.reserve(fileNamesToSearch.size());
+
     QStringList result;
+
     for (const auto &rootUrl : m_rootUrls) {
         const QString rootDir = QUrl(QString::fromUtf8(rootUrl)).toLocalFile();
 
@@ -525,11 +542,18 @@ QStringList QQmlCodeModel::findFilePathsFromFileNames(const QStringList &fileNam
             continue;
 
         qCDebug(codeModelLog) << "Searching for files to watch in workspace folder" << rootDir;
-        QDirIterator it(rootDir, fileNames, QDir::Files, QDirIterator::Subdirectories);
+        QDirIterator it(rootDir, fileNamesToSearch, QDir::Files, QDirIterator::Subdirectories);
         while (it.hasNext()) {
-            QFileInfo info = it.nextFileInfo();
+            const QFileInfo info = it.nextFileInfo();
+            const QString fileName = info.fileName();
+            foundFiles.insert(fileName);
             result << info.absoluteFilePath();
         }
+    }
+
+    for (const auto& fileName: fileNamesToSearch) {
+        if (!foundFiles.contains(fileName))
+            m_ignoreForWatching.insert(fileName);
     }
     return result;
 }
@@ -561,8 +585,12 @@ QStringList QQmlCodeModel::fileNamesToWatch(const DomItem &qmlFile)
             continue;
 
         const QString filePath = QFileInfo(type.scope->filePath()).fileName();
-        result << filePath;
+        if (!filePath.isEmpty())
+            result << filePath;
     }
+
+    std::sort(result.begin(), result.end());
+    result.erase(std::unique(result.begin(), result.end()), result.end());
 
     return result;
 }

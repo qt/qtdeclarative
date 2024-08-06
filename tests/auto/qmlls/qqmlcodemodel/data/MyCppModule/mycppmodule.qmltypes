@@ -33,4 +33,12 @@ Module {
         }
         Signal { name: "myPChanged" }
     }
+    Component {
+        file: ""
+        name: "FileLess"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["MyCppModule/FileLess 1.0"]
+        exportMetaObjectRevisions: [256]
+    }
 }
