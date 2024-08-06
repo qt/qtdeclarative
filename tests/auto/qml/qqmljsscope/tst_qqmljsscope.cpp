@@ -117,6 +117,7 @@ private Q_SLOTS:
     void builtinTypeResolution_data();
     void builtinTypeResolution();
     void methodAndSignalSourceLocation();
+    void modulePrefixes();
 
 public:
     tst_qqmljsscope()
@@ -986,6 +987,34 @@ void tst_qqmljsscope::methodAndSignalSourceLocation()
     QCOMPARE(jsscope->methods("s1")[0].sourceLocation(), SourceLocation(offsets[6], 11, 13, 5));
     QCOMPARE(jsscope->methods("s2")[0].sourceLocation(), SourceLocation(offsets[7], 17, 14, 5));
     QCOMPARE(jsscope->methods("s3")[0].sourceLocation(), SourceLocation(offsets[8], 28, 15, 5));
+}
+
+void tst_qqmljsscope::modulePrefixes()
+{
+    const auto url = testFile("modulePrefixes.qml");
+    const QString sourceCode = loadUrl(url);
+    QQmlJSLogger logger;
+    logger.setFileName(url);
+    logger.setCode(sourceCode);
+
+    QQmlJSScope::Ptr target = QQmlJSScope::create();
+    QmlIR::Document document(false);
+    QQmlJSSaveFunction noop([](auto &&...) { return true; });
+    QQmlJSCompileError error;
+    [&]() {
+        QVERIFY2(qCompileQmlFile(document, url, noop, nullptr, &error), qPrintable(error.message));
+    }();
+    if (!error.message.isEmpty())
+        return;
+
+    QQmlJSImportVisitor visitor(target, &m_importer, &logger, dataDirectory());
+    QQmlJSTypeResolver typeResolver{ &m_importer };
+    typeResolver.init(&visitor, document.program);
+
+    const auto prefixes = typeResolver.seenModuleQualifiers();
+    QVERIFY(prefixes.contains("QML"_L1));
+    QVERIFY(prefixes.contains("CD"_L1));
+    QVERIFY(prefixes.contains("QQ"_L1));
 }
 
 QTEST_MAIN(tst_qqmljsscope)
