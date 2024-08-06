@@ -832,6 +832,15 @@ public:
     Q_INVOKABLE void baz() {}
 };
 
+class JavaScriptFunction : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    JavaScriptFunction(QObject *parent = nullptr) : QObject(parent) {}
+    Q_INVOKABLE void jsfunc(QQmlV4FunctionPtr) {}
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -909,6 +918,8 @@ private slots:
     void enumsRegistered();
     void doNotDuplicateQtNamespace();
     void slotsBeforeInvokables();
+
+    void omitQQmlV4FunctionPtrArg();
 
 private:
     QByteArray qmltypesData;

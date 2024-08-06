@@ -1086,4 +1086,17 @@ void tst_qmltyperegistrar::slotsBeforeInvokables()
     })"));
 }
 
+void tst_qmltyperegistrar::omitQQmlV4FunctionPtrArg()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "JavaScriptFunction"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["QmlTypeRegistrarTest/JavaScriptFunction 1.0"]
+        exportMetaObjectRevisions: [256]
+        Method { name: "jsfunc"; isJavaScriptFunction: true }
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)
