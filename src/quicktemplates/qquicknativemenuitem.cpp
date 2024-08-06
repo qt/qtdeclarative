@@ -199,13 +199,18 @@ void QQuickNativeMenuItem::sync()
 
     const QQuickIcon icon = effectiveIcon();
     const auto *menuPrivate = QQuickMenuPrivate::get(m_parentMenu);
-    const auto *window = qGuiApp->topLevelWindows().first();
+
     // We should reload the icon if the window's DPR has changed, regardless if its properties have changed.
     // We can't check for ItemDevicePixelRatioHasChanged in QQuickMenu::itemChange,
     // because that isn't sent when the menu isn't visible, and will never
     // be sent for native menus. We instead store lastDevicePixelRatio in QQuickMenu
     // (to avoid storing it for each menu item) and set it whenever it's opened.
-    const bool dprChanged = !qFuzzyCompare(window->devicePixelRatio(), menuPrivate->lastDevicePixelRatio);
+    bool dprChanged = false;
+    if (!qGuiApp->topLevelWindows().isEmpty()) {
+        const auto *window = qGuiApp->topLevelWindows().first();
+        dprChanged = !qFuzzyCompare(window->devicePixelRatio(), menuPrivate->lastDevicePixelRatio);
+    }
+
     if (!icon.isEmpty() && (icon != iconLoader()->icon() || dprChanged)) {
         // This will load the icon, which will call sync() recursively, hence the m_syncing check.
         reloadIcon();
