@@ -1,11 +1,13 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 #include <config.h>
+
+#include <cstdio>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <qdebug.h>
-#include <qbytearray.h> // qvsnprintf
 #include <FilePrintStream.h>
 
 #if ENABLE(ASSEMBLER) && CPU(X86) && !OS(MAC_OS_X)
@@ -58,7 +60,7 @@ FilePrintStream& dataFile()
 void dataLogFV(const char* format, va_list args)
 {
     char buffer[1024];
-    qvsnprintf(buffer, sizeof(buffer), format, args);
+    std::vsnprintf(buffer, sizeof(buffer), format, args);
     qDebug().nospace().noquote() << buffer;
 }
 
@@ -67,7 +69,7 @@ void dataLogF(const char* format, ...)
     char buffer[1024];
     va_list args;
     va_start(args, format);
-    qvsnprintf(buffer, sizeof(buffer), format, args);
+    std::vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
     qDebug().nospace().noquote() << buffer;
 }
