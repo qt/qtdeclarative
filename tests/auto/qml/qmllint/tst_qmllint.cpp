@@ -2004,24 +2004,14 @@ void TestQmllint::attachedPropertyReuse()
             {}, {}, {}, UseDefaultImports, &categories);
 
     runTest("attachedPropEnum.qml", Result::clean(), {}, {}, {}, UseDefaultImports, &categories);
-    runTest("MyStyle/ToolBar.qml", Result {
-        {
-            Message {
-                "Using attached type MyStyle already initialized in a parent scope"_L1,
-                10,
-                16
-            }
-        },
-        {},
-        {
-            Message {
-                "Reference it by id instead"_L1,
-                10,
-                16
-            }
-        },
-        Result::AutoFixable
-    });
+    runTest("MyStyle/ToolBar.qml",
+            Result{ { Message{
+                            "Using attached type MyStyle already initialized in a parent scope"_L1,
+                            10, 16 } },
+                    {},
+                    { Message{ "Reference it by id instead"_L1, 10, 16 } },
+                    Result::AutoFixable },
+            {}, {}, {}, UseDefaultImports, &categories);
     runTest("pluginQuick_multipleAttachedPropertyReuse.qml",
             Result{ { Message{ QStringLiteral(
                     "Using attached type Test already initialized in a parent scope") } } },
