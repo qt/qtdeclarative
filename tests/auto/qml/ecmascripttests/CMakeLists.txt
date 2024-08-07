@@ -27,6 +27,10 @@ qt_internal_add_test(tst_ecmascripttests
         Qt::QuickTestUtilsPrivate
     TESTDATA
         ${test_data}
+
+    # We're doing our own QTest timeout handling here.
+    # Don't let ctest interfere.
+    TIMEOUT 3600
 )
 
 if(ANDROID OR IOS)
