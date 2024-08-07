@@ -226,10 +226,9 @@ private slots:
     void listModel();
 
     void resizableHandlerBlockingEvents();
-
     void headerData();
-
     void warnMissingDefaultRole();
+    void dragInvalidItemDuringReorder();
 
 private:
     QQmlEngine *engine;
@@ -457,6 +456,37 @@ void tst_QQuickHeaderView::warnMissingDefaultRole()
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
+}
+
+void tst_QQuickHeaderView::dragInvalidItemDuringReorder()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("reorderHeader.qml"));
+    QVERIFY2(helper.errorMessage.isEmpty(), helper.errorMessage);
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto hhv = window->findChild<QQuickHorizontalHeaderView *>("horizontalHeader");
+    QVERIFY(hhv);
+
+    const auto item = hhv->itemAtIndex(hhv->index(0, 0));
+    QQuickWindow *itemWindow = item->window();
+
+    QSignalSpy columnMovedSpy(hhv, SIGNAL(columnMoved(int, int, int)));
+    QVERIFY(columnMovedSpy.isValid());
+
+    const QPoint localPos = QPoint(item->width() - 5, item->height() - 5);
+    const QPoint startPos = itemWindow->contentItem()->mapFromItem(item, localPos).toPoint();
+    const QPoint startDragDist = QPoint(0, qApp->styleHints()->startDragDistance() + 1);
+    const QPoint dragLength(0, 100);
+
+    QTest::mousePress(itemWindow, Qt::LeftButton, Qt::NoModifier, startPos);
+    QTest::mouseMove(itemWindow, startPos + startDragDist);
+    QTest::mouseMove(itemWindow, startPos + dragLength);
+    QTest::mouseRelease(itemWindow, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
+
+    QVERIFY(!QQuickTest::qIsPolishScheduled(item));
+    QCOMPARE(columnMovedSpy.size(), 0);
 }
 
 QTEST_MAIN(tst_QQuickHeaderView)
