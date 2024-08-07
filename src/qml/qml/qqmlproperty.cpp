@@ -843,17 +843,21 @@ static void removeOldBinding(QObject *object, QQmlPropertyIndex index, QQmlPrope
     oldBinding = data->bindings;
 
     while (oldBinding && (oldBinding->targetPropertyIndex().coreIndex() != coreIndex ||
-                          oldBinding->targetPropertyIndex().hasValueTypeIndex()))
+                          oldBinding->targetPropertyIndex().hasValueTypeIndex())) {
         oldBinding = oldBinding->nextBinding();
+    }
 
-    if (!oldBinding)
-        return;
-
-    if (valueTypeIndex != -1 && oldBinding->kind() == QQmlAbstractBinding::ValueTypeProxy)
+    if (valueTypeIndex != -1
+            && oldBinding
+            && oldBinding->kind() == QQmlAbstractBinding::ValueTypeProxy) {
         oldBinding = static_cast<QQmlValueTypeProxyBinding *>(oldBinding.data())->binding(index);
+    }
 
-    if (!oldBinding)
+    if (!oldBinding) {
+        // Clear the binding bit so that the binding doesn't appear later for any reason
+        data->clearBindingBit(coreIndex);
         return;
+    }
 
     if (!(flags & QQmlPropertyPrivate::DontEnable))
         oldBinding->setEnabled(false, {});

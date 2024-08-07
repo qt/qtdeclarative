@@ -464,6 +464,8 @@ private slots:
     void nestedVectors();
     void optimizedSequenceShift();
 
+    void overrideInnerBinding();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8973,6 +8975,18 @@ void tst_qqmllanguage::optimizedSequenceShift()
     const QVariant one = o->property("one");
     QCOMPARE(one.metaType(), QMetaType::fromType<int>());
     QCOMPARE(one.toInt(), 1);
+}
+
+void tst_qqmllanguage::overrideInnerBinding()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("BindingOverrider.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("width").toReal(), 20.0);
+    QCOMPARE(o->property("innerWidth").toReal(), 20.0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
