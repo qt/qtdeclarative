@@ -947,6 +947,22 @@ void QSvgVisitorImpl::visitUseNode(const QSvgUse *node)
     handleBaseNodeEnd(node);
 }
 
+bool QSvgVisitorImpl::visitSwitchNodeStart(const QSvgSwitch *node)
+{
+    QSvgNode *link = node->childToRender();
+    if (!link)
+        return false;
+
+    QSvgVisitor::traverse(link);
+
+    return false;
+}
+
+void QSvgVisitorImpl::visitSwitchNodeEnd(const QSvgSwitch *node)
+{
+    Q_UNUSED(node);
+}
+
 bool QSvgVisitorImpl::visitDefsNodeStart(const QSvgDefs *node)
 {
     Q_UNUSED(node)
