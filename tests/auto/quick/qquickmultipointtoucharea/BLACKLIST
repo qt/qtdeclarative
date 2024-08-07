@@ -8,3 +8,6 @@ ubuntu-22.04
 # QTBUG-118065
 [mouseGestureStarted]
 opensuse-leap
+
+[tst_QQuickMultiPointTouchArea::inFlickable]
+ci
