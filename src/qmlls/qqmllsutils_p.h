@@ -151,11 +151,11 @@ public:
     void sort();
     bool isEmpty() const;
 
-    friend bool comparesEqual(const Usages &a, const Usages &b)
+    friend bool comparesEqual(const Usages &a, const Usages &b) noexcept
     {
         return a.m_usagesInFile == b.m_usagesInFile && a.m_usagesInFilename == b.m_usagesInFilename;
     }
-    Q_DECLARE_EQUALITY_COMPARABLE_NON_NOEXCEPT(Usages)
+    Q_DECLARE_EQUALITY_COMPARABLE(Usages)
 
     Usages() = default;
     Usages(const QList<Location> &usageInFile, const QList<QString> &usageInFilename);
@@ -189,12 +189,12 @@ renamed and also filename themselves can be renamed.
 class RenameUsages
 {
 public:
-    friend bool comparesEqual(const RenameUsages &a, const RenameUsages &b)
+    friend bool comparesEqual(const RenameUsages &a, const RenameUsages &b) noexcept
     {
         return std::tie(a.m_renamesInFile, a.m_renamesInFilename)
                 == std::tie(b.m_renamesInFile, b.m_renamesInFilename);
     }
-    Q_DECLARE_EQUALITY_COMPARABLE_NON_NOEXCEPT(RenameUsages)
+    Q_DECLARE_EQUALITY_COMPARABLE(RenameUsages)
 
     RenameUsages() = default;
     RenameUsages(const QList<Edit> &renamesInFile, const QList<FileRename> &renamesInFilename);
