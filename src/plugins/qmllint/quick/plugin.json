@@ -38,7 +38,8 @@
         {
             "name": "controls-attached-property-reuse",
             "settingsName": "ControlsAttachedPropertyReuse",
-            "description": "Warn about failure to re-use attached objects of controls"
+            "description": "Warn about failure to re-use attached objects of controls",
+            "enabled": false
         },
         {
             "name": "attached-property-reuse",
