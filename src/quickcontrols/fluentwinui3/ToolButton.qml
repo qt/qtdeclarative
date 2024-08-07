@@ -25,6 +25,27 @@ T.ToolButton {
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
 
+    icon.width: config.icon.width
+    icon.height: config.icon.height
+    icon.color: __buttonText
+
+    readonly property color __buttonText: {
+        if (control.down) {
+            return (control.checked || control.highlighted)
+                ? Application.styleHints.colorScheme == Qt.Light
+                    ? Qt.rgba(1, 1, 1, 0.7) : Qt.rgba(0, 0, 0, 0.5)
+                : (Application.styleHints.colorScheme === Qt.Light
+                    ? Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.62)
+                    : Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.7725))
+        } else if (control.checked || control.highlighted) {
+            return (Application.styleHints.colorScheme === Qt.Dark && !control.enabled)
+                ? Qt.rgba(1, 1, 1, 0.5302)
+                : (Application.styleHints.colorScheme === Qt.Dark ? "black" : "white")
+        } else {
+            return control.palette.buttonText
+        }
+    }
+
     readonly property string __currentState: [
         control.checked && "checked",
         !control.enabled && "disabled",
@@ -32,20 +53,6 @@ T.ToolButton {
         down && "pressed"
     ].filter(Boolean).join("_") || "normal"
     readonly property var config: Config.controls.toolbutton[__currentState] || {}
-
-    readonly property color __pressedText: (control.checked || control.highlighted)
-                                    ? Application.styleHints.colorScheme == Qt.Light
-                                        ? Qt.rgba(control.palette.highlightedText.r, control.palette.highlightedText.g, control.palette.highlightedText.b, 0.498)
-                                        : Qt.rgba(control.palette.highlightedText.r, control.palette.highlightedText.g, control.palette.highlightedText.b, 0.502)
-                                    : Application.styleHints.colorScheme == Qt.Light
-                                        ? Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.62)
-                                        : Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.7725)
-
-    icon.width: config.icon.width
-    icon.height: config.icon.height
-    icon.color: control.down ? __pressedText : (control.checked || control.highlighted)
-                                                ? control.palette.highlightedText
-                                                : control.palette.buttonText
 
     contentItem: IconLabel {
         spacing: control.spacing
