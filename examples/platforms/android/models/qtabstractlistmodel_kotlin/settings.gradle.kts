@@ -9,7 +9,7 @@ pluginManagement {
         }
         mavenCentral()
         maven {
-            url "https://android.qt.io/maven/snapshots"
+            url = uri("https://android.qt.io/maven/snapshots")
         }
         gradlePluginPortal()
     }
@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "qtabstractlistmodel_kotlin"
 include ':app'
+
