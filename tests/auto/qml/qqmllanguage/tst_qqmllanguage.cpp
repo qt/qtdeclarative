@@ -466,6 +466,8 @@ private slots:
 
     void overrideInnerBinding();
 
+    void innerFunctionWithTypeAnnotation();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8987,6 +8989,17 @@ void tst_qqmllanguage::overrideInnerBinding()
 
     QCOMPARE(o->property("width").toReal(), 20.0);
     QCOMPARE(o->property("innerWidth").toReal(), 20.0);
+}
+
+void tst_qqmllanguage::innerFunctionWithTypeAnnotation()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("typeAnnotationInInnerFunction.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->objectName(), "data12");
 }
 
 QTEST_MAIN(tst_qqmllanguage)

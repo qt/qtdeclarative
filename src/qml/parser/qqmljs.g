@@ -544,6 +544,10 @@ int Parser::lookaheadToken(Lexer *lexer)
 
 bool Parser::ensureNoFunctionTypeAnnotations(AST::TypeAnnotation *returnValueAnnotation, AST::FormalParameterList *formals)
 {
+    // Type annotations are allowed everywhere in QML code.
+    if (driver->lexer()->qmlMode())
+        return true;
+
     for (auto formal = formals; formal; formal = formal->next) {
         if (formal->element && formal->element->typeAnnotation) {
             syntaxError(formal->element->typeAnnotation->firstSourceLocation(), "Type annotations are not permitted in function parameters in JavaScript functions");
