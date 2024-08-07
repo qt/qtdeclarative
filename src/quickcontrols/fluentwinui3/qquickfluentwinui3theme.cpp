@@ -101,8 +101,7 @@ static void populateSystemPalette(QPalette &palette)
     palette.setColor(QPalette::All, QPalette::Accent, WINUI3Colors[colorSchemeIndex][accentDefault]);
     palette.setColor(QPalette::Disabled, QPalette::Accent, WINUI3Colors[colorSchemeIndex][accentDisabled]);
 
-    palette.setColor(QPalette::All, QPalette::HighlightedText, WINUI3Colors[colorSchemeIndex][textOnAccentPrimary]);
-    palette.setColor(QPalette::Disabled, QPalette::HighlightedText, WINUI3Colors[colorSchemeIndex][textOnAccentDisabled]);
+    palette.setColor(QPalette::All, QPalette::HighlightedText, Qt::white);
 }
 
 static void populateThemeFont(QQuickTheme *theme)
