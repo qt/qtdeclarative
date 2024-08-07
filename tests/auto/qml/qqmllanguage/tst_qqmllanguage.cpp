@@ -398,6 +398,8 @@ private slots:
 
     void typedObjectList();
 
+    void overrideInnerBinding();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6782,6 +6784,18 @@ void tst_qqmllanguage::typedObjectList()
 
     QCOMPARE(list.count(&list), 1);
     QVERIFY(list.at(&list, 0) != nullptr);
+}
+
+void tst_qqmllanguage::overrideInnerBinding()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("BindingOverrider.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("width").toReal(), 20.0);
+    QCOMPARE(o->property("innerWidth").toReal(), 20.0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
