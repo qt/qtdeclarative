@@ -1133,5 +1133,15 @@ void tst_qmltyperegistrar::preserveVoidStarPropTypes()
         }
     })"));
 }
+void tst_qmltyperegistrar::allReferencedTypesCollected()
+{
+    // reproduce the issue from the comment in QTBUG-118112
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "typereferencinganother.h"
+        name: "SampleHeader"
+        accessSemantics: "reference"
+        prototype: "QObject"
+    })"));
+}
 
 QTEST_MAIN(tst_qmltyperegistrar)
