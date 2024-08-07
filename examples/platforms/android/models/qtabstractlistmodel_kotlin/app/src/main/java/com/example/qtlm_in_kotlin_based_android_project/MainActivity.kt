@@ -14,23 +14,25 @@ import org.qtproject.qt.android.QtQmlStatus
 import org.qtproject.qt.android.QtQmlStatusChangeListener
 import org.qtproject.qt.android.QtQuickView
 
+//! [MainActivity definition]
 class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
     private val m_mainQmlComponent: Main = Main()
     private val m_listModel = MyListModel()
+//! [MainActivity definition]
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+//! [Adding QtQuickView]
         val qtQuickView: QtQuickView = QtQuickView(this)
-        m_mainQmlComponent.setStatusChangeListener(this)
 
         val params: ViewGroup.LayoutParams = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
         )
         val qmlFrameLayout: FrameLayout = findViewById<FrameLayout>(R.id.qmlFrame)
         qmlFrameLayout.addView(qtQuickView, params)
-
+//! [Adding QtQuickView]
+//! [Adding control buttons]
         val addRowAtEndButton: Button = findViewById<Button>(R.id.addRow)
         val removeRowFromEndButton: Button = findViewById<Button>(R.id.removeRow)
         addRowAtEndButton.setOnClickListener { _: View? ->
@@ -39,13 +41,18 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         removeRowFromEndButton.setOnClickListener { _: View? ->
             m_listModel.removeRow()
         }
-
+//! [Adding control buttons]
+//! [Loading the QML component]
+        m_mainQmlComponent.setStatusChangeListener(this)
         qtQuickView.loadComponent(m_mainQmlComponent)
+//! [Loading the QML component]
     }
 
+//! [Linking the data model]
     override fun onStatusChanged(qtQmlStatus: QtQmlStatus) {
         if (qtQmlStatus === QtQmlStatus.READY) {
             m_mainQmlComponent.setDataModel(m_listModel)
         }
     }
+//! [Linking the data model]
 }
