@@ -4,11 +4,13 @@ plugins {
     id 'org.qtproject.qt.gradleplugin' version '0.1-SNAPSHOT+'
 }
 
+//! [build.gradle QtBuild config]
 QtBuild {
     // Relative for pre-installed (Installer or MaintenanceTool) installations.
     qtPath file('../../../../../../../6.8.0')
     projectPath file('../../qtabstractlistmodel')
 }
+//! [build.gradle QtBuild config]
 
 android {
     namespace 'com.example.qtabstractlistmodel_kotlin'

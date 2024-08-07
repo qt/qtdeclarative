@@ -81,4 +81,15 @@
     \externalpage https://developer.android.com/reference/android/Manifest.permission#SYSTEM_ALERT_WINDOW
     \title Android: SYSTEM_ALERT_WINDOW
 */
-
+/*!
+    \externalpage https://developer.android.com/reference/android/app/Activity
+    \title Android: Activity
+*/
+/*!
+    \externalpage https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/
+    \title Kotlin: Int
+*/
+/*!
+    \externalpage https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/
+    \title Kotlin: String
+*/

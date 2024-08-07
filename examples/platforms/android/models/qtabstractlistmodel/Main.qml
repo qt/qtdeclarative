@@ -3,19 +3,23 @@
 import QtQuick
 import QtQuick.Controls
 
+//! [QML root item and dataModel definition]
 Rectangle {
     id: mainRectangle
 
     property AbstractItemModel dataModel
+//! [QML root item and dataModel definition]
 
     color: "#00414A"
     border.width: 2
     border.color: "black"
 
+//! [ListView definition]
     ListView {
         id: listView
 
         model: mainRectangle.dataModel
+//! [ListView definition]
         ScrollBar.vertical: ScrollBar {}
         spacing: 10
 
@@ -24,6 +28,7 @@ Rectangle {
             margins: 20
         }
 
+//! [ListView delegate definition]
         delegate: Rectangle {
             required property var model
 
@@ -65,5 +70,6 @@ Rectangle {
                 }
             }
         }
+//! [ListView delegate definition]
     }
 }
