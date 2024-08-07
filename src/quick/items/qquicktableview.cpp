@@ -7307,6 +7307,8 @@ void QQuickTableViewSectionDragHandler::handleEventPoint(QPointerEvent *event, Q
                     // Grab the image for dragging header
                     const QPoint cell = tableView->cellAtPosition(point.position(), true);
                     auto *item = tableView->itemAtCell(cell);
+                    if (!item)
+                        break;
                     if (m_drag.isNull()) {
                         m_drag = new QDrag(item);
                         connect(m_drag.data(), &QDrag::actionChanged, this,
