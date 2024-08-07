@@ -33,6 +33,7 @@ target_link_libraries(tst_qmltyperegistrarPrivate PRIVATE Qt::Core)
 qt_internal_add_test(tst_qmltyperegistrar
     SOURCES
         hppheader.hpp
+        typereferencinganother.h
         # noextheader special case
         tst_qmltyperegistrar.cpp tst_qmltyperegistrar.h
         foo.cpp foo.h duplicatedExports.h

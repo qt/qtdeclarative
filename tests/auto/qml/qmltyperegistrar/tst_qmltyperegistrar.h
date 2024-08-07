@@ -940,6 +940,7 @@ private slots:
     void doNotDuplicateQtNamespace();
     void doNotDuplicateQObject();
     void slotsBeforeInvokables();
+    void allReferencedTypesCollected();
 
     void omitQQmlV4FunctionPtrArg();
     void preserveVoidStarPropTypes();
