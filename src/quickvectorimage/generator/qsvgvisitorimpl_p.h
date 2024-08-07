@@ -49,6 +49,9 @@ protected:
     bool visitDocumentNodeStart(const QSvgTinyDocument *node) override;
     void visitDocumentNodeEnd(const QSvgTinyDocument *node) override;
 
+    bool visitSwitchNodeStart(const QSvgSwitch *node) override;
+    void visitSwitchNodeEnd(const QSvgSwitch *node) override;
+
 private:
     void fillCommonNodeInfo(const QSvgNode *node, NodeInfo &info);
     void handleBaseNodeSetup(const QSvgNode *node);
