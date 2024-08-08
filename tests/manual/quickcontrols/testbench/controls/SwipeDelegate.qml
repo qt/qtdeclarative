@@ -48,7 +48,7 @@ QtObject {
         clip: true
         model: 20
         delegate: SwipeDelegate {
-            width: parent.width
+            width: ListView.view.width
             text: "SwipeDelegate"
             focusPolicy: Qt.StrongFocus
 
