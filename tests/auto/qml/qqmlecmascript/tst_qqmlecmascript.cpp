@@ -3891,8 +3891,8 @@ void tst_qqmlecmascript::scriptConnect()
         QCOMPARE(object->property("a"), 1);
 
         QMetaObject::invokeMethod(object, "destroyObj", Qt::DirectConnection);
-        QApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-        QApplication::processEvents();
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
 
         QMetaObject::invokeMethod(object, "someSignal");
 
