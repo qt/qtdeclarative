@@ -79,6 +79,8 @@ public:
     bool dynamicRoles() const { return m_dynamicRoles; }
     void setDynamicRoles(bool enableDynamicRoles);
 
+    ListModel *listModel() const { return m_listModel; }
+
 Q_SIGNALS:
     void countChanged();
 

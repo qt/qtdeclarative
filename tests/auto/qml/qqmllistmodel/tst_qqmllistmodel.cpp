@@ -122,6 +122,7 @@ private slots:
     void enumsInListElement();
     void protectQObjectFromGC();
     void nestedLists();
+    void deadModelData();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -2054,6 +2055,67 @@ void tst_qqmllistmodel::nestedLists()
 
     QMetaObject::invokeMethod(o.data(), "load", Q_ARG(QVariant, QVariant::fromValue(objects)));
     verifyLists(list, topLevel);
+}
+
+void tst_qqmllistmodel::deadModelData()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deadModelData.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QQmlListModel *l1 = o->property("l1").value<QQmlListModel *>();
+    QVERIFY(l1);
+    QQmlListModel *l2 = o->property("l2").value<QQmlListModel *>();
+    QVERIFY(l2);
+
+    QCOMPARE(l1->count(), 3);
+    QCOMPARE(l2->count(), 3);
+
+    for (int i = 0; i < 3; ++i) {
+        QObject *i1 = qjsvalue_cast<QObject *>(l1->get(i));
+        QVERIFY(i1);
+        QCOMPARE(i1->property("ident").value<double>(), i + 1);
+        QCOMPARE(i1->property("buttonText").value<QString>(),
+                 QLatin1String("B %1").arg(QLatin1Char('0' + i + 1)));
+
+        QObject *i2 = qjsvalue_cast<QObject *>(l2->get(i));
+        QVERIFY(i2);
+        QCOMPARE(i2->property("ident").value<double>(), i + 4);
+        QCOMPARE(i2->property("buttonText").value<QString>(),
+                 QLatin1String("B %1").arg(QLatin1Char('0' + i + 4)));
+    }
+
+    for (int i = 0; i < 6; ++i) {
+        QTest::ignoreMessage(
+                QtWarningMsg,
+                QRegularExpression(".*: ident is undefined. Adding an object with a undefined "
+                                   "member does not create a role for it."));
+        QTest::ignoreMessage(
+                QtWarningMsg,
+                QRegularExpression(".*: buttonText is undefined. Adding an object with a undefined "
+                                   "member does not create a role for it."));
+    }
+
+    QMetaObject::invokeMethod(o.data(), "swapCorpses");
+
+    // We get default-created values for all the roles now.
+
+    QCOMPARE(l1->count(), 3);
+    QCOMPARE(l2->count(), 3);
+
+    for (int i = 0; i < 3; ++i) {
+        QObject *i1 = qjsvalue_cast<QObject *>(l1->get(i));
+        QVERIFY(i1);
+        QCOMPARE(i1->property("ident").value<double>(), double());
+        QCOMPARE(i1->property("buttonText").value<QString>(), QString());
+
+        QObject *i2 = qjsvalue_cast<QObject *>(l2->get(i));
+        QVERIFY(i2);
+        QCOMPARE(i2->property("ident").value<double>(), double());
+        QCOMPARE(i2->property("buttonText").value<QString>(), QString());
+    }
 }
 
 QTEST_MAIN(tst_qqmllistmodel)

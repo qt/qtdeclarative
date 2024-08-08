@@ -215,7 +215,7 @@ struct QV4QPointer {
 
 private:
     QtSharedPointer::ExternalRefCountData *d;
-    QObject *qObject;
+    T *qObject;
 };
 Q_STATIC_ASSERT(std::is_trivial_v<QV4QPointer<QObject>>);
 #endif

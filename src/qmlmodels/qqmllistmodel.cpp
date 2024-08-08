@@ -1665,9 +1665,12 @@ bool ModelObject::virtualPut(Managed *m, PropertyKey id, const Value &value, Val
 
     ExecutionEngine *eng = that->engine();
     const int elementIndex = that->d()->elementIndex();
-    int roleIndex = that->d()->m_model->m_listModel->setExistingProperty(elementIndex, propName, value, eng);
-    if (roleIndex != -1)
-        that->d()->m_model->emitItemsChanged(elementIndex, 1, QVector<int>(1, roleIndex));
+    if (QQmlListModel *model = that->d()->m_model) {
+        const int roleIndex
+                = model->listModel()->setExistingProperty(elementIndex, propName, value, eng);
+        if (roleIndex != -1)
+            model->emitItemsChanged(elementIndex, 1, QVector<int>(1, roleIndex));
+    }
 
     ModelNodeMetaObject *mo = ModelNodeMetaObject::get(that->object());
     if (mo->initialized())
@@ -1683,7 +1686,11 @@ ReturnedValue ModelObject::virtualGet(const Managed *m, PropertyKey id, const Va
     const ModelObject *that = static_cast<const ModelObject*>(m);
     Scope scope(that);
     ScopedString name(scope, id.asStringOrSymbol());
-    const ListLayout::Role *role = that->d()->m_model->m_listModel->getExistingRole(name);
+    QQmlListModel *model = that->d()->m_model;
+    if (!model)
+        return QObjectWrapper::virtualGet(m, id, receiver, hasProperty);
+
+    const ListLayout::Role *role = model->listModel()->getExistingRole(name);
     if (!role)
         return QObjectWrapper::virtualGet(m, id, receiver, hasProperty);
     if (hasProperty)
@@ -1696,7 +1703,7 @@ ReturnedValue ModelObject::virtualGet(const Managed *m, PropertyKey id, const Va
     }
 
     const int elementIndex = that->d()->elementIndex();
-    QVariant value = that->d()->m_model->data(elementIndex, role->index);
+    QVariant value = model->data(elementIndex, role->index);
     return that->engine()->fromVariant(value);
 }
 
@@ -1719,16 +1726,19 @@ PropertyKey ModelObjectOwnPropertyKeyIterator::next(const Object *o, Property *p
     const ModelObject *that = static_cast<const ModelObject *>(o);
 
     ExecutionEngine *v4 = that->engine();
-    if (roleNameIndex < that->listModel()->roleCount()) {
+
+    QQmlListModel *model = that->d()->m_model;
+    ListModel *listModel = model ? model->listModel() : nullptr;
+    if (listModel && roleNameIndex < listModel->roleCount()) {
         Scope scope(that->engine());
-        const ListLayout::Role &role = that->listModel()->getExistingRole(roleNameIndex);
+        const ListLayout::Role &role = listModel->getExistingRole(roleNameIndex);
         ++roleNameIndex;
         ScopedString roleName(scope, v4->newString(role.name));
         if (attrs)
             *attrs = QV4::Attr_Data;
         if (pd) {
 
-            QVariant value = that->d()->m_model->data(that->d()->elementIndex(), role.index);
+            QVariant value = model->data(that->d()->elementIndex(), role.index);
             if (auto recursiveListModel = qvariant_cast<QQmlListModel*>(value)) {
                 auto size = recursiveListModel->count();
                 auto array = ScopedArrayObject{scope, v4->newArrayObject(size)};
