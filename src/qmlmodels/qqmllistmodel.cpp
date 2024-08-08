@@ -2379,9 +2379,10 @@ int QQmlListModel::count() const
 /*!
     \qmlmethod ListModel::clear()
 
-    Deletes all content from the model.
+    Deletes all content from the model. In particular this invalidates all objects you may have
+    retrieved using \l get().
 
-    \sa append(), remove()
+    \sa append(), remove(), get()
 */
 void QQmlListModel::clear()
 {
@@ -2675,9 +2676,10 @@ void QQmlListModel::append(QQmlV4FunctionPtr args)
     \endcode
 
     \warning The returned object is not guaranteed to remain valid. It
-    should not be used in \l{Property Binding}{property bindings}.
+    should not be used in \l{Property Binding}{property bindings} or for
+    storing data across modifications of its origin ListModel.
 
-    \sa append()
+    \sa append(), clear()
 */
 QJSValue QQmlListModel::get(int index) const
 {
