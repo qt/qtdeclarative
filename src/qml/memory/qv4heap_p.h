@@ -252,7 +252,7 @@ struct QQmlQPointer {
 
 private:
     QtSharedPointer::ExternalRefCountData *d;
-    QObject *qObject;
+    T *qObject;
 };
 Q_STATIC_ASSERT(std::is_trivial< QQmlQPointer<QObject> >::value);
 #endif
