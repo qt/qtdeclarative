@@ -89,6 +89,15 @@ QQuickHeaderViewBasePrivate::~QQuickHeaderViewBasePrivate()
 {
 }
 
+void QQuickHeaderViewBasePrivate::init()
+{
+    Q_Q(QQuickHeaderViewBase);
+    m_headerDataProxyModel.m_headerView = q;
+    setSizePolicy(orientation() == Qt::Horizontal ? QLayoutPolicy::Preferred : QLayoutPolicy::Fixed,
+                  orientation() == Qt::Horizontal ? QLayoutPolicy::Fixed : QLayoutPolicy::Preferred);
+    q->setSyncDirection(orientation());
+}
+
 const QPointer<QQuickItem> QQuickHeaderViewBasePrivate::delegateItemAt(int row, int col) const
 {
     return loadedTableItem(QPoint(col, row))->item;
@@ -211,18 +220,15 @@ QQuickHeaderViewBase::QQuickHeaderViewBase(Qt::Orientation orient, QQuickItem *p
     : QQuickTableView(*(new QQuickHeaderViewBasePrivate), parent)
 {
     Q_D(QQuickHeaderViewBase);
-    d->m_headerDataProxyModel.m_headerView = this;
-    d->setSizePolicy(orient == Qt::Horizontal ? QLayoutPolicy::Preferred : QLayoutPolicy::Fixed,
-                            orient == Qt::Horizontal ? QLayoutPolicy::Fixed : QLayoutPolicy::Preferred);
     d->setOrientation(orient);
-    setSyncDirection(orient);
+    d->init();
 }
 
 QQuickHeaderViewBase::QQuickHeaderViewBase(QQuickHeaderViewBasePrivate &dd, QQuickItem *parent)
     : QQuickTableView(dd, parent)
 {
     Q_D(QQuickHeaderViewBase);
-    d->m_headerDataProxyModel.m_headerView = this;
+    d->init();
 }
 
 QQuickHeaderViewBase::~QQuickHeaderViewBase()
@@ -441,7 +447,7 @@ void QHeaderDataProxyModel::disconnectFromModel()
 }
 
 QQuickHorizontalHeaderView::QQuickHorizontalHeaderView(QQuickItem *parent)
-    : QQuickHeaderViewBase(Qt::Horizontal, parent)
+    : QQuickHeaderViewBase(*(new QQuickHorizontalHeaderViewPrivate), parent)
 {
     setFlickableDirection(FlickableDirection::HorizontalFlick);
     setResizableColumns(true);
@@ -476,7 +482,7 @@ void QQuickHorizontalHeaderView::setMovableColumns(bool movableColumns)
 }
 
 QQuickVerticalHeaderView::QQuickVerticalHeaderView(QQuickItem *parent)
-    : QQuickHeaderViewBase(Qt::Vertical, parent)
+    : QQuickHeaderViewBase(*(new QQuickVerticalHeaderViewPrivate), parent)
 {
     setFlickableDirection(FlickableDirection::VerticalFlick);
     setResizableRows(true);
@@ -510,11 +516,17 @@ void QQuickVerticalHeaderView::setMovableRows(bool movableRows)
     emit movableRowsChanged();
 }
 
-QQuickHorizontalHeaderViewPrivate::QQuickHorizontalHeaderViewPrivate() = default;
+QQuickHorizontalHeaderViewPrivate::QQuickHorizontalHeaderViewPrivate()
+{
+    setOrientation(Qt::Horizontal);
+};
 
 QQuickHorizontalHeaderViewPrivate::~QQuickHorizontalHeaderViewPrivate() = default;
 
-QQuickVerticalHeaderViewPrivate::QQuickVerticalHeaderViewPrivate() = default;
+QQuickVerticalHeaderViewPrivate::QQuickVerticalHeaderViewPrivate()
+{
+    setOrientation(Qt::Vertical);
+};
 
 QQuickVerticalHeaderViewPrivate::~QQuickVerticalHeaderViewPrivate() = default;
 

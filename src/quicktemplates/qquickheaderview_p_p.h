@@ -66,6 +66,7 @@ public:
     QQuickHeaderViewBasePrivate();
     ~QQuickHeaderViewBasePrivate();
 
+    void init();
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
     const QPointer<QQuickItem> delegateItemAt(int row, int col) const;
