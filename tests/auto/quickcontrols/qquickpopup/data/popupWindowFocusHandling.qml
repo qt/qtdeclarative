@@ -20,6 +20,7 @@ Window {
     Popup {
         id: simplepopup
         popupType: Popup.Window
+        focus: true
         TextField {
             id: innerTextField
             focus: true
