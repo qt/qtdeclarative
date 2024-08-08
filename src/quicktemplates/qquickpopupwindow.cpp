@@ -222,6 +222,16 @@ bool QQuickPopupWindow::event(QEvent *e)
     Q_D(QQuickPopupWindow);
     d->forwardEventToParentMenuOrMenuBar(e);
 
+    if (d->m_popup && !d->m_popup->hasFocus() && (e->type() == QEvent::KeyPress || e->type() == QEvent::KeyRelease)
+#if QT_CONFIG(shortcut)
+        && (!static_cast<QKeyEvent *>(e)->matches(QKeySequence::Cancel)
+#if defined(Q_OS_ANDROID)
+        || static_cast<QKeyEvent *>(e)->key() != Qt::Key_Back
+#endif
+        )
+#endif
+    ) return false;
+
     return QQuickWindowQmlImpl::event(e);
 }
 

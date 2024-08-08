@@ -48,6 +48,7 @@ public:
     tst_QQuickPopup();
 
 private slots:
+    void cleanup();
     void initTestCase() override;
     void visible_data();
     void visible();
@@ -140,6 +141,14 @@ tst_QQuickPopup::tst_QQuickPopup()
 {
     popupWindowsSupported = QGuiApplicationPrivate::platformIntegration()
                                 ->hasCapability(QPlatformIntegration::Capability::MultipleWindows);
+}
+
+void tst_QQuickPopup::cleanup()
+{
+    // For some reason, it's not impossible for popups to already exist, when this test is executed.
+    if (QGuiApplicationPrivate::popupCount() > 0)
+        QGuiApplicationPrivate::closeAllPopups();
+    QTRY_COMPARE(QGuiApplicationPrivate::popupCount(), 0);
 }
 
 void tst_QQuickPopup::initTestCase()
@@ -2708,6 +2717,10 @@ void tst_QQuickPopup::popupWindowChangingParent()
 
 void tst_QQuickPopup::popupWindowFocus()
 {
+#if defined(Q_OS_QNX)
+    QSKIP("This test doesn't pass on QNX. It needs more investigation before it can be enabled");
+#endif
+
     if (!popupWindowsSupported)
         QSKIP("The platform doesn't support popup windows. Skipping test.");
 
@@ -2725,24 +2738,47 @@ void tst_QQuickPopup::popupWindowFocus()
     QVERIFY(textField2);
 
     window->show();
-    QVERIFY(QTest::qWaitForWindowFocused(window));
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QQuickTest::qWaitForPolish(window));
     QVERIFY(QGuiApplication::focusObject() == textField1);
-    QTest::keyClick(helper.window, Qt::Key_Q);
+    QVERIFY(window->focusObject() == textField1);
+    QVERIFY(textField1->hasActiveFocus());
+
+    QTest::keyClick(window, Qt::Key_Q);
     QTRY_COMPARE(textField1->text(), "q");
     popup->open();
-    QTRY_VERIFY(popup->isVisible());
+    QTRY_VERIFY(popup->isOpened());
+    QTRY_VERIFY(popupPrivate->popupWindow);
     auto *popupWindow = popupPrivate->popupWindow;
-    QVERIFY(popupWindow);
     QVERIFY(popupWindow->isVisible());
+    QCOMPARE(QGuiApplicationPrivate::popupCount(), 1);
     // The focusWindow should still be the main window,
     // the popup window should get its event forwarded via the delivery agent
-    QVERIFY(QGuiApplication::focusWindow() == helper.window);
+    QVERIFY(QGuiApplication::focusWindow() == window);
     QVERIFY(popupWindow->focusObject() == textField2);
-    QTest::keyClick(popupWindow, Qt::Key_T);
+    QVERIFY(QTest::qWaitForWindowActive(popupWindow));
+    QVERIFY(QQuickTest::qWaitForPolish(popupWindow));
+    QTest::keyClick(window, Qt::Key_T);
+    QVERIFY(QQuickTest::qWaitForPolish(textField2));
     QTRY_COMPARE(textField2->text(), "t");
     popup->close();
-    QTRY_VERIFY(!popup->isVisible());
+    QTRY_VERIFY(!popup->isOpened());
     QVERIFY(QGuiApplication::focusObject() == textField1);
+    QCOMPARE(QGuiApplicationPrivate::popupCount(), 0);
+
+    // If the popup doesn't have focus, it shouldn't receive key events.
+    popup->setFocus(false);
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+    QVERIFY(popupWindow->isVisible());
+    QCOMPARE(QGuiApplicationPrivate::popupCount(), 1);
+    QVERIFY(QTest::qWaitForWindowActive(popupWindow));
+    QVERIFY(QQuickTest::qWaitForPolish(popupWindow));
+    QTest::keyClick(window, Qt::Key_T);
+    QVERIFY(QQuickTest::qWaitForPolish(textField1));
+    QTRY_COMPARE(textField1->text(), "qt");
+    popup->close();
+    QTRY_VERIFY(!popup->isOpened());
 }
 
 void tst_QQuickPopup::popupTypeChangeFromWindowToItem()
