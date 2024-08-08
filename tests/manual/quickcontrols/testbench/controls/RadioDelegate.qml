@@ -37,7 +37,7 @@ QtObject {
         clip: true
         model: 20
         delegate: RadioDelegate {
-            width: parent.width
+            width: ListView.view.width
             text: "RadioDelegate"
             focusPolicy: Qt.StrongFocus
         }
