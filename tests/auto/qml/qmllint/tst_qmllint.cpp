@@ -2402,8 +2402,8 @@ void TestQmllint::maxWarnings()
     runQmllint(testFile("badScript.qml"), true, {"-W", "-1"});
     // 1 warning => should fail
     runQmllint(testFile("badScript.qml"), false, {"--max-warnings", "0"});
-    // only 1 warning => should exit normally
-    runQmllint(testFile("badScript.qml"), true, {"--max-warnings", "1"});
+    // only 2 warning => should exit normally
+    runQmllint(testFile("badScript.qml"), true, {"--max-warnings", "2"});
 }
 
 #endif

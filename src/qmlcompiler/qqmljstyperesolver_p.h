@@ -205,6 +205,11 @@ public:
     QQmlJSScope::ConstPtr merge(const QQmlJSScope::ConstPtr &a,
                                 const QQmlJSScope::ConstPtr &b) const;
 
+    QQmlJSRegisterContent varRegister() const
+    {
+        return globalType(m_varType);
+    }
+
     bool canHoldUndefined(const QQmlJSRegisterContent &content) const;
     bool isOptionalType(const QQmlJSRegisterContent &content) const;
     QQmlJSScope::ConstPtr extractNonVoidFromOptionalType(

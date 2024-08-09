@@ -71,9 +71,14 @@ QQmlJSCompilePass::BlocksAndAnnotations QQmlJSTypePropagator::run(const Function
     return { std::move(m_basicBlocks), std::move(m_state.annotations) };
 }
 
-#define INSTR_PROLOGUE_NOT_IMPLEMENTED()                                              \
-  addError(u"Instruction \"%1\" not implemented"_s.arg(QString::fromUtf8(__func__))); \
-  return;
+#define INSTR_PROLOGUE_NOT_IMPLEMENTED()                                                \
+    addError(u"Instruction \"%1\" not implemented"_s.arg(QString::fromUtf8(__func__))); \
+    return;
+
+#define INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC()                                  \
+    addError(u"Instruction \"%1\" not implemented"_s.arg(QString::fromUtf8(__func__))); \
+    setVarAccumulatorAndError(); /* Keep sane state after error */                      \
+    return;
 
 #define INSTR_PROLOGUE_NOT_IMPLEMENTED_IGNORE()                                                    \
     m_logger->log(u"Instruction \"%1\" not implemented"_s.arg(QString::fromUtf8(__func__)),        \
@@ -214,7 +219,7 @@ void QQmlJSTypePropagator::generate_MoveReg(int srcReg, int destReg)
 void QQmlJSTypePropagator::generate_LoadImport(int index)
 {
     Q_UNUSED(index)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_LoadLocal(int index)
@@ -233,7 +238,7 @@ void QQmlJSTypePropagator::generate_LoadScopedLocal(int scope, int index)
 {
     Q_UNUSED(scope)
     Q_UNUSED(index)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_StoreScopedLocal(int scope, int index)
@@ -247,7 +252,6 @@ void QQmlJSTypePropagator::generate_LoadRuntimeString(int stringId)
 {
     Q_UNUSED(stringId)
     setAccumulator(m_typeResolver->globalType(m_typeResolver->stringType()));
-    //    m_state.accumulatorOut.m_state.value = m_jsUnitGenerator->stringForIndex(stringId);
 }
 
 void QQmlJSTypePropagator::generate_MoveRegExp(int regExpId, int destReg)
@@ -269,8 +273,10 @@ void QQmlJSTypePropagator::generate_LoadName(int nameIndex)
 {
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
     setAccumulator(m_typeResolver->scopedType(m_function->qmlScope, name));
-    if (!m_state.accumulatorOut().isValid())
+    if (!m_state.accumulatorOut().isValid()) {
         addError(u"Cannot find name "_s + name);
+        setVarAccumulatorAndError();
+    }
 }
 
 void QQmlJSTypePropagator::generate_LoadGlobalLookup(int index)
@@ -592,6 +598,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     if (!m_state.accumulatorOut().isValid()) {
         addError(u"Cannot access value for name "_s + name);
         handleUnqualifiedAccess(name, false);
+        setVarAccumulatorAndError();
         return;
     }
 
@@ -840,8 +847,10 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
         if (m_state.accumulatorIn().isImportNamespace())
             m_logger->log(u"Type not found in namespace"_s, qmlUnresolvedType,
                           getCurrentSourceLocation());
-    } else if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::Singleton
-               && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ObjectModulePrefix) {
+    }
+
+    if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::Singleton
+        && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ObjectModulePrefix) {
         m_logger->log(
                 u"Cannot access singleton as a property of an object. Did you want to access an attached object?"_s,
                 qmlAccessSingleton, getCurrentSourceLocation());
@@ -862,7 +871,8 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
         }
     }
 
-    if (!m_state.accumulatorOut().isValid()) {
+    if (m_state.instructionHasError || !m_state.accumulatorOut().isValid()) {
+        setVarAccumulatorAndError();
         if (checkForEnumProblems(m_state.accumulatorIn(), propertyName))
             return;
 
@@ -978,7 +988,7 @@ void QQmlJSTypePropagator::generate_LoadOptionalProperty(int name, int offset)
 {
     Q_UNUSED(name);
     Q_UNUSED(offset);
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_GetLookup(int index)
@@ -1071,7 +1081,7 @@ void QQmlJSTypePropagator::generate_SetLookup(int index, int base)
 void QQmlJSTypePropagator::generate_LoadSuperProperty(int property)
 {
     Q_UNUSED(property)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_StoreSuperProperty(int property)
@@ -1101,7 +1111,7 @@ void QQmlJSTypePropagator::generate_CallValue(int name, int argc, int argv)
     Q_UNUSED(name)
     Q_UNUSED(argc)
     Q_UNUSED(argv)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_CallWithReceiver(int name, int thisObject, int argc, int argv)
@@ -1111,7 +1121,7 @@ void QQmlJSTypePropagator::generate_CallWithReceiver(int name, int thisObject, i
     Q_UNUSED(thisObject)
     Q_UNUSED(argc)
     Q_UNUSED(argv)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 static bool isLoggingMethod(const QString &consoleMethod)
@@ -1231,6 +1241,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
             return;
         }
 
+        setVarAccumulatorAndError();
         addError(u"Type %1 does not have a property %2 for calling"_s
                          .arg(callBase.descriptiveName(), propertyName));
 
@@ -1436,6 +1447,7 @@ void QQmlJSTypePropagator::propagateCall(
     const QQmlJSMetaMethod match = bestMatchForCall(methods, argc, argv, &errors);
 
     if (!match.isValid()) {
+        setVarAccumulatorAndError();
         if (methods.size() == 1) {
             // Cannot have multiple fuzzy matches if there is only one method
             Q_ASSERT(errors.size() == 1);
@@ -1793,7 +1805,7 @@ void QQmlJSTypePropagator::generate_CallPossiblyDirectEval(int argc, int argv)
     m_state.setHasSideEffects(true);
     Q_UNUSED(argc)
     Q_UNUSED(argv)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::propagateScopeLookupCall(const QString &functionName, int argc, int argv)
@@ -1840,7 +1852,7 @@ void QQmlJSTypePropagator::generate_CallWithSpread(int func, int thisObject, int
     Q_UNUSED(thisObject)
     Q_UNUSED(argc)
     Q_UNUSED(argv)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_TailCall(int func, int thisObject, int argc, int argv)
@@ -1926,7 +1938,7 @@ void QQmlJSTypePropagator::generate_ConstructWithSpread(int func, int argc, int 
     Q_UNUSED(func)
     Q_UNUSED(argc)
     Q_UNUSED(argv)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_SetUnwindHandler(int offset)
@@ -1979,7 +1991,7 @@ void QQmlJSTypePropagator::generate_ThrowException()
 
 void QQmlJSTypePropagator::generate_GetException()
 {
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_SetException()
@@ -2069,7 +2081,7 @@ void QQmlJSTypePropagator::generate_IteratorNextForYieldStar(int iterator, int o
     Q_UNUSED(iterator)
     Q_UNUSED(object)
     Q_UNUSED(offset)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_IteratorClose()
@@ -2079,20 +2091,20 @@ void QQmlJSTypePropagator::generate_IteratorClose()
 
 void QQmlJSTypePropagator::generate_DestructureRestElement()
 {
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_DeleteProperty(int base, int index)
 {
     Q_UNUSED(base)
     Q_UNUSED(index)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_DeleteName(int name)
 {
     Q_UNUSED(name)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_TypeofName(int name)
@@ -2161,23 +2173,23 @@ void QQmlJSTypePropagator::generate_CreateClass(int classIndex, int heritage, in
     Q_UNUSED(classIndex)
     Q_UNUSED(heritage)
     Q_UNUSED(computedNames)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_CreateMappedArgumentsObject()
 {
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_CreateUnmappedArgumentsObject()
 {
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_CreateRestParameter(int argIndex)
 {
     Q_UNUSED(argIndex)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_ConvertThisToObject()
@@ -2187,12 +2199,12 @@ void QQmlJSTypePropagator::generate_ConvertThisToObject()
 
 void QQmlJSTypePropagator::generate_LoadSuperConstructor()
 {
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_ToObject()
 {
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_Jump(int offset)
@@ -2418,7 +2430,7 @@ void QQmlJSTypePropagator::generate_CmpIn(int lhs)
 void QQmlJSTypePropagator::generate_CmpInstanceOf(int lhs)
 {
     Q_UNUSED(lhs)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_As(int lhs)
@@ -2653,15 +2665,12 @@ void QQmlJSTypePropagator::generate_ThrowOnNullOrUndefined()
 void QQmlJSTypePropagator::generate_GetTemplateObject(int index)
 {
     Q_UNUSED(index)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 QV4::Moth::ByteCodeHandler::Verdict
 QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
 {
-    if (!m_errors->isEmpty())
-        return SkipInstruction;
-
     if (m_state.jumpTargets.contains(currentInstructionOffset())) {
         if (m_state.skipInstructionsUntilNextJumpTarget) {
             // When re-surfacing from dead code, all registers are invalid.
@@ -2715,6 +2724,60 @@ QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
     return ProcessInstruction;
 }
 
+bool QQmlJSTypePropagator::populatesAccumulator(QV4::Moth::Instr::Type instr) const
+{
+    switch (instr) {
+    // the following instructions are not expected to produce output in the accumulator
+    case QV4::Moth::Instr::Type::Ret:
+    case QV4::Moth::Instr::Type::Jump:
+    case QV4::Moth::Instr::Type::JumpFalse:
+    case QV4::Moth::Instr::Type::JumpTrue:
+    case QV4::Moth::Instr::Type::StoreReg:
+    case QV4::Moth::Instr::Type::StoreElement:
+    case QV4::Moth::Instr::Type::StoreLocal:
+    case QV4::Moth::Instr::Type::StoreNameSloppy:
+    case QV4::Moth::Instr::Type::StoreNameStrict:
+    case QV4::Moth::Instr::Type::StoreProperty:
+    case QV4::Moth::Instr::Type::SetException:
+    case QV4::Moth::Instr::Type::SetLookup:
+    case QV4::Moth::Instr::Type::MoveConst:
+    case QV4::Moth::Instr::Type::MoveReg:
+    case QV4::Moth::Instr::Type::MoveRegExp:
+    case QV4::Moth::Instr::Type::CheckException:
+    case QV4::Moth::Instr::Type::CreateCallContext:
+    case QV4::Moth::Instr::Type::PopContext:
+    case QV4::Moth::Instr::Type::JumpNoException:
+    case QV4::Moth::Instr::Type::JumpNotUndefined:
+    case QV4::Moth::Instr::Type::ThrowException:
+    case QV4::Moth::Instr::Type::ThrowOnNullOrUndefined:
+    case QV4::Moth::Instr::Type::SetUnwindHandler:
+    case QV4::Moth::Instr::Type::PushCatchContext:
+    case QV4::Moth::Instr::Type::PushWithContext:
+    case QV4::Moth::Instr::Type::UnwindDispatch:
+    case QV4::Moth::Instr::Type::UnwindToLabel:
+    case QV4::Moth::Instr::Type::InitializeBlockDeadTemporalZone:
+    case QV4::Moth::Instr::Type::ConvertThisToObject:
+    case QV4::Moth::Instr::Type::DeadTemporalZoneCheck:
+    case QV4::Moth::Instr::Type::IteratorClose:
+    case QV4::Moth::Instr::Type::IteratorNext:
+    case QV4::Moth::Instr::Type::IteratorNextForYieldStar:
+        return false;
+    default:
+        return true;
+    }
+}
+
+bool QQmlJSTypePropagator::isNoop(QV4::Moth::Instr::Type instr) const
+{
+    switch (instr) {
+    case QV4::Moth::Instr::Type::DeadTemporalZoneCheck:
+    case QV4::Moth::Instr::Type::IteratorClose:
+        return true;
+    default:
+        return false;
+    }
+}
+
 void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
 {
     InstructionAnnotation &currentInstruction = m_state.annotations[currentInstructionOffset()];
@@ -2724,58 +2787,22 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
     currentInstruction.hasSideEffects = m_state.hasSideEffects();
     currentInstruction.isRename = m_state.isRename();
 
-    switch (instr) {
-    // the following instructions are not expected to produce output in the accumulator
-    case QV4::Moth::Instr::Type::Ret:
-    case QV4::Moth::Instr::Type::Jump:
-    case QV4::Moth::Instr::Type::JumpFalse:
-    case QV4::Moth::Instr::Type::JumpTrue:
-    case QV4::Moth::Instr::Type::StoreReg:
-    case QV4::Moth::Instr::Type::StoreElement:
-    case QV4::Moth::Instr::Type::StoreNameSloppy:
-    case QV4::Moth::Instr::Type::StoreProperty:
-    case QV4::Moth::Instr::Type::SetLookup:
-    case QV4::Moth::Instr::Type::MoveConst:
-    case QV4::Moth::Instr::Type::MoveReg:
-    case QV4::Moth::Instr::Type::CheckException:
-    case QV4::Moth::Instr::Type::CreateCallContext:
-    case QV4::Moth::Instr::Type::PopContext:
-    case QV4::Moth::Instr::Type::JumpNoException:
-    case QV4::Moth::Instr::Type::ThrowException:
-    case QV4::Moth::Instr::Type::SetUnwindHandler:
-    case QV4::Moth::Instr::Type::PushCatchContext:
-    case QV4::Moth::Instr::Type::UnwindDispatch:
-    case QV4::Moth::Instr::Type::InitializeBlockDeadTemporalZone:
-    case QV4::Moth::Instr::Type::ConvertThisToObject:
-    case QV4::Moth::Instr::Type::DeadTemporalZoneCheck:
-    case QV4::Moth::Instr::Type::IteratorNext:
-    case QV4::Moth::Instr::Type::IteratorNextForYieldStar:
-        if (m_state.changedRegisterIndex() == Accumulator && m_errors->isEmpty()) {
-            addError(u"Instruction is not expected to populate the accumulator"_s);
-            return;
-        }
-        break;
-    default:
-        // If the instruction is expected to produce output, save it in the register set
-        // for the next instruction.
-        if ((!m_state.changedRegister().isValid() || m_state.changedRegisterIndex() != Accumulator)
-            && m_errors->isEmpty()) {
-            addError(u"Instruction is expected to populate the accumulator"_s);
-            return;
-        }
-    }
+    bool populates = populatesAccumulator(instr);
+    int changedIndex = m_state.changedRegisterIndex();
+    Q_ASSERT((populates && changedIndex == Accumulator && m_state.accumulatorOut().isValid())
+             || (!populates && changedIndex != Accumulator));
 
     const auto noError = std::none_of(m_errors->cbegin(), m_errors->cend(),
                                       [](const auto &e) { return e.isError(); });
-    if (noError && instr != QV4::Moth::Instr::Type::DeadTemporalZoneCheck) {
-        // An instruction needs to have side effects or write to another register otherwise it's a
-        // noop. DeadTemporalZoneCheck is not needed by the compiler and is ignored.
-        Q_ASSERT(m_state.hasSideEffects() || m_state.changedRegisterIndex() != -1);
+    if (noError && !isNoop(instr)) {
+        // An instruction needs to have side effects or write to another register or be a known
+        // noop. Anything else is a problem.
+        Q_ASSERT(m_state.hasSideEffects() || changedIndex != InvalidRegister);
     }
 
-    if (m_state.changedRegisterIndex() != InvalidRegister) {
+    if (changedIndex != InvalidRegister) {
         Q_ASSERT(!m_errors->isEmpty() || m_state.changedRegister().isValid());
-        VirtualRegister &r = m_state.registers[m_state.changedRegisterIndex()];
+        VirtualRegister &r = m_state.registers[changedIndex];
         r.content = m_state.changedRegister();
         r.canMove = false;
         r.affectedBySideEffects = m_state.isRename()
@@ -2786,6 +2813,7 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
     m_state.setHasSideEffects(false);
     m_state.setIsRename(false);
     m_state.setReadRegisters(VirtualRegisters());
+    m_state.instructionHasError = false;
 }
 
 QQmlJSRegisterContent QQmlJSTypePropagator::propagateBinaryOperation(QSOperator::Op op, int lhs)

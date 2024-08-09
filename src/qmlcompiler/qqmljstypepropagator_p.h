@@ -188,6 +188,7 @@ private:
         QSet<int> jumpTargets;
         bool skipInstructionsUntilNextJumpTarget = false;
         bool needsMorePasses = false;
+        bool instructionHasError = false;
     };
 
     void handleUnqualifiedAccess(const QString &name, bool isMethod) const;
@@ -239,6 +240,9 @@ private:
         addReadRegister(Accumulator, convertTo);
     }
 
+    bool populatesAccumulator(QV4::Moth::Instr::Type instr) const;
+    bool isNoop(QV4::Moth::Instr::Type instr) const;
+
     void recordEqualsNullType();
     void recordEqualsIntType();
     void recordEqualsType(int lhs);
@@ -258,6 +262,17 @@ private:
     void generate_StoreProperty_SAcheck(const QString propertyName, const QQmlJSRegisterContent &callBase);
     void generate_callProperty_SAcheck(const QString propertyName, const QQmlJSScope::ConstPtr &baseType);
 
+    void addError(const QString &message)
+    {
+        QQmlJSCompilePass::addError(message);
+        m_state.instructionHasError = true;
+    }
+
+    void setVarAccumulatorAndError()
+    {
+        setAccumulator(m_typeResolver->varRegister());
+        m_state.instructionHasError = true;
+    }
 
     QQmlJSRegisterContent m_returnType;
     QQmlSA::PassManager *m_passManager = nullptr;
