@@ -7,6 +7,7 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qcbormap.h>
+#include <QtCore/qvarlengtharray.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -16,23 +17,6 @@ namespace QQmlJS {
 namespace Dom {
 
 using namespace Qt::StringLiterals;
-
-QStringList resourceFilesFromBuildFolders(const QStringList &buildFolders)
-{
-    QStringList result;
-    for (const QString &path : buildFolders) {
-        QDir dir(path);
-        if (!dir.cd(u".rcc"_s))
-            continue;
-
-        QDirIterator it(dir.canonicalPath(), QStringList{ u"*.qrc"_s }, QDir::Files,
-                        QDirIterator::Subdirectories);
-        while (it.hasNext()) {
-            result.append(it.next());
-        }
-    }
-    return result;
-}
 
 static QMetaEnum regionEnum = QMetaEnum::fromType<FileLocationRegion>();
 

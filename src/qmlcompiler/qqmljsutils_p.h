@@ -381,6 +381,8 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSUtils
             path = QDir::cleanPath(path);
         return std::move(paths);
     }
+
+    static QStringList resourceFilesFromBuildFolders(const QStringList &buildFolders);
 };
 
 bool Q_QMLCOMPILER_EXPORT canStrictlyCompareWithVar(

@@ -6,6 +6,7 @@
 #include <QtLanguageServer/private/qlanguageserverspec_p.h>
 #include <QtQmlCompiler/private/qqmljslinter_p.h>
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
+#include <QtQmlCompiler/private/qqmljsutils_p.h>
 #include <QtQmlDom/private/qqmldom_utils_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtCore/qdebug.h>
@@ -315,7 +316,7 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
     bool silent = true;
     const QString fileContents = doc.field(Fields::code).value().toString();
     const QStringList qmltypesFiles;
-    const QStringList resourceFiles = resourceFilesFromBuildFolders(imports);
+    const QStringList resourceFiles = QQmlJSUtils::resourceFilesFromBuildFolders(imports);
 
     QList<QQmlJS::LoggerCategory> categories = QQmlJSLogger::defaultCategories();
 

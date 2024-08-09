@@ -38,8 +38,6 @@ qOverloadedVisitor(Ts...) -> qOverloadedVisitor<Ts...>;
 namespace QQmlJS {
 namespace Dom {
 
-QStringList resourceFilesFromBuildFolders(const QStringList &buildFolders);
-
 QString fileLocationRegionName(FileLocationRegion region);
 FileLocationRegion fileLocationRegionValue(QStringView region);
 

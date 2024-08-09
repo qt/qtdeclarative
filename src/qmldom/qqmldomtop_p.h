@@ -1116,13 +1116,14 @@ private:
     struct SemanticAnalysis
     {
         SemanticAnalysis(const QStringList &loadPaths);
-        void setLoadPaths(const QStringList &loadPaths);
+        void updateLoadPaths(const QStringList &loadPaths);
 
         std::shared_ptr<QQmlJSResourceFileMapper> m_mapper;
         std::shared_ptr<QQmlJSImporter> m_importer;
     };
     std::optional<SemanticAnalysis> m_semanticAnalysis;
-    SemanticAnalysis &semanticAnalysis();
+public:
+    SemanticAnalysis semanticAnalysis();
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(DomEnvironment::Options)
 

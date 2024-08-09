@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/qt/qml/Me/Apps/Main/">
+    <file alias="qml/popups/AdminDialog.qml">../../../AdminDialogFromSource.qml</file>
+  </qresource>
+</RCC>
