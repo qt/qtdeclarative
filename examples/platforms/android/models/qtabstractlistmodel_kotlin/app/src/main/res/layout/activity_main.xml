@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -31,20 +32,28 @@
                 android:id="@+id/addRow"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
+                android:layout_marginTop="@dimen/margins_top_bottom"
+                android:layout_marginBottom="@dimen/margins_top_bottom"
+                android:padding="@dimen/padding"
+                android:layout_marginLeft="@dimen/button_margins"
+                android:layout_marginRight="@dimen/button_margins"
                 android:text="@string/addRowText"
                 android:layout_weight="1"
-                android:textSize="16sp"/>
+                app:cornerRadius="@dimen/corner_radius"
+                android:textSize="@dimen/text_size"/>
 
             <Button
                 android:id="@+id/removeRow"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="10dp"
+                android:layout_marginTop="@dimen/margins_top_bottom"
+                android:layout_marginBottom="@dimen/margins_top_bottom"
+                android:padding="@dimen/padding"
+                android:layout_marginRight="@dimen/button_margins"
                 android:layout_weight="1"
                 android:text="@string/removeRowText"
-                android:textSize="16sp"/>
+                app:cornerRadius="@dimen/corner_radius"
+                android:textSize="@dimen/text_size"/>
         </LinearLayout>
     </FrameLayout>
 </LinearLayout>
