@@ -763,7 +763,7 @@ QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)
         QString dirName = d.dirName();
         QDateTime lastModified;
         while (d.cdUp() && --iDir > 0) {
-            for (const QFileInfo &fInfo : d.entryInfoList(QDir::Dirs)) {
+            for (const QFileInfo &fInfo : d.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
                 if (fInfo.completeBaseName() == u"build"
                     || fInfo.completeBaseName().startsWith(u"build-%1"_s.arg(dirName))) {
                     if (iDir > 1)
@@ -786,7 +786,7 @@ QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)
         res += bPath;
         if (QFile::exists(bPath + u"/_deps") && bPath.split(u"/_deps/"_s).size() < maxDeps) {
             QDir d(bPath + u"/_deps");
-            for (const QFileInfo &fInfo : d.entryInfoList(QDir::Dirs))
+            for (const QFileInfo &fInfo : d.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot))
                 buildPaths.append(fInfo.absoluteFilePath());
         }
     }
