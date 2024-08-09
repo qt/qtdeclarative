@@ -549,10 +549,20 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
 
             typeResolver.init(&v, parser.rootNode());
 
+            const QStringList resourcePaths = mapper
+                    ? mapper->resourcePaths(QQmlJSResourceFileMapper::localFileFilter(filename))
+                    : QStringList();
+            const QString resolvedPath =
+                    (resourcePaths.size() == 1) ? u':' + resourcePaths.first() : filename;
+
+            QQmlJSLinterCodegen codegen{ &m_importer, resolvedPath, qmldirFiles, m_logger.get() };
+            codegen.setTypeResolver(std::move(typeResolver));
+
             using PassManagerPtr = std::unique_ptr<
                     QQmlSA::PassManager, decltype(&QQmlSA::PassManagerPrivate::deletePassManager)>;
-            PassManagerPtr passMan(QQmlSA::PassManagerPrivate::createPassManager(&v, &typeResolver),
-                                   &QQmlSA::PassManagerPrivate::deletePassManager);
+            PassManagerPtr passMan(
+                    QQmlSA::PassManagerPrivate::createPassManager(&v, codegen.typeResolver()),
+                    &QQmlSA::PassManagerPrivate::deletePassManager);
             passMan->registerPropertyPass(
                     std::make_unique<QQmlJSLiteralBindingCheck>(passMan.get()), QString(),
                     QString(), QString());
@@ -578,14 +588,6 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                 return;
             }
 
-            const QStringList resourcePaths = mapper
-                    ? mapper->resourcePaths(QQmlJSResourceFileMapper::localFileFilter(filename))
-                    : QStringList();
-            const QString resolvedPath =
-                    (resourcePaths.size() == 1) ? u':' + resourcePaths.first() : filename;
-
-            QQmlJSLinterCodegen codegen { &m_importer, resolvedPath, qmldirFiles, m_logger.get() };
-            codegen.setTypeResolver(std::move(typeResolver));
             if (passMan) {
                 // passMan now has a pointer to the moved from type resolver
                 // we fix this in setPassManager
