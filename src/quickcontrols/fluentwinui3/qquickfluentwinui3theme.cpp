@@ -96,10 +96,8 @@ static void populateSystemPalette(QPalette &palette)
     palette.setColor(QPalette::All, QPalette::ButtonText, WINUI3Colors[colorSchemeIndex][textPrimary]);
     palette.setColor(QPalette::Disabled, QPalette::ButtonText, WINUI3Colors[colorSchemeIndex][textDisabled]);
 
-    palette.setColor(QPalette::All, QPalette::Highlight, WINUI3Colors[colorSchemeIndex][accentDefault]);
-    palette.setColor(QPalette::Disabled, QPalette::Highlight, WINUI3Colors[colorSchemeIndex][accentDisabled]);
-    palette.setColor(QPalette::All, QPalette::Accent, WINUI3Colors[colorSchemeIndex][accentDefault]);
     palette.setColor(QPalette::Disabled, QPalette::Accent, WINUI3Colors[colorSchemeIndex][accentDisabled]);
+    palette.setColor(QPalette::Disabled, QPalette::Highlight, WINUI3Colors[colorSchemeIndex][accentDisabled]);
 
     palette.setColor(QPalette::All, QPalette::HighlightedText, Qt::white);
 }
@@ -136,13 +134,26 @@ void QQuickFluentWinUI3Theme::initialize(QQuickTheme *theme)
     populateThemeFont(theme);
     QPalette systemPalette;
     updatePalette(systemPalette);
-#ifdef Q_OS_WIN
+
     if (auto platformTheme = QGuiApplicationPrivate::platformTheme()) {
         const auto platformPalette = platformTheme->palette();
         if (platformPalette)
-            systemPalette = platformPalette->resolve(systemPalette);
+            // style palette takes precedence over platform's theme
+            systemPalette = systemPalette.resolve(*platformPalette);
     }
-#endif
+
+    {
+        const auto colorSchemeIndex = QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Light ? 0 : 1;
+        if (!systemPalette.isBrushSet(QPalette::Active, QPalette::Accent))
+            systemPalette.setColor(QPalette::Active, QPalette::Accent, WINUI3Colors[colorSchemeIndex][accentDefault]);
+
+        systemPalette.setColor(QPalette::Active, QPalette::Highlight, systemPalette.accent().color());
+        systemPalette.setColor(QPalette::Inactive, QPalette::Accent, systemPalette.accent().color());
+        systemPalette.setColor(QPalette::Inactive, QPalette::Highlight, systemPalette.highlight().color());
+    }
+
+    // Finally QGuiApp::palette() should take precedence over style palette
+    systemPalette = QGuiApplication::palette().resolve(systemPalette);
     theme->setPalette(QQuickTheme::System, systemPalette);
 }
 
