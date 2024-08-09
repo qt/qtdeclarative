@@ -134,9 +134,6 @@ class QQmlObjectModelAttached : public QObject
 public:
     QQmlObjectModelAttached(QObject *parent)
         : QObject(parent), m_index(-1) {}
-    ~QQmlObjectModelAttached() {
-        attachedProperties.remove(parent());
-    }
 
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
     int index() const { return m_index; }
@@ -147,22 +144,11 @@ public:
         }
     }
 
-    static QQmlObjectModelAttached *properties(QObject *obj) {
-        QQmlObjectModelAttached *rv = attachedProperties.value(obj);
-        if (!rv) {
-            rv = new QQmlObjectModelAttached(obj);
-            attachedProperties.insert(obj, rv);
-        }
-        return rv;
-    }
-
 Q_SIGNALS:
     void indexChanged();
 
 public:
     int m_index;
-
-    static QHash<QObject*, QQmlObjectModelAttached*> attachedProperties;
 };
 
 
