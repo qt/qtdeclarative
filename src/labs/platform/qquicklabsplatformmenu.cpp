@@ -695,7 +695,7 @@ void QQuickLabsPlatformMenu::open(QQmlV4FunctionPtr args)
 #endif
     }
     m_handle->showPopup(window,
-                        QHighDpi::toNativePixels(targetRect, window),
+                        QHighDpi::toNativeLocalPosition(targetRect, window),
                         menuItem ? menuItem->handle() : nullptr);
 }
 
