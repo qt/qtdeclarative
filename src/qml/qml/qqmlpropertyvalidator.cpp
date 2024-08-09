@@ -746,10 +746,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *p
                                                       .arg(typeName));
     } else if (propType == QMetaType::fromType<QQmlScriptString>()) {
         return qQmlCompileError(binding->valueLocation, tr("Invalid property assignment: script expected"));
-    } else if (QQmlMetaType::isValueType(property->propType())) {
-        return qQmlCompileError(binding->location, tr("Cannot assign value of type \"%1\" to property \"%2\", expecting an object")
-                                                      .arg(rhsType()).arg(propertyName));
-    } else {
+    } else if (!QQmlMetaType::isValueType(property->propType())) {
         // We want to use the raw metaObject here as the raw metaobject is the
         // actual property type before we applied any extensions that might
         // effect the properties on the type, but don't effect assignability

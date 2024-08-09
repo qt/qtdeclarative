@@ -8,6 +8,7 @@ QtObject {
     property point p: Qt.point(5, 6);
     property ObjectType o: ObjectType {
         id: oo
+        objectName: "short"
         property int makeItASeparateType: 1
     }
 
@@ -15,4 +16,8 @@ QtObject {
     property withLength wp: p
     property withLength wi: 17
     property withLength wo: oo
+    property withLength wz: ObjectType {
+        objectName: "looooong"
+        property int makeItASeparateType: 2
+    }
 }

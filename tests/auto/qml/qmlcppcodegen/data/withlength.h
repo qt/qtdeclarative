@@ -30,8 +30,8 @@ public:
     Q_INVOKABLE ValueTypeWithLength(int length) : m_length(length) {}
     Q_INVOKABLE ValueTypeWithLength(QPointF point) : m_length(point.manhattanLength()) {}
     Q_INVOKABLE ValueTypeWithLength(QRectF rect) : m_length(rect.width()) {}
+    Q_INVOKABLE ValueTypeWithLength(ObjectType *o) : m_length(o->objectName().length()) {}
     Q_INVOKABLE QString toString() const { return QStringLiteral("no"); }
-    Q_INVOKABLE ValueTypeWithLength(ObjectType *) : m_length(-4) {}
 
     int length() const { return m_length; }
 

@@ -1210,11 +1210,17 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 recordError(binding->location, tr("Cannot assign object to read only list"));
                 return false;
             }
-
-        } else {
+        } else if (bindingProperty->propType().flags().testFlag(QMetaType::PointerToQObject)) {
             // pointer compatibility was tested in QQmlPropertyValidator at type compile time
             argv[0] = &createdSubObject;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, bindingProperty->coreIndex(), argv);
+        } else {
+            QVariant target = QQmlValueTypeProvider::createValueType(
+                    QVariant::fromValue(createdSubObject), bindingProperty->propType());
+            if (target.isValid())
+                bindingProperty->writeProperty(_qobject, target.data(), propertyWriteFlags);
+            else
+                recordError(binding->location, tr("Cannot construct value type from given object"));
         }
         return true;
     }
