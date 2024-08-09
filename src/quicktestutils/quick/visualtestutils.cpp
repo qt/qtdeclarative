@@ -190,7 +190,7 @@ bool QQuickVisualTestUtils::compareImages(const QImage &ia, const QImage &ib, QS
                         qWarning() << "Failed to save expected image to" << expectedImageFilePath;
 
                     if (actualImageSaved && expectedImageSaved) {
-                        debug << "\nActual image saved to:" << actualImageFilePath;
+                        debug.noquote() << "\nActual image saved to:" << actualImageFilePath;
                         debug << "\nExpected image saved to:" << expectedImageFilePath;
                     }
                 }
