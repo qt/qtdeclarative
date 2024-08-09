@@ -3504,6 +3504,7 @@ void tst_QmlCppCodegen::multipleCtors()
     QCOMPARE(o->property("wr").value<ValueTypeWithLength>().length(), 3);
     QCOMPARE(o->property("wp").value<ValueTypeWithLength>().length(), 11);
     QCOMPARE(o->property("wi").value<ValueTypeWithLength>().length(), 17);
+    QCOMPARE(o->property("wo").value<ValueTypeWithLength>().length(), -4);
 }
 
 void tst_QmlCppCodegen::namespaceWithEnum()

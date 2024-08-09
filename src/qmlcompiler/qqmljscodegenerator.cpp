@@ -4265,7 +4265,9 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
             input = variable;
             argPointer = contentPointer(from, u"arg"_s);
         } else {
-            const QQmlJSRegisterContent argument = global(argumentType);
+            const QQmlJSRegisterContent argument
+                    = m_typeResolver->globalType(argumentType)
+                              .storedIn(m_typeResolver->genericType(argumentType));
             input = conversion(from, argument, variable);
             argPointer = contentPointer(argument, u"arg"_s);
         }
