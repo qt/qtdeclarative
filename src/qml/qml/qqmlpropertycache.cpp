@@ -1050,14 +1050,18 @@ int visitMethods(const QMetaObject &mo, int methodOffset, int methodCount,
 {
     int fieldsForParameterData = 0;
 
-    bool hasRevisionedMethods = false;
+    bool hasOldStyleRevisionedMethods = false;
 
     for (int i = 0; i < methodCount; ++i) {
         const int handle = methodOffset + i * QMetaObjectPrivate::IntsPerMethod;
 
         const uint flags = mo.d.data[handle + 4];
-        if (flags & MethodRevisioned)
-            hasRevisionedMethods = true;
+        if (flags & MethodRevisioned) {
+            if (mo.d.data[0] < 13)
+                hasOldStyleRevisionedMethods = true;
+            else
+                fieldsForParameterData += 1;    // revision
+        }
 
         visitString(mo.d.data[handle + 0]); // name
         visitString(mo.d.data[handle + 3]); // tag
@@ -1080,7 +1084,7 @@ int visitMethods(const QMetaObject &mo, int methodOffset, int methodCount,
     }
 
     int fieldsForRevisions = 0;
-    if (hasRevisionedMethods)
+    if (hasOldStyleRevisionedMethods)
         fieldsForRevisions = methodCount;
 
     return methodCount * QMetaObjectPrivate::IntsPerMethod
@@ -1170,7 +1174,7 @@ int countMetaObjectFields(const QMetaObject &mo, StringVisitor stringVisitor)
 
 } // anonymous namespace
 
-static_assert(QMetaObjectPrivate::OutputRevision == 12, "Check and adjust determineMetaObjectSizes");
+static_assert(QMetaObjectPrivate::OutputRevision - 12 <= 1, "Check and adjust determineMetaObjectSizes");
 
 bool QQmlPropertyCache::determineMetaObjectSizes(const QMetaObject &mo, int *fieldCount,
                                                  int *stringCount)
