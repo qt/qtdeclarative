@@ -1201,16 +1201,14 @@ int countMetaObjectFields(const QMetaObject &mo, StringVisitor stringVisitor)
 
 } // anonymous namespace
 
-static_assert(QMetaObjectPrivate::OutputRevision - 12 <= 1, "Check and adjust determineMetaObjectSizes");
+static_assert(QMetaObjectPrivate::OutputRevision == 13, "Check and adjust determineMetaObjectSizes");
 
 bool QQmlPropertyCache::determineMetaObjectSizes(const QMetaObject &mo, int *fieldCount,
                                                  int *stringCount)
 {
     const QMetaObjectPrivate *priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
-    if (priv->revision > QMetaObjectPrivate::OutputRevision
-            || priv->revision < QMetaObjectPrivate::OutputRevision - 1) {
+    if (priv->revision != QMetaObjectPrivate::OutputRevision)
         return false;
-    }
 
     uint highestStringIndex = 0;
     const auto stringIndexVisitor = [&highestStringIndex](uint index) {
