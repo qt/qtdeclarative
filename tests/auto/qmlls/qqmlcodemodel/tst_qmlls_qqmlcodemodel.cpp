@@ -32,6 +32,10 @@ void tst_qmlls_qqmlcodemodel::buildPathsForFileUrl_data()
     QTest::addRow("EnvironmentVariableOverridesIniFile") << path1 << path2 << QString() << path2;
     QTest::addRow("iniFile") << path1 << QString() << QString() << path1;
     QTest::addRow("environmentVariable") << QString() << path3 << QString() << path3;
+
+    // bug where qmlls allocates memory in an endless loop because of a folder called "_deps"
+    QTest::addRow("endlessLoop") << QString() << QString() << testFile(u"buildfolderwithdeps"_s)
+                                 << testFile(u"buildfolderwithdeps"_s);
 }
 
 void tst_qmlls_qqmlcodemodel::buildPathsForFileUrl()
