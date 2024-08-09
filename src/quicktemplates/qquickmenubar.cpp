@@ -549,8 +549,10 @@ bool QQuickMenuBarPrivate::useNativeMenu(const QQuickMenu *menu) const
     // Since we cannot hide a QPlatformMenu, we have to avoid
     // creating it if it shouldn't be visible in the menu bar.
     for (int i = 0; i < q->count(); ++i) {
-        if (q->menuAt(i) == menu)
-            return itemAt(i)->isVisible();
+        if (q->menuAt(i) == menu) {
+            QQuickItem *itemAtI = itemAt(i);
+            return itemAtI && itemAtI->isVisible();
+        }
     }
 
     return true;
@@ -664,7 +666,7 @@ void QQuickMenuBar::setDelegate(QQmlComponent *delegate)
 
     for (int i = count() - 1; i >= 0; --i) {
         auto item = itemAt(i);
-        if (!item->property(kCreatedFromDelegate).toBool())
+        if (!item || !item->property(kCreatedFromDelegate).toBool())
             continue;
 
         QQuickMenuBarItem *menuBarItem = static_cast<QQuickMenuBarItem *>(item);
