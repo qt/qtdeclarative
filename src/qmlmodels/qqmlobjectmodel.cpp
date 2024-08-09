@@ -3,7 +3,6 @@
 
 #include "qqmlobjectmodel_p.h"
 
-#include <QtCore/qcoreapplication.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlinfo.h>
@@ -11,10 +10,11 @@
 #include <private/qqmlchangeset_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qobject_p.h>
-#include <private/qpodvector_p.h>
 
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qlist.h>
+#include <QtCore/qvarlengtharray.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -29,7 +29,7 @@ public:
         void addRef() { ++ref; }
         bool deref() { return --ref == 0; }
 
-        QObject *item;
+        QPointer<QObject> item;
         int ref;
     };
 
@@ -95,7 +95,7 @@ public:
             n = tfrom-tto;
         }
 
-        QPODVector<QQmlObjectModelPrivate::Item, 4> store;
+        QVarLengthArray<QQmlObjectModelPrivate::Item, 4> store;
         for (int i = 0; i < to - from; ++i)
             store.append(children[from + n + i]);
         for (int i = 0; i < n; ++i)
@@ -158,7 +158,7 @@ private:
     QList<Item> children;
 };
 
-Q_DECLARE_TYPEINFO(QQmlObjectModelPrivate::Item, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlObjectModelPrivate::Item, Q_RELOCATABLE_TYPE);
 
 
 /*!
@@ -269,7 +269,9 @@ QVariant QQmlObjectModel::variantValue(int index, const QString &role)
     Q_D(QQmlObjectModel);
     if (index < 0 || index >= d->children.size())
         return QString();
-    return d->children.at(index).item->property(role.toUtf8().constData());
+    if (QObject *item = d->children.at(index).item)
+        return item->property(role.toUtf8().constData());
+    return QString();
 }
 
 QQmlIncubator::Status QQmlObjectModel::incubationStatus(int)
