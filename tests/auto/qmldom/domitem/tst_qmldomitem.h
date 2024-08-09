@@ -4316,6 +4316,25 @@ private slots:
         }
     }
 
+    void environmentSetLoadPaths()
+    {
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+
+        auto envPtr = DomEnvironment::create(
+                QStringList{},
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies,
+                options);
+
+        auto semanticAnalysis = envPtr->semanticAnalysis();
+        QVERIFY(semanticAnalysis.m_mapper->isEmpty());
+        envPtr->setLoadPaths(QStringList { baseDir + u"/buildFolderWithQrc"_s });
+        QVERIFY(!semanticAnalysis.m_mapper->isEmpty());
+        QVERIFY(semanticAnalysis.m_mapper->isFile(u"/qt/qml/MyModule/qml/HelloWorld.qml"_s));
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

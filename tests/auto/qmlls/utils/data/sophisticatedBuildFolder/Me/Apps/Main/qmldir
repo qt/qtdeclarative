@@ -1,0 +1,6 @@
+module Me.Apps.Main
+prefer :/qt/qml/Me/Apps/Main/
+Main 254.0 qml/Main.qml
+AdminDialog 254.0 qml/popups/AdminDialog.qml
+LabelTitle 254.0 qml/common/LabelTitle.qml
+

@@ -44,7 +44,8 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
     };
 
     QStringList qmltypeDirs =
-            QStringList({ dataDirectory(), QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
+            QStringList({ dataDirectory(), QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath),
+                          dataDirectory() + u"/sophisticatedBuildFolder"_s });
 
     // This should be exactly the same options as qmlls uses in qqmlcodemodel.
     // Otherwise, this test will not test the codepaths also used by qmlls and will be useless.
@@ -4323,6 +4324,11 @@ void tst_qmlls_utils::completions_data()
             << testFile("completions/Enumerations.qml") << 18 << 34
             << ExpectedCompletions{ { u"World"_s, CompletionItemKind::EnumMember },
                                     { u"Hello"_s, CompletionItemKind::Enum } }
+            << QStringList{};
+
+    QTest::newRow("viaResourceFile")
+            << testFile("AdminDialogFromSource.qml") << 4 << 33
+            << ExpectedCompletions{ { u"LabelTitle"_s, CompletionItemKind::Constructor } }
             << QStringList{};
 }
 

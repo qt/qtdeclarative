@@ -5,6 +5,10 @@
 #include "qqmljstyperesolver_p.h"
 #include "qqmljsscopesbyid_p.h"
 
+#include <QtCore/qvarlengtharray.h>
+#include <QtCore/qdir.h>
+#include <QtCore/qdiriterator.h>
+
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
@@ -29,8 +33,7 @@ resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
 
     // TODO: one could optimize the generated alias code for aliases pointing to aliases
     //  e.g., if idA.myAlias -> idB.myAlias2 -> idC.myProp, then one could directly generate
-    //  idA.myProp as pointing to idC.myProp.
-    //  This gets complicated when idB.myAlias is in a different Component than where the
+    //  idA.myProp as pointing to idC.myProp. //  This gets complicated when idB.myAlias is in a different Component than where the
     //  idA.myAlias is defined: scopeForId currently only contains the ids of the current
     //  component and alias resolution on the ids of a different component fails then.
     if (QQmlJSMetaProperty nextProperty = property; nextProperty.isAlias()) {
@@ -247,5 +250,35 @@ bool canCompareWithQUrl(
     return typeResolver->equals(lhsType, typeResolver->urlType())
             && typeResolver->equals(rhsType, typeResolver->urlType());
 }
+
+static QVarLengthArray<QString, 2> resourceFoldersFromBuildFolder(const QString &buildFolder)
+{
+    QVarLengthArray<QString, 2> result;
+    const QDir dir(buildFolder);
+    if (dir.exists(u".rcc"_s)) {
+        result.append(dir.filePath(u".rcc"_s));
+    }
+    if (dir.exists(u".qt/rcc"_s)) {
+        result.append(dir.filePath(u".qt/rcc"_s));
+    }
+    return result;
+}
+
+
+QStringList QQmlJSUtils::resourceFilesFromBuildFolders(const QStringList &buildFolders)
+{
+    QStringList result;
+    for (const QString &path : buildFolders) {
+        for (const QString &resourceFolder : resourceFoldersFromBuildFolder(path)) {
+            QDirIterator it(resourceFolder, QStringList{ u"*.qrc"_s }, QDir::Files,
+                            QDirIterator::Subdirectories);
+            while (it.hasNext()) {
+                result.append(it.next());
+            }
+        }
+    }
+    return result;
+}
+
 
 QT_END_NAMESPACE

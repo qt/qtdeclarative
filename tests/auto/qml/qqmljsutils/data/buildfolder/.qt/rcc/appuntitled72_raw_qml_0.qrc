@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qt/qml/MyModule/">
+    <file alias="qml/HelloWorld.qml">../../HelloWorld.qml</file>
+  </qresource>
+</RCC>
+
