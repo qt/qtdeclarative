@@ -74,7 +74,7 @@ TestCase {
                     objectName: "ShaderFX"
                     width: rect.width
                     height: rect.height
-                    fragmentShader: "combobox/shader.frag.qsb"
+                    fragmentShader: "qrc:/data/combobox/shader.frag.qsb"
                 }
             }
         }
