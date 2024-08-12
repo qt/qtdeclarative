@@ -99,7 +99,8 @@ protected:
     void classBegin() override;
     void componentComplete() override;
 
-    bool create();
+    enum class CreateOptions { TryAllDialogTypes = 0, DontTryNativeDialog = 1 };
+    bool create(CreateOptions = CreateOptions::TryAllDialogTypes);
     void destroy();
 
     virtual bool useNativeDialog() const;
