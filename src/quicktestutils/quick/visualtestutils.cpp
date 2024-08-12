@@ -174,9 +174,10 @@ bool QQuickVisualTestUtils::compareImages(const QImage &ia, const QImage &ib, QS
                 if (lcCompareImages().isDebugEnabled()) {
                     const QDir saveDir(QCoreApplication::applicationDirPath());
                     QString imageFileNamePrefix = QString::fromUtf8("%1-%2").arg(
-                        QTest::currentAppName(), QTest::currentTestFunction());
+                            QString::fromUtf8(QTest::currentAppName()),
+                            QString::fromUtf8(QTest::currentTestFunction()));
                     if (QTest::currentDataTag())
-                        imageFileNamePrefix.append("-" + QString::fromUtf8(QTest::currentDataTag()));
+                        imageFileNamePrefix.append(QStringLiteral("-") + QString::fromUtf8(QTest::currentDataTag()));
 
                     const QString actualImageFilePath = saveDir.filePath(imageFileNamePrefix + QLatin1String("-actual.png"));
                     const bool actualImageSaved = ia.save(actualImageFilePath);
