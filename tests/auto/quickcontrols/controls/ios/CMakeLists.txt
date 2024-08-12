@@ -26,3 +26,5 @@ qt_internal_add_test(tst_ios
     TESTDATA ${test_data}
 )
 
+set(test_target tst_ios)
+include(../shared.cmake)

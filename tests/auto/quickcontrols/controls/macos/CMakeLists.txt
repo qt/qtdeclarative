@@ -36,3 +36,6 @@ set_source_files_properties(${test_data}
     PROPERTIES
         HEADER_FILE_ONLY ON
 )
+
+set(test_target tst_macos)
+include(../shared.cmake)
