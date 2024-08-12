@@ -7350,6 +7350,10 @@ void QQuickTableViewSectionDragHandler::handleEventPoint(QPointerEvent *event, Q
                             Q_UNUSED(itemPos);
                             m_drag->setHotSpot(m_sectionOrientation == Qt::Horizontal ? QPoint(item->width()/2, itemPos.y()) : QPoint(itemPos.x(), item->height()/2));
                             m_drag->exec();
+                            // If the state still remains dragging, means the drop happened outside the corresponding section handler's
+                            // drop area, better clear all the state.
+                            if (m_state == Dragging)
+                                resetDragData();
                             // Reset the active handler
                             tableViewPrivate->setActivePointerHandler(nullptr);
                         }
