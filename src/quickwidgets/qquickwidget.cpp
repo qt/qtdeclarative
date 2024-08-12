@@ -1123,7 +1123,17 @@ void QQuickWidget::createFramebufferObject()
     else
         samples = 0;
 
-    const QSize fboSize = size() * devicePixelRatio();
+    const int minTexSize = d->rhi->resourceLimit(QRhi::TextureSizeMin);
+    const int maxTexSize = d->rhi->resourceLimit(QRhi::TextureSizeMax);
+
+    QSize fboSize = size() * devicePixelRatio();
+    if (fboSize.width() > maxTexSize || fboSize.height() > maxTexSize) {
+        qWarning("QQuickWidget: Requested backing texture size is %dx%d, but the maximum texture size for the 3D API implementation is %dx%d",
+                 fboSize.width(), fboSize.height(),
+                 maxTexSize, maxTexSize);
+    }
+    fboSize.setWidth(qMin(maxTexSize, qMax(minTexSize, fboSize.width())));
+    fboSize.setHeight(qMin(maxTexSize, qMax(minTexSize, fboSize.height())));
 
     // Could be a simple hide - show, in which case the previous texture is just fine.
     if (!d->outputTexture) {
