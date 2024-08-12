@@ -4,6 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
+import QtQuick.Controls.FluentWinUI3.impl
 
 T.RadioDelegate {
     id: control
@@ -40,7 +41,7 @@ T.RadioDelegate {
     ].filter(Boolean).join("_") || "normal"
     readonly property var config: Config.controls.itemdelegate[__currentState] || {}
 
-    indicator: Image {
+    indicator: RadioIndicator {
         readonly property string currentState: [
             control.checked && "checked",
             !control.enabled && control.checked && "disabled",
@@ -51,7 +52,8 @@ T.RadioDelegate {
 
         x: control.text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-        source: Qt.resolvedUrl(config.indicator.filePath)
+        control: control
+        filePath: Qt.resolvedUrl(config.indicator.filePath)
     }
 
     contentItem: IconLabel {

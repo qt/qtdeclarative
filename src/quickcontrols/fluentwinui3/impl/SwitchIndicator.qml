@@ -8,7 +8,7 @@ import QtQuick.Templates as T
 Item {
     id: indicator
 
-    property T.AbstractButton control
+    required property T.AbstractButton control
 
     property Item handleBackground: Rectangle {
         parent: control.indicator
@@ -40,11 +40,11 @@ Item {
             gradient: Gradient {
                 GradientStop {
                     position: 0
-                    color: !control.checked ? "transparent" : Application.styleHints.colorScheme == Qt.Light ? "#0F000000" : "#FFFFFF12"
+                    color: !control.checked ? "transparent" : Application.styleHints.colorScheme == Qt.Light ? "#0F000000" : "#12FFFFFF"
                 }
                 GradientStop {
                     position: 0.5
-                    color: !control.checked ? "transparent" : Application.styleHints.colorScheme == Qt.Light ? "#0F000000" : "#FFFFFF12"
+                    color: !control.checked ? "transparent" : Application.styleHints.colorScheme == Qt.Light ? "#0F000000" : "#12FFFFFF"
                 }
                 GradientStop {
                     position: 0.95
@@ -53,12 +53,12 @@ Item {
             }
 
             Rectangle {
-                radius: height / 2
-                color: control.checked ? control.palette.highlightedText : control.palette.placeholderText
-                width: parent.width - 2
-                height: parent.height - 2
                 x: (parent.width - width) / 2
                 y: (parent.height - height) / 2
+                width: parent.width - 2
+                height: parent.height - 2
+                radius: height / 2
+                color: !control.checked ? control.palette.placeholderText : Application.styleHints.colorScheme === Qt.Dark ? "black" : "white"
             }
 
             Behavior on scale {

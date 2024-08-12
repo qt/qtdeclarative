@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Controls.impl
+import QtQuick.Controls.FluentWinUI3.impl
 import QtQuick.Templates as T
 
 T.CheckBox {
@@ -36,11 +37,11 @@ T.CheckBox {
     readonly property var config: Config.controls.checkbox[__currentState] || {}
     readonly property bool mirroredIndicator: control.mirrored !== (config.mirrored || false)
 
-    // TODO: Add animation for indicator
-    indicator: Image {
+    indicator: CheckIndicator {
         x: control.text ? (control.mirroredIndicator ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-        source: Qt.resolvedUrl(control.config.indicator.filePath)
+        control: control
+        filePath: Qt.resolvedUrl(control.config.indicator.filePath)
     }
 
     contentItem: Text {
