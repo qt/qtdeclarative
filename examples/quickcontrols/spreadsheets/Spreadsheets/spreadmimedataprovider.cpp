@@ -88,7 +88,8 @@ bool SpreadMimeDataProvider::saveDataToModel(int index,
                                              QAbstractItemModel *model) const
 {
     const QMap<int, QVariant> &item_data = m_data.at(index).second;
-    return model->setItemData(modelIndex, item_data);
+    return item_data.isEmpty() ? model->clearItemData(modelIndex)
+                               : model->setItemData(modelIndex, item_data);
 }
 
 void SpreadMimeDataProvider::loadDataFromModel(const QPoint &cell,
