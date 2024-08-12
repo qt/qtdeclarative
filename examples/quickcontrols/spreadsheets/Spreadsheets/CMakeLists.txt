@@ -33,7 +33,6 @@ qt_add_qml_module(${PROJECT_NAME}
         icons/insert_row_below.svg
         icons/remove_column.svg
         icons/remove_row.svg
-        icons/pan.svg
         icons/paste.svg
         icons/copy.svg
         icons/cut.svg

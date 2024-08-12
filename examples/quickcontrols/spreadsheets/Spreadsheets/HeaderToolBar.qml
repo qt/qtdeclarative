@@ -10,7 +10,6 @@ Item {
     implicitHeight: 40
     implicitWidth: 40
 
-    property alias panEnabled: panButton.checked
     readonly property int __icon_size: 20
 
     signal helpRequested()
@@ -34,20 +33,6 @@ Item {
                 ToolTip {
                     text: qsTr("Help")
                     visible: helpButton.hovered
-                }
-            }
-
-            ToolButton {
-                id: panButton
-                icon.source: "icons/pan.svg"
-                icon.color: palette.text
-                icon.width: root.__icon_size
-                icon.height: root.__icon_size
-                flat: true
-                checkable: true
-                ToolTip {
-                    text: qsTr("Pan")
-                    visible: panButton.hovered
                 }
             }
 
