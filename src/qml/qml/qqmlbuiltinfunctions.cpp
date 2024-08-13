@@ -355,14 +355,11 @@ QVariant QtObject::rgba(double r, double g, double b, double a) const
 */
 QVariant QtObject::hsla(double h, double s, double l, double a) const
 {
-    if (h < 0.0) h=0.0;
-    if (h > 1.0) h=1.0;
-    if (s < 0.0) s=0.0;
-    if (s > 1.0) s=1.0;
-    if (l < 0.0) l=0.0;
-    if (l > 1.0) l=1.0;
-    if (a < 0.0) a=0.0;
-    if (a > 1.0) a=1.0;
+    if (h != -1)
+        h = qBound(0.0, h, 1.0);
+    s = qBound(0.0, s, 1.0);
+    l = qBound(0.0, l, 1.0);
+    a = qBound(0.0, a, 1.0);
 
     return QQml_colorProvider()->fromHslF(h, s, l, a);
 }
@@ -377,7 +374,8 @@ QVariant QtObject::hsla(double h, double s, double l, double a) const
 */
 QVariant QtObject::hsva(double h, double s, double v, double a) const
 {
-    h = qBound(0.0, h, 1.0);
+    if (h != -1)
+        h = qBound(0.0, h, 1.0);
     s = qBound(0.0, s, 1.0);
     v = qBound(0.0, v, 1.0);
     a = qBound(0.0, a, 1.0);
