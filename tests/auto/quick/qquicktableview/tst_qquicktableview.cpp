@@ -281,6 +281,7 @@ private slots:
     void checkScroll_data();
     void checkScroll();
     void checkRebuildJsModel();
+    void invalidateTableInstanceModelContextObject();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -7627,6 +7628,30 @@ void tst_QQuickTableView::checkRebuildJsModel()
     // Set the same model once again and check if model changes
     tableView->setModel(jsModel);
     QCOMPARE(tableView->property(modelUpdated).toInt(), 1);
+}
+
+void tst_QQuickTableView::invalidateTableInstanceModelContextObject()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("invalidateModelContextObject.qml"));
+
+    std::unique_ptr<QQuickWindow> window(qobject_cast<QQuickWindow*>(component.create()));
+    QVERIFY(window);
+
+    auto tableView = window->property("tableView").value<QQuickTableView *>();
+    QVERIFY(tableView);
+    WAIT_UNTIL_POLISHED;
+
+    const int modelData = window->property("modelData").toInt();
+    QCOMPARE(tableView->rows(), modelData);
+
+    bool tableViewDestroyed = false;
+    connect(tableView, &QObject::destroyed, [&] {
+        tableViewDestroyed = true;
+    });
+
+    window.reset();
+    QTRY_COMPARE(tableViewDestroyed, true);
 }
 
 QTEST_MAIN(tst_QQuickTableView)
