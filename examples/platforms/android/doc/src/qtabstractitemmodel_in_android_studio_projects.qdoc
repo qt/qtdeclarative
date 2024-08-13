@@ -26,33 +26,33 @@
     \section1 Running the example
 
     To run this example, you need Android Studio and
-    \l {Qt Tools for Android Studio} on top of a standard Qt for Android installation.
+    \l {\QtTAS} on top of a standard Qt for Android installation.
     Open qtabstractitemmodel_java in Android Studio and follow the instructions
-    in \l {Qt Tools for Android Studio} to import the \c qtabstractitemmodel.
+    in \l {\QtTAS} to import the \c qtabstractitemmodel.
 
     \section1 QML project
 
-    On the QML project side, the example uses a \l {Rectangle QML Type} as the root
+    On the QML project side, the example uses a \l [QML] {Rectangle} as the root
     object. The \c dataModel property variable holds the data model created and
     delivered from the Java side.
 
     \snippet android/models/qtabstractitemmodel/Main.qml 0
 
-    \l {TableView QML Type} displays our data model. On the \c delegate property, the example
-    defines each cell item of the model with \l {Text QML Type}.
+    \l [QML] {TableView} displays our data model. On the \c delegate property, the example
+    defines each cell item of the model with \l [QML] {Text}.
 
     \snippet android/models/qtabstractitemmodel/Main.qml 1
 
     In the delegate, the example sets the \c row and \c column properties through the
-    \l {QAbstractItemModel Class}{QHash<int, QByteArray> QAbstractItemModel::roleNames() const}
-    and \l {QAbstractItemModel Class}{ QtModelIndex index(int row, int column, QtModelIndex parent) }
-    and \l {QAbstractItemModel Class}{Object data(QtModelIndex qtModelIndex, int role) }
+    \l {QAbstractItemModel}{QHash<int, QByteArray> QAbstractItemModel::roleNames() const}
+    and \l {QAbstractItemModel}{QtModelIndex index(int row, int column, QtModelIndex parent)}
+    and \l {QAbstractItemModel}{Object data(QtModelIndex qtModelIndex, int role) }
     methods of the model.
 
     Calling these methods from QML means the execution takes place in the Qt qtMainLoopThread
     thread context.
 
-    See \l {QAbstractItemModel Class}{QAbstractItemModel} for a detailed description.
+    See \l {QAbstractItemModel}{QAbstractItemModel} for a detailed description.
 
     \snippet android/models/qtabstractitemmodel/Main.qml 1
 
@@ -64,7 +64,7 @@
     \section2 Data Model
 
     The data model, c\ MyDataModel, extends \c QtAbstractItemModel class.
-    The \c QtAbstractItemModel is a wrapper for \l {QAbstractItemModel Class}.
+    The \c QtAbstractItemModel is a wrapper for \l {QAbstractItemModel}.
 
     As the methods of \c MyDataModel class are called from both, QML and Android sides, the
     execution occurs in both thread contexts, Qt qtMainLoopThread, and Android main thread
