@@ -4429,11 +4429,18 @@ void QQuickTableViewPrivate::syncSyncView()
         q->setRightMargin(syncView->rightMargin());
         updateContentWidth();
 
-        if (syncView->leftColumn() != q->leftColumn()) {
-            // The left column is no longer the same as the left
-            // column in syncView. This requires a rebuild.
-            scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn;
-            scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+        if (scheduledRebuildOptions & RebuildOption::LayoutOnly) {
+            if (syncView->leftColumn() != q->leftColumn()
+                    || syncView->d_func()->loadedTableOuterRect.left() != loadedTableOuterRect.left()) {
+                // The left column is no longer the same, or at the same pos, as the left column in
+                // syncView. This can happen if syncView did a relayout that caused its left column
+                // to be resized so small that it ended up outside the viewport. It can also happen
+                // if the syncView loaded and unloaded columns after the relayout. We therefore need
+                // to sync our own left column and pos to be the same, which we do by rebuilding the
+                // whole viewport instead of just doing a plain LayoutOnly.
+                scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn;
+                scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+            }
         }
     }
 
@@ -4444,11 +4451,18 @@ void QQuickTableViewPrivate::syncSyncView()
         q->setBottomMargin(syncView->bottomMargin());
         updateContentHeight();
 
-        if (syncView->topRow() != q->topRow()) {
-            // The top row is no longer the same as the top
-            // row in syncView. This requires a rebuild.
-            scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow;
-            scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+        if (scheduledRebuildOptions & RebuildOption::LayoutOnly) {
+            if (syncView->topRow() != q->topRow()
+                    || syncView->d_func()->loadedTableOuterRect.top() != loadedTableOuterRect.top()) {
+                // The top row is no longer the same, or at the same pos, as the top row in
+                // syncView. This can happen if syncView did a relayout that caused its top row
+                // to be resized so small that it ended up outside the viewport. It can also happen
+                // if the syncView loaded and unloaded rows after the relayout. We therefore need
+                // to sync our own top row and pos to be the same, which we do by rebuilding the
+                // whole viewport instead of just doing a plain LayoutOnly.
+                scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow;
+                scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+            }
         }
     }
 
