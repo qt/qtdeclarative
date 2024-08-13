@@ -28,20 +28,24 @@
                 android:id="@+id/addRowAtEndButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="5dp"
+                android:layout_marginEnd="@dimen/button_margins"
                 android:layout_weight="1"
                 android:maxLines="3"
                 android:text="Add Row"
-                android:textSize="12sp" />
+                android:textSize="@dimen/text_size"
+                android:padding="@dimen/button_padding"
+                app:cornerRadius="@dimen/corner_radius"/>
             <Button
                 android:id="@+id/removeRowFromEndButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="5dp"
+                android:layout_marginEnd="@dimen/button_margins"
                 android:layout_weight="1"
                 android:maxLines="3"
                 android:text="Remove Row"
-                android:textSize="12sp" />
+                android:textSize="@dimen/text_size"
+                android:padding="@dimen/button_padding"
+                app:cornerRadius="@dimen/corner_radius"/>
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
@@ -51,20 +55,24 @@
                 android:id="@+id/addColumnButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="5dp"
+                android:layout_marginEnd="@dimen/button_margins"
                 android:layout_weight="1"
                 android:maxLines="3"
                 android:text="@string/add_column"
-                android:textSize="12sp" />
+                android:textSize="@dimen/text_size"
+                android:padding="@dimen/button_padding"
+                app:cornerRadius="@dimen/corner_radius"/>
             <Button
                 android:id="@+id/removeLastColumnButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="5dp"
+                android:layout_marginEnd="@dimen/button_margins"
                 android:layout_weight="1"
                 android:maxLines="3"
-                android:text="Remove Column"
-                android:textSize="12sp" />
+                android:text="@string/remove_column"
+                android:textSize="@dimen/text_size"
+                android:padding="@dimen/button_padding"
+                app:cornerRadius="@dimen/corner_radius"/>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
