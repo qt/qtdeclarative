@@ -1393,9 +1393,8 @@ static std::optional<ExpressionType> resolveFieldMemberExpressionType(const DomI
     if (auto scope = propertyFromReferrerScope(owner->semanticScope, name, options))
         return *scope;
 
-    // Ignore enum usages from other files for now.
-    if (owner->type == QmlComponentIdentifier) {
-        // Check if name is a enum value <TypeName>.<EnumValue>
+    if (owner->type == QmlComponentIdentifier || owner->type == EnumeratorIdentifier) {
+        // Check if name is a enum value <TypeName>.<EnumValue> or ...<EnumName>.<EnumValue>
         // Enumerations should live under the root element scope of the file that defines the enum,
         // therefore use the DomItem to find the root element of the qml file instead of directly
         // using owner->semanticScope.

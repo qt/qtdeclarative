@@ -161,9 +161,8 @@ void tst_qmlls_highlighting::highlights_data()
         options.setFlag(DomCreationOption::WithRecovery);
 
         QStringList dirs = {QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath)};
-        auto envPtr = DomEnvironment::create(dirs,
-                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies, options);
+        auto envPtr = DomEnvironment::create(
+                dirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, options);
         envPtr->loadBuiltins();
         envPtr->loadFile(FileToLoad::fromMemory(envPtr, filePath, code),
                          [&file](Path, const DomItem &, const DomItem &newIt) {
@@ -274,22 +273,30 @@ void tst_qmlls_highlighting::highlights_data()
     { // Enums
         const auto filePath = m_highlightingDataDir + "/enums.qml";
         const auto fileItem = fileObject(filePath);
-        QTest::addRow("enum-keyword")
-                << fileItem
-                << Token(QQmlJS::SourceLocation(141, 4, 7, 5),
-                         int(SemanticTokenProtocolTypes::Keyword), 0);
-        QTest::addRow("enum-name")
-                << fileItem
-                << Token(QQmlJS::SourceLocation(146, 3, 7, 10),
-                         int(SemanticTokenProtocolTypes::Enum), 0);
-        QTest::addRow("enum-item")
-                << fileItem
-                << Token(QQmlJS::SourceLocation(160, 3, 8, 9),
-                         int(SemanticTokenProtocolTypes::EnumMember), 0);
-        QTest::addRow("enum-value")
-                << fileItem
-                << Token(QQmlJS::SourceLocation(179, 1, 9, 15),
-                         int(SemanticTokenProtocolTypes::Number), 0);
+        QTest::addRow("enum-keyword") << fileItem
+                                      << Token(QQmlJS::SourceLocation(158, 4, 8, 5),
+                                               int(SemanticTokenProtocolTypes::Keyword), 0);
+        QTest::addRow("enum-name") << fileItem
+                                   << Token(QQmlJS::SourceLocation(163, 3, 8, 10),
+                                            int(SemanticTokenProtocolTypes::Enum), 0);
+        QTest::addRow("enum-item") << fileItem
+                                   << Token(QQmlJS::SourceLocation(177, 3, 9, 9),
+                                            int(SemanticTokenProtocolTypes::EnumMember), 0);
+        QTest::addRow("enum-value") << fileItem
+                                    << Token(QQmlJS::SourceLocation(196, 1, 10, 15),
+                                             int(SemanticTokenProtocolTypes::Number), 0);
+        QTest::addRow("namespace-enum") << fileItem
+                                        << Token(QQmlJS::SourceLocation(225, 1, 13, 21),
+                                                 int(SemanticTokenProtocolTypes::Namespace), 0);
+        QTest::addRow("component-enum") << fileItem
+                                        << Token(QQmlJS::SourceLocation(227, 11, 13, 23),
+                                                 int(SemanticTokenProtocolTypes::Type), 0);
+        QTest::addRow("enum-name-1") << fileItem
+                                     << Token(QQmlJS::SourceLocation(239, 1, 13, 35),
+                                              int(SemanticTokenProtocolTypes::Enum), 0);
+        QTest::addRow("enum-member-1") << fileItem
+                                       << Token(QQmlJS::SourceLocation(241, 4, 13, 37),
+                                                int(SemanticTokenProtocolTypes::EnumMember), 0);
     }
     { // objects and inline components
         const auto filePath = m_highlightingDataDir + "/objectAndComponent.qml";
@@ -510,6 +517,13 @@ void tst_qmlls_highlighting::highlights_data()
                 << fileItem
                 << Token(QQmlJS::SourceLocation(656, 9, 32, 5),
                          int(SemanticTokenProtocolTypes::Method), 0);
+
+        QTest::addRow("enum-name-usage") << fileItem
+                                         << Token(QQmlJS::SourceLocation(790, 1, 36, 35),
+                                                  int(SemanticTokenProtocolTypes::Enum), 0);
+        QTest::addRow("enum-member-usage") << fileItem
+                                           << Token(QQmlJS::SourceLocation(792, 4, 36, 37),
+                                                    int(SemanticTokenProtocolTypes::EnumMember), 0);
     }
     { // script expressions
         const auto filePath = m_highlightingDataDir + "/scriptExpressions.qml";
