@@ -169,6 +169,8 @@ private slots:
     void checkSyncView_emptyModel();
     void checkSyncView_topLeftChanged();
     void checkSyncView_unloadHeader();
+    void checkSyncView_dontRelayoutWhileFlicking();
+    void checkSyncView_detectTopLeftPositionChanged();
     void delegateWithRequiredProperties();
     void checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable();
     void replaceModel();
@@ -3351,6 +3353,85 @@ void tst_QQuickTableView::checkSyncView_topLeftChanged()
 
     QCOMPARE(tableViewH->leftColumn(), tableView->leftColumn());
     QCOMPARE(tableViewV->topRow(), tableView->topRow());
+}
+
+void tst_QQuickTableView::checkSyncView_dontRelayoutWhileFlicking()
+{
+    // Check that we don't do a full relayout in a sync child when
+    // a new row or column is flicked into the view. Normal load
+    // and unload of edges should suffice, equal to how the main
+    // TableView (syncView) does it.
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewHV);
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+    tableViewHV->setModel(model);
+
+    tableView->setColumnWidthProvider(QJSValue());
+    tableView->setRowHeightProvider(QJSValue());
+    view->rootObject()->setProperty("delegateWidth", 50);
+    view->rootObject()->setProperty("delegateHeight", 50);
+
+    WAIT_UNTIL_POLISHED;
+
+    // To check that we don't do a relayout when flicking horizontally, we use a "trick"
+    // where we check the rebuildOptions when we receive the rightColumnChanged
+    // signal. If this signal is emitted as a part of a relayout, rebuildOptions
+    // would still be different from RebuildOption::None at that point.
+    bool columnFlickedIn = false;
+    connect(tableViewHV, &QQuickTableView::rightColumnChanged, [&] {
+        columnFlickedIn = true;
+        QCOMPARE(tableViewHVPrivate->rebuildOptions, QQuickTableViewPrivate::RebuildOption::None);
+    });
+
+    // We do the same for vertical flicking
+    bool rowFlickedIn = false;
+    connect(tableViewHV, &QQuickTableView::bottomRowChanged, [&] {
+        rowFlickedIn = true;
+        QCOMPARE(tableViewHVPrivate->rebuildOptions, QQuickTableViewPrivate::RebuildOption::None);
+    });
+
+    // Move the main tableview so that a new column is flicked in
+    tableView->setContentX(60);
+    QTRY_VERIFY(columnFlickedIn);
+
+    // Move the main tableview so that a new row is flicked in
+    tableView->setContentY(60);
+    QTRY_VERIFY(rowFlickedIn);
+}
+
+void tst_QQuickTableView::checkSyncView_detectTopLeftPositionChanged()
+{
+    // It can happen that, during a resize of columns or rows from using a float-based
+    // slider, that the position of the top-left delegate item is shifted a bit left or
+    // right because of rounding issues. And this again can over time, as you flick, make
+    // the loadedTableOuterRect get slightly out of sync in the sync child compared to the
+    // sync view. TableView will detect if this happens (in syncSyncView), and correct for
+    // it. And this test will test that it works.
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewHV);
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+    tableViewHV->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Writing an auto test to trigger this rounding issue is very hard. So to keep it
+    // simple, we cheat by just moving the loadedTableOuterRect directly, and
+    // check that the syncView child detects it, and corrects it, upon doing a
+    // forceLayout()
+    tableViewPrivate->loadedTableOuterRect.moveLeft(20);
+    tableViewPrivate->loadedTableOuterRect.moveTop(30);
+    tableViewPrivate->relayoutTableItems();
+    tableViewHV->forceLayout();
+
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.left(), 20);
+    QCOMPARE(tableViewHVPrivate->loadedTableOuterRect.left(), 20);
+
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.top(), 30);
+    QCOMPARE(tableViewHVPrivate->loadedTableOuterRect.top(), 30);
 }
 
 void tst_QQuickTableView::checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable()
