@@ -527,7 +527,6 @@ public:
     void updateExtents();
     void syncLoadedTableRectFromLoadedTable();
     void syncLoadedTableFromLoadRequest();
-    void shiftLoadedTableRect(const QPointF newPosition);
 
     int nextVisibleEdgeIndex(Qt::Edge edge, int startIndex) const;
     int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge) const;

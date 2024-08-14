@@ -2576,18 +2576,6 @@ void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
     loadedTableInnerRect = QRectF(topLeftRect.bottomRight(), bottomRightRect.topLeft());
 }
 
-void QQuickTableViewPrivate::shiftLoadedTableRect(const QPointF newPosition)
-{
-    // Move the tracked table rects to the new position. For this to
-    // take visual effect (move the delegate items to be inside the table
-    // rect), it needs to be followed by a relayoutTableItems().
-    // Also note that the position of the viewport needs to be adjusted
-    // separately for it to overlap the loaded table.
-    const QPointF innerDiff = loadedTableOuterRect.topLeft() - loadedTableInnerRect.topLeft();
-    loadedTableOuterRect.moveTopLeft(newPosition);
-    loadedTableInnerRect.moveTopLeft(newPosition + innerDiff);
-}
-
 QQuickTableViewPrivate::RebuildOptions QQuickTableViewPrivate::checkForVisibilityChanges()
 {
     // This function will check if there are any visibility changes among
