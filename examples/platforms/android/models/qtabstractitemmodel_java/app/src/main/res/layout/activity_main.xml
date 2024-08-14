@@ -31,7 +31,7 @@
                 android:layout_marginEnd="@dimen/button_margins"
                 android:layout_weight="1"
                 android:maxLines="3"
-                android:text="Add Row"
+                android:text="@string/add_row"
                 android:textSize="@dimen/text_size"
                 android:padding="@dimen/button_padding"
                 app:cornerRadius="@dimen/corner_radius"/>
@@ -42,7 +42,7 @@
                 android:layout_marginEnd="@dimen/button_margins"
                 android:layout_weight="1"
                 android:maxLines="3"
-                android:text="Remove Row"
+                android:text="@string/remove_row"
                 android:textSize="@dimen/text_size"
                 android:padding="@dimen/button_padding"
                 app:cornerRadius="@dimen/corner_radius"/>
