@@ -4,10 +4,10 @@
 # Generated from pluginWrongCase.pro.
 
 #####################################################################
-## Plugin Generic Library:
+## pluginWrongCase Generic Library:
 #####################################################################
 
-qt_internal_add_cmake_library(Plugin
+qt_internal_add_cmake_library(pluginWrongCase
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/WrongCase"
     SOURCES
@@ -20,11 +20,13 @@ qt_internal_add_cmake_library(Plugin
         Qt::QmlPrivate
 )
 
+set_target_properties(pluginWrongCase PROPERTIES OUTPUT_NAME "Plugin")
+
 #### Keys ignored in scope 1:.:.:pluginWrongCase.pro:<TRUE>:
 # IMPORT_FILES = "qmldir"
 # TEMPLATE = "lib"
 
-qt_autogen_tools_initial_setup(Plugin)
+qt_autogen_tools_initial_setup(pluginWrongCase)
 # special case begin
 file(COPY qmldir
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/WrongCase"
