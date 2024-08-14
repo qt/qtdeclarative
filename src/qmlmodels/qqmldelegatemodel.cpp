@@ -1341,12 +1341,19 @@ QVariant QQmlDelegateModelPrivate::variantValue(QQmlListCompositor::Group group,
             role = name.left(dot);
         QVariant value = model->value(it.modelIndex(), role);
         while (dot > 0) {
-            QObject *obj = qvariant_cast<QObject*>(value);
-            if (!obj)
-                return QVariant();
             const int from = dot + 1;
             dot = name.indexOf(QLatin1Char('.'), from);
-            value = obj->property(QStringView{name}.mid(from, dot - from).toUtf8());
+            QStringView propertyName = QStringView{name}.mid(from, dot - from);
+            if (QObject *obj = qvariant_cast<QObject*>(value)) {
+                value = obj->property(propertyName.toUtf8());
+            } else if (const QMetaObject *metaObject = QQmlMetaType::metaObjectForValueType(value.metaType())) {
+                // Q_GADGET
+                const int propertyIndex = metaObject->indexOfProperty(propertyName.toUtf8());
+                if (propertyIndex >= 0)
+                    value = metaObject->property(propertyIndex).readOnGadget(value.constData());
+            } else {
+                return QVariant();
+            }
         }
         return value;
     }

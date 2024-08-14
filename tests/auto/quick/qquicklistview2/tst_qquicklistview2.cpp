@@ -68,6 +68,7 @@ private slots:
     void bindingDirectlyOnPositionInHeaderAndFooterDelegates();
 
     void clearObjectListModel();
+    void gadgetModelSections();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -1310,6 +1311,17 @@ void tst_QQuickListView2::clearObjectListModel()
     list.setModel(QVariantList());
 
     QVERIFY(!list.itemAtIndex(0));
+}
+
+void tst_QQuickListView2::gadgetModelSections()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("gadgetlist.qml")));
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window.rootObject());
+    QTRY_VERIFY(listview);
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+    QCOMPARE(listview->count(), 4);
+    QCOMPARE(listview->currentSection(), "small");
 }
 
 QTEST_MAIN(tst_QQuickListView2)
