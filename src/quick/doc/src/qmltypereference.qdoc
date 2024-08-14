@@ -65,6 +65,7 @@ available when you import \c QtQuick.
     \keyword colorvaluetypedocs
     \qmlvaluetype color
     \ingroup qtquickvaluetypes
+
     \brief an ARGB color value.
 
     The \c color type refers to an ARGB color value. It can be specified in a number of ways:
@@ -86,11 +87,11 @@ available when you import \c QtQuick.
     \enddiv
     \snippet qml/colors.qml colors
 
-    A color type has \c r, \c g, \c b and \c a properties that refer to the red,
-    green, blue and alpha values of the color, respectively. Additionally it has
-    \c hsvHue, \c hsvSaturation, \c hsvValue and \c hslHue, \c hslSaturation,
-    \c hslLightness properties, which allow access to color values in HSV and HSL
-    color models accordingly:
+
+    A color type has \e r, \e g, \e b, and \e a properties that refer to the red,
+    green, blue and alpha values of the color, respectively. Additionally, the
+    \e hsvHue, \e hsvSaturation, \e hsvValue, \e hslHue, \e hslSaturation, and \e hslLightness
+    properties allow access to color values in HSV and HSL color models respectively.
 
     \qml
     Text {
@@ -119,6 +120,62 @@ available when you import \c QtQuick.
     \include svg-colors.qdocinc
 
     \sa {QML Value Types}
+*/
+
+/*!
+    \qmlproperty real color::r
+    The Red color channel of the RGBA model.
+*/
+
+/*!
+    \qmlproperty real color::g
+    The Green color channel of the RGBA model.
+*/
+
+/*!
+    \qmlproperty real color::b
+    The Blue color channel of the RGBA model.
+*/
+
+/*!
+    \qmlproperty real color::a
+    The Alpha color channel of the RGBA model.
+    Alpha depicts the opacity of each pixel.
+*/
+
+/*!
+    \qmlproperty real color::hsvHue
+    The HSV Hue color component of the color.
+*/
+
+/*!
+    \qmlproperty real color::hsvSaturation
+    The HSV Saturation color component of the color.
+*/
+
+/*!
+    \qmlproperty real color::hsvValue
+    The HSV Value color component of the color.
+*/
+
+/*!
+    \qmlproperty real color::hslHue
+    The HSL hue color component of the color.
+*/
+
+/*!
+    \qmlproperty real color::hslSaturation
+    The HSL Saturation color component of the color.
+*/
+
+/*!
+    \qmlproperty real color::hslLightness
+    The HSL Lightness color component of the color.
+*/
+
+/*!
+    \qmlproperty bool  color::valid
+    Returns \c True if the color is valid; otherwise returns \c False.
 */
 
 /*!
