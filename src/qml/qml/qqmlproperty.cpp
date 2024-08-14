@@ -19,6 +19,7 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlirbuilder_p.h>
+#include <private/qqmllistwrapper_p.h>
 #include <QtQml/private/qqmllist_p.h>
 
 #include <QStringList>
@@ -1609,8 +1610,11 @@ bool QQmlPropertyPrivate::write(
             prop.clear(&prop);
 
             const auto doAppend = [&](QObject *o) {
-                if (o && !QQmlMetaObject::canConvert(o, valueMetaObject))
+                if (Q_UNLIKELY(o && !QQmlMetaObject::canConvert(o, valueMetaObject))) {
+                    qCWarning(lcIncompatibleElement)
+                            << "Cannot append" << o << "to a QML list of" << listValueType.name();
                     o = nullptr;
+                }
                 prop.append(&prop, o);
             };
 
