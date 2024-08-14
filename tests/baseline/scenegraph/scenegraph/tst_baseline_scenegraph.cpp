@@ -11,6 +11,9 @@
 
 #include <algorithm>
 
+// qmlscenegrabber's default timeout, in ms
+#define SCENE_TIMEOUT 6000
+
 QString blockify(const QByteArray& s)
 {
     const char* indent = "\n | ";
@@ -49,6 +52,7 @@ private:
 
     QString testSuitePath;
     QString grabberPath;
+    int grabberTimeout;
     int consecutiveErrors;   // Not test failures (image mismatches), but system failures (so no image at all)
     bool aborted;            // This run given up because of too many system failures
 };
@@ -57,6 +61,10 @@ private:
 tst_Scenegraph::tst_Scenegraph()
     : consecutiveErrors(0), aborted(false)
 {
+    int sceneTimeout = qEnvironmentVariableIntValue("LANCELOT_SCENE_TIMEOUT");
+    if (!sceneTimeout)
+        sceneTimeout = SCENE_TIMEOUT;
+    grabberTimeout = (sceneTimeout * 4) / 3; // Include some slack
 }
 
 
@@ -113,7 +121,7 @@ void tst_Scenegraph::cleanup()
 {
     // Allow subsystems time to settle
     if (!aborted)
-        QTest::qWait(20);
+        QTest::qWait(grabberTimeout / 100);
 }
 
 #ifdef TEXTLESS_TEST
@@ -216,10 +224,10 @@ bool tst_Scenegraph::renderAndGrab(const QString& qmlFile, const QStringList& ex
     QString tmpfile = usePipe ? QString("-") : QString("/tmp/qmlscenegrabber-%1-out.ppm").arg(QCoreApplication::applicationPid());
     args << qmlFile << "-o" << tmpfile;
     grabber.start(grabberPath, args, QIODevice::ReadOnly);
-    grabber.waitForFinished(17000);         //### hardcoded, must be larger than the scene timeout in qmlscenegrabber
+    grabber.waitForFinished(grabberTimeout);
     if (grabber.state() != QProcess::NotRunning) {
         grabber.terminate();
-        grabber.waitForFinished(3000);
+        grabber.waitForFinished(grabberTimeout / 4);
     }
     QImage img;
     bool res = usePipe ? img.load(&grabber, "ppm") : img.load(tmpfile);
