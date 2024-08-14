@@ -16,6 +16,7 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qpointer.h>
 
 #include <QtQml/qqmllist.h>
@@ -24,6 +25,8 @@
 #include <private/qv4object_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcIncompatibleElement)
 
 namespace QV4 {
 
@@ -38,6 +41,7 @@ struct QmlListWrapper : Object
 
     QObject *object() const { return m_object.data(); }
     QMetaType propertyType() const { return QMetaType(m_propertyType); }
+    QMetaType elementType() const { return QQmlMetaType::listValueType(propertyType()); }
 
     const QQmlListProperty<QObject> *property() const
     {

@@ -17,6 +17,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcIncompatibleElement, "qt.qml.list.incompatible")
+
 using namespace QV4;
 using namespace Qt::StringLiterals;
 
@@ -229,7 +231,22 @@ bool QmlListWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
         QV4::Scope scope(v4);
         QV4::ScopedObject so(scope, value.toObject(scope.engine));
         if (auto *wrapper = so->as<QV4::QObjectWrapper>()) {
-            prop->replace(prop, index, wrapper->object());
+            QObject *object = wrapper->object();
+            if (!object) {
+                prop->replace(prop, index, object);
+                return true;
+            }
+
+            const QMetaType elementType = w->d()->elementType();
+            const QMetaObject *elementMeta = elementType.metaObject();
+            if (Q_UNLIKELY(!elementMeta || !QQmlMetaObject::canConvert(object, elementMeta))) {
+                qCWarning(lcIncompatibleElement)
+                        << "Cannot insert" << object << "into a QML list of" << elementType.name();
+                prop->replace(prop, index, nullptr);
+                return true;
+            }
+
+            prop->replace(prop, index, object);
             return true;
         }
 
@@ -346,11 +363,28 @@ ReturnedValue PropertyListPrototype::method_push(const FunctionObject *b, const 
     if (!qIsAtMostUintLimit(length, std::numeric_limits<uint>::max() - argc))
         return scope.engine->throwRangeError(QString::fromLatin1("List length out of range."));
 
+    const QMetaType elementType = w->d()->elementType();
+    const QMetaObject *elementMeta = elementType.metaObject();
     for (int i = 0; i < argc; ++i) {
-        if (argv[i].isNull())
+        if (argv[i].isNull()) {
             property->append(property, nullptr);
-        else
-            property->append(property, argv[i].as<QV4::QObjectWrapper>()->object());
+            continue;
+        }
+
+        QObject *object = argv[i].as<QV4::QObjectWrapper>()->object();
+        if (!object) {
+            property->append(property, nullptr);
+            continue;
+        }
+
+        if (Q_UNLIKELY(!elementMeta || !QQmlMetaObject::canConvert(object, elementMeta))) {
+            qCWarning(lcIncompatibleElement)
+                    << "Cannot append" << object << "to a QML list of" << elementType.name();
+            property->append(property, nullptr);
+            continue;
+        }
+
+        property->append(property, object);
     }
 
     const auto actualLength = property->count(property);
@@ -474,12 +508,29 @@ ReturnedValue PropertyListPrototype::method_splice(const FunctionObject *b, cons
         }
     }
 
+    const QMetaType elementType = w->d()->elementType();
+    const QMetaObject *elementMeta = elementType.metaObject();
     for (qsizetype i = 0; i < itemCount; ++i) {
         const auto arg = argv[i + 2];
-        if (arg.isNull())
+        if (arg.isNull()) {
             property->replace(property, start + i, nullptr);
-        else
-            property->replace(property, start + i, arg.as<QObjectWrapper>()->object());
+            continue;
+        }
+
+        QObject *object = arg.as<QObjectWrapper>()->object();
+        if (!object) {
+            property->replace(property, start + i, nullptr);
+            continue;
+        }
+
+        if (Q_UNLIKELY(!elementMeta || !QQmlMetaObject::canConvert(object, elementMeta))) {
+            qCWarning(lcIncompatibleElement)
+                    << "Cannot splice" << object << "into a QML list of" << elementType.name();
+            property->replace(property, start + i, nullptr);
+            continue;
+        }
+
+        property->replace(property, start + i, object);
     }
 
     return newArray->asReturnedValue();
@@ -524,9 +575,24 @@ ReturnedValue PropertyListPrototype::method_unshift(const FunctionObject *b, con
     for (qsizetype k = len; k > 0; --k)
         property->replace(property, k + argc - 1, property->at(property, k - 1));
 
+    const QMetaType elementType = w->d()->elementType();
+    const QMetaObject *elementMeta = elementType.metaObject();
     for (int i = 0; i < argc; ++i) {
         const auto *wrapper = argv[i].as<QObjectWrapper>();
-        property->replace(property, i, wrapper ? wrapper->object() : nullptr);
+        QObject *object = wrapper ? wrapper->object() : nullptr;
+        if (!object) {
+            property->replace(property, i, object);
+            continue;
+        }
+
+        if (Q_UNLIKELY(!elementMeta || !QQmlMetaObject::canConvert(object, elementMeta))) {
+            qCWarning(lcIncompatibleElement)
+                    << "Cannot unshift" << object << "into a QML list of" << elementType.name();
+            property->replace(property, i, nullptr);
+            continue;
+        }
+
+        property->replace(property, i, object);
     }
 
     return Encode(uint(len + argc));
