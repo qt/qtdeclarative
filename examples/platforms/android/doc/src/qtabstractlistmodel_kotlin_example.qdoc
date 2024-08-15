@@ -23,10 +23,10 @@
 
     The \l {Qt Gradle Plugin} will be used to build the QML project during the Android project
     build process. For this, the example has some plugin configuration in the app-level
-    build.gradle file which may need to be modified if the plugin cannot, for example, find the Qt
+    build.gradle.kts file which may need to be modified if the plugin cannot, for example, find the Qt
     kit directory.
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/build.gradle build.gradle QtBuild config
+    \snippet android/models/qtabstractlistmodel_kotlin/app/build.gradle.kts build.gradle QtBuild config
 
     For further configuration of the plugin, please refer to the
     \l [Qt Gradle Plugin]{Configure the plugin}{Qt Gradle Plugin documentation}.
