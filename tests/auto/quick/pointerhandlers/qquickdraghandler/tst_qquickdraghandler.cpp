@@ -52,6 +52,7 @@ private slots:
     void unsuitableEventDuringDrag();
     void underModalLayer();
     void interruptedByIrrelevantButton();
+    void touchDragExclusiveGrabber();
 
 private:
     void sendWheelEvent(QQuickView &window, QPoint pos, QPoint angleDelta, QPoint pixelDelta, Qt::KeyboardModifiers modifiers, Qt::ScrollPhase phase, bool inverted);
@@ -1125,6 +1126,67 @@ void tst_DragHandler::interruptedByIrrelevantButton() // QTBUG-102201
     QVERIFY(!dragHandler->active());
     QCOMPARE(activeSpy.size(), 4);
     QCOMPARE(cancelSpy.size(), 0); // none of this caused a canceled() signal
+}
+
+class TouchItem : public QQuickItem {
+public:
+    TouchItem(QQuickItem *parent = nullptr) : QQuickItem(parent)
+    {
+        setAcceptTouchEvents(true);
+    }
+
+protected:
+    void touchEvent(QTouchEvent *ev) override
+    {
+        switch (ev->type()) {
+        case QEvent::TouchBegin:
+            ev->accept();
+            break;
+        default:
+            break;
+        }
+    }
+};
+void tst_DragHandler::touchDragExclusiveGrabber()
+{
+    qmlRegisterType<TouchItem>("Test", 1, 0, "TouchItem");
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("dragHandlerTakeOverForbidden.qml")));
+
+    QQuickItem *rect = window.rootObject()->findChild<QQuickItem *>();
+    QVERIFY(rect);
+    QQuickDragHandler *dragHandler = rect->findChild<QQuickDragHandler*>();
+    QVERIFY(dragHandler);
+
+    QSignalSpy centroidChangedSpy(dragHandler, &QQuickDragHandler::centroidChanged);
+    QSignalSpy dragHandlerActiveChangedSpy(dragHandler, &QQuickDragHandler::activeChanged);
+    QSignalSpy grabChangedSpy(dragHandler, &QQuickDragHandler::grabChanged);
+
+    QPointF rectCenter = rect->clipRect().center();
+    QPointF scenePressPos = rect->mapToScene(rectCenter);
+    QPoint p1 = scenePressPos.toPoint();
+    auto dragThreshold = dragHandler->dragThreshold();
+
+    QTest::QTouchEventSequence touchSeq = QTest::touchEvent(&window, touchDevice, false);
+    touchSeq.press(1, p1, &window).commit();
+    QVERIFY(!dragHandler->active());
+    QCOMPARE(dragHandler->centroid().velocity(), QVector2D());
+    QCOMPARE(centroidChangedSpy.size(), 1);
+    QCOMPARE(grabChangedSpy.size(), 1);
+
+    p1 += QPoint(dragThreshold + 1, dragThreshold + 1);
+    touchSeq.move(1, p1, &window).commit();
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(dragHandler->active(), false); // TakeOverForbidden so approveGrabTransition says no
+    QCOMPARE(centroidChangedSpy.size(), 1);
+    QCOMPARE(grabChangedSpy.size(), 1);
+    QCOMPARE(grabChangedSpy.takeLast().at(0).toInt(), QPointingDevice::GrabTransition::GrabPassive);
+
+    touchSeq.release(1, p1, &window).commit();
+    QQuickTouchUtils::flush(&window);
+    QVERIFY(!dragHandler->active());
+    QCOMPARE(centroidChangedSpy.size(), 1);
+    QCOMPARE(grabChangedSpy.size(), 1);
 }
 
 QTEST_MAIN(tst_DragHandler)
