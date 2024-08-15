@@ -93,6 +93,7 @@ public:
         , selectByMouse(true), canPaste(false), canPasteValid(false), hAlignImplicit(true)
         , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
         , hadSelection(false), markdownText(false), inResize(false), ownsDocument(false)
+        , containsUnscalableGlyphs(false)
     {
 #if QT_CONFIG(accessibility)
         QAccessible::installActivationObserver(this);
@@ -220,6 +221,7 @@ public:
     bool markdownText : 1;
     bool inResize : 1;
     bool ownsDocument : 1;
+    bool containsUnscalableGlyphs : 1;
 
     static const int largeTextSizeThreshold;
 };

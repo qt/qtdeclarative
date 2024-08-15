@@ -1722,7 +1722,7 @@ void QQuickTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
     Q_UNUSED(value);
     switch (change) {
     case ItemDevicePixelRatioHasChanged:
-        if (d->renderType == NativeRendering) {
+        if (d->containsUnscalableGlyphs) {
             // Native rendering optimizes for a given pixel grid, so its results must not be scaled.
             // Text layout code respects the current device pixel ratio automatically, we only need
             // to rerun layout after the ratio changed.
@@ -2478,6 +2478,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         return oldNode;
     }
 
+    d->containsUnscalableGlyphs = false;
     if (!oldNode || d->updateType == QQuickTextEditPrivate::UpdateAll) {
         delete oldNode;
         oldNode = nullptr;
@@ -2664,8 +2665,12 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                     bool createdNodeInView = false;
                     if (inView) {
                         if (!engine.hasContents()) {
-                            if (node && !node->parent())
-                                d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
+                            if (node) {
+                                d->containsUnscalableGlyphs = d->containsUnscalableGlyphs
+                                                              || node->containsUnscalableGlyphs();
+                                if (!node->parent())
+                                    d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
+                            }
                             node = d->createTextNode();
                             createdNodeInView = true;
                             updateNodeTransform(node, nodeOffset);
@@ -2680,6 +2685,8 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                     QList<int>::const_iterator lowerBound = std::lower_bound(frameBoundaries.constBegin(), frameBoundaries.constEnd(), block.next().position());
                     if (node && (currentNodeSize > nodeBreakingSize || lowerBound == frameBoundaries.constEnd() || *lowerBound > nodeStart)) {
                         currentNodeSize = 0;
+                        d->containsUnscalableGlyphs = d->containsUnscalableGlyphs
+                                                      || node->containsUnscalableGlyphs();
                         if (!node->parent())
                             d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
                         if (!createdNodeInView)
@@ -2690,8 +2697,12 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                     ++it;
                 } // loop over blocks in frame
             }
-            if (Q_LIKELY(node && !node->parent()))
-                d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
+            if (Q_LIKELY(node)) {
+                d->containsUnscalableGlyphs = d->containsUnscalableGlyphs
+                                              || node->containsUnscalableGlyphs();
+                if (Q_LIKELY(!node->parent()))
+                    d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
+            }
         }
         frameDecorationsEngine.addToSceneGraph(rootNode->frameDecorationsNode, QQuickText::Normal, QColor());
         // Now prepend the frame decorations since we want them rendered first, with the text nodes and cursor in front.

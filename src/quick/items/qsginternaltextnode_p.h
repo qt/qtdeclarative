@@ -126,6 +126,11 @@ public:
         return m_renderType;
     }
 
+    bool containsUnscalableGlyphs() const
+    {
+        return m_containsUnscalableGlyphs;
+    }
+
     void setFiltering(QSGTexture::Filtering filtering) override
     {
         m_filtering = filtering;
@@ -189,6 +194,7 @@ private:
     int m_renderTypeQuality = -1;
     int m_firstLineInViewport = -1;
     int m_firstLinePastViewport = -1;
+    bool m_containsUnscalableGlyphs = false;
 
     friend class QQuickTextEdit;
     friend class QQuickTextEditPrivate;
