@@ -3180,6 +3180,7 @@ function(qt6_target_qml_sources target)
             if(NOT TARGET ${target}_tooling)
                 add_library(${target}_tooling INTERFACE)
                 add_dependencies(${target} ${target}_tooling)
+                set_target_properties(${target}_tooling PROPERTIES QT_EXCLUDE_FROM_TRANSLATION ON)
             endif()
             target_sources(${target}_tooling PRIVATE
                 ${copied_files}
