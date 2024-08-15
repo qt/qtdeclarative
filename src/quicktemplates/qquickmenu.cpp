@@ -2237,6 +2237,23 @@ void QQuickMenu::keyPressEvent(QKeyEvent *event)
     default:
         break;
     }
+
+#if QT_CONFIG(shortcut)
+    if (event->modifiers() == Qt::NoModifier) {
+        for (int i = 0; i < count(); ++i) {
+            QQuickAbstractButton *item = qobject_cast<QQuickAbstractButton*>(d->itemAt(i));
+            if (!item)
+                continue;
+            const QKeySequence keySequence = QKeySequence::mnemonic(item->text());
+            if (keySequence.isEmpty())
+                continue;
+            if (keySequence[0].key() == event->key()) {
+                item->click();
+                break;
+            }
+        }
+    }
+#endif
 }
 
 void QQuickMenu::timerEvent(QTimerEvent *event)
