@@ -1761,7 +1761,7 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
     Q_Q(QQuickItemView);
     if (!model || !model->isValid() || !q->isComponentComplete())
         return;
-    if (q->size().isEmpty() && visibleItems.isEmpty())
+    if (q->size().isNull() && visibleItems.isEmpty())
         return;
     if (!model->count()) {
         updateHeader();

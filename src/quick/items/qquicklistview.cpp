@@ -3677,7 +3677,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     int modelIndex = change.index;
     int count = change.count;
 
-    if (q->size().isEmpty() && visibleItems.isEmpty())
+    if (q->size().isNull() && visibleItems.isEmpty())
         return false;
 
     qreal tempPos = isContentFlowReversed() ? -position()-size() : position();
