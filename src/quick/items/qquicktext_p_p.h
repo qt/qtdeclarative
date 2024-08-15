@@ -144,6 +144,7 @@ public:
     bool formatModifiesFontSize:1;
     bool polishSize:1; // Workaround for problem with polish called after updateSize (QTBUG-42636)
     bool updateSizeRecursionGuard:1;
+    bool containsUnscalableGlyphs:1;
 
     static const QChar elideChar;
     static const int largeTextSizeThreshold;

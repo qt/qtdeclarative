@@ -64,6 +64,7 @@ QQuickTextPrivate::QQuickTextPrivate()
     , layoutTextElided(false), textHasChanged(true), needToUpdateLayout(false), formatModifiesFontSize(false)
     , polishSize(false)
     , updateSizeRecursionGuard(false)
+    , containsUnscalableGlyphs(false)
 {
     implicitAntialiasing = true;
 }
@@ -1924,7 +1925,7 @@ void QQuickText::itemChange(ItemChange change, const ItemChangeData &value)
     case ItemDevicePixelRatioHasChanged:
         {
             bool needUpdateLayout = false;
-            if (d->renderType == NativeRendering) {
+            if (d->containsUnscalableGlyphs) {
                 // Native rendering optimizes for a given pixel grid, so its results must not be scaled.
                 // Text layout code respects the current device pixel ratio automatically, we only need
                 // to rerun layout after the ratio changed.
@@ -2738,6 +2739,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     Q_D(QQuickText);
 
     if (d->text.isEmpty()) {
+        d->containsUnscalableGlyphs = false;
         delete oldNode;
         return nullptr;
     }
@@ -2798,6 +2800,8 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
             }
         }
     }
+
+    d->containsUnscalableGlyphs = node->containsUnscalableGlyphs();
 
     // The font caches have now been initialized on the render thread, so they have to be
     // invalidated before we can use them from the main thread again.

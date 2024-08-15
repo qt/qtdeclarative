@@ -65,6 +65,9 @@ QSGGlyphNode *QSGInternalTextNode::addGlyphs(const QPointF &position, const QGly
                 preferredRenderType = QSGTextNode::NativeRendering;
     }
 
+    if (preferredRenderType == NativeRendering)
+        m_containsUnscalableGlyphs = true;
+
     QSGGlyphNode *node = m_renderContext->sceneGraphContext()->createGlyphNode(m_renderContext,
                                                                                preferredRenderType,
                                                                                m_renderTypeQuality);
