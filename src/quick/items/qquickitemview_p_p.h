@@ -152,7 +152,7 @@ public:
     }
     virtual bool releaseItem(FxViewItem *item, QQmlInstanceModel::ReusableFlag reusableFlag);
 
-    QQuickItem *createHighlightItem() const;
+    QQuickItem *createHighlightItem();
     QQuickItem *createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault = false) const;
     virtual void initializeComponentItem(QQuickItem *) const;
 
