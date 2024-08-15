@@ -1543,6 +1543,28 @@ void QQuickMenu::keyPressEvent(QKeyEvent *event)
     default:
         break;
     }
+
+#if QT_CONFIG(shortcut)
+    if (event->modifiers() == Qt::NoModifier) {
+        for (int i = 0; i < count(); ++i) {
+            QQuickAbstractButton *item = qobject_cast<QQuickAbstractButton*>(d->itemAt(i));
+            if (!item)
+                continue;
+            const QKeySequence keySequence = QKeySequence::mnemonic(item->text());
+            if (keySequence.isEmpty())
+                continue;
+            // Have to simulate click on the item since
+            // QQuickAbstractButton::click() is introduced in Qt-6.8
+            if (keySequence[0].key() == event->key() && item->isEnabled()) {
+                auto *p = QQuickAbstractButtonPrivate::get(item);
+                const QPointF eventPos(p->width / 2, p->height / 2);
+                p->handlePress(eventPos, 0);
+                p->handleRelease(eventPos, 0);
+                break;
+            }
+        }
+    }
+#endif
 }
 
 void QQuickMenu::timerEvent(QTimerEvent *event)
