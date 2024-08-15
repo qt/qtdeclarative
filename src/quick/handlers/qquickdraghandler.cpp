@@ -168,7 +168,7 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
         return; // see QQuickDragHandler::wantsPointerEvent; we don't want to handle those events
 
     QQuickMultiPointHandler::handlePointerEventImpl(event);
-    event->setAccepted(true);
+    event->accept(); // just the event, not the points
 
     if (active()) {
         // Calculate drag delta, taking into account the axis enabled constraint
@@ -234,10 +234,11 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
                     m_pressTargetPos = targetCentroidPosition();
                 }
                 // QQuickDeliveryAgentPrivate::deliverToPassiveGrabbers() skips subsequent delivery if the event is filtered.
-                // (That affects behavior for mouse but not for touch, because Flickable only handles mouse.)
+                // That affects behavior for mouse but not for touch, because Flickable behaves differently in the mouse case.
                 // So we have to compensate by accepting the event here to avoid any parent Flickable from
                 // getting the event via direct delivery and grabbing too soon.
-                point->setAccepted(QQuickDeliveryAgentPrivate::isMouseEvent(event)); // stop propagation iff it's a mouse event
+                if (QQuickDeliveryAgentPrivate::isMouseEvent(event))
+                    point->setAccepted(true); // stop propagation iff it's a mouse event
             }
         }
         if (allOverThreshold) {
