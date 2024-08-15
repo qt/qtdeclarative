@@ -2492,9 +2492,15 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item, QQmlInstanceModel::Reu
     return flags != QQmlInstanceModel::Referenced;
 }
 
-QQuickItem *QQuickItemViewPrivate::createHighlightItem() const
+QQuickItem *QQuickItemViewPrivate::createHighlightItem()
 {
-    return createComponentItem(highlightComponent, 0.0, true);
+    QQuickItem *item = nullptr;
+    if (!inRequest) {
+        inRequest = true;
+        item = createComponentItem(highlightComponent, 0.0, true);
+        inRequest = false;
+    }
+    return item;
 }
 
 QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault) const
