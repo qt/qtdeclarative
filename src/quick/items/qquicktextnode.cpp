@@ -62,6 +62,8 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
         }
     }
 
+    m_containsUnscalableGlyphs = m_containsUnscalableGlyphs || preferNativeGlyphNode;
+
     QSGGlyphNode *node = sg->sceneGraphContext()->createGlyphNode(sg, preferNativeGlyphNode, m_renderTypeQuality);
 
     node->setOwnerElement(m_ownerElement);

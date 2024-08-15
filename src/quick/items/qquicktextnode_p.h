@@ -75,6 +75,11 @@ public:
     void setRenderTypeQuality(int renderTypeQuality) { m_renderTypeQuality = renderTypeQuality; }
     int renderTypeQuality() const { return m_renderTypeQuality; }
 
+    bool containsUnscalableGlyphs() const
+    {
+        return m_containsUnscalableGlyphs;
+    }
+
     QPair<int, int> renderedLineRange() const { return { m_firstLineInViewport, m_firstLinePastViewport }; }
 
 private:
@@ -85,6 +90,7 @@ private:
     int m_renderTypeQuality;
     int m_firstLineInViewport = -1;
     int m_firstLinePastViewport = -1;
+    bool m_containsUnscalableGlyphs = false;
 
     friend class QQuickTextEdit;
     friend class QQuickTextEditPrivate;

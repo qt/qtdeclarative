@@ -124,6 +124,7 @@ public:
         , inLayout(false)
         , requireImplicitWidth(false)
         , overwriteMode(false)
+        , containsUnscalableGlyphs(false)
 #if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
         , selectByTouchDrag(false)
 #endif
@@ -276,6 +277,7 @@ public:
     bool inLayout:1;
     bool requireImplicitWidth:1;
     bool overwriteMode:1;
+    bool containsUnscalableGlyphs:1;
 #if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
     bool selectByTouchDrag:1;
 #endif
