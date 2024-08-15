@@ -1035,6 +1035,34 @@ TestCase {
         tryCompare(tumblerView, "offset", 4, tumblerView.highlightMoveDuration * 2);
     }
 
+    // QTBUG-127613
+    function test_autoWrappingWithDelegate() {
+        createTumbler();
+        tumbler.delegate = paddingDelegate;
+        tumbler.model = 7;
+        tumbler.padding = 10;
+
+        let expectedWidth = tumbler.availableWidth;
+        let expectedHeight = tumbler.availableHeight / tumbler.visibleItemCount;
+
+        tumbler.model = tumbler.visibleItemCount
+        compare(tumbler.wrap, true);
+
+        --tumbler.model;
+        compare(tumbler.wrap, false);
+
+        let delegate = findChild(tumbler.contentItem, "delegate0");
+        compare(delegate.width, expectedWidth);
+        compare(delegate.height, expectedHeight);
+
+        ++tumbler.model;
+        compare(tumbler.wrap, true);
+
+        delegate = findChild(tumbler.contentItem, "delegate0");
+        compare(delegate.width, expectedWidth);
+        compare(delegate.height, expectedHeight);
+    }
+
     function test_moving_data() {
         return [
             { tag: "wrap:true", wrap: true },

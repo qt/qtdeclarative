@@ -550,9 +550,6 @@ void QQuickTumbler::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
             // Make sure we use the new content item and not the current one, as that won't
             // be changed until after contentItemChange() has finished.
             d->setupViewData(newItem);
-
-            d->_q_updateItemHeights();
-            d->_q_updateItemWidths();
         }
     }
 }
@@ -621,6 +618,11 @@ void QQuickTumblerPrivate::setupViewData(QQuickItem *newControlContentItem)
     syncCurrentIndex();
 
     calculateDisplacements();
+
+    if (q->isComponentComplete()) {
+        _q_updateItemWidths();
+        _q_updateItemHeights();
+    }
 }
 
 void QQuickTumblerPrivate::warnAboutIncorrectContentItem()
