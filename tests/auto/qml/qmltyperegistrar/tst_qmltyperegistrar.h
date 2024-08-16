@@ -6,6 +6,7 @@
 
 #include "foreign.h"
 #include "private/foreign_p.h"
+#include "inaccessible/base.h"
 
 #include <QtQmlTypeRegistrar/private/qqmltyperegistrar_p.h>
 
@@ -862,6 +863,14 @@ public:
     UsingVoid *void2() const { return nullptr; }
 };
 
+class AccessibleDerived : public InaccessibleBase
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    AccessibleDerived(QObject *parent = nullptr) : InaccessibleBase(parent) {}
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -944,6 +953,8 @@ private slots:
 
     void omitQQmlV4FunctionPtrArg();
     void preserveVoidStarPropTypes();
+
+    void inaccessibleBase();
 
 private:
     QByteArray qmltypesData;
