@@ -2391,11 +2391,13 @@ void QQuickTableViewPrivate::updateExtents()
     const int nextTopRow = nextVisibleEdgeIndexAroundLoadedTable(Qt::TopEdge);
     const int nextBottomRow = nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge);
 
+    QPointF prevOrigin = origin;
+    QSizeF prevEndExtent = endExtent;
+
     if (syncHorizontally) {
         const auto syncView_d = syncView->d_func();
         origin.rx() = syncView_d->origin.x();
         endExtent.rwidth() = syncView_d->endExtent.width();
-        hData.markExtentsDirty();
     } else if (nextLeftColumn == kEdgeIndexAtEnd) {
         // There are no more columns to load on the left side of the table.
         // In that case, we ensure that the origin match the beginning of the table.
@@ -2412,7 +2414,6 @@ void QQuickTableViewPrivate::updateExtents()
             }
         }
         origin.rx() = loadedTableOuterRect.left();
-        hData.markExtentsDirty();
     } else if (loadedTableOuterRect.left() <= origin.x() + cellSpacing.width()) {
         // The table rect is at the origin, or outside, but we still have more
         // visible columns to the left. So we try to guesstimate how much space
@@ -2422,7 +2423,6 @@ void QQuickTableViewPrivate::updateExtents()
         const qreal remainingSpacing = columnsRemaining * cellSpacing.width();
         const qreal estimatedRemainingWidth = remainingColumnWidths + remainingSpacing;
         origin.rx() = loadedTableOuterRect.left() - estimatedRemainingWidth;
-        hData.markExtentsDirty();
     } else if (nextRightColumn == kEdgeIndexAtEnd) {
         // There are no more columns to load on the right side of the table.
         // In that case, we ensure that the end of the content view match the end of the table.
@@ -2440,7 +2440,6 @@ void QQuickTableViewPrivate::updateExtents()
             }
         }
         endExtent.rwidth() = loadedTableOuterRect.right() - q->contentWidth();
-        hData.markExtentsDirty();
     } else if (loadedTableOuterRect.right() >= q->contentWidth() + endExtent.width() - cellSpacing.width()) {
         // The right-most column is outside the end of the content view, and we
         // still have more visible columns in the model. This can happen if the application
@@ -2451,14 +2450,12 @@ void QQuickTableViewPrivate::updateExtents()
         const qreal estimatedRemainingWidth = remainingColumnWidths + remainingSpacing;
         const qreal pixelsOutsideContentWidth = loadedTableOuterRect.right() - q->contentWidth();
         endExtent.rwidth() = pixelsOutsideContentWidth + estimatedRemainingWidth;
-        hData.markExtentsDirty();
     }
 
     if (syncVertically) {
         const auto syncView_d = syncView->d_func();
         origin.ry() = syncView_d->origin.y();
         endExtent.rheight() = syncView_d->endExtent.height();
-        vData.markExtentsDirty();
     } else if (nextTopRow == kEdgeIndexAtEnd) {
         // There are no more rows to load on the top side of the table.
         // In that case, we ensure that the origin match the beginning of the table.
@@ -2475,7 +2472,6 @@ void QQuickTableViewPrivate::updateExtents()
             }
         }
         origin.ry() = loadedTableOuterRect.top();
-        vData.markExtentsDirty();
     } else if (loadedTableOuterRect.top() <= origin.y() + cellSpacing.height()) {
         // The table rect is at the origin, or outside, but we still have more
         // visible rows at the top. So we try to guesstimate how much space
@@ -2485,7 +2481,6 @@ void QQuickTableViewPrivate::updateExtents()
         const qreal remainingSpacing = rowsRemaining * cellSpacing.height();
         const qreal estimatedRemainingHeight = remainingRowHeights + remainingSpacing;
         origin.ry() = loadedTableOuterRect.top() - estimatedRemainingHeight;
-        vData.markExtentsDirty();
     } else if (nextBottomRow == kEdgeIndexAtEnd) {
         // There are no more rows to load on the bottom side of the table.
         // In that case, we ensure that the end of the content view match the end of the table.
@@ -2503,7 +2498,6 @@ void QQuickTableViewPrivate::updateExtents()
             }
         }
         endExtent.rheight() = loadedTableOuterRect.bottom() - q->contentHeight();
-        vData.markExtentsDirty();
     } else if (loadedTableOuterRect.bottom() >= q->contentHeight() + endExtent.height() - cellSpacing.height()) {
         // The bottom-most row is outside the end of the content view, and we
         // still have more visible rows in the model. This can happen if the application
@@ -2514,7 +2508,6 @@ void QQuickTableViewPrivate::updateExtents()
         const qreal estimatedRemainingHeight = remainingRowHeigts + remainingSpacing;
         const qreal pixelsOutsideContentHeight = loadedTableOuterRect.bottom() - q->contentHeight();
         endExtent.rheight() = pixelsOutsideContentHeight + estimatedRemainingHeight;
-        vData.markExtentsDirty();
     }
 
     if (tableMovedHorizontally || tableMovedVertically) {
@@ -2535,12 +2528,23 @@ void QQuickTableViewPrivate::updateExtents()
         }
     }
 
-    if (hData.minExtentDirty || vData.minExtentDirty) {
-        qCDebug(lcTableViewDelegateLifecycle) << "move origin and endExtent to:" << origin << endExtent;
+    if (prevOrigin != origin || prevEndExtent != endExtent) {
+        if (prevOrigin != origin)
+            qCDebug(lcTableViewDelegateLifecycle) << "move origin to:" << origin;
+        if (prevEndExtent != endExtent)
+            qCDebug(lcTableViewDelegateLifecycle) << "move endExtent to:" << endExtent;
         // updateBeginningEnd() will let the new extents take effect. This will also change the
         // visualArea of the flickable, which again will cause any attached scrollbars to adjust
         // the position of the handle. Note the latter will cause the viewport to move once more.
+        hData.markExtentsDirty();
+        vData.markExtentsDirty();
         updateBeginningEnd();
+        if (!q->isMoving()) {
+            // When we adjust the extents, the viewport can sometimes be left suspended in an
+            // overshooted state. It will bounce back again once the user clicks inside the
+            // viewport. But this comes across as a bug, so returnToBounds explicitly.
+            q->returnToBounds();
+        }
     }
 }
 
