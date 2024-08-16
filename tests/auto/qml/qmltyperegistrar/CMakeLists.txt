@@ -38,6 +38,7 @@ qt_internal_add_test(tst_qmltyperegistrar
         tst_qmltyperegistrar.cpp tst_qmltyperegistrar.h
         foo.cpp foo.h duplicatedExports.h
         inaccessible/base.h
+        inaccessible/property.h
         ${moc_files}
     INCLUDE_DIRECTORIES
         foreign

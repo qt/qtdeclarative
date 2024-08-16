@@ -181,8 +181,11 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
     output << u"#include <QtQml/qqml.h>\n"_s;
     output << u"#include <QtQml/qqmlmoduleregistration.h>\n"_s;
 
-    for (const QString &include : m_includes)
-        output << u"\n#include <%1>"_s.arg(include);
+    for (const QString &include : m_includes) {
+        output << u"\n#if __has_include(<%1>)"_s.arg(include);
+        output << u"\n#  include <%1>"_s.arg(include);
+        output << u"\n#endif"_s;
+    }
 
     output << u"\n\n"_s;
 

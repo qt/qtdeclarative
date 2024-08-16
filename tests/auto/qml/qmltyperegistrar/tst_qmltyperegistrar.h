@@ -7,6 +7,7 @@
 #include "foreign.h"
 #include "private/foreign_p.h"
 #include "inaccessible/base.h"
+#include "inaccessible/property.h"
 
 #include <QtQmlTypeRegistrar/private/qqmltyperegistrar_p.h>
 
@@ -867,8 +868,11 @@ class AccessibleDerived : public InaccessibleBase
 {
     Q_OBJECT
     QML_ELEMENT
+    Q_PROPERTY(InaccessibleProperty *p MEMBER m_p CONSTANT)
 public:
     AccessibleDerived(QObject *parent = nullptr) : InaccessibleBase(parent) {}
+private:
+    InaccessibleProperty *m_p = nullptr;
 };
 
 class tst_qmltyperegistrar : public QObject
