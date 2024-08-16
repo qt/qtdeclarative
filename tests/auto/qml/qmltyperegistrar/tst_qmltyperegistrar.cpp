@@ -1130,4 +1130,26 @@ void tst_qmltyperegistrar::allReferencedTypesCollected()
     })"));
 }
 
+void tst_qmltyperegistrar::inaccessibleBase()
+{
+    // This shows up in qmltypes but we're not actually including base.h
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "base.h"
+        name: "InaccessibleBase"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "a"; type: "int"; index: 0; isConstant: true }
+    })"));
+
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "AccessibleDerived"
+        accessSemantics: "reference"
+        prototype: "InaccessibleBase"
+        exports: ["QmlTypeRegistrarTest/AccessibleDerived 1.0"]
+        exportMetaObjectRevisions: [256]
+    })"));
+}
+
+
 QTEST_MAIN(tst_qmltyperegistrar)

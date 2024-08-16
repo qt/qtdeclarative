@@ -37,6 +37,7 @@ qt_internal_add_test(tst_qmltyperegistrar
         # noextheader special case
         tst_qmltyperegistrar.cpp tst_qmltyperegistrar.h
         foo.cpp foo.h duplicatedExports.h
+        inaccessible/base.h
         ${moc_files}
     INCLUDE_DIRECTORIES
         foreign
