@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -46,7 +45,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         setContentView(view)
         //! [binding]
 
-        m_binding.signalSwitch.setOnClickListener { switchListener() }
+        m_binding.disconnectQmlListenerSwitch.setOnClickListener { switchListener() }
 
         //! [m_qtQuickView]
         m_qtQuickView = QtQuickView(this)
@@ -69,7 +68,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         m_qtQuickView!!.loadComponent(m_mainQmlComponent)
         //! [loadComponent]
 
-        m_binding.changeColorButton.setOnClickListener { onClickListener() }
+        m_binding.changeQmlColorButton.setOnClickListener { onClickListener() }
         m_binding.loadMainQml.setOnClickListener { loadMainQml() }
         m_binding.loadSecondQml.setOnClickListener { loadSecondQml() }
         m_binding.rotateQmlGridButton.setOnClickListener { rotateQmlGrid() }
@@ -122,7 +121,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         // Display the QML View background color in a view
         // if qmlBackgroundColor is not null
         if (qmlBackgroundColor != null) {
-            m_binding.colorBox.setBackgroundColor(Color.parseColor(qmlBackgroundColor))
+            m_binding.qmlColorBox.setBackgroundColor(Color.parseColor(qmlBackgroundColor))
         }
     }
     //! [onClickListener]
@@ -130,7 +129,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
     private fun switchListener() {
         // Disconnect QML button signal listener if switch is On using the saved signal listener Id
         // and connect it again if switch is turned off
-        if (m_binding.signalSwitch.isChecked) {
+        if (m_binding.disconnectQmlListenerSwitch.isChecked) {
             Log.v(TAG, "QML button onClicked signal listener disconnected")
             m_binding.switchText.setText(R.string.connect_qml_button_signal_listener)
             //! [disconnect qml signal listener]
@@ -159,12 +158,12 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
                 + m_statusNames[status])
 
         // Show current QML View status in a textview
-        m_binding.qmlStatus.text = qmlStatus
+        m_binding.qmlStatusText.text = qmlStatus
 
         // Connect signal listener to "onClicked" signal from main.qml
         // addSignalListener returns int which can be used later to identify the listener
         //! [qml signal listener]
-        if (status == QtQmlStatus.READY && !m_binding.signalSwitch.isChecked) {
+        if (status == QtQmlStatus.READY && !m_binding.disconnectQmlListenerSwitch.isChecked) {
             m_qmlButtonSignalListenerId =
                 m_mainQmlComponent.connectOnClickedListener { _: String, _: Void? ->
                     Log.i(TAG, "QML button clicked")
@@ -183,7 +182,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         m_qtQuickView!!.loadComponent(m_secondQmlComponent)
 
         // Reset box color and color text after component reload
-        m_binding.colorBox.setBackgroundColor(Color.parseColor("#00ffffff"))
+        m_binding.qmlColorBox.setBackgroundColor(Color.parseColor("#00ffffff"))
         m_binding.getPropertyValueText.text = ""
     }
 
@@ -191,7 +190,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         m_qtQuickView!!.loadComponent(m_mainQmlComponent)
 
         // Reset box color and color text after component reload
-        m_binding.colorBox.setBackgroundColor(Color.parseColor("#00ffffff"))
+        m_binding.qmlColorBox.setBackgroundColor(Color.parseColor("#00ffffff"))
         m_binding.getPropertyValueText.text = ""
     }
     //! [switchLoadedComponent]

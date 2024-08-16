@@ -40,7 +40,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/qmlStatus"
+            android:id="@+id/qmlStatusText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
@@ -79,7 +79,7 @@
                     android:textSize="@dimen/other_text_size"/>
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/changeColorButton"
+                    android:id="@+id/changeQmlColorButton"
                     android:layout_width="@dimen/change_color_button_width"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
@@ -108,7 +108,7 @@
                     android:textSize="@dimen/other_text_size"/>
 
                 <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/signalSwitch"
+                    android:id="@+id/disconnectQmlListenerSwitch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
@@ -160,7 +160,7 @@
             </LinearLayout>
 
             <View
-                android:id="@+id/colorBox"
+                android:id="@+id/qmlColorBox"
                 android:layout_width="@dimen/color_box_width"
                 android:layout_height="@dimen/color_box_height"
                 android:layout_gravity="center_horizontal"
