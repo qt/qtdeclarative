@@ -93,15 +93,20 @@ void QQuickPopupPositioner::reposition()
         const QQuickItem *centerInParent = p->anchors ? p->getAnchors()->centerIn() : nullptr;
         const QQuickOverlay *centerInOverlay = qobject_cast<const QQuickOverlay *>(centerInParent);
 
-        if (centerInParent == p->parentItem || centerInOverlay) {
-            windowPos = centerInOverlay ? QPoint(qRound(centerInOverlay->width() / 2.0), qRound(centerInOverlay->height() / 2.0))
-                                  : QPoint(qRound(p->parentItem->width() / 2.0), qRound(p->parentItem->height() / 2.0));
-            windowPos -= QPoint(qRound(p->popupItem->width() / 2.0), qRound(p->popupItem->height() / 2.0));
-
-        } else if (centerInParent)
+        if (centerInOverlay) {
+            windowPos = QPoint(qRound((centerInOverlay->width() - p->popupItem->width()) / 2.0),
+                               qRound((centerInOverlay->height() - p->popupItem->height()) / 2.0));
+        } else if (centerInParent == p->parentItem) {
+            windowPos = QPoint(qRound((p->parentItem->width() - p->popupItem->width()) / 2.0),
+                               qRound((p->parentItem->height() - p->popupItem->height()) / 2.0));
+        } else if (centerInParent) {
             qmlWarning(popup()) << "Popup can only be centered within its immediate parent or Overlay.overlay";
+        }
 
-        const QPointF globalCoords = p->parentItem->mapToGlobal(windowPos.x(), windowPos.y());
+        const QPointF globalCoords = centerInOverlay
+                ? centerInOverlay->mapToGlobal(windowPos.x(), windowPos.y())
+                : p->parentItem->mapToGlobal(windowPos.x(), windowPos.y());
+
         p->popupWindow->setPosition(globalCoords.x(), globalCoords.y());
         p->popupItem->setPosition(p->windowInsetsTopLeft());
         return;
