@@ -3,4 +3,5 @@
 
 add_subdirectory(how-to-cpp-button)
 add_subdirectory(how-to-cpp-enum-js)
+add_subdirectory(how-to-cpp-gauge)
 add_subdirectory(how-to-qml)
