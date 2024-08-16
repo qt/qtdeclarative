@@ -1155,6 +1155,16 @@ void tst_qmltyperegistrar::inaccessibleBase()
         Property { name: "a"; type: "int"; index: 0; isPropertyConstant: true }
     })"));
 
+    // This shows up and we include property.h, but guarded by a __has_include.
+    // Since we don't actually need the include, it compiles.
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "property.h"
+        name: "InaccessibleProperty"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "b"; type: "int"; index: 0; isPropertyConstant: true }
+    })"));
+
     QVERIFY(qmltypesData.contains(R"(Component {
         file: "tst_qmltyperegistrar.h"
         name: "AccessibleDerived"
@@ -1162,6 +1172,13 @@ void tst_qmltyperegistrar::inaccessibleBase()
         prototype: "InaccessibleBase"
         exports: ["QmlTypeRegistrarTest/AccessibleDerived 1.0"]
         exportMetaObjectRevisions: [256]
+        Property {
+            name: "p"
+            type: "InaccessibleProperty"
+            isPointer: true
+            index: 0
+            isPropertyConstant: true
+        }
     })"));
 }
 
