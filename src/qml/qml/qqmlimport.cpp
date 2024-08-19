@@ -1159,6 +1159,10 @@ static QQmlImportInstance *addImportToNamespace(
     return import;
 }
 
+static QString getVersionInfo(QTypeRevision version) {
+    return version.isValid() ? QDebug::toString(version) : u"(latest)"_s;
+}
+
 QTypeRevision QQmlImports::addLibraryImport(
         QQmlTypeLoader *typeLoader, const QString &uri, const QString &prefix,
         QTypeRevision version, const QString &qmldirIdentifier, const QString &qmldirUrl,
@@ -1167,9 +1171,11 @@ QTypeRevision QQmlImports::addLibraryImport(
     Q_ASSERT(typeLoader);
     Q_ASSERT(errors);
 
-    qCDebug(lcQmlImport)
-            << "addLibraryImport:" << qPrintable(baseUrl().toString())
-            << uri << "version '" << version << "'" << "as" << prefix;
+    if (lcQmlImport().isDebugEnabled()) {
+        qCDebug(lcQmlImport)
+                << "addLibraryImport:" << qPrintable(baseUrl().toString())
+                << uri << "version" << getVersionInfo(version) << "as" << prefix;
+    }
 
     QQmlImportNamespace *nameSpace = importNamespace(prefix);
     Q_ASSERT(nameSpace);
@@ -1257,9 +1263,11 @@ QTypeRevision QQmlImports::addFileImport(
     Q_ASSERT(typeLoader);
     Q_ASSERT(errors);
 
-    qCDebug(lcQmlImport)
-            << "addFileImport:" << qPrintable(baseUrl().toString())
-            << uri << version << "as" << prefix;
+    if (lcQmlImport().isDebugEnabled()) {
+        qCDebug(lcQmlImport)
+                << "addFileImport:" << qPrintable(baseUrl().toString())
+                << uri << "version" << getVersionInfo(version) << "as" << prefix;
+    }
 
     if (uri.startsWith(Slash) || uri.startsWith(Colon)) {
         QQmlError error;
