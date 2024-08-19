@@ -409,21 +409,7 @@ void QSGSoftwareInternalImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrap
 
 void QSGSoftwareInternalImageNode::update()
 {
-    if (m_cachedMirroredPixmapIsDirty) {
-        if (m_mirror || m_textureIsLayer) {
-            QTransform transform(
-                        (m_mirror ? -1 : 1), 0,
-                        0                  , (m_textureIsLayer ? -1 :1),
-                        0                  , 0
-            );
-            m_cachedMirroredPixmap = pixmap().transformed(transform);
-        } else {
-            //Cleanup cached pixmap if necessary
-            if (!m_cachedMirroredPixmap.isNull())
-                m_cachedMirroredPixmap = QPixmap();
-        }
-        m_cachedMirroredPixmapIsDirty = false;
-    }
+    updateCachedMirroredPixmap();
 }
 
 void QSGSoftwareInternalImageNode::preprocess()
@@ -457,6 +443,7 @@ void QSGSoftwareInternalImageNode::paint(QPainter *painter)
     // Disable antialiased clipping. It causes transformed tiles to have gaps.
     painter->setRenderHint(QPainter::Antialiasing, false);
 
+    updateCachedMirroredPixmap();
     const QPixmap &pm = m_mirror || m_textureIsLayer ? m_cachedMirroredPixmap : pixmap();
 
     if (m_innerTargetRect != m_targetRect) {
@@ -500,6 +487,25 @@ const QPixmap &QSGSoftwareInternalImageNode::pixmap() const
     Q_ASSERT(m_texture == nullptr);
     static const QPixmap nullPixmap;
     return nullPixmap;
+}
+
+void QSGSoftwareInternalImageNode::updateCachedMirroredPixmap()
+{
+    if (m_cachedMirroredPixmapIsDirty) {
+        if (m_mirror || m_textureIsLayer) {
+            QTransform transform(
+                        (m_mirror ? -1 : 1), 0,
+                        0                  , (m_textureIsLayer ? -1 :1),
+                        0                  , 0
+            );
+            m_cachedMirroredPixmap = pixmap().transformed(transform);
+        } else {
+            //Cleanup cached pixmap if necessary
+            if (!m_cachedMirroredPixmap.isNull())
+                m_cachedMirroredPixmap = QPixmap();
+        }
+        m_cachedMirroredPixmapIsDirty = false;
+    }
 }
 
 QT_END_NAMESPACE
