@@ -1262,11 +1262,13 @@ Qt::InputMethodHints QQuickTextInputPrivate::effectiveInputMethodHints() const
     Specifies how the text should be displayed in the TextInput.
 
     \value TextInput.Normal     Displays the text as it is. (Default)
-    \value TextInput.Password   Displays platform-dependent password mask
-                                characters instead of the actual characters.
+    \value TextInput.Password   Displays the \l passwordCharacter instead of the actual characters.
+                                While editing, newly entered characters are displayed in clear text
+                                for a short period specified by the \l passwordMaskDelay property.
     \value TextInput.NoEcho     Displays nothing.
-    \value TextInput.PasswordEchoOnEdit Displays characters as they are entered
-                                while editing, otherwise identical to \c TextInput.Password.
+    \value TextInput.PasswordEchoOnEdit Content is masked as with \c TextInput.Password. During
+                                editing, newly entered characters are displayed in clear text as
+                                long as the TextInput has active focus.
 */
 QQuickTextInput::EchoMode QQuickTextInput::echoMode() const
 {
