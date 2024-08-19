@@ -15,6 +15,11 @@ set(qml_files
     "Frame.qml"
     "GroupBox.qml"
     "ItemDelegate.qml"
+    "Menu.qml"
+    "MenuBar.qml"
+    "MenuBarItem.qml"
+    "MenuItem.qml"
+    "MenuSeparator.qml"
     "Popup.qml"
     "ProgressBar.qml"
     "PageIndicator.qml"
@@ -41,6 +46,7 @@ set_source_files_properties(Config.qml PROPERTIES
 
 file(GLOB light_theme_resources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "light/images/*.png")
 file(GLOB dark_theme_resources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "dark/images/*.png")
+file(GLOB icons_theme_resources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "icons/*.png")
 
 add_subdirectory(impl)
 
@@ -62,6 +68,7 @@ qt_internal_add_qml_module(qtquickcontrols2fluentwinui3styleplugin
     RESOURCES
         ${light_theme_resources}
         ${dark_theme_resources}
+        ${icons_theme_resources}
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
