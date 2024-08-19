@@ -347,6 +347,7 @@ void QmlTypesCreator::writeRootMethods(const MetaType &classDef)
 
     // Add toString()
     Method toStringMethod;
+    toStringMethod.index = -2; // See QV4::QObjectMethod
     toStringMethod.name = "toString"_L1;
     toStringMethod.access = Access::Public;
     toStringMethod.returnType = "QString"_L1;
@@ -354,6 +355,7 @@ void QmlTypesCreator::writeRootMethods(const MetaType &classDef)
 
     // Add destroy(int)
     Method destroyMethodWithArgument;
+    destroyMethodWithArgument.index = -1; // See QV4::QObjectMethod
     destroyMethodWithArgument.name = "destroy"_L1;
     destroyMethodWithArgument.access = Access::Public;
     Argument delayArgument;
@@ -364,6 +366,7 @@ void QmlTypesCreator::writeRootMethods(const MetaType &classDef)
 
     // Add destroy()
     Method destroyMethod;
+    destroyMethod.index = -1; // See QV4::QObjectMethod
     destroyMethod.name = "destroy"_L1;
     destroyMethod.access = Access::Public;
     destroyMethod.isCloned = true;

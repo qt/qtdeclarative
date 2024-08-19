@@ -104,6 +104,7 @@ struct Argument
 struct Method
 {
     using Container = std::vector<Method>;
+    static constexpr int InvalidIndex = std::numeric_limits<int>::min();
 
     Method() = default;
     Method(const QCborMap &cbor, bool isConstructor);
@@ -112,6 +113,8 @@ struct Method
 
     Argument::Container arguments;
     QAnyStringView returnType;
+
+    int index = InvalidIndex;
 
     QTypeRevision revision;
 
