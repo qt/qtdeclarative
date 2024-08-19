@@ -67,8 +67,9 @@ T.MenuItem {
         implicitHeight: 30
         radius: 4
 
-        color: control.palette.dark
-        opacity: 0.1
+        readonly property real alpha: control.down ? 0.0241 : control.hovered ? 0.0373 : 0
+
+        color: Qt.rgba(0, 0, 0, alpha)
         visible: control.down || control.highlighted
     }
 }
