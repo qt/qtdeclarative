@@ -5,6 +5,8 @@
 ## qtquickcontrols2nativestyleplugin Plugin:
 #####################################################################
 
+qt_policy(SET QTP0004 NEW)
+
 set(qml_files
     "controls/DefaultButton.qml"
     "controls/DefaultCheckBox.qml"
