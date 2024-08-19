@@ -24,6 +24,7 @@ qt_add_qml_module(qt_target_qml_sources_example
     URI Example
     VERSION 2.3
     RESOURCE_PREFIX /my.company.com/imports
+    NO_GENERATE_EXTRA_QMLDIRS
     QML_FILES
         nested/way/down/File.qml
         TemplateFile.qml

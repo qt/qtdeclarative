@@ -177,6 +177,11 @@ relative to the \c{target}'s \c SOURCE_DIR target property. This relative path
 can be overridden by setting the \c QT_RESOURCE_ALIAS property on the source
 file. This is commonly used to collect files from different directories and
 have them appear in the resources under a common location.
+However, since Qt 6.8, enabling \l{QTP0004} is often a better option if the goal
+is that all files of the QML module can be found in the implicit import.
+In cases where such a manual setup is still necessary, it is advisable to pass
+\c {NO_GENERATE_EXTRA_QMLDIRS} to \c{qt_add_qml_module}, as the extra qmldirs do
+not take resource file aliasing into consideration.
 
 \target qt_target_qml_sources_example
 \snippet cmake/qt_target_qml_sources/CMakeLists.txt 0
