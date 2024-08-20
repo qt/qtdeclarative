@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype TextSelection
-    \instantiates QQuickTextSelection
+    \nativetype QQuickTextSelection
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \ingroup qtquick-input

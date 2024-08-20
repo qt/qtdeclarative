@@ -6,7 +6,7 @@
 
 /*!
     \qmltype LineShape
-    \instantiates QQuickLineExtruder
+    \nativetype QQuickLineExtruder
     \inqmlmodule QtQuick.Particles
     \inherits ParticleExtruder
     \brief Represents a line for affectors and emitters.

@@ -7,7 +7,7 @@
 QT_BEGIN_NAMESPACE
 /*!
     \qmltype Friction
-    \instantiates QQuickFrictionAffector
+    \nativetype QQuickFrictionAffector
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector

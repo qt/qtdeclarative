@@ -97,7 +97,7 @@ bool QQuickPen::isValid() const
 
 /*!
     \qmltype GradientStop
-    \instantiates QQuickGradientStop
+    \nativetype QQuickGradientStop
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
     \brief Defines the color at a position in a Gradient.
@@ -149,7 +149,7 @@ void QQuickGradientStop::updateGradient()
 
 /*!
     \qmltype Gradient
-    \instantiates QQuickGradient
+    \nativetype QQuickGradient
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
     \brief Defines a gradient fill.
@@ -277,7 +277,7 @@ void QQuickRectanglePrivate::maybeSetImplicitAntialiasing()
 }
 /*!
     \qmltype Rectangle
-    \instantiates QQuickRectangle
+    \nativetype QQuickRectangle
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-visual

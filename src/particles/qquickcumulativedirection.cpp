@@ -8,7 +8,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype CumulativeDirection
-    \instantiates QQuickCumulativeDirection
+    \nativetype QQuickCumulativeDirection
     \inqmlmodule QtQuick.Particles
     \inherits Direction
     \brief For specifying a direction made of other directions.

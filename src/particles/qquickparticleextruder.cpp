@@ -8,7 +8,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ParticleExtruder
-    \instantiates QQuickParticleExtruder
+    \nativetype QQuickParticleExtruder
     \inqmlmodule QtQuick.Particles
     \brief For specifying an area for affectors and emitters.
     \ingroup qtquick-particles

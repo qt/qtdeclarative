@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Application
-    \instantiates QQuickApplication
+    \nativetype QQuickApplication
     \inqmlmodule QtQuick
     //! once exposed: \inherits CoreApplication?
     //! TODO: \ingroup ?

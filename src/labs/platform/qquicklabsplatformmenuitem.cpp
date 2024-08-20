@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuItem
     \inherits QtObject
-//!     \instantiates QQuickLabsPlatformMenuItem
+//!     \nativetype QQuickLabsPlatformMenuItem
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native menu item.

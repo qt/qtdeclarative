@@ -17,7 +17,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SplitView
     \inherits Container
-//!     \instantiates QQuickSplitView
+//!     \nativetype QQuickSplitView
     \inqmlmodule QtQuick.Controls
     \since 5.13
     \ingroup qtquickcontrols-containers
@@ -2167,7 +2167,7 @@ QQuickSplitHandleAttached::QQuickSplitHandleAttached(QObject *parent)
 /*!
     \qmltype SplitHandle
     \inherits QtObject
-//!     \instantiates QQuickSplitHandleAttached
+//!     \nativetype QQuickSplitHandleAttached
     \inqmlmodule QtQuick.Controls
     \since 5.13
     \brief Provides attached properties for SplitView handles.

@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SwitchDelegate
     \inherits ItemDelegate
-//!     \instantiates QQuickSwitchDelegate
+//!     \nativetype QQuickSwitchDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-delegates

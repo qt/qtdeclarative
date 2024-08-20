@@ -1921,7 +1921,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
 
 /*!
     \qmltype ListModel
-    \instantiates QQmlListModel
+    \nativetype QQmlListModel
     \inherits AbstractListModel
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
@@ -3001,7 +3001,7 @@ bool QQmlListModelParser::definesEmptyList(const QString &s)
 
 /*!
     \qmltype ListElement
-    \instantiates QQmlListElement
+    \nativetype QQmlListElement
     \inqmlmodule QtQml.Models
     \brief Defines a data item in a ListModel.
     \ingroup qtquick-models

@@ -8,7 +8,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MessageDialog
     \inherits Dialog
-//!     \instantiates QQuickMessageDialog
+//!     \nativetype QQuickMessageDialog
     \inqmlmodule QtQuick.Dialogs
     \since 6.3
     \brief A message dialog.

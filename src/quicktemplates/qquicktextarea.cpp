@@ -24,7 +24,7 @@ using namespace Qt::StringLiterals;
 /*!
     \qmltype TextArea
     \inherits TextEdit
-//!     \instantiates QQuickTextArea
+//!     \nativetype QQuickTextArea
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-input

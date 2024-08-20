@@ -145,7 +145,7 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
 
 /*!
     \qmltype Component
-    \instantiates QQmlComponent
+    \nativetype QQmlComponent
     \ingroup qml-utility-elements
     \inqmlmodule QtQml
     \brief Encapsulates a QML component definition.

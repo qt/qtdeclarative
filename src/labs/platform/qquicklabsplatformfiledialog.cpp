@@ -12,7 +12,7 @@ using namespace Qt::StringLiterals;
 /*!
     \qmltype FileDialog
     \inherits Dialog
-//!     \instantiates QQuickLabsPlatformFileDialog
+//!     \nativetype QQuickLabsPlatformFileDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native file dialog.

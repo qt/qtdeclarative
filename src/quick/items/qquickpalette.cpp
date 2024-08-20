@@ -44,7 +44,7 @@ static constexpr bool is_valid(QPalette::ColorGroup cg) noexcept
 
 /*!
     \qmltype Palette
-    \instantiates QQuickPalette
+    \nativetype QQuickPalette
     \inherits QQuickColorGroup
     \inqmlmodule QtQuick
     \ingroup qtquick-visual

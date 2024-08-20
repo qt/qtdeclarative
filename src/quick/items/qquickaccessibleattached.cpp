@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Accessible
-    \instantiates QQuickAccessibleAttached
+    \nativetype QQuickAccessibleAttached
     \brief Enables accessibility of QML items.
 
     \inqmlmodule QtQuick

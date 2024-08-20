@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype handlerPoint
-    \instantiates QQuickHandlerPoint
+    \nativetype QQuickHandlerPoint
     \inqmlmodule QtQuick
     \brief An event point.
 

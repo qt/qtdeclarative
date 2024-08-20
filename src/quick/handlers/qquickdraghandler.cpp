@@ -14,7 +14,7 @@ Q_STATIC_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
 
 /*!
     \qmltype DragHandler
-    \instantiates QQuickDragHandler
+    \nativetype QQuickDragHandler
     \inherits MultiPointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers

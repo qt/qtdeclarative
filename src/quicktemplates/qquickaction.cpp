@@ -22,7 +22,7 @@ Q_STATIC_LOGGING_CATEGORY(lcAction, "qt.quick.controls.action")
 /*!
     \qmltype Action
     \inherits QtObject
-//!     \instantiates QQuickAction
+//!     \nativetype QQuickAction
     \inqmlmodule QtQuick.Controls
     \since 5.10
     \ingroup utilities

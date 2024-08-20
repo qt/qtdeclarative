@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype PageIndicator
     \inherits Control
-//!     \instantiates QQuickPageIndicator
+//!     \nativetype QQuickPageIndicator
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-indicators

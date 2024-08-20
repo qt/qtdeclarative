@@ -19,7 +19,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Settings
-//!    \instantiates QQmlSettings
+//!    \nativetype QQmlSettings
     \inherits QtObject
     \inqmlmodule QtCore
     \since 6.5

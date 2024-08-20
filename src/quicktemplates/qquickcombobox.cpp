@@ -34,7 +34,7 @@ Q_STATIC_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobo
 /*!
     \qmltype ComboBox
     \inherits Control
-//!     \instantiates QQuickComboBox
+//!     \nativetype QQuickComboBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-input

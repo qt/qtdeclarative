@@ -76,7 +76,7 @@ Q_LOGGING_CATEGORY(lcDialogs, "qt.quick.dialogs")
 /*!
     \qmltype Dialog
     \inherits QtObject
-//! \instantiates QQuickAbstractDialog
+//! \nativetype QQuickAbstractDialog
     \inqmlmodule QtQuick.Dialogs
     \since 6.2
     \brief The base class of native dialogs.

@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ShaderEffect
-    \instantiates QQuickShaderEffect
+    \nativetype QQuickShaderEffect
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-effects

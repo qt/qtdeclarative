@@ -11,7 +11,7 @@
 
 /*!
     \qmltype RowLayout
-    //! \instantiates QQuickRowLayout
+    //! \nativetype QQuickRowLayout
     \inherits Item
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts
@@ -71,7 +71,7 @@
 
 /*!
     \qmltype ColumnLayout
-    //! \instantiates QQuickColumnLayout
+    //! \nativetype QQuickColumnLayout
     \inherits Item
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts
@@ -130,7 +130,7 @@
 
 /*!
     \qmltype GridLayout
-    //! \instantiates QQuickGridLayout
+    //! \nativetype QQuickGridLayout
     \inherits Item
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts

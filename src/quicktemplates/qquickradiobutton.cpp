@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype RadioButton
     \inherits AbstractButton
-//!     \instantiates QQuickRadioButton
+//!     \nativetype QQuickRadioButton
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-buttons

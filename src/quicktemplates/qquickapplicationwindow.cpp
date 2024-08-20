@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ApplicationWindow
     \inherits Window
-//!     \instantiates QQuickApplicationWindow
+//!     \nativetype QQuickApplicationWindow
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-containers

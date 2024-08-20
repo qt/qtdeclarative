@@ -82,7 +82,7 @@ QQuickStateOperation::QQuickStateOperation(QObjectPrivate &dd, QObject *parent)
 
 /*!
     \qmltype State
-    \instantiates QQuickState
+    \nativetype QQuickState
     \inqmlmodule QtQuick
     \ingroup qtquick-states
     \brief Defines configurations of objects and properties.

@@ -7,7 +7,7 @@
 
 /*!
     \qmltype ParticleGroup
-    \instantiates QQuickParticleGroup
+    \nativetype QQuickParticleGroup
     \inqmlmodule QtQuick.Particles
     \brief For setting attributes on a logical particle group.
     \ingroup qtquick-particles

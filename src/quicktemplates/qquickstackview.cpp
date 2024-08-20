@@ -54,7 +54,7 @@ QDebug operator<<(QDebug debug, const QQuickStackViewArg &arg)
 /*!
     \qmltype StackView
     \inherits Control
-//!     \instantiates QQuickStackView
+//!     \nativetype QQuickStackView
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-navigation

@@ -50,7 +50,7 @@ using namespace QV4;
 /*!
 \qmltype Qt
 \inqmlmodule QtQml
-//! \instantiates QQmlEnginePrivate
+//! \nativetype QQmlEnginePrivate
 \ingroup qml-utility-elements
 \keyword QmlGlobalQtObject
 \brief Provides a global object with useful enums and functions from Qt.

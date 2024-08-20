@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype FontDialog
     \inherits Dialog
-//!     \instantiates QQuickFontDialog
+//!     \nativetype QQuickFontDialog
     \inqmlmodule QtQuick.Dialogs
     \since 6.2
     \brief A font dialog.

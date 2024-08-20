@@ -31,7 +31,7 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickPopup, "qt.quick.controls.popup")
 /*!
     \qmltype Popup
     \inherits QtObject
-//!     \instantiates QQuickPopup
+//!     \nativetype QQuickPopup
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-popups

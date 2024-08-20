@@ -20,7 +20,7 @@ Q_STATIC_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
     \qmltype PointerHandler
     \qmlabstract
     \since 5.10
-    \instantiates QQuickPointerHandler
+    \nativetype QQuickPointerHandler
     \inqmlmodule QtQuick
     \brief Abstract handler for pointer events.
 

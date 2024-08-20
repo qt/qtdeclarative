@@ -2036,7 +2036,7 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
 
 /*!
     \qmltype ListView
-    \instantiates QQuickListView
+    \nativetype QQuickListView
     \inqmlmodule QtQuick
     \ingroup qtquick-views
     \inherits Flickable

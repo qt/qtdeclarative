@@ -139,7 +139,7 @@ static void q_QFontLoaderFontsStaticReset()
 
 /*!
     \qmltype FontLoader
-    \instantiates QQuickFontLoader
+    \nativetype QQuickFontLoader
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
     \brief Allows fonts to be loaded by URL.

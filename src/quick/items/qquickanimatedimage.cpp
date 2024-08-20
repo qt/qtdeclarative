@@ -55,7 +55,7 @@ void QQuickAnimatedImagePrivate::clearCache()
 
 /*!
     \qmltype AnimatedImage
-    \instantiates QQuickAnimatedImage
+    \nativetype QQuickAnimatedImage
     \inqmlmodule QtQuick
     \inherits Image
     \brief Plays animations stored as a series of images.

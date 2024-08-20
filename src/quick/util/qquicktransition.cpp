@@ -18,7 +18,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Transition
-    \instantiates QQuickTransition
+    \nativetype QQuickTransition
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \brief Defines animated transitions that occur on state changes.

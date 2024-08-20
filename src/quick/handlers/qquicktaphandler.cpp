@@ -20,7 +20,7 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
 
 /*!
     \qmltype TapHandler
-    \instantiates QQuickTapHandler
+    \nativetype QQuickTapHandler
     \inherits SinglePointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers

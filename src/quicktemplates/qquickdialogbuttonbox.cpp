@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype DialogButtonBox
     \inherits Container
-//!     \instantiates QQuickDialogButtonBox
+//!     \nativetype QQuickDialogButtonBox
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols-dialogs
     \brief A button box used in dialogs.

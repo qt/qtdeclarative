@@ -22,7 +22,7 @@ using namespace Qt::StringLiterals;
 /*!
     \qmltype TextField
     \inherits TextInput
-//!     \instantiates QQuickTextField
+//!     \nativetype QQuickTextField
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-input

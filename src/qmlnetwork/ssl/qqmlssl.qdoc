@@ -157,7 +157,7 @@
     \qmltype sslKey
     \inqmlmodule QtNetwork
 
-    \instantiates QSslKey
+    \nativetype QSslKey
     \brief The sslKey class provides the interface for private and public keys.
 
     The sslKey provides an API for managing keys.

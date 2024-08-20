@@ -29,7 +29,7 @@ Q_LOGGING_CATEGORY(lcItemManagement, "qt.quick.controls.control.itemmanagement")
 /*!
     \qmltype Control
     \inherits Item
-//!     \instantiates QQuickControl
+//!     \nativetype QQuickControl
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \brief Abstract base type providing functionality common to all controls.

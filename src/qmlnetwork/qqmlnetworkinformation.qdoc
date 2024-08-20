@@ -4,7 +4,7 @@
 /*!
     \qmltype NetworkInformation
     \inqmlmodule QtNetwork
-    \instantiates QNetworkInformation
+    \nativetype QNetworkInformation
     \brief  Provides a cross-platform interface to network-related information.
 
     NetworkInformation provides a cross-platform interface to network-related information.

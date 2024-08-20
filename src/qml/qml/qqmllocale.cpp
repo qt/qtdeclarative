@@ -591,7 +591,7 @@ void QQmlLocaleValueType::toString(QQmlV4FunctionPtr args) const
 
 /*!
     \qmltype Locale
-    //! \instantiates QQmlLocale
+    //! \nativetype QQmlLocale
     \inqmlmodule QtQml
     \brief Provides locale specific properties and formatted data.
 

@@ -127,7 +127,7 @@ public:
 
 /*!
  * \qmltype ItemGrabResult
- * \instantiates QQuickItemGrabResult
+ * \nativetype QQuickItemGrabResult
  * \inherits QtObject
  * \inqmlmodule QtQuick
  * \ingroup qtquick-visual

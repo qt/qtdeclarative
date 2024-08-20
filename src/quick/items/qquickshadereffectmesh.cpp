@@ -35,7 +35,7 @@ QQuickShaderEffectMesh::QQuickShaderEffectMesh(QObjectPrivate &dd, QObject *pare
 
 /*!
     \qmltype GridMesh
-    \instantiates QQuickGridMesh
+    \nativetype QQuickGridMesh
     \inqmlmodule QtQuick
     \since 5.0
     \ingroup qtquick-effects
@@ -221,7 +221,7 @@ QSize QQuickGridMesh::resolution() const
 
 /*!
     \qmltype BorderImageMesh
-    \instantiates QQuickBorderImageMesh
+    \nativetype QQuickBorderImageMesh
     \inqmlmodule QtQuick
     \since 5.8
     \ingroup qtquick-effects

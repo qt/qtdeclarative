@@ -30,7 +30,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Menu
     \inherits QtObject
-//! \instantiates QQuickLabsPlatformMenu
+//! \nativetype QQuickLabsPlatformMenu
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native menu.

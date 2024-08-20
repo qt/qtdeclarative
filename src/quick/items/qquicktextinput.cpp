@@ -35,7 +35,7 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickTextInput, "qt.quick.textInput")
 
 /*!
     \qmltype TextInput
-    \instantiates QQuickTextInput
+    \nativetype QQuickTextInput
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \ingroup qtquick-input

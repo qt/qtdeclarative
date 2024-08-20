@@ -21,7 +21,7 @@ Q_STATIC_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 
 /*!
     \qmltype PinchHandler
-    \instantiates QQuickPinchHandler
+    \nativetype QQuickPinchHandler
     \inherits MultiPointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers

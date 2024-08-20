@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Slider
     \inherits Control
-//!     \instantiates QQuickSlider
+//!     \nativetype QQuickSlider
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-input

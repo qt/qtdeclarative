@@ -18,7 +18,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ActionGroup
     \inherits QtObject
-//!     \instantiates QQuickActionGroup
+//!     \nativetype QQuickActionGroup
     \inqmlmodule QtQuick.Controls
     \since 5.10
     \ingroup utilities

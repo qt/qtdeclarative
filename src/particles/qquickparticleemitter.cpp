@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Emitter
-//!    \instantiates QQuickParticleEmitter
+//!    \nativetype QQuickParticleEmitter
     \inqmlmodule QtQuick.Particles
     \brief Emits logical particles.
     \ingroup qtquick-particles

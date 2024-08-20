@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype FolderDialog
     \inherits Dialog
-//!     \instantiates QQuickFolderDialog
+//!     \nativetype QQuickFolderDialog
     \inqmlmodule QtQuick.Dialogs
     \since 6.3
     \brief A native folder dialog.

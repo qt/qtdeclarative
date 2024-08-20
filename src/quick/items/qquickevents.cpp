@@ -18,7 +18,7 @@ Q_LOGGING_CATEGORY(lcPointerEvents, "qt.quick.pointer.events")
 
 /*!
     \qmltype KeyEvent
-    \instantiates QQuickKeyEvent
+    \nativetype QQuickKeyEvent
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
 
@@ -153,7 +153,7 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
 
 /*!
     \qmltype MouseEvent
-    \instantiates QQuickMouseEvent
+    \nativetype QQuickMouseEvent
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
 
@@ -323,7 +323,7 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
 
 /*!
     \qmltype WheelEvent
-    \instantiates QQuickWheelEvent
+    \nativetype QQuickWheelEvent
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
     \brief Provides information about a mouse wheel event.

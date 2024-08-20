@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuItemGroup
     \inherits QtObject
-//!     \instantiates QQuickLabsPlatformMenuItemGroup
+//!     \nativetype QQuickLabsPlatformMenuItemGroup
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A group for managing native menu items.

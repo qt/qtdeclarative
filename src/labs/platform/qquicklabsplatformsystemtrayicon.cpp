@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SystemTrayIcon
     \inherits QtObject
-//!     \instantiates QQuickLabsPlatformSystemTrayIcon
+//!     \nativetype QQuickLabsPlatformSystemTrayIcon
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A system tray icon.

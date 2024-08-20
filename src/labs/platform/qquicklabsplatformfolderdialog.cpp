@@ -8,7 +8,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype FolderDialog
     \inherits Dialog
-//!     \instantiates QQuickLabsPlatformFolderDialog
+//!     \nativetype QQuickLabsPlatformFolderDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native folder dialog.

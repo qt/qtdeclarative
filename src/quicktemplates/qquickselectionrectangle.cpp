@@ -17,7 +17,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SelectionRectangle
     \inherits Control
-//!     \instantiates QQuickSelectionRectangle
+//!     \nativetype QQuickSelectionRectangle
     \inqmlmodule QtQuick.Controls
     \since 6.2
     \ingroup utilities

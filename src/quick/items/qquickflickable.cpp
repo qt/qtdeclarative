@@ -629,7 +629,7 @@ void QQuickFlickablePrivate::updateBeginningEnd()
 
 /*!
     \qmltype Flickable
-    \instantiates QQuickFlickable
+    \nativetype QQuickFlickable
     \inqmlmodule QtQuick
     \ingroup qtquick-input
     \ingroup qtquick-containers
