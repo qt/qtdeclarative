@@ -25,6 +25,7 @@ ApplicationWindow {
         x: 10; y: 10
         width: window.width - 10
         height: window.height - 10
+        popupType: Popup.Item
 
         Button {
             id: button
