@@ -145,7 +145,7 @@ tst_QQuickPopup::tst_QQuickPopup()
 
 void tst_QQuickPopup::cleanup()
 {
-    // For some reason, it's not impossible for popups to already exist, when this test is executed.
+    // For some reason, it's not impossible for popups to already exist, when a test is executed.
     if (QGuiApplicationPrivate::popupCount() > 0)
         QGuiApplicationPrivate::closeAllPopups();
     QTRY_COMPARE(QGuiApplicationPrivate::popupCount(), 0);
