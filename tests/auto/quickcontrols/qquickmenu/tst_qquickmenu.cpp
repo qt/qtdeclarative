@@ -56,6 +56,7 @@ private slots:
     void mouse_data();
     void mouse();
     void pressAndHold();
+    void contextMenuKeyboard_data();
     void contextMenuKeyboard();
     void disabledMenuItemKeyNavigation();
     void mnemonics();
@@ -365,9 +366,18 @@ void tst_QQuickMenu::pressAndHold()
     QTRY_VERIFY(!menu->isVisible());
 }
 
+void tst_QQuickMenu::contextMenuKeyboard_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    QTest::newRow("Popup.Window") << QQuickPopup::Window;
+}
+
 void tst_QQuickMenu::contextMenuKeyboard()
 {
     SKIP_IF_NO_WINDOW_ACTIVATION
+
+    QFETCH(QQuickPopup::PopupType, popupType);
 
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
@@ -384,8 +394,13 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QVERIFY(QGuiApplication::focusWindow() == window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+    QQuickMenuPrivate *menuPrivate = QQuickMenuPrivate::get(menu);
+    QVERIFY(menuPrivate);
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
+
+    menu->setPopupType(popupType);
 
     QQuickMenuItem *firstItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
     QVERIFY(firstItem);
@@ -393,13 +408,23 @@ void tst_QQuickMenu::contextMenuKeyboard()
 
     QVERIFY(menu->hasFocus());
     menu->open();
-    QCOMPARE(visibleSpy.size(), 1);
-    QVERIFY(menu->isVisible());
-    QVERIFY(menu->hasActiveFocus());
-    QQuickOverlay *overlay = window->property("overlay").value<QQuickOverlay*>();
-    QVERIFY(overlay);
-    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
+
+    QQuickItem *parentItem = nullptr;
+    if (!menuPrivate->usePopupWindow()) {
+        parentItem = window->property("overlay").value<QQuickOverlay*>();
+    } else {
+        QTRY_VERIFY(menuPrivate->popupWindow);
+        parentItem = menuPrivate->popupWindow->contentItem();
+        QVERIFY(QTest::qWaitForWindowExposed(menuPrivate->popupWindow));
+        QQuickTest::qWaitForPolish(menuPrivate->popupWindow);
+    }
+
     QTRY_VERIFY(menu->isOpened());
+    QCOMPARE(visibleSpy.size(), 1);
+    QVERIFY(menu->hasActiveFocus());
+
+    QVERIFY(parentItem);
+    QVERIFY(parentItem->childItems().contains(menu->contentItem()->parentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->property("highlighted").toBool());
     QCOMPARE(menu->currentIndex(), -1);
@@ -431,7 +456,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(secondTriggeredSpy.size(), 1);
     QTRY_COMPARE(visibleSpy.size(), 2);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!overlay->childItems().contains(menu->contentItem()));
+    QVERIFY(!parentItem->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->hasVisualFocus());
     QVERIFY(!firstItem->isHighlighted());
@@ -444,9 +469,12 @@ void tst_QQuickMenu::contextMenuKeyboard()
     // Enter/return should also work.
     // Open the menu.
     menu->open();
-    QCOMPARE(visibleSpy.size(), 3);
-    QVERIFY(menu->isVisible());
     QTRY_VERIFY(menu->isOpened());
+    QCOMPARE(visibleSpy.size(), 3);
+    if (auto *popupWindow = menuPrivate->popupWindow) {
+        QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
+        QVERIFY(QQuickTest::qWaitForPolish(popupWindow));
+    }
     // Give the first item focus.
     QTest::keyClick(window, Qt::Key_Tab);
     QVERIFY(firstItem->hasActiveFocus());
@@ -461,7 +489,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(firstTriggeredSpy.size(), 1);
     QTRY_COMPARE(visibleSpy.size(), 4);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!overlay->childItems().contains(menu->contentItem()));
+    QVERIFY(!parentItem->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->hasVisualFocus());
     QVERIFY(!firstItem->isHighlighted());
@@ -472,10 +500,13 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
-    QCOMPARE(visibleSpy.size(), 5);
-    QVERIFY(menu->isVisible());
-    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
+    if (auto *popupWindow = menuPrivate->popupWindow) {
+        QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
+        QVERIFY(QQuickTest::qWaitForPolish(popupWindow));
+    }
     QTRY_VERIFY(menu->isOpened());
+    QCOMPARE(visibleSpy.size(), 5);
+    QVERIFY(parentItem->childItems().contains(menu->contentItem()->parentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->hasVisualFocus());
     QVERIFY(!firstItem->isHighlighted());
