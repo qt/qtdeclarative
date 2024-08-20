@@ -6,7 +6,7 @@ plugins {
 
 //! [build.gradle QtBuild config]
 QtBuild {
-    // Relative for pre-installed (Installer or MaintenanceTool) installations.
+    // Relative for Qt (Installer or MaintenanceTool) installations.
     qtPath = file("../../../../../../../6.8.0")
     projectPath = file("../../qtabstractlistmodel")
 }

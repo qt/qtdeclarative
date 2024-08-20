@@ -4,11 +4,9 @@ plugins {
  }
 
  QtBuild {
-     // Relative for pre-installed (Installer or MaintenanceTool) installations.
+     // Relative for Qt (Installer or MaintenanceTool) installations.
      qtPath = file('../../../../../../6.8.0')
      projectPath = file('../../qtquickview')
-     // Optional. Commented builds multi-abi. Define for a single ABI build.
-     // qtKitDir = file('home/<your-username>/<your-Qt-builds>/<your-Qt-kit>')
  }
 
 android {
