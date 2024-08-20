@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Frame
     \inherits Pane
-//!     \instantiates QQuickFrame
+//!     \nativetype QQuickFrame
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-containers

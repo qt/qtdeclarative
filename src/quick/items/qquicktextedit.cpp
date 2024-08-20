@@ -41,7 +41,7 @@ using namespace Qt::StringLiterals;
 
 /*!
     \qmltype TextEdit
-    \instantiates QQuickTextEdit
+    \nativetype QQuickTextEdit
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \ingroup qtquick-input

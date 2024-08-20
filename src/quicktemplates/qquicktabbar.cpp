@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype TabBar
     \inherits Container
-//!     \instantiates QQuickTabBar
+//!     \nativetype QQuickTabBar
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-navigation

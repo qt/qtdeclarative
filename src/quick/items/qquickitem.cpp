@@ -98,7 +98,7 @@ static void setActiveFocus(QQuickItem *item, Qt::FocusReason reason)
 
 /*!
     \qmltype Transform
-    \instantiates QQuickTransform
+    \nativetype QQuickTransform
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
     \brief For specifying advanced transformations on Items.
@@ -343,7 +343,7 @@ void QQuickItemKeyFilter::componentComplete()
 }
 /*!
     \qmltype KeyNavigation
-    \instantiates QQuickKeyNavigationAttached
+    \nativetype QQuickKeyNavigationAttached
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers
     \brief Supports key navigation by arrow keys.
@@ -800,7 +800,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
 /*!
     \qmltype Keys
-    \instantiates QQuickKeysAttached
+    \nativetype QQuickKeysAttached
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers
     \brief Provides key handling to Items.
@@ -1407,7 +1407,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 
 /*!
     \qmltype LayoutMirroring
-    \instantiates QQuickLayoutMirroringAttached
+    \nativetype QQuickLayoutMirroringAttached
     \inqmlmodule QtQuick
     \ingroup qtquick-positioners
     \ingroup qml-utility-elements
@@ -1589,7 +1589,7 @@ void QQuickItemPrivate::setLayoutMirror(bool mirror)
 
 /*!
     \qmltype EnterKey
-    \instantiates QQuickEnterKeyAttached
+    \nativetype QQuickEnterKeyAttached
     \inqmlmodule QtQuick
     \ingroup qtquick-input
     \since 5.6
@@ -1874,7 +1874,7 @@ bool QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
 
 /*!
     \qmltype Item
-    \instantiates QQuickItem
+    \nativetype QQuickItem
     \inherits QtObject
     \inqmlmodule QtQuick
     \ingroup qtquick-visual

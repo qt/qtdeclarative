@@ -30,7 +30,7 @@ public:
 
 /*!
     \qmltype StateChangeScript
-    \instantiates QQuickStateChangeScript
+    \nativetype QQuickStateChangeScript
     \inqmlmodule QtQuick
     \ingroup qtquick-states
     \brief Specifies how to run a script in a state.

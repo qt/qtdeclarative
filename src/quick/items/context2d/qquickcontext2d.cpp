@@ -54,7 +54,7 @@
 QT_BEGIN_NAMESPACE
 /*!
     \qmltype Context2D
-    \instantiates QQuickContext2D
+    \nativetype QQuickContext2D
     \inqmlmodule QtQuick
     \ingroup qtquick-canvas
     \since 5.0

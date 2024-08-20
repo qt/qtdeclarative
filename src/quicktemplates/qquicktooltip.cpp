@@ -18,7 +18,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ToolTip
     \inherits Popup
-//!     \instantiates QQuickToolTip
+//!     \nativetype QQuickToolTip
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-popups

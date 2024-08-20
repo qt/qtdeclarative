@@ -13,7 +13,7 @@ Q_LOGGING_CATEGORY(lcTableModel, "qt.qml.tablemodel")
 
 /*!
     \qmltype TableModel
-//!    \instantiates QQmlTableModel
+//!    \nativetype QQmlTableModel
     \inqmlmodule Qt.labs.qmlmodels
     \brief Encapsulates a simple table model.
     \since 5.14

@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ToolButton
     \inherits Button
-//!     \instantiates QQuickToolButton
+//!     \nativetype QQuickToolButton
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-buttons

@@ -184,7 +184,7 @@ void QQmlInstantiatorPrivate::makeModel()
 
 /*!
     \qmltype Instantiator
-    \instantiates QQmlInstantiator
+    \nativetype QQmlInstantiator
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
     \brief Dynamically creates objects.

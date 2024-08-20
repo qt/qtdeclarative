@@ -30,7 +30,7 @@ using namespace Qt::StringLiterals;
 
 /*!
     \qmltype Drag
-    \instantiates QQuickDrag
+    \nativetype QQuickDrag
     \inqmlmodule QtQuick
     \ingroup qtquick-input
     \brief For specifying drag and drop events for moved Items.

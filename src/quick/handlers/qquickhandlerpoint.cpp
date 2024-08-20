@@ -10,7 +10,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
 
 /*!
     \qmltype handlerPoint
-    \instantiates QQuickHandlerPoint
+    \nativetype QQuickHandlerPoint
     \inqmlmodule QtQuick
     \brief An event point.
 

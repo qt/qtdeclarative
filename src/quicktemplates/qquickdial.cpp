@@ -15,7 +15,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Dial
     \inherits Control
-//!     \instantiates QQuickDial
+//!     \nativetype QQuickDial
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-input

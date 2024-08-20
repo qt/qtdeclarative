@@ -92,7 +92,7 @@ void QQuickBoundaryReturnJob::updateState(QAbstractAnimationJob::State newState,
 
 /*!
     \qmltype BoundaryRule
-//!    \instantiates QQuickBoundaryRule
+//!    \nativetype QQuickBoundaryRule
     \inqmlmodule Qt.labs.animation
     \ingroup qtquick-transitions-animations
     \ingroup qtquick-interceptors

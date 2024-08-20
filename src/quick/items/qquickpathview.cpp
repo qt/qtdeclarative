@@ -450,7 +450,7 @@ void QQuickPathViewPrivate::setDragging(bool d)
 
 /*!
     \qmltype PathView
-    \instantiates QQuickPathView
+    \nativetype QQuickPathView
     \inqmlmodule QtQuick
     \ingroup qtquick-paths
     \ingroup qtquick-views

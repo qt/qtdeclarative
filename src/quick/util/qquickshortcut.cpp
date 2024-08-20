@@ -12,7 +12,7 @@
 
 /*!
     \qmltype Shortcut
-    \instantiates QQuickShortcut
+    \nativetype QQuickShortcut
     \inqmlmodule QtQuick
     \since 5.5
     \ingroup qtquick-input

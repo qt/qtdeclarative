@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
     \qmlabstract
     \since 5.10
     \preliminary
-    \instantiates QQuickPointerDeviceHandler
+    \nativetype QQuickPointerDeviceHandler
     \inherits PointerHandler
     \inqmlmodule QtQuick
     \brief Abstract handler for pointer events with device-specific constraints.

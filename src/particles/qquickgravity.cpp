@@ -8,7 +8,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Gravity
-    \instantiates QQuickGravityAffector
+    \nativetype QQuickGravityAffector
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector

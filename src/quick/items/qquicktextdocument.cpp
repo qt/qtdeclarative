@@ -22,7 +22,7 @@ using namespace Qt::StringLiterals;
 
 /*!
     \qmltype TextDocument
-    \instantiates QQuickTextDocument
+    \nativetype QQuickTextDocument
     \inqmlmodule QtQuick
     \brief A wrapper around TextEdit's backing QTextDocument.
     \preliminary

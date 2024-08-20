@@ -21,7 +21,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlMptaVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGIN
 
 /*!
     \qmltype TouchPoint
-    \instantiates QQuickTouchPoint
+    \nativetype QQuickTouchPoint
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
     \brief Describes a touch point in a MultiPointTouchArea.
@@ -254,7 +254,7 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
 
 /*!
     \qmltype GestureEvent
-    \instantiates QQuickGrabGestureEvent
+    \nativetype QQuickGrabGestureEvent
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
     \brief The parameter given with the gestureStarted signal.
@@ -290,7 +290,7 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
 
 /*!
     \qmltype MultiPointTouchArea
-    \instantiates QQuickMultiPointTouchArea
+    \nativetype QQuickMultiPointTouchArea
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-input

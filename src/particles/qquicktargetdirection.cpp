@@ -10,7 +10,7 @@
 QT_BEGIN_NAMESPACE
 /*!
     \qmltype TargetDirection
-    \instantiates QQuickTargetDirection
+    \nativetype QQuickTargetDirection
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Direction

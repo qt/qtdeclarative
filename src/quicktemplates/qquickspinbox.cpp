@@ -20,7 +20,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 /*!
     \qmltype SpinBox
     \inherits Control
-//!     \instantiates QQuickSpinBox
+//!     \nativetype QQuickSpinBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup input

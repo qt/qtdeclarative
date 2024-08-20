@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Container
     \inherits Control
-//!     \instantiates QQuickContainer
+//!     \nativetype QQuickContainer
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-containers

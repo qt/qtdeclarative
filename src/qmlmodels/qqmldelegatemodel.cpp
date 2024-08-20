@@ -134,7 +134,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 
 /*!
     \qmltype DelegateModel
-//!    \instantiates QQmlDelegateModel
+//!    \nativetype QQmlDelegateModel
     \inqmlmodule QtQml.Models
     \brief Encapsulates a model and delegate.
 
@@ -2906,7 +2906,7 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
 
 /*!
     \qmltype DelegateModelGroup
-    \instantiates QQmlDelegateModelGroup
+    \nativetype QQmlDelegateModelGroup
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
     \brief Encapsulates a filtered set of visual data items.

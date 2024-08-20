@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype WeekNumberColumn
     \inherits Control
-//!     \instantiates QQuickWeekNumberColumn
+//!     \nativetype QQuickWeekNumberColumn
     \inqmlmodule QtQuick.Controls
     \brief A column of week numbers.
 

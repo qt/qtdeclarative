@@ -112,7 +112,7 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent)
 
 /*!
     \qmltype ParentChange
-    \instantiates QQuickParentChange
+    \nativetype QQuickParentChange
     \inqmlmodule QtQuick
     \ingroup qtquick-states
     \brief Specifies how to reparent an Item in a state change.
@@ -528,7 +528,7 @@ void QQuickParentChange::rewind()
 
 /*!
     \qmltype AnchorChanges
-    \instantiates QQuickAnchorChanges
+    \nativetype QQuickAnchorChanges
     \inqmlmodule QtQuick
     \ingroup qtquick-states
     \brief Specifies how to change the anchors of an item in a state.

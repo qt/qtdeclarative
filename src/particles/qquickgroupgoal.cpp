@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype GroupGoal
-    \instantiates QQuickGroupGoalAffector
+    \nativetype QQuickGroupGoalAffector
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector

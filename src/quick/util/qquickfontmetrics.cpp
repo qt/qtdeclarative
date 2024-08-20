@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype FontMetrics
-    \instantiates QQuickFontMetrics
+    \nativetype QQuickFontMetrics
     \inqmlmodule QtQuick
     \since 5.4
     \ingroup qtquick-text-utility

@@ -30,7 +30,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Settings
-//!    \instantiates QQmlSettings
+//!    \nativetype QQmlSettings
     \inqmlmodule Qt.labs.settings
     \ingroup settings
     \deprecated [6.5] Use \l [QML] {QtCore::}{Settings} from Qt Qml Core instead.

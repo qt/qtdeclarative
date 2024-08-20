@@ -163,7 +163,7 @@ Q_DECLARE_TYPEINFO(QQmlObjectModelPrivate::Item, Q_RELOCATABLE_TYPE);
 
 /*!
     \qmltype ObjectModel
-    \instantiates QQmlObjectModel
+    \nativetype QQmlObjectModel
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
     \brief Defines a set of items to be used as a model.

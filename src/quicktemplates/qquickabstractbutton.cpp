@@ -27,7 +27,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype AbstractButton
     \inherits Control
-//!     \instantiates QQuickAbstractButton
+//!     \nativetype QQuickAbstractButton
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-buttons

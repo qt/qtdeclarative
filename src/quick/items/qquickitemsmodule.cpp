@@ -145,7 +145,7 @@ void QQuickItemsModule::defineModule()
 
 /*!
     \qmltype PointerEvent
-    \instantiates QPointerEvent
+    \nativetype QPointerEvent
     \inqmlmodule QtQuick
     \brief QML equivalent for \l QPointerEvent.
 
@@ -154,7 +154,7 @@ void QQuickItemsModule::defineModule()
 
 /*!
     \qmltype PointerDevice
-    \instantiates QPointingDevice
+    \nativetype QPointingDevice
     \inqmlmodule QtQuick
     \brief QML equivalent for \l QPointingDevice.
 
@@ -222,7 +222,7 @@ void QQuickItemsModule::defineModule()
 
 /*!
     \qmltype pointingDeviceUniqueId
-    \instantiates QPointingDeviceUniqueId
+    \nativetype QPointingDeviceUniqueId
     \inqmlmodule QtQuick
     \brief QML equivalent for \l QPointingDeviceUniqueId.
 

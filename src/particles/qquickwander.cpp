@@ -7,7 +7,7 @@
 QT_BEGIN_NAMESPACE
 /*!
     \qmltype Wander
-    \instantiates QQuickWanderAffector
+    \nativetype QQuickWanderAffector
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector

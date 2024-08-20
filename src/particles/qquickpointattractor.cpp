@@ -7,7 +7,7 @@
 QT_BEGIN_NAMESPACE
 /*!
     \qmltype Attractor
-    \instantiates QQuickAttractorAffector
+    \nativetype QQuickAttractorAffector
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector

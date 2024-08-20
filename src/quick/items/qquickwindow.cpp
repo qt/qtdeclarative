@@ -899,7 +899,7 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 
 /*!
     \qmltype Window
-    \instantiates QQuickWindow
+    \nativetype QQuickWindow
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \brief Creates a new top-level window.
@@ -2459,7 +2459,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
 */
 /*!
     \qmltype CloseEvent
-    \instantiates QQuickCloseEvent
+    \nativetype QQuickCloseEvent
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \brief Notification that a \l Window is about to be closed.

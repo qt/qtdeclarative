@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Page
     \inherits Pane
-//!     \instantiates QQuickPage
+//!     \nativetype QQuickPage
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-containers

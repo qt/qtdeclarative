@@ -1401,7 +1401,7 @@ qreal QQuickTextPrivate::devicePixelRatio() const
 
 /*!
     \qmltype Text
-    \instantiates QQuickText
+    \nativetype QQuickText
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \inherits Item

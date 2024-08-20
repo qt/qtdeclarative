@@ -47,7 +47,7 @@ QQuickImagePrivate::QQuickImagePrivate()
 
 /*!
     \qmltype Image
-    \instantiates QQuickImage
+    \nativetype QQuickImage
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \inherits Item

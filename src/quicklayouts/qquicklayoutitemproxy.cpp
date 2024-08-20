@@ -5,7 +5,7 @@
 
 /*!
     \qmltype LayoutItemProxy
-    \instantiates QQuickLayoutItemProxy
+    \nativetype QQuickLayoutItemProxy
     \inherits Item
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts

@@ -20,7 +20,7 @@ Q_LOGGING_CATEGORY(lcFileDialog, "qt.quick.dialogs.filedialog")
 /*!
     \qmltype FileDialog
     \inherits Dialog
-//!     \instantiates QQuickFileDialog
+//!     \nativetype QQuickFileDialog
     \inqmlmodule QtQuick.Dialogs
     \since 6.2
     \brief A file dialog.

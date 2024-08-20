@@ -11,7 +11,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
     \qmltype SinglePointHandler
     \qmlabstract
     \preliminary
-    \instantiates QQuickSinglePointHandler
+    \nativetype QQuickSinglePointHandler
     \inherits PointerDeviceHandler
     \inqmlmodule QtQuick
     \brief Abstract handler for single-point Pointer Events.

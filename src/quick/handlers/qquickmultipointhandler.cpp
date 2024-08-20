@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
     \qmltype MultiPointHandler
     \since 5.10
     \preliminary
-    \instantiates QQuickMultiPointHandler
+    \nativetype QQuickMultiPointHandler
     \inherits PointerDeviceHandler
     \inqmlmodule QtQuick
     \brief Abstract handler for multi-point Pointer Events.

@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype PathElement
-    \instantiates QQuickPathElement
+    \nativetype QQuickPathElement
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief PathElement is the base path type.
@@ -30,7 +30,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Path
-    \instantiates QQuickPath
+    \nativetype QQuickPath
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a path for use by \l PathView and \l Shape.
@@ -1112,7 +1112,7 @@ bool QQuickCurve::hasRelativeY()
 
 /*!
     \qmltype PathAttribute
-    \instantiates QQuickPathAttribute
+    \nativetype QQuickPathAttribute
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Specifies how to set an attribute at a given position in a Path.
@@ -1229,7 +1229,7 @@ void QQuickPathAttribute::setValue(qreal value)
 
 /*!
     \qmltype PathLine
-    \instantiates QQuickPathLine
+    \nativetype QQuickPathLine
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a straight line.
@@ -1288,7 +1288,7 @@ void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
 
 /*!
     \qmltype PathMove
-    \instantiates QQuickPathMove
+    \nativetype QQuickPathMove
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Moves the Path's position.
@@ -1346,7 +1346,7 @@ void QQuickPathMove::addToPath(QPainterPath &path, const QQuickPathData &data)
 
 /*!
     \qmltype PathQuad
-    \instantiates QQuickPathQuad
+    \nativetype QQuickPathQuad
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a quadratic Bezier curve with a control point.
@@ -1498,7 +1498,7 @@ void QQuickPathQuad::addToPath(QPainterPath &path, const QQuickPathData &data)
 
 /*!
     \qmltype PathCubic
-    \instantiates QQuickPathCubic
+    \nativetype QQuickPathCubic
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a cubic Bezier curve with two control points.
@@ -1722,7 +1722,7 @@ void QQuickPathCubic::addToPath(QPainterPath &path, const QQuickPathData &data)
 
 /*!
     \qmltype PathCurve
-    \instantiates QQuickPathCatmullRomCurve
+    \nativetype QQuickPathCatmullRomCurve
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a point on a Catmull-Rom curve.
@@ -1868,7 +1868,7 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
 
 /*!
     \qmltype PathArc
-    \instantiates QQuickPathArc
+    \nativetype QQuickPathArc
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines an arc with the given radius.
@@ -2079,7 +2079,7 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
 
 /*!
     \qmltype PathAngleArc
-    \instantiates QQuickPathAngleArc
+    \nativetype QQuickPathAngleArc
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines an arc with the given radii and center.
@@ -2252,7 +2252,7 @@ void QQuickPathAngleArc::addToPath(QPainterPath &path, const QQuickPathData &)
 
 /*!
     \qmltype PathSvg
-    \instantiates QQuickPathSvg
+    \nativetype QQuickPathSvg
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a path using an SVG path data string.
@@ -2306,7 +2306,7 @@ void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)
 
 /*!
     \qmltype PathRectangle
-    \instantiates QQuickPathRectangle
+    \nativetype QQuickPathRectangle
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a rectangle with optionally rounded corners.
@@ -2568,7 +2568,7 @@ void QQuickPathRectangle::addToPath(QPainterPath &path, const QQuickPathData &da
 
 /*!
     \qmltype PathPercent
-    \instantiates QQuickPathPercent
+    \nativetype QQuickPathPercent
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Manipulates the way a path is interpreted.
@@ -2663,7 +2663,7 @@ void QQuickPathPercent::setValue(qreal value)
 
 /*!
     \qmltype PathPolyline
-    \instantiates QQuickPathPolyline
+    \nativetype QQuickPathPolyline
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a polyline through a list of coordinates.
@@ -2771,7 +2771,7 @@ void QQuickPathPolyline::addToPath(QPainterPath &path, const QQuickPathData &/*d
 
 /*!
     \qmltype PathMultiline
-    \instantiates QQuickPathMultiline
+    \nativetype QQuickPathMultiline
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a set of polylines through a list of lists of coordinates.
@@ -2922,7 +2922,7 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 
 /*!
     \qmltype PathText
-    \instantiates QQuickPathText
+    \nativetype QQuickPathText
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a string in a specified font.

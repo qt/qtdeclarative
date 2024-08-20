@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 const qreal CONV = 0.017453292519943295;
 /*!
     \qmltype AngleDirection
-    \instantiates QQuickAngleDirection
+    \nativetype QQuickAngleDirection
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Direction

@@ -54,7 +54,7 @@ void qml_register_types_QML();
 
 /*!
   \qmltype QtObject
-    \instantiates QObject
+    \nativetype QObject
   \inqmlmodule QtQml
   \ingroup qml-utility-elements
   \brief A basic QML type.

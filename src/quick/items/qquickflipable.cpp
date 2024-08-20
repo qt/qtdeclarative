@@ -52,7 +52,7 @@ public:
 
 /*!
     \qmltype Flipable
-    \instantiates QQuickFlipable
+    \nativetype QQuickFlipable
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-input

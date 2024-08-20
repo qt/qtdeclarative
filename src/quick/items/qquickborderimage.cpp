@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype BorderImage
-    \instantiates QQuickBorderImage
+    \nativetype QQuickBorderImage
     \inqmlmodule QtQuick
     \brief Paints a border based on an image.
     \inherits Item

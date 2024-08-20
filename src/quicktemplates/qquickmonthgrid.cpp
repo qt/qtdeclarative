@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MonthGrid
     \inherits Control
-//!     \instantiates QQuickMonthGrid
+//!     \nativetype QQuickMonthGrid
     \inqmlmodule QtQuick.Controls
     \brief A grid of days for a calendar month.
 

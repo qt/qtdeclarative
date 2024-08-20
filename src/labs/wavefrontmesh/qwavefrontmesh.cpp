@@ -63,7 +63,7 @@ public:
 /*!
     \qmltype WavefrontMesh
     \inqmlmodule Qt.labs.wavefrontmesh
-//!    \instantiates QWavefrontMesh
+//!    \nativetype QWavefrontMesh
     \ingroup qtquick-effects
     \brief The WavefrontMesh provides a mesh based on a Wavefront .obj file.
     \since 5.12

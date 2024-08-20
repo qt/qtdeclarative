@@ -161,7 +161,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
 
 /*!
     \qmltype MouseArea
-    \instantiates QQuickMouseArea
+    \nativetype QQuickMouseArea
     \inqmlmodule QtQuick
     \ingroup qtquick-input
     \brief Enables simple mouse handling.

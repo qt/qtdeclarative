@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ScrollBar
     \inherits Control
-//!     \instantiates QQuickScrollBar
+//!     \nativetype QQuickScrollBar
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-indicators

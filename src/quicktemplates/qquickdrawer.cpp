@@ -19,7 +19,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Drawer
     \inherits Popup
-//!     \instantiates QQuickDrawer
+//!     \nativetype QQuickDrawer
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-navigation

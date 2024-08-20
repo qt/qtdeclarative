@@ -3,7 +3,7 @@
 
 /*!
     \qmltype ItemSelectionModel
-    \instantiates QItemSelectionModel
+    \nativetype QItemSelectionModel
     \inqmlmodule QtQml.Models
     \since 5.5
     \ingroup qtquick-models

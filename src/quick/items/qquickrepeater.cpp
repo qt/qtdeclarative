@@ -30,7 +30,7 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
 
 /*!
     \qmltype Repeater
-    \instantiates QQuickRepeater
+    \nativetype QQuickRepeater
     \inqmlmodule QtQuick
     \ingroup qtquick-models
     \ingroup qtquick-positioning

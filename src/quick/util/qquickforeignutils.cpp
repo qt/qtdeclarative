@@ -7,7 +7,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
    \qmltype eventPoint
-   \instantiates QEventPoint
+   \nativetype QEventPoint
    \inqmlmodule QtQuick
    \brief Qml equivalent for \l QEventPoint.
    \sa handlerPoint

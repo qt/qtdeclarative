@@ -14,7 +14,7 @@ Q_LOGGING_CATEGORY(lcPane, "qt.quick.controls.pane")
 /*!
     \qmltype Pane
     \inherits Control
-//!     \instantiates QQuickPane
+//!     \nativetype QQuickPane
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-containers

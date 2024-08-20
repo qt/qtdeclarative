@@ -12,7 +12,7 @@ Q_LOGGING_CATEGORY(lcHoverHandler, "qt.quick.handler.hover")
 
 /*!
     \qmltype HoverHandler
-    \instantiates QQuickHoverHandler
+    \nativetype QQuickHoverHandler
     \inherits SinglePointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers

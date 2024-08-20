@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ColorGroup
-    \instantiates QQuickColorGroup
+    \nativetype QQuickColorGroup
     \inherits QtObject
     \inqmlmodule QtQuick
     \ingroup qtquick-visual

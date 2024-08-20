@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ScrollView
     \inherits Pane
-//!     \instantiates QQuickScrollView
+//!     \nativetype QQuickScrollView
     \inqmlmodule QtQuick.Controls
     \since 5.9
     \ingroup qtquickcontrols-containers

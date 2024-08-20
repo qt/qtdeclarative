@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Package
-    \instantiates QQuickPackage
+    \nativetype QQuickPackage
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
     \brief Specifies a collection of named items.

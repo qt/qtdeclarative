@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuBarItem
     \inherits AbstractButton
-//!     \instantiates QQuickMenuBarItem
+//!     \nativetype QQuickMenuBarItem
     \inqmlmodule QtQuick.Controls
     \since 5.10
     \ingroup qtquickcontrols-menus

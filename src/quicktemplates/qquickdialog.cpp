@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Dialog
     \inherits Popup
-//!     \instantiates QQuickDialog
+//!     \nativetype QQuickDialog
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols-dialogs
     \ingroup qtquickcontrols-popups

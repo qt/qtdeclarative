@@ -50,7 +50,7 @@ static const int SUBMENU_DELAY = 225;
 /*!
     \qmltype Menu
     \inherits Popup
-//!     \instantiates QQuickMenu
+//!     \nativetype QQuickMenu
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-menus

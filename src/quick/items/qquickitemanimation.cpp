@@ -20,7 +20,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ParentAnimation
-    \instantiates QQuickParentAnimation
+    \nativetype QQuickParentAnimation
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \since 5.0
@@ -371,7 +371,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 
 /*!
     \qmltype AnchorAnimation
-    \instantiates QQuickAnchorAnimation
+    \nativetype QQuickAnchorAnimation
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \inherits Animation
@@ -513,7 +513,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
 #if QT_CONFIG(quick_path)
 /*!
     \qmltype PathAnimation
-    \instantiates QQuickPathAnimation
+    \nativetype QQuickPathAnimation
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \inherits Animation

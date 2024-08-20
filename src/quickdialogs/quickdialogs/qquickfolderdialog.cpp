@@ -13,7 +13,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
 /*!
     \qmltype FolderDialog
     \inherits Dialog
-//!     \instantiates QQuickFolderDialog
+//!     \nativetype QQuickFolderDialog
     \inqmlmodule QtQuick.Dialogs
     \since 6.3
     \brief A native folder dialog.

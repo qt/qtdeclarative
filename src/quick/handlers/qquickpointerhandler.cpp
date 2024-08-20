@@ -21,7 +21,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcHandlerParent)
     \qmltype PointerHandler
     \qmlabstract
     \since 5.10
-    \instantiates QQuickPointerHandler
+    \nativetype QQuickPointerHandler
     \inqmlmodule QtQuick
     \brief Abstract handler for pointer events.
 

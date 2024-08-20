@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Turbulence
-    \instantiates QQuickTurbulenceAffector
+    \nativetype QQuickTurbulenceAffector
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector

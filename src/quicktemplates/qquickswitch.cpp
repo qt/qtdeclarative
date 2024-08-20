@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Switch
     \inherits AbstractButton
-//!     \instantiates QQuickSwitch
+//!     \nativetype QQuickSwitch
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-buttons

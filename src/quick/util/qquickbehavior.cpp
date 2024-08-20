@@ -159,7 +159,7 @@ UntypedProxyProperty::UntypedProxyProperty(QUntypedBindable bindable, QQuickBeha
 
 /*!
     \qmltype Behavior
-    \instantiates QQuickBehavior
+    \nativetype QQuickBehavior
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \ingroup qtquick-interceptors

@@ -282,7 +282,7 @@ void QSmoothedAnimation::debugAnimation(QDebug d) const
 
 /*!
     \qmltype SmoothedAnimation
-    \instantiates QQuickSmoothedAnimation
+    \nativetype QQuickSmoothedAnimation
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \inherits NumberAnimation

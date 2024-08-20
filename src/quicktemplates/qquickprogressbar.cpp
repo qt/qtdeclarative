@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ProgressBar
     \inherits Control
-//!     \instantiates QQuickProgressBar
+//!     \nativetype QQuickProgressBar
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-indicators

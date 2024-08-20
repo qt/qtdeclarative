@@ -48,7 +48,7 @@ public:
 
 /*!
     \qmltype Timer
-    \instantiates QQmlTimer
+    \nativetype QQmlTimer
     \inqmlmodule QtQml
     \ingroup qtquick-interceptors
     \brief Triggers a handler at a specified interval.

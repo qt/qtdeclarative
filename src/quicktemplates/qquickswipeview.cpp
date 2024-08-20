@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SwipeView
     \inherits Container
-//!     \instantiates QQuickSwipeView
+//!     \nativetype QQuickSwipeView
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-navigation
