@@ -27,6 +27,7 @@ ApplicationWindow {
             Menu {
                 id: fileMenu
                 y: parent.height
+                popupType: Popup.Item
 
                 MenuItem {
                     text: qsTr("New")
@@ -52,6 +53,7 @@ ApplicationWindow {
     Popup {
         id: focusPopup
         focus: true
+        popupType: Popup.Item
         width: parent.width
         height: parent.height
 
