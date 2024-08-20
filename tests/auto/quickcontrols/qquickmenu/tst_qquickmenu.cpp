@@ -17,6 +17,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
+#include <QtQuickTest/quicktest.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
@@ -32,6 +33,7 @@
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
 #include <QtQuickTemplates2/private/qquickmenuseparator_p.h>
 #include <QtQuickTemplates2/private/qquicknativemenuitem_p.h>
+#include <QtQuickTemplates2/private/qquickpopupwindow_p_p.h>
 
 using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
@@ -51,6 +53,7 @@ private slots:
 
     void defaults();
     void count();
+    void mouse_data();
     void mouse();
     void pressAndHold();
     void contextMenuKeyboard();
@@ -197,9 +200,19 @@ void tst_QQuickMenu::count()
     QCOMPARE(countSpy.size(), 4);
 }
 
+void tst_QQuickMenu::mouse_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    if (popupWindowsSupported)
+        QTest::newRow("Popup.Window") << QQuickPopup::Window;
+}
+
 void tst_QQuickMenu::mouse()
 {
     SKIP_IF_NO_WINDOW_ACTIVATION
+
+    QFETCH(QQuickPopup::PopupType, popupType);
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
@@ -217,41 +230,57 @@ void tst_QQuickMenu::mouse()
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     QVERIFY(menu);
+    QQuickMenuPrivate *menuPrivate = QQuickMenuPrivate::get(menu);
+    QVERIFY(menuPrivate);
+    menu->setPopupType(popupType);
     menu->open();
-    QVERIFY(menu->isVisible());
-    QQuickOverlay *overlay = window->property("overlay").value<QQuickOverlay*>();
-    QVERIFY(overlay);
-    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
+
+    QQuickItem *parentItem = nullptr;
+    if (!menuPrivate->usePopupWindow()) {
+        parentItem = window->property("overlay").value<QQuickOverlay*>();
+    } else {
+        QTRY_VERIFY(menuPrivate->popupWindow);
+        parentItem = menuPrivate->popupWindow->contentItem();
+        QVERIFY(QTest::qWaitForWindowExposed(menuPrivate->popupWindow));
+        QQuickTest::qWaitForPolish(menuPrivate->popupWindow);
+    }
+
+    QVERIFY(parentItem);
+    QVERIFY(parentItem->childItems().contains(menu->contentItem()->parentItem()));
 
     QQuickItem *firstItem = menu->itemAt(0);
     QSignalSpy clickedSpy(firstItem, SIGNAL(clicked()));
     QSignalSpy triggeredSpy(firstItem, SIGNAL(triggered()));
     QSignalSpy visibleSpy(menu, SIGNAL(visibleChanged()));
 
+    QCOMPARE(menu->currentIndex(), -1);
+
     // Ensure that presses cause the current index to change,
     // so that the highlight acts as a way of illustrating press state.
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier,
-        QPoint(menu->x() + menu->leftPadding() + firstItem->width() / 2, menu->y() + menu->topPadding() + firstItem->height() / 2));
-    QVERIFY(firstItem->hasActiveFocus());
-    QCOMPARE(menu->currentIndex(), 0);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, window->mapFromGlobal(firstItem->mapToGlobal(firstItem->boundingRect().center()).toPoint()));
+    QTRY_COMPARE(menu->currentIndex(), 0);
+    QTRY_VERIFY(firstItem->hasActiveFocus());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(0));
-    QVERIFY(menu->isVisible());
+    QVERIFY(menu->isOpened());
 
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier,
-        QPoint(menu->x() + menu->leftPadding() + firstItem->width() / 2, menu->y() + menu->topPadding() + firstItem->height() / 2));
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, window->mapFromGlobal(firstItem->mapToGlobal(firstItem->boundingRect().center()).toPoint()));
     QCOMPARE(clickedSpy.size(), 1);
     QCOMPARE(triggeredSpy.size(), 1);
     QTRY_COMPARE(visibleSpy.size(), 1);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!overlay->childItems().contains(menu->contentItem()));
-    QCOMPARE(menu->currentIndex(), -1);
+    QVERIFY(!parentItem->childItems().contains(menu->contentItem()));
+
+    QTRY_COMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
+    if (auto *popupWindow = menuPrivate->popupWindow)
+        QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
+
     QCOMPARE(visibleSpy.size(), 2);
     QVERIFY(menu->isVisible());
-    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
+    QVERIFY(parentItem->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
 
     // Ensure that we have enough space to click outside of the menu.
@@ -262,12 +291,17 @@ void tst_QQuickMenu::mouse()
                              menu->contentItem()->y() + menu->contentItem()->height() + 1));
     QTRY_COMPARE(visibleSpy.size(), 3);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!overlay->childItems().contains(menu->contentItem()->parentItem()));
+    if (menuPrivate->usePopupWindow())
+        QVERIFY(!menuPrivate->popupWindow->isVisible());
+    else
+        QVERIFY(!parentItem->childItems().contains(menu->contentItem()->parentItem()));
 
     menu->open();
-    QCOMPARE(visibleSpy.size(), 4);
+    if (auto *popupWindow = menuPrivate->popupWindow)
+        QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
+    QTRY_COMPARE(visibleSpy.size(), 4);
     QVERIFY(menu->isVisible());
-    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
+    QVERIFY(parentItem->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
 
     // Hover-highlighting does not work on Android

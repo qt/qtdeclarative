@@ -1102,7 +1102,7 @@ void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
             popupItem->setParentItem(popupWindow->contentItem());
             popupItem->forceActiveFocus(Qt::PopupFocusReason);
         }
-        popupItem->setVisible(true);
+        popupItem->setVisible(visible);
         popupWindow->setVisible(visible);
     } else {
         if (visible) {
