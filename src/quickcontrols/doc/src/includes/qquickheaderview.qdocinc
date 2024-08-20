@@ -2,8 +2,8 @@
 A \1 provides a styled table header.
 It can either be used as an independent view or header for a \l TableView.
 
-You can add a header for a TableView by assigning a \1
-to the \l {TableView::syncView} property. The header and the table will
+You can add a header for a TableView by assigning the TableView to the
+\l {TableView::syncView}{syncView} property of \1. The header and the table will
 then be kept in sync while flicking.
 
 By default, \1 displays
