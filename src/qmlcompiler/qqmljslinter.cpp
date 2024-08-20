@@ -552,12 +552,21 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
             QQmlJSLiteralBindingCheck literalCheck;
             literalCheck.run(&v, &typeResolver);
 
+            const QStringList resourcePaths = mapper
+                    ? mapper->resourcePaths(QQmlJSResourceFileMapper::localFileFilter(filename))
+                    : QStringList();
+            const QString resolvedPath =
+                    (resourcePaths.size() == 1) ? u':' + resourcePaths.first() : filename;
+
+            QQmlJSLinterCodegen codegen{ &m_importer, resolvedPath, qmldirFiles, m_logger.get() };
+            codegen.setTypeResolver(std::move(typeResolver));
+
             using PassManagerPtr = std::unique_ptr<
                     QQmlSA::PassManager, decltype(&QQmlSA::PassManagerPrivate::deletePassManager)>;
             PassManagerPtr passMan(nullptr, &QQmlSA::PassManagerPrivate::deletePassManager);
 
             if (m_enablePlugins) {
-                passMan.reset(QQmlSA::PassManagerPrivate::createPassManager(&v, &typeResolver));
+                passMan.reset(QQmlSA::PassManagerPrivate::createPassManager(&v, codegen.typeResolver()));
 
                 for (const Plugin &plugin : m_plugins) {
                     if (!plugin.isValid() || !plugin.isEnabled())
@@ -580,14 +589,6 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                 return;
             }
 
-            const QStringList resourcePaths = mapper
-                    ? mapper->resourcePaths(QQmlJSResourceFileMapper::localFileFilter(filename))
-                    : QStringList();
-            const QString resolvedPath =
-                    (resourcePaths.size() == 1) ? u':' + resourcePaths.first() : filename;
-
-            QQmlJSLinterCodegen codegen { &m_importer, resolvedPath, qmldirFiles, m_logger.get() };
-            codegen.setTypeResolver(std::move(typeResolver));
             if (passMan)
                 codegen.setPassManager(passMan.get());
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
