@@ -552,10 +552,19 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
             QQmlJSLiteralBindingCheck literalCheck;
             literalCheck.run(&v, &typeResolver);
 
+            const QStringList resourcePaths = mapper
+                    ? mapper->resourcePaths(QQmlJSResourceFileMapper::localFileFilter(filename))
+                    : QStringList();
+            const QString resolvedPath =
+                    (resourcePaths.size() == 1) ? u':' + resourcePaths.first() : filename;
+
+            QQmlJSLinterCodegen codegen{ &m_importer, resolvedPath, qmldirFiles, m_logger.get() };
+            codegen.setTypeResolver(std::move(typeResolver));
+
             QScopedPointer<QQmlSA::PassManager> passMan;
 
             if (m_enablePlugins) {
-                passMan.reset(new QQmlSA::PassManager(&v, &typeResolver));
+                passMan.reset(new QQmlSA::PassManager(&v, codegen.typeResolver()));
 
                 for (const Plugin &plugin : m_plugins) {
                     if (!plugin.isValid() || !plugin.isEnabled())
@@ -577,14 +586,6 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                 return;
             }
 
-            const QStringList resourcePaths = mapper
-                    ? mapper->resourcePaths(QQmlJSResourceFileMapper::localFileFilter(filename))
-                    : QStringList();
-            const QString resolvedPath =
-                    (resourcePaths.size() == 1) ? u':' + resourcePaths.first() : filename;
-
-            QQmlJSLinterCodegen codegen { &m_importer, resolvedPath, qmldirFiles, m_logger.get() };
-            codegen.setTypeResolver(std::move(typeResolver));
             if (passMan)
                 codegen.setPassManager(passMan.get());
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
