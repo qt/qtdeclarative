@@ -75,5 +75,5 @@ ApplicationWindow {
             }
         }
     }
-//![0]
 }
+//![0]
