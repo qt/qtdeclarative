@@ -972,6 +972,7 @@ void QQuickTextEditPrivate::mirrorChange()
         if (!hAlignImplicit && (hAlign == QQuickTextEdit::AlignRight || hAlign == QQuickTextEdit::AlignLeft)) {
             updateDefaultTextOption();
             q->updateSize();
+            q->updateWholeDocument();
             emit q->effectiveHorizontalAlignmentChanged();
         }
     }
