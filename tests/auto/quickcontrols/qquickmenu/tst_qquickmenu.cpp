@@ -1474,9 +1474,14 @@ void tst_QQuickMenu::removeTakeItem()
 void tst_QQuickMenu::subMenuMouse_data()
 {
     QTest::addColumn<bool>("cascade");
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
 
-    QTest::newRow("cascading") << true;
-    QTest::newRow("non-cascading") << false;
+    QTest::newRow("cascading, in-scene") << true << QQuickPopup::Item;
+    QTest::newRow("non-cascading, in-scene") << false << QQuickPopup::Item;
+    if (popupWindowsSupported) {
+        QTest::newRow("cascading, popup windows") << true << QQuickPopup::Window;
+        QTest::newRow("non-cascading, popup windows") << false << QQuickPopup::Window;
+    }
 }
 
 void tst_QQuickMenu::subMenuMouse()
@@ -1486,6 +1491,7 @@ void tst_QQuickMenu::subMenuMouse()
         QSKIP("Mouse hovering not functional on offscreen/minimal platforms");
 
     QFETCH(bool, cascade);
+    QFETCH(QQuickPopup::PopupType, popupType);
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("subMenus.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -1498,6 +1504,7 @@ void tst_QQuickMenu::subMenuMouse()
     QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
     QVERIFY(mainMenu);
     mainMenu->setCascade(cascade);
+    mainMenu->setPopupType(popupType);
     QCOMPARE(mainMenu->cascade(), cascade);
 
     QQuickMenu *subMenu1 = window->property("subMenu1").value<QQuickMenu *>();
@@ -1518,6 +1525,13 @@ void tst_QQuickMenu::subMenuMouse()
     mainMenu->open();
     QVERIFY(mainMenu->isVisible());
     QTRY_VERIFY(mainMenu->isOpened());
+
+    auto *mainMenuPrivate = QQuickMenuPrivate::get(mainMenu);
+    QCOMPARE(mainMenuPrivate->resolvedPopupType(), popupType);
+    if (mainMenuPrivate->usePopupWindow()) {
+        QTRY_VERIFY(mainMenuPrivate->popupWindow);
+        QVERIFY(QTest::qWaitForWindowExposed(mainMenuPrivate->popupWindow));
+    }
     QVERIFY(!subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
@@ -1526,8 +1540,16 @@ void tst_QQuickMenu::subMenuMouse()
     QQuickMenuItem *subMenu1Item = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(1));
     QVERIFY(subMenu1Item);
     QCOMPARE(subMenu1Item->subMenu(), subMenu1);
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, subMenu1Item->mapToScene(QPoint(1, 1)).toPoint());
+    const QPoint subMenu1ItemPos = subMenu1Item->mapToGlobal(QPoint(1, 1)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, window->mapFromGlobal(subMenu1ItemPos));
     QTRY_COMPARE(mainMenu->isVisible(), cascade);
+
+    auto *subMenu1Private = QQuickMenuPrivate::get(subMenu1);
+    QCOMPARE(subMenu1Private->resolvedPopupType(), popupType);
+    if (mainMenuPrivate->usePopupWindow()) {
+        QTRY_VERIFY(subMenu1Private->popupWindow);
+        QVERIFY(QTest::qWaitForWindowExposed(subMenu1Private->popupWindow));
+    }
     QVERIFY(subMenu1->isVisible());
     QTRY_VERIFY(subMenu1->isOpened());
     QVERIFY(!subMenu2->isVisible());
@@ -1539,7 +1561,8 @@ void tst_QQuickMenu::subMenuMouse()
     QQuickMenuItem *subSubMenu1Item = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(2));
     QVERIFY(subSubMenu1Item);
     QCOMPARE(subSubMenu1Item->subMenu(), subSubMenu1);
-    QTest::mouseMove(window, subSubMenu1Item->mapToScene(QPoint(1, 1)).toPoint());
+    const QPoint subSubMenu1ItemPos = subSubMenu1Item->mapToGlobal(QPoint(1, 1)).toPoint();
+    QTest::mouseMove(window, window->mapFromGlobal(subSubMenu1ItemPos));
     QCOMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
@@ -1553,14 +1576,15 @@ void tst_QQuickMenu::subMenuMouse()
     QQuickMenuItem *subMenuItem1 = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
     QVERIFY(subMenuItem1);
     QVERIFY(!subMenuItem1->subMenu());
-    QTest::mouseMove(window, subMenuItem1->mapToScene(QPoint(1, 1)).toPoint());
+    const QPoint subMenuItem1Pos = subMenuItem1->mapToGlobal(QPoint(1, 1)).toPoint();
+    QTest::mouseMove(window, window->mapFromGlobal(subMenuItem1Pos));
     QCOMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QTRY_VERIFY(!subSubMenu1->isVisible());
 
     // re-open the sub-sub-menu with mouse hover
-    QTest::mouseMove(window, subSubMenu1Item->mapToScene(QPoint(1, 1)).toPoint());
+    QTest::mouseMove(window, window->mapFromGlobal(subSubMenu1ItemPos));
     QCOMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
@@ -1574,20 +1598,26 @@ void tst_QQuickMenu::subMenuMouse()
     // close sub-menu and sub-sub-menu with mouse hover in the main menu
     QQuickMenuItem *mainMenuItem1 = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(0));
     QVERIFY(mainMenuItem1);
-    QTest::mouseMove(window, mainMenuItem1->mapToScene(QPoint(1, 1)).toPoint());
+    const QPoint mainMenuItem1Pos = mainMenuItem1->mapToGlobal(QPoint(1, 1)).toPoint();
+    QTest::mouseMove(window, window->mapFromGlobal(mainMenuItem1Pos));
+
     QCOMPARE(mainMenu->isVisible(), cascade);
     QTRY_COMPARE(subMenu1->isVisible(), !cascade);
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
+
+    // close all menus by click triggering an item
+    QQuickAbstractButton *itemToClick = cascade ? mainMenuItem1 : subMenuItem1;
+    QVERIFY(itemToClick->isVisible());
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, window->mapFromGlobal(itemToClick->mapToGlobal({1,1}).toPoint()));
 #else
     QQuickMenuItem *mainMenuItem1 = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(0));
     QVERIFY(mainMenuItem1);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, mainMenuItem1->mapToScene({1,1}).toPoint());
 #endif // !Q_OS_ANDROID
 
-    // close all menus by click triggering an item
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, mainMenuItem1->mapToScene(QPoint(1, 1)).toPoint());
-    QTRY_VERIFY(!mainMenu->isVisible());
     QTRY_VERIFY(!subMenu1->isVisible());
+    QTRY_VERIFY(!mainMenu->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
 }
