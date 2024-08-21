@@ -1057,14 +1057,13 @@ bool QQuickDeliveryAgentPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *i
 {
     auto itemPrivate = QQuickItemPrivate::get(item);
     const auto transform = itemPrivate->windowToItemTransform();
-    const auto transformToGlobal = itemPrivate->windowToGlobalTransform();
-    auto globalPos = transformToGlobal.map(scenePos);
+    auto globalPos = item->mapToGlobal(scenePos);
     QHoverEvent hoverEvent(type, scenePos, globalPos, transform.map(lastScenePos), modifiers);
     hoverEvent.setTimestamp(timestamp);
     hoverEvent.setAccepted(true);
     QEventPoint &point = hoverEvent.point(0);
     QMutableEventPoint::setPosition(point, transform.map(scenePos));
-    QMutableEventPoint::setGlobalLastPosition(point, transformToGlobal.map(lastScenePos));
+    QMutableEventPoint::setGlobalLastPosition(point, item->mapToGlobal(lastScenePos));
 
     hasFiltered.clear();
     if (sendFilteredMouseEvent(&hoverEvent, item, item->parentItem()))
