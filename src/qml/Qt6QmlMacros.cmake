@@ -4786,13 +4786,15 @@ function(_qt_internal_collect_qml_module_dependencies_deferred target)
 
     # Attempt adding the dependencies that are specified as URI's next.
     get_target_property(deps ${target} QT_QML_MODULE_DEPENDENCIES)
-    if(NOT deps)
+    get_target_property(imports ${target} QT_QML_MODULE_IMPORTS)
+    if(NOT deps AND NOT imports)
         return()
     endif()
+    set(merged_deps_and_imports ${imports} ${deps})
     if(known_dep_ids)
-        list(REMOVE_ITEM deps ${known_dep_ids})
+        list(REMOVE_ITEM merged_deps_and_imports ${known_dep_ids})
     endif()
-    foreach(dep IN LISTS deps)
+    foreach(dep IN LISTS merged_deps_and_imports)
         string(REPLACE " " ";" dep "${dep}")
         list(GET dep 0 dep_module_uri)
 
