@@ -80,6 +80,7 @@ void QQmlJSFunctionInitializer::populateSignature(
     function->isFullyTyped = !arguments.isEmpty() || ast->typeAnnotation;
 
     if (function->argumentTypes.isEmpty()) {
+        bool alreadyWarnedAboutMissingAnnotations = false;
         for (const QQmlJS::AST::BoundName &argument : std::as_const(arguments)) {
             if (argument.typeAnnotation) {
                 if (const auto type = m_typeResolver->typeFromAST(argument.typeAnnotation->type)) {
@@ -94,10 +95,13 @@ void QQmlJSFunctionInitializer::populateSignature(
                                    .arg(argument.typeAnnotation->type->toString()));
                 }
             } else {
-                function->argumentTypes.append(
-                            m_typeResolver->tracked(
-                                m_typeResolver->globalType(m_typeResolver->varType())));
-                signatureError(u"Functions without type annotations won't be compiled"_s);
+                if (!alreadyWarnedAboutMissingAnnotations) {
+                    alreadyWarnedAboutMissingAnnotations = true;
+                    function->argumentTypes.append(
+                                m_typeResolver->tracked(
+                                    m_typeResolver->globalType(m_typeResolver->varType())));
+                    signatureError(u"Functions without type annotations won't be compiled"_s);
+                }
             }
         }
     } else {
