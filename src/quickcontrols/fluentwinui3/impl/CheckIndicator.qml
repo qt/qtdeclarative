@@ -34,15 +34,15 @@ ColorImage {
 
         ShapePath {
             strokeWidth: 1
-            strokeColor: control.indicator.indicatorColor
+            strokeColor: indicator.indicatorColor
             fillColor: "transparent"
             capStyle: ShapePath.RoundCap
             joinStyle: ShapePath.RoundJoin
 
-            startX: 2
+            startX: 1
             startY: 6
-            PathLine { x: 5; y: 9 }
-            PathLine { x: 10; y: 3 }
+            PathLine { x: 5; y: 10 }
+            PathLine { x: 11; y: 3 }
         }
     }
 
@@ -53,6 +53,6 @@ ColorImage {
         width: 8
         height: 1
         radius: height * 0.5
-        color: control.indicator.indicatorColor
+        color: indicator.indicatorColor
     }
 }
