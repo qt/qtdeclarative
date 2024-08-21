@@ -3203,34 +3203,6 @@ void QQuickItemPrivate::itemToParentTransform(QTransform *t) const
 }
 
 /*!
-    Returns a transform that maps points from window space into global space.
-*/
-QTransform QQuickItemPrivate::windowToGlobalTransform() const
-{
-    if (Q_UNLIKELY(window == nullptr))
-        return QTransform();
-
-    QPoint quickWidgetOffset;
-    QWindow *renderWindow = QQuickRenderControl::renderWindowFor(window, &quickWidgetOffset);
-    QPointF pos = (renderWindow ? renderWindow : window)->mapToGlobal(quickWidgetOffset);
-    return QTransform::fromTranslate(pos.x(), pos.y());
-}
-
-/*!
-    Returns a transform that maps points from global space into window space.
-*/
-QTransform QQuickItemPrivate::globalToWindowTransform() const
-{
-    if (Q_UNLIKELY(window == nullptr))
-        return QTransform();
-
-    QPoint quickWidgetOffset;
-    QWindow *renderWindow = QQuickRenderControl::renderWindowFor(window, &quickWidgetOffset);
-    QPointF pos = (renderWindow ? renderWindow : window)->mapToGlobal(quickWidgetOffset);
-    return QTransform::fromTranslate(-pos.x(), -pos.y());
-}
-
-/*!
     Returns true if construction of the QML component is complete; otherwise
     returns false.
 
@@ -8821,7 +8793,14 @@ QPointF QQuickItem::mapToScene(const QPointF &point) const
 QPointF QQuickItem::mapToGlobal(const QPointF &point) const
 {
     Q_D(const QQuickItem);
-    return d->windowToGlobalTransform().map(mapToScene(point));
+
+    if (Q_UNLIKELY(d->window == nullptr))
+        return mapToScene(point);
+
+    QPoint renderOffset;
+    QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window, &renderOffset);
+    QWindow *effectiveWindow = renderWindow ? renderWindow : d->window;
+    return effectiveWindow->mapToGlobal((mapToScene(point) + renderOffset));
 }
 
 /*!
@@ -8925,7 +8904,17 @@ QPointF QQuickItem::mapFromScene(const QPointF &point) const
 QPointF QQuickItem::mapFromGlobal(const QPointF &point) const
 {
     Q_D(const QQuickItem);
-    QPointF scenePoint = d->globalToWindowTransform().map(point);
+
+    QPointF scenePoint;
+    if (Q_LIKELY(d->window)) {
+        QPoint renderOffset;
+        QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window, &renderOffset);
+        QWindow *effectiveWindow = renderWindow ? renderWindow : d->window;
+        scenePoint = effectiveWindow->mapFromGlobal(point) - renderOffset;
+    } else {
+        scenePoint = point;
+    }
+
     if (auto da = QQuickDeliveryAgentPrivate::currentOrItemDeliveryAgent(this)) {
         if (auto sceneTransform = da->sceneTransform())
             scenePoint = sceneTransform->map(scenePoint);
