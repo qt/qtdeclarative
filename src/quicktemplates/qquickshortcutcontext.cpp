@@ -13,7 +13,9 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/qquickrendercontrol.h>
+#include <QtQuickTemplates2/private/qquickpopupwindow_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -25,18 +27,25 @@ static bool isBlockedByPopup(QQuickItem *item)
         return false;
 
     QQuickOverlay *overlay = QQuickOverlay::overlay(item->window());
-    const auto popups = QQuickOverlayPrivate::get(overlay)->stackingOrderPopups();
-    for (QQuickPopup *popup : popups) {
+    auto popups = QQuickOverlayPrivate::get(overlay)->stackingOrderPopups();
+
+    for (QWindow *popupWindow : QGuiApplicationPrivate::popup_list) {
+        if (QQuickPopupWindow *quickPopupWindow = qobject_cast<QQuickPopupWindow *>(popupWindow);
+            quickPopupWindow && quickPopupWindow->popup())
+            popups += quickPopupWindow->popup();
+    }
+
+    for (QQuickPopup *popup : std::as_const(popups)) {
         if (qobject_cast<QQuickToolTip *>(popup))
             continue; // ignore tooltips (QTBUG-60492)
         if (popup->isModal() || popup->closePolicy() & QQuickPopup::CloseOnEscape) {
             qCDebug(lcContextMatcher) << popup << "is modal or has a CloseOnEscape policy;"
-                << "if the following are both true," << item << "will be blocked by it:"
-                << (item != popup->popupItem()) << !popup->popupItem()->isAncestorOf(item);
+                                      << "if one of the following is true," << item
+                                      << "will be blocked by it:" << (item != popup->popupItem())
+                                      << !popup->popupItem()->isAncestorOf(item);
             return item != popup->popupItem() && !popup->popupItem()->isAncestorOf(item);
         }
     }
-
     return false;
 }
 
