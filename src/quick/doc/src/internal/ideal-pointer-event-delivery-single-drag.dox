@@ -1,6 +1,5 @@
 /*! \internal
     \page qq-ideal-pointer-event-delivery-single-drag Dragging one DragHandler with one touchpoint
-    \tableofcontents
 
     <a href="https://doc.qt.io/qt-6/qtquick-input-topic.html">Multi-touch</a>
     is intended to be a strong feature in Qt Quick, so let's run this example

@@ -7,8 +7,6 @@
 \title Mouse Events
 \brief handling mouse events in Qt Quick
 
-\tableofcontents
-
 A more modern way of handling events from all pointing devices, including
 mouse and touchscreen, is via \l {Qt Quick Input Handlers}{Input Handlers}.
 This page describes the original Qt Quick \l MouseArea type, which was
