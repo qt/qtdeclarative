@@ -3549,6 +3549,8 @@ public:
     SourceLocation identifierToken;
     SourceLocation colonToken;
     SourceLocation semicolonToken;
+    SourceLocation lparenToken;
+    SourceLocation rparenToken;
 private:
     union {
         SourceLocation m_propertyToken = SourceLocation {};

@@ -3445,6 +3445,16 @@ private slots:
                 << QSet{ QQmlJS::SourceLocation{ 247, 1, 13, 18 },
                          QQmlJS::SourceLocation{ 264, 1, 14, 15 } };
 
+        QTest::newRow("signal-lparen")
+                << baseDir + u"/fileLocationRegions/functions.qml"_s << LeftParenthesisRegion
+                << QSet{ QQmlJS::SourceLocation{ 242, 1, 13, 13 },
+                         QQmlJS::SourceLocation{ 263, 1, 14, 14 } };
+
+        QTest::newRow("signal-rparen")
+                << baseDir + u"/fileLocationRegions/functions.qml"_s << RightParenthesisRegion
+                << QSet{ QQmlJS::SourceLocation{ 248, 1, 13, 19 },
+                         QQmlJS::SourceLocation{ 270, 1, 14, 21 } };
+
         QTest::newRow("pragma-keyword")
                 << baseDir + u"/fileLocationRegions/pragmas.qml"_s << PragmaKeywordRegion
                 << QSet{ QQmlJS::SourceLocation{ 112, 6, 4, 1 },

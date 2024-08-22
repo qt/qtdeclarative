@@ -478,10 +478,15 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
         MethodInfo *mPtr;
         Path p = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
         pushEl(p, *mPtr, el);
-        FileLocations::addRegion(nodeStack.last().fileLocations, SignalKeywordRegion,
-                                 el->propertyToken());
-        FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion,
-                                 el->identifierToken);
+
+        const auto fileLocations = nodeStack.last().fileLocations;
+        FileLocations::addRegion(fileLocations, SignalKeywordRegion, el->propertyToken());
+        FileLocations::addRegion(fileLocations, IdentifierRegion, el->identifierToken);
+        if (el->lparenToken.isValid())
+            FileLocations::addRegion(fileLocations, LeftParenthesisRegion, el->lparenToken);
+        if (el->rparenToken.isValid())
+            FileLocations::addRegion(fileLocations, RightParenthesisRegion, el->rparenToken);
+
         MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
         AST::UiParameterList *args = el->parameters;
         while (args) {

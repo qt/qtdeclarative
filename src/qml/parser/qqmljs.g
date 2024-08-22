@@ -1256,7 +1256,9 @@ UiObjectMember: T_SIGNAL T_IDENTIFIER T_LPAREN UiParameterListOpt T_RPAREN Semic
         node->setPropertyToken(loc(1));
         node->typeToken = loc(2);
         node->identifierToken = loc(2);
+        node->lparenToken = loc(3);
         node->parameters = sym(4).UiParameterList;
+        node->rparenToken = loc(5);
         node->semicolonToken = loc(6);
         sym(1).Node = node;
     } break;
