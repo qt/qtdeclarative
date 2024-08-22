@@ -154,6 +154,19 @@ void QQuickIconImage::setSource(const QUrl &source)
     emit sourceChanged(source);
 }
 
+void QQuickIconImage::snapPositionTo(QPointF pos)
+{
+    // Ensure that we are placed on an integer position relative to the owning control. We assume
+    // that there is exactly one intermediate parent item between us and the control (in practice,
+    // the contentItem). The idea is to enable the app, by placing the controls at integer
+    // positions, to avoid the image being smoothed over pixel boundaries in the basic, DPR=1 case.
+    QPointF offset;
+    if (parentItem())
+        offset = parentItem()->position();
+    QPointF offsetPos(std::round(offset.x() + pos.x()), std::round(offset.y() + pos.y()));
+    setPosition(offsetPos - offset);
+}
+
 void QQuickIconImage::componentComplete()
 {
     Q_D(QQuickIconImage);

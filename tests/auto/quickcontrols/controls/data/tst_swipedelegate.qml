@@ -1735,8 +1735,8 @@ TestCase {
         case SwipeDelegate.IconOnly:
             verify(iconImage)
             verify(!textLabel)
-            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.x, Math.round((control.availableWidth - iconImage.width) / 2))
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             break;
         case SwipeDelegate.TextOnly:
             verify(!iconImage)
@@ -1747,7 +1747,7 @@ TestCase {
         case SwipeDelegate.TextUnderIcon:
             verify(iconImage)
             verify(textLabel)
-            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(iconImage.x, Math.round((control.availableWidth - iconImage.width) / 2))
             compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
             verify(iconImage.y < textLabel.y)
             break;
@@ -1758,7 +1758,7 @@ TestCase {
                 verify(textLabel.x < iconImage.x)
             else
                 verify(iconImage.x < textLabel.x)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         }
