@@ -1373,7 +1373,7 @@ void tst_QQuickMenu::subMenuDisabledMouse()
     QVERIFY(subMenuItem2->isHighlighted());
 
     // Close all menus by clicking on the item that isn't disabled.
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, subMenuItem2->mapToScene(QPoint(1, 1)).toPoint());
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, window->mapFromGlobal(subMenuItem2->mapToGlobal(QPoint(1, 1)).toPoint()));
     QTRY_VERIFY(!mainMenu->isVisible());
     QTRY_VERIFY(!subMenu->isVisible());
 }
