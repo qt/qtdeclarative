@@ -6,7 +6,7 @@ project(SpreadsheetsExample VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.8 REQUIRED COMPONENTS Gui Qml)
+find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -17,9 +17,11 @@ qt_add_executable(${PROJECT_NAME} WIN32
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
+    Qt6::Core
     Qt6::Gui
     Qt6::Qml
-    Spreadsheets
+    Qt6::Quick
+    Spreadsheetsplugin
 )
 
 qt_add_resources(${PROJECT_NAME} "spareadsheet_icon"
