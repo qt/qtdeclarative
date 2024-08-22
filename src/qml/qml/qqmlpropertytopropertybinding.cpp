@@ -91,8 +91,7 @@ void QQmlPropertyToPropertyBinding::update(QQmlPropertyData::WriteFlags flags)
 
     // Check for a binding update loop
     if (Q_UNLIKELY(updatingFlag())) {
-        QQmlAbstractBinding::printBindingLoopError(
-                    QQmlPropertyPrivate::restore(target, *d, &vtd, nullptr));
+        printBindingLoopError(QQmlPropertyPrivate::restore(target, *d, &vtd, nullptr));
         return;
     }
 

@@ -5,6 +5,7 @@
 
 #include "qqmlcontext.h"
 #include "qqmldata_p.h"
+#include "qqmlinfo.h"
 
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
@@ -145,7 +146,7 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
         getPropertyData(&d, &vtd);
         Q_ASSERT(d);
         QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), *d, &vtd, nullptr);
-        QQmlAbstractBinding::printBindingLoopError(p);
+        printBindingLoopError(p);
         return;
     }
     setUpdatingFlag(true);
@@ -165,6 +166,12 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
 
     if (!watcher.wasDeleted())
         setUpdatingFlag(false);
+}
+
+void QQmlBinding::printBindingLoopError(const QQmlProperty &prop)
+{
+    qmlWarning(prop.object()) << QString(QLatin1String("Binding loop detected for property \"%1\":\n%2"))
+        .arg(prop.name(), expressionIdentifier());
 }
 
 QV4::ReturnedValue QQmlBinding::evaluate(bool *isUndefined)
