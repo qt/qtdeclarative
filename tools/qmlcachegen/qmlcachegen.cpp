@@ -140,6 +140,23 @@ int main(int argc, char **argv)
     if (target == GenerateLoader && parser.isSet(resourceNameOption))
         target = GenerateLoaderStandAlone;
 
+    if (parser.isSet(onlyBytecode)) {
+        const std::array<QCommandLineOption *, 5> compilerOnlyOptions{
+            &directCallsOption, &staticOption, &validateBasicBlocksOption, &dumpAotStatsOption,
+            &moduleIdOption
+        };
+
+        for (auto *compilerOnlyOption : compilerOnlyOptions) {
+            if (parser.isSet(*compilerOnlyOption)) {
+                std::string name = compilerOnlyOption->names().first().toStdString();
+                fprintf(stderr, "Passing mutually exclusive options \"only-bytecode\" and \"%s\".\n"
+                                "Remove --only-bytecode to be able to use compiler options like --%s",
+                        name.c_str(), name.c_str());
+                return EXIT_FAILURE;
+            }
+        }
+    }
+
     if (parser.isSet(dumpAotStatsOption) && !parser.isSet(moduleIdOption)) {
         fprintf(stderr, "--dump-aot-stats set without setting --module-id");
         return EXIT_FAILURE;
