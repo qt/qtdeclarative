@@ -4,11 +4,11 @@
 cmake_minimum_required(VERSION 3.16)
 project(Spreadsheets LANGUAGES CXX)
 
-find_package(Qt6 6.8 REQUIRED COMPONENTS Core Quick Qml)
 qt_standard_project_setup(REQUIRES 6.8)
+qt_add_library(${PROJECT_NAME} STATIC)
 
 qt_add_qml_module(${PROJECT_NAME}
-    URI Spreadsheets
+    URI ${PROJECT_NAME}
     VERSION 1.0
     QML_FILES
         Main.qml
