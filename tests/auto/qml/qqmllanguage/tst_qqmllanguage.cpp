@@ -1971,9 +1971,9 @@ void tst_qqmllanguage::valueTypes()
     QQmlComponent component(&engine, testFileUrl("valueTypes.qml"));
     VERIFY_ERRORS(0);
 
-    QString message = component.url().toString() + ":2:1: QML MyTypeObject: Binding loop detected for property \"rectProperty.width\"";
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(message));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(message));
+    const auto bindingLoopRegex = QRegularExpression(".*QML MyTypeObject: Binding loop detected for property \"rectProperty.width\".*");
+    QTest::ignoreMessage(QtWarningMsg, bindingLoopRegex);
+    QTest::ignoreMessage(QtWarningMsg, bindingLoopRegex);
 
     QScopedPointer<MyTypeObject> object(qobject_cast<MyTypeObject*>(component.create()));
     QVERIFY(object != nullptr);
