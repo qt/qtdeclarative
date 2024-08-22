@@ -981,8 +981,7 @@ void tst_QQuickFileDialogImpl::changeNameFilters()
     dialogHelper.dialog->close();
     QVERIFY(!dialogHelper.dialog->isVisible());
     QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
-    QTRY_COMPARE(dialogHelper.popupWindow()->isVisible(), false);
-    QTRY_COMPARE(dialogHelper.popupWindow()->isExposed(), false);
+    QTRY_VERIFY(!dialogHelper.popupWindow());
 
     // Set .txt and .html filters.
     QSignalSpy nameFiltersChangedSpy(dialogHelper.dialog, SIGNAL(nameFiltersChanged()));
