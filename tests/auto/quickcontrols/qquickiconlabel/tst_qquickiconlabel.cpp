@@ -144,8 +144,8 @@ void tst_qquickiconlabel::display()
         case QQuickIconLabel::IconOnly:
             QVERIFY(icon);
             QVERIFY(!text);
-            QCOMPARE(icon->x(), horizontalCenter - icon->width() / 2);
-            QCOMPARE(icon->y(), verticalCenter - icon->height() / 2);
+            QCOMPARE(icon->x(), std::round(horizontalCenter - icon->width() / 2));
+            QCOMPARE(icon->y(), std::round(verticalCenter - icon->height() / 2));
             QCOMPARE(icon->width(), icon->implicitWidth());
             QCOMPARE(icon->height(), icon->implicitHeight());
             QCOMPARE(label->implicitWidth(), icon->implicitWidth() + horizontalPadding);
@@ -166,8 +166,8 @@ void tst_qquickiconlabel::display()
             QVERIFY(text);
             const qreal combinedHeight = icon->height() + label->spacing() + text->height();
             const qreal contentY = verticalCenter - combinedHeight / 2;
-            QCOMPARE(icon->x(), horizontalCenter - icon->width() / 2);
-            QCOMPARE(icon->y(), contentY);
+            QCOMPARE(icon->x(), std::round(horizontalCenter - icon->width() / 2));
+            QCOMPARE(icon->y(), std::round(contentY));
             QCOMPARE(icon->width(), icon->implicitWidth());
             QCOMPARE(icon->height(), icon->implicitHeight());
             QCOMPARE(text->x(), horizontalCenter - text->width() / 2);
@@ -184,8 +184,8 @@ void tst_qquickiconlabel::display()
             QVERIFY(text);
             const qreal combinedWidth = icon->width() + label->spacing() + text->width();
             const qreal contentX = horizontalCenter - combinedWidth / 2;
-            QCOMPARE(icon->x(), contentX + (label->isMirrored() ? text->width() + label->spacing() : 0));
-            QCOMPARE(icon->y(), verticalCenter - icon->height() / 2);
+            QCOMPARE(icon->x(), std::round(contentX + (label->isMirrored() ? text->width() + label->spacing() : 0)));
+            QCOMPARE(icon->y(), std::round(verticalCenter - icon->height() / 2));
             QCOMPARE(icon->width(), icon->implicitWidth());
             QCOMPARE(icon->height(), icon->implicitHeight());
             QCOMPARE(text->x(), contentX + (label->isMirrored() ? 0 : icon->width() + label->spacing()));

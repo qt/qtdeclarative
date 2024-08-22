@@ -541,8 +541,8 @@ TestCase {
         case SwitchDelegate.IconOnly:
             verify(iconImage)
             verify(!textLabel)
-            compare(iconImage.x, indicatorOffset + (availableWidth - iconImage.width) / 2)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.x, Math.round(indicatorOffset + (availableWidth - iconImage.width) / 2))
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             break;
         case SwitchDelegate.TextOnly:
             verify(!iconImage)
@@ -553,7 +553,7 @@ TestCase {
         case SwitchDelegate.TextUnderIcon:
             verify(iconImage)
             verify(textLabel)
-            compare(iconImage.x, indicatorOffset + (availableWidth - iconImage.width) / 2)
+            compare(iconImage.x, Math.round(indicatorOffset + (availableWidth - iconImage.width) / 2))
             compare(textLabel.x, indicatorOffset + (availableWidth - textLabel.width) / 2)
             verify(iconImage.y < textLabel.y)
             break;
@@ -564,7 +564,7 @@ TestCase {
                 verify(textLabel.x < iconImage.x)
             else
                 verify(iconImage.x < textLabel.x)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         }

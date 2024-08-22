@@ -41,6 +41,8 @@ public:
 
     void setSource(const QUrl &url) override;
 
+    void snapPositionTo(QPointF pos);
+
 Q_SIGNALS:
     void nameChanged();
     void colorChanged();
