@@ -826,7 +826,7 @@ void QQuickPopupPrivate::finalizeExitTransition()
 {
     Q_Q(QQuickPopup);
     getPositioner()->setParentItem(nullptr);
-    if (popupItem && !popupWindow) {
+    if (popupItem) {
         popupItem->setParentItem(nullptr);
         popupItem->setVisible(false);
     }
@@ -1092,17 +1092,18 @@ void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
     }
 
     if (usePopupWindow()) {
-        if (!popupWindow) {
-            popupWindow = new QQuickPopupWindow(q, window);
-            popupWindow->setWidth(popupItem->width() + windowInsets().left() + windowInsets().right());
-            popupWindow->setHeight(popupItem->height() + windowInsets().top() + windowInsets().bottom());
-            popupWindow->setModality(modal ? Qt::ApplicationModal : Qt::NonModal);
-            popupItem->resetTitle();
-            popupWindow->setTitle(m_title);
+        if (visible) {
+            if (!popupWindow) {
+                popupWindow = new QQuickPopupWindow(q, window);
+                popupWindow->setWidth(popupItem->width() + windowInsets().left() + windowInsets().right());
+                popupWindow->setHeight(popupItem->height() + windowInsets().top() + windowInsets().bottom());
+                popupWindow->setModality(modal ? Qt::ApplicationModal : Qt::NonModal);
+                popupItem->resetTitle();
+                popupWindow->setTitle(m_title);
+            }
             popupItem->setParentItem(popupWindow->contentItem());
             popupItem->forceActiveFocus(Qt::PopupFocusReason);
         }
-        popupItem->setVisible(visible);
         popupWindow->setVisible(visible);
     } else {
         if (visible) {
@@ -1129,8 +1130,8 @@ void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
         }
 
         popupItem->setTitle(m_title);
-        popupItem->setVisible(visible);
     }
+    popupItem->setVisible(visible);
 }
 
 QQuickItem *QQuickPopupPrivate::createDimmer(QQmlComponent *component, QQuickPopup *popup, QQuickItem *parent) const
