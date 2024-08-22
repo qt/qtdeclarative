@@ -73,6 +73,8 @@ public:
     QString expression() const override;
     void update(QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding);
 
+    void printBindingLoopError(const QQmlProperty &prop) override;
+
     typedef int Identifier;
     enum {
         Invalid = -1
