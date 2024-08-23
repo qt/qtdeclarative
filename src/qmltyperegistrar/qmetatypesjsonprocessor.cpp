@@ -393,7 +393,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
     const auto addReference
             = [&](const MetaType &type, QSet<QAnyStringView> *processedRelatedNames,
-                  FoundType::Origin origin, TypeRelation relation) {
+                  FoundType::Origin origin) {
         if (type.isEmpty())
             return;
         QAnyStringView qualifiedName = type.qualifiedClassName();
@@ -415,21 +415,9 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 qualifiedClassNameLessThan);
         m_types.insert(insert, type);
 
-        switch (relation) {
-        case TypeRelation::Base:
-            // These have to be fully defined. We don't need to add extra includes.
-            // TODO: We would like to actually remove the inputFile from the includes at this point,
-            //       but that's complicated since it might also contain top-level types.
-            break;
-        default: {
-            const QString inputFile = type.inputFile();
-            if (!inputFile.isEmpty()) {
-                // Also add its include. We don't want to rely on transitive inclues,
-                // at least not for non-Base relations.
-                m_includes.append(inputFile);
-            }
-        }
-        }
+        // We only add types to m_types of which we know we can reach them via the existing
+        // m_includes. We do not add to m_includes, because any further headers may not be
+        // #include'able.
 
         // Remove from the foreign types to avoid the ODR warning.
         const auto remove = std::equal_range(
@@ -444,13 +432,11 @@ void MetaTypesJsonProcessor::addRelatedTypes()
     };
 
     const auto addInterface
-            = [&](QAnyStringView typeName, const QList<QAnyStringView> &namespaces,
-                  TypeRelation relation) {
+            = [&](QAnyStringView typeName, const QList<QAnyStringView> &namespaces) {
         if (const FoundType other = QmlTypesClassDescription::findType(
                     m_types, m_foreignTypes, typeName, namespaces)) {
             if (!other.native.isEmpty()) {
-                addReference(
-                        other.native, &processedRelatedNativeNames, other.nativeOrigin, relation);
+                addReference(other.native, &processedRelatedNativeNames, other.nativeOrigin);
                 return true;
             }
         } else {
@@ -464,15 +450,12 @@ void MetaTypesJsonProcessor::addRelatedTypes()
     };
 
     const auto doAddReferences = [&](QAnyStringView typeName,
-                                     const QList<QAnyStringView> &namespaces,
-                                     TypeRelation relation) {
+                                     const QList<QAnyStringView> &namespaces) {
         if (const FoundType other = QmlTypesClassDescription::findType(
                     m_types, m_foreignTypes, typeName, namespaces)) {
+            addReference(other.native, &processedRelatedNativeNames, other.nativeOrigin);
             addReference(
-                    other.native, &processedRelatedNativeNames, other.nativeOrigin, relation);
-            addReference(
-                    other.javaScript, &processedRelatedJavaScriptNames, other.javaScriptOrigin,
-                    relation);
+                    other.javaScript, &processedRelatedJavaScriptNames, other.javaScriptOrigin);
             return true;
         }
 
@@ -481,7 +464,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
     const auto addType = [&](const MetaType &context, QAnyStringView typeName,
                              const QList<QAnyStringView> &namespaces, TypeRelation relation) {
-        if (doAddReferences(typeName, namespaces, relation))
+        if (doAddReferences(typeName, namespaces))
             return true;
 
         // If it's an enum, add the surrounding type.
@@ -496,12 +479,10 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                     if (enumerator.name != enumName && enumerator.alias != enumName)
                         continue;
 
-                    addReference(
-                            other.native, &processedRelatedNativeNames, other.nativeOrigin,
-                            relation);
+                    addReference(other.native, &processedRelatedNativeNames, other.nativeOrigin);
                     addReference(
                             other.javaScript, &processedRelatedJavaScriptNames,
-                            other.javaScriptOrigin, relation);
+                            other.javaScriptOrigin);
                     return true;
                 }
             }
@@ -530,7 +511,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
     const auto addSupers = [&](const MetaType &context, const QList<QAnyStringView> &namespaces) {
         for (const Interface &iface : context.ifaces())
-            addInterface(interfaceName(iface), namespaces, TypeRelation::Base);
+            addInterface(interfaceName(iface), namespaces);
 
         // We don't warn about missing bases for value types. They don't have to be registered.
         bool warnAboutSupers = context.kind() != MetaType::Kind::Gadget;
@@ -542,7 +523,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 continue;
 
             QAnyStringView typeName = superObject.name;
-            if (doAddReferences(typeName, namespaces, TypeRelation::Base))
+            if (doAddReferences(typeName, namespaces))
                 warnAboutSupers = false;
             else
                 missingSupers.append(typeName);
@@ -558,35 +539,6 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
             processedRelatedNativeNames.insert(typeName);
             processedRelatedJavaScriptNames.insert(typeName);
-        }
-    };
-
-    const auto addProperties = [&](const MetaType &context,
-                                   const QList<QAnyStringView> &namespaces) {
-        for (const Property &property : context.properties()) {
-            ResolvedTypeAlias resolved(property.type, m_usingDeclarations);
-            if (!resolved.type.isEmpty())
-                addType(context, resolved.type, namespaces, TypeRelation::Property);
-        }
-    };
-
-    const auto addMethods = [&](const MetaType &context,
-                                const QList<QAnyStringView> &namespaces) {
-        for (const Method::Container &methods
-             : {context.methods(), context.constructors(), context.sigs() }) {
-            for (const Method &methodObject : methods) {
-                if (methodObject.access != Access::Public)
-                    continue;
-                for (const Argument &argument : std::as_const(methodObject.arguments)) {
-                    ResolvedTypeAlias resolved(argument.type, m_usingDeclarations);
-                    if (!resolved.type.isEmpty())
-                        addType(context, resolved.type, namespaces,  TypeRelation::Argument);
-                }
-
-                ResolvedTypeAlias resolved(methodObject.returnType, m_usingDeclarations);
-                if (!resolved.type.isEmpty())
-                    addType(context, resolved.type, namespaces,  TypeRelation::Return);
-            }
         }
     };
 
@@ -641,8 +593,6 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 const QList<QAnyStringView> otherNamespaces
                         = MetaTypesJsonProcessor::namespaces(other);
                 addSupers(other, otherNamespaces);
-                addProperties(other, otherNamespaces);
-                addMethods(other, otherNamespaces);
                 addEnums(other, otherNamespaces);
 
                 for (const ClassInfo &obj : other.classInfos()) {
@@ -663,8 +613,6 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         }
 
         addSupers(classDef, namespaces);
-        addProperties(classDef, namespaces);
-        addMethods(classDef, namespaces);
         addEnums(classDef, namespaces);
     }
 }
