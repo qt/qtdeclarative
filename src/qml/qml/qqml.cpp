@@ -974,6 +974,8 @@ void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
     qmlregister(TypeAndRevisionsRegistration, &type);
 }
 
+struct LookupNotInitialized {};
+
 QObject *AOTCompiledContext::thisObject() const
 {
     return static_cast<QV4::MetaTypesStackFrame *>(engine->handle()->currentStackFrame)
@@ -1283,8 +1285,8 @@ static ObjectPropertyResult resetFallbackProperty(
 
 static bool isTypeCompatible(QMetaType lookupType, QMetaType propertyType)
 {
-    if (!lookupType.isValid()) {
-        // If type is invalid, then the calling code depends on the lookup
+    if (lookupType == QMetaType::fromType<LookupNotInitialized>()) {
+        // If lookup is not initialized, then the calling code depends on the lookup
         // to be set up in order to query the type, via lookupResultMetaType.
         // We cannot verify the type in this case.
     } else if ((lookupType.flags() & QMetaType::IsQmlList)
@@ -1597,8 +1599,10 @@ QMetaType AOTCompiledContext::lookupResultMetaType(uint index) const
                 = reinterpret_cast<const QMetaObject *>(l->qobjectFallbackLookup.metaObject - 1);
         const int coreIndex = l->qobjectFallbackLookup.coreIndex;
         return metaObject->property(coreIndex).metaType();
+    } else if (l->getter == QV4::Lookup::getterQObjectMethod) {
+        return l->qobjectMethodLookup.propertyData->propType();
     }
-    return QMetaType();
+    return QMetaType::fromType<LookupNotInitialized>();
 }
 
 static bool isUndefined(const void *value, QMetaType type)
@@ -1625,7 +1629,7 @@ void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value, QMetaType 
     l.nameIndex = nameIndex;
     l.forCall = false;
     ObjectPropertyResult storeResult = ObjectPropertyResult::NeedsInit;
-    switch (initObjectLookup(this, &l, qmlScopeObject, QMetaType())) {
+    switch (initObjectLookup(this, &l, qmlScopeObject, QMetaType::fromType<LookupNotInitialized>())) {
     case ObjectLookupResult::ObjectAsVariant:
     case ObjectLookupResult::Object: {
         const QMetaType propType = l.qobjectLookup.propertyData->propType();
@@ -1780,6 +1784,9 @@ bool AOTCompiledContext::callQmlContextPropertyLookup(
         return false;
     }
 
+    if (types[0] == QMetaType::fromType<LookupNotInitialized>())
+        return false;
+
     function->call(qmlScopeObject, args, types, argc);
     return !scope.hasException();
 }
@@ -1787,8 +1794,8 @@ bool AOTCompiledContext::callQmlContextPropertyLookup(
 void AOTCompiledContext::initCallQmlContextPropertyLookup(uint index) const
 {
     Q_UNUSED(index);
-    Q_ASSERT(engine->hasError());
-    amendException(engine->handle());
+    if (engine->hasError())
+        amendException(engine->handle());
 }
 
 bool AOTCompiledContext::loadContextIdLookup(uint index, void *target) const
@@ -1862,6 +1869,9 @@ bool AOTCompiledContext::callObjectPropertyLookup(
         return false;
     }
 
+    if (types[0] == QMetaType::fromType<LookupNotInitialized>())
+        return false;
+
     function->call(object, args, types, argc);
     return !scope.hasException();
 }
@@ -1869,8 +1879,8 @@ bool AOTCompiledContext::callObjectPropertyLookup(
 void AOTCompiledContext::initCallObjectPropertyLookup(uint index) const
 {
     Q_UNUSED(index);
-    Q_ASSERT(engine->hasError());
-    amendException(engine->handle());
+    if (engine->hasError())
+        amendException(engine->handle());
 }
 
 bool AOTCompiledContext::callGlobalLookup(

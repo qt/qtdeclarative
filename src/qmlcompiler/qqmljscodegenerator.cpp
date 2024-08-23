@@ -1551,22 +1551,6 @@ void QQmlJSCodeGenerator::generate_StoreProperty(int nameIndex, int baseReg)
     reject(u"StoreProperty"_s);
 }
 
-QString QQmlJSCodeGenerator::setLookupPreparation(
-        const QQmlJSRegisterContent &content, const QString &arg, int lookup)
-{
-    if (m_typeResolver->registerContains(content, content.storedType()))
-        return QString();
-
-    if (registerIsStoredIn(content, m_typeResolver->varType())) {
-        return u"const QMetaType argType = aotContext->lookupResultMetaType("_s
-                + QString::number(lookup) + u");\n"_s
-                + u"if (argType.isValid())\n    "_s + arg + u".convert(argType)";
-    }
-    // TODO: We could make sure they're compatible, for example QObject pointers.
-    return QString();
-}
-
-
 void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
 {
     INJECT_TRACE_INFO(generate_SetLookup);
@@ -1605,7 +1589,6 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
     m_body += u"{\n"_s;
     QString variableIn;
     QString variableInType;
-    QString preparation;
     QString argType;
     if (!m_typeResolver->registerContains(
                 m_state.accumulatorIn(), property.containedType())) {
@@ -1614,11 +1597,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
                 + u";\n"_s;
         variableIn = contentPointer(property, u"converted"_s);
         variableInType = contentType(property, u"converted"_s);
-        preparation = setLookupPreparation(property, u"converted"_s, index);
-        if (preparation.isEmpty())
-            argType = contentType(property, u"converted"_s);
-        else
-            argType = u"argType"_s;
+        argType = contentType(property, u"converted"_s);
     } else {
         variableIn = contentPointer(property, m_state.accumulatorVariableIn);
         variableInType = contentType(property, m_state.accumulatorVariableIn);
@@ -1635,7 +1614,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
                 + u", "_s + basePointer + u", "_s + variableIn + u')';
         const QString initialization = u"aotContext->initSetObjectLookup("_s
                 + indexString + u", "_s + basePointer + u", "_s + argType + u')';
-        generateLookup(lookup, initialization, preparation);
+        generateLookup(lookup, initialization);
         break;
     }
     case QQmlJSScope::AccessSemantics::Sequence: {
@@ -1675,7 +1654,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
                 + indexString + u", "_s + metaObject(originalScope)
                 + u", "_s + argType + u')';
 
-        generateLookup(lookup, initialization, preparation);
+        generateLookup(lookup, initialization);
         generateWriteBack(baseReg);
 
         break;
@@ -1715,7 +1694,8 @@ void QQmlJSCodeGenerator::generate_Resume(int)
     BYTECODE_UNIMPLEMENTED();
 }
 
-QString QQmlJSCodeGenerator::argumentsList(int argc, int argv, QString *outVar)
+QQmlJSCodeGenerator::ArgumentsAndTypes QQmlJSCodeGenerator::argumentsList(
+        int argc, int argv, QString *outVar)
 {
     QString types;
     QString args;
@@ -1729,12 +1709,6 @@ QString QQmlJSCodeGenerator::argumentsList(int argc, int argv, QString *outVar)
         *outVar = u"callResult"_s;
         const QQmlJSScope::ConstPtr outType = m_state.accumulatorOut().storedType();
         m_body += outType->augmentedInternalName() + u' ' + *outVar;
-        if (!m_typeResolver->registerContains(m_state.accumulatorOut(), outType)) {
-             if (m_typeResolver->equals(outType, m_typeResolver->varType())
-                || m_typeResolver->equals(outType, m_typeResolver->jsPrimitiveType())) {
-                m_body += u'(' + metaType(m_state.accumulatorOut().containedType()) + u')';
-             }
-        }
         m_body += u";\n";
 
         args = contentPointer(m_state.accumulatorOut(), *outVar);
@@ -1748,8 +1722,7 @@ QString QQmlJSCodeGenerator::argumentsList(int argc, int argv, QString *outVar)
         types += u", "_s + contentType(content, var);
     }
 
-    return u"void *args[] = { "_s + args + u" };\n"_s
-            + u"const QMetaType types[] = { "_s + types + u" };\n"_s;
+    return {args, types};
 }
 
 void QQmlJSCodeGenerator::generateMoveOutVar(const QString &outVar)
@@ -2264,13 +2237,22 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
     m_body += u"{\n"_s;
 
     QString outVar;
-    m_body += argumentsList(argc, argv, &outVar);
-    const QString lookup = u"aotContext->callObjectPropertyLookup("_s + indexString
-            + u", "_s + inputPointer
-            + u", args, types, "_s + QString::number(argc) + u')';
+    const ArgumentsAndTypes argsAndTypes = argumentsList(argc, argv, &outVar);
+
+    m_body += u"const auto doCall = [&]() {\n"_s
+            + u"    void *args[] = {" + argsAndTypes.arguments + u"};\n"_s
+            + u"    QMetaType types[] = {" + argsAndTypes.types + u"};\n"_s
+            + u"    return aotContext->callObjectPropertyLookup("_s
+            + indexString + u", "_s + inputPointer + u", args, types, "
+            + QString::number(argc) + u");\n"
+            + u"};\n"_s;
+
+    const QString lookup = u"doCall()"_s;
     const QString initialization = u"aotContext->initCallObjectPropertyLookup("_s
             + indexString + u')';
-    generateLookup(lookup, initialization);
+    const QString preparation = getLookupPreparation(m_state.accumulatorOut(), outVar, index);
+
+    generateLookup(lookup, initialization, preparation);
     generateMoveOutVar(outVar);
 
     m_body += u"}\n"_s;
@@ -2320,12 +2302,19 @@ void QQmlJSCodeGenerator::generate_CallQmlContextPropertyLookup(int index, int a
 
     m_body += u"{\n"_s;
     QString outVar;
-    m_body += argumentsList(argc, argv, &outVar);
-    const QString lookup = u"aotContext->callQmlContextPropertyLookup("_s + indexString
-            + u", args, types, "_s + QString::number(argc) + u')';
+    const ArgumentsAndTypes argsAndTypes = argumentsList(argc, argv, &outVar);
+    m_body += u"const auto doCall = [&]() {\n"_s
+            + u"    void *args[] = {" + argsAndTypes.arguments + u"};\n"_s
+            + u"    QMetaType types[] = {" + argsAndTypes.types + u"};\n"_s
+            + u"    return aotContext->callQmlContextPropertyLookup("_s
+            + indexString + u", args, types, " + QString::number(argc) + u");\n"
+            + u"};\n"_s;
+
+    const QString lookup = u"doCall()"_s;
     const QString initialization = u"aotContext->initCallQmlContextPropertyLookup("_s
             + indexString + u')';
-    generateLookup(lookup, initialization);
+    const QString preparation = getLookupPreparation(m_state.accumulatorOut(), outVar, index);
+    generateLookup(lookup, initialization, preparation);
     generateMoveOutVar(outVar);
 
     m_body += u"}\n"_s;
@@ -2920,6 +2909,12 @@ QString QQmlJSCodeGenerator::getLookupPreparation(
         return var + u" = QVariant(aotContext->lookupResultMetaType("_s
                 + QString::number(lookup) + u"))"_s;
     }
+
+    if (registerIsStoredIn(content, m_typeResolver->jsPrimitiveType())) {
+        return var + u" = QJSPrimitiveValue(aotContext->lookupResultMetaType("_s
+                + QString::number(lookup) + u"))"_s;
+    }
+
     // TODO: We could make sure they're compatible, for example QObject pointers.
     return QString();
 }
