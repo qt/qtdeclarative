@@ -221,6 +221,7 @@ QHash<QString, QQmlJSMetaEnum> QQmlJSScope::enumerations() const
 QString QQmlJSScope::augmentedInternalName() const
 {
     using namespace Qt::StringLiterals;
+    Q_ASSERT(!m_internalName.isEmpty());
 
     switch (m_semantics) {
     case AccessSemantics::Reference:
