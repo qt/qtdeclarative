@@ -72,6 +72,7 @@ Item {
             id: shape
             x: 0
             y: 0
+            asynchronous: controlPanel.async
             preferredRendererType: controlPanel.preferCurve ? Shape.CurveRenderer : Shape.UnknownRenderer
             onRendererTypeChanged: {
                 controlPanel.rendererName = rendererType == Shape.SoftwareRenderer ? "Software" :

@@ -31,6 +31,7 @@ Item {
     property alias fillScaleX: fillTransformSlider.value
     property alias rendererName: rendererLabel.text
     property alias preferCurve: rendererLabel.preferCurve
+    property alias async: enableAsync.checked
 
     property int subShape: pickSubShape.checked ? subShapeSelector.value : -1
     property bool subShapeGreaterThan : pickSubShapeGreaterThan.checked
@@ -84,6 +85,14 @@ Item {
                         rendererLabel.preferCurve = !rendererLabel.preferCurve
                     }
                 }
+            }
+            CheckBox {
+                id: enableAsync
+                Layout.fillWidth: false
+            }
+            Label {
+                text: "Asynchronous"
+                color: "white"
             }
             CheckBox {
                 id: enableDebug
@@ -207,7 +216,7 @@ Item {
                 id: scaleSlider
                 Layout.fillWidth: true
                 from: 0.01
-                to: 500.0
+                to: 50.0
                 value: 0.2
                 onValueChanged: scaleEdit.text = value.toFixed(4)
             }
