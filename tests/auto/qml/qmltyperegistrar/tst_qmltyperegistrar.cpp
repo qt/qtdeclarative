@@ -449,12 +449,6 @@ void tst_qmltyperegistrar::consistencyWarnings()
                   "but cannot be found.");
     expectWarning("Warning: tst_qmltyperegistrar.h:: NotQByteArray is used as sequence value type "
                   "but cannot be found.");
-    expectWarning("Warning: tst_qmltyperegistrar.h:: NotAPropertyType is used as property type "
-                  "but cannot be found.");
-    expectWarning("Warning: tst_qmltyperegistrar.h:: NotAnArgumentType is used as argument type "
-                  "but cannot be found.");
-    expectWarning("Warning: tst_qmltyperegistrar.h:: NotAReturnType is used as return type "
-                  "but cannot be found.");
     expectWarning("Warning: tst_qmltyperegistrar.h:: NotAnUnderlyingType is used as enum type "
                   "but cannot be found.");
     QTest::failOnWarning();
@@ -1122,12 +1116,8 @@ void tst_qmltyperegistrar::preserveVoidStarPropTypes()
 void tst_qmltyperegistrar::allReferencedTypesCollected()
 {
     // reproduce the issue from the comment in QTBUG-118112
-    QVERIFY(qmltypesData.contains(R"(Component {
-        file: "typereferencinganother.h"
-        name: "SampleHeader"
-        accessSemantics: "reference"
-        prototype: "QObject"
-    })"));
+    // - and make sure we don't accidentally register a type we shouldn't.
+    QVERIFY(!qmltypesData.contains(R"(name: "SampleHeader")"));
 }
 
 void tst_qmltyperegistrar::inaccessibleBase()
@@ -1141,15 +1131,7 @@ void tst_qmltyperegistrar::inaccessibleBase()
         Property { name: "a"; type: "int"; index: 0; isConstant: true }
     })"));
 
-    // This shows up and we include property.h, but guarded by a __has_include.
-    // Since we don't actually need the include, it compiles.
-    QVERIFY(qmltypesData.contains(R"(Component {
-        file: "property.h"
-        name: "InaccessibleProperty"
-        accessSemantics: "reference"
-        prototype: "QObject"
-        Property { name: "b"; type: "int"; index: 0; isConstant: true }
-    })"));
+    QVERIFY(!qmltypesData.contains(R"(name: "InaccessibleProperty")"));
 
     QVERIFY(qmltypesData.contains(R"(Component {
         file: "tst_qmltyperegistrar.h"
