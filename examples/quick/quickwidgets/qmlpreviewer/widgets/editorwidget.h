@@ -24,6 +24,7 @@ public slots:
     void saveFile();
     void closeFile();
     void reloadFile();
+    void moveCursorTo(int line, int column);
 
 private:
     void initUI();

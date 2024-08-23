@@ -12,11 +12,15 @@ qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
     main.cpp
-    widgets/mainwindow.h widgets/mainwindow.cpp
-    widgets/editorwidget.h widgets/editorwidget.cpp
-    widgets/patheditwidget.h widgets/patheditwidget.cpp
+    models/errorlistmodel.h models/errorlistmodel.cpp
     states/statecontroller.h states/statecontroller.cpp
     utility/syntaxhighlighter.h utility/syntaxhighlighter.cpp
+    widgets/codeeditor.h widgets/codeeditor.cpp
+    widgets/editorwidget.h widgets/editorwidget.cpp
+    widgets/linenumberarea.h widgets/linenumberarea.cpp
+    widgets/mainwindow.h widgets/mainwindow.cpp
+    widgets/patheditwidget.h widgets/patheditwidget.cpp
+    widgets/previewwidget.h widgets/previewwidget.cpp
 )
 
 include(resources.cmake)

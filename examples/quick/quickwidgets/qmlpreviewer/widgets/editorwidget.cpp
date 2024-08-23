@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include "editorwidget.h"
+#include "codeeditor.h"
 #include "patheditwidget.h"
 #include "../states/statecontroller.h"
 #include "../utility/syntaxhighlighter.h"
 
 #include <QFile>
 #include <QMessageBox>
-#include <QPlainTextEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -34,7 +34,7 @@ static inline QByteArray loadFromFile(const QString &filePath)
 EditorWidget::EditorWidget(QWidget *parent)
     : QWidget{parent}
     , m_pathEdit{new PathEditWidget}
-    , m_editor{new QPlainTextEdit}
+    , m_editor{new CodeEditor}
     , m_saveButton{new QPushButton}
     , m_reloadButton{new QPushButton}
     , m_closeButton{new QPushButton}
@@ -146,6 +146,19 @@ void EditorWidget::reloadFile()
     m_mutex.unlock();
 }
 
+void EditorWidget::moveCursorTo(int line, int column)
+{
+    if (line < 1 || column < 1)
+        return;
+
+    QTextCursor cursor = m_editor->textCursor();
+    cursor.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
+    cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, line - 1);
+    cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor, column - 1);
+    m_editor->setTextCursor(cursor);
+    m_editor->setFocus();
+}
+
 void EditorWidget::initUI()
 {
     QHBoxLayout *actionsLayout = new QHBoxLayout;
@@ -160,6 +173,7 @@ void EditorWidget::initUI()
     layout->setContentsMargins(0,0,0,0);
     setLayout(layout);
 
+    m_editor->setCursorWidth(2);
     m_editor->setPlaceholderText(tr("Write code or open a file"));
     m_saveButton->setText(tr("Save"));
     m_saveButton->setEnabled(false);
