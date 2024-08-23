@@ -107,6 +107,7 @@ public:
         , canRedo(false)
         , hAlignImplicit(true)
         , selectPressed(false)
+        , hadSelectionOnMousePress(false)
         , textLayoutDirty(true)
         , persistentSelection(false)
         , hasImState(false)
@@ -260,6 +261,7 @@ public:
     bool canRedo:1;
     bool hAlignImplicit:1;
     bool selectPressed:1;
+    bool hadSelectionOnMousePress:1;
     bool textLayoutDirty:1;
     bool persistentSelection:1;
     bool hasImState : 1;
