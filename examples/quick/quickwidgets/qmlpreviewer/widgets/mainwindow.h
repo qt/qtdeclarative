@@ -6,8 +6,8 @@
 
 #include <QMainWindow>
 
+class PreviewWidget;
 class EditorWidget;
-class QQuickWidget;
 class QFileSystemWatcher;
 
 class MainWindow : public QMainWindow
@@ -31,11 +31,12 @@ private slots:
 
 private:
     EditorWidget *m_editorWidget = nullptr;
-    QQuickWidget *m_previewWidget = nullptr;
+    PreviewWidget *m_previewWidget = nullptr;
     QFileSystemWatcher *m_fileWatcher = nullptr;
     QAction *m_openAction = nullptr;
     QAction *m_saveAction = nullptr;
     QAction *m_closeAction = nullptr;
     QAction *m_reloadAction = nullptr;
+    QAction *m_quitAction = nullptr;
 };
 #endif // MAINWINDOW_H

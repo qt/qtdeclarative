@@ -3,27 +3,19 @@
 
 #include "mainwindow.h"
 #include "editorwidget.h"
+#include "previewwidget.h"
 #include "../states/statecontroller.h"
 
+#include <QCloseEvent>
 #include <QFileSystemWatcher>
 #include <QLayout>
 #include <QMenuBar>
 #include <QMessageBox>
-#include <QQmlEngine>
-#include <QQuickWidget>
-
-namespace {
-static constexpr auto QUIT_SHORTCUT = QKeySequence::Quit;
-static constexpr auto OPEN_SHORTCUT = QKeySequence::Open;
-static constexpr auto SAVE_SHORTCUT = QKeySequence::Save;
-static constexpr auto CLOSE_SHORTCUT = QKeySequence::Close;
-static constexpr auto RELOAD_SHORTCUT = Qt::CTRL | Qt::Key_R;
-}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_editorWidget{new EditorWidget}
-    , m_previewWidget{new QQuickWidget}
+    , m_previewWidget{new PreviewWidget}
     , m_fileWatcher{new QFileSystemWatcher}
 {
     setWindowIcon(QIcon(":/resources/logo.png"));
@@ -51,8 +43,6 @@ void MainWindow::initUI()
     centralWidget->setLayout(horizontalLayout);
 
     horizontalLayout->addWidget(m_editorWidget, 1);
-
-    m_previewWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
     horizontalLayout->addWidget(m_previewWidget, 1);
 }
 
@@ -61,21 +51,24 @@ void MainWindow::initMenuBar()
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
 
     m_openAction = fileMenu->addAction(tr("&Open"));
-    m_openAction->setShortcut(OPEN_SHORTCUT);
     m_saveAction = fileMenu->addAction(tr("&Save"));
-    m_saveAction->setShortcut(SAVE_SHORTCUT);
     m_saveAction->setEnabled(false);
     m_closeAction = fileMenu->addAction(tr("&Close"));
-    m_closeAction->setShortcut(CLOSE_SHORTCUT);
     m_closeAction->setEnabled(false);
     m_reloadAction = fileMenu->addAction(tr("&Reload"));
-    m_reloadAction->setShortcut(::RELOAD_SHORTCUT);
     m_reloadAction->setEnabled(false);
 
     fileMenu->addSeparator();
 
-    QAction *quitAction = fileMenu->addAction(tr("&Quit"));
-    quitAction->setShortcut(QUIT_SHORTCUT);
+    m_quitAction = fileMenu->addAction(tr("&Quit"));
+
+#if QT_CONFIG(shortcut)
+    m_openAction->setShortcut(QKeySequence::Open);
+    m_saveAction->setShortcut(QKeySequence::Save);
+    m_closeAction->setShortcut(QKeySequence::Close);
+    m_reloadAction->setShortcut(Qt::CTRL | Qt::Key_R);
+    m_quitAction->setShortcut(QKeySequence::Quit);
+#endif
 }
 
 void MainWindow::setupConnections()
@@ -84,6 +77,8 @@ void MainWindow::setupConnections()
             &MainWindow::onAppStateChanged);
     connect(m_fileWatcher, &QFileSystemWatcher::fileChanged, this, &MainWindow::onFileChanged);
     connect(menuBar(), &QMenuBar::triggered, this, &MainWindow::onMenuBarTriggered);
+    connect(m_previewWidget, &PreviewWidget::errorPositionSelected, m_editorWidget,
+            &EditorWidget::moveCursorTo);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -112,11 +107,10 @@ void MainWindow::onAppStateChanged(int oldState, int newState)
 {
     switch (newState) {
     case StateController::InitState:
-        if (!m_previewWidget->source().isEmpty()) {
-            m_previewWidget->engine()->clearComponentCache();
+        if (!m_previewWidget->sourcePath().isEmpty()) {
             if (const QStringList files = m_fileWatcher->files(); !files.isEmpty())
                 m_fileWatcher->removePaths(files);
-            m_previewWidget->setSource(QUrl{});
+            m_previewWidget->setSourcePath(QString{});
         }
         m_saveAction->setEnabled(false);
         m_closeAction->setEnabled(false);
@@ -124,11 +118,10 @@ void MainWindow::onAppStateChanged(int oldState, int newState)
         break;
 
     case StateController::OpenState:
-        m_previewWidget->engine()->clearComponentCache();
         if (const QStringList files = m_fileWatcher->files(); !files.isEmpty())
             m_fileWatcher->removePaths(files);
         m_fileWatcher->addPath(StateController::instance()->filePath());
-        m_previewWidget->setSource(QUrl::fromLocalFile(StateController::instance()->filePath()));
+        m_previewWidget->setSourcePath(StateController::instance()->filePath());
         m_saveAction->setEnabled(false);
         m_closeAction->setEnabled(true);
         m_reloadAction->setEnabled(false);
@@ -169,22 +162,20 @@ void MainWindow::onFileChanged(const QString &path)
     }
 
     m_editorWidget->updateEditor();
-    m_previewWidget->engine()->clearComponentCache();
-    m_previewWidget->setSource(QUrl::fromLocalFile(path));
+    m_previewWidget->setSourcePath(path);
     stateController->setDirty(false);
 }
 
 void MainWindow::onMenuBarTriggered(QAction *action)
 {
-    const QKeySequence shortcut = action->shortcut();
-    if (shortcut == OPEN_SHORTCUT)
+    if (action == m_openAction)
         m_editorWidget->openFile();
-    else if (shortcut == SAVE_SHORTCUT)
+    else if (action == m_saveAction)
         m_editorWidget->saveFile();
-    else if (shortcut == CLOSE_SHORTCUT)
+    else if (action == m_closeAction)
         m_editorWidget->closeFile();
-    else if (shortcut == RELOAD_SHORTCUT)
+    else if (action == m_reloadAction)
         m_editorWidget->reloadFile();
-    else if (shortcut == QUIT_SHORTCUT)
+    else if (action == m_quitAction)
         QCoreApplication::quit();
 }

@@ -15,7 +15,7 @@ void SyntaxHighlighter::highlightBlock(const QString &text)
     setFormat(0, text.length(), QColor{214, 207 , 154});
 
     // import keyword
-    QRegularExpression regex{"^\\bimport\\b"};
+    QRegularExpression regex{"^\\bimport\\b||^\\s*property\\b"};
     QRegularExpressionMatchIterator it = regex.globalMatchView(text);
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
