@@ -66,7 +66,7 @@
     \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt qmlComponent
 
     The \c m_mainQmlComponent is loaded into the \c m_qtQuickView through the
-    \c QtQuickView.loadComponent() method, which takes \c QtQmlComponent as an
+    \c QtQuickView.loadContent() method, which takes \c QtQmlComponent as an
     argument.
 
     For a Java-based project:
@@ -146,7 +146,7 @@
 
     You can have multiple QtQmlComponents in the imported QML project and
     switch the currently loaded component of the QtQuickView between them
-    using the QtQuickView.loadComponent() method, which
+    using the QtQuickView.loadContent() method, which
     takes a QtQmlComponent as an argument. This will load the QtQmlComponent
     that was given and unloads the previous one, if there is one.
 

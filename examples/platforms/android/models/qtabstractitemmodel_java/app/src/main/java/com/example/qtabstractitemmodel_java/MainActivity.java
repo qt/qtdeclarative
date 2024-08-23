@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         //! [2]
 
         //! [3]
-        qtQuickView.loadComponent(m_mainQmlComponent);
+        qtQuickView.loadContent(m_mainQmlComponent);
         //! [3]
 
     }

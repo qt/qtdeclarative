@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         m_qmlFrameLayout.addView(m_qtQuickView, params);
         //! [layoutParams]
         //! [loadComponent]
-        m_qtQuickView.loadComponent(m_mainQmlComponent);
+        m_qtQuickView.loadContent(m_mainQmlComponent);
         //! [loadComponent]
 
         Button m_changeColorButton = findViewById(R.id.changeQmlColorButton);
@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
     //! [onStatusChanged]
     //! [switchLoadedComponent]
     private void loadSecondQml() {
-        m_qtQuickView.loadComponent(m_secondQmlComponent);
+        m_qtQuickView.loadContent(m_secondQmlComponent);
 
         // Reset box color and color text after component reload
         m_box.setBackgroundColor(Color.parseColor("#00ffffff"));
@@ -206,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
     }
 
     private void loadMainQml() {
-        m_qtQuickView.loadComponent(m_mainQmlComponent);
+        m_qtQuickView.loadContent(m_mainQmlComponent);
 
         // Reset box color and color text after component reload
         m_box.setBackgroundColor(Color.parseColor("#00ffffff"));

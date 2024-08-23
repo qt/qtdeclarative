@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
 //! [Adding control buttons]
 //! [Loading the QML component]
         m_mainQmlComponent.setStatusChangeListener(this)
-        qtQuickView.loadComponent(m_mainQmlComponent)
+        qtQuickView.loadContent(m_mainQmlComponent)
 //! [Loading the QML component]
     }
 

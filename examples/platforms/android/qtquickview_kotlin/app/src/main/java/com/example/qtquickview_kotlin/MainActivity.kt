@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         m_binding.qmlFrame.addView(m_qtQuickView, params)
         //! [layoutParams]
         //! [loadComponent]
-        m_qtQuickView!!.loadComponent(m_mainQmlComponent)
+        m_qtQuickView!!.loadContent(m_mainQmlComponent)
         //! [loadComponent]
 
         m_binding.changeQmlColorButton.setOnClickListener { onClickListener() }
@@ -179,7 +179,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
     //! [onStatusChanged]
     //! [switchLoadedComponent]
     private fun loadSecondQml() {
-        m_qtQuickView!!.loadComponent(m_secondQmlComponent)
+        m_qtQuickView!!.loadContent(m_secondQmlComponent)
 
         // Reset box color and color text after component reload
         m_binding.qmlColorBox.setBackgroundColor(Color.parseColor("#00ffffff"))
@@ -187,7 +187,7 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
     }
 
     private fun loadMainQml() {
-        m_qtQuickView!!.loadComponent(m_mainQmlComponent)
+        m_qtQuickView!!.loadContent(m_mainQmlComponent)
 
         // Reset box color and color text after component reload
         m_binding.qmlColorBox.setBackgroundColor(Color.parseColor("#00ffffff"))
