@@ -92,7 +92,9 @@ tst_qquickmenubar::tst_qquickmenubar()
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
     QQuickMenuBar mb;
     nativeMenuBarSupported = QQuickMenuBarPrivate::get(&mb)->useNativeMenuBar();
+#if defined(Q_OS_WINDOWS) || defined(Q_OS_MACOS)
     popupWindowsSupported = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows);
+#endif
 }
 
 void tst_qquickmenubar::init()

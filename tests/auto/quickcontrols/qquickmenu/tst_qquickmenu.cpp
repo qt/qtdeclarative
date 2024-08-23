@@ -133,7 +133,9 @@ tst_QQuickMenu::tst_QQuickMenu()
 {
     std::unique_ptr<QPlatformMenu> platformMenu(QGuiApplicationPrivate::platformTheme()->createPlatformMenu());
     nativeMenuSupported = platformMenu != nullptr;
+#if defined(Q_OS_WINDOWS) || defined (Q_OS_MACOS)
     popupWindowsSupported = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows);
+#endif
 }
 
 void tst_QQuickMenu::init()
@@ -2044,6 +2046,9 @@ void tst_QQuickMenu::addRemoveSubMenus()
 
 void tst_QQuickMenu::subMenuPopupType()
 {
+    if (!popupWindowsSupported)
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
     // Undo the setting of AA_DontUseNativeMenuWindows to true from init()
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
 
@@ -2092,16 +2097,14 @@ void tst_QQuickMenu::subMenuPopupType()
     // Setting QQuickPopup::Window on the root menu will force all sub-menus
     // to use QQuickPopup::Window as well, if it's supported on the platform
     // where the test runs. Otherwise it will fall back to QQuickPopup::Item.
-    const QQuickPopup::PopupType windowIfSupportedElseItem =
-        popupWindowsSupported ? QQuickPopup::Window : QQuickPopup::Item;
     mainMenu->setPopupType(QQuickPopup::Window);
     QCOMPARE(mainMenu->popupType(), QQuickPopup::Window);
     QCOMPARE(subMenu1->popupType(), QQuickPopup::Window);
     mainMenu->open();
     QTRY_VERIFY(mainMenu->isOpened());
-    QCOMPARE(mainMenu_d->resolvedPopupType(), windowIfSupportedElseItem);
-    QCOMPARE(subMenu1_d->resolvedPopupType(), windowIfSupportedElseItem);
-    QCOMPARE(subSubMenu1_d->resolvedPopupType(), windowIfSupportedElseItem);
+    QCOMPARE(mainMenu_d->resolvedPopupType(), QQuickPopup::Window);
+    QCOMPARE(subMenu1_d->resolvedPopupType(), QQuickPopup::Window);
+    QCOMPARE(subSubMenu1_d->resolvedPopupType(), QQuickPopup::Window);
     mainMenu->close();
     QTRY_VERIFY(!mainMenu->isVisible());
 
@@ -2123,9 +2126,9 @@ void tst_QQuickMenu::subMenuPopupType()
         // When Native is not supported, we fall back to either Window or Item
         mainMenu->open();
         QTRY_VERIFY(mainMenu->isOpened());
-        QCOMPARE(mainMenu_d->resolvedPopupType(), windowIfSupportedElseItem);
-        QCOMPARE(subMenu1_d->resolvedPopupType(), windowIfSupportedElseItem);
-        QCOMPARE(subSubMenu1_d->resolvedPopupType(), windowIfSupportedElseItem);
+        QCOMPARE(mainMenu_d->resolvedPopupType(), QQuickPopup::Window);
+        QCOMPARE(subMenu1_d->resolvedPopupType(), QQuickPopup::Window);
+        QCOMPARE(subSubMenu1_d->resolvedPopupType(), QQuickPopup::Window);
         mainMenu->close();
         QTRY_VERIFY(!mainMenu->isVisible());
     }

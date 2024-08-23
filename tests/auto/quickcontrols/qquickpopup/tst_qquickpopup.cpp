@@ -139,8 +139,9 @@ using namespace Qt::StringLiterals;
 tst_QQuickPopup::tst_QQuickPopup()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
-    popupWindowsSupported = QGuiApplicationPrivate::platformIntegration()
-                                ->hasCapability(QPlatformIntegration::Capability::MultipleWindows);
+#if defined(Q_OS_WINDOWS) || defined(Q_OS_MACOS)
+    popupWindowsSupported = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows);
+#endif
 }
 
 void tst_QQuickPopup::cleanup()
