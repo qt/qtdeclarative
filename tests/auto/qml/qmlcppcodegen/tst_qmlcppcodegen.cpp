@@ -41,6 +41,7 @@ private slots:
     void ambiguousAs();
     void ambiguousSignals();
     void anchorsFill();
+    void anonymousComposite();
     void argumentConversion();
     void array();
     void arrayCtor();
@@ -606,6 +607,16 @@ void tst_QmlCppCodegen::anchorsFill()
 
     child->setProperty("parent", QVariant::fromValue(newParent));
     QCOMPARE(child->property("width").toInt(), 47);
+}
+
+void tst_QmlCppCodegen::anonymousComposite()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/anonymousCompositeUser.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("b").toInt(), 5);
 }
 
 void tst_QmlCppCodegen::argumentConversion()
