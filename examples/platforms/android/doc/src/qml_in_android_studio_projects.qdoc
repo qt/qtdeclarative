@@ -52,30 +52,30 @@
 
     \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt m_qtQuickView
 
-    The \c Main and \c Second Java classes inherit from the \c QtQmlComponent
+    The \c Main and \c Second Java classes inherit from the \c QtQuickViewContent
     class. These classes are generated from the QML project that we've
     imported. In this example, these QML components are used to explain how to
     embed QML components into Android Projects.
 
     For a Java-based project:
 
-    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java qmlComponent
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java qmlContent
 
     For a Kotlin-based project (initialized when declared):
 
-    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt qmlComponent
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt qmlContent
 
-    The \c m_mainQmlComponent is loaded into the \c m_qtQuickView through the
-    \c QtQuickView.loadContent() method, which takes \c QtQmlComponent as an
+    The \c m_mainQmlContent is loaded into the \c m_qtQuickView through the
+    \c QtQuickView.loadContent() method, which takes \c QtQuickViewContent as an
     argument.
 
     For a Java-based project:
 
-    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java loadComponent
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java loadContent
 
     For a Kotlin-based project:
 
-    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt loadComponent
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt loadContent
 
     The \c m_qtQuickView is added to Android FrameLayout ViewGroup with
     appropriate layout parameters.
@@ -92,7 +92,7 @@
 
     To interact with the embedded QML component we implement the
     \c QtQmlStatusChangeListener interface and override the onStatusChanged
-    method to get the loading status of the QtQmlComponent currently being
+    method to get the loading status of the QtQuickViewContent currently being
     loaded into the \c m_qtQuickView.
 
     For a Java-based project:
@@ -123,8 +123,8 @@
     \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt onStatusChanged
 
     The \c onStatusChanged listener is set as the \c statusChangeListener
-    of the \c m_mainQmlComponent and \c m_secondQmlComponent with
-    \c {QtQmlComponent.setStatusChangeListener(QtQmlStatusChangeListener onStatusChanged())}
+    of the \c m_mainQmlContent and \c m_secondQmlContent with
+    \c {QtQuickViewContent.setStatusChangeListener(QtQmlStatusChangeListener onStatusChanged())}
     method.
 
     For a Java-based project:
@@ -138,32 +138,32 @@
     The overridden callback function \c onStatusChanged() receives
     \c StatusChanged() signal containing the current
     status (public Enum QtQmlStatus) of the loading of the current
-    QtQmlComponent into the \c m_qtQuickView. If this \c QtQmlStatus
+    QtQuickViewContent into the \c m_qtQuickView. If this \c QtQmlStatus
     is confirmed to be \c QtQmlStatus.READY, we can start interacting
     with the QML view.
 
-    \section1 Loading QtQmlComponents into QtQuickView
+    \section1 Loading QtQuickViewContents into QtQuickView
 
-    You can have multiple QtQmlComponents in the imported QML project and
-    switch the currently loaded component of the QtQuickView between them
+    You can have multiple QtQuickViewContents in the imported QML project and
+    switch the currently loaded content of the QtQuickView between them
     using the QtQuickView.loadContent() method, which
-    takes a QtQmlComponent as an argument. This will load the QtQmlComponent
+    takes a QtQuickViewContent as an argument. This will load the QtQuickViewContent
     that was given and unloads the previous one, if there is one.
 
     For a Java-based project:
 
-    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java switchLoadedComponent
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java switchLoadedContent
 
     For a Kotlin-based project:
 
-    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt switchLoadedComponent
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt switchLoadedContent
 
     \section1 Getting and setting QML component property values
 
     Getting and setting QML component property values happens through the
     methods described in the \c Main.java class. In this case we use the
-    \c m_mainQmlComponent.setColorStringProperty() and
-    \c m_mainQmlComponent.getColorStringProperty() methods. These methods are
+    \c m_mainQmlContent.setColorStringProperty() and
+    \c m_mainQmlContent.getColorStringProperty() methods. These methods are
     generated according to what properties the QML component includes.
 
     For a Java-based project:
@@ -174,19 +174,19 @@
 
     \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt onClickListener
 
-    With the \c m_mainQmlComponent.setColorStringProperty()
+    With the \c m_mainQmlContent.setColorStringProperty()
     method we set the \c colorStringFormat property value of the
-    \c m_mainQmlComponent a random color value that is fetched from the
+    \c m_mainQmlContent a random color value that is fetched from the
     \c Colors.java (or \c {Colors.kt}) class.
 
-    The \c m_mainQmlComponent.getColorStringProperty()
+    The \c m_mainQmlContent.getColorStringProperty()
     method is used here to fetch the current background color of the root
-    object of the m_mainQmlComponent and then show it to the user on the
+    object of the m_mainQmlContent and then show it to the user on the
     Java/Kotlin Android side of the application.
 
-    \c m_secondQmlComponent has a \l [QML] {Grid} QML component
+    \c m_secondQmlContent has a \l [QML] {Grid} QML component
     which we can rotate from the Java side with the generated
-    \c m_secondQmlComponent.setGridRotation() method.
+    \c m_secondQmlContent.setGridRotation() method.
 
     For a Java-based project:
 
@@ -198,11 +198,11 @@
 
     \section1 Signal listeners
 
-    The \c QtQmlComponent class offers a
+    The \c QtQuickViewContent class offers a
     \c connectSignalListener() and \c disconnectSignalListener() methods which
     are used to connect and disconnect a signal listener/s between a signal/s
     that is/are declared in the QML component root object.
-    The \c QtQmlComponent.connectSignalListener()
+    The \c QtQuickViewContent.connectSignalListener()
     returns a unique signal listener id which we store and use later to
     identify and disconnect the listener.
 
@@ -224,7 +224,7 @@
     a random color value fetched from the \c Colors.java class.
 
     Next, the signal listener is disconnected using the
-    \c QtQmlComponent.disconnectSignalListener()
+    \c QtQuickViewContent.disconnectSignalListener()
     method by giving it the unique signal listener id.
 
     For a Java-based project:
