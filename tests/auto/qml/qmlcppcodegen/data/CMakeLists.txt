@@ -35,6 +35,7 @@ set(cpp_sources
 set(qml_files
     AccessModelMethodsFromOutside.qml
     Action.qml
+    AnonymousComposite.qml
     ArraySequenceLengthInterop.qml
     B.qml
     BadType.qml
@@ -83,6 +84,7 @@ set(qml_files
     ambiguousAs.qml
     ambiguousSignals.qml
     anchorsFill.qml
+    anonymousCompositeUser.qml
     argumentConversion.qml
     array.qml
     arrayCtor.qml

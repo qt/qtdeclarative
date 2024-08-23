@@ -109,14 +109,17 @@ QString QQmlJSCodeGenerator::metaType(const QQmlJSScope::ConstPtr &type)
 {
     if (type->isComposite()) {
         const QString name = m_typeResolver->nameForType(type);
-        if (!name.isEmpty())
-            return compositeMetaType(name);
+        if (name.isEmpty()) {
+            reject(u"retrieving the metaType of a composite type without an element name."_s);
+            return QString();
+        }
+        return compositeMetaType(name);
     }
 
     if (type->isListProperty() && type->valueType()->isComposite()) {
         const QString name = m_typeResolver->nameForType(type->valueType());
-        if (!name.isEmpty())
-            return compositeListMetaType(name);
+        Q_ASSERT(!name.isEmpty()); // There can't be a list with anonymous composite value type
+        return compositeListMetaType(name);
     }
 
     return m_typeResolver->equals(m_typeResolver->genericType(type), type)

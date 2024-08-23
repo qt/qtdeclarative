@@ -98,7 +98,10 @@ public:
     }
     QString nameForType(const QQmlJSScope::ConstPtr &type) const
     {
-        return m_imports.name(originalType(type));
+        // We want here not the name of the original type. That one may not exist.
+        // We want the name of the type we've used as replacement since that is
+        // whatever we do with the type expects.
+        return m_imports.name(comparableType(type));
     }
 
     QQmlJSScope::ConstPtr typeFromAST(QQmlJS::AST::Type *type) const;
