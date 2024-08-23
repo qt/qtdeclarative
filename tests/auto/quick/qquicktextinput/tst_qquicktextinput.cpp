@@ -7187,11 +7187,9 @@ void tst_qquicktextinput::touchscreenDoesNotSelect()
     QTest::touchEvent(&window, touchscreen.data()).press(0, QPoint(x2,y), &window);
     QTest::touchEvent(&window, touchscreen.data()).release(0, QPoint(x2,y), &window);
     QQuickTouchUtils::flush(&window);
-    QCOMPARE(textInputObject->selectedText().isEmpty(), !expectDefaultSelectByMouse);
-    if (expectDefaultSelectByMouse)
-        QCOMPARE(textInputObject->cursorPosition(), cursorPos);
-    else
-        QCOMPARE_NE(textInputObject->cursorPosition(), cursorPos);
+    QCOMPARE(textInputObject->selectedText().isEmpty(), true);
+    QCOMPARE_NE(textInputObject->cursorPosition(), cursorPos);
+    QVERIFY(textInputObject->selectedText().isEmpty());
 }
 
 void tst_qquicktextinput::touchscreenSetsFocusAndMovesCursor()
