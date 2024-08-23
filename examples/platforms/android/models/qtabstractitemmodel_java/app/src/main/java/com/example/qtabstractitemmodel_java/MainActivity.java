@@ -16,7 +16,7 @@ import org.qtproject.example.qtabstractitemmodel.QmlModule.Main;
 
 public class MainActivity extends AppCompatActivity implements QtQmlStatusChangeListener {
     private static final String TAG = "QtAIM MainActivity";
-    private Main m_mainQmlComponent;
+    private Main m_mainQmlContent;
     //! [1]
     private final MyDataModel m_model = new MyDataModel();
     //! [1]
@@ -25,9 +25,9 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        m_mainQmlComponent = new Main();
+        m_mainQmlContent = new Main();
         QtQuickView qtQuickView = new QtQuickView(this);
-        m_mainQmlComponent.setStatusChangeListener(this);
+        m_mainQmlContent.setStatusChangeListener(this);
 
         ViewGroup.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         //! [2]
 
         //! [3]
-        qtQuickView.loadContent(m_mainQmlComponent);
+        qtQuickView.loadContent(m_mainQmlContent);
         //! [3]
 
     }
@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
         Log.i(TAG, "Status of QtQuickView: " + qtQmlStatus);
         if (qtQmlStatus == QtQmlStatus.READY)
             // Calls in a context of a Android main thread.
-            m_mainQmlComponent.setDataModel(m_model);
+            m_mainQmlContent.setDataModel(m_model);
     }
     //! [4]
 

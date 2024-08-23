@@ -16,7 +16,7 @@ import org.qtproject.qt.android.QtQuickView
 
 //! [MainActivity definition]
 class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
-    private val m_mainQmlComponent: Main = Main()
+    private val m_mainQmlContent: Main = Main()
     private val m_listModel = MyListModel()
 //! [MainActivity definition]
 
@@ -43,15 +43,15 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
         }
 //! [Adding control buttons]
 //! [Loading the QML component]
-        m_mainQmlComponent.setStatusChangeListener(this)
-        qtQuickView.loadContent(m_mainQmlComponent)
+        m_mainQmlContent.setStatusChangeListener(this)
+        qtQuickView.loadContent(m_mainQmlContent)
 //! [Loading the QML component]
     }
 
 //! [Linking the data model]
     override fun onStatusChanged(qtQmlStatus: QtQmlStatus) {
         if (qtQmlStatus === QtQmlStatus.READY) {
-            m_mainQmlComponent.setDataModel(m_listModel)
+            m_mainQmlContent.setDataModel(m_listModel)
         }
     }
 //! [Linking the data model]
