@@ -990,34 +990,40 @@ TestCase {
             property alias modalPopupWithoutDim: modalPopupWithoutDim
             visible: true
             Drawer {
-                z: 0
                 id: firstDrawer
+                z: 0
+                popupType: Popup.Item
             }
             Drawer {
-                z: 1
                 id: secondDrawer
+                z: 1
+                popupType: Popup.Item
             }
             Popup {
                 id: modalPopup
                 z: 2
+                popupType: Popup.Item
                 modal: true
                 exit: Transition { PauseAnimation { duration: 200 } }
             }
             Popup {
                 id: modelessPopup
                 z: 3
+                popupType: Popup.Item
                 dim: true
                 exit: Transition { PauseAnimation { duration: 200 } }
             }
             Popup {
                 id: plainPopup
                 z: 4
+                popupType: Popup.Item
                 enter: Transition { PauseAnimation { duration: 200 } }
                 exit: Transition { PauseAnimation { duration: 200 } }
             }
             Popup {
                 id: modalPopupWithoutDim
                 z: 5
+                popupType: Popup.Item
                 dim: false
                 modal: true
                 exit: Transition { PauseAnimation { duration: 200 } }
