@@ -174,7 +174,7 @@ class Q_QUICKLAYOUTS_EXPORT QQuickLayoutAttached : public QObject
     Q_PROPERTY(qreal maximumHeight READ maximumHeight WRITE setMaximumHeight NOTIFY maximumHeightChanged FINAL)
     Q_PROPERTY(bool fillHeight READ fillHeight WRITE setFillHeight NOTIFY fillHeightChanged FINAL)
     Q_PROPERTY(bool fillWidth READ fillWidth WRITE setFillWidth NOTIFY fillWidthChanged FINAL)
-    Q_PROPERTY(QQuickLayout::SizePolicy useDefaultSizePolicy READ useDefaultSizePolicy WRITE setUseDefaultSizePolicy NOTIFY useDefaultSizePolicyChanged FINAL)
+    Q_PROPERTY(QQuickLayout::SizePolicy useDefaultSizePolicy READ useDefaultSizePolicy WRITE setUseDefaultSizePolicy NOTIFY useDefaultSizePolicyChanged FINAL REVISION(6, 8))
     Q_PROPERTY(int row READ row WRITE setRow NOTIFY rowChanged FINAL)
     Q_PROPERTY(int column READ column WRITE setColumn NOTIFY columnChanged FINAL)
     Q_PROPERTY(int rowSpan READ rowSpan WRITE setRowSpan NOTIFY rowSpanChanged FINAL)
@@ -347,7 +347,7 @@ Q_SIGNALS:
     void maximumHeightChanged();
     void fillWidthChanged();
     void fillHeightChanged();
-    void useDefaultSizePolicyChanged();
+    Q_REVISION(6, 8) void useDefaultSizePolicyChanged();
     void leftMarginChanged();
     void topMarginChanged();
     void rightMarginChanged();
