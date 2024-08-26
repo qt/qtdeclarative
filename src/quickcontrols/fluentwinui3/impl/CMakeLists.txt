@@ -5,6 +5,7 @@
 ## qtquickcontrols2fluentwinui3styleimplplugin Plugin:
 #####################################################################
 set(qml_files
+    "ButtonBackground.qml"
     "CheckIndicator.qml"
     "RadioIndicator.qml"
     "SwitchIndicator.qml"

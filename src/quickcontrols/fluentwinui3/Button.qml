@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Controls.impl
+import QtQuick.Controls.FluentWinUI3.impl
 import QtQuick.Templates as T
 
 T.Button {
@@ -25,21 +26,21 @@ T.Button {
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
 
-    icon.width: 16
-    icon.height: 16
+    icon.width: config.icon.width
+    icon.height: config.icon.height
     icon.color: __buttonText
 
     readonly property color __buttonText: {
         if (control.down) {
             return (control.checked || control.highlighted)
                 ? Application.styleHints.colorScheme == Qt.Light
-                    ? Qt.rgba(1, 1, 1, 0.7) : Qt.rgba(0, 0, 0, 0.5)
+                    ? Color.transparent("white", 0.7) : Color.transparent("black", 0.5)
                 : (Application.styleHints.colorScheme === Qt.Light
-                    ? Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.62)
-                    : Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.7725))
+                    ? Color.transparent(control.palette.buttonText, 0.62)
+                    : Color.transparent(control.palette.buttonText, 0.7725))
         } else if (control.checked || control.highlighted) {
             return (Application.styleHints.colorScheme === Qt.Dark && !control.enabled)
-                ? Qt.rgba(1, 1, 1, 0.5302)
+                ? Color.transparent("white", 0.5302)
                 : (Application.styleHints.colorScheme === Qt.Dark ? "black" : "white")
         } else {
             return control.palette.buttonText
@@ -67,7 +68,11 @@ T.Button {
         color: control.icon.color
     }
 
-    background: StyleImage {
-        imageConfig: control.config.background
+    background: ButtonBackground {
+        control: control
+        implicitHeight: control.config.background.height
+        implicitWidth: control.config.background.width
+        radius: control.config.background.topOffset
+        subtle: control.flat
     }
 }

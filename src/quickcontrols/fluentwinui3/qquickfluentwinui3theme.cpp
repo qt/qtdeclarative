@@ -32,6 +32,8 @@ enum WinUI3Color {
     controlDisabled,                    // Color for disabled controls
     controlStrokeDefault,               // Color for gradient stops in elevations (pressed or disabled state)
     controlStrokeSecondary,             // Color for gradient stops in elevations
+    controlStrokeAccentDefault,         // Color for gradient stops in elevations for accent controls
+    controlStrokeAccentSecondary,       // Color for gradient stops in elevations for accent controls
     accentDefault,                      // Default color for accent fills on controls
     accentDisabled,                     // Default color for accent fills on disabled controls
     accentSecondary,                    // Color for accent fills on hovered controls
@@ -49,6 +51,8 @@ const static QColor WINUI3ColorsLight [] {
     QColor(0xF9,0xF9,0xF9,0x4D), //controlDisabled
     QColor(0x00,0x00,0x00,0x0F), //controlStrokeDefault
     QColor(0x00,0x00,0x00,0x29), //controlStrokeSecondary
+    QColor(0xFF,0xFF,0xFF,0x14), //controlStrokeAccentDefault
+    QColor(0x00,0x00,0x00,0x66), //controlStrokeAccentSecondary
     QColor(0x00,0x5F,0xB8,0xFF), //accentDefault
     QColor(0x00,0x00,0x00,0x37), //accentDisabled
     QColor(0x00,0x5F,0xB8,0xE6), //accentSecondary
@@ -66,6 +70,8 @@ const static QColor WINUI3ColorsDark[] {
     QColor(0xFF,0xFF,0xFF,0x11), //controlDisabled
     QColor(0xFF,0xFF,0xFF,0x12), //controlStrokeDefault
     QColor(0xFF,0xFF,0xFF,0x18), //controlStrokeSecondary
+    QColor(0xFF,0xFF,0xFF,0x14), //controlStrokeAccentDefault
+    QColor(0x00,0x00,0x00,0x23), //controlStrokeAccentSecondary
     QColor(0x60,0xCD,0xFF,0xFF), //accentDefault
     QColor(0xFF,0xFF,0xFF,0x28), //accentDisabled
     QColor(0x60,0xCD,0xFF,0xE6) // accentSecondary
@@ -100,6 +106,11 @@ static void populateSystemPalette(QPalette &palette)
     palette.setColor(QPalette::Disabled, QPalette::Highlight, WINUI3Colors[colorSchemeIndex][accentDisabled]);
 
     palette.setColor(QPalette::All, QPalette::HighlightedText, Qt::white);
+
+    palette.setColor(QPalette::All, QPalette::Light, WINUI3Colors[colorSchemeIndex][controlStrokeAccentDefault]);
+    palette.setColor(QPalette::All, QPalette::Midlight, WINUI3Colors[colorSchemeIndex][controlStrokeDefault]);
+    palette.setColor(QPalette::All, QPalette::Dark, WINUI3Colors[colorSchemeIndex][controlStrokeSecondary]);
+    palette.setColor(QPalette::All, QPalette::Mid, WINUI3Colors[colorSchemeIndex][controlStrokeAccentSecondary]);
 }
 
 static void populateThemeFont(QQuickTheme *theme)
