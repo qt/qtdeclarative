@@ -193,7 +193,7 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
         if (event->isBeginEvent())
             m_pressedInsideTarget = target() && currentPoints().size() > 0;
 
-        for (const QQuickHandlerPoint &p : currentPoints()) {
+        for (const QQuickHandlerPoint &p : std::as_const(currentPoints())) {
             if (!allOverThreshold)
                 break;
             auto point = event->pointById(p.id());
