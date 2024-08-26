@@ -498,7 +498,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
 {
     QQuickMultiPointHandler::handlePointerEventImpl(event);
     if (Q_UNLIKELY(lcPinchHandler().isDebugEnabled())) {
-        for (const QQuickHandlerPoint &p : currentPoints())
+        for (const QQuickHandlerPoint &p : std::as_const(currentPoints()))
             qCDebug(lcPinchHandler) << Qt::hex << p.id() << p.sceneGrabPosition() << "->" << p.scenePosition();
     }
 
@@ -533,7 +533,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
     {
         const bool containsReleasedPoints = event->isEndEvent();
         QVector<QEventPoint> chosenPoints;
-        for (const QQuickHandlerPoint &p : currentPoints()) {
+        for (const QQuickHandlerPoint &p : std::as_const(currentPoints())) {
             auto ep = event->pointById(p.id());
             Q_ASSERT(ep);
             chosenPoints << *ep;
