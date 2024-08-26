@@ -23,5 +23,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "qtabstractlistmodel_kotlin"
-include ':app'
+include(":app")
 
