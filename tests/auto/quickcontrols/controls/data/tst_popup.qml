@@ -293,6 +293,7 @@ TestCase {
         let control = createTemporaryObject(popupControl, testCase, {visible: true, margins: 0})
         verify(control)
 
+        control.popupType = Popup.Item
         control.scale = 1.0
         control.width = control.implicitWidth = testCase.width + 10
         control.height = control.implicitHeight = testCase.height + 10
