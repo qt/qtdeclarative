@@ -2016,7 +2016,7 @@ void QQmlJSTypePropagator::generate_PushCatchContext(int index, int name)
 void QQmlJSTypePropagator::generate_PushWithContext()
 {
     m_state.setHasSideEffects(true);
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_POPULATES_ACC();
 }
 
 void QQmlJSTypePropagator::generate_PushBlockContext(int index)
@@ -2653,6 +2653,7 @@ void QQmlJSTypePropagator::generate_Sub(int lhs)
 
 void QQmlJSTypePropagator::generate_InitializeBlockDeadTemporalZone(int firstReg, int count)
 {
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->emptyType()));
     for (int reg = firstReg, end = firstReg + count; reg < end; ++reg)
         setRegister(reg, m_typeResolver->globalType(m_typeResolver->emptyType()));
 }
@@ -2727,43 +2728,142 @@ QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
 bool QQmlJSTypePropagator::populatesAccumulator(QV4::Moth::Instr::Type instr) const
 {
     switch (instr) {
-    // the following instructions are not expected to produce output in the accumulator
-    case QV4::Moth::Instr::Type::Ret:
+    case QV4::Moth::Instr::Type::CheckException:
+    case QV4::Moth::Instr::Type::CloneBlockContext:
+    case QV4::Moth::Instr::Type::ConvertThisToObject:
+    case QV4::Moth::Instr::Type::CreateCallContext:
+    case QV4::Moth::Instr::Type::DeadTemporalZoneCheck:
+    case QV4::Moth::Instr::Type::Debug:
+    case QV4::Moth::Instr::Type::DeclareVar:
+    case QV4::Moth::Instr::Type::IteratorClose:
+    case QV4::Moth::Instr::Type::IteratorNext:
+    case QV4::Moth::Instr::Type::IteratorNextForYieldStar:
     case QV4::Moth::Instr::Type::Jump:
     case QV4::Moth::Instr::Type::JumpFalse:
+    case QV4::Moth::Instr::Type::JumpNoException:
+    case QV4::Moth::Instr::Type::JumpNotUndefined:
     case QV4::Moth::Instr::Type::JumpTrue:
-    case QV4::Moth::Instr::Type::StoreReg:
+    case QV4::Moth::Instr::Type::MoveConst:
+    case QV4::Moth::Instr::Type::MoveReg:
+    case QV4::Moth::Instr::Type::MoveRegExp:
+    case QV4::Moth::Instr::Type::PopContext:
+    case QV4::Moth::Instr::Type::PushBlockContext:
+    case QV4::Moth::Instr::Type::PushCatchContext:
+    case QV4::Moth::Instr::Type::PushScriptContext:
+    case QV4::Moth::Instr::Type::Resume:
+    case QV4::Moth::Instr::Type::Ret:
+    case QV4::Moth::Instr::Type::SetException:
+    case QV4::Moth::Instr::Type::SetLookup:
+    case QV4::Moth::Instr::Type::SetUnwindHandler:
     case QV4::Moth::Instr::Type::StoreElement:
     case QV4::Moth::Instr::Type::StoreLocal:
     case QV4::Moth::Instr::Type::StoreNameSloppy:
     case QV4::Moth::Instr::Type::StoreNameStrict:
     case QV4::Moth::Instr::Type::StoreProperty:
-    case QV4::Moth::Instr::Type::SetException:
-    case QV4::Moth::Instr::Type::SetLookup:
-    case QV4::Moth::Instr::Type::MoveConst:
-    case QV4::Moth::Instr::Type::MoveReg:
-    case QV4::Moth::Instr::Type::MoveRegExp:
-    case QV4::Moth::Instr::Type::CheckException:
-    case QV4::Moth::Instr::Type::CreateCallContext:
-    case QV4::Moth::Instr::Type::PopContext:
-    case QV4::Moth::Instr::Type::JumpNoException:
-    case QV4::Moth::Instr::Type::JumpNotUndefined:
+    case QV4::Moth::Instr::Type::StoreReg:
+    case QV4::Moth::Instr::Type::StoreScopedLocal:
+    case QV4::Moth::Instr::Type::StoreSuperProperty:
     case QV4::Moth::Instr::Type::ThrowException:
     case QV4::Moth::Instr::Type::ThrowOnNullOrUndefined:
-    case QV4::Moth::Instr::Type::SetUnwindHandler:
-    case QV4::Moth::Instr::Type::PushCatchContext:
-    case QV4::Moth::Instr::Type::PushWithContext:
     case QV4::Moth::Instr::Type::UnwindDispatch:
     case QV4::Moth::Instr::Type::UnwindToLabel:
-    case QV4::Moth::Instr::Type::InitializeBlockDeadTemporalZone:
-    case QV4::Moth::Instr::Type::ConvertThisToObject:
-    case QV4::Moth::Instr::Type::DeadTemporalZoneCheck:
-    case QV4::Moth::Instr::Type::IteratorClose:
-    case QV4::Moth::Instr::Type::IteratorNext:
-    case QV4::Moth::Instr::Type::IteratorNextForYieldStar:
+    case QV4::Moth::Instr::Type::Yield:
+    case QV4::Moth::Instr::Type::YieldStar:
         return false;
-    default:
+    case QV4::Moth::Instr::Type::Add:
+    case QV4::Moth::Instr::Type::As:
+    case QV4::Moth::Instr::Type::BitAnd:
+    case QV4::Moth::Instr::Type::BitAndConst:
+    case QV4::Moth::Instr::Type::BitOr:
+    case QV4::Moth::Instr::Type::BitOrConst:
+    case QV4::Moth::Instr::Type::BitXor:
+    case QV4::Moth::Instr::Type::BitXorConst:
+    case QV4::Moth::Instr::Type::CallGlobalLookup:
+    case QV4::Moth::Instr::Type::CallName:
+    case QV4::Moth::Instr::Type::CallPossiblyDirectEval:
+    case QV4::Moth::Instr::Type::CallProperty:
+    case QV4::Moth::Instr::Type::CallPropertyLookup:
+    case QV4::Moth::Instr::Type::CallQmlContextPropertyLookup:
+    case QV4::Moth::Instr::Type::CallValue:
+    case QV4::Moth::Instr::Type::CallWithReceiver:
+    case QV4::Moth::Instr::Type::CallWithSpread:
+    case QV4::Moth::Instr::Type::CmpEq:
+    case QV4::Moth::Instr::Type::CmpEqInt:
+    case QV4::Moth::Instr::Type::CmpEqNull:
+    case QV4::Moth::Instr::Type::CmpGe:
+    case QV4::Moth::Instr::Type::CmpGt:
+    case QV4::Moth::Instr::Type::CmpIn:
+    case QV4::Moth::Instr::Type::CmpInstanceOf:
+    case QV4::Moth::Instr::Type::CmpLe:
+    case QV4::Moth::Instr::Type::CmpLt:
+    case QV4::Moth::Instr::Type::CmpNe:
+    case QV4::Moth::Instr::Type::CmpNeInt:
+    case QV4::Moth::Instr::Type::CmpNeNull:
+    case QV4::Moth::Instr::Type::CmpStrictEqual:
+    case QV4::Moth::Instr::Type::CmpStrictNotEqual:
+    case QV4::Moth::Instr::Type::Construct:
+    case QV4::Moth::Instr::Type::ConstructWithSpread:
+    case QV4::Moth::Instr::Type::CreateClass:
+    case QV4::Moth::Instr::Type::CreateMappedArgumentsObject:
+    case QV4::Moth::Instr::Type::CreateRestParameter:
+    case QV4::Moth::Instr::Type::CreateUnmappedArgumentsObject:
+    case QV4::Moth::Instr::Type::Decrement:
+    case QV4::Moth::Instr::Type::DefineArray:
+    case QV4::Moth::Instr::Type::DefineObjectLiteral:
+    case QV4::Moth::Instr::Type::DeleteName:
+    case QV4::Moth::Instr::Type::DeleteProperty:
+    case QV4::Moth::Instr::Type::DestructureRestElement:
+    case QV4::Moth::Instr::Type::Div:
+    case QV4::Moth::Instr::Type::Exp:
+    case QV4::Moth::Instr::Type::GetException:
+    case QV4::Moth::Instr::Type::GetIterator:
+    case QV4::Moth::Instr::Type::GetLookup:
+    case QV4::Moth::Instr::Type::GetOptionalLookup:
+    case QV4::Moth::Instr::Type::GetTemplateObject:
+    case QV4::Moth::Instr::Type::Increment:
+    case QV4::Moth::Instr::Type::InitializeBlockDeadTemporalZone:
+    case QV4::Moth::Instr::Type::LoadClosure:
+    case QV4::Moth::Instr::Type::LoadConst:
+    case QV4::Moth::Instr::Type::LoadElement:
+    case QV4::Moth::Instr::Type::LoadFalse:
+    case QV4::Moth::Instr::Type::LoadGlobalLookup:
+    case QV4::Moth::Instr::Type::LoadImport:
+    case QV4::Moth::Instr::Type::LoadInt:
+    case QV4::Moth::Instr::Type::LoadLocal:
+    case QV4::Moth::Instr::Type::LoadName:
+    case QV4::Moth::Instr::Type::LoadNull:
+    case QV4::Moth::Instr::Type::LoadOptionalProperty:
+    case QV4::Moth::Instr::Type::LoadProperty:
+    case QV4::Moth::Instr::Type::LoadQmlContextPropertyLookup:
+    case QV4::Moth::Instr::Type::LoadReg:
+    case QV4::Moth::Instr::Type::LoadRuntimeString:
+    case QV4::Moth::Instr::Type::LoadScopedLocal:
+    case QV4::Moth::Instr::Type::LoadSuperConstructor:
+    case QV4::Moth::Instr::Type::LoadSuperProperty:
+    case QV4::Moth::Instr::Type::LoadTrue:
+    case QV4::Moth::Instr::Type::LoadUndefined:
+    case QV4::Moth::Instr::Type::LoadZero:
+    case QV4::Moth::Instr::Type::Mod:
+    case QV4::Moth::Instr::Type::Mul:
+    case QV4::Moth::Instr::Type::PushWithContext:
+    case QV4::Moth::Instr::Type::Shl:
+    case QV4::Moth::Instr::Type::ShlConst:
+    case QV4::Moth::Instr::Type::Shr:
+    case QV4::Moth::Instr::Type::ShrConst:
+    case QV4::Moth::Instr::Type::Sub:
+    case QV4::Moth::Instr::Type::TailCall:
+    case QV4::Moth::Instr::Type::ToObject:
+    case QV4::Moth::Instr::Type::TypeofName:
+    case QV4::Moth::Instr::Type::TypeofValue:
+    case QV4::Moth::Instr::Type::UCompl:
+    case QV4::Moth::Instr::Type::UMinus:
+    case QV4::Moth::Instr::Type::UNot:
+    case QV4::Moth::Instr::Type::UPlus:
+    case QV4::Moth::Instr::Type::UShr:
+    case QV4::Moth::Instr::Type::UShrConst:
         return true;
+    default:
+        Q_UNREACHABLE_RETURN(false);
     }
 }
 
@@ -2789,8 +2889,12 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
 
     bool populates = populatesAccumulator(instr);
     int changedIndex = m_state.changedRegisterIndex();
-    Q_ASSERT((populates && changedIndex == Accumulator && m_state.accumulatorOut().isValid())
-             || (!populates && changedIndex != Accumulator));
+
+    // TODO: Find a way to deal with instructions that change multiple registers
+    if (instr != QV4::Moth::Instr::Type::InitializeBlockDeadTemporalZone) {
+        Q_ASSERT((populates && changedIndex == Accumulator && m_state.accumulatorOut().isValid())
+                 || (!populates && changedIndex != Accumulator));
+    }
 
     const auto noError = std::none_of(m_errors->cbegin(), m_errors->cend(),
                                       [](const auto &e) { return e.isError(); });
