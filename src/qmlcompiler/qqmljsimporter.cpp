@@ -6,6 +6,7 @@
 #include "qqmljstypereader_p.h"
 #include "qqmljsimportvisitor_p.h"
 #include "qqmljslogger_p.h"
+#include "qqmljsutils_p.h"
 
 #include <QtQml/private/qqmlimportresolver_p.h>
 
@@ -162,10 +163,10 @@ static QStringList aliases(const QQmlJSScope::ConstPtr &scope)
 }
 
 QQmlJSImporter::QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
-                               bool useOptionalImports)
+                               QQmlJSImporterFlags flags)
     : m_importPaths(importPaths),
       m_mapper(mapper),
-      m_useOptionalImports(useOptionalImports),
+      m_flags(flags),
       m_importVisitor([](QQmlJS::AST::Node *rootNode, QQmlJSImporter *self,
                          const ImportVisitorPrerequisites &p) {
           auto visitor = std::unique_ptr<QQmlJS::AST::BaseVisitor>(new QQmlJSImportVisitor(
@@ -367,7 +368,7 @@ void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
     for (auto const &import : std::as_const(import.imports)) {
         if (import.flags & QQmlDirParser::Import::Optional) {
             hasOptionalImports = true;
-            if (!m_useOptionalImports) {
+            if (!useOptionalImports()) {
                 continue;
             }
 
@@ -380,7 +381,7 @@ void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
                      isDependency);
     }
 
-    if (hasOptionalImports && !m_useOptionalImports) {
+    if (hasOptionalImports && !useOptionalImports()) {
         m_warnings.append(
                 { u"%1 uses optional imports which are not supported. Some types might not be found."_s
                           .arg(import.name),
@@ -883,15 +884,19 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
 
 QQmlJSScope::Ptr QQmlJSImporter::localFile2ScopeTree(const QString &filePath)
 {
-    const auto seen = m_importedFiles.find(filePath);
+    const QString sourceFolderFile = preferQmlFilesFromSourceFolder()
+            ? QQmlJSUtils::qmlSourcePathFromBuildPath(m_mapper, filePath)
+            : filePath;
+
+    const auto seen = m_importedFiles.find(sourceFolderFile);
     if (seen != m_importedFiles.end())
         return *seen;
 
-    return *m_importedFiles.insert(filePath, {
-                                       QQmlJSScope::create(),
-                                       QSharedPointer<QDeferredFactory<QQmlJSScope>>(
-                                            new QDeferredFactory<QQmlJSScope>(this, filePath))
-                                   });
+    return *m_importedFiles.insert(
+            sourceFolderFile,
+            { QQmlJSScope::create(),
+              QSharedPointer<QDeferredFactory<QQmlJSScope>>(new QDeferredFactory<QQmlJSScope>(
+                      this, sourceFolderFile)) });
 }
 
 QQmlJSScope::Ptr QQmlJSImporter::importFile(const QString &file)
