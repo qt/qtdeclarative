@@ -770,18 +770,21 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
     auto passResult = basicBlocks.run(function, m_flags, basicBlocksValidationFailed);
     auto &[blocks, annotations] = passResult;
 
-    QQmlJSTypePropagator propagator(m_unitGenerator, &m_typeResolver, m_logger, errors, blocks, annotations);
+    QQmlJSTypePropagator propagator(
+            m_unitGenerator, &m_typeResolver, m_logger, errors, blocks, annotations);
     passResult = propagator.run(function);
     if (!errors->isEmpty())
         return compileError();
 
-    QQmlJSShadowCheck shadowCheck(m_unitGenerator, &m_typeResolver, m_logger, errors, blocks, annotations);
+    QQmlJSShadowCheck shadowCheck(
+            m_unitGenerator, &m_typeResolver, m_logger, errors, blocks, annotations);
     passResult = shadowCheck.run(function);
     if (!errors->isEmpty())
         return compileError();
 
-    QQmlJSOptimizations optimizer(m_unitGenerator, &m_typeResolver, m_logger, errors, blocks, annotations,
-                                  basicBlocks.objectAndArrayDefinitions());
+    QQmlJSOptimizations optimizer(
+            m_unitGenerator, &m_typeResolver, m_logger, errors, blocks, annotations,
+            basicBlocks.objectAndArrayDefinitions());
     passResult = optimizer.run(function);
     if (!errors->isEmpty())
         return compileError();
@@ -797,9 +800,10 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
     if (!errors->isEmpty())
         return compileError();
 
-    QQmlJSCodeGenerator codegen(context, m_unitGenerator, &m_typeResolver, m_logger, errors, blocks, annotations);
+    QQmlJSCodeGenerator codegen(
+            context, m_unitGenerator, &m_typeResolver, m_logger, errors, blocks, annotations);
     QQmlJSAotFunction result = codegen.run(function, basicBlocksValidationFailed);
-    return !errors->isEmpty() ? compileError() : result;
+    return !errors->isEmpty() ? compileError() : std::move(result);
 }
 
 QQmlJSAotFunction QQmlJSAotCompiler::doCompileAndRecordAotStats(const QV4::Compiler::Context *context, QQmlJSCompilePass::Function *function,

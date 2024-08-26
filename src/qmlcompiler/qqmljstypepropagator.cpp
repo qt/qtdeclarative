@@ -30,8 +30,8 @@ QQmlJSTypePropagator::QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator 
                                            const QQmlJSTypeResolver *typeResolver,
                                            QQmlJSLogger *logger,
                                            QList<QQmlJS::DiagnosticMessage> *errors,
-                                           BasicBlocks basicBlocks,
-                                           InstructionAnnotations annotations,
+                                           const BasicBlocks &basicBlocks,
+                                           const InstructionAnnotations &annotations,
                                            QQmlSA::PassManager *passManager)
     : QQmlJSCompilePass(unitGenerator, typeResolver, logger, errors, basicBlocks, annotations),
       m_passManager(passManager)

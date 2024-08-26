@@ -23,8 +23,9 @@ class Q_QMLCOMPILER_EXPORT QQmlJSStorageInitializer : public QQmlJSCompilePass
 public:
     QQmlJSStorageInitializer(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
                              const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                             QList<QQmlJS::DiagnosticMessage> *errors, BasicBlocks basicBlocks,
-                             InstructionAnnotations annotations)
+                             QList<QQmlJS::DiagnosticMessage> *errors,
+                             const BasicBlocks &basicBlocks,
+                             const InstructionAnnotations &annotations)
         : QQmlJSCompilePass(jsUnitGenerator, typeResolver, logger, errors, basicBlocks, annotations)
     {}
 

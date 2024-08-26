@@ -264,8 +264,8 @@ public:
 
     QQmlJSCompilePass(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
                       const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                      QList<QQmlJS::DiagnosticMessage> *errors, BasicBlocks basicBlocks = {},
-                      InstructionAnnotations annotations = {})
+                      QList<QQmlJS::DiagnosticMessage> *errors, const BasicBlocks &basicBlocks = {},
+                      const InstructionAnnotations &annotations = {})
         : m_jsUnitGenerator(jsUnitGenerator)
         , m_typeResolver(typeResolver)
         , m_logger(logger)

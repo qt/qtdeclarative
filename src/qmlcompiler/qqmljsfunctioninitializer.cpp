@@ -254,7 +254,7 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
 
         QString name = u"binding for "_s; // ####
         ast = new (&pool) QQmlJS::AST::FunctionDeclaration(
-                pool.newString(name), /*formals*/ nullptr, body);
+                pool.newString(std::move(name)), /*formals*/ nullptr, body);
         ast->lbraceToken = astNode->firstSourceLocation();
         ast->functionToken = ast->lbraceToken;
         ast->rbraceToken = astNode->lastSourceLocation();

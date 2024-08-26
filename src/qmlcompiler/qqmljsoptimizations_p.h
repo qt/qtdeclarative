@@ -25,11 +25,11 @@ public:
 
     QQmlJSOptimizations(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                         const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                        QList<QQmlJS::DiagnosticMessage> *errors, BasicBlocks basicBlocks,
-                        InstructionAnnotations annotations,
+                        QList<QQmlJS::DiagnosticMessage> *errors, const BasicBlocks &basicBlocks,
+                        const InstructionAnnotations &annotations,
                         QList<ObjectOrArrayDefinition> objectAndArrayDefinitions)
         : QQmlJSCompilePass(unitGenerator, typeResolver, logger, errors, basicBlocks, annotations),
-          m_objectAndArrayDefinitions{ objectAndArrayDefinitions }
+          m_objectAndArrayDefinitions{ std::move(objectAndArrayDefinitions) }
     {
     }
 

@@ -57,8 +57,8 @@ QQmlJSCodeGenerator::QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerC
                                          const QQmlJSTypeResolver *typeResolver,
                                          QQmlJSLogger *logger,
                                          QList<QQmlJS::DiagnosticMessage> *errors,
-                                         BasicBlocks basicBlocks,
-                                         InstructionAnnotations annotations)
+                                         const BasicBlocks &basicBlocks,
+                                         const InstructionAnnotations &annotations)
     : QQmlJSCompilePass(unitGenerator, typeResolver, logger, errors, basicBlocks, annotations)
     , m_context(compilerContext)
 {}
@@ -282,7 +282,7 @@ QT_WARNING_POP
                 metaType(m_typeResolver->originalContainedType(function->argumentTypes[i])));
     }
 
-    result.signature = signature;
+    result.signature = std::move(signature);
     return result;
 }
 
