@@ -2827,36 +2827,37 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
         }
     }
 
-    if (!hasExplicit)
-    for (int ii = 0; ii < actions.size(); ++ii) {
-        QQuickStateAction &action = actions[ii];
+    if (!hasExplicit) {
+        for (int ii = 0; ii < actions.size(); ++ii) {
+            QQuickStateAction &action = actions[ii];
 
-        QObject *obj = action.property.object();
-        QString propertyName = action.property.name();
-        QObject *sObj = action.specifiedObject;
-        QString sPropertyName = action.specifiedProperty;
-        bool same = (obj == sObj);
+            QObject *obj = action.property.object();
+            QString propertyName = action.property.name();
+            QObject *sObj = action.specifiedObject;
+            QString sPropertyName = action.specifiedProperty;
+            bool same = (obj == sObj);
 
-        if ((targets.isEmpty() || targets.contains(obj) || (!same && targets.contains(sObj))) &&
-           (!d->exclude.contains(obj)) && (same || (!d->exclude.contains(sObj))) &&
-           (props.contains(propertyName) || (!same && props.contains(sPropertyName))
-               || (useType && action.property.propertyType() == d->interpolatorType))) {
-            QQuickStateAction myAction = action;
+            if ((targets.isEmpty() || targets.contains(obj) || (!same && targets.contains(sObj))) &&
+               (!d->exclude.contains(obj)) && (same || (!d->exclude.contains(sObj))) &&
+               (props.contains(propertyName) || (!same && props.contains(sPropertyName))
+                   || (useType && action.property.propertyType() == d->interpolatorType))) {
+                QQuickStateAction myAction = action;
 
-            if (d->fromIsDefined)
-                myAction.fromValue = d->from;
-            else
-                myAction.fromValue = QVariant();
-            if (d->toIsDefined)
-                myAction.toValue = d->to;
+                if (d->fromIsDefined)
+                    myAction.fromValue = d->from;
+                else
+                    myAction.fromValue = QVariant();
+                if (d->toIsDefined)
+                    myAction.toValue = d->to;
 
-            d->convertVariant(myAction.fromValue, d->interpolatorType ? QMetaType(d->interpolatorType) : myAction.property.propertyMetaType());
-            d->convertVariant(myAction.toValue, d->interpolatorType ? QMetaType(d->interpolatorType) : myAction.property.propertyMetaType());
+                d->convertVariant(myAction.fromValue, d->interpolatorType ? QMetaType(d->interpolatorType) : myAction.property.propertyMetaType());
+                d->convertVariant(myAction.toValue, d->interpolatorType ? QMetaType(d->interpolatorType) : myAction.property.propertyMetaType());
 
-            modified << action.property;
+                modified << action.property;
 
-            newActions << myAction;
-            action.fromValue = myAction.toValue;
+                newActions << myAction;
+                action.fromValue = myAction.toValue;
+            }
         }
     }
     return newActions;
