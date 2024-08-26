@@ -6,7 +6,6 @@ import QtQuick.Window
 import QtTest
 import QtQuick.Controls
 import Qt.test.controls
-import QtQuick.NativeStyle as NativeStyle
 
 TestCase {
     id: testCase

@@ -6,7 +6,6 @@ import QtTest
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Templates as T
-import QtQuick.NativeStyle as NativeStyle
 import Qt.test.controls
 
 TestCase {
