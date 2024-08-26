@@ -62,6 +62,12 @@ private:
 };
 }
 
+enum QQmlJSImporterFlag {
+    UseOptionalImports = 0x1,
+    PreferQmlFilesFromSourceFolder = 0x2
+};
+Q_DECLARE_FLAGS(QQmlJSImporterFlags, QQmlJSImporterFlag)
+
 class QQmlJSImportVisitor;
 class QQmlJSLogger;
 class Q_QMLCOMPILER_EXPORT QQmlJSImporter
@@ -70,7 +76,7 @@ public:
     using ImportedTypes = QQmlJS::ContextualTypes;
 
     QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
-                   bool useOptionalImports = false);
+                   QQmlJSImporterFlags flags = QQmlJSImporterFlags{});
 
     QQmlJSResourceFileMapper *resourceFileMapper() const { return m_mapper; }
     void setResourceFileMapper(QQmlJSResourceFileMapper *mapper) { m_mapper = mapper; }
@@ -213,7 +219,12 @@ private:
 
     QQmlJSResourceFileMapper *m_mapper = nullptr;
     QQmlJSResourceFileMapper *m_metaDataMapper = nullptr;
-    bool m_useOptionalImports;
+    QQmlJSImporterFlags m_flags;
+    bool useOptionalImports() const { return m_flags.testFlag(UseOptionalImports); };
+    bool preferQmlFilesFromSourceFolder() const
+    {
+        return m_flags.testFlag(PreferQmlFilesFromSourceFolder);
+    };
 
     ImportVisitor m_importVisitor;
 };

@@ -882,7 +882,7 @@ void tst_qqmljsscope::attachedTypeResolution()
 
     logger->setCode(qmlFile.readAll());
     logger->setFileName(QString(qmlFile.filesystemFileName().string().c_str()));
-    QQmlJSImporter importer{ { "data" }, nullptr, true };
+    QQmlJSImporter importer{ { "data" }, nullptr, UseOptionalImports };
     QStringList defaultImportPaths =
             QStringList{ QLibraryInfo::path(QLibraryInfo::QmlImportsPath) };
     importer.setImportPaths(defaultImportPaths);
@@ -940,7 +940,7 @@ void tst_qqmljsscope::builtinTypeResolution()
     QFETCH(bool, valid);
     QFETCH(QString, typeName);
 
-    QQmlJSImporter importer{ { "data" }, nullptr, true };
+    QQmlJSImporter importer{ { "data" }, nullptr, UseOptionalImports };
     QStringList defaultImportPaths =
             QStringList{ QLibraryInfo::path(QLibraryInfo::QmlImportsPath) };
     importer.setImportPaths(defaultImportPaths);

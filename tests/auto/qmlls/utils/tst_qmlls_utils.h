@@ -83,7 +83,8 @@ private slots:
 private:
     using EnvironmentAndFile = std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>;
 
-    EnvironmentAndFile createEnvironmentAndLoadFile(const QString &file);
+    EnvironmentAndFile createEnvironmentAndLoadFile(const QString &file,
+                                                    const QStringList &extraBuildDir = {});
 
     ExpectedCompletions quickSnippets(const QStringView firstPrefix,
                                       const QStringView secondPrefix) const;

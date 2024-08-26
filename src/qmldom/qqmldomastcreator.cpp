@@ -346,11 +346,23 @@ bool QQmlDomAstCreator::visit(UiProgram *program)
         qmlFilePtr->addImport(selfDirImport);
 
         if (loadDependencies) {
-            const QString currentFileDir =
-                    QFileInfo(qmlFile.canonicalFilePath()).dir().canonicalPath();
-            envPtr->loadFile(FileToLoad::fromFileSystem(
-                                     envPtr, selfDirImport.uri.absoluteLocalPath(currentFileDir)),
+            const QString currentFile = envPtr->domCreationOptions().testFlag(WithSemanticAnalysis)
+                    ? QQmlJSUtils::qmlBuildPathFromSourcePath(
+                              envPtr->semanticAnalysis().m_mapper.get(),
+                              qmlFile.canonicalFilePath())
+                    : qmlFile.canonicalFilePath();
+
+            const QDir implicitImportDir = QFileInfo(currentFile).dir();
+            const QString implicitImportDirPath = implicitImportDir.canonicalPath();
+            envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, implicitImportDirPath),
                              DomItem::Callback(), DomType::QmlDirectory);
+
+            // also load the qmldir from the implicit directory, if existing
+            if (implicitImportDir.exists(u"qmldir"_s)) {
+                const QString implicitImportQmldir = implicitImportDirPath + u"/qmldir"_s;
+                envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, implicitImportQmldir),
+                                 DomItem::Callback(), DomType::QmldirFile);
+            }
         }
     }
     // add implicit imports from the environment (QML, QtQml for example) and load them in the Dom

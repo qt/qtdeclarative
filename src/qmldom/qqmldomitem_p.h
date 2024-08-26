@@ -880,6 +880,8 @@ public:
     std::weak_ptr<DomEnvironment> environment() const { return m_environment; }
     QString canonicalPath() const { return m_canonicalPath; }
     QString logicalPath() const { return m_logicalPath; }
+    void setCanonicalPath(const QString &canonicalPath) { m_canonicalPath = canonicalPath; }
+    void setLogicalPath(const QString &logicalPath) { m_logicalPath = logicalPath; }
     std::optional<InMemoryContents> content() const { return m_content; }
 
 private:

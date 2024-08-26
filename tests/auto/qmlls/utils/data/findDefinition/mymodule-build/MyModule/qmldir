@@ -1,0 +1,5 @@
+module MyModule
+prefer :/qt/qml/MyModule/
+Main 254.0 Main.qml
+MyComponent 254.0 X/Y/Z/MyComponent.qml
+
