@@ -6,7 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_target_compile_qml_to_cpp
-\target qt6_target_compile_qml_to_cpp
+\keyword qt6_target_compile_qml_to_cpp
 
 This command is removed in Qt 6.4 in favor of \l{qt6_add_qml_module} which can
 now invoke qmltc internally as described in the \l{qmltc-cmake}{qmltc section}.

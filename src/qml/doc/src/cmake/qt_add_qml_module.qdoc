@@ -6,7 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_add_qml_module
-\target qt6_add_qml_module
+\keyword qt6_add_qml_module
 
 \brief Defines a QML module.
 
