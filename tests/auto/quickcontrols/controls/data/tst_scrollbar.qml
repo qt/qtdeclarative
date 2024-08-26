@@ -4,7 +4,6 @@
 import QtQuick
 import QtTest
 import QtQuick.Controls
-import QtQuick.NativeStyle as NativeStyle
 
 TestCase {
     id: testCase
@@ -773,14 +772,11 @@ TestCase {
         compare(control.visible, true)
         compare(control.policy, ScrollBar.AsNeeded)
 
-        let windowsStyle = false
-        let macOSStyle = false
-        if (control.background instanceof NativeStyle.StyleItem) {
-            windowsStyle = Qt.platform.pluginName === "windows"
-            macOSStyle = Qt.platform.pluginName === "cocoa"
-        }
+        // some ScrollBar style implementations, e.g. native macOS
+        // and Windows styles, may have no internal states
+        const hasStates = control.states.length > 0 || control.contentItem.states.length > 0
 
-        if (!windowsStyle && !macOSStyle) {
+        if (hasStates) {
             control.size = 0.5
             verify(control.state === "active" || control.contentItem.state === "active")
 
@@ -792,7 +788,7 @@ TestCase {
 
         control.policy = ScrollBar.AlwaysOn
         compare(control.visible, true)
-        if (!windowsStyle && !macOSStyle) {
+        if (hasStates) {
             verify(control.state === "active" || control.contentItem.state === "active")
         }
     }
