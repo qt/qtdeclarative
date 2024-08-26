@@ -630,7 +630,7 @@ void QQuickMenuPrivate::setNativeMenuVisible(bool visible)
                 }
             }
         }
-        handle->showPopup(window, QHighDpi::toNativePixels(targetRect, window),
+        handle->showPopup(window, QHighDpi::toNativeLocalPosition(targetRect, window),
             /*menuItem ? menuItem->handle() : */nullptr);
     } else {
         handle->dismiss();
