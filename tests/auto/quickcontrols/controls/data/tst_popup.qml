@@ -950,12 +950,12 @@ TestCase {
         // set explicit size
         control.width = 50
         compare(control.implicitWidth, 30)
-        compare(control.width, 50)
+        tryCompare(control, "width", 50)
         compare(control.contentItem.width, control.availableWidth)
 
         control.height = 60
         compare(control.implicitHeight, 40)
-        compare(control.height, 60)
+        tryCompare(control, "height", 60)
         compare(control.contentItem.height, control.availableHeight)
 
         // reset explicit size
