@@ -16,6 +16,9 @@ public:
 
 private slots:
     void findResourceFilesFromBuildFolders();
+
+    void qmlFileSourcePathFromBuildPath_data();
+    void qmlFileSourcePathFromBuildPath();
 };
 
 #endif // TST_QQMLJSUTILS_P_H
