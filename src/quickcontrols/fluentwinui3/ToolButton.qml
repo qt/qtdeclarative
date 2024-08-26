@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Controls.impl
+import QtQuick.Controls.FluentWinUI3.impl
 import QtQuick.Templates as T
 
 T.ToolButton {
@@ -65,7 +66,11 @@ T.ToolButton {
         color: control.icon.color
     }
 
-    background: StyleImage {
-        imageConfig: control.config.background
+    background: ButtonBackground {
+        control: control
+        implicitHeight: control.config.background.height
+        implicitWidth: implicitHeight
+        radius: control.config.background.topOffset
+        subtle: !(control.checked || control.highlighted) || control.flat
     }
 }

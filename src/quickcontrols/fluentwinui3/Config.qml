@@ -14,9 +14,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17023;8603:12521;2373:10903"
-                        readonly property string filePath: "dark/images/button-background-checked.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -84,9 +83,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17029;8603:12527;2373:10903"
-                        readonly property string filePath: "dark/images/button-background-checked-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -154,9 +152,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17027;8603:12525;2373:10903"
-                        readonly property string filePath: "dark/images/button-background-checked-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -224,9 +221,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17031;8603:12529;2373:10903"
-                        readonly property string filePath: "dark/images/button-background-checked-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -294,9 +290,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17025;8603:12523;2373:10903"
-                        readonly property string filePath: "dark/images/button-background-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -364,9 +359,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17019;8603:12517;2373:10903"
-                        readonly property string filePath: "dark/images/button-background-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -434,9 +428,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17017;8603:12515;2373:10903"
-                        readonly property string filePath: "dark/images/button-background.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -504,9 +497,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17021;8603:12519;2373:10903"
-                        readonly property string filePath: "dark/images/button-background-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -3387,9 +3379,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9227;3987:9104;3987:9044"
-                        readonly property string filePath: "dark/images/flatbutton-background-checked.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -3457,9 +3448,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9230;3987:9122;3987:9044"
-                        readonly property string filePath: "dark/images/flatbutton-background-checked-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -3527,9 +3517,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9229;3987:9113;3987:9044"
-                        readonly property string filePath: "dark/images/flatbutton-background-checked-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -3597,9 +3586,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9231;3987:9131;3987:9044"
-                        readonly property string filePath: "dark/images/flatbutton-background-checked-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -3667,9 +3655,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9228;3987:9095;3987:9044"
-                        readonly property string filePath: "dark/images/flatbutton-background-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -3737,9 +3724,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9225;3987:9077;3987:9044"
-                        readonly property string filePath: "dark/images/flatbutton-background-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -3876,9 +3862,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9226;3987:9086;3987:9044"
-                        readonly property string filePath: "dark/images/flatbutton-background-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -9902,9 +9887,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17283;2556:18709;2556:18691"
-                        readonly property string filePath: "dark/images/toolbutton-background-checked.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -9918,17 +9902,17 @@ QtObject {
                         readonly property real y: 1942
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:17283;2556:18709"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-checked"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -9965,16 +9949,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject checked_disabled: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17289;2556:18724;2556:18691"
-                        readonly property string filePath: "dark/images/toolbutton-background-checked-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -9988,17 +9971,17 @@ QtObject {
                         readonly property real y: 2143
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:17289;2556:18724"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-checked-disabled"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -10035,16 +10018,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject checked_hovered: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17287;2556:18719;2556:18691"
-                        readonly property string filePath: "dark/images/toolbutton-background-checked-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10058,17 +10040,17 @@ QtObject {
                         readonly property real y: 2076
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:17287;2556:18719"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-checked-hovered"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -10105,16 +10087,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject checked_pressed: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17291;2556:18729;2556:18691"
-                        readonly property string filePath: "dark/images/toolbutton-background-checked-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10128,17 +10109,17 @@ QtObject {
                         readonly property real y: 2211
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:17291;2556:18729"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-checked-pressed"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -10175,16 +10156,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject disabled: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17285;2556:18714;2556:18691"
-                        readonly property string filePath: "dark/images/toolbutton-background-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10198,17 +10178,17 @@ QtObject {
                         readonly property real y: 2010
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:17285;2556:18714"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-disabled"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -10245,16 +10225,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject hovered: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17279;2556:18699;2556:18691"
-                        readonly property string filePath: "dark/images/toolbutton-background-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10268,17 +10247,17 @@ QtObject {
                         readonly property real y: 1807
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:17279;2556:18699"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-hovered"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -10315,7 +10294,7 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject normal: QtObject {
@@ -10337,17 +10316,17 @@ QtObject {
                         readonly property real y: 1741
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:17277;2556:18694"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -10384,16 +10363,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject pressed: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:17281;2556:18704;2556:18691"
-                        readonly property string filePath: "dark/images/toolbutton-background-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10407,17 +10385,17 @@ QtObject {
                         readonly property real y: 1863
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:17281;2556:18704"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-pressed"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -10454,7 +10432,7 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
             }
@@ -10468,9 +10446,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15399;2356:10516;2373:10903"
-                        readonly property string filePath: "light/images/button-background-checked.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10538,9 +10515,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15405;2356:10522;2373:10903"
-                        readonly property string filePath: "light/images/button-background-checked-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10608,9 +10584,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15403;2356:10520;2373:10903"
-                        readonly property string filePath: "light/images/button-background-checked-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10678,9 +10653,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15407;2356:10524;2373:10903"
-                        readonly property string filePath: "light/images/button-background-checked-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10748,9 +10722,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15401;2356:10518;2373:10903"
-                        readonly property string filePath: "light/images/button-background-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10818,9 +10791,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15395;2356:10512;2373:10903"
-                        readonly property string filePath: "light/images/button-background-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10888,9 +10860,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15393;2356:10510;2373:10903"
-                        readonly property string filePath: "light/images/button-background.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -10958,9 +10929,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15397;2356:10514;2373:10903"
-                        readonly property string filePath: "light/images/button-background-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -13841,9 +13811,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9165;3987:9104;3987:9044"
-                        readonly property string filePath: "light/images/flatbutton-background-checked.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -13911,9 +13880,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9168;3987:9122;3987:9044"
-                        readonly property string filePath: "light/images/flatbutton-background-checked-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -13981,9 +13949,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9167;3987:9113;3987:9044"
-                        readonly property string filePath: "light/images/flatbutton-background-checked-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -14051,9 +14018,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9169;3987:9131;3987:9044"
-                        readonly property string filePath: "light/images/flatbutton-background-checked-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -14121,9 +14087,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9166;3987:9095;3987:9044"
-                        readonly property string filePath: "light/images/flatbutton-background-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -14191,9 +14156,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9163;3987:9077;3987:9044"
-                        readonly property string filePath: "light/images/flatbutton-background-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -14330,9 +14294,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I3991:9164;3987:9086;3987:9044"
-                        readonly property string filePath: "light/images/flatbutton-background-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -20356,9 +20319,8 @@ QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15659;2556:18709;2556:18691"
-                        readonly property string filePath: "light/images/toolbutton-background-checked.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -20372,17 +20334,17 @@ QtObject {
                         readonly property real y: 1943
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:15659;2556:18709"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-checked"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -20419,16 +20381,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject checked_disabled: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15665;2556:18724;2556:18691"
-                        readonly property string filePath: "light/images/toolbutton-background-checked-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -20442,17 +20403,17 @@ QtObject {
                         readonly property real y: 2144
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:15665;2556:18724"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-checked-disabled"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -20489,16 +20450,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject checked_hovered: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15663;2556:18719;2556:18691"
-                        readonly property string filePath: "light/images/toolbutton-background-checked-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -20512,17 +20472,17 @@ QtObject {
                         readonly property real y: 2077
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:15663;2556:18719"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-checked-hovered"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -20559,16 +20519,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject checked_pressed: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15667;2556:18729;2556:18691"
-                        readonly property string filePath: "light/images/toolbutton-background-checked-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -20582,17 +20541,17 @@ QtObject {
                         readonly property real y: 2211.5
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:15667;2556:18729"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-checked-pressed"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -20629,16 +20588,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject disabled: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15661;2556:18714;2556:18691"
-                        readonly property string filePath: "light/images/toolbutton-background-disabled.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -20652,17 +20610,17 @@ QtObject {
                         readonly property real y: 2010.5
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:15661;2556:18714"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-disabled"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -20699,16 +20657,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject hovered: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15655;2556:18699;2556:18691"
-                        readonly property string filePath: "light/images/toolbutton-background-hovered.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -20722,17 +20679,17 @@ QtObject {
                         readonly property real y: 1811.5
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:15655;2556:18699"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-hovered"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -20769,7 +20726,7 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject normal: QtObject {
@@ -20791,17 +20748,17 @@ QtObject {
                         readonly property real y: 1742
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:15653;2556:18694"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -20838,16 +20795,15 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
                 readonly property QtObject pressed: QtObject {
                     readonly property QtObject background: QtObject {
                         readonly property real bottomOffset: 4
                         readonly property real bottomShadow: 0
-                        readonly property string exportType: "image"
                         readonly property string figmaId: "I2557:15657;2556:18704;2556:18691"
-                        readonly property string filePath: "light/images/toolbutton-background-pressed.png"
+                        readonly property string filePath: ""
                         readonly property real height: 32
                         readonly property real leftOffset: 4
                         readonly property real leftShadow: 0
@@ -20861,17 +20817,17 @@ QtObject {
                         readonly property real y: 1878
                     }
 
-                    readonly property real bottomPadding: 11
+                    readonly property real bottomPadding: 8
                     readonly property QtObject contentItem: QtObject {
                         readonly property string alignItems: "CENTER"
-                        readonly property real bottomPadding: 11
+                        readonly property real bottomPadding: 8
                         readonly property string figmaId: "I2557:15657;2556:18704"
                         readonly property string layoutMode: "HORIZONTAL"
                         readonly property real leftPadding: 11
                         readonly property string name: "toolbutton-contentItem-pressed"
                         readonly property real rightPadding: 11
                         readonly property real spacing: 8
-                        readonly property real topPadding: 11
+                        readonly property real topPadding: 8
                     }
 
                     readonly property QtObject icon: QtObject {
@@ -20908,7 +20864,7 @@ QtObject {
                     readonly property bool mirrored: false
                     readonly property real rightPadding: 11
                     readonly property real spacing: 8
-                    readonly property real topPadding: 11
+                    readonly property real topPadding: 8
                 }
 
             }

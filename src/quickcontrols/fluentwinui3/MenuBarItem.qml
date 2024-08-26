@@ -4,6 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
+import QtQuick.Controls.FluentWinUI3.impl
 
 T.MenuBarItem {
     id: control
@@ -51,9 +52,12 @@ T.MenuBarItem {
         color: control.icon.color
     }
 
-    background: StyleImage {
-        imageConfig: control.config.background
-        implicitWidth: 30
+    background: ButtonBackground {
+        control: control
         implicitHeight: 30
+        implicitWidth: 30
+        radius: control.config.background.topOffset
+        subtle: !control.checked || control.flat
+        accented: control.checked
     }
 }
