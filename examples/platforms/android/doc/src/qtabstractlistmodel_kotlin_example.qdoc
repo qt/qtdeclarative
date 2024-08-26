@@ -60,7 +60,7 @@
     \c ArrayList<String> as the internal storage system for data. In the initializer block of
     \c MyListModel, it generates some random data for the list.
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtlm_in_kotlin_based_android_project/MyListModel.kt MyListModel definition
+    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MyListModel.kt MyListModel definition
 
     Each item in the model has a set of data elements associated with it, each with its own role.
     Custom implementations of QtAbstractItemModel must define a custom role for each data
@@ -68,13 +68,13 @@
     retrieving the data, and a \l {Kotlin: String} {String} value, which specifies the name of the
     data element when used from QML.
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtlm_in_kotlin_based_android_project/MyListModel.kt MyListModel::roleNames
+    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MyListModel.kt MyListModel::roleNames
 
     While the \c Int values in the \c "roleNames()" method may be hard-coded, this example
     specifies a custom enum class \c DataRole within \c MyListModel, which is used when referring
     to these values. In this example, we define two roles: UUID and Row.
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtlm_in_kotlin_based_android_project/MyListModel.kt MyListModel::DataRole enum
+    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MyListModel.kt MyListModel::DataRole enum
 
     When it comes to returning data from the data model, the class must override the
     \c "QtAbstractListModel::data()" method. This method takes two parameters: \l QtModelIndex and
@@ -88,15 +88,15 @@
     originating from the Qt thread and accessing the underlying data possibly at the same time as
     requests from the Android thread via the \c "addRow()" and \c "removeRow()" methods.
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtlm_in_kotlin_based_android_project/MyListModel.kt MyListModel::data
+    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MyListModel.kt MyListModel::data
 
     To allow outside actors to manipulate the QtAbstractItemModel, the example adds two additional
     methods to \c MyDataModel. To add data to the row, it has the \c "addRow()" method; to remove
     data, there is the \c "removeRow()" method. These are used from the main activity.
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtlm_in_kotlin_based_android_project/MyListModel.kt MyListModel::addRow
+    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MyListModel.kt MyListModel::addRow
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtlm_in_kotlin_based_android_project/MyListModel.kt MyListModel::removeRow
+    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MyListModel.kt MyListModel::removeRow
 
     \section2 Main activity
 
@@ -105,27 +105,27 @@
     stores the \c QtQuickViewContent object for the main view of the QML application and an instance
     of the data model detailed above.
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtlm_in_kotlin_based_android_project/MainActivity.kt MainActivity definition
+    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MainActivity.kt MainActivity definition
 
     When creating the main Activity of the application, the example first creates a \l QtQuickView
     and places it into the view hierarchy.
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtlm_in_kotlin_based_android_project/MainActivity.kt Adding QtQuickView
+    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MainActivity.kt Adding QtQuickView
 
     After adding the QtQuickView into the UI, the example finds the buttons that are used to
     manipulate the data model and sets some click listeners to call \c addRow() and \c removeRow()
     on the member data model.
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtlm_in_kotlin_based_android_project/MainActivity.kt Adding control buttons
+    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MainActivity.kt Adding control buttons
 
     Once the UI setup and listeners are done, the QML component can be prepared and loaded. The
     example sets the \c MainActivity as a listener for the status change signal of the QML
     component and tells \c QtQuickView to load the QML component.
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtlm_in_kotlin_based_android_project/MainActivity.kt Loading the QML component
+    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MainActivity.kt Loading the QML component
 
     Finally, once the QML component is successfully loaded, the example assigns the value of the
     MyDataModel instance into the \c dataModel property in the QML component.
 
-    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtlm_in_kotlin_based_android_project/MainActivity.kt Linking the data model
+    \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MainActivity.kt Linking the data model
  */
