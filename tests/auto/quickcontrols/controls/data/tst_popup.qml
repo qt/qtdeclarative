@@ -1231,9 +1231,15 @@ TestCase {
         let window = createTemporaryObject(xyBindingLoop, testCase)
         let control = window.popup
         waitForRendering(control.contentItem)
-        compare(control.x, (control.parent.width - control.width) / 2)
-        compare(control.y, (control.parent.height - control.height) / 2)
-    }
+
+        if (control.popupType === Popup.Item) {
+            compare(control.x, (control.parent.width - control.width) / 2)
+            compare(control.y, (control.parent.height - control.height) / 2)
+        } else {
+            compare(control.x, Math.floor((control.parent.width - control.width) / 2))
+            compare(control.y, Math.floor((control.parent.height - control.height) / 2))
+        }
+    }
 
     function test_windowParent() {
         let control = createTemporaryObject(popupControl, applicationWindow, {width: 100, height: 100})
