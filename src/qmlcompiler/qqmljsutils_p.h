@@ -18,6 +18,7 @@
 
 #include "qqmljslogger_p.h"
 #include "qqmljsregistercontent_p.h"
+#include "qqmljsresourcefilemapper_p.h"
 #include "qqmljsscope_p.h"
 #include "qqmljsmetatypes_p.h"
 
@@ -383,6 +384,10 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSUtils
     }
 
     static QStringList resourceFilesFromBuildFolders(const QStringList &buildFolders);
+    static QString qmlSourcePathFromBuildPath(const QQmlJSResourceFileMapper *mapper,
+                                              const QString &pathInBuildFolder);
+    static QString qmlBuildPathFromSourcePath(const QQmlJSResourceFileMapper *mapper,
+                                              const QString &pathInBuildFolder);
 };
 
 bool Q_QMLCOMPILER_EXPORT canStrictlyCompareWithVar(
