@@ -6,7 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_add_qml_plugin
-\target qt6_add_qml_plugin
+\keyword qt6_add_qml_plugin
 
 \brief Defines a plugin associated with a QML module.
 

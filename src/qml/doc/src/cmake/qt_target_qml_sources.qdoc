@@ -6,7 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_target_qml_sources
-\target qt6_target_qml_sources
+\keyword qt6_target_qml_sources
 
 \brief Add qml files and resources to an existing QML module target.
 
