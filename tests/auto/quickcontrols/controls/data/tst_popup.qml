@@ -233,6 +233,8 @@ TestCase {
     function test_position() {
         let control = createTemporaryObject(popupControl, testCase, {visible: true, leftMargin: 10, topMargin: 20, width: 100, height: 100})
         verify(control)
+        if (control.popupType === Popup.Window)
+            skip("Popup windows do not support margins and their position is not bound by their parent.")
         verify(control.visible)
 
         let xSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "xChanged"})
