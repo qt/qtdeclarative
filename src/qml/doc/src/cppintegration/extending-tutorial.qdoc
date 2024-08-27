@@ -31,7 +31,7 @@ Examples/Qt-\QtVersion/qml/tutorials/extending-qml/.
 
 Alternatively, you can follow the tutorial by creating the sources from scratch:
 For each chapter, create a new project using the \e {Qt Quick Application} template
-in \QC, as instructed in \l {\QC: Creating Qt Quick Projects}.
+in \QC, as instructed in \l {\QC: Create Qt Quick Applications}.
 Then follow along by adapting and extending the generated skeleton code.
 
 \section1 Chapter 1: Creating a New Type

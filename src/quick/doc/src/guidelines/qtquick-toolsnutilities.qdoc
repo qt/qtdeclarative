@@ -4,22 +4,22 @@
 /*!
 \page qtquick-tools-and-utilities.html
 \title Qt Quick Tools and Utilities
-\brief Lists the tools and utilities that enhance developer experience
+\brief Lists the tools and utilities that enhance developer experience.
 
 Qt offers several tools and utilities to enable a rich developer experience,
 especially for Qt Quick developers. The following sections provide a brief
 introduction to those tools and utilities, and provide links to further
 information about them.
 
-\section1 Qt Creator
+\section1 \QC
 
-The \l{Qt Creator Manual}{Qt Creator} IDE is the key tool that enhances the overall developer
+The \l{\QC Documentation}{\QC} IDE is the key tool that enhances the overall developer
 experience of working with Qt and Qt Quick. Its editing, formatting, profiling and
 debugging features for Qt Quick make working with Qt Quick easier.
 
-\section1 Qt Design Studio
+\section1 \QDS
 
-\l{Qt Design Studio Manual}{Qt Design Studio} enables designing Qt Quick-based
+\l{\QDS Manual}{\QDS} enables designing Qt Quick-based
 UIs using simple drag-n-drop gestures that most designers are familiar with.
 It offers UI elements from the Qt Quick and Qt Quick Controls modules, as well
 as integration for custom UI elements.
@@ -30,26 +30,25 @@ as integration for custom UI elements.
 high productivity and performance. You can run Qt Quick Effect Maker as a
 standalone tool.
 
-\section1 QML Debugger
+\section1 QML Debugging
 
-The \l{Qt Creator: QML Debugger}{QML Debugger} is a very useful utility that
-enables:
+\l{\QC: Debugging Qt Quick Projects}{Qt Quick debugging} enables:
 \list
  \li debugging JavaScript functions,
  \li executing JavaScript expressions,
  \li and inspecting QML properties.
 \endlist
 
-The QML debugger is part of both \e{Qt Creator} and \e{Qt Design Studio}.
+The QML debugger is part of both \QC and \QDS.
 
 \section1 QML Profiler
 
-The \l{Qt Creator: QML Profiler}{QML Profiler} enables you to get necessary
+The \l{\QC: Profiling QML Applications}{QML Profiler} enables you to get necessary
 diagnostic information, allowing you to analyze the application code for
 performance issues. For example, too much JavaScript in each frame,
 long-running C++ functions, and so on.
 
-The profiler is part of both \e{Qt Creator} and \e{Qt Design Studio}.
+The profiler is part of both \QC and \QDS.
 
 \section1 QmlLive
 

@@ -10,7 +10,7 @@
 \keyword qtquick-samples
 
 Qt includes several examples to demonstrate a particular usage. The examples
-run as applications or as non-GUI examples in \QC. Qt tutorials show
+run as applications or as non-GUI examples in \l{\QC Documentation}{\QC}. Qt tutorials show
 the step-by-step information and give insight to particular code snippets.
 
 This page lists the \l{Qt Qml} and \l{Qt Quick} examples, however, many other
@@ -20,11 +20,9 @@ This page lists the \l{Qt Qml} and \l{Qt Quick} examples, however, many other
 
 The examples are packaged with the \l{Getting Started with Qt}{Qt installers}
 and are accessed through \QC. For more information about running
-examples in \QC, visit the
-\l{\QC: Building and Running an Example}{Building and Running an Example}
-page.
+examples in \QC, see \l{\QC: Tutorial: Build and run}.
 
-Open and run examples within \QC's \gui{Welcome} mode. Most of the
+Open and run examples in the \QC \uicontrol {Welcome} mode. Most of the
 examples run on various platforms and to search for platform-specific
 examples, type the platform name (or any keywords) in the search field. For
 example, typing \c mobile in the search field lists the examples that are
@@ -45,14 +43,15 @@ demos are deployable to mobile and desktop platforms.
 
 The following pages show how to develop Qt applications using
 \l{\QC Documentation}{\QC} and Qt Quick. The pages demonstrate various
-steps such as use cases and introductory material. For more information about Qt Quick Applications and related modules, visit the \l{QML Applications} page.
+steps such as use cases and introductory material. For more information about
+Qt Quick Applications and related modules, visit the \l{QML Applications} page.
 
 \div {class="multi-column"}
     \div {class="doc-column"}
         \b{Development Environment}
         \list
-        \li \l{\QC: Creating Qt Quick Projects}{Creating Qt Quick Projects}
-        \li \l{\QC: Using QML Modules with Plugins}{Using QML Modules with Plugins}
+        \li \l{\QC: Create Qt Quick Applications}
+        \li \l{\QC: Using QML Modules with Plugins}
         \endlist
     \enddiv
     \div {class="doc-column"}
@@ -60,7 +59,7 @@ steps such as use cases and introductory material. For more information about Qt
         \list
         \li \l{First Steps with QML}
         \li \l{Getting Started Programming with Qt Quick}{Alarms Application}
-        \li \l{Qt Design Studio: Your First UI}{Qt Design Studio Tutorials}
+        \li \l{\QDS: Your First UI}{\QDS Tutorials}
         \li \l{QML Advanced Tutorial}{SameGame}
         \endlist
     \enddiv

@@ -17,7 +17,7 @@ application.
 
 When setting up a new project, it's easiest to use
 \l {\QC Documentation}{\QC}. For this project, we chose the
-\l {\QC: Creating Qt Quick Projects}{Qt Quick application} template, which creates a
+\l {\QC: Create Qt Quick Applications}{Qt Quick application} template, which creates a
 basic "Hello World" application with the following files:
 
 \list
@@ -256,7 +256,7 @@ idea of which screens your application will contain. Doing so not only makes
 your code easier to read, but ensures that items are only instantiated from
 a given component when completely necessary, reducing memory usage.
 
-\note Qt Creator provides several convenient \l {http://doc.qt.io/qtcreator/creator-editor-refactoring.html#refactoring-qml-code}{refactoring options for QML},
+\note \QC provides several convenient \l {\QC: QML Quick Fixes}{quick fixes for QML},
 one of which allows you to move a block of code into a separate file
  (\c {Alt + Enter > Move Component into Separate File}).
 
@@ -804,7 +804,7 @@ In this tutorial, we've taken you through the following steps of writing a
 basic application using Qt Quick Controls:
 
 \list
-\li Creating a new project using Qt Creator.
+\li Creating a new project using \QC.
 \li Setting up a basic ApplicationWindow.
 \li Defining headers and footers with Page.
 \li Displaying content in a ListView.

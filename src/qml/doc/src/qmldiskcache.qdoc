@@ -19,7 +19,7 @@ byte code and native code are then compiled into your binary.
 
 When using \l{qmake} you can specify \c{CONFIG += qtquickcompiler} to
 give similar treatment to QML and JavaScript files added as resources to your
-project. \l{Qt Creator} has a setting that allows passing
+project. \l{\QC Documentation}{\QC} has a setting that allows passing
 \c{CONFIG += qtquickcompiler} to the qmake command line. By default, it is
 enabled for release and profile builds. \l{qmake} cannot pass as much
 information to the \l{Qt Quick Compiler} as CMake. Therefore, the compilation

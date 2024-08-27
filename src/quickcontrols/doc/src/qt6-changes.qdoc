@@ -29,7 +29,7 @@
     Qt Quick Controls has undergone some large, mostly internal changes in Qt
     6. By making use of the improved type registration introduced in Qt 5.15,
     we pave the way for compilation of the module's QML files to C++ and enable
-    tooling to become more effective. In particular, Qt Creator's QML code
+    tooling to become more effective. In particular, \QC's QML code
     model should have a more complete picture of types, making its completion
     and error checking of Qt Quick Controls code more reliable. Static analysis
     tools like qmllint and qmlformat also benefit by becoming aware of the

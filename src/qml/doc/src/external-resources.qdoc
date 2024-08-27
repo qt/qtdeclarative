@@ -33,18 +33,6 @@
     \title Felgo QML Hot Reload Tool
 */
 /*!
-    \externalpage https://doc.qt.io/qtcreator/creator-debugging-qml.html
-    \title Qt Creator: QML Debugger
-*/
-/*!
-    \externalpage https://doc.qt.io/qtcreator/creator-qml-performance-monitor.html
-    \title Qt Creator: QML Profiler
-*/
-/*!
-    \externalpage https://doc.qt.io/qtcreator/creator-live-preview-desktop.html
-    \title Qt Creator: QML Preview On Desktop
-*/
-/*!
     \externalpage https://fontawesome.com/
     \title Font Awesome
 */

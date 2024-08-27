@@ -186,7 +186,7 @@ or by a heuristic that takes the following aspects into account:
 
 In order to observe the development of both the address space and the number
 of objects allocated in it, it is best to use a specialized tool. The
-\l{Qt Creator: QML Profiler}{QML Profiler} provides a visualization that
+\l{\QC: Profiling QML Applications}{QML Profiler} provides a visualization that
 helps here. More generic tools cannot see what the JavaScript memory manager
 does within the address space it reserves and may not even notice that part
 of the address space is not committed to physical memory.

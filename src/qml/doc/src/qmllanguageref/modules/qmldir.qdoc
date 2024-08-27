@@ -215,7 +215,7 @@ this information.
 \endcode
 
 Declares a \l{Type Description Files}{type description file} for
-the module that can be read by QML tools such as Qt Creator to
+the module that can be read by QML tools such as \l{\QC Documentation}{\QC} to
 access information about the types defined by the module's plugins.
 \c <File> is the (relative) file name of a \c .qmltypes file.
 
@@ -407,7 +407,7 @@ extension and are read by external tools to gain information about
 types defined in C++ and typically imported via plugins.
 
 As such qmltypes files have no effect on the functionality of a QML module.
-Their only use is to allow tools such as Qt Creator to provide code completion,
+Their only use is to allow tools such as \l{\QC Documentation}{\QC} to provide code completion,
 error checking and other functionality to users of your module.
 
 Any module that defines QML types in C++ should also ship a type description
