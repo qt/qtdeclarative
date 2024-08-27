@@ -1020,6 +1020,7 @@ bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgTinyDocument *node)
     info.size = doc->size();
     info.viewBox = doc->viewBox();
     info.isPathContainer = isPathContainer(node);
+    info.forceSeparatePaths = false;
     info.stage = StructureNodeStage::Start;
 
     return m_generator->generateRootNode(info);

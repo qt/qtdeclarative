@@ -431,6 +431,18 @@ void QQuickQmlGenerator::generateUseNode(const UseNodeInfo &info)
     }
 }
 
+void QQuickQmlGenerator::generatePathContainer(const StructureNodeInfo &info)
+{
+    Q_UNUSED(info);
+    stream() << shapeName() <<" {";
+    m_indentLevel++;
+    if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer))
+        stream() << "preferredRendererType: Shape.CurveRenderer";
+    m_indentLevel--;
+
+    m_inShapeItem = true;
+}
+
 bool QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
 {
     if (!isNodeVisible(info))
@@ -438,13 +450,7 @@ bool QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
 
     if (info.stage == StructureNodeStage::Start) {
         if (!info.forceSeparatePaths && info.isPathContainer) {
-            stream() << shapeName() <<" {";
-            m_indentLevel++;
-            if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer))
-                stream() << "preferredRendererType: Shape.CurveRenderer";
-            m_indentLevel--;
-
-            m_inShapeItem = true;
+            generatePathContainer(info);
         } else {
             stream() << "Item {";
         }
@@ -475,10 +481,11 @@ bool QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
 
 bool QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
 {
-    m_indentLevel = 0;
     const QStringList comments = m_commentString.split(u'\n');
 
     if (!isNodeVisible(info)) {
+        m_indentLevel = 0;
+
         if (comments.isEmpty()) {
             stream() << "// Generated from SVG";
         } else {
@@ -505,6 +512,8 @@ bool QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
     }
 
     if (info.stage == StructureNodeStage::Start) {
+        m_indentLevel = 0;
+
         if (comments.isEmpty())
             stream() << "// Generated from SVG";
         else
@@ -535,9 +544,20 @@ bool QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
         }
 
         generateNodeBase(info);
+
+        if (!info.forceSeparatePaths && info.isPathContainer) {
+            generatePathContainer(info);
+            m_indentLevel++;
+        }
     } else {
+        if (m_inShapeItem) {
+            m_inShapeItem = false;
+            m_indentLevel--;
+            stream() << "}";
+        }
+
+        m_indentLevel--;
         stream() << "}";
-        m_inShapeItem = false;
     }
 
     return true;
