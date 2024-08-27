@@ -60,32 +60,12 @@ void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArg
     // collect them into editsByFileUris.
     QMap<QUrl, QList<QLspSpecification::TextEdit>> editsByFileUris;
 
-    auto renames = QQmlLSUtils::renameUsagesOf(front.domItem, newName, expressionType);
-
-    QQmlJS::Dom::DomItem files = front.domItem.top().field(QQmlJS::Dom::Fields::qmlFileWithPath);
-
-    QHash<QString, QString> codeCache;
-
+    const auto renames = QQmlLSUtils::renameUsagesOf(front.domItem, newName, expressionType);
     for (const auto &rename : renames.renameInFile()) {
         QLspSpecification::TextEdit edit;
 
-        const QUrl uri = QUrl::fromLocalFile(rename.location.filename);
-
-        auto cacheEntry = codeCache.find(rename.location.filename);
-        if (cacheEntry == codeCache.end()) {
-            auto file = files.key(rename.location.filename)
-                                .field(QQmlJS::Dom::Fields::currentItem)
-                                .ownerAs<QQmlJS::Dom::QmlFile>();
-            if (!file) {
-                qDebug() << "File" << rename.location.filename
-                         << "not found in DOM! Available files are" << files.keys();
-                continue;
-            }
-            cacheEntry = codeCache.insert(rename.location.filename, file->code());
-        }
-
-        edit.range = QQmlLSUtils::qmlLocationToLspLocation(cacheEntry.value(),
-                                                           rename.location.sourceLocation);
+        const QUrl uri = QUrl::fromLocalFile(rename.location.filename());
+        edit.range = QQmlLSUtils::qmlLocationToLspLocation(rename.location);
         edit.newText = rename.replacement.toUtf8();
 
         editsByFileUris[uri].append(edit);
