@@ -22,20 +22,20 @@ int main(int argc, char *argv[])
 #endif
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("SVG to QML converter [tech preview]");
+    parser.setApplicationDescription("SVG to QML converter");
     parser.addHelpOption();
     parser.addPositionalArgument("input", QCoreApplication::translate("main", "SVG file to read."));
     parser.addPositionalArgument("output", QCoreApplication::translate("main", "QML file to write."), "[output]");
 
-    QCommandLineOption optimizeOption("optimize-paths",
-                                      QCoreApplication::translate("main", "Optimize paths for the curve renderer."));
-    parser.addOption(optimizeOption);
-
-    QCommandLineOption curveRendererOption("curve-renderer",
+    QCommandLineOption curveRendererOption({ "c", "curve-renderer" },
                                            QCoreApplication::translate("main", "Use the curve renderer in generated QML."));
     parser.addOption(curveRendererOption);
 
-    QCommandLineOption typeNameOption(QStringList() << "t" << "type-name",
+    QCommandLineOption optimizeOption({ "p", "optimize-paths" },
+                                      QCoreApplication::translate("main", "Optimize paths for the curve renderer."));
+    parser.addOption(optimizeOption);
+
+    QCommandLineOption typeNameOption({ "t", "type-name" },
                                       QCoreApplication::translate("main", "Use <typename> for Shape."),
                                       QCoreApplication::translate("main", "typename"));
     parser.addOption(typeNameOption);
@@ -49,14 +49,6 @@ int main(int argc, char *argv[])
                                          QCoreApplication::translate("main", "Stroke the outline (contour) of the filled shape instead of "
                                                                              "the original path. Also sets optimize-paths."));
     parser.addOption(outlineModeOption);
-
-    QCommandLineOption keepPathsOption("keep-external-paths",
-                                       QCoreApplication::translate("main", "Any paths to external files will be retained in the QML output. "
-                                                                           "The paths will be reformatted as relative to the output file. If "
-                                                                           "this is not enabled, copies of the file will be saved to the asset output "
-                                                                           "directory. Embedded data will still be saved to files, even if "
-                                                                           "this option is set."));
-    parser.addOption(keepPathsOption);
 
     QCommandLineOption assetOutputDirectoryOption("asset-output-directory",
                                                   QCoreApplication::translate("main", "If the SVG refers to external or embedded files, such as images, these "
@@ -72,8 +64,16 @@ int main(int argc, char *argv[])
                                                QCoreApplication::translate("main", "prefix"));
     parser.addOption(assetOutputPrefixOption);
 
+    QCommandLineOption keepPathsOption("keep-external-paths",
+                                       QCoreApplication::translate("main", "Any paths to external files will be retained in the QML output. "
+                                                                           "The paths will be reformatted as relative to the output file. If "
+                                                                           "this is not enabled, copies of the file will be saved to the asset output "
+                                                                           "directory. Embedded data will still be saved to files, even if "
+                                                                           "this option is set."));
+    parser.addOption(keepPathsOption);
+
 #ifdef ENABLE_GUI
-    QCommandLineOption guiOption(QStringList() << "v" << "view",
+    QCommandLineOption guiOption({ "v", "view" },
                                  QCoreApplication::translate("main", "Display the generated QML in a window. This is the default behavior if no "
                                                                      "output file is specified."));
     parser.addOption(guiOption);
