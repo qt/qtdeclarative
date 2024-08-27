@@ -1880,16 +1880,22 @@ void tst_QQuickMenu::subMenuPosition_data()
     QTest::addColumn<bool>("flip");
     QTest::addColumn<bool>("mirrored");
     QTest::addColumn<qreal>("overlap");
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
 
-    QTest::newRow("cascading") << true << false << false << 0.0;
-    QTest::newRow("cascading,flip") << true << true << false << 0.0;
-    QTest::newRow("cascading,overlap") << true << false << false << 10.0;
-    QTest::newRow("cascading,flip,overlap") << true << true << false << 10.0;
-    QTest::newRow("cascading,mirrored") << true << false << true << 0.0;
-    QTest::newRow("cascading,mirrored,flip") << true << true << true << 0.0;
-    QTest::newRow("cascading,mirrored,overlap") << true << false << true << 10.0;
-    QTest::newRow("cascading,mirrored,flip,overlap") << true << true << true << 10.0;
-    QTest::newRow("non-cascading") << false << false << false << 0.0;
+    QTest::newRow("cascading") << true << false << false << 0.0 << QQuickPopup::Item;
+    QTest::newRow("cascading,flip") << true << true << false << 0.0 << QQuickPopup::Item;
+    QTest::newRow("cascading,overlap") << true << false << false << 10.0 << QQuickPopup::Item;
+    QTest::newRow("cascading,flip,overlap") << true << true << false << 10.0 << QQuickPopup::Item;
+    QTest::newRow("cascading,mirrored") << true << false << true << 0.0 << QQuickPopup::Item;
+    QTest::newRow("cascading,mirrored,flip") << true << true << true << 0.0 << QQuickPopup::Item;
+    QTest::newRow("cascading,mirrored,overlap") << true << false << true << 10.0 << QQuickPopup::Item;
+    QTest::newRow("cascading,mirrored,flip,overlap") << true << true << true << 10.0 << QQuickPopup::Item;
+    QTest::newRow("non-cascading") << false << false << false << 0.0 << QQuickPopup::Item;
+    // Flipping is tested in subMenuFlipsPositionWhenOutOfBounds(), and mirroring doesn't currently work when using popup windows.
+
+    // TODO: enable the test rows below, once they're fixed to not be flaky. QTBUG-128471
+    //QTest::newRow("cascading,window") << true << false << false << 0.0 << QQuickPopup::Window;
+    //QTest::newRow("non-cascading,window") << false << false << false << 0.0 << QQuickPopup::Window;
 }
 
 void tst_QQuickMenu::subMenuPosition()
@@ -1898,6 +1904,7 @@ void tst_QQuickMenu::subMenuPosition()
     QFETCH(bool, flip);
     QFETCH(bool, mirrored);
     QFETCH(qreal, overlap);
+    QFETCH(QQuickPopup::PopupType, popupType);
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("subMenus.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -1937,6 +1944,8 @@ void tst_QQuickMenu::subMenuPosition()
     QCOMPARE(mainMenu->cascade(), cascade);
     mainMenu->setOverlap(overlap);
     QCOMPARE(mainMenu->overlap(), overlap);
+    mainMenu->setPopupType(popupType);
+    QCOMPARE(mainMenu->popupType(), popupType);
 
     QQuickMenu *subMenu1 = window->property("subMenu1").value<QQuickMenu *>();
     QVERIFY(subMenu1);
@@ -1967,6 +1976,15 @@ void tst_QQuickMenu::subMenuPosition()
     mainMenu->open();
     QVERIFY(mainMenu->isVisible());
     QTRY_VERIFY(mainMenu->isOpened());
+
+    QQuickMenuPrivate *mainMenuPrivate = QQuickMenuPrivate::get(mainMenu);
+    QVERIFY(mainMenuPrivate);
+    if (mainMenuPrivate->usePopupWindow()) {
+        QTRY_VERIFY(mainMenuPrivate->popupWindow);
+        QVERIFY(QTest::qWaitForWindowExposed(mainMenuPrivate->popupWindow));
+        QVERIFY(QQuickTest::qWaitForPolish(mainMenuPrivate->popupWindow));
+    }
+
     QVERIFY(!subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
@@ -1979,26 +1997,42 @@ void tst_QQuickMenu::subMenuPosition()
     QTRY_COMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
     QTRY_VERIFY(subMenu1->isOpened());
+
+    QQuickMenuPrivate *subMenu1Private = QQuickMenuPrivate::get(subMenu1);
+    QVERIFY(subMenu1Private);
+    if (subMenu1Private->usePopupWindow()) {
+        QTRY_VERIFY(subMenu1Private->popupWindow);
+        QVERIFY(QTest::qWaitForWindowExposed(subMenu1Private->popupWindow));
+        QVERIFY(QQuickTest::qWaitForPolish(subMenu1Private->popupWindow));
+    }
+
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
-
     if (cascade) {
         QCOMPARE(subMenu1->parentItem(), subMenu1Item);
         // vertically aligned to the parent menu item
         // We cast to float here because we want to use its larger tolerance for equality (because it has less precision than double).
-        FLOAT_EQ(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + subMenu1Item->y());
+        QCOMPARE(subMenu1->popupItem()->mapToGlobal({0, 0}).y(), mainMenu->popupItem()->mapToGlobal({0, subMenu1Item->y()}).y());
         if (mirrored) {
             // on the left of the parent menu
             FLOAT_EQ(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() - subMenu1->width() + overlap);
         } else {
             // on the right of the parent menu
-            FLOAT_EQ(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + mainMenu->width() - overlap);
+            if (!mainMenuPrivate->usePopupWindow())
+                FLOAT_EQ(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + mainMenu->width() - overlap);
+            else
+                QCOMPARE(subMenu1->popupItem()->mapToGlobal({0, 0}).x(), mainMenu->popupItem()->mapToGlobal({subMenu1->width() - overlap,0}).x());
         }
     } else {
         QCOMPARE(subMenu1->parentItem(), mainMenu->parentItem());
         // centered over the parent menu
-        FLOAT_EQ(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + (mainMenu->width() - subMenu1->width()) / 2);
-        FLOAT_EQ(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + (mainMenu->height() - subMenu1->height()) / 2);
+        if (!mainMenuPrivate->usePopupWindow()) {
+            FLOAT_EQ(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + (mainMenu->width() - subMenu1->width()) / 2);
+            FLOAT_EQ(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + (mainMenu->height() - subMenu1->height()) / 2);
+        } else {
+            QCOMPARE(subMenu1->popupItem()->mapToGlobal({0, 0}),
+                     mainMenu->popupItem()->mapToGlobal({(mainMenu->width() - subMenu1->width()) / 2, (mainMenu->height() - subMenu1->height()) / 2}));
+        }
     }
 
     // open the sub-sub-menu (can flip)
@@ -2012,23 +2046,47 @@ void tst_QQuickMenu::subMenuPosition()
     QVERIFY(subSubMenu1->isVisible());
     QTRY_VERIFY(subSubMenu1->isOpened());
 
+    QQuickMenuPrivate *subSubMenu1Private = QQuickMenuPrivate::get(subSubMenu1);
+    if (subSubMenu1Private->usePopupWindow()) {
+        QTRY_VERIFY(subSubMenu1Private->popupWindow);
+        QVERIFY(QTest::qWaitForWindowExposed(subSubMenu1Private->popupWindow));
+        QVERIFY(QQuickTest::qWaitForPolish(subSubMenu1Private->popupWindow));
+    }
+
     if (cascade) {
         QCOMPARE(subSubMenu1->parentItem(), subSubMenu1Item);
         // vertically aligned to the parent menu item
-        FLOAT_EQ(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + subSubMenu1Item->y());
+        QCOMPARE(subSubMenu1->popupItem()->mapToGlobal({0, 0}).y(), subMenu1->popupItem()->mapToGlobal({0, subSubMenu1Item->y()}).y());
         if (mirrored != flip) {
             // on the left of the parent menu
-            FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() - subSubMenu1->width() + overlap);
+            if (!mainMenuPrivate->usePopupWindow())
+                FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() - subSubMenu1->width() + overlap);
+            else
+                QCOMPARE(subSubMenu1->popupItem()->mapToGlobal({0, 0}).x(), subMenu1->popupItem()->mapToGlobal({overlap - subSubMenu1->width(),0}).x());
         } else {
             // on the right of the parent menu
-            FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + subMenu1->width() - overlap);
+            if (!mainMenuPrivate->usePopupWindow())
+                FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + subMenu1->width() - overlap);
+            else
+                QCOMPARE(subSubMenu1->popupItem()->mapToGlobal({0, 0}).x(), subMenu1->popupItem()->mapToGlobal({subMenu1->width() - overlap,0}).x());
         }
     } else {
         QCOMPARE(subSubMenu1->parentItem(), subMenu1->parentItem());
         // centered over the parent menu
-        FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + (subMenu1->width() - subSubMenu1->width()) / 2);
-        FLOAT_EQ(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + (subMenu1->height() - subSubMenu1->height()) / 2);
+        if (!mainMenuPrivate->usePopupWindow()) {
+            FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + (subMenu1->width() - subSubMenu1->width()) / 2);
+            FLOAT_EQ(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + (subMenu1->height() - subSubMenu1->height()) / 2);
+        } else {
+            const QWindow *subSubMenu1Window = subSubMenu1->popupItem()->window();
+            const QWindow *subMenu1Window = subMenu1->popupItem()->window();
+            const QPoint offset((subMenu1->width() - subSubMenu1->width()) / 2, (subMenu1->height() - subSubMenu1->height()) / 2);
+
+            QTRY_COMPARE(subSubMenu1Window->position(), subMenu1Window->position() + offset);
+        }
     }
+    subSubMenu1->close();
+    subMenu1->close();
+    mainMenu->close();
 }
 
 #undef FLOAT_EQ
