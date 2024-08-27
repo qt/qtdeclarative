@@ -35,11 +35,11 @@ In addition, it supports the following options:
     \li --copyright-statement <string>
     \li Adds <string> as a comment at the beginning of the generated file.
 \row
-    \li --curve-renderer
+    \li -c, --curve-renderer
     \li Enables the curve renderer backend for \l{Qt Quick Shapes}. This enables smooth, antialiased
     shapes in the scene without multi-sampling, but at some extra cost.
 \row
-    \li --optimize-paths
+    \li -p, --optimize-paths
     \li Enables optimization of paths before committing them to the QML file, potentially making
     them faster to load and render later.
 \row
