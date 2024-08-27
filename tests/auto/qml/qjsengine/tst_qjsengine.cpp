@@ -331,6 +331,9 @@ private slots:
     void generatorStackOverflow();
     void generatorInfiniteRecursion();
 
+    void setDeleteDuringForEach();
+    void mapDeleteDuringForEach();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6561,6 +6564,42 @@ void tst_QJSEngine::generatorInfiniteRecursion() {
     QVERIFY(result.isError());
     QCOMPARE(result.errorType(), QJSValue::RangeError);
     QCOMPARE(result.toString(), "RangeError: Maximum call stack size exceeded.");
+}
+
+void tst_QJSEngine::setDeleteDuringForEach() {
+  QJSEngine engine;
+  QJSValue result = engine.evaluate(R"(
+    let set = new Set([1,2,3]);
+    let visited = []
+    set.forEach((v) => {
+        visited.push(v);
+        set.delete(v)
+    })
+    visited
+  )");
+
+  QVERIFY(result.isArray());
+
+  QJsonArray visited = engine.fromScriptValue<QJsonArray>(result);
+  QCOMPARE(visited, QJsonArray({1, 2, 3}));
+}
+
+void tst_QJSEngine::mapDeleteDuringForEach() {
+  QJSEngine engine;
+  QJSValue result = engine.evaluate(R"(
+    let map = new Map([[1, 1], [2, 2], [3, 3]]);
+    let visited = []
+    map.forEach((v, k) => {
+        visited.push(v);
+        map.delete(k)
+    })
+    visited
+  )");
+
+  QVERIFY(result.isArray());
+
+  QJsonArray visited = engine.fromScriptValue<QJsonArray>(result);
+  QCOMPARE(visited, QJsonArray({1, 2, 3}));
 }
 
 QTEST_MAIN(tst_QJSEngine)

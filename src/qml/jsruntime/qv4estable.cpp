@@ -46,6 +46,11 @@ void ESTable::markObjects(MarkStack *s, bool isWeakMap)
 void ESTable::clear()
 {
     m_size = 0;
+
+    std::for_each(m_observers.begin(), m_observers.end(), [](ShiftObserver* ob){
+        Q_ASSERT(ob);
+        ob->pivot = ShiftObserver::OUT_OF_TABLE;
+    });
 }
 
 // Update the table to contain \a value for a given \a key. The key is
@@ -119,6 +124,13 @@ bool ESTable::remove(const Value &key)
             memmove(m_keys + index, m_keys + index + 1, count);
             memmove(m_values + index, m_values + index + 1, count);
             m_size--;
+
+            std::for_each(m_observers.begin(), m_observers.end(), [index](ShiftObserver* ob) {
+                Q_ASSERT(ob);
+                if (index <= ob->pivot && ob->pivot != ShiftObserver::OUT_OF_TABLE)
+                    ob->pivot = ob->pivot == 0 ? ShiftObserver::OUT_OF_TABLE : ob->pivot - 1;
+            });
+
             return true;
         }
     }
@@ -157,4 +169,3 @@ void ESTable::removeUnmarkedKeys()
     }
     m_size = toIdx;
 }
-

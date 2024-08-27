@@ -15,6 +15,8 @@
 #ifndef QV4ESTABLE_P_H
 #define QV4ESTABLE_P_H
 
+#include <vector>
+
 #include "qv4value_p.h"
 
 class tst_qv4estable;
@@ -25,6 +27,23 @@ namespace QV4 {
 
 class Q_AUTOTEST_EXPORT ESTable
 {
+public:
+    // Can be used to observe changes in the position of the element at index pivot by registering an instance
+    // with `observeShifts`.
+    // This is used by implementations of `forEach`, for `ESTable`
+    // backed collections, to respect the correct order of iteration
+    // in the face of a `callbackFn` that mutates the collection
+    // itself.
+    struct ShiftObserver {
+        static constexpr uint OUT_OF_TABLE = -1u;
+
+        uint pivot = 0;
+
+        void next() {
+            pivot = pivot == OUT_OF_TABLE ? 0 : pivot + 1;
+        }
+    };
+
 public:
     ESTable();
     ~ESTable();
@@ -40,6 +59,14 @@ public:
 
     void removeUnmarkedKeys();
 
+    inline void observeShifts(ShiftObserver& observer) {
+        if (std::find(m_observers.cbegin(), m_observers.cend(), &observer) == m_observers.cend())
+            m_observers.push_back(&observer);
+    }
+    inline void stopObservingShifts(ShiftObserver& observer) {
+        m_observers.erase(std::remove(m_observers.begin(), m_observers.end(), &observer));
+    }
+
 private:
     friend class ::tst_qv4estable;
 
@@ -47,6 +74,8 @@ private:
     Value *m_values = nullptr;
     uint m_size = 0;
     uint m_capacity = 0;
+
+    std::vector<ShiftObserver*> m_observers;
 };
 
 } // namespace QV4

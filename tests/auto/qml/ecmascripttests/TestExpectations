@@ -192,7 +192,6 @@ built-ins/JSON/parse/reviver-object-own-keys-err.js fails
 built-ins/JSON/stringify/replacer-proxy-revoked.js fails
 built-ins/JSON/stringify/replacer-proxy.js fails
 built-ins/JSON/stringify/value-proxy.js fails
-built-ins/Map/prototype/forEach/iterates-values-deleted-then-readded.js fails
 built-ins/Math/round/S15.8.2.15_A7.js fails
 built-ins/Number/prototype/toPrecision/return-values.js fails
 built-ins/Object/create/15.2.3.5-4-14.js strictFails
@@ -230,7 +229,6 @@ built-ins/RegExp/unicode_restricted_identity_escape_c.js fails
 built-ins/RegExp/unicode_restricted_incomple_quantifier.js fails
 built-ins/RegExp/unicode_restricted_octal_escape.js fails
 built-ins/RegExp/unicode_restricted_quantifiable_assertion.js fails
-built-ins/Set/prototype/forEach/iterates-values-revisits-after-delete-re-add.js fails
 built-ins/SharedArrayBuffer/data-allocation-after-object-creation.js fails
 built-ins/SharedArrayBuffer/prototype-from-newtarget.js fails
 built-ins/String/prototype/endsWith/return-abrupt-from-searchstring-regexp-test.js fails
