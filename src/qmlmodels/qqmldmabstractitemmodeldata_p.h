@@ -85,6 +85,16 @@ public:
     {
     }
 
+    void notifyItem(const QQmlGuard<QQmlDMAbstractItemModelData> &item, const QVector<int> &signalIndexes) const
+    {
+        for (const int signalIndex : signalIndexes) {
+            QMetaObject::activate(item, signalIndex, nullptr);
+            if (item.isNull())
+                return;
+        }
+        emit item->modelDataChanged();
+    }
+
     bool notify(
             const QQmlAdaptorModel &,
             const QList<QQmlDelegateModelItem *> &items,
@@ -131,11 +141,8 @@ public:
                 continue;
 
             const int idx = item->modelIndex();
-            if (idx >= index && idx < index + count) {
-                for (int i = 0; i < signalIndexes.size(); ++i)
-                    QMetaObject::activate(item, signalIndexes.at(i), nullptr);
-                emit item->modelDataChanged();
-            }
+            if (idx >= index && idx < index + count)
+                notifyItem(item, signalIndexes);
         }
         return changed;
     }
