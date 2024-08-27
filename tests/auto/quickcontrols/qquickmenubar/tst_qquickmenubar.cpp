@@ -16,6 +16,7 @@
 #include <QtQuickTemplates2/private/qquickmenubar_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenubaritem_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
+#include <QtQuickTemplates2/private/qquickpopupwindow_p_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
@@ -69,6 +70,7 @@ private slots:
     void applicationWindow();
     void menubarAsHeader_data();
     void menubarAsHeader();
+    void menuPosition_data();
     void menuPosition();
     void changeDelegate_data();
     void changeDelegate();
@@ -1548,8 +1550,22 @@ void tst_qquickmenubar::menubarAsHeader()
     }
 }
 
+void tst_qquickmenubar::menuPosition_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    if (popupWindowsSupported)
+        QTest::newRow("Popup.Window") << QQuickPopup::Window;
+}
+
+static bool pixelsCloseEnough(int lhs, int rhs)
+{
+    return qAbs(lhs - rhs) < 2;
+}
+
 void tst_qquickmenubar::menuPosition()
 {
+    QFETCH(QQuickPopup::PopupType, popupType);
     // A Menu.qml will typically have a background with a drop-shadow. And to make
     // room for this shadow, the Menu itself is made bigger by using Control.insets.
     // This will make room for both the background and its shadow.
@@ -1568,22 +1584,32 @@ void tst_qquickmenubar::menuPosition()
     QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
-    QPointF requestedPos{50, 50};
+    const QPoint requestedPos{50, 50};
 
     QQuickMenu *editMenu = menuBar->menuAt(1);
     QVERIFY(editMenu);
+    QQuickMenuPrivate *editMenuPrivate = QQuickMenuPrivate::get(editMenu);
+    editMenu->setPopupType(popupType);
     editMenu->setX(requestedPos.x());
     editMenu->setY(requestedPos.y());
     editMenu->setVisible(true);
     QTRY_VERIFY(editMenu->isOpened());
-    QCOMPARE(editMenu->x(), requestedPos.x());
-    QCOMPARE(editMenu->y(), requestedPos.y());
+    if (editMenuPrivate->usePopupWindow()) {
+        QTRY_VERIFY(editMenuPrivate->popupWindow);
+        QVERIFY(QTest::qWaitForWindowExposed(editMenuPrivate->popupWindow));
+    }
+
+    QVERIFY(pixelsCloseEnough(editMenu->x(), requestedPos.x()));
+    QVERIFY(pixelsCloseEnough(editMenu->y(), requestedPos.y()));
 
     QQuickItem *background = editMenu->background();
     QVERIFY(background);
 
-    QPointF bgPos = background->mapToItem(editMenu->parentItem(), {0, 0});
-    QCOMPARE(bgPos, requestedPos);
+    const QPoint bgPos = editMenu->parentItem()->mapFromGlobal(background->mapToGlobal({0, 0})).toPoint();
+    QVERIFY2(pixelsCloseEnough(requestedPos.x(), bgPos.x()),
+             "The background's x coordinate changed when mapped to the overlay's coordinate space.");
+    QVERIFY2(pixelsCloseEnough(requestedPos.y(), bgPos.y()),
+             "The background's y coordinate changed when mapped to the overlay's coordinate space.");
 }
 
 void tst_qquickmenubar::changeDelegate_data()
