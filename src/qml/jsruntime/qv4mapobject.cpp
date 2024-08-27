@@ -280,12 +280,21 @@ ReturnedValue MapPrototype::method_forEach(const FunctionObject *b, const Value 
 
     Value *arguments = scope.alloc(3);
     arguments[2] = that;
-    for (uint i = 0; i < that->d()->esTable->size(); ++i) {
-        that->d()->esTable->iterate(i, &arguments[1], &arguments[0]); // fill in key (0), value (1)
+
+    ESTable::ShiftObserver observer{};
+    that->d()->esTable->observeShifts(observer);
+
+    while (observer.pivot < that->d()->esTable->size()) {
+        that->d()->esTable->iterate(observer.pivot, &arguments[1], &arguments[0]); // fill in key (0), value (1)
 
         callbackfn->call(thisArg, arguments, 3);
         CHECK_EXCEPTION();
+
+        observer.next();
     }
+
+    that->d()->esTable->stopObservingShifts(observer);
+
     return Encode::undefined();
 }
 

@@ -255,15 +255,23 @@ ReturnedValue SetPrototype::method_forEach(const FunctionObject *b, const Value 
     if (argc > 1)
         thisArg = ScopedValue(scope, argv[1]);
 
+    ESTable::ShiftObserver observer{};
+    that->d()->esTable->observeShifts(observer);
+
     Value *arguments = scope.alloc(3);
-    for (uint i = 0; i < that->d()->esTable->size(); ++i) {
-        that->d()->esTable->iterate(i, &arguments[0], &arguments[1]); // fill in key (0), value (1)
+    while (observer.pivot < that->d()->esTable->size()) {
+        that->d()->esTable->iterate(observer.pivot, &arguments[0], &arguments[1]); // fill in key (0), value (1)
         arguments[1] = arguments[0]; // but for set, we want to return the key twice; value is always undefined.
 
         arguments[2] = that;
         callbackfn->call(thisArg, arguments, 3);
         CHECK_EXCEPTION();
+
+        observer.next();
     }
+
+    that->d()->esTable->stopObservingShifts(observer);
+
     return Encode::undefined();
 }
 
