@@ -2292,6 +2292,12 @@ void tst_QQuickMenu::disableWhenTriggered()
     QVERIFY(menu->isVisible());
     QTRY_VERIFY(menu->isOpened());
 
+    QQuickMenuPrivate *menuPrivate = QQuickMenuPrivate::get(menu);
+    if (menuPrivate->usePopupWindow()) {
+        QTRY_VERIFY(menuPrivate->popupWindow);
+        QVERIFY(QTest::qWaitForWindowExposed(menuPrivate->popupWindow));
+    }
+
     QPointer<QQuickMenuItem> menuItem = qobject_cast<QQuickMenuItem*>(menu->itemAt(menuItemIndex));
     QVERIFY(menuItem);
 
