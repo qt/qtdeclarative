@@ -54,16 +54,8 @@ void QmlGoToDefinitionSupport::process(RequestPointerArgument request)
         return;
 
     QLspSpecification::Location l;
-    l.uri = QUrl::fromLocalFile(location->filename).toEncoded();
-
-    QQmlJS::Dom::DomItem file = front.domItem.goToFile(location->filename);
-    auto fileOfBasePtr = file.ownerAs<QQmlJS::Dom::QmlFile>();
-    if (!fileOfBasePtr) {
-        qDebug() << "Could not find file" << location->filename << "in the dom!";
-        return;
-    }
-    const QString qmlCode = fileOfBasePtr->code();
-    l.range = QQmlLSUtils::qmlLocationToLspLocation(qmlCode, location->sourceLocation);
+    l.uri = QUrl::fromLocalFile(location->filename()).toEncoded();
+    l.range = QQmlLSUtils::qmlLocationToLspLocation(*location);
 
     results.append(l);
 }

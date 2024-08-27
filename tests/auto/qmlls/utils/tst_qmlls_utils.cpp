@@ -443,21 +443,21 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
     QVERIFY(base);
 
     auto fileObject =
-            locations[resultIndex].domItem.goToFile(base->filename).as<QQmlJS::Dom::QmlFile>();
+            locations[resultIndex].domItem.goToFile(base->filename()).as<QQmlJS::Dom::QmlFile>();
 
     // print some debug message when failing, instead of using QVERIFY2
     // (printing the type every time takes a lot of time).
     if constexpr (enable_debug_output) {
         if (!fileObject)
-            qDebug() << "Could not find the file" << base->filename << "in the Dom.";
+            qDebug() << "Could not find the file" << base->filename() << "in the Dom.";
     }
 
     QVERIFY(fileObject);
-    QCOMPARE(base->filename, expectedFilePath);
+    QCOMPARE(base->filename(), expectedFilePath);
     QCOMPARE(fileObject->canonicalFilePath(), expectedFilePath);
 
-    QCOMPARE(base->sourceLocation.startLine, quint32(expectedLine));
-    QCOMPARE(base->sourceLocation.startColumn, quint32(expectedCharacter));
+    QCOMPARE(base->sourceLocation().startLine, quint32(expectedLine));
+    QCOMPARE(base->sourceLocation().startColumn, quint32(expectedCharacter));
 }
 
 void tst_qmlls_utils::findLocationOfItem_data()
@@ -632,8 +632,8 @@ void tst_qmlls_utils::findBaseObject()
     QEXPECT_FAIL("inline-ic2", failOnInlineComponentsMessage, Abort);
     QVERIFY(typeLocation);
     QQmlJS::Dom::DomItem type = QQmlLSUtils::sourceLocationToDomItem(
-            locations.front().domItem.goToFile(typeLocation->filename),
-            typeLocation->sourceLocation);
+            locations.front().domItem.goToFile(typeLocation->filename()),
+            typeLocation->sourceLocation());
     auto base = QQmlLSUtils::baseObject(type);
 
     if constexpr (enable_debug_output) {
@@ -1464,16 +1464,16 @@ void tst_qmlls_utils::findUsages()
         if (usages != data.expectedUsages) {
             qDebug() << "Got:\n";
             for (auto &x : usages.usagesInFile()) {
-                qDebug() << x.filename << "(" << x.sourceLocation.startLine << ", "
-                         << x.sourceLocation.startColumn << "), " << x.sourceLocation.offset << "+"
-                         << x.sourceLocation.length;
+                qDebug() << x.filename() << "(" << x.sourceLocation().startLine << ", "
+                         << x.sourceLocation().startColumn << "), " << x.sourceLocation().offset << "+"
+                         << x.sourceLocation().length;
             }
             qDebug() << "with usages in filenames:" << usages.usagesInFilename();
             qDebug() << "But expected: \n";
             for (auto &x : data.expectedUsages.usagesInFile()) {
-                qDebug() << x.filename << "(" << x.sourceLocation.startLine << ", "
-                         << x.sourceLocation.startColumn << "), " << x.sourceLocation.offset << "+"
-                         << x.sourceLocation.length;
+                qDebug() << x.filename() << "(" << x.sourceLocation().startLine << ", "
+                         << x.sourceLocation().startColumn << "), " << x.sourceLocation().offset << "+"
+                         << x.sourceLocation().length;
             }
             qDebug() << "with usages in filenames:" << data.expectedUsages.usagesInFilename();
         }
@@ -1754,11 +1754,11 @@ void tst_qmlls_utils::renameUsages()
         if (edits != expectedRenames) {
             qDebug() << "Got:\n";
             for (auto &x : edits.renameInFile()) {
-                qDebug() << x.replacement << x.location.filename << "("
-                         << x.location.sourceLocation.startLine << ", "
-                         << x.location.sourceLocation.startColumn << "), "
-                         << x.location.sourceLocation.offset << "+"
-                         << x.location.sourceLocation.length;
+                qDebug() << x.replacement << x.location.filename() << "("
+                         << x.location.sourceLocation().startLine << ", "
+                         << x.location.sourceLocation().startColumn << "), "
+                         << x.location.sourceLocation().offset << "+"
+                         << x.location.sourceLocation().length;
             }
             qDebug() << "with renames in filenames:";
             for (auto &x : edits.renameInFilename()) {
@@ -1766,11 +1766,11 @@ void tst_qmlls_utils::renameUsages()
             }
             qDebug() << "But expected: \n";
             for (auto &x : expectedRenames.renameInFile()) {
-                qDebug() << x.replacement << x.location.filename << "("
-                         << x.location.sourceLocation.startLine << ", "
-                         << x.location.sourceLocation.startColumn << "), "
-                         << x.location.sourceLocation.offset << "+"
-                         << x.location.sourceLocation.length;
+                qDebug() << x.replacement << x.location.filename() << "("
+                         << x.location.sourceLocation().startLine << ", "
+                         << x.location.sourceLocation().startColumn << "), "
+                         << x.location.sourceLocation().offset << "+"
+                         << x.location.sourceLocation().length;
             }
             qDebug() << "with renames in filenames:";
             for (auto &x : expectedRenames.renameInFilename()) {
@@ -1966,11 +1966,11 @@ void tst_qmlls_utils::findDefinitionFromLocation()
     QVERIFY(definition);
 
     // don't work with absolute paths, and only compare the end of the file path
-    QCOMPARE(QStringView(definition->filename).last(expectedFilePath.size()), expectedFilePath);
+    QCOMPARE(QStringView(definition->filename()).last(expectedFilePath.size()), expectedFilePath);
 
-    QCOMPARE(definition->sourceLocation.startLine, quint32(expectedLine));
-    QCOMPARE(definition->sourceLocation.startColumn, quint32(expectedCharacter));
-    QCOMPARE(definition->sourceLocation.length, quint32(expectedLength));
+    QCOMPARE(definition->sourceLocation().startLine, quint32(expectedLine));
+    QCOMPARE(definition->sourceLocation().startColumn, quint32(expectedCharacter));
+    QCOMPARE(definition->sourceLocation().length, quint32(expectedLength));
 }
 
 void tst_qmlls_utils::resolveExpressionType_data()

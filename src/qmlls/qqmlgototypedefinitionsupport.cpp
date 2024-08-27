@@ -55,18 +55,9 @@ void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
         return;
     }
 
-    QQmlJS::Dom::DomItem fileOfBase = front.domItem.goToFile(base->filename);
-    auto fileOfBasePtr = fileOfBase.ownerAs<QQmlJS::Dom::QmlFile>();
-    if (!fileOfBasePtr) {
-        qDebug() << u"Could not obtain the file of the base."_s;
-        return;
-    }
-
     QLspSpecification::Location l;
-    l.uri = QUrl::fromLocalFile(fileOfBasePtr->canonicalFilePath()).toEncoded();
-
-    const QString qmlCode = fileOfBasePtr->code();
-    l.range = QQmlLSUtils::qmlLocationToLspLocation(qmlCode, base->sourceLocation);
+    l.uri = QUrl::fromLocalFile(base->filename()).toEncoded();
+    l.range = QQmlLSUtils::qmlLocationToLspLocation(*base);
 
     results.append(l);
 }

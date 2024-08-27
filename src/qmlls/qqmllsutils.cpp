@@ -168,21 +168,16 @@ QByteArray qmlUrlToLspUri(const QByteArray &url)
    \brief Converts a QQmlJS::SourceLocation to a LSP Range.
 
    QQmlJS::SourceLocation starts counting lines and rows at 1, but the LSP Range starts at 0.
-   Also, the QQmlJS::SourceLocation contains startLine, startColumn and length while the LSP Range
-   contains startLine, startColumn, endLine and endColumn, which must be computed from the actual
-   qml code.
  */
-QLspSpecification::Range qmlLocationToLspLocation(const QString &code,
-                                                  QQmlJS::SourceLocation qmlLocation)
+QLspSpecification::Range qmlLocationToLspLocation(Location qmlLocation)
 {
     QLspSpecification::Range range;
 
-    range.start.line = qmlLocation.startLine - 1;
-    range.start.character = qmlLocation.startColumn - 1;
+    range.start.line = qmlLocation.sourceLocation().startLine - 1;
+    range.start.character = qmlLocation.sourceLocation().startColumn - 1;
+    range.end.line = qmlLocation.end().line;
+    range.end.character = qmlLocation.end().character;
 
-    auto end = QQmlLSUtils::textRowAndColumnFrom(code, qmlLocation.end());
-    range.end.line = end.line;
-    range.end.character = end.character;
     return range;
 }
 
@@ -459,18 +454,16 @@ DomItem baseObject(const DomItem &object)
 
 static std::optional<Location> locationFromDomItem(const DomItem &item, FileLocationRegion region)
 {
-    Location location;
-    location.filename = item.canonicalFilePath();
-
     auto tree = FileLocations::treeOf(item);
     // tree is null for C++ defined types, for example
     if (!tree)
         return {};
 
-    location.sourceLocation = FileLocations::region(tree, region);
-    if (!location.sourceLocation.isValid() && region != QQmlJS::Dom::MainRegion)
-        location.sourceLocation = FileLocations::region(tree, MainRegion);
-    return location;
+    QQmlJS::SourceLocation sourceLocation = FileLocations::region(tree, region);
+    if (!sourceLocation.isValid() && region != QQmlJS::Dom::MainRegion)
+        sourceLocation = FileLocations::region(tree, QQmlJS::Dom::MainRegion);
+
+    return Location::tryFrom(item.canonicalFilePath(), sourceLocation, item);
 }
 
 /*!
@@ -569,8 +562,8 @@ std::optional<Location> findTypeDefinitionOf(const DomItem &object)
             return {};
 
         if (scope->type == QmlObjectIdIdentifier) {
-            return Location{ scope->semanticScope->filePath(),
-                             scope->semanticScope->sourceLocation() };
+            return Location::tryFrom(scope->semanticScope->filePath(),
+                                     scope->semanticScope->sourceLocation(), object);
         }
 
         typeDefinition = sourceLocationToDomItem(object.containingFile(),
@@ -887,7 +880,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
     const QStringList namesToCheck = namesOfPossibleUsages(name, item, expressionType->semanticScope);
 
     const auto addLocationIfTypeMatchesTarget =
-            [&result, &expressionType](const DomItem &toBeResolved, FileLocationRegion subRegion) {
+            [&result, &expressionType, &item](const DomItem &toBeResolved, FileLocationRegion subRegion) {
                 const auto currentType =
                         resolveExpressionType(toBeResolved, ResolveOptions::ResolveOwnerType);
                 if (!currentType)
@@ -903,8 +896,10 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
                     if (!sourceLocation.isValid())
                         return;
 
-                    Location location{ toBeResolved.canonicalFilePath(), sourceLocation };
-                    result.appendUsage(location);
+                    if (auto location = Location::tryFrom(toBeResolved.canonicalFilePath(),
+                                                          sourceLocation, item)) {
+                        result.appendUsage(*location);
+                    }
                 }
             };
 
@@ -981,19 +976,18 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
     }
 }
 
-static Location locationFromJSIdentifierDefinition(const DomItem &definitionOfItem,
-                                                   const QString &name)
+static std::optional<Location> locationFromJSIdentifierDefinition(const DomItem &definitionOfItem,
+                                                                  const QString &name)
 {
     Q_ASSERT_X(!definitionOfItem.semanticScope().isNull()
                        && definitionOfItem.semanticScope()->ownJSIdentifier(name).has_value(),
                "QQmlLSUtils::locationFromJSIdentifierDefinition",
                "JS definition does not actually define the JS identifier. "
                "Did you obtain definitionOfItem from findJSIdentifierDefinition() ?");
-    QQmlJS::SourceLocation location =
+    const QQmlJS::SourceLocation location =
             definitionOfItem.semanticScope()->ownJSIdentifier(name).value().location;
 
-    Location result = { definitionOfItem.canonicalFilePath(), location };
-    return result;
+    return Location::tryFrom(definitionOfItem.canonicalFilePath(), location, definitionOfItem);
 }
 
 static void findUsagesHelper(const DomItem &item, const QString &name, Usages &result)
@@ -1020,9 +1014,10 @@ static void findUsagesHelper(const DomItem &item, const QString &name, Usages &r
                         qCWarning(QQmlLSUtilsLog) << "Failed finding filelocation of found usage";
                         return true;
                     }
-                    const QQmlJS::SourceLocation location = fileLocation->info().fullRegion;
+                    const QQmlJS::SourceLocation sourceLocation = fileLocation->info().fullRegion;
                     const QString fileName = item.canonicalFilePath();
-                    result.appendUsage({ fileName, location });
+                    if (auto location = Location::tryFrom(fileName, sourceLocation, item))
+                        result.appendUsage(*location);
                     return true;
                 }
                 QQmlJSScope::ConstPtr scope = item.semanticScope();
@@ -1039,8 +1034,8 @@ static void findUsagesHelper(const DomItem &item, const QString &name, Usages &r
             },
             emptyChildrenVisitor, filterForFindUsages());
 
-    const Location definition = locationFromJSIdentifierDefinition(definitionOfItem, name);
-    result.appendUsage(definition);
+    if (const auto definition = locationFromJSIdentifierDefinition(definitionOfItem, name))
+        result.appendUsage(*definition);
 }
 
 Usages findUsagesOf(const DomItem &item)
@@ -1088,9 +1083,9 @@ Usages findUsagesOf(const DomItem &item)
     if (QQmlLSUtilsLog().isDebugEnabled()) {
         qCDebug(QQmlLSUtilsLog) << "Found following usages in files:";
         for (auto r : result.usagesInFile()) {
-            qCDebug(QQmlLSUtilsLog)
-                    << r.filename << " @ " << r.sourceLocation.startLine << ":"
-                    << r.sourceLocation.startColumn << " with length " << r.sourceLocation.length;
+            qCDebug(QQmlLSUtilsLog) << r.filename() << " @ " << r.sourceLocation().startLine << ":"
+                                    << r.sourceLocation().startColumn << " with length "
+                                    << r.sourceLocation().length;
         }
         qCDebug(QQmlLSUtilsLog) << "And following usages in file names:"
                                 << result.usagesInFilename();
@@ -1927,10 +1922,7 @@ findMethodDefinitionOf(const DomItem &file, QQmlJS::SourceLocation location, con
     auto regions = fileLocation->info().regions;
 
     if (auto it = regions.constFind(IdentifierRegion); it != regions.constEnd()) {
-        Location result;
-        result.sourceLocation = *it;
-        result.filename = method.canonicalFilePath();
-        return result;
+        return Location::tryFrom(method.canonicalFilePath(), *it, file);
     }
 
     return {};
@@ -1950,10 +1942,7 @@ findPropertyDefinitionOf(const DomItem &file, QQmlJS::SourceLocation propertyDef
     auto regions = fileLocation->info().regions;
 
     if (auto it = regions.constFind(IdentifierRegion); it != regions.constEnd()) {
-        Location result;
-        result.sourceLocation = *it;
-        result.filename = propertyDefinition.canonicalFilePath();
-        return result;
+        return Location::tryFrom(propertyDefinition.canonicalFilePath(), *it, file);
     }
 
     return {};
@@ -1977,7 +1966,8 @@ std::optional<Location> findDefinitionOf(const DomItem &item)
         if (!jsIdentifier)
             return {};
 
-        return Location{ resolvedExpression->semanticScope->filePath(), jsIdentifier->location };
+        return Location::tryFrom(resolvedExpression->semanticScope->filePath(),
+                                 jsIdentifier->location, item);
     }
 
     case PropertyIdentifier: {
@@ -2011,17 +2001,13 @@ std::optional<Location> findDefinitionOf(const DomItem &item)
             return {};
         }
 
-        Location result;
-        result.sourceLocation = FileLocations::treeOf(domId)->info().fullRegion;
-        result.filename = domId.canonicalFilePath();
-        return result;
+        return Location::tryFrom(domId.canonicalFilePath(),
+                                 FileLocations::treeOf(domId)->info().fullRegion, domId);
     }
     case AttachedTypeIdentifier:
     case QmlComponentIdentifier: {
-        Location result;
-        result.sourceLocation = resolvedExpression->semanticScope->sourceLocation();
-        result.filename = resolvedExpression->semanticScope->filePath();
-        return result;
+        return Location::tryFrom(resolvedExpression->semanticScope->filePath(),
+                                 resolvedExpression->semanticScope->sourceLocation(), item);
     }
     case QualifiedModuleIdentifier: {
         const DomItem imports = item.fileObject().field(Fields::imports);
@@ -2031,10 +2017,7 @@ std::optional<Location> findDefinitionOf(const DomItem &item)
                 if (!fileLocations)
                     continue;
 
-                Location result;
-                result.sourceLocation = fileLocations->info().regions[IdNameRegion];
-                result.filename = item.canonicalFilePath();
-                return result;
+                return Location::tryFrom(item.canonicalFilePath(), fileLocations->info().regions[IdNameRegion], item);
             }
         }
         return {};
@@ -2314,7 +2297,7 @@ RenameUsages renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
 
     // set the new name at the found usages, but add "on"-prefix and "Changed"-suffix if needed
     for (const auto &location : locations.usagesInFile()) {
-        const qsizetype currentLength = location.sourceLocation.length;
+        const qsizetype currentLength = location.sourceLocation().length;
         Edit edit;
         edit.location = location;
         if (oldNameLength == currentLength) {
@@ -2363,14 +2346,30 @@ RenameUsages renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
     return result;
 }
 
+std::optional<Location> Location::tryFrom(const QString &fileName,
+                                          const QQmlJS::SourceLocation &sourceLocation,
+                                          const QQmlJS::Dom::DomItem &someItem)
+{
+    auto qmlFile = someItem.goToFile(fileName).ownerAs<QQmlJS::Dom::QmlFile>();
+    if (!qmlFile) {
+        qDebug() << "Could not find file" << fileName << "in the dom!";
+        return {};
+    }
+    return Location{ fileName, sourceLocation,
+                     textRowAndColumnFrom(qmlFile->code(), sourceLocation.end()) };
+}
+
+Location Location::from(const QString &fileName, const QQmlJS::SourceLocation &sourceLocation, const QString &code)
+{
+    return Location{ fileName, sourceLocation, textRowAndColumnFrom(code, sourceLocation.end()) };
+}
+
 Location Location::from(const QString &fileName, const QString &code, quint32 startLine,
                         quint32 startCharacter, quint32 length)
 {
-    quint32 offset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
-
-    Location location{ fileName,
-                       QQmlJS::SourceLocation{ offset, length, startLine, startCharacter } };
-    return location;
+    const quint32 offset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
+    return from(fileName, QQmlJS::SourceLocation{ offset, length, startLine, startCharacter },
+                code);
 }
 
 Edit Edit::from(const QString &fileName, const QString &code, quint32 startLine,

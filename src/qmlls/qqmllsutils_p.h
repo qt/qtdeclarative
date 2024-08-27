@@ -73,24 +73,45 @@ struct ExpressionType
     IdentifierType type;
 };
 
-struct Location
+class Location
 {
-    QString filename;
-    QQmlJS::SourceLocation sourceLocation;
+public:
+    Location() = default;
+    Location(const QString &filename, const QQmlJS::SourceLocation &sourceLocation,
+             const TextPosition &end)
+        : m_filename(filename), m_sourceLocation(sourceLocation), m_end(end)
+    {
+    }
+
+    QString filename() const { return m_filename; }
+    QQmlJS::SourceLocation sourceLocation() const { return m_sourceLocation; }
+    TextPosition end() const { return m_end; }
 
     static Location from(const QString &fileName, const QString &code, quint32 startLine,
                          quint32 startCharacter, quint32 length);
+    static Location from(const QString &fileName, const QQmlJS::SourceLocation &sourceLocation,
+                         const QString &code);
+    static std::optional<Location> tryFrom(const QString &fileName,
+                                           const QQmlJS::SourceLocation &sourceLocation,
+                                           const QQmlJS::Dom::DomItem &someItem);
 
     friend bool operator<(const Location &a, const Location &b)
     {
-        return std::make_tuple(a.filename, a.sourceLocation.begin(), a.sourceLocation.end())
-                < std::make_tuple(b.filename, b.sourceLocation.begin(), b.sourceLocation.end());
+        return std::make_tuple(a.m_filename, a.m_sourceLocation.begin(), a.m_sourceLocation.end())
+                < std::make_tuple(b.m_filename, b.m_sourceLocation.begin(),
+                                  b.m_sourceLocation.end());
     }
     friend bool operator==(const Location &a, const Location &b)
     {
-        return std::make_tuple(a.filename, a.sourceLocation.begin(), a.sourceLocation.end())
-                == std::make_tuple(b.filename, b.sourceLocation.begin(), b.sourceLocation.end());
+        return std::make_tuple(a.m_filename, a.m_sourceLocation.begin(), a.m_sourceLocation.end())
+                == std::make_tuple(b.m_filename, b.m_sourceLocation.begin(),
+                                   b.m_sourceLocation.end());
     }
+
+private:
+    QString m_filename;
+    QQmlJS::SourceLocation m_sourceLocation;
+    TextPosition m_end;
 };
 
 /*!
@@ -236,8 +257,7 @@ QList<ItemLocation> itemsFromTextLocation(const DomItem &file, int line, int cha
 DomItem sourceLocationToDomItem(const DomItem &file, const QQmlJS::SourceLocation &location);
 QByteArray lspUriToQmlUrl(const QByteArray &uri);
 QByteArray qmlUrlToLspUri(const QByteArray &url);
-QLspSpecification::Range qmlLocationToLspLocation(const QString &code,
-                                                  QQmlJS::SourceLocation qmlLocation);
+QLspSpecification::Range qmlLocationToLspLocation(Location qmlLocation);
 DomItem baseObject(const DomItem &qmlObject);
 std::optional<Location> findTypeDefinitionOf(const DomItem &item);
 std::optional<Location> findDefinitionOf(const DomItem &item);
