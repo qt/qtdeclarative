@@ -13,6 +13,8 @@ set(qml_files
     "CheckDelegate.qml"
     "ComboBox.qml"
     "DelayButton.qml"
+    "Dialog.qml"
+    "DialogButtonBox.qml"
     "Frame.qml"
     "GroupBox.qml"
     "ItemDelegate.qml"

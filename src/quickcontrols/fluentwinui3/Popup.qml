@@ -43,7 +43,7 @@ T.Popup {
     }
 
     T.Overlay.modal: Rectangle {
-        color: "#4D000000"
+        color: Color.transparent(control.palette.shadow, 0.3)
     }
 
     T.Overlay.modeless: Rectangle {

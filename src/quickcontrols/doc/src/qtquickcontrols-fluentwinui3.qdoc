@@ -30,9 +30,9 @@
     \section2 Current state
 
     The FluentWinUI3 style is under development, and some controls are not yet supported. Those controls
-    are: \l Dial, \l Dialog, \ DialogButtonBox, \l DelayButton, \l Drawer, \l HorizontalHeaderView,
-    \l RoundButton, \l SplitView, \l StackView, \l SwipeDelegate, \l SwipeView, \l ToolSeparator,
-    \l TreeViewDelegate, \l Tumbler, and \l VerticalHeaderView. Those will fall back to use the \l {Fusion Style}.
+    are: \l Dial, \l Drawer, \l HorizontalHeaderView, \l SplitView, \l StackView, \l SwipeDelegate,
+    \l SwipeView, \l TreeViewDelegate, \l Tumbler, and \l VerticalHeaderView. Those will fall back to
+    use the \l {Fusion Style}.
 
     \section2 Customization
 
