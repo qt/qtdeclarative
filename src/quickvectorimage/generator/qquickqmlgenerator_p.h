@@ -79,6 +79,7 @@ protected:
 private:
     void generateGradient(const QGradient *grad);
     void generateTransform(const QTransform &xf);
+    void generatePathContainer(const StructureNodeInfo &info);
 
     QStringView indent();
     enum StreamFlags { NoFlags = 0x0, SameLine = 0x1 };

@@ -40,6 +40,7 @@ protected:
 
 private:
     void generateGradient(const QGradient *grad, QQuickShapePath *shapePath);
+    void generatePathContainer(const StructureNodeInfo &info);
     QQuickItem *currentItem();
     void addCurrentItem(QQuickItem *item, const NodeInfo &info);
 

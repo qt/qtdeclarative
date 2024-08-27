@@ -315,6 +315,16 @@ void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
 
 }
 
+void QQuickItemGenerator::generatePathContainer(const StructureNodeInfo &info)
+{
+    m_inShapeItem = true;
+    auto *shapeItem = new QQuickShape;
+    if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer))
+        shapeItem->setPreferredRendererType(QQuickShape::CurveRenderer);
+    m_parentShapeItem = shapeItem;
+    addCurrentItem(shapeItem, info);
+}
+
 bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
 {
     if (!isNodeVisible(info))
@@ -322,12 +332,7 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
 
     if (info.stage == StructureNodeStage::Start) {
         if (!info.forceSeparatePaths && info.isPathContainer) {
-            m_inShapeItem = true;
-            auto *shapeItem = new QQuickShape;
-            if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer))
-                shapeItem->setPreferredRendererType(QQuickShape::CurveRenderer);
-            m_parentShapeItem = shapeItem;
-            addCurrentItem(shapeItem, info);
+            generatePathContainer(info);
         } else {
             QQuickItem *item = !info.viewBox.isEmpty() ? new QQuickVectorImageGenerator::Utils::ViewBoxItem(info.viewBox) : new QQuickItem;
             addCurrentItem(item, info);
@@ -373,9 +378,16 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
         item->setWidth(m_parentItem->implicitWidth());
         item->setHeight(m_parentItem->implicitHeight());
         generateNodeBase(info);
+
+        if (!info.forceSeparatePaths && info.isPathContainer)
+            generatePathContainer(info);
     } else {
-        m_inShapeItem = false;
-        m_parentShapeItem = nullptr;
+        if (m_inShapeItem) {
+            m_inShapeItem = false;
+            m_parentShapeItem = nullptr;
+            m_items.pop();
+        }
+
         m_items.pop();
     }
 
