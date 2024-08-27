@@ -105,72 +105,60 @@ const QPointer<QQuickItem> QQuickHeaderViewBasePrivate::delegateItemAt(int row, 
 
 QVariant QQuickHeaderViewBasePrivate::modelImpl() const
 {
-    if (auto model = m_headerDataProxyModel.sourceModel())
-        return QVariant::fromValue(model.data());
-#if QT_CONFIG(transposeproxymodel)
-    if (auto model = m_transposeProxyModel.sourceModel())
-        return QVariant::fromValue(model);
-#endif
-    return QQuickTableViewPrivate::modelImpl();
-}
+    // modelImpl is supposed to return the actual model that is
+    // is used (that is, the proxy model), and not the source model.
+    if (m_headerDataProxyModel.sourceModel())
+        return QVariant::fromValue(&m_headerDataProxyModel);
 
-template <typename P, typename M>
-inline bool proxyModelSetter(QQuickHeaderViewBase *const q, P &proxyModel, M *model)
-{
-    if (model) {
-        if (model == proxyModel.sourceModel())
-            return true;
-        proxyModel.setSourceModel(model);
-        const auto &modelVariant = QVariant::fromValue(std::addressof(proxyModel));
-        bool isProxyModelChanged = (modelVariant != QQuickTableViewPrivate::get(q)->QQuickTableViewPrivate::modelImpl());
-        QQuickTableViewPrivate::get(q)->QQuickTableViewPrivate::setModelImpl(modelVariant);
-        //Necessary, since TableView's assigned model not changed, but proxy's source changed
-        if (!isProxyModelChanged)
-            emit q->modelChanged();
-        return true;
-    }
-    proxyModel.setSourceModel(nullptr);
-    return false;
+    // If we're not using the proxy model, use the assigned model
+    return QQuickTableViewPrivate::modelImpl();
 }
 
 void QQuickHeaderViewBasePrivate::setModelImpl(const QVariant &newModel)
 {
-    Q_Q(QQuickHeaderViewBase);
-    m_modelExplicitlySetByUser = true;
-    // Case 1: newModel is QAbstractTableModel
-    if (proxyModelSetter(q, m_headerDataProxyModel, newModel.value<QAbstractTableModel *>()))
-        return;
-#if QT_CONFIG(transposeproxymodel)
-    // Case 2: newModel is QAbstractItemModel but not QAbstractTableModel
-    if (orientation() == Qt::Horizontal
-        && proxyModelSetter(q, m_transposeProxyModel, newModel.value<QAbstractItemModel *>()))
-        return;
-#endif
+    m_modelExplicitlySet = newModel.isValid();
 
+    if (auto qabstracttablemodel = qobject_cast<QAbstractTableModel *>(qaim(newModel))) {
+        if (qabstracttablemodel != m_headerDataProxyModel.sourceModel()) {
+            m_headerDataProxyModel.setSourceModel(qabstracttablemodel);
+            assignedModel = QVariant::fromValue(std::addressof(m_headerDataProxyModel));
+            scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
+            emit q_func()->modelChanged();
+        }
+        return;
+    }
+
+    m_headerDataProxyModel.setSourceModel(nullptr);
     QQuickTableViewPrivate::setModelImpl(newModel);
 }
 
 void QQuickHeaderViewBasePrivate::syncModel()
 {
-    Q_Q(QQuickHeaderViewBase);
-
-    if (assignedSyncView && !m_modelExplicitlySetByUser) {
-        auto newModel = assignedSyncView->model();
-        if (auto m = newModel.value<QAbstractItemModel *>())
-            proxyModelSetter(q, m_headerDataProxyModel, m);
+    if (!m_modelExplicitlySet && assignedSyncView) {
+        // When no model has been explicitly set, but we have a syncView, we
+        // should use the headerData() from the syncView's model as model.
+        // If the model is not a QAbstractItemModel, or if it doesn't contain
+        // any header data, header view will be empty.
+        auto syncView_d = QQuickTableViewPrivate::get(assignedSyncView);
+        auto syncViewModelAsQaim = qaim(syncView_d->assignedModel);
+        if (syncViewModelAsQaim != m_headerDataProxyModel.sourceModel()) {
+            m_headerDataProxyModel.setSourceModel(syncViewModelAsQaim); // can be nullptr
+            assignedModel = QVariant::fromValue(std::addressof(m_headerDataProxyModel));
+            emit q_func()->modelChanged();
+        }
     }
 
     QQuickTableViewPrivate::syncModel();
 
+    // For models that are just a list or a number, and especially not a
+    // table, we transpose the view when the orientation is horizontal.
+    // The model (list) will then be laid out horizontally rather than
+    // vertically, which is otherwise the default.
     isTransposed = false;
     const auto aim = model->abstractItemModel();
-    if (orientation() == Qt::Horizontal) {
-        // For models that are just a list or a number, and especially not a
-        // table, we transpose the view when the orientation is horizontal.
-        // The model (list) will then be laid out horizontally rather than
-        // vertically, which is the otherwise the default.
+    if (orientation() == Qt::Horizontal)
         isTransposed = !aim || aim->columnCount() == 1;
-    }
+
     if (m_textRole.isEmpty() && aim)
         m_textRole = QLatin1String("display");
 }

@@ -284,6 +284,7 @@ private slots:
     void checkScroll();
     void checkRebuildJsModel();
     void invalidateTableInstanceModelContextObject();
+    void transposed();
 
     // Row and column reordering
     void checkVisualRowColumnAfterReorder();
@@ -7730,6 +7731,48 @@ void tst_QQuickTableView::invalidateTableInstanceModelContextObject()
 
     window.reset();
     QTRY_COMPARE(tableViewDestroyed, true);
+}
+
+void tst_QQuickTableView::transposed()
+{
+    // Check that TableView will be transposed if isTransposed is set to true.
+    // This is used by HorizontalHeaderView to be able to use e.g a JavaScript
+    // Array as model.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    const QStringList stringModel = {"one", "two", "three"};
+    tableView->setModel(QVariant::fromValue(stringModel));
+    WAIT_UNTIL_POLISHED;
+
+    // First, check that the elements are laid out in a
+    // column-major order when not transposed.
+    QCOMPARE(tableView->columns(), 1);
+    QCOMPARE(tableView->rows(), stringModel.count());
+
+    for (int row = 0; row < 3; ++row) {
+        auto item = tableView->itemAtCell({0, row});
+        QVERIFY(item);
+        const QPoint contextCell = getContextRowAndColumn(item);
+        QCOMPARE(contextCell, QPoint(0, row));
+    }
+
+    // Now transpose the model
+    tableViewPrivate->isTransposed = true;
+    tableView->forceLayout();
+
+    // Check that the elements are laid out in a row-major order
+    QCOMPARE(tableView->columns(), stringModel.count());
+    QCOMPARE(tableView->rows(), 1);
+
+    for (int col = 0; col < 3; ++col) {
+        auto item = tableView->itemAtCell({col, 0});
+        QVERIFY(item);
+        const QPoint contextCell = getContextRowAndColumn(item);
+        QCOMPARE(contextCell, QPoint(0, col));
+    }
+    // Also sanity-check that the old column-major items are removed
+    for (int row = 1; row < 3; ++row)
+        QVERIFY(!tableView->itemAtCell({0, row}));
 }
 
 void tst_QQuickTableView::checkVisualRowColumnAfterReorder()
