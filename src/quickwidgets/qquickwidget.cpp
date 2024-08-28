@@ -734,6 +734,22 @@ void QQuickWidget::setContent(const QUrl& url, QQmlComponent *component, QObject
     d->setRootObject(item);
     emit statusChanged(status());
 }
+/*!
+   Sets the initial properties \a initialProperties with which the QML
+   component gets initialized after calling \l QQuickWidget::setSource().
+
+   \note You can only use this function to initialize top-level properties.
+   \note This function should always be called before setSource, as it has
+   no effect once the component has become \c Ready.
+
+   \sa QQmlComponent::createWithInitialProperties()
+   \since 6.9
+*/
+void QQuickWidget::setInitialProperties(const QVariantMap &initialProperties)
+{
+    Q_D(QQuickWidget);
+    d->initialProperties = initialProperties;
+}
 
 /*!
   Returns the source URL, if set.
@@ -1248,7 +1264,9 @@ void QQuickWidget::continueExecute()
         return;
     }
 
-    QObject *obj = d->component->create();
+    std::unique_ptr<QObject> obj(d->initialProperties.empty()
+                                     ? d->component->create()
+                                     : d->component->createWithInitialProperties(d->initialProperties));
 
     if (d->component->isError()) {
         const QList<QQmlError> errorList = d->component->errors();
@@ -1260,7 +1278,8 @@ void QQuickWidget::continueExecute()
         return;
     }
 
-    d->setRootObject(obj);
+    if (d->setRootObject(obj.get()))
+        Q_UNUSED(obj.release());
     emit statusChanged(status());
 }
 
@@ -1268,11 +1287,12 @@ void QQuickWidget::continueExecute()
 /*!
   \internal
 */
-void QQuickWidgetPrivate::setRootObject(QObject *obj)
+bool QQuickWidgetPrivate::setRootObject(QObject *obj)
 {
     Q_Q(QQuickWidget);
     if (root == obj)
-        return;
+        return true;
+
     if (QQuickItem *sgItem = qobject_cast<QQuickItem *>(obj)) {
         root = sgItem;
         sgItem->setParentItem(offscreenWindow->contentItem());
@@ -1296,7 +1316,10 @@ void QQuickWidgetPrivate::setRootObject(QObject *obj)
             q->resize(initialSize);
         }
         initResize();
+        return true;
     }
+
+    return false;
 }
 
 QPlatformBackingStoreRhiConfig QQuickWidgetPrivate::rhiConfig() const

@@ -56,7 +56,7 @@ public:
     void updateSize();
     void updatePosition();
     void updateFrambufferObjectSize();
-    void setRootObject(QObject *);
+    bool setRootObject(QObject *);
     void render(bool needsSync);
     void renderSceneGraph();
     void initializeWithRhi();
@@ -111,6 +111,8 @@ public:
     bool deviceLost;
 
     QBackingStoreRhiSupport offscreenRenderer;
+
+    QVariantMap initialProperties;
 };
 
 class QQuickWidgetOffscreenWindow: public QQuickWindow

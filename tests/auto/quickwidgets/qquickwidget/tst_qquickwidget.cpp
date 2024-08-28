@@ -144,6 +144,7 @@ private slots:
     void accessibilityHandlesViewChange();
     void cleanupRhi();
     void dontRecreateRootElementOnWindowChange();
+    void setInitialProperties();
 
 private:
     QPointingDevice *device = QTest::createTouchDevice();
@@ -1107,6 +1108,18 @@ void tst_qquickwidget::dontRecreateRootElementOnWindowChange()
     QCoreApplication::sendEvent(quickWidget, &event);
 
     QVERIFY(!wasDestroyed);
+}
+
+void tst_qquickwidget::setInitialProperties()
+{
+    QQuickWidget widget;
+    widget.setInitialProperties({{"z", 4}, {"width", 100}});
+    widget.setSource(testFileUrl("resizemodeitem.qml"));
+    widget.show();
+    QObject *rootObject = widget.rootObject();
+    QVERIFY(rootObject);
+    QCOMPARE(rootObject->property("z").toInt(), 4);
+    QCOMPARE(rootObject->property("width").toInt(), 100);
 }
 
 QTEST_MAIN(tst_qquickwidget)
