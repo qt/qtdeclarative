@@ -67,7 +67,11 @@ involved type analysis can be performed. Therefore, the generated C++ code
 is generally more efficient than the result of the JIT compilation.
 
 There are limitations on what JavaScript constructs can be compiled to C++.
-For more information, see \l {Limitations when compiling JavaScript to C++}.
+For more information on these limitations, see
+\l {Limitations when compiling JavaScript to C++}. For statistics on how well
+a QML project can be compiled, see
+\l {Obtaining statistics about the compilation of functions and bindings}.
+
 
 \e{qmlsc} will be used instead of \e{qmlcachegen} if the Qt Quick Compiler
 Extensions are installed. It has the following additional features over
