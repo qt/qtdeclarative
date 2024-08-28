@@ -39,6 +39,8 @@ T.ComboBox {
                                     ? Config.controls.editablecombobox[__currentState]
                                     : Config.controls.combobox[__currentState]) || {}
 
+    readonly property Item __focusFrameTarget: control.editable ? null : control
+
     delegate: ItemDelegate {
         required property var model
         required property int index
@@ -89,12 +91,14 @@ T.ComboBox {
         selectedTextColor: control.palette.highlightedText
         horizontalAlignment: control.config.label_text.textHAlignment
         verticalAlignment: control.config.label_text.textVAlignment
+
+        readonly property Item __focusFrameControl: control
     }
 
     background: StyleImage {
         imageConfig: control.config.background
         Item {
-            visible: control.editable && (control.down && control.popup.visible)
+            visible: control.editable && ((control.down && control.popup.visible) || control.activeFocus)
             width: parent.width
             height: 2
             y: parent.height - height

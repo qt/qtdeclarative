@@ -37,6 +37,8 @@ T.Switch {
     readonly property var config: Config.controls.switch_[__currentState] || {}
     readonly property bool mirroredIndicator: control.mirrored !== (config.mirrored || false)
 
+    readonly property Item __focusFrameTarget: control
+
     indicator: SwitchIndicator {
         x: control.text ? (control.mirroredIndicator ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2

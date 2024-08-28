@@ -55,6 +55,8 @@ T.ToolButton {
     ].filter(Boolean).join("_") || "normal"
     readonly property var config: Config.controls.toolbutton[__currentState] || {}
 
+    readonly property Item __focusFrameTarget: control
+
     contentItem: IconLabel {
         spacing: control.spacing
         mirrored: control.mirrored

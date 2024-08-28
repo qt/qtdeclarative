@@ -52,6 +52,8 @@ T.RoundButton {
         ? Config.controls.flatbutton[__currentState]
         : Config.controls.button[__currentState]) || {}
 
+    readonly property Item __focusFrameTarget: control
+
     contentItem: IconLabel {
         spacing: control.spacing
         mirrored: control.mirrored

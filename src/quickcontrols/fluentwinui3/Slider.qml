@@ -25,6 +25,8 @@ T.Slider {
     ].filter(Boolean).join("_") || "normal"
     readonly property var config: Config.controls.slider[__currentState] || {}
 
+    readonly property Item __focusFrameTarget: control
+
     readonly property real __steps: Math.abs(to - from) / stepSize
     readonly property bool __isDiscrete: stepSize >= Number.EPSILON
         && Math.abs(Math.round(__steps) - __steps) < Number.EPSILON
