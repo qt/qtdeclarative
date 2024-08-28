@@ -45,9 +45,24 @@ Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
     effect using \l {Qt Quick Effect Maker}. For more information about shader effects,
     see the \l ShaderEffect reference documentation.
 
+    Note that MultiEffect type renders a new visual item alongside the source
+    item. To apply the effect to the source item, you need to place the new
+    MultiEffect item at the position of the source item. If the source item and
+    the MultiEffect item are not opaque, both the items can be visible, thus you
+    may not get the desired effect. To hide the source item, do any of
+    these:
+
+    \list
+        \li Set \c{visible: false} for the source item. In this case, the source
+            item is not rendered at all and cannot receive touch or click input.
+        \li Set \c{opacity: 0} for the source item. In this case, the source
+            item is completely transparent, but still can receive touch or click
+            input.
+    \endlist
+
     \section1 Example Usage
 
-    The following simple example shows how to apply a saturation effect on an item:
+    The following example shows how to apply a saturation effect to an item:
 
     \table 70%
     \row
@@ -60,8 +75,14 @@ Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
         Image {
             id: sourceItem
             source: "qt_logo_green_rgb.png"
+            // Hide the source item, otherwise both the source item and
+            // MultiEffect will be rendered
             visible: false
+            // or you can set:
+            // opacity: 0
         }
+        // Renders a new item with the specified effects rendered
+        // at the same position where the source item was rendered
         MultiEffect {
             source: sourceItem
             anchors.fill: sourceItem
@@ -70,7 +91,31 @@ Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
         \endqml
     \endtable
 
-    Here is a bit more complex example, applying multiple effects at the same time:
+    The following example shows how to apply a saturation effect to
+    a \l [QML]{Item#Item Layers}{layered Item}:
+
+    \table 70%
+    \row
+    \li \image multieffect-example1.png
+    \li \qml
+        import QtQuick
+        import QtQuick.Effects
+
+        ...
+        Image {
+            id: sourceItem
+            source: "qt_logo_green_rgb.png"
+            layer.enabled: true
+            // For the layered items, you can assign a MultiEffect directly
+            // to layer.effect.
+            layer.effect: MultiEffect {
+                saturation: -1.0
+            }
+        }
+        \endqml
+    \endtable
+
+    The following example shows how to apply multiple effects at the same time:
 
     \table 70%
     \row
@@ -645,8 +690,11 @@ void QQuickMultiEffect::setMaskEnabled(bool enabled)
 
     Source item for the mask effect. Should point to ShaderEffectSource,
     item with \l {QtQuick::Item::layer.enabled} {layer.enabled} set to \c true,
-    or to an item that can be directly used as a texture source (e.g.
+    or to an item that can be directly used as a texture source (for example,
     \l [QML] Image). The alpha channel of the source item is used for masking.
+
+    If the maskSource and the source have different dimensions, the maskSource
+    image is stretched to match the source size.
 */
 QQuickItem *QQuickMultiEffect::maskSource() const
 {
