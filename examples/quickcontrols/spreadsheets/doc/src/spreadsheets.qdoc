@@ -1,0 +1,77 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \title Spreadsheets Example
+    \example spreadsheets
+    \brief Demonstrates how to create a spreadsheet application.
+    \examplecategory {User Interface Components}
+
+    \image spreadsheets-example.png
+
+    The example demonstrates how to combine TableView and HeaderView to
+    create a spreadsheet application.
+
+    \section1 Overview
+    The spreadsheets example demonstrates how to combine TableView and
+    HeaderView to create a spreadsheet application. It serves as an
+    excellent starting point for developers looking to understand the
+    implementation of spreadsheet-like functionality in their
+    applications, highlighting the versatility of TableView and
+    HeaderView while providing practical insights into handling user
+    interactions and data operations in a grid-based interface.
+
+    This example implements a comprehensive set of functionalities,
+    providing users with a robust set of tools for data manipulation
+    and structural organization. These functionalities include:
+    \list
+        \li Cell Manipulation
+        \li Data Management
+        \li Formula Support
+    \endlist
+
+    \section1 Cell Manipulation
+    This feature set focuses on how users can interact with and modify
+    the structure of the spreadsheet. Key capabilities in this area
+    include:
+    \list
+        \li Select individual cells, entire rows, or columns
+        \li Insert and remove rows and columns
+        \li Show or hide specific rows and columns
+    \endlist
+
+    \section1 Data Management
+    These features demonstrate advanced data handling capabilities,
+    allowing users to efficiently manipulate cell contents. The
+    following operations are supported:
+    \list
+        \li Copy, cut, and paste groups of cells
+        \li Drag and drop cell contents
+        \li Reorder rows and columns
+    \endlist
+
+    \section1 Formula Support
+    This section highlights the spreadsheet's ability to perform
+    calculations, enabling users to create dynamic, interconnected
+    data. The supported operations include:
+    \list
+        \li Perform basic arithmetic operations
+        \li Calculate sum of a range of cells
+    \endlist
+
+    \section2 Perform basic arithmetic operations
+    This subsection covers the fundamental mathematical operations that
+    can be performed within cells. Users can leverage the following
+    capabilities:
+    \list
+        \li Single cell assignment
+        \li Addition and subtraction
+        \li Multiplication and division
+    \endlist
+
+    \section2 Calculate sum of a range of cells
+    The summation feature allows users to quickly total a series of
+    values. Users can employ a formula syntax similar to common
+    spreadsheet applications. For example, to sum the values in cells
+    A1 through B4, one might use a formula like "=SUM A1:B4"
+*/
