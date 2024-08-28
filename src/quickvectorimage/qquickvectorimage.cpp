@@ -16,6 +16,7 @@ QT_BEGIN_NAMESPACE
     \title Qt Quick Vector Image QML Types
     \ingroup qmlmodules
     \brief Provides QML types for displaying vector image files.
+    \since 6.8
 
     To use the types in this module, import the module with the following line:
 
