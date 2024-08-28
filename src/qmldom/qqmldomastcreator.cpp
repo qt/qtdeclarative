@@ -489,6 +489,8 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
             param.name = args->name.toString();
             param.typeName = args->type ? args->type->toString() : QString();
             index_type idx = index_type(mInfo.parameters.size());
+            if (!args->colonToken.isValid())
+                param.typeAnnotationStyle = MethodParameter::TypeAnnotationStyle::Prefix;
             mInfo.parameters.append(param);
             auto argLocs = FileLocations::ensure(nodeStack.last().fileLocations,
                                                  Path::Field(Fields::parameters).index(idx),

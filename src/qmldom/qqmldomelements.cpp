@@ -1894,9 +1894,13 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
                 first = false;
             else
                 ow.write(u", ");
-            if (const MethodParameter *argPtr = arg.as<MethodParameter>())
-                argPtr->writeOutSignal(arg, ow);
-            else
+
+            if (const MethodParameter *argPtr = arg.as<MethodParameter>()) {
+                if (argPtr->typeAnnotationStyle == MethodParameter::TypeAnnotationStyle::Prefix)
+                    argPtr->writeOutSignal(arg, ow);
+                else
+                    argPtr->writeOut(arg, ow);
+            } else
                 qCWarning(domLog) << "failed to cast to MethodParameter";
         }
         ow.writeRegion(RightParenthesisRegion);
