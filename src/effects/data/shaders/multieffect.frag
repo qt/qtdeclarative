@@ -101,9 +101,9 @@ void main() {
     shadow += texture(blurSrc5, shadowTexCoord).a * shadowBlurWeight2[1];
 #endif
     shadow *= shadowColor.a;
-    float aa = (1.0 - color.a) * (1.0 - shadow);
-    color.rgb = mix(shadowColor.rgb * shadow, color.rgb, color.a + aa);
-    color.a = 1.0 - aa;
+    float aa = color.a + (1.0 - color.a) * (1.0 - shadow);
+    aa = min(1.0, aa);
+    color = mix(shadowColor, color, aa);
 #endif // SHADOW
 
 #if defined(MASK)
