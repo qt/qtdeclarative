@@ -1795,6 +1795,7 @@ TestCase {
     function test_emptyPopupAfterModelCleared() {
         var control = createTemporaryObject(comboBox, testCase, { model: 1 })
         verify(control)
+        control.popup.popupType = Popup.Item
         compare(control.popup.implicitHeight, 0)
 
         // Ensure that it's open so that the popup's implicitHeight changes when we increase the model count.
