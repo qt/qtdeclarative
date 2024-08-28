@@ -31,7 +31,8 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
 
     QStringList builtInStyles = { QLatin1String("Basic"), QLatin1String("Fusion"),
-        QLatin1String("Imagine"), QLatin1String("Material"), QLatin1String("Universal") };
+        QLatin1String("Imagine"), QLatin1String("Material"), QLatin1String("Universal"),
+        QLatin1String("FluentWinUI3") };
 #if defined(Q_OS_MACOS)
     builtInStyles << QLatin1String("macOS");
     builtInStyles << QLatin1String("iOS");
