@@ -9,25 +9,25 @@ ColumnLayout {
     TextField {
         placeholderText: qsTr("Enter text")
         enabled: false
-        cursorVisible: false
+        cursorDelegate: Item {}
     }
 
     TextField {
         placeholderText: qsTr("Enter text")
         placeholderTextColor: "red"
-        cursorVisible: false
+        cursorDelegate: Item {}
     }
 
     TextField {
         placeholderText: qsTr("Enter text")
         focus: true
-        cursorVisible: false
+        cursorDelegate: Item {}
     }
 
     TextField {
         placeholderText: qsTr("Enter text")
         LayoutMirroring.enabled: true
-        cursorVisible: false
+        cursorDelegate: Item {}
     }
 
     TextField {
@@ -35,6 +35,6 @@ ColumnLayout {
                    + "sed do eiusmod tempor incididunt utlabore et dolore magna"
                    + "aliqua.Ut enim ad minim veniam, quis nostrud exercitation"
                    + "ullamco laboris nisi ut aliquip ex ea commodo consequat.")
-        cursorVisible: false
+        cursorDelegate: Item {}
     }
 }
