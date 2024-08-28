@@ -8,13 +8,13 @@ ColumnLayout {
 
     TextArea {
         text: "TextArea\n...\n...\n...\n..."
-        cursorVisible: false
+        cursorDelegate: Item {}
     }
 
     TextArea {
         placeholderText: "TextArea\n...\n...\n..."
         enabled: false
-        cursorVisible: false
+        cursorDelegate: Item {}
     }
 
     TextArea {
@@ -26,7 +26,7 @@ ColumnLayout {
     TextArea {
         text: "TextArea\n...\n...\n...\n..."
         LayoutMirroring.enabled: true
-        cursorVisible: false
+        cursorDelegate: Item {}
     }
 }
 
