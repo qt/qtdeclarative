@@ -718,7 +718,10 @@ class QMLDOM_EXPORT MethodParameter
 {
 public:
     constexpr static DomType kindValue = DomType::MethodParameter;
-
+    enum class TypeAnnotationStyle {
+        Prefix, // a(int x)
+        Suffix, // a(x : int)
+    };
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const;
 
     void writeOut(const DomItem &self, OutWriter &ow) const;
@@ -739,6 +742,7 @@ public:
     std::shared_ptr<ScriptExpression> value;
     QList<QmlObject> annotations;
     RegionComments comments;
+    TypeAnnotationStyle typeAnnotationStyle = TypeAnnotationStyle::Suffix;
 };
 
 class QMLDOM_EXPORT MethodInfo : public AttributeInfo
