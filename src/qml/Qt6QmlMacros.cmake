@@ -1093,10 +1093,17 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
 endfunction()
 
 function(_qt_internal_deferred_aggregate_aotstats_files target)
-    get_property(module_aotstats_files GLOBAL PROPERTY "module_aotstats_files")
-    list(JOIN module_aotstats_files "\n" lines)
+    get_property(module_aotstats_targets GLOBAL PROPERTY _qt_module_aotstats_targets)
+    set(module_aotstats_files "")
+    foreach(module_target ${module_aotstats_targets})
+        get_target_property(file_path ${module_target} _qt_aotstats_file)
+        if(file_path)
+            string(APPEND module_aotstats_files "${file_path}\n")
+        endif()
+    endforeach()
+
     set(aotstats_list_file "${PROJECT_BINARY_DIR}/.rcc/qmlcache/all_aotstats.aotstatslist")
-    file(WRITE ${aotstats_list_file} ${lines})
+    file(WRITE ${aotstats_list_file} ${module_aotstats_files})
 
     set(all_aotstats_file ${PROJECT_BINARY_DIR}/.rcc/qmlcache/all_aotstats.aotstats)
     set(formatted_stats_file ${PROJECT_BINARY_DIR}/.rcc/qmlcache/all_aotstats.txt)
@@ -1106,7 +1113,7 @@ function(_qt_internal_deferred_aggregate_aotstats_files target)
         OUTPUT
             ${all_aotstats_file}
             ${formatted_stats_file}
-        DEPENDS ${module_aotstats_files}
+        DEPENDS ${module_aotstats_targets}
         COMMAND
             ${tool_wrapper}
             $<TARGET_FILE:Qt6::qmlaotstats>
@@ -3119,14 +3126,15 @@ function(qt6_target_qml_sources target)
         endif()
     endforeach()
 
-    if(NOT "${arg_URI}" STREQUAL "")
+    if(NOT "${uri}" STREQUAL "")
         list(JOIN aotstats_files "\n" aotstats_files_lines)
-        set(module_aotstats_list_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/module_${arg_URI}.aotstatslist")
+        set(module_aotstats_list_file
+            "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/module_${uri}.aotstatslist")
         file(WRITE ${module_aotstats_list_file} ${aotstats_files_lines})
 
         # Aggregate qml file aotstats into module-level aotstats
         _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
-        set(output "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/module_${arg_URI}.aotstats")
+        set(output "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/module_${uri}.aotstats")
         add_custom_command(
             OUTPUT ${output}
             DEPENDS ${aotstats_files}
@@ -3137,9 +3145,22 @@ function(qt6_target_qml_sources target)
                 ${module_aotstats_list_file}
                 ${output}
         )
+        if(NOT CMAKE_GENERATOR STREQUAL "Xcode")
+            set(module_aotstats_target_name "module_${target}_aotstats_targets")
+            if(NOT TARGET ${module_aotstats_target_name})
+                add_custom_target(${module_aotstats_target_name}
+                    DEPENDS ${output}
+                )
+            endif()
 
-        # Collect module-level aotstats files for later aggregation at the project level
-        set_property(GLOBAL APPEND PROPERTY "module_aotstats_files" ${output})
+            set_target_properties(${module_aotstats_target_name}
+                PROPERTIES _qt_aotstats_file ${output}
+            )
+
+            # Collect module-level aotstats files for later aggregation at the project level
+            set_property(
+                GLOBAL APPEND PROPERTY _qt_module_aotstats_targets ${module_aotstats_target_name})
+        endif()
     endif()
 
     if(ANDROID)
