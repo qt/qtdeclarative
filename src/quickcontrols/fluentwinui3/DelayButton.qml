@@ -50,6 +50,8 @@ T.DelayButton {
     ].filter(Boolean).join("_") || "normal"
     readonly property var config: Config.controls.button[__currentState] || {}
 
+    readonly property Item __focusFrameTarget: control
+
     transition: Transition {
         NumberAnimation {
             duration: control.delay * (control.pressed ? 1.0 - control.progress : 0.3 * control.progress)

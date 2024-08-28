@@ -44,6 +44,9 @@ T.RangeSlider {
     ].filter(Boolean).join("_") || "normal"
     readonly property var secondHandleConfig: Config.controls.rangeslider[__secondHandleState] || {}
 
+    readonly property Item __focusFrameControl: control
+    readonly property Item __focusFrameTarget: control
+
     first.handle: StyleImage {
         x: Math.round(control.leftPadding + (control.horizontal
             ? control.first.visualPosition * (control.availableWidth - width)
@@ -53,6 +56,8 @@ T.RangeSlider {
             : control.first.visualPosition * (control.availableHeight - height)))
 
         imageConfig: control.firstHandleConfig.first_handle
+
+        readonly property Item __focusFrameTarget: control
 
         property Rectangle indicator: Rectangle {
             property real diameter: !control.enabled ? 10 : control.first.pressed ? 8 : control.first.hovered ? 14 : 10
@@ -85,6 +90,8 @@ T.RangeSlider {
             : control.second.visualPosition * (control.availableHeight - height)))
 
         imageConfig: control.secondHandleConfig.second_handle
+
+        readonly property Item __focusFrameTarget: control
 
         property Rectangle indicator: Rectangle {
             property real diameter: control.second.pressed ? 8 : control.second.hovered ? 14 : 10

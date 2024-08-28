@@ -44,6 +44,8 @@ T.TabButton {
                                             ? Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.62)
                                             : Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.7725)
 
+    readonly property Item __focusFrameTarget: control
+
     contentItem: IconLabel {
         spacing: control.spacing
         mirrored: control.mirrored

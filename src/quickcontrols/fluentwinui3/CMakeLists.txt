@@ -42,8 +42,9 @@ set(qml_files
     "ToolButton.qml"
     "ToolSeparator.qml"
     "ToolTip.qml"
-    "Config.qml" # TODO: move to impl module
-    "StyleImage.qml" # TODO: move to impl module
+    "Config.qml"
+    "StyleImage.qml"
+    "FocusFrame.qml"
 )
 
 set_source_files_properties(Config.qml PROPERTIES
@@ -69,6 +70,7 @@ qt_internal_add_qml_module(qtquickcontrols2fluentwinui3styleplugin
     SOURCES
         qtquickcontrols2fluentwinui3styleplugin.cpp
         qquickfluentwinui3theme_p.h qquickfluentwinui3theme.cpp
+        qquickfluentwinui3focusframe_p.h qquickfluentwinui3focusframe.cpp
     QML_FILES
         ${qml_files}
     RESOURCES

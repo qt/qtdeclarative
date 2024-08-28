@@ -41,6 +41,8 @@ T.SwitchDelegate {
     ].filter(Boolean).join("_") || "normal"
     readonly property var config: Config.controls.itemdelegate[__currentState] || {}
 
+    readonly property Item __focusFrameTarget: control
+
     indicator: SwitchIndicator {
         readonly property string currentState: [
             control.checked && "checked",
