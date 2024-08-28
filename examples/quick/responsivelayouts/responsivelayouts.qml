@@ -9,10 +9,10 @@ Window {
     id: appWindow
 
     visible: true
-    title: qsTr("Responsive layouts with LayoutItemProxy")
+    title: qsTr(`Responsive layouts with LayoutItemProxy: ${grid.columns} columns`)
 
-    minimumHeight: 500
-    minimumWidth: 250
+    minimumHeight: 320
+    minimumWidth: 240
 
     //! [item definition]
     Rectangle {
@@ -23,13 +23,16 @@ Window {
         color: "#00414A"
 
         GridLayout {
-            anchors.fill: parent
             id: grid
-            columns: 2
-            anchors.margins: 8
+            anchors {
+                fill: parent
+                margins: 8
+            }
+            columns: Math.min(Math.round(width / 130), 6)
             Repeater {
-                model: 18
-                Rectangle {
+                model: 60
+                delegate: Rectangle {
+                    required property int index
                     Layout.fillWidth: true
                     Layout.margins: 8
                     implicitWidth: 200
@@ -43,7 +46,7 @@ Window {
                         color: "#ffffff"
                         font.pointSize: 22
                         anchors.centerIn: parent
-                        text: index
+                        text: parent.index + 1
                     }
                 }
             }
@@ -126,6 +129,7 @@ Window {
         anchors.fill: parent
         ColumnLayout {
             Layout.minimumWidth: 100
+            Layout.fillWidth: true
             Layout.margins: 2
             LayoutItemProxy{ target: a }
             LayoutItemProxy{ target: b }
@@ -138,7 +142,7 @@ Window {
 
         LayoutItemProxy {
             Layout.fillHeight: true
-            Layout.fillWidth: false
+            Layout.fillWidth: true
             target: contentItem
         }
     }
