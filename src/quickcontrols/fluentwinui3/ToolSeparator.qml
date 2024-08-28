@@ -12,10 +12,11 @@ T.ToolSeparator {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    topPadding: config.topPadding || 0
-    bottomPadding: config.bottomPadding || 0
-    leftPadding: config.leftPadding || 0
-    rightPadding: config.rightPadding || 0
+    padding: 2
+    topPadding: vertical ? config.topPadding : padding
+    bottomPadding: vertical ? config.bottomPadding : padding
+    leftPadding: vertical ? padding : config.topPadding
+    rightPadding: vertical ? padding : config.bottomPadding
 
     readonly property var config: Config.controls.toolbutton["normal"] || {}
 
