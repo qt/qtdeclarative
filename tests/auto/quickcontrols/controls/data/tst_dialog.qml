@@ -80,10 +80,10 @@ TestCase {
 
     function test_reject() {
         let control = createTemporaryObject(dialog, testCase)
-
         let openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
         verify(openedSpy.valid)
 
+        control.popupType = Popup.Item
         control.open()
         openedSpy.wait()
         compare(openedSpy.count, 1)
