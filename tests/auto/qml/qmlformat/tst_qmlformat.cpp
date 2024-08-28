@@ -369,6 +369,9 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("enumWithValues")
             << "enumWithValues.qml"
             << "enumWithValues.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("typeAnnotatedSignal")
+            << "signal.qml"
+            << "signal.formatted.qml" << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
