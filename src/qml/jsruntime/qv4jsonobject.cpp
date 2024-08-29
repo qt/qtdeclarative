@@ -623,7 +623,8 @@ public:
                         QStringLiteral("Cannot convert circular structure to JSON"));
         }
 
-        stringify->v4->checkStackLimits();
+        const bool hasOverflow = stringify->v4->checkStackLimits();
+        Q_UNUSED(hasOverflow); // No handling needed. Exception has been thrown already.
     }
 
     bool foundProblem() const { return m_callDepthRecorder.ee->hasException; }
