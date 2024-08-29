@@ -1948,8 +1948,11 @@ bool QQuickComboBox::eventFilter(QObject *object, QEvent *event)
             d->extra->allowComplete = ke->key() != Qt::Key_Backspace && ke->key() != Qt::Key_Delete;
         break;
     }
-    case QEvent::FocusOut:
-        if (qGuiApp->focusObject() != this && (!d->popup || !d->popup->hasActiveFocus())) {
+    case QEvent::FocusOut: {
+        const bool hasActiveFocus = d->popup && d->popup->hasActiveFocus();
+        const bool usingPopupWindows =
+                d->popup ? QQuickPopupPrivate::get(d->popup)->usePopupWindow() : false;
+        if (qGuiApp->focusObject() != this && !(hasActiveFocus && !usingPopupWindows)) {
             // Only close the popup if focus was transferred somewhere else
             // than to the popup or the popup button (which normally means that
             // the user clicked on the popup button to open it, not close it).
@@ -1963,6 +1966,7 @@ bool QQuickComboBox::eventFilter(QObject *object, QEvent *event)
                 setCurrentIndex(indexForEditText);
         }
         break;
+    }
 #if QT_CONFIG(im)
     case QEvent::InputMethod:
         if (d->extra.isAllocated())
@@ -1992,7 +1996,9 @@ void QQuickComboBox::focusOutEvent(QFocusEvent *event)
     Q_D(QQuickComboBox);
     QQuickControl::focusOutEvent(event);
 
-    if (qGuiApp->focusObject() != d->contentItem && (!d->popup || !d->popup->hasActiveFocus())) {
+    const bool hasActiveFocus = d->popup && d->popup->hasActiveFocus();
+    const bool usingPopupWindows = d->popup && QQuickPopupPrivate::get(d->popup)->usePopupWindow();
+    if (qGuiApp->focusObject() != d->contentItem && !(hasActiveFocus && !usingPopupWindows)) {
         // Only close the popup if focus was transferred
         // somewhere else than to the popup or the inner line edit (which is
         // normally done from QQuickComboBox::focusInEvent).
