@@ -1202,7 +1202,7 @@ void tst_QQuickMenu::popup()
     // to the center of the window.
     QTRY_VERIFY(qFuzzyCompare(menu->x(), -11));
     QTRY_VERIFY(qFuzzyCompare(menu->y(), -22));
-    QCOMPARE(menu->popupItem()->mapToGlobal({0,0}), button->mapToGlobal({-11, -22}));
+    QCOMPARE(menu->popupItem()->mapToGlobal({0,0}).toPoint(), button->mapToGlobal({-11, -22}).toPoint());
     menu->close();
 
     menu->setParentItem(nullptr);
@@ -1212,7 +1212,7 @@ void tst_QQuickMenu::popup()
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
     QTRY_VERIFY(qFuzzyCompare(menu->x(), -33));
     QTRY_VERIFY(qFuzzyCompare(menu->y(), -44));
-    QCOMPARE(menu->popupItem()->mapToGlobal({0,0}), button->mapToGlobal({-33, -44}));
+    QCOMPARE(menu->popupItem()->mapToGlobal({0,0}).toPoint(), button->mapToGlobal({-33, -44}).toPoint());
     menu->close();
 
     const qreal twelveOrLeftMargin = qMax(qreal(12), menu->leftMargin());
@@ -1261,7 +1261,7 @@ void tst_QQuickMenu::popup()
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
         QTRY_VERIFY(qFuzzyCompare(menu->x(), -11));
         QTRY_VERIFY(qFuzzyCompare(menu->y(), -22 - menu->topPadding() - menuItem->y()));
-        QCOMPARE(menu->popupItem()->mapToGlobal({0,0}), button->mapToGlobal({-11, -22 - menu->topPadding() - menuItem->y()}));
+        QCOMPARE(menu->popupItem()->mapToGlobal({0,0}).toPoint(), button->mapToGlobal({-11, -22 - menu->topPadding() - menuItem->y()}).toPoint());
         menu->close();
 
         menu->setParentItem(nullptr);
@@ -1271,7 +1271,7 @@ void tst_QQuickMenu::popup()
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
         QTRY_VERIFY(qFuzzyCompare(menu->x(), -33));
         QTRY_VERIFY(qFuzzyCompare(menu->y(), -44 - menu->topPadding() - menuItem->y()));
-        QCOMPARE(menu->popupItem()->mapToGlobal({0,0}), button->mapToGlobal({-33, -44 - menu->topPadding() - menuItem->y()}));
+        QCOMPARE(menu->popupItem()->mapToGlobal({0,0}).toPoint(), button->mapToGlobal({-33, -44 - menu->topPadding() - menuItem->y()}).toPoint());
         menu->close();
     }
 
