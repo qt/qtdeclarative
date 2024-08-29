@@ -1,0 +1,105 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+    \title Vector Image Example
+    \example vectorimage
+    \image qml-vectorimage-example.png
+    \brief A Qt Quick example demonstrating the differences of \l{Qt SVG}, VectorImage and \l{svgtoqml}.
+    \ingroup qtquickexamples
+    \examplecategory {Graphics}
+
+    There are several different ways you can include two-dimensional vector graphics in your
+    Qt application. This example focuses on the \c{SVG} format and how this can be used with Qt.
+    As a baseline, Qt supports the static features of the \c{SVG Tiny 1.2} profile. In addition,
+    \l{Qt SVG} optionally supports some features from the full profile, but those are not used in
+    this example.
+
+    The example shows a grid of 3x3 cells, each containing the same vector image of a heart. The
+    heart image is provided as an \c{SVG} file with the example.
+
+    In the grid, each row shows the image at a different scale factor (1x, 2.5x and 4x
+    respectively).
+
+    Each column represents a different way to render the vector graphics in Qt. The left-most column
+    is an \l{Image} component, the center column is a \l{VectorImage} component and the right-most
+    column is a pregenerated \c{QML} representation created using the \l{svgtoqml} tool.
+
+    Each method of rendering the vector graphics has its own benefits and drawbacks, and caters to
+    different use cases. To make an informed decision about which one to use, it can be useful to
+    understand the details of how they differ.
+
+    \section1 The \l{Image} component and \l{Qt SVG}
+
+    When you use the \l{Image} element and set an \c{SVG} file as source, this will invoke the
+    image format plugin in \l{Qt SVG}. The plugin will parse the \c{SVG} file, rasterize it using
+    the software rasterizer in \l{QPainter} and then provide it to Qt Quick as a pixmap image. This
+    is equivalent to using the \l{QSvgRenderer} class to draw the image.
+
+    \snippet vectorimage/Main.qml image
+
+    Since the vector image is rasterized at a specific size, any transformation we apply to the
+    \l{Image} will be applied to the \e{rasterized image}. This can result in pixelation artifacts
+    and uneven curves.
+
+    Loading a vector image through \l{Image} works best if you request the image at the exact size
+    that you intend to display. When the \l{Image} is displayed at a 1x scale in the top-most row,
+    it looks identical to the others, but at higher scale factors it starts to look fuzzy.
+
+    If the image will ever only be displayed with a single size, then this will typically be the
+    most performant option. There is a start-up cost for rasterizing the image at the specified
+    size, but after this, the cost of copying the data onto the screen is very low.
+
+    But as the image is requested at multiple different sizes, the start-up cost will grow, as will
+    the accumulated memory consumption. Animated zooms of the image can often get too expensive to
+    run at full frame rate on lower end devices. These are the use cases for which \l{VectorImage}
+    and \l{svgtoqml} should be considered.
+
+    \section1 The \l{VectorImage} component
+
+    As an alternative to \l{Image}, Qt provides the \l{VectorImage} component. This converts the
+    \c{SVG} image to a vector graphics representation in Qt Quick, and rasterization happens on
+    demand, on the graphics HW, as it is rendered to the screen.
+
+    \snippet vectorimage/Main.qml vectorimage
+
+    Since the image is not pre-rasterized, we can apply transformations to it without losing
+    fidelity to the original shapes. Note that the example uses the \c{VectorImage.CurveRenderer}
+    renderer type. This is recommended for use cases where the image will be transformed and
+    antialiasing is needed.
+
+    This means that we can display the image at any size and even animate the scale of the image,
+    and all the work will be done by the graphics hardware. However, when the \l{VectorImage} is
+    rendered onto the screen, it will come at a slightly higher cost than rendering an \l{Image}.
+    This is because the rasterization of curves happens every time the component is rendered and
+    not ahead of time.
+
+    Therefore, \l{VectorImage} is most suitable for vector graphics where the size will change
+    frequently. It can also be suitable when the destination size of the image is very large and
+    memory consumption is a concern. When using \l{Image}, the full rasterized image has to be
+    stored in graphics memory. Thus, the memory consumption will scale with the size of the image.
+    The memory consumed by \l{VectorImage} will be the same, regardless of the destination size it
+    is rendered at.
+
+    \section1 The \l{svgtoqml} tool
+
+    The \l{VectorImage} component parses the \c{SVG} file and builds up an equivalent scene of
+    Qt Quick items at run-time.
+
+    If the \c{SVG} is part of the application assets, then some of the work can be done ahead of
+    time instead, by using the \l{svgtoqml} tool. This tool produces the same scene as
+    \l{VectorImage}, but instead of building it at run-time, it creates a \c{QML} file which can
+    be included in the application project.
+
+    In this example, the \c{heart.svg} file has been pre-converted to a file called \c{Heart.qml}.
+    This can be instantiated in the scene as any other Qt Quick item.
+
+    \snippet vectorimage/Main.qml svgtoqml
+
+    By using this approach, we do not need to parse the \c{SVG} file every time the application
+    is started. In addition, the \c{svgtoqml} tool can optimize and analyze the shapes, in order to
+    provide the renderer with hints that will further speed up its run-time processing.
+
+    The \l{svgtoqml} tool should be considered for the same use cases as \l{VectorImage} and should
+    be preferred whenever the \c{SVG} file is available as an asset when the application is built
+    and is not provided by the end-user of the application.
+*/
