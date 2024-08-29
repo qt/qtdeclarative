@@ -27,6 +27,7 @@ private slots:
     void accessParentOnDestruction();
     void cleanInternalClasses();
     void createObjectsOnDestruction();
+    void forInOnProxyMarksTarget();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -204,6 +205,33 @@ void tst_qv4mm::createObjectsOnDestruction()
     QVERIFY(obj);
     QCOMPARE(obj->property("numChecked").toInt(), 1000);
     QCOMPARE(obj->property("ok").toBool(), true);
+}
+
+
+QV4::ReturnedValue method_in_use(const QV4::FunctionObject *, const QV4::Value *, const QV4::Value *argv, int argc) {
+    static QV4::Value::HeapBasePtr target = nullptr;
+
+    if (argc == 1) {
+        target = argv[0].heapObject();
+    }
+
+    Q_ASSERT(target);
+    return QV4::Encode(target->inUse());
+}
+
+void tst_qv4mm::forInOnProxyMarksTarget() {
+    QQmlEngine engine;
+    auto *v4 = engine.handle();
+    auto globalObject = v4->globalObject;
+    globalObject->defineDefaultProperty(QStringLiteral("__inUse"), method_in_use);
+
+    QQmlComponent comp(&engine, testFileUrl("forInOnProxyMarksTarget.qml"));
+    QVERIFY(comp.isReady());
+    std::unique_ptr<QObject> root {comp.create()};
+
+    QVERIFY(root);
+    QVERIFY(root->property("wasInUseBeforeRevoke").toBool());
+    QVERIFY(root->property("wasInUseAfterRevoke").toBool());
 }
 
 QTEST_MAIN(tst_qv4mm)
