@@ -31,12 +31,14 @@ public:
 
 private slots:
     void init() override;
+    void cleanup();
     void delegate();
     void mouse_data();
     void mouse();
     void touch();
     void keys_data();
     void keys();
+    void mnemonics_data();
     void mnemonics();
     void altNavigation();
     void addRemove_data();
@@ -105,6 +107,14 @@ void tst_qquickmenubar::init()
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, false);
 }
 
+void tst_qquickmenubar::cleanup()
+{
+    // For some reason, it's not impossible for popups to already exist, when a test is executed.
+    if (QGuiApplicationPrivate::popupCount() > 0)
+        QGuiApplicationPrivate::closeAllPopups();
+    QTRY_COMPARE(QGuiApplicationPrivate::popupCount(), 0);
+}
+
 void tst_qquickmenubar::delegate()
 {
     QQmlApplicationEngine engine(testFileUrl("empty.qml"));
@@ -120,15 +130,16 @@ void tst_qquickmenubar::delegate()
 
 void tst_qquickmenubar::mouse_data()
 {
-    QTest::addColumn<bool>("usePopupWindow");
-    QTest::newRow("in-scene popup") << false;
-    // Uncomment when popup windows work 100%
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    // Uncomment when popup windows work 100% (QTBUG-128479)
     // if (popupWindowsSupported)
-    //     QTest::newRow("popup window") << true;
+    //     QTest::newRow("Popup.Window") << QQuickPopup::Window;
 }
 
 void tst_qquickmenubar::mouse()
 {
+    QFETCH(QQuickPopup::PopupType, popupType);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
 
@@ -155,7 +166,10 @@ void tst_qquickmenubar::mouse()
     QQuickMenu *viewMenuBarMenu = menuBar->menuAt(2);
     QQuickMenu *helpMenuBarMenu = menuBar->menuAt(3);
     QVERIFY(fileMenuBarMenu && editMenuBarMenu && viewMenuBarMenu && helpMenuBarMenu);
-
+    fileMenuBarMenu->setPopupType(popupType);
+    editMenuBarMenu->setPopupType(popupType);
+    viewMenuBarMenu->setPopupType(popupType);
+    helpMenuBarMenu->setPopupType(popupType);
     QQuickMenuBarItem *fileMenuBarItem = qobject_cast<QQuickMenuBarItem *>(fileMenuBarMenu->parentItem());
     QQuickMenuBarItem *editMenuBarItem = qobject_cast<QQuickMenuBarItem *>(editMenuBarMenu->parentItem());
     QQuickMenuBarItem *viewMenuBarItem = qobject_cast<QQuickMenuBarItem *>(viewMenuBarMenu->parentItem());
@@ -345,15 +359,16 @@ void tst_qquickmenubar::touch()
 
 void tst_qquickmenubar::keys_data()
 {
-    QTest::addColumn<bool>("usePopupWindow");
-    QTest::newRow("in-scene popup") << false;
-    // Uncomment when popup windows work 100%
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    // Uncomment when popup windows work 100% (QTBUG-128479)
     // if (popupWindowsSupported)
-    //     QTest::newRow("popup window") << true;
+    //     QTest::newRow("Popup.Window") << QQuickPopup::Window;
 }
 
 void tst_qquickmenubar::keys()
 {
+    QFETCH(QQuickPopup::PopupType, popupType);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
 
@@ -376,7 +391,10 @@ void tst_qquickmenubar::keys()
     QQuickMenu *viewMenuBarMenu = menuBar->menuAt(2);
     QQuickMenu *helpMenuBarMenu = menuBar->menuAt(3);
     QVERIFY(fileMenuBarMenu && editMenuBarMenu && viewMenuBarMenu && helpMenuBarMenu);
-
+    fileMenuBarMenu->setPopupType(popupType);
+    editMenuBarMenu->setPopupType(popupType);
+    viewMenuBarMenu->setPopupType(popupType);
+    helpMenuBarMenu->setPopupType(popupType);
     QQuickMenuBarItem *fileMenuBarItem = qobject_cast<QQuickMenuBarItem *>(fileMenuBarMenu->parentItem());
     QQuickMenuBarItem *editMenuBarItem = qobject_cast<QQuickMenuBarItem *>(editMenuBarMenu->parentItem());
     QQuickMenuBarItem *viewMenuBarItem = qobject_cast<QQuickMenuBarItem *>(viewMenuBarMenu->parentItem());
@@ -546,8 +564,18 @@ void tst_qquickmenubar::keys()
     QTRY_VERIFY(!viewMenuBarMenu->isVisible());
 }
 
+void tst_qquickmenubar::mnemonics_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    // Uncomment when popup windows work 100% (QTBUG-128479)
+    // if (popupWindowsSupported)
+    //     QTest::newRow("Popup.Window") << QQuickPopup::Window;
+}
+
 void tst_qquickmenubar::mnemonics()
 {
+    QFETCH(QQuickPopup::PopupType, popupType);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
 
@@ -576,6 +604,10 @@ void tst_qquickmenubar::mnemonics()
     QQuickMenu *viewMenuBarMenu = menuBar->menuAt(2);
     QQuickMenu *helpMenuBarMenu = menuBar->menuAt(3);
     QVERIFY(fileMenuBarMenu && editMenuBarMenu && viewMenuBarMenu && helpMenuBarMenu);
+    fileMenuBarMenu->setPopupType(popupType);
+    editMenuBarMenu->setPopupType(popupType);
+    viewMenuBarMenu->setPopupType(popupType);
+    helpMenuBarMenu->setPopupType(popupType);
 
     QQuickMenuBarItem *fileMenuBarItem = qobject_cast<QQuickMenuBarItem *>(fileMenuBarMenu->parentItem());
     QQuickMenuBarItem *editMenuBarItem = qobject_cast<QQuickMenuBarItem *>(editMenuBarMenu->parentItem());
@@ -1099,15 +1131,17 @@ void tst_qquickmenubar::addRemoveExistingMenus()
 
 void tst_qquickmenubar::checkHighlightWhenMenuDismissed_data()
 {
-    QTest::addColumn<bool>("usePopupWindow");
-    QTest::newRow("in-scene popup") << false;
-    // Uncomment when popup windows work 100%
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    // Uncomment when popup windows work 100% (QTBUG-128479)
     // if (popupWindowsSupported)
-    //     QTest::newRow("popup window") << true;
+    //     QTest::newRow("Popup.Window") << QQuickPopup::Window;
 }
 
 void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
 {
+    QFETCH(QQuickPopup::PopupType, popupType);
+
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
@@ -1128,6 +1162,8 @@ void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
     QQuickMenu *staticMenu = menuBar->menuAt(0);
     QQuickMenu *dynamicMenu = menuBar->menuAt(1);
     QVERIFY(staticMenu && dynamicMenu);
+    staticMenu->setPopupType(popupType);
+    dynamicMenu->setPopupType(popupType);
     QQuickMenuBarItem *staticMenuBarItem = qobject_cast<QQuickMenuBarItem *>(staticMenu->parentItem());
     QQuickMenuBarItem *dynamicMenuBarItem = qobject_cast<QQuickMenuBarItem *>(dynamicMenu->parentItem());
     QVERIFY(staticMenuBarItem && dynamicMenuBarItem);
