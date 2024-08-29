@@ -602,6 +602,9 @@ void tst_QQuickMenu::mnemonics()
     QQuickMenuItem *subMenuItem = window->property("subMenuItem").value<QQuickMenuItem *>();
     QVERIFY(menu && action && menuItem && subMenu && subMenuItem);
 
+    // TODO: QTBUG-128474
+    menu->setPopupType(QQuickPopup::Item);
+
     keySim.press(Qt::Key_Alt);
     menu->open();
     QTRY_VERIFY(menu->isOpened());
@@ -1541,6 +1544,8 @@ void tst_QQuickMenu::subMenuDisabledMouse()
     QVERIFY(mainMenu);
     mainMenu->setCascade(cascade);
     QCOMPARE(mainMenu->cascade(), cascade);
+    // TODO: QTBUG-128474
+    mainMenu->setPopupType(QQuickPopup::Item);
 
     QQuickMenuItem *menuItem1 = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(0));
     QVERIFY(menuItem1);
@@ -1619,6 +1624,8 @@ void tst_QQuickMenu::subMenuKeyboard()
     QVERIFY(mainMenu);
     mainMenu->setCascade(cascade);
     QCOMPARE(mainMenu->cascade(), cascade);
+    // TODO: QTBUG-128474
+    mainMenu->setPopupType(QQuickPopup::Item);
 
     QQuickMenu *subMenu1 = window->property("subMenu1").value<QQuickMenu *>();
     QVERIFY(subMenu1);
@@ -1748,6 +1755,8 @@ void tst_QQuickMenu::subMenuDisabledKeyboard()
     QVERIFY(mainMenu);
     mainMenu->setCascade(cascade);
     QCOMPARE(mainMenu->cascade(), cascade);
+    // TODO: QTBUG-128474
+    mainMenu->setPopupType(QQuickPopup::Item);
 
     QQuickMenuItem *menuItem1 = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(0));
     QVERIFY(menuItem1);
@@ -2159,6 +2168,8 @@ void tst_QQuickMenu::scrollable()
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    // TODO: QTBUG-128474
+    menu->setPopupType(QQuickPopup::Item);
     menu->open();
     QVERIFY(menu->isVisible());
 
@@ -2200,6 +2211,8 @@ void tst_QQuickMenu::disableWhenTriggered()
 
     QQuickMenu *menu = window->findChild<QQuickMenu*>("Menu");
     QVERIFY(menu);
+    // TODO: QTBUG-128474
+    menu->setPopupType(QQuickPopup::Item);
 
     menu->open();
     QVERIFY(menu->isVisible());
