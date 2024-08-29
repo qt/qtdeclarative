@@ -267,6 +267,10 @@ TestCase {
     function test_inheritance_popup(data) {
         let prop = data.tag
         let popupObject = createTemporaryObject(popupComponent, testCase)
+
+        if (popupObject.popup.popupType === Popup.Window)
+            skip("QTBUG-126713: Palette propagation is currently not supported for QQuickPopupWindows.")
+
         compare(popupObject.popup.Material.textSelectionColor.toString(), popupObject.Material.textSelectionColor.toString())
         compare(popupObject.label.color.toString(), popupObject.Material.textSelectionColor.toString())
         compare(popupObject.label2.color.toString(), popupObject.Material.textSelectionColor.toString())
@@ -523,6 +527,10 @@ TestCase {
         let container = createTemporaryObject(menuComponent, testCase)
         verify(container)
         verify(container.menu)
+
+        if (container.menu.popupType === Popup.Window)
+            skip("QTBUG-126713: Palette propagation is currently not supported for QQuickPopupWindows.")
+
         container.menu.open()
         verify(container.menu.visible)
         let child = container.menu.itemAt(0)
@@ -762,6 +770,9 @@ TestCase {
     function test_background(data) {
         let window = createTemporaryObject(backgroundControlsComponent, testCase)
         verify(window)
+
+        if (window.popup.popupType === Popup.Window)
+            skip("QTBUG-126713: Palette propagation is currently not supported for QQuickPopupWindows.")
 
         let control = window[data.tag]
         verify(control)
