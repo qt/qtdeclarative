@@ -1065,7 +1065,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         endif()
     endif()
 
-    if("${CMAKE_VERSION}" VERSION_GREATER_EQUAL "3.19.0" AND NOT CMAKE_GENERATOR STREQUAL "Xcode")
+    if("${CMAKE_VERSION}" VERSION_GREATER_EQUAL "3.19.0")
         set(id qmlaotstats_aggregation)
         cmake_language(DEFER DIRECTORY ${PROJECT_BINARY_DIR} GET_CALL ${id} call)
 
@@ -1075,17 +1075,10 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         endif()
     else()
         if(NOT TARGET all_aotstats)
-            if(CMAKE_GENERATOR STREQUAL "Xcode") #TODO: QTBUG-125995
-                add_custom_target(
-                    all_aotstats
-                    ${CMAKE_COMMAND} -E echo "aotstats is not supported on Xcode"
-                )
-            else()
-                add_custom_target(
-                    all_aotstats
-                    ${CMAKE_COMMAND} -E echo "aotstats is not supported on CMake versions < 3.19"
-                )
-            endif()
+            add_custom_target(
+                all_aotstats
+                ${CMAKE_COMMAND} -E echo "aotstats is not supported on CMake versions < 3.19"
+            )
         endif()
     endif()
 endfunction()
@@ -3142,22 +3135,21 @@ function(qt6_target_qml_sources target)
                 ${module_aotstats_list_file}
                 ${output}
         )
-        if(NOT CMAKE_GENERATOR STREQUAL "Xcode")
-            set(module_aotstats_target_name "module_${target}_aotstats_targets")
-            if(NOT TARGET ${module_aotstats_target_name})
-                add_custom_target(${module_aotstats_target_name}
-                    DEPENDS ${output}
-                )
-            endif()
-
-            set_target_properties(${module_aotstats_target_name}
-                PROPERTIES _qt_aotstats_file ${output}
+        set(module_aotstats_target_name "module_${target}_aotstats_targets")
+        if(NOT TARGET ${module_aotstats_target_name})
+            add_custom_target(${module_aotstats_target_name}
+                DEPENDS ${output}
             )
-
-            # Collect module-level aotstats files for later aggregation at the project level
-            set_property(
-                GLOBAL APPEND PROPERTY _qt_module_aotstats_targets ${module_aotstats_target_name})
+            add_dependencies(${module_aotstats_target_name} ${target}_qmltyperegistration)
         endif()
+
+        set_target_properties(${module_aotstats_target_name}
+            PROPERTIES _qt_aotstats_file ${output}
+        )
+
+        # Collect module-level aotstats files for later aggregation at the project level
+        set_property(
+            GLOBAL APPEND PROPERTY _qt_module_aotstats_targets ${module_aotstats_target_name})
     endif()
 
     if(ANDROID)
