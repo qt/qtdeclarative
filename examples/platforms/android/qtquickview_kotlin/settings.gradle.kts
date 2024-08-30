@@ -3,9 +3,6 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-        maven {
-            url = uri("https://android.qt.io/maven/snapshots")
-        }
     }
 }
 dependencyResolutionManagement {
