@@ -11,8 +11,6 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlcomponent.h>
 
-#include <QtQuick/qquickitem.h>
-
 
 QT_BEGIN_NAMESPACE
 
@@ -21,8 +19,12 @@ QScopedPointer<QQuickItem> QQuickFluentWinUI3FocusFrame::m_focusFrame;
 QQuickFluentWinUI3FocusFrame::QQuickFluentWinUI3FocusFrame()
 {
     connect(qGuiApp, &QGuiApplication::focusObjectChanged, this, [this]{
-        if (auto item = qobject_cast<QQuickItem *>(qGuiApp->focusObject()))
-            moveToItem(item);
+        if (auto control = qobject_cast<QQuickControl *>(qGuiApp->focusObject())) {
+            if (control->focusReason() == Qt::FocusReason::TabFocusReason
+                || control->focusReason() == Qt::FocusReason::BacktabFocusReason) {
+                moveToItem(control);
+            }
+        }
     });
 }
 
@@ -38,7 +40,7 @@ QQuickItem *QQuickFluentWinUI3FocusFrame::createFocusFrame(QQmlContext *context)
     return frame;
 }
 
-void QQuickFluentWinUI3FocusFrame::moveToItem(QQuickItem *item)
+void QQuickFluentWinUI3FocusFrame::moveToItem(QQuickControl *item)
 {
     if (!m_focusFrame) {
         const auto context = QQmlEngine::contextForObject(item);
@@ -59,17 +61,17 @@ void QQuickFluentWinUI3FocusFrame::moveToItem(QQuickItem *item)
                               Q_ARG(QVariant, QVariant::fromValue(target)));
 }
 
-QQuickItem *QQuickFluentWinUI3FocusFrame::getFocusTarget(QQuickItem *focusItem) const
+QQuickControl *QQuickFluentWinUI3FocusFrame::getFocusTarget(QQuickControl *focusItem) const
 {
     const auto parentItem = focusItem->parentItem();
     if (!parentItem)
         return nullptr;
 
-    // The item that gets active focus can be a child of the control (e.g
+    // The control that gets active focus can be a child of the control (e.g
     // editable ComboBox). In that case, resolve the actual control first.
-    const auto proxy = focusItem->property("__focusFrameControl").value<QQuickItem *>();
+    const auto proxy = focusItem->property("__focusFrameControl").value<QQuickControl *>();
     const auto control = proxy ? proxy : focusItem;
-    auto target = control->property("__focusFrameTarget").value<QQuickItem *>();
+    auto target = control->property("__focusFrameTarget").value<QQuickControl *>();
 
     return target;
 }

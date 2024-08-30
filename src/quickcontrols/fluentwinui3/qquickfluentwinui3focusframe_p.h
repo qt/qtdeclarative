@@ -13,7 +13,7 @@
 //
 // We mean it.
 //
-#include <QtQuick/qquickitem.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -28,8 +28,8 @@ private:
     static QScopedPointer<QQuickItem> m_focusFrame;
 
     QQuickItem *createFocusFrame(QQmlContext *context);
-    void moveToItem(QQuickItem *item);
-    QQuickItem *getFocusTarget(QQuickItem *focusItem) const;
+    void moveToItem(QQuickControl *item);
+    QQuickControl *getFocusTarget(QQuickControl *focusItem) const;
 };
 
 QT_END_NAMESPACE
