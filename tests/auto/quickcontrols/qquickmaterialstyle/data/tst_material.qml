@@ -745,6 +745,7 @@ TestCase {
             property Page page: Page { }
             property Pane pane: Pane { }
             property Popup popup: Popup { }
+            property Popup popup_window: Popup { popupType: Popup.Window }
             property TabBar tabbar: TabBar { }
             property ToolBar toolbar: ToolBar { }
             property ToolTip tooltip: ToolTip { }
@@ -761,6 +762,7 @@ TestCase {
             { tag: "page", inherit: true },
             { tag: "pane", inherit: true },
             { tag: "popup", inherit: true },
+            { tag: "popup_window", inherit: true },
             { tag: "tabbar", inherit: true },
             { tag: "toolbar", inherit: false },
             { tag: "tooltip", inherit: false }
@@ -770,9 +772,6 @@ TestCase {
     function test_background(data) {
         let window = createTemporaryObject(backgroundControlsComponent, testCase)
         verify(window)
-
-        if (window.popup.popupType === Popup.Window)
-            skip("QTBUG-126713: Palette propagation is currently not supported for QQuickPopupWindows.")
 
         let control = window[data.tag]
         verify(control)
