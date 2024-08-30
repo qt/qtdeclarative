@@ -8,9 +8,6 @@ pluginManagement {
             }
         }
         mavenCentral()
-        maven {
-            url = uri("https://android.qt.io/maven/snapshots")
-        }
         gradlePluginPortal()
     }
 }

@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("org.qtproject.qt.gradleplugin") version "0.1-SNAPSHOT+"
+    id("org.qtproject.qt.gradleplugin") version "1.+"
 }
 
 QtBuild {
