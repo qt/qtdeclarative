@@ -58,6 +58,7 @@
 
 Q_STATIC_LOGGING_CATEGORY(lcGcStats, "qt.qml.gc.statistics")
 Q_STATIC_LOGGING_CATEGORY(lcGcAllocatorStats, "qt.qml.gc.allocatorStats")
+Q_STATIC_LOGGING_CATEGORY(lcGcStateTransitions, "qt.qml.gc.stateTransitions")
 
 using namespace WTF;
 
@@ -678,27 +679,27 @@ GCState markStart(GCStateMachine *that, ExtraData &)
     //Initialize the mark stack
     that->mm->m_markStack = std::make_unique<MarkStack>(that->mm->engine);
     that->mm->engine->isGCOngoing = true;
-    return MarkGlobalObject;
+    return GCState::MarkGlobalObject;
 }
 
 GCState markGlobalObject(GCStateMachine *that, ExtraData &)
 {
     that->mm->engine->markObjects(that->mm->m_markStack.get());
-    return MarkJSStack;
+    return GCState::MarkJSStack;
 }
 
 GCState markJSStack(GCStateMachine *that, ExtraData &)
 {
     that->mm->collectFromJSStack(that->mm->markStack());
-    return InitMarkPersistentValues;
+    return GCState::InitMarkPersistentValues;
 }
 
 GCState initMarkPersistentValues(GCStateMachine *that, ExtraData &stateData)
 {
     if (!that->mm->m_persistentValues)
-        return InitMarkWeakValues; // no persistent values to mark
+        return GCState::InitMarkWeakValues; // no persistent values to mark
     stateData = GCIteratorStorage { that->mm->m_persistentValues->begin() };
-    return MarkPersistentValues;
+    return GCState::MarkPersistentValues;
 }
 
 static constexpr int markLoopIterationCount = 1024;
@@ -715,35 +716,35 @@ bool wasDrainNecessary(MarkStack *ms, QDeadlineTimer deadline)
 GCState markPersistentValues(GCStateMachine *that, ExtraData &stateData) {
     auto markStack = that->mm->markStack();
     if (wasDrainNecessary(markStack, that->deadline) && that->deadline.hasExpired())
-        return MarkPersistentValues;
+        return GCState::MarkPersistentValues;
     PersistentValueStorage::Iterator& it = get<GCIteratorStorage>(stateData).it;
     // avoid repeatedly hitting the timer constantly by batching iterations
     for (int i = 0; i < markLoopIterationCount; ++i) {
         if (!it.p)
-            return InitMarkWeakValues;
+            return GCState::InitMarkWeakValues;
         if (Managed *m = (*it).as<Managed>())
             m->mark(markStack);
         ++it;
     }
-    return MarkPersistentValues;
+    return GCState::MarkPersistentValues;
 }
 
 GCState initMarkWeakValues(GCStateMachine *that, ExtraData &stateData)
 {
     stateData = GCIteratorStorage { that->mm->m_weakValues->begin() };
-    return MarkWeakValues;
+    return GCState::MarkWeakValues;
 }
 
 GCState markWeakValues(GCStateMachine *that, ExtraData &stateData)
 {
     auto markStack = that->mm->markStack();
     if (wasDrainNecessary(markStack, that->deadline) && that->deadline.hasExpired())
-        return MarkWeakValues;
+        return GCState::MarkWeakValues;
     PersistentValueStorage::Iterator& it = get<GCIteratorStorage>(stateData).it;
     // avoid repeatedly hitting the timer constantly by batching iterations
     for (int i = 0; i < markLoopIterationCount; ++i) {
         if (!it.p)
-            return MarkDrain;
+            return GCState::MarkDrain;
         QObjectWrapper *qobjectWrapper = (*it).as<QObjectWrapper>();
         ++it;
         if (!qobjectWrapper)
@@ -764,25 +765,25 @@ GCState markWeakValues(GCStateMachine *that, ExtraData &stateData)
         if (keepAlive)
             qobjectWrapper->mark(that->mm->markStack());
     }
-    return MarkWeakValues;
+    return GCState::MarkWeakValues;
 }
 
 GCState markDrain(GCStateMachine *that, ExtraData &)
 {
     if (that->deadline.isForever()) {
         that->mm->markStack()->drain();
-        return MarkReady;
+        return GCState::MarkReady;
     }
     auto drainState = that->mm->m_markStack->drain(that->deadline);
     return drainState == MarkStack::DrainState::Complete
-            ? MarkReady
-            : MarkDrain;
+            ? GCState::MarkReady
+            : GCState::MarkDrain;
 }
 
 GCState markReady(GCStateMachine *, ExtraData &)
 {
     //Possibility to do some clean up, stat printing, etc...
-    return InitCallDestroyObjects;
+    return GCState::InitCallDestroyObjects;
 }
 
 /** \!internal
@@ -799,9 +800,9 @@ GCState initCallDestroyObjects(GCStateMachine *that, ExtraData &stateData)
     // as we don't have a deletion barrier, we need to rescan the stack
     redrain(that);
     if (!that->mm->m_weakValues)
-        return FreeWeakMaps; // no need to call destroy objects
+        return GCState::FreeWeakMaps; // no need to call destroy objects
     stateData = GCIteratorStorage { that->mm->m_weakValues->begin() };
-    return CallDestroyObjects;
+    return GCState::CallDestroyObjects;
 }
 GCState callDestroyObject(GCStateMachine *that, ExtraData &stateData)
 {
@@ -814,7 +815,7 @@ GCState callDestroyObject(GCStateMachine *that, ExtraData &stateData)
     // avoid repeatedly hitting the timer constantly by batching iterations
     for (int i = 0; i < markLoopIterationCount; ++i) {
         if (!it.p)
-            return FreeWeakMaps;
+            return GCState::FreeWeakMaps;
         Managed *m = (*it).managed();
         ++it;
         if (!m || m->markBit())
@@ -824,7 +825,7 @@ GCState callDestroyObject(GCStateMachine *that, ExtraData &stateData)
         if (QObjectWrapper *qobjectWrapper = m->as<QObjectWrapper>())
             qobjectWrapper->destroyObject(/*lastSweep =*/false);
     }
-    return CallDestroyObjects;
+    return GCState::CallDestroyObjects;
 }
 
 void freeWeakMaps(MemoryManager *mm)
@@ -841,7 +842,7 @@ void freeWeakMaps(MemoryManager *mm)
 GCState freeWeakMaps(GCStateMachine *that, ExtraData &)
 {
     freeWeakMaps(that->mm);
-    return FreeWeakSets;
+    return GCState::FreeWeakSets;
 }
 
 void freeWeakSets(MemoryManager *mm)
@@ -859,13 +860,13 @@ void freeWeakSets(MemoryManager *mm)
 GCState freeWeakSets(GCStateMachine *that, ExtraData &)
 {
     freeWeakSets(that->mm);
-    return HandleQObjectWrappers;
+    return GCState::HandleQObjectWrappers;
 }
 
 GCState handleQObjectWrappers(GCStateMachine *that, ExtraData &)
 {
     that->mm->cleanupDeletedQObjectWrappersInSweep();
-    return DoSweep;
+    return GCState::DoSweep;
 }
 
 GCState doSweep(GCStateMachine *that, ExtraData &)
@@ -889,7 +890,7 @@ GCState doSweep(GCStateMachine *that, ExtraData &)
 
     mm->updateUnmanagedHeapSizeGCLimit();
 
-    return Invalid;
+    return GCState::Invalid;
 }
 
 }
@@ -1489,8 +1490,12 @@ void GCStateMachine::transition() {
                 */
                 redrain(this);
             }
+            qCDebug(lcGcStateTransitions) << "Preparing to execute the"
+                                          << QMetaEnum::fromType<GCState>().key(state) << "state";
             GCStateInfo& stateInfo = stateInfoMap[int(state)];
             state = stateInfo.execute(this, stateData);
+            qCDebug(lcGcStateTransitions) << "Transitioning to the"
+                                          << QMetaEnum::fromType<GCState>().key(state) << "state";
             if (stateInfo.breakAfter)
                 break;
         }
@@ -1503,8 +1508,12 @@ void GCStateMachine::transition() {
     } else {
         deadline = QDeadlineTimer::Forever;
         while (state != GCState::Invalid) {
+            qCDebug(lcGcStateTransitions) << "Preparing to execute the"
+                                          << QMetaEnum::fromType<GCState>().key(state) << "state";
             GCStateInfo& stateInfo = stateInfoMap[int(state)];
             state = stateInfo.execute(this, stateData);
+            qCDebug(lcGcStateTransitions) << "Transitioning to the"
+                                          << QMetaEnum::fromType<GCState>().key(state) << "state";
         }
     }
 }
@@ -1512,3 +1521,5 @@ void GCStateMachine::transition() {
 } // namespace QV4
 
 QT_END_NAMESPACE
+
+#include "moc_qv4mm_p.cpp"
