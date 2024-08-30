@@ -9,6 +9,7 @@
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquickpopupitem_p_p.h>
+#include <QtQuickTemplates2/private/qquickpopupwindow_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -145,7 +146,13 @@ static QQuickAttachedPropertyPropagator *findAttachedParent(const QMetaObject *o
         QQuickPopup *popup = qobject_cast<QQuickPopup *>(objectWeAreAttachedTo);
         if (popup) {
             qCDebug(lcAttached).noquote() << "- attachee is a popup; checking its window";
-            return attachedObject(ourAttachedType, popup->popupItem()->window());
+            auto* popupWindow = popup->popupItem()->window();
+            auto *object = attachedObject(ourAttachedType, popupWindow);
+            // Check if the attached object exists for the popup window. If it
+            // doesn't, use transient parent attached object
+            if (!object && qobject_cast<QQuickPopupWindow *>(popupWindow))
+                return attachedObject(ourAttachedType, popupWindow->transientParent());
+            return object;
         }
     }
 
