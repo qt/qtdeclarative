@@ -4974,7 +4974,7 @@ void QQuickTableViewPrivate::syncViewportRect()
         auto syncChild_d = syncChild->d_func();
         if (syncChild_d->syncHorizontally)
             w = qMax(w, syncChild->width());
-        if (syncChild_d->syncHorizontally)
+        if (syncChild_d->syncVertically)
             h = qMax(h, syncChild->height());
     }
 
