@@ -162,7 +162,9 @@ private slots:
     void checkSyncView_childViews_data();
     void checkSyncView_childViews();
     void checkSyncView_differentSizedModels();
-    void checkSyncView_differentGeometry();
+    void checkSyncView_differentGeometry_vertical();
+    void checkSyncView_differentGeometry_horizontal();
+    void checkSyncView_differentGeometry_both_directions();
     void checkSyncView_connect_late_data();
     void checkSyncView_connect_late();
     void checkSyncView_pageFlicking();
@@ -3074,7 +3076,7 @@ void tst_QQuickTableView::checkSyncView_differentSizedModels()
     QVERIFY(tableViewHVPrivate->loadedColumns.isEmpty());
 }
 
-void tst_QQuickTableView::checkSyncView_differentGeometry()
+void tst_QQuickTableView::checkSyncView_differentGeometry_vertical()
 {
     // Check that you can have two tables in a syncView relation, where
     // the sync "child" is larger than the sync view. This means that the
@@ -3087,46 +3089,106 @@ void tst_QQuickTableView::checkSyncView_differentGeometry()
     GET_QML_TABLEVIEW(tableViewV);
     GET_QML_TABLEVIEW(tableViewHV);
 
-    tableView->setWidth(40);
-    tableView->setHeight(40);
+    tableView->setHeight(90);
+    tableViewH->setSyncView(nullptr);
+    tableViewHV->setSyncView(nullptr);
+
+    auto tableViewModel = TestModelAsVariant(100, 100);
+
+    tableView->setModel(tableViewModel);
+    tableViewV->setModel(tableViewModel);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that the row heights are in sync
+    for (int row = tableViewV->topRow(); row < tableViewV->bottomRow(); ++row)
+        QCOMPARE(tableViewV->rowHeight(row), tableView->rowHeight(row));
+
+    // Flick in a new row
+    tableView->setContentY(20);
+
+    // Check that the row heights are in sync
+    for (int row = tableViewV->topRow(); row <= tableViewV->bottomRow(); ++row)
+        QCOMPARE(tableViewV->rowHeight(row), tableView->rowHeight(row));
+}
+
+void tst_QQuickTableView::checkSyncView_differentGeometry_horizontal()
+{
+    // Check that you can have two tables in a syncView relation, where
+    // the sync "child" is larger than the sync view. This means that the
+    // child will display more rows and columns than the parent.
+    // In that case, the sync view will anyway need to load the same rows
+    // and columns as the child, otherwise the column and row sizes
+    // cannot be determined for the child.
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+    GET_QML_TABLEVIEW(tableViewV);
+    GET_QML_TABLEVIEW(tableViewHV);
+
+    tableView->setWidth(90);
+    tableViewV->setSyncView(nullptr);
+    tableViewHV->setSyncView(nullptr);
+
+    auto tableViewModel = TestModelAsVariant(100, 100);
+
+    tableView->setModel(tableViewModel);
+    tableViewH->setModel(tableViewModel);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that the column widths are in sync
+    for (int column = tableViewH->leftColumn(); column < tableViewH->rightColumn(); ++column)
+        QCOMPARE(tableViewH->columnWidth(column), tableView->columnWidth(column));
+
+    // Flick in a new column
+    tableView->setContentX(20);
+
+    // Check that the column widths are in sync
+    for (int column = tableViewH->leftColumn(); column < tableViewH->rightColumn(); ++column)
+        QCOMPARE(tableViewH->columnWidth(column), tableView->columnWidth(column));
+}
+
+void tst_QQuickTableView::checkSyncView_differentGeometry_both_directions() {
+    // Check that you can have two tables in a syncView relation, where
+    // the sync "child" is larger than the sync view. This means that the
+    // child will display more rows and columns than the parent.
+    // In that case, the sync view will anyway need to load the same rows
+    // and columns as the child, otherwise the column and row sizes
+    // cannot be determined for the child.
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+    GET_QML_TABLEVIEW(tableViewV);
+    GET_QML_TABLEVIEW(tableViewHV);
+
+    tableView->setWidth(90);
+    tableView->setHeight(90);
+    tableViewHV->setSyncView(nullptr);
 
     auto tableViewModel = TestModelAsVariant(100, 100);
 
     tableView->setModel(tableViewModel);
     tableViewH->setModel(tableViewModel);
     tableViewV->setModel(tableViewModel);
-    tableViewHV->setModel(tableViewModel);
 
     WAIT_UNTIL_POLISHED;
 
+    // Check that the row heights are in sync
+    for (int row = tableViewV->topRow(); row < tableViewV->bottomRow(); ++row)
+        QCOMPARE(tableViewV->rowHeight(row), tableView->rowHeight(row));
     // Check that the column widths are in sync
-    for (int column = tableViewH->leftColumn(); column < tableViewH->rightColumn(); ++column) {
+    for (int column = tableViewH->leftColumn(); column < tableViewH->rightColumn(); ++column)
         QCOMPARE(tableViewH->columnWidth(column), tableView->columnWidth(column));
-        QCOMPARE(tableViewHV->columnWidth(column), tableView->columnWidth(column));
-    }
+
+    // Flick in a new row
+    tableView->setContentX(20);
+    tableView->setContentY(20);
 
     // Check that the row heights are in sync
-    for (int row = tableViewV->topRow(); row < tableViewV->bottomRow(); ++row) {
+    for (int row = tableViewV->topRow(); row <= tableViewV->bottomRow(); ++row)
         QCOMPARE(tableViewV->rowHeight(row), tableView->rowHeight(row));
-        QCOMPARE(tableViewHV->rowHeight(row), tableView->rowHeight(row));
-    }
-
-    // Flick a bit, and do the same test again
-    tableView->setContentX(200);
-    tableView->setContentY(200);
-    WAIT_UNTIL_POLISHED;
-
     // Check that the column widths are in sync
-    for (int column = tableViewH->leftColumn(); column < tableViewH->rightColumn(); ++column) {
+    for (int column = tableViewH->leftColumn(); column < tableViewH->rightColumn(); ++column)
         QCOMPARE(tableViewH->columnWidth(column), tableView->columnWidth(column));
-        QCOMPARE(tableViewHV->columnWidth(column), tableView->columnWidth(column));
-    }
-
-    // Check that the row heights are in sync
-    for (int row = tableViewV->topRow(); row < tableViewV->bottomRow(); ++row) {
-        QCOMPARE(tableViewV->rowHeight(row), tableView->rowHeight(row));
-        QCOMPARE(tableViewHV->rowHeight(row), tableView->rowHeight(row));
-    }
 }
 
 void tst_QQuickTableView::checkSyncView_connect_late_data()
