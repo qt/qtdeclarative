@@ -136,11 +136,10 @@ void QQuickQmlGenerator::generateImageNode(const ImageNodeInfo &info)
 
     const QFileInfo assetFileInfo(filePath);
 
-    // TODO: this requires proper asset management.
     stream() << "Image {";
-    m_indentLevel++;
 
     generateNodeBase(info);
+    m_indentLevel++;
     stream() << "x: " << info.rect.x();
     stream() << "y: " << info.rect.y();
     stream() << "width: " << info.rect.width();
@@ -165,7 +164,6 @@ void QQuickQmlGenerator::generatePath(const PathNodeInfo &info, const QRectF &ov
         m_inShapeItem = true;
         stream() << shapeName() << " {";
 
-        // Check ??
         generateNodeBase(info);
 
         m_indentLevel++;
