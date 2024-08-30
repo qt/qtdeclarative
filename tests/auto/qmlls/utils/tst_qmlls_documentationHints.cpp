@@ -131,4 +131,35 @@ void tst_qmlls_documentationHints::qdochtmlparser()
     QCOMPARE(actual, expectedDocumentation);
 }
 
+void tst_qmlls_documentationHints::skipParsingHtmlTags_data()
+{
+    using namespace QQmlJS::Dom;
+    QTest::addColumn<QString>("rawHtml");
+    QTest::addColumn<QString>("expectedText");
+    QTest::addColumn<QString>("keyword");
+    QTest::addColumn<DomType>("domType");
+
+    QTest::addRow("htmlWithTag")
+        << R"("<a name="pressedButtons-prop"></a>
+            <div class="qmldoc"><p><b>Note: </b>
+            Due to historical reasons, this property is not equivalent to Item.enabled
+            It only affects mouse events, and its effect does not propagate to child items.</p>
+            <p>This property holds the mouse buttons currently pressed.</p>")"
+        << "This property holds the mouse buttons currently pressed."
+        << "pressedButtons"
+        << DomType::PropertyDefinition;
+}
+
+void tst_qmlls_documentationHints::skipParsingHtmlTags()
+{
+    using namespace QQmlJS::Dom;
+    QFETCH(QString, rawHtml);
+    QFETCH(QString, expectedText);
+    QFETCH(QString, keyword);
+    QFETCH(DomType, domType);
+    ExtractDocumentation extractor(domType);
+    const auto actual = extractor.execute(rawHtml, keyword, HtmlExtractor::ExtractionMode::Simplified);
+    QCOMPARE(actual, expectedText);
+}
+
 QTEST_MAIN(tst_qmlls_documentationHints)
