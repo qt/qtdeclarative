@@ -17,6 +17,8 @@ private slots:
     void qdochtmlparser_data();
     void qdochtmlparser();
 
+    void skipParsingHtmlTags_data();
+    void skipParsingHtmlTags();
 private:
     QString m_documentationDataDir;
 };
