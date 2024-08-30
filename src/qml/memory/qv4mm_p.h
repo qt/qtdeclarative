@@ -28,40 +28,48 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-enum GCState {
-    MarkStart = 0,
-    MarkGlobalObject,
-    MarkJSStack,
-    InitMarkPersistentValues,
-    MarkPersistentValues,
-    InitMarkWeakValues,
-    MarkWeakValues,
-    MarkDrain,
-    MarkReady,
-    InitCallDestroyObjects,
-    CallDestroyObjects,
-    FreeWeakMaps,
-    FreeWeakSets,
-    HandleQObjectWrappers,
-    DoSweep,
-    Invalid,
-    Count,
-};
-
 struct GCData { virtual ~GCData(){};};
 
 struct GCIteratorStorage {
     PersistentValueStorage::Iterator it{nullptr, 0};
 };
-struct GCStateMachine;
-
-struct GCStateInfo {
-    using ExtraData = std::variant<std::monostate, GCIteratorStorage>;
-    GCState (*execute)(GCStateMachine *, ExtraData &) = nullptr;  // Function to execute for this state, returns true if ready to transition
-    bool breakAfter{false};
-};
 
 struct GCStateMachine {
+    Q_GADGET_EXPORT(Q_QML_EXPORT)
+
+public:
+    enum GCState {
+        MarkStart = 0,
+        MarkGlobalObject,
+        MarkJSStack,
+        InitMarkPersistentValues,
+        MarkPersistentValues,
+        InitMarkWeakValues,
+        MarkWeakValues,
+        MarkDrain,
+        MarkReady,
+        InitCallDestroyObjects,
+        CallDestroyObjects,
+        FreeWeakMaps,
+        FreeWeakSets,
+        HandleQObjectWrappers,
+        DoSweep,
+        Invalid,
+        Count,
+    };
+    Q_ENUM(GCState)
+
+    struct StepTiming {
+        qint64 rolling_sum = 0;
+        qint64 count = 0;
+    };
+
+    struct GCStateInfo {
+        using ExtraData = std::variant<std::monostate, GCIteratorStorage>;
+        GCState (*execute)(GCStateMachine *, ExtraData &) = nullptr;  // Function to execute for this state, returns true if ready to transition
+        bool breakAfter{false};
+    };
+
     using ExtraData = GCStateInfo::ExtraData;
     GCState state{GCState::Invalid};
     std::chrono::microseconds timeLimit{};
@@ -94,6 +102,8 @@ struct GCStateMachine {
     }
 };
 
+using GCState = GCStateMachine::GCState;
+using GCStateInfo = GCStateMachine::GCStateInfo;
 
 struct ChunkAllocator;
 struct MemorySegment;
