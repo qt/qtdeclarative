@@ -17,6 +17,8 @@
 
 #include <vector>
 
+#include <QtCore/q20vector.h>
+
 #include "qv4value_p.h"
 
 class tst_qv4estable;
@@ -64,7 +66,7 @@ public:
             m_observers.push_back(&observer);
     }
     inline void stopObservingShifts(ShiftObserver& observer) {
-        m_observers.erase(std::remove(m_observers.begin(), m_observers.end(), &observer));
+        q20::erase(m_observers, &observer);
     }
 
 private:
