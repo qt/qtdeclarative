@@ -100,9 +100,11 @@ QQuickNativeMenuItem *QQuickNativeMenuItem::createFromNonNativeItem(
         // Ensure that the MenuItem is clicked when the user clicks on a native menu item.
         connect(nativeMenuItem->m_handle.get(), &QPlatformMenuItem::activated,
                 menuItem, [menuItem](){
-            // This changes the checked state, which we need when syncing but also to ensure that
-            // the user can still use MenuItem's API even though they can't actually interact with it.
-            menuItem->toggle();
+            if (menuItem->isCheckable()) {
+                // This changes the checked state, which we need when syncing but also to ensure that
+                // the user can still use MenuItem's API even though they can't actually interact with it.
+                menuItem->toggle();
+            }
             // The same applies here: allow users to respond to the MenuItem's clicked signal.
             QQuickAbstractButtonPrivate::get(menuItem)->click();
         });
