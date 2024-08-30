@@ -80,9 +80,9 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
     imageItem->setWidth(info.rect.width());
     imageItem->setHeight(info.rect.height());
 
+    addCurrentItem(imageItem, info);
     generateNodeBase(info);
 
-    addCurrentItem(imageItem, info);
     m_items.pop();
 }
 
