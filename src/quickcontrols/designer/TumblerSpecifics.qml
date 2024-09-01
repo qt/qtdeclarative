@@ -52,6 +52,21 @@ Column {
                     Layout.fillWidth: true
                 }
             }
+
+            Label {
+                text: qsTr("flickDeceleration")
+                tooltip: qsTr("The rate at which a flick will decelerate.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: 0
+                    decimals: 2
+                    stepSize: 0.1
+                    backendValue: backendValues.flickDeceleration
+                    Layout.fillWidth: true
+                }
+            }
         }
     }
 

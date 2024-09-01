@@ -589,6 +589,113 @@ TestCase {
     }
 
     Component {
+        id: pathViewComponent
+
+        PathView {
+        }
+    }
+
+    Component {
+        id: listViewComponent
+
+        ListView {
+        }
+    }
+
+    function test_defaultFlickDecelerationWrap() {
+        createTumbler();
+
+        tumbler.wrap = true;
+        tumblerView = findView(tumbler);
+
+        tryCompare(tumblerView, "flickDeceleration", tumbler.flickDeceleration);
+        // when wrapping, the default flickDeceleration should
+        // match the default flickDeceleration of PathView
+        let pathView = createTemporaryObject(pathViewComponent, testCase);
+        compare(tumbler.flickDeceleration, pathView.flickDeceleration);
+    }
+
+    function test_defaultFlickDecelerationNoWrap() {
+        createTumbler();
+
+        tumbler.wrap = false;
+        tumblerView = findView(tumbler);
+
+        tryCompare(tumblerView, "flickDeceleration", tumbler.flickDeceleration);
+        // when not wrapping, the default flickDeceleration should
+        // match the default flickDeceleration of ListView
+        let listView = createTemporaryObject(listViewComponent, testCase);
+        compare(tumbler.flickDeceleration, listView.flickDeceleration);
+    }
+
+    function test_explicitFlickDeceleration() {
+        createTumbler();
+
+        tumbler.wrap = false;
+        tumbler.flickDeceleration = 0.2;
+        compare(tumbler.flickDeceleration, 0.2);
+        tumblerView = findView(tumbler);
+        tryCompare(tumblerView, "flickDeceleration", tumbler.flickDeceleration);
+
+        tumbler.wrap = true;
+        compare(tumbler.flickDeceleration, 0.2);
+        tumblerView = findView(tumbler);
+        tryCompare(tumblerView, "flickDeceleration", tumbler.flickDeceleration);
+
+        tumbler.flickDeceleration = 1.2;
+        compare(tumbler.flickDeceleration, 1.2);
+        tryCompare(tumblerView, "flickDeceleration", tumbler.flickDeceleration);
+
+        tumbler.wrap = false;
+        compare(tumbler.flickDeceleration, 1.2);
+        tumblerView = findView(tumbler);
+        tryCompare(tumblerView, "flickDeceleration", tumbler.flickDeceleration);
+    }
+
+    function test_resetFlickDeceleration() {
+        createTumbler();
+
+        tumbler.wrap = true;
+        tumbler.flickDeceleration = 0.2;
+
+        compare(tumbler.flickDeceleration, 0.2);
+        waitForRendering(tumblerView);
+        tryCompare(tumblerView, "flickDeceleration", tumbler.flickDeceleration);
+
+        tumbler.flickDeceleration = undefined;
+
+        let pathView = createTemporaryObject(pathViewComponent, testCase);
+        compare(tumbler.flickDeceleration, pathView.flickDeceleration);
+        tryCompare(tumblerView, "flickDeceleration", tumbler.flickDeceleration);
+
+        tumbler.wrap = false;
+        let listView = createTemporaryObject(listViewComponent, testCase);
+        compare(tumbler.flickDeceleration, listView.flickDeceleration);
+        tumblerView = findView(tumbler);
+        tryCompare(tumblerView, "flickDeceleration", tumbler.flickDeceleration);
+    }
+
+    Component {
+        id: signalSpy
+        SignalSpy { }
+    }
+
+    function test_flickDecelerationChangedSignalOnWrapChanged() {
+        createTumbler();
+
+        tumbler.wrap = true;
+        let oldFlickDeceleration = tumbler.flickDeceleration
+
+        let spy = signalSpy.createObject(tumbler, { target: tumbler, signalName: "flickDecelerationChanged" });
+        verify(spy.valid);
+
+        tumbler.wrap = false;
+
+        let expected = oldFlickDeceleration !== tumbler.flickDeceleration ? 1 : 0;
+        compare(spy.count, expected);
+    }
+
+    Component {
         id: customListViewTumblerComponent
 
         Tumbler {

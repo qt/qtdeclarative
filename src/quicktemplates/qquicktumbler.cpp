@@ -9,6 +9,7 @@
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuickTemplates2/private/qquicktumbler_p_p.h>
+#include <QtGui/private/qguiapplication_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,6 +62,13 @@ namespace {
     static inline qreal delegateHeight(const QQuickTumbler *tumbler)
     {
         return tumbler->availableHeight() / tumbler->visibleItemCount();
+    }
+
+    static qreal defaultFlickDeceleration(bool wrap)
+    {
+        if (wrap)
+            return 100;
+        return QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::FlickDeceleration).toReal();
     }
 }
 
@@ -494,6 +502,46 @@ void QQuickTumbler::positionViewAtIndex(int index, QQuickTumbler::PositionMode m
     QMetaObject::invokeMethod(d->view, "positionViewAtIndex", Q_ARG(int, index), Q_ARG(int, mode));
 }
 
+
+/*!
+    \qmlproperty int QtQuick.Controls::Tumbler::flickDeceleration
+
+    This property holds the rate at which a flick will decelerate:
+    the higher the number, the faster it slows down when the user stops
+    flicking via touch. For example, \c 0.0001 is nearly
+    "frictionless", and \c 10000 feels quite "sticky".
+
+    When \l wrap is true (the default), the default
+    \l flickDeceleration is \c 100. Otherwise, it is platform-dependent.
+    To override this behavior, explicitly set the value of this property.
+    To return to the default behavior, set this property to undefined.
+    Values of zero or less are not allowed.
+*/
+qreal QQuickTumbler::flickDeceleration() const
+{
+    Q_D(const QQuickTumbler);
+    return d->effectiveFlickDeceleration();
+}
+
+void QQuickTumbler::setFlickDeceleration(qreal flickDeceleration)
+{
+    Q_D(QQuickTumbler);
+    const qreal oldFlickDeceleration = d->effectiveFlickDeceleration();
+    flickDeceleration = qMax(0.001, flickDeceleration);
+    d->flickDeceleration = flickDeceleration;
+    if (!qFuzzyCompare(oldFlickDeceleration, flickDeceleration))
+        emit flickDecelerationChanged();
+}
+
+void QQuickTumbler::resetFlickDeceleration()
+{
+    Q_D(QQuickTumbler);
+    const qreal oldFlickDeceleration = d->effectiveFlickDeceleration();
+    d->flickDeceleration = 0.0;
+    if (!qFuzzyCompare(oldFlickDeceleration, d->effectiveFlickDeceleration()))
+        emit flickDecelerationChanged();
+}
+
 void QQuickTumbler::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickTumbler);
@@ -776,6 +824,9 @@ void QQuickTumblerPrivate::setWrap(bool shouldWrap, QQml::PropertyUtils::State p
     // between view changes.
     const int oldCurrentIndex = currentIndex;
 
+    // changing wrap can change the implicit flickDeceleration
+    const qreal oldFlickDeceleration = effectiveFlickDeceleration();
+
     disconnectFromView();
 
     wrap = shouldWrap;
@@ -802,6 +853,16 @@ void QQuickTumblerPrivate::setWrap(bool shouldWrap, QQml::PropertyUtils::State p
         setupViewData(contentItem);
 
     setCurrentIndex(oldCurrentIndex);
+
+    if (effectiveFlickDeceleration() != oldFlickDeceleration)
+        emit q->flickDecelerationChanged();
+}
+
+qreal QQuickTumblerPrivate::effectiveFlickDeceleration() const
+{
+    if (flickDeceleration == 0.0)
+        return defaultFlickDeceleration(wrap);
+    return flickDeceleration;
 }
 
 void QQuickTumblerPrivate::beginSetModel()

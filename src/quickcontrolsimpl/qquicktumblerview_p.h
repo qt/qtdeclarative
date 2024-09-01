@@ -60,6 +60,7 @@ protected:
 private:
     QQuickItem *view();
     void createView();
+    void updateFlickDeceleration();
     void updateView();
     void updateModel();
 

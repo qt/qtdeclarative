@@ -37,6 +37,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickTumbler : public QQuickControl
     Q_PROPERTY(bool wrap READ wrap WRITE setWrap RESET resetWrap NOTIFY wrapChanged FINAL REVISION(2, 1))
     // 2.2 (Qt 5.9)
     Q_PROPERTY(bool moving READ isMoving NOTIFY movingChanged FINAL REVISION(2, 2))
+    Q_PROPERTY(qreal flickDeceleration READ flickDeceleration WRITE setFlickDeceleration RESET resetFlickDeceleration NOTIFY flickDecelerationChanged FINAL REVISION(6, 9))
     QML_NAMED_ELEMENT(Tumbler)
     QML_ATTACHED(QQuickTumblerAttached)
     QML_ADDED_IN_VERSION(2, 0)
@@ -83,6 +84,10 @@ public:
     // 2.5 (Qt 5.12)
     Q_REVISION(2, 5) Q_INVOKABLE void positionViewAtIndex(int index, PositionMode mode);
 
+    qreal flickDeceleration() const;
+    void setFlickDeceleration(qreal newFlickDeceleration);
+    void resetFlickDeceleration();
+
 Q_SIGNALS:
     void modelChanged();
     void countChanged();
@@ -94,6 +99,7 @@ Q_SIGNALS:
     Q_REVISION(2, 1) void wrapChanged();
     // 2.2 (Qt 5.9)
     Q_REVISION(2, 2) void movingChanged();
+    Q_REVISION(6, 9) void flickDecelerationChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
