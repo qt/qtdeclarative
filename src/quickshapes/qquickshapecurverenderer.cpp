@@ -655,7 +655,16 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStr
 
 void QQuickShapeCurveRenderer::setRootNode(QSGNode *node)
 {
+    clearNodeReferences();
     m_rootNode = node;
+}
+
+void QQuickShapeCurveRenderer::clearNodeReferences()
+{
+    for (PathData &pd : m_paths) {
+        pd.fillNodes.clear();
+        pd.strokeNodes.clear();
+    }
 }
 
 int QQuickShapeCurveRenderer::debugVisualizationFlags = QQuickShapeCurveRenderer::NoDebug;
