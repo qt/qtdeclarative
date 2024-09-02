@@ -59,6 +59,7 @@
 Q_STATIC_LOGGING_CATEGORY(lcGcStats, "qt.qml.gc.statistics")
 Q_STATIC_LOGGING_CATEGORY(lcGcAllocatorStats, "qt.qml.gc.allocatorStats")
 Q_STATIC_LOGGING_CATEGORY(lcGcStateTransitions, "qt.qml.gc.stateTransitions")
+Q_STATIC_LOGGING_CATEGORY(lcGcForcedRuns, "qt.qml.gc.forcedRuns")
 
 using namespace WTF;
 
@@ -1234,10 +1235,17 @@ static size_t dumpBins(BlockAllocator *b, const char *title)
  */
 bool MemoryManager::tryForceGCCompletion()
 {
-    if (gcBlocked == InCriticalSection)
+    if (gcBlocked == InCriticalSection) {
+        qCDebug(lcGcForcedRuns)
+            << "Tried to force the GC to complete a run but failed due to being in a critical section.";
         return false;
+    }
+
     const bool incrementalGCIsAlreadyRunning = m_markStack != nullptr;
     Q_ASSERT(incrementalGCIsAlreadyRunning);
+
+    qCDebug(lcGcForcedRuns) << "Forcing the GC to complete a run.";
+
     auto oldTimeLimit = std::exchange(gcStateMachine->timeLimit, std::chrono::microseconds::max());
     while (gcStateMachine->inProgress()) {
         gcStateMachine->step();
