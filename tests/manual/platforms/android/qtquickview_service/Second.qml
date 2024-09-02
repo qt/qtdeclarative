@@ -15,7 +15,7 @@ Rectangle {
     Text {
         id: helloText
 
-        text: "QML"
+        text: "Second QML"
         color: "white"
         font.pixelSize: 72
         font.bold: true

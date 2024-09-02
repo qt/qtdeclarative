@@ -17,7 +17,7 @@ qt_add_executable(qtquickview_service
 qt_add_qml_module(qtquickview_service
     URI qml_floating_view
     VERSION 1.0
-    QML_FILES Main.qml
+    QML_FILES Main.qml Second.qml
 )
 
 target_link_libraries(qtquickview_service
