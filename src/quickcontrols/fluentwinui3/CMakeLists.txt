@@ -32,6 +32,7 @@ set(qml_files
     "RoundButton.qml"
     "Slider.qml"
     "SpinBox.qml"
+    "SwipeDelegate.qml"
     "Switch.qml"
     "SwitchDelegate.qml"
     "TabBar.qml"
