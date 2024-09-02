@@ -16,6 +16,7 @@
 #define QV4ESTABLE_P_H
 
 #include <vector>
+#include <limits>
 
 #include <QtCore/q20vector.h>
 
@@ -37,7 +38,7 @@ public:
     // in the face of a `callbackFn` that mutates the collection
     // itself.
     struct ShiftObserver {
-        static constexpr uint OUT_OF_TABLE = -1u;
+        static constexpr uint OUT_OF_TABLE = std::numeric_limits<uint>::max();
 
         uint pivot = 0;
 
