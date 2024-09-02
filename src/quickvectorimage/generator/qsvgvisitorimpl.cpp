@@ -788,9 +788,10 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         QTextBlock block = document.firstBlock();
         while (block.isValid()) {
             QTextLayout *lout = block.layout();
-            QRectF boundingRect = lout->boundingRect();
 
             if (lout != nullptr) {
+                QRectF boundingRect = lout->boundingRect();
+
                 // If this block has requested the current SVG font, we override it
                 // (note that this limits the text to one svg font, but this is also the case
                 // in the QPainter at the moment, and needs a more centralized solution in Qt Svg
