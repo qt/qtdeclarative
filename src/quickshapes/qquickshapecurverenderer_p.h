@@ -65,6 +65,7 @@ public:
     void updateNode() override;
 
     void setRootNode(QSGNode *node);
+    void clearNodeReferences();
 
     using NodeList = QVector<QSGCurveAbstractNode *>;
 
