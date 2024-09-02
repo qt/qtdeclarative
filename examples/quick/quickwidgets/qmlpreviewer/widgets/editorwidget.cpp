@@ -222,7 +222,7 @@ void EditorWidget::onFileSelected(const QString &filePath)
 
     switch (stateController->currentState()) {
     case StateController::NewState:
-        stateController->setDirty(false);
+        stateController->changesSaved(filePath);
         break;
     case StateController::OpenState:
         closeFile();
