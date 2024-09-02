@@ -47,6 +47,7 @@ public:
 
 private slots:
     void init() final;
+    void cleanup();
 
     void defaults();
     void count();
@@ -146,6 +147,14 @@ void tst_QQuickMenu::init()
     // were written before they were a thing. We instead explicitly set it where necessary.
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+}
+
+void tst_QQuickMenu::cleanup()
+{
+    // In case a test forgets to close all popup windows
+    if (QGuiApplicationPrivate::popupCount() > 0)
+        QGuiApplicationPrivate::closeAllPopups();
+    QTRY_COMPARE(QGuiApplicationPrivate::popupCount(), 0);
 }
 
 void tst_QQuickMenu::defaults()
