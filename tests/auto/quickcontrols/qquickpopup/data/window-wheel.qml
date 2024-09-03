@@ -27,6 +27,7 @@ Window {
         implicitWidth: parent.width - 100
         implicitHeight: parent.height - 100
         clip: true
+        popupType: Popup.Item
         contentItem: Slider {
             id: popupSlider
             wheelEnabled: true
@@ -36,6 +37,7 @@ Window {
             id: nestedPopup
             x: 0; y: 0
             clip: true
+            popupType: Popup.Item
             implicitWidth: 50
             implicitHeight: 50
         }

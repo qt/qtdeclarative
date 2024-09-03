@@ -25,6 +25,7 @@ Window {
             visible: true
             modal: false
             dim: true
+            popupType: Popup.Item
 
             Overlay.modeless: Rectangle {
                 opacity: 0.5

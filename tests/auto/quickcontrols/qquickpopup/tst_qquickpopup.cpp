@@ -180,6 +180,7 @@ void tst_QQuickPopup::visible()
     QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
     QQuickItem *popupItem = popup->popupItem();
+    popup->setPopupType(QQuickPopup::Item);
 
     popup->open();
     QTRY_VERIFY(popup->isOpened());
@@ -292,6 +293,7 @@ void tst_QQuickPopup::overlay()
 
     QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
+    popup->setPopupType(QQuickPopup::Item);
 
     QQuickOverlayAttached *overlayAttached = qobject_cast<QQuickOverlayAttached *>(qmlAttachedPropertiesObject<QQuickOverlay>(popup));
     QVERIFY(overlayAttached);
@@ -429,10 +431,12 @@ void tst_QQuickPopup::zOrder()
 
     QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
+    popup->setPopupType(QQuickPopup::Item);
     popup->setModal(true);
 
     QQuickPopup *popup2 = window->property("popup2").value<QQuickPopup*>();
     QVERIFY(popup2);
+    popup2->setPopupType(QQuickPopup::Item);
     popup2->setModal(true);
 
     // show popups in reverse order. popup2 has higher z-order so it appears
@@ -565,6 +569,7 @@ void tst_QQuickPopup::closePolicy()
     QQuickButton *button = window->property("button").value<QQuickButton*>();
     QVERIFY(button);
 
+    popup->setPopupType(QQuickPopup::Item);
     popup->setModal(true);
     popup->setFocus(true);
     popup->setClosePolicy(closePolicy);
@@ -802,7 +807,7 @@ void tst_QQuickPopup::activeFocusOnClose3()
     QVERIFY(closedSpy.wait());
 
     QVERIFY(!popup1->isVisible());
-    QVERIFY(popup2->isVisible());
+    QTRY_VERIFY(popup2->isVisible());
     QTRY_VERIFY(popup2->hasActiveFocus());
 }
 
@@ -949,11 +954,13 @@ void tst_QQuickPopup::activeFocusDespiteLowerStackingOrder()
 
     QQuickPopup *popup1 = window->property("popup1").value<QQuickPopup *>();
     QVERIFY(popup1);
+    popup1->setPopupType(QQuickPopup::Item);
     popup1->open();
     QTRY_VERIFY(popup1->isOpened());
 
     QQuickPopup *popup2 = window->property("popup2").value<QQuickPopup *>();
     QVERIFY(popup2);
+    popup2->setPopupType(QQuickPopup::Item);
     popup2->open();
     QTRY_VERIFY(popup2->isOpened());
     popup2->setX(popup1->width() / 2);
@@ -1496,13 +1503,15 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
     QQuickItem *settingsMenuItem = window->findChild<QQuickItem*>("settingsMenuItem");
     QVERIFY(settingsMenuItem);
 
+    QQuickPopup *settingsDialog = window->contentItem()->findChild<QQuickPopup*>("settingsDialog");
+    QVERIFY(settingsDialog);
+    settingsDialog->setPopupType(QQuickPopup::Item);
+
     // Click on the settings menu item. The settings dialog should pop up.
     const QPoint settingsMenuItemCenter = settingsMenuItem->mapToScene(
         QPointF(settingsMenuItem->width() / 2, settingsMenuItem->height() / 2)).toPoint();
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, settingsMenuItemCenter);
 
-    QQuickPopup *settingsDialog = window->contentItem()->findChild<QQuickPopup*>("settingsDialog");
-    QVERIFY(settingsDialog);
     QTRY_VERIFY(!optionsMenu->isVisible());
     QTRY_VERIFY(settingsDialog->isOpened());
 
@@ -2009,6 +2018,7 @@ void tst_QQuickPopup::dimmerContainmentMask()
 
     QQuickOverlay *overlay = QQuickOverlay::overlay(window);
     QQuickPopup *modalPopup = window->property("modalPopup").value<QQuickPopup *>();
+    QVERIFY(modalPopup);
 
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
     QCOMPARE(window->property("clickCount"), ++expectedClickCount);
@@ -2096,7 +2106,11 @@ void tst_QQuickPopup::relativeZOrder()
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
     auto *parentDialog = window->findChild<QQuickPopup *>("parentDialog");
+    QVERIFY(parentDialog);
     auto *subDialog = window->findChild<QQuickPopup *>("subDialog");
+    QVERIFY(subDialog);
+    auto *parentDialogPrivate = QQuickPopupPrivate::get(parentDialog);
+    auto *subDialogPrivate = QQuickPopupPrivate::get(subDialog);
 
     QVERIFY(!parentDialog->isVisible());
     QVERIFY(!subDialog->isVisible());
@@ -2105,15 +2119,29 @@ void tst_QQuickPopup::relativeZOrder()
     QCOMPARE(subDialog->popupItem()->parent(), subDialog);
 
     parentDialog->open();
-    QCOMPARE(parentDialog->popupItem()->parentItem(), QQuickOverlay::overlay(window));
     QTRY_VERIFY(parentDialog->isOpened());
+    QQuickItem *expectedParentItem = QQuickOverlay::overlay(window);
+    if (parentDialogPrivate->usePopupWindow()) {
+        QTRY_VERIFY(parentDialogPrivate->popupWindow);
+        expectedParentItem = parentDialogPrivate->popupWindow->contentItem();
+    }
+    QCOMPARE(parentDialog->popupItem()->parentItem(), expectedParentItem);
 
     subDialog->open();
-    QCOMPARE(subDialog->popupItem()->parentItem(), QQuickOverlay::overlay(window));
     QTRY_VERIFY(subDialog->isOpened());
+    if (subDialogPrivate->usePopupWindow()) {
+        QTRY_VERIFY(subDialogPrivate->popupWindow);
+        expectedParentItem = subDialogPrivate->popupWindow->contentItem();
+    }
+    QCOMPARE(subDialog->popupItem()->parentItem(), expectedParentItem);
 
-    auto *overlayPrivate = QQuickOverlayPrivate::get(QQuickOverlay::overlay(window));
-    QCOMPARE(overlayPrivate->paintOrderChildItems().last(), subDialog->popupItem());
+    if (!subDialogPrivate->usePopupWindow()) {
+        auto *overlayPrivate = QQuickOverlayPrivate::get(QQuickOverlay::overlay(window));
+        QCOMPARE(overlayPrivate->paintOrderChildItems().last(), subDialog->popupItem());
+    }
+
+    subDialog->close();
+    parentDialog->close();
 }
 
 void tst_QQuickPopup::mirroredCombobox()
@@ -2144,6 +2172,7 @@ void tst_QQuickPopup::mirroredCombobox()
         QVERIFY(comboBox);
         QQuickPopup *popup = comboBox->popup();
         QVERIFY(popup);
+        popup->setPopupType(QQuickPopup::Item);
         popup->open();
         QTRY_COMPARE(popup->isVisible(), true);
         const QPointF popupPos(popup->contentItem()->mapToItem(comboBox->parentItem(),
@@ -2171,6 +2200,7 @@ void tst_QQuickPopup::mirroredCombobox()
         QVERIFY(comboBox);
         QQuickPopup *popup = comboBox->popup();
         QVERIFY(popup);
+        popup->setPopupType(QQuickPopup::Item);
         popup->open();
         QTRY_COMPARE(popup->isVisible(), true);
         const QPointF popupPos(popup->contentItem()->mapToItem(comboBox->parentItem(),

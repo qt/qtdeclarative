@@ -27,6 +27,7 @@ ApplicationWindow {
             rightPadding: 10
             topPadding: 10
             bottomPadding: 10
+            popupType: Popup.Item
 
             Button {
                 anchors.centerIn: parent

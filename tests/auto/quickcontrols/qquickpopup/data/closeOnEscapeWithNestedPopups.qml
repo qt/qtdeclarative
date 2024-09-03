@@ -19,6 +19,7 @@ ApplicationWindow {
                 objectName: "optionsMenu"
                 x: parent.width - width
                 transformOrigin: Menu.TopRight
+                popupType: Popup.Item
 
                 MenuItem {
                     objectName: "settingsMenuItem"

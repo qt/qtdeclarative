@@ -16,6 +16,7 @@ ApplicationWindow {
         modal: true
         width: 200
         height: 200
+        popupType: Popup.Item
     }
 
     Popup {
@@ -23,5 +24,6 @@ ApplicationWindow {
         modal: false
         width: 100
         height: 100
+        popupType: Popup.Item
     }
 }

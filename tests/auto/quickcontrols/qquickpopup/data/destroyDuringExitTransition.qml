@@ -21,6 +21,7 @@ ApplicationWindow {
             modal: true
             closePolicy: Popup.CloseOnEscape
             visible: true
+            popupType: Popup.Item
 
             property alias button: button
 
@@ -45,6 +46,7 @@ ApplicationWindow {
             focus: true
             closePolicy: Popup.CloseOnEscape
             visible: true
+            popupType: Popup.Item
 
             Text {
                 text: "Press Esc key to reject this dialog"

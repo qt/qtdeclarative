@@ -12,6 +12,7 @@ ApplicationWindow {
         width: parent.width
         height: parent.height
         modal: true
+        popupType: Popup.Item
         Control {
             id: controls
             anchors.fill: parent
@@ -24,5 +25,6 @@ ApplicationWindow {
         width: parent.width
         height: parent.height
         modal: true
+        popupType: Popup.Item
     }
 }
