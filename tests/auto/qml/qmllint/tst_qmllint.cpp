@@ -305,12 +305,20 @@ void TestQmllint::testUnknownCausesFail()
 {
     runTest("unknownElement.qml",
             Result { { Message {
-                    QStringLiteral("Unknown was not found. Did you add all import paths?"), 4, 5,
-                    QtWarningMsg } } });
+                    QStringLiteral(
+                            "Unknown was not found. "
+                            "Did you add all imports and dependencies?"),
+                    4, 5,
+                    QtWarningMsg
+            } } });
     runTest("TypeWithUnknownPropertyType.qml",
             Result { { Message {
-                    QStringLiteral("Something was not found. Did you add all import paths?"), 4, 5,
-                    QtWarningMsg } } });
+                    QStringLiteral(
+                            "Something was not found. "
+                            "Did you add all imports and dependencies?"),
+                    4, 5,
+                    QtWarningMsg
+            } } });
 }
 
 void TestQmllint::directoryPassedAsQmlTypesFile()
@@ -333,8 +341,11 @@ void TestQmllint::oldQmltypes()
                              Message { QStringLiteral(
                                      "Revision 0 corresponds to version 0.0; it should be 1.0.") },
                      },
-                     { Message { QStringLiteral(
-                             "QQuickItem was not found. Did you add all import paths?") } } });
+                     {
+                             Message { QStringLiteral("QQuickItem was not found. "
+                                                      "Did you add all imports and dependencies?")
+                     }
+            } });
 }
 
 void TestQmllint::qmltypes_data()
@@ -596,8 +607,9 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("badQmldirImportAndDepend")
             << QStringLiteral("qmldirImportAndDepend/bad.qml")
             << Result { { Message {
-                       QStringLiteral("Item was not found. Did you add all import paths?"), 3,
-                       1 } } };
+                       QStringLiteral("Item was not found. "
+                                      "Did you add all imports and dependencies?"),
+                       3, 1 } } };
     QTest::newRow("javascriptMethodsInModule")
             << QStringLiteral("javascriptMethodsInModuleBad.qml")
             << Result { { Message {
@@ -751,7 +763,7 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("DefaultPropertyLookupInUnknownType")
         << QStringLiteral("unknownParentDefaultPropertyCheck.qml")
         << Result { { Message {  QStringLiteral(
-                "Alien was not found. Did you add all import paths?") } } };
+                "Alien was not found. Did you add all imports and dependencies?") } } };
     QTest::newRow("InvalidImport")
             << QStringLiteral("invalidImport.qml")
             << Result { { Message { QStringLiteral(
@@ -860,7 +872,9 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("unresolvedType")
             << QStringLiteral("unresolvedType.qml")
             << Result { { Message { QStringLiteral(
-                                "UnresolvedType was not found. Did you add all import paths?") } },
+                               "UnresolvedType was not found. "
+                               "Did you add all imports and dependencies?")
+                       } },
                         { Message { QStringLiteral("incompatible type") } } };
     QTest::newRow("invalidInterceptor")
             << QStringLiteral("invalidInterceptor.qml")
@@ -1020,9 +1034,9 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("didYouMean(component)")
             << QStringLiteral("didYouMeanComponent.qml")
             << Result { { Message { QStringLiteral(
-                                  "Itym was not found. Did you add all import paths?") },
-                          {},
-                          { Message { QStringLiteral("Item") } } } };
+                                  "Itym was not found. Did you add all imports and dependencies?")
+                                  }, {},
+                        { Message { QStringLiteral("Item") } } } };
     QTest::newRow("didYouMean(enum)")
             << QStringLiteral("didYouMeanEnum.qml")
             << Result { { Message { QStringLiteral(
@@ -1078,7 +1092,8 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("assignNonExistingTypeToVarProp")
             << QStringLiteral("assignNonExistingTypeToVarProp.qml")
             << Result { { Message { QStringLiteral(
-                       "NonExistingType was not found. Did you add all import paths?") } } };
+                       "NonExistingType was not found. Did you add all imports and dependencies?")
+               } } };
     QTest::newRow("unboundComponents")
             << QStringLiteral("unboundComponents.qml")
             << Result { {

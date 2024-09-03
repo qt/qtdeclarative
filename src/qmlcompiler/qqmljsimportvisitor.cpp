@@ -34,6 +34,11 @@ using namespace Qt::StringLiterals;
 
 using namespace QQmlJS::AST;
 
+static const QLatin1StringView wasNotFound
+        = "was not found."_L1;
+static const QLatin1StringView didYouAddAllImports
+        = "Did you add all imports and dependencies?"_L1;
+
 /*!
     \internal
     Returns if assigning \a assignedType to \a property would require an
@@ -659,8 +664,7 @@ void QQmlJSImportVisitor::processPropertyTypes()
             property.setType(propertyType);
             type.scope->addOwnProperty(property);
         } else {
-            m_logger->log(property.typeName()
-                                  + QStringLiteral(" was not found. Did you add all import paths?"),
+            m_logger->log(property.typeName() + ' '_L1 + wasNotFound + ' '_L1 + didYouAddAllImports,
                           qmlImport, type.location);
         }
     }
@@ -1051,10 +1055,10 @@ void QQmlJSImportVisitor::checkSignal(
         auto type = p.type();
         if (!type) {
             m_logger->log(
-                    QStringLiteral(
-                            "Type %1 of parameter %2 in signal%3 was not found, but is "
-                            "required to compile %4. Did you add all import paths?")
-                            .arg(p.typeName(), p.name(), signalName(), handlerName),
+                    "Type %1 of parameter %2 in signal %3 %4, but is required to compile "
+                    "%4. %5"_L1.arg(
+                            p.typeName(), p.name(), signalName(), wasNotFound,
+                            handlerName, didYouAddAllImports),
                     qmlSignalParameters, location);
             continue;
         }
@@ -1200,7 +1204,7 @@ void QQmlJSImportVisitor::breakInheritanceCycles(const QQmlJSScope::Ptr &origina
                 m_logger->log(error, qmlImport, scope->sourceLocation(), true, true);
             } else if (!name.isEmpty()) {
                 m_logger->log(
-                        name + QStringLiteral(" was not found. Did you add all import paths?"),
+                        name + ' '_L1 + wasNotFound + ' '_L1 + didYouAddAllImports,
                         qmlImport, scope->sourceLocation(), true, true,
                         QQmlJSUtils::didYouMean(scope->baseTypeName(),
                                                 m_rootScopeImports.types().keys(),
