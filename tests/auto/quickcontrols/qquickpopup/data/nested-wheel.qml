@@ -16,6 +16,7 @@ ApplicationWindow {
         anchors.centerIn: parent
         visible: true
         modal: true
+        popupType: Popup.Item
 
         ComboBox {
             id: combobox
@@ -28,6 +29,7 @@ ApplicationWindow {
                 y: combobox.height
                 width: combobox.width
                 height: contentItem.implicitHeight
+                popupType: Popup.Item
                 contentItem: ListView {
                     objectName: "Combobox ListView"
                     clip: true

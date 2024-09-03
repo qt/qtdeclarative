@@ -18,6 +18,7 @@ ApplicationWindow {
         y: parent.height - height
         width: 50
         height: 50
+        popupType: Popup.Item
     }
 
     Popup {
@@ -26,6 +27,7 @@ ApplicationWindow {
         y: parent.height - height
         width: 50
         height: 50
+        popupType: Popup.Item
         exit:  Transition { PauseAnimation { duration: 100 } }
     }
 }

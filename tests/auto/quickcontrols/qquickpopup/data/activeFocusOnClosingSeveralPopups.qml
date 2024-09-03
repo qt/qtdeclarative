@@ -20,6 +20,7 @@ ApplicationWindow {
     Popup {
         id: popup1
         focus: true
+        popupType: Popup.Item
         enter: Transition { NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 200 } }
         exit: Transition { NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 200 } }
     }
@@ -27,6 +28,7 @@ ApplicationWindow {
     Popup {
         id: popup2
         focus: true
+        popupType: Popup.Item
         enter: Transition { NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 100 } }
         exit: Transition { NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 100 } }
     }

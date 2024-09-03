@@ -21,5 +21,6 @@ ApplicationWindow {
         background: Rectangle {
             color: popup.palette.base
         }
+        popupType: Popup.Item
     }
 }

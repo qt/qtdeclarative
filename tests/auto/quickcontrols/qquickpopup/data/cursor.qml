@@ -20,5 +20,6 @@ ApplicationWindow {
         y: textField.y + textField.height / 2 - height / 2
         width: 100
         height: 100
+        popupType: Popup.Item
     }
 }

@@ -35,6 +35,7 @@ ApplicationWindow {
         height: 200
         anchors.centerIn: parent
         visible: true
+        popupType: Popup.Item
 
         ColumnLayout {
             Button {

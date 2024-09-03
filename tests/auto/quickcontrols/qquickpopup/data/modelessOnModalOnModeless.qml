@@ -20,6 +20,7 @@ ApplicationWindow {
         width: 200
         height: 200
         anchors.centerIn: parent
+        popupType: Popup.Item
 
         Button {
             id: button
@@ -36,6 +37,7 @@ ApplicationWindow {
             width: 100
             height: 100
             anchors.centerIn: parent
+            popupType: Popup.Item
 
             Popup {
                 id: tooltip
@@ -44,6 +46,7 @@ ApplicationWindow {
                 width: 50
                 height: 50
                 anchors.centerIn: parent
+                popupType: Popup.Item
             }
         }
     }
