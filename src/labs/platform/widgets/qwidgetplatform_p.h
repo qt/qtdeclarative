@@ -111,23 +111,25 @@ namespace QWidgetPlatform
     static inline QPlatformDialogHelper *createDialog(QPlatformTheme::DialogType type, QObject *parent = nullptr)
     {
 #if !defined(QT_WIDGETS_LIB) || !(QT_CONFIG(colordialog) || QT_CONFIG(filedialog) || QT_CONFIG(fontdialog) || QT_CONFIG(messagebox))
+        Q_UNUSED(type);
         Q_UNUSED(parent);
-#endif
+#else
         switch (type) {
-#if defined(QT_WIDGETS_LIB) && QT_CONFIG(colordialog)
+#if QT_CONFIG(colordialog)
         case QPlatformTheme::ColorDialog: return createWidget<QWidgetPlatformColorDialog>("ColorDialog", parent);
 #endif
-#if defined(QT_WIDGETS_LIB) && QT_CONFIG(filedialog)
+#if QT_CONFIG(filedialog)
         case QPlatformTheme::FileDialog: return createWidget<QWidgetPlatformFileDialog>("FileDialog", parent);
 #endif
-#if defined(QT_WIDGETS_LIB) && QT_CONFIG(fontdialog)
+#if QT_CONFIG(fontdialog)
         case QPlatformTheme::FontDialog: return createWidget<QWidgetPlatformFontDialog>("FontDialog", parent);
 #endif
-#if defined(QT_WIDGETS_LIB) && QT_CONFIG(messagebox)
+#if QT_CONFIG(messagebox)
         case QPlatformTheme::MessageDialog: return createWidget<QWidgetPlatformMessageDialog>("MessageDialog", parent);
 #endif
         default: break;
         }
+#endif
         return nullptr;
     }
 }
