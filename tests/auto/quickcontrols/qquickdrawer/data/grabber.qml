@@ -21,6 +21,7 @@ ApplicationWindow {
         id: popup
         x: 200
         width: 200
+        popupType: Popup.Item
         height: parent.height
     }
 }
