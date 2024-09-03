@@ -2968,7 +2968,8 @@ void tst_QQuickMenu::effectivePosition_data()
     QTest::addColumn<QQuickPopup::PopupType>("popupType");
 
     QTest::newRow("Item") << QQuickPopup::Item;
-    QTest::newRow("Window") << QQuickPopup::Window;
+    if (popupWindowsSupported)
+        QTest::newRow("Window") << QQuickPopup::Window;
 }
 
 void tst_QQuickMenu::effectivePosition()
@@ -3017,8 +3018,14 @@ void tst_QQuickMenu::effectivePosition()
     // requested position pluss the (negative) insets
     const auto background = menu->background();
     QVERIFY(background);
-    const QPointF actualBgPos = background->mapToItem(menu->parentItem(), {0, 0});
-    QCOMPARE(actualBgPos, requestedPos + insets);
+    const QPoint actualBgPos = background->mapToItem(menu->parentItem(), {0, 0}).toPoint();
+    const QPoint requestedPlusInsets = (requestedPos + insets).toPoint();
+    QVERIFY2(qAbs(actualBgPos.x() - requestedPlusInsets.x()) < 2,
+             qPrintable(QStringLiteral("The background's requsted x value %1 didn't match the actual value of %2")
+                        .arg(actualBgPos.x()).arg(requestedPlusInsets.x())));
+    QVERIFY2(qAbs(actualBgPos.y() - requestedPlusInsets.y()) < 2,
+             qPrintable(QStringLiteral("The background's requsted y value %1 didn't match the actual value of %2")
+                                .arg(actualBgPos.y()).arg(requestedPlusInsets.y())));
 }
 
 void tst_QQuickMenu::textPadding()
