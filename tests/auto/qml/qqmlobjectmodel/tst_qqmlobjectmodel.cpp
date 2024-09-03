@@ -156,6 +156,7 @@ void tst_QQmlObjectModel::objectDestroyed()
         ObjectModel {
             id: objectModel
 
+            property int gcRuns: 0
             property Component objectComponent: QtObject {}
 
             Component.onCompleted: {
@@ -167,7 +168,10 @@ void tst_QQmlObjectModel::objectDestroyed()
                 running: true
                 interval: 1
                 repeat: true
-                onTriggered: gc()
+                onTriggered: {
+                    gc()
+                    objectModel.gcRuns++
+                }
             }
         }
     )", QUrl());
@@ -186,10 +190,19 @@ void tst_QQmlObjectModel::objectDestroyed()
     QVERIFY(child);
     QCOMPARE(child->objectName(), QStringLiteral("first"));
 
-    QSignalSpy spy(child, &QObject::destroyed);
-    QTRY_COMPARE(spy.count(), 1);
+    // The object model holds on to its children if it can ...
 
-    // Now we should not be able to get to the child anymore
+    QSignalSpy spy(child, &QObject::destroyed);
+
+    QTRY_VERIFY(model->property("gcRuns").toInt() > 4);
+
+    QCOMPARE(spy.count(), 0);
+    QCOMPARE(children.at(&children, 0), child);
+
+    // ... but it adapts if we manually delete the child.
+
+    delete child;
+    QCOMPARE(spy.count(), 1);
     QCOMPARE(children.at(&children, 0), nullptr);
 }
 

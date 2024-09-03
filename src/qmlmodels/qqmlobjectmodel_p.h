@@ -88,6 +88,7 @@ class Q_QMLMODELS_EXPORT QQmlObjectModel : public QQmlInstanceModel
     Q_DECLARE_PRIVATE(QQmlObjectModel)
 
     Q_PROPERTY(QQmlListProperty<QObject> children READ children NOTIFY childrenChanged DESIGNABLE false)
+    Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QQmlV4ExecutionEnginePtr)")
     Q_CLASSINFO("DefaultProperty", "children")
     QML_NAMED_ELEMENT(ObjectModel)
     QML_ADDED_IN_VERSION(2, 1)
@@ -124,6 +125,7 @@ Q_SIGNALS:
     void childrenChanged();
 
 private:
+    Q_PRIVATE_SLOT(d_func(), quint64 _q_createJSWrapper(QQmlV4ExecutionEnginePtr))
     Q_DISABLE_COPY(QQmlObjectModel)
 };
 

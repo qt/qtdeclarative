@@ -10,6 +10,7 @@
 #include <private/qqmlchangeset_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qobject_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qhash.h>
@@ -24,16 +25,22 @@ class QQmlObjectModelPrivate : public QObjectPrivate
 public:
     class Item {
     public:
-        Item(QObject *i) : item(i), ref(0) {}
+        Item(QObject *i = nullptr) : m_item(i) {}
 
-        void addRef() { ++ref; }
-        bool deref() { return --ref == 0; }
+        void addRef() { ++m_ref; }
+        bool deref() { return --m_ref == 0; }
+        int refCount() const { return m_ref; }
 
-        QPointer<QObject> item;
-        int ref;
+        QObject *item() const { return m_item.data(); }
+
+    private:
+        QPointer<QObject> m_item;
+        int m_ref = 0;
     };
 
     QQmlObjectModelPrivate() : QObjectPrivate(), moveId(0) {}
+
+    static QQmlObjectModelPrivate *get(QQmlObjectModel *q) { return q->d_func(); }
 
     static void children_append(QQmlListProperty<QObject> *prop, QObject *item) {
         qsizetype index = static_cast<QQmlObjectModelPrivate *>(prop->data)->children.size();
@@ -45,7 +52,7 @@ public:
     }
 
     static QObject *children_at(QQmlListProperty<QObject> *prop, qsizetype index) {
-        return static_cast<QQmlObjectModelPrivate *>(prop->data)->children.at(index).item;
+        return static_cast<QQmlObjectModelPrivate *>(prop->data)->children.at(index).item();
     }
 
     static void children_clear(QQmlListProperty<QObject> *prop) {
@@ -61,9 +68,19 @@ public:
         data->remove(data->children.size() - 1, 1);
     }
 
+    void markNewChild(QQmlObjectModel *q, QObject *item)
+    {
+        if (QJSEngine *engine = qjsEngine(q)) {
+            QV4::WriteBarrier::markCustom(engine->handle(), [&](QV4::MarkStack *markStack) {
+                QV4::QObjectWrapper::markWrapper(item, markStack);
+            });
+        }
+    }
+
     void insert(int index, QObject *item) {
         Q_Q(QQmlObjectModel);
         children.insert(index, Item(item));
+        markNewChild(q, item);
         for (int i = index, end = children.size(); i < end; ++i)
             setIndex(i);
         QQmlChangeSet changeSet;
@@ -77,6 +94,7 @@ public:
         Q_Q(QQmlObjectModel);
         clearIndex(index);
         children.replace(index, Item(item));
+        markNewChild(q, item);
         setIndex(index);
         QQmlChangeSet changeSet;
         changeSet.change(index, 1);
@@ -97,12 +115,12 @@ public:
 
         QVarLengthArray<QQmlObjectModelPrivate::Item, 4> store;
         for (int i = 0; i < to - from; ++i)
-            store.append(children[from + n + i]);
+            store.append(std::move(children[from + n + i]));
         for (int i = 0; i < n; ++i)
-            store.append(children[from + i]);
+            store.append(std::move(children[from + i]));
 
         for (int i = 0, end = store.count(); i < end; ++i) {
-            children[from + i] = store[i];
+            children[from + i] = std::move(store[i]);
             setIndex(from + i);
         }
 
@@ -130,22 +148,30 @@ public:
         Q_Q(QQmlObjectModel);
         const auto copy = children;
         for (const Item &child : copy)
-            emit q->destroyingItem(child.item);
+            emit q->destroyingItem(child.item());
         remove(0, children.size());
     }
 
     int indexOf(QObject *item) const {
         for (int i = 0; i < children.size(); ++i)
-            if (children.at(i).item == item)
+            if (children.at(i).item() == item)
                 return i;
         return -1;
     }
+
+    void markChildren(QV4::MarkStack *markStack) const
+    {
+        for (const Item &child : children)
+            QV4::QObjectWrapper::markWrapper(child.item(), markStack);
+    }
+
+    quint64 _q_createJSWrapper(QQmlV4ExecutionEnginePtr engine);
 
 private:
     void setIndex(int child, int index)
     {
         if (auto *attached = static_cast<QQmlObjectModelAttached *>(
-                    qmlAttachedPropertiesObject<QQmlObjectModel>(children.at(child).item))) {
+                    qmlAttachedPropertiesObject<QQmlObjectModel>(children.at(child).item()))) {
             attached->setIndex(index);
         }
     }
@@ -158,7 +184,39 @@ private:
     QList<Item> children;
 };
 
-Q_DECLARE_TYPEINFO(QQmlObjectModelPrivate::Item, Q_RELOCATABLE_TYPE);
+namespace QV4 {
+namespace Heap {
+struct QQmlObjectModelWrapper : public QObjectWrapper {
+    static void markObjects(Base *that, MarkStack *markStack)
+    {
+        Q_ASSERT(QV4::Value::fromHeapObject(that).as<QV4::QObjectWrapper>());
+        QObject *object = static_cast<QObjectWrapper *>(that)->object();
+        if (!object)
+            return;
+
+        Q_ASSERT(qobject_cast<QQmlObjectModel *>(object));
+        QQmlObjectModelPrivate::get(static_cast<QQmlObjectModel *>(object))
+                ->markChildren(markStack);
+
+        QObjectWrapper::markObjects(that, markStack);
+    }
+};
+} // namespace Heap
+
+struct QQmlObjectModelWrapper : public QObjectWrapper {
+    V4_OBJECT2(QQmlObjectModelWrapper, QObjectWrapper)
+};
+
+} // namspace QV4
+
+DEFINE_OBJECT_VTABLE(QV4::QQmlObjectModelWrapper);
+
+quint64 QQmlObjectModelPrivate::_q_createJSWrapper(QQmlV4ExecutionEnginePtr engine)
+{
+    return (engine->memoryManager->allocate<QV4::QQmlObjectModelWrapper>(
+                    q_func()))->asReturnedValue();
+}
+
 
 
 /*!
@@ -246,11 +304,12 @@ QObject *QQmlObjectModel::object(int index, QQmlIncubator::IncubationMode)
     Q_D(QQmlObjectModel);
     QQmlObjectModelPrivate::Item &item = d->children[index];
     item.addRef();
-    if (item.ref == 1) {
-        emit initItem(index, item.item);
-        emit createdItem(index, item.item);
+    QObject *obj = item.item();
+    if (item.refCount() == 1) {
+        emit initItem(index, obj);
+        emit createdItem(index, obj);
     }
-    return item.item;
+    return obj;
 }
 
 QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item, ReusableFlag)
@@ -269,7 +328,7 @@ QVariant QQmlObjectModel::variantValue(int index, const QString &role)
     Q_D(QQmlObjectModel);
     if (index < 0 || index >= d->children.size())
         return QString();
-    if (QObject *item = d->children.at(index).item)
+    if (QObject *item = d->children.at(index).item())
         return item->property(role.toUtf8().constData());
     return QString();
 }
@@ -314,7 +373,7 @@ QObject *QQmlObjectModel::get(int index) const
     Q_D(const QQmlObjectModel);
     if (index < 0 || index >= d->children.size())
         return nullptr;
-    return d->children.at(index).item;
+    return d->children.at(index).item();
 }
 
 /*!
