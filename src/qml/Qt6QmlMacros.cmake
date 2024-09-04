@@ -3143,7 +3143,11 @@ function(qt6_target_qml_sources target)
             add_custom_target(${module_aotstats_target_name}
                 DEPENDS ${output}
             )
-            add_dependencies(${module_aotstats_target_name} ${target}_qmltyperegistration)
+            if(TARGET ${target}_qmltyperegistration)
+                add_dependencies(${module_aotstats_target_name} ${target}_qmltyperegistration)
+            else()
+                add_dependencies(${module_aotstats_target_name} ${target})
+            endif()
         endif()
 
         set_target_properties(${module_aotstats_target_name}
