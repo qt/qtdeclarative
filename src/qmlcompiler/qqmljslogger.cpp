@@ -255,10 +255,9 @@ void QQmlJSLogger::log(const QString &message, QQmlJS::LoggerWarningId id,
                 (!overrideFileName.isEmpty() ? overrideFileName : m_fileName) + QStringLiteral(":");
 
     if (srcLocation.isValid())
-        prefix += QStringLiteral("%1:%2:").arg(srcLocation.startLine).arg(srcLocation.startColumn);
-
-    if (!prefix.isEmpty())
-        prefix.append(QLatin1Char(' '));
+        prefix += QStringLiteral("%1:%2: ").arg(srcLocation.startLine).arg(srcLocation.startColumn);
+    else if (!prefix.isEmpty())
+        prefix += QStringLiteral(": "); // produce double colon for Qt Creator's issues pane
 
     // Note: we do the clamping to [Info, Critical] range since our logger only
     // supports 3 categories
