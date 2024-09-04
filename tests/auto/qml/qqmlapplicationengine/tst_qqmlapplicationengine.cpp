@@ -34,6 +34,7 @@ private slots:
     void setInitialProperties();
     void failureToLoadTriggersWarningSignal();
     void errorWhileCreating();
+    void createWithQrcPath();
 
 private:
     QString buildDir;
@@ -387,6 +388,21 @@ void tst_qqmlapplicationengine::errorWhileCreating()
     QList<QVariant> args = observer.takeFirst();
     QVERIFY(args.at(0).isNull());
     QCOMPARE(args.at(1).toUrl(), url);
+}
+
+void tst_qqmlapplicationengine::createWithQrcPath()
+{
+    QTest::ignoreMessage(
+            QtMsgType::QtWarningMsg, "QQmlApplicationEngine failed to load component");
+    QTest::ignoreMessage(
+            QtMsgType::QtWarningMsg, "qrc:/some/qrc/path.qml: No such file or directory");
+    QQmlApplicationEngine test(":/some/qrc/path.qml");
+
+    QTest::ignoreMessage(
+            QtMsgType::QtWarningMsg, "QQmlApplicationEngine failed to load component");
+    QTest::ignoreMessage(
+            QtMsgType::QtWarningMsg, "qrc:/some/other/path.qml: No such file or directory");
+    test.load(":/some/other/path.qml");
 }
 
 QTEST_MAIN(tst_qqmlapplicationengine)
