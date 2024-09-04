@@ -34,7 +34,7 @@ public class QmlService extends Service implements QtQmlStatusChangeListener
     private static final String TAG = "QmlService";
     private WindowManager m_windowManager;
     private QtQuickView m_serviceView;
-    private final Main m_serviceViewComponent = new Main();
+    private final Main m_serviceViewContent = new Main();
     private View m_mainView;
 
     private TextView m_qmlBackgroundColorTextView;
@@ -57,8 +57,8 @@ public class QmlService extends Service implements QtQmlStatusChangeListener
         getScreenSize((size) -> {
             // Get the available geometry, and split it between the Android and QML UIs
             m_serviceView = addQuickView(new Size(size.getWidth() / 2, size.getHeight()));
-            m_serviceViewComponent.setStatusChangeListener(this);
-            m_serviceView.loadComponent(m_serviceViewComponent);
+            m_serviceViewContent.setStatusChangeListener(this);
+            m_serviceView.loadContent(m_serviceViewContent);
 
             m_mainView = addMainView(new Size(size.getWidth() / 2, size.getHeight()));
             connectToNativeControls(m_mainView);
@@ -163,7 +163,7 @@ public class QmlService extends Service implements QtQmlStatusChangeListener
 
     public void onChangeColorButtonListener(View view)
     {
-        m_serviceViewComponent.setColorStringFormat(getRandomColorString());
+        m_serviceViewContent.setColorStringFormat(getRandomColorString());
 
         final String qmlColor = m_serviceView.getProperty("colorStringFormat");
         m_qmlBackgroundColorTextView.setText(qmlColor);
