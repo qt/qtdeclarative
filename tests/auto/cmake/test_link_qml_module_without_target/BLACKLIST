@@ -1,0 +1,3 @@
+#QTBUG-128645
+[canRun]
+windows arm 64bit
