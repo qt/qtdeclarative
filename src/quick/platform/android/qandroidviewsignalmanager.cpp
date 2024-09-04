@@ -11,7 +11,8 @@ QT_BEGIN_NAMESPACE
 
 void QAndroidViewSignalManager::forwardSignal()
 {
-    invokeListener(sender(), senderSignalIndex(), QVariant());
+    // We use VoidStar because creating QVariant from QtMetaType::Void is not possible
+    invokeListener(sender(), senderSignalIndex(), QVariant::fromValue<void *>(nullptr));
 }
 
 void QAndroidViewSignalManager::forwardSignal(int signalValue)
