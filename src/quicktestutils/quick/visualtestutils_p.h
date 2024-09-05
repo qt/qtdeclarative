@@ -225,9 +225,6 @@ namespace QQuickVisualTestUtils
     QPoint mapToWindow(const QQuickItem *item, const QPointF &relativePos);
 }
 
-#define QQUICK_VERIFY_POLISH(item) \
-    QTRY_COMPARE(QQuickItemPrivate::get(item)->polishScheduled, false)
-
 #define SKIP_IF_NO_WINDOW_ACTIVATION \
 do { \
     if (!(QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation))) \
