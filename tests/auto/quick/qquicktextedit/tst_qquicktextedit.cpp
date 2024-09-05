@@ -980,7 +980,7 @@ static inline QByteArray msgNotLessThan(int n1, int n2)
 
 void tst_qquicktextedit::hAlignVisual()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QQuickView view(testFileUrl("hAlignVisual.qml"));
     view.setFlags(view.flags() | Qt::WindowStaysOnTopHint); // Prevent being obscured by other windows.
@@ -6351,7 +6351,7 @@ void tst_qquicktextedit::keys_shortcutoverride()
 
 void tst_qquicktextedit::transparentSelectionColor()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("transparentSelectionColor.qml")));
@@ -6526,7 +6526,7 @@ void tst_qquicktextedit::touchscreenDoesNotSelect()
 
 void tst_qquicktextedit::touchscreenSetsFocusAndMovesCursor()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("twoInAColumn.qml")));

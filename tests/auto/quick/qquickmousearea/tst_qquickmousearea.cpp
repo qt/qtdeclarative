@@ -1376,7 +1376,7 @@ void tst_QQuickMouseArea::hoverPropagation()
 
 void tst_QQuickMouseArea::hoverVisible()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("hoverVisible.qml")));

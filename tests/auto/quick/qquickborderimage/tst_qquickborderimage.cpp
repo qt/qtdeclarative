@@ -575,7 +575,7 @@ void tst_qquickborderimage::progressAndStatusChanges()
 #if QT_CONFIG(opengl)
 void tst_qquickborderimage::borderImageMesh()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QQuickView *window = new QQuickView;
 
@@ -607,7 +607,7 @@ void tst_qquickborderimage::multiFrame_data()
 
 void tst_qquickborderimage::multiFrame()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QFETCH(QString, qmlfile);
     QFETCH(bool, asynchronous);

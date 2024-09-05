@@ -102,7 +102,7 @@ void tst_QQuickTextArea::touchscreenDoesNotSelect()
 
 void tst_QQuickTextArea::touchscreenSetsFocusAndMovesCursor()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
     qunsetenv("QT_QUICK_CONTROLS_TEXT_SELECTION_BEHAVIOR");
 
     QQuickView window;

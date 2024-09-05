@@ -1034,7 +1034,7 @@ static inline QByteArray msgNotLessThan(int n1, int n2)
 
 void tst_qquicktext::hAlignImplicitWidth()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QQuickView view(testFileUrl("hAlignImplicitWidth.qml"));
     view.setFlags(view.flags() | Qt::WindowStaysOnTopHint); // Prevent being obscured by other windows.
@@ -4830,7 +4830,7 @@ void tst_qquicktext::verticallyAlignedImageInTable()
 
 void tst_qquicktext::transparentBackground()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("transparentBackground.qml"));
@@ -4849,7 +4849,7 @@ void tst_qquicktext::transparentBackground()
 
 void tst_qquicktext::displaySuperscriptedTag()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("displaySuperscriptedTag.qml"));

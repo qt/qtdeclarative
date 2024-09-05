@@ -143,7 +143,7 @@ void tst_qquickmenubar::mouse()
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
 
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
@@ -372,7 +372,7 @@ void tst_qquickmenubar::keys()
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
 
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
 
@@ -579,7 +579,7 @@ void tst_qquickmenubar::mnemonics()
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
 
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
 #if defined(Q_OS_MACOS) or defined(Q_OS_WEBOS)
     QSKIP("Mnemonics are not used on this platform");

@@ -254,7 +254,7 @@ void tst_QQuickShape::changeSignals()
 
 void tst_QQuickShape::render()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QScopedPointer<QQuickView> window(createView());
 
@@ -276,7 +276,7 @@ void tst_QQuickShape::render()
 
 void tst_QQuickShape::renderWithMultipleSp()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QScopedPointer<QQuickView> window(createView());
 
@@ -298,7 +298,7 @@ void tst_QQuickShape::renderWithMultipleSp()
 
 void tst_QQuickShape::radialGrad()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QScopedPointer<QQuickView> window(createView());
 
@@ -320,7 +320,7 @@ void tst_QQuickShape::radialGrad()
 
 void tst_QQuickShape::conicalGrad()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QScopedPointer<QQuickView> window(createView());
 
@@ -342,7 +342,7 @@ void tst_QQuickShape::conicalGrad()
 
 void tst_QQuickShape::renderPolyline()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QScopedPointer<QQuickView> window(createView());
 
@@ -369,7 +369,7 @@ void tst_QQuickShape::renderPolyline()
 
 void tst_QQuickShape::renderMultiline()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QScopedPointer<QQuickView> window(createView());
 
@@ -429,7 +429,7 @@ void tst_QQuickShape::polylineDataTypes_data()
 
 void tst_QQuickShape::polylineDataTypes()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QFETCH(QVariant, path);
 
@@ -578,7 +578,7 @@ void tst_QQuickShape::multilineDataTypes_data()
 
 void tst_QQuickShape::multilineDataTypes()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QFETCH(QVariant, paths);
 
@@ -624,7 +624,7 @@ void tst_QQuickShape::multilineDataTypes()
 
 void tst_QQuickShape::multilineStronglyTyped()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("multilineStronglyTyped.qml"));

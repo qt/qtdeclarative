@@ -131,7 +131,7 @@ void tst_drawingmodes::points()
 
     // Contrary to what b1d0136192b7451788dee79c865dede02438f96e says,
     // this test fails when running with the offscreen platform plugin,
-    // so we can't use SKIP_IF_NO_WINDOW_GRAB here.
+    // so we can't use SKIP_IF_NO_WINDOW_GRAB; here.
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");

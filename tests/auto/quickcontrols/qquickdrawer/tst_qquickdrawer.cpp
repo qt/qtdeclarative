@@ -1103,7 +1103,7 @@ void tst_QQuickDrawer::interactive_data()
 
 void tst_QQuickDrawer::interactive()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QFETCH(QString, source);
     QQuickControlsApplicationHelper helper(this, source);

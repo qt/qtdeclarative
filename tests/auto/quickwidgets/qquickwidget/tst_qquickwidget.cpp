@@ -994,7 +994,7 @@ void tst_qquickwidget::focusOnClickInProxyWidget()
 
 void tst_qquickwidget::focusPreserved()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
     if (QGuiApplication::platformName() == "android")
         QSKIP("Test doesn't exit cleanly on Android and generates many warnings - QTBUG-112696");
 

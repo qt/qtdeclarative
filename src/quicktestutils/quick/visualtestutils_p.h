@@ -229,12 +229,16 @@ namespace QQuickVisualTestUtils
     QTRY_COMPARE(QQuickItemPrivate::get(item)->polishScheduled, false)
 
 #define SKIP_IF_NO_WINDOW_ACTIVATION \
-if (!(QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation))) \
-    QSKIP("Window activation is not supported on this platform");
+do { \
+    if (!(QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation))) \
+        QSKIP("Window activation is not supported on this platform"); \
+} while (false)
 
 #define SKIP_IF_NO_WINDOW_GRAB \
-if (QGuiApplication::platformName() == QLatin1String("minimal")) \
-    QSKIP("grabWindow is not supported on the minimal platform");
+do { \
+    if (QGuiApplication::platformName() == QLatin1String("minimal")) \
+        QSKIP("grabWindow is not supported on the minimal platform"); \
+} while (false)
 
 QT_END_NAMESPACE
 

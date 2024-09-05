@@ -325,7 +325,7 @@ void tst_qquickimage::smooth()
 
 void tst_qquickimage::mirror()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QMap<QQuickImage::FillMode, QImage> screenshots;
     const QList<QQuickImage::FillMode> fillModes{QQuickImage::Stretch,
@@ -541,7 +541,7 @@ void tst_qquickimage::big()
 
 void tst_qquickimage::tiling_QTBUG_6716()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QFETCH(QString, source);
 
@@ -1189,7 +1189,7 @@ void tst_qquickimage::highDpiFillModesAndSizes()
 
 void tst_qquickimage::hugeImages()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QQuickView view;
     view.setSource(testFileUrl("hugeImages.qml"));
@@ -1247,7 +1247,7 @@ void tst_qquickimage::multiFrame_data()
 
 void tst_qquickimage::multiFrame()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QFETCH(QString, qmlfile);
     QFETCH(bool, asynchronous);

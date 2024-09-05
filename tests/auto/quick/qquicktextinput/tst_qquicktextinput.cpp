@@ -7194,7 +7194,7 @@ void tst_qquicktextinput::touchscreenDoesNotSelect()
 
 void tst_qquicktextinput::touchscreenSetsFocusAndMovesCursor()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("twoInAColumn.qml")));

@@ -1626,7 +1626,7 @@ public:
 
 void tst_qquickwindow::earlyGrab()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     qmlRegisterType<Grabber>("Test", 1, 0, "Grabber");
     QQmlEngine engine;

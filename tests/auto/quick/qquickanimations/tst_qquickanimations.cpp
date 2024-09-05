@@ -1853,7 +1853,7 @@ void tst_qquickanimations::fastFlickingBug()
 
 void tst_qquickanimations::opacityAnimationFromZero()
 {
-    SKIP_IF_NO_WINDOW_GRAB
+    SKIP_IF_NO_WINDOW_GRAB;
 
     // not easy to verify this in threaded render loop
     // since it's difficult to capture the first frame when scene graph

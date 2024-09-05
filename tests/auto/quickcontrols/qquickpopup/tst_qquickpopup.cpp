@@ -549,7 +549,7 @@ void tst_QQuickPopup::closePolicy_data()
 
 void tst_QQuickPopup::closePolicy()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QFETCH(QString, source);
     QFETCH(const QPointingDevice *, device);
@@ -692,7 +692,7 @@ void tst_QQuickPopup::closePolicy_grabberInside()
 
 void tst_QQuickPopup::activeFocusOnClose1()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     // Test that a popup that never sets focus: true (e.g. ToolTip) doesn't affect
     // the active focus item when it closes.
@@ -737,7 +737,7 @@ void tst_QQuickPopup::activeFocusOnClose1()
 
 void tst_QQuickPopup::activeFocusOnClose2()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     // Test that a popup that sets focus: true but relinquishes focus (e.g. by
     // calling forceActiveFocus() on another item) before it closes doesn't
@@ -778,7 +778,7 @@ void tst_QQuickPopup::activeFocusOnClose2()
 
 void tst_QQuickPopup::activeFocusOnClose3()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     // Test that a closing popup that had focus doesn't steal focus from
     // another popup that the focus was transferred to.
@@ -813,7 +813,7 @@ void tst_QQuickPopup::activeFocusOnClose3()
 
 void tst_QQuickPopup::activeFocusOnClosingSeveralPopups()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     // Test that active focus isn't lost when multiple popup closing simultaneously
     QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusOnClosingSeveralPopups.qml"));
@@ -864,7 +864,7 @@ void tst_QQuickPopup::activeFocusOnClosingSeveralPopups()
 
 void tst_QQuickPopup::activeFocusAfterExit()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     // Test that after closing a popup the highest one in z-order receives it instead.
     QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusAfterExit.qml"));
@@ -915,7 +915,7 @@ void tst_QQuickPopup::activeFocusAfterExit()
 
 void tst_QQuickPopup::activeFocusOnDelayedEnter()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     // Test that after opening two popups, first of which has an animation, does not cause
     // the first one to receive focus after the animation stops.
@@ -943,7 +943,7 @@ void tst_QQuickPopup::activeFocusOnDelayedEnter()
 // key events due to having active focus.
 void tst_QQuickPopup::activeFocusDespiteLowerStackingOrder()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusOnClose3.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -986,7 +986,7 @@ void tst_QQuickPopup::activeFocusDespiteLowerStackingOrder()
 
 void tst_QQuickPopup::activeFocusItemAfterWindowInactive()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusAfterWindowInactive.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -1472,7 +1472,7 @@ void tst_QQuickPopup::componentComplete()
 
 void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     // Tests the scenario in the Gallery example, where there are nested popups that should
     // close in the correct order when the Escape key is pressed.
@@ -1543,7 +1543,7 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
 
 void tst_QQuickPopup::closeOnEscapeWithVisiblePopup()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickControlsApplicationHelper helper(this, QStringLiteral("closeOnEscapeWithVisiblePopup.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -1653,7 +1653,7 @@ void tst_QQuickPopup::qquickview()
 // QTBUG-73447
 void tst_QQuickPopup::disabledPalette()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickControlsApplicationHelper helper(this, "disabledPalette.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -1692,7 +1692,7 @@ void tst_QQuickPopup::disabledPalette()
 
 void tst_QQuickPopup::disabledParentPalette()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickControlsApplicationHelper helper(this, "disabledPalette.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -1800,7 +1800,7 @@ void tst_QQuickPopup::setOverlayParentToNull()
 
 void tst_QQuickPopup::tabFence()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
@@ -1925,7 +1925,7 @@ void tst_QQuickPopup::centerInOverlayWithinStackViewItem()
 
 void tst_QQuickPopup::destroyDuringExitTransition()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickControlsApplicationHelper helper(this, "destroyDuringExitTransition.qml");
     QVERIFY2(helper.ready, helper.failureMessage());

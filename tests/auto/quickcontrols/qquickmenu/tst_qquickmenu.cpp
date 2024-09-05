@@ -213,7 +213,7 @@ void tst_QQuickMenu::mouse_data()
 
 void tst_QQuickMenu::mouse()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QFETCH(QQuickPopup::PopupType, popupType);
 
@@ -375,7 +375,7 @@ void tst_QQuickMenu::contextMenuKeyboard_data()
 
 void tst_QQuickMenu::contextMenuKeyboard()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QFETCH(QQuickPopup::PopupType, popupType);
 
@@ -587,7 +587,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
 // QTBUG-70181
 void tst_QQuickMenu::disabledMenuItemKeyNavigation()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
@@ -653,7 +653,7 @@ void tst_QQuickMenu::disabledMenuItemKeyNavigation()
 
 void tst_QQuickMenu::mnemonics()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
 #ifdef Q_OS_MACOS
     QSKIP("Mnemonics are not used on macOS");
@@ -911,7 +911,7 @@ void tst_QQuickMenu::checkableMnemonics()
 
 void tst_QQuickMenu::menuButton()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
@@ -965,7 +965,7 @@ void tst_QQuickMenu::addItem()
 
 void tst_QQuickMenu::menuSeparator()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("menuSeparator.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -1377,7 +1377,7 @@ void tst_QQuickMenu::actions()
 #if QT_CONFIG(shortcut)
 void tst_QQuickMenu::actionShortcuts()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("actionShortcuts.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -1674,7 +1674,7 @@ void tst_QQuickMenu::subMenuKeyboard_data()
 
 void tst_QQuickMenu::subMenuKeyboard()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QFETCH(bool, cascade);
     QFETCH(bool, mirrored);
@@ -1805,7 +1805,7 @@ void tst_QQuickMenu::subMenuDisabledKeyboard_data()
 // QTBUG-69540
 void tst_QQuickMenu::subMenuDisabledKeyboard()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QFETCH(bool, cascade);
     QFETCH(bool, mirrored);
@@ -2554,7 +2554,7 @@ void tst_QQuickMenu::menuItemWidthAfterRetranslate()
 
 void tst_QQuickMenu::giveMenuItemFocusOnButtonPress()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("giveMenuItemFocusOnButtonPress.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -3129,7 +3129,7 @@ void tst_QQuickMenu::effectivePosition()
     // background the opposite way, to ensure that the top-left of the background
     // ends up at the requested position.
     QFETCH(QQuickPopup::PopupType, popupType);
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -3253,7 +3253,7 @@ void tst_QQuickMenu::resetCurrentIndexUponPopup()
     // a menu is repopened using the popup() function without
     // providing a MenuItem as argument.
     QFETCH(QQuickPopup::PopupType, popupType);
-    SKIP_IF_NO_WINDOW_ACTIVATION
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
