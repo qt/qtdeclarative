@@ -2335,12 +2335,13 @@ ReturnedValue GlobalExtensions::method_qsTrNoOp(const FunctionObject *, const Va
 
     \tt{//% <string>}
 
+    \snippet qml/qsTrId.1.qml 0
+
     or
 
-    \tt{\\begincomment% <string> \\endcomment}
+    \tt{\begincomment% <string> \endcomment}
 
-    Example:
-    \snippet qml/qsTrId.1.qml 0
+    \snippet qml/qsTrId.1.qml 1
 
     Creating binary translation (QM) files suitable for use with this function requires passing
     the \c -idbased option to the \c lrelease tool.
