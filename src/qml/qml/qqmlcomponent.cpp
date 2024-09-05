@@ -1492,22 +1492,24 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context, QQmlC
 }
 
 /*!
-   Set top-level \a properties of the \a component.
+   Set top-level \a properties of the \a object that was created from a
+   QQmlComponent.
 
    This method provides advanced control over component instance creation.
    In general, programmers should use
-   \l QQmlComponent::createWithInitialProperties to create a component.
+   \l QQmlComponent::createWithInitialProperties to create an object instance
+   from a component.
 
    Use this method after beginCreate and before completeCreate has been called.
    If a provided property does not exist, a warning is issued.
 
    \since 5.14
 */
-void QQmlComponent::setInitialProperties(QObject *component, const QVariantMap &properties)
+void QQmlComponent::setInitialProperties(QObject *object, const QVariantMap &properties)
 {
     Q_D(QQmlComponent);
     for (auto it = properties.constBegin(); it != properties.constEnd(); ++it)
-        d->setInitialProperty(component, it.key(), it.value());
+        d->setInitialProperty(object, it.key(), it.value());
 }
 
 /*
