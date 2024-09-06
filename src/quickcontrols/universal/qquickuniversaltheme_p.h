@@ -20,11 +20,15 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickTheme;
+class QQuickUniversalStyle;
 
 class Q_QUICKCONTROLS2UNIVERSAL_EXPORT QQuickUniversalTheme
 {
 public:
     static void initialize(QQuickTheme *theme);
+    static void registerSystemStyle(QQuickUniversalStyle *style);
+    static void unregisterSystemStyle(QQuickUniversalStyle *style);
+    static void updateTheme();
 };
 
 QT_END_NAMESPACE

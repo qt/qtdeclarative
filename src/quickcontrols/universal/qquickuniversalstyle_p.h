@@ -201,6 +201,7 @@ private:
     // or not these are set.
     bool m_hasForeground = false;
     bool m_hasBackground = false;
+    bool m_usingSystemTheme = false;
     // The actual values for this item, whether explicit, inherited or globally set.
     Theme m_theme = Light;
     QRgb m_accent = Qt::blue;

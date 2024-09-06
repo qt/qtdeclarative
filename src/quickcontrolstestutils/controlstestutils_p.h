@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -75,6 +76,23 @@ namespace QQuickControlsTestUtils
 
     public:
         QString styleName() const;
+    };
+
+    class MockPlatformTheme : public QPlatformTheme
+    {
+        Qt::ColorScheme colorScheme() const override
+        {
+            return m_colorScheme;
+        }
+        void requestColorScheme(Qt::ColorScheme theme) override
+        {
+            m_colorScheme = theme;
+            QWindowSystemInterfacePrivate::ThemeChangeEvent tce{nullptr};
+            QGuiApplicationPrivate::processThemeChanged(&tce);
+        }
+
+    private:
+        Qt::ColorScheme m_colorScheme = Qt::ColorScheme::Unknown;
     };
 }
 

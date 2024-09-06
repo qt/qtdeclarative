@@ -26,6 +26,9 @@ qt_internal_add_test(tst_qquickuniversalstyle
         tst_qquickuniversalstyle.cpp
     LIBRARIES
         Qt::Gui
+        Qt::GuiPrivate
+        Qt::QuickControls2UniversalPrivate
+        Qt::QuickControlsTestUtilsPrivate
     TESTDATA ${test_data}
 )
 
