@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickuniversalstyle_p.h"
+#include "qquickuniversaltheme_p.h"
 
 #include <QtCore/qdebug.h>
 #if QT_CONFIG(settings)
@@ -120,9 +121,15 @@ static QRgb GlobalBackground = qquickuniversal_light_color(QQuickUniversalStyle:
 static bool HasGlobalForeground = false;
 static bool HasGlobalBackground = false;
 
-QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent) : QQuickAttachedPropertyPropagator(parent),
-    m_hasForeground(HasGlobalForeground), m_hasBackground(HasGlobalBackground), m_theme(GlobalTheme),
-    m_accent(GlobalAccent), m_foreground(GlobalForeground), m_background(GlobalBackground)
+QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent)
+    : QQuickAttachedPropertyPropagator(parent)
+    , m_hasForeground(HasGlobalForeground)
+    , m_hasBackground(HasGlobalBackground)
+    , m_usingSystemTheme(GlobalTheme == System)
+    , m_theme(qquickuniversal_effective_theme(GlobalTheme))
+    , m_accent(GlobalAccent)
+    , m_foreground(GlobalForeground)
+    , m_background(GlobalBackground)
 {
     initialize();
 }
@@ -139,12 +146,27 @@ QQuickUniversalStyle::Theme QQuickUniversalStyle::theme() const
 
 void QQuickUniversalStyle::setTheme(Theme theme)
 {
-    theme = qquickuniversal_effective_theme(theme);
     m_explicitTheme = true;
-    if (m_theme == theme)
+
+    // If theme is System: m_theme is set to the system's theme (Dark/Light)
+    // and m_usingSystemTheme is set to true.
+    // If theme is Dark/Light: m_theme is set to the input theme (Dark/Light)
+    // and m_usingSystemTheme is set to false.
+    const bool systemThemeChanged = (m_usingSystemTheme != (theme == System));
+    const Theme effectiveTheme = qquickuniversal_effective_theme(theme);
+    // Check m_theme and m_usingSystemTheme have changed.
+    if ((m_theme == effectiveTheme) && !systemThemeChanged)
         return;
 
-    m_theme = theme;
+    m_theme = effectiveTheme;
+    m_usingSystemTheme = (theme == System);
+    if (systemThemeChanged) {
+        if (m_usingSystemTheme)
+            QQuickUniversalTheme::registerSystemStyle(this);
+        else
+            QQuickUniversalTheme::unregisterSystemStyle(this);
+    }
+
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
@@ -154,10 +176,15 @@ void QQuickUniversalStyle::setTheme(Theme theme)
 
 void QQuickUniversalStyle::inheritTheme(Theme theme)
 {
-    if (m_explicitTheme || m_theme == theme)
+    const bool systemThemeChanged = (m_usingSystemTheme != (theme == System));
+    const Theme effectiveTheme = qquickuniversal_effective_theme(theme);
+    const bool hasThemeChanged = systemThemeChanged || (m_theme != effectiveTheme);
+    if (m_explicitTheme || !hasThemeChanged)
         return;
 
-    m_theme = theme;
+    m_theme = effectiveTheme;
+    m_usingSystemTheme = (theme == System);
+
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
@@ -170,8 +197,12 @@ void QQuickUniversalStyle::propagateTheme()
     const auto styles = attachedChildren();
     for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(child);
-        if (universal)
+        if (universal) {
+            // m_theme is the effective theme; either Dark or Light.
+            // m_usingSystemTheme indicates whether the theme is set by
+            // the system (true) or manually (false).
             universal->inheritTheme(m_theme);
+        }
     }
 }
 
@@ -512,7 +543,7 @@ void QQuickUniversalStyle::initGlobals()
     QByteArray themeValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_THEME", settings, QStringLiteral("Theme"));
     Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
     if (ok)
-        GlobalTheme = qquickuniversal_effective_theme(themeEnum);
+        GlobalTheme = themeEnum;
     else if (!themeValue.isEmpty())
         qWarning().nospace().noquote() << "Universal: unknown theme value: " << themeValue;
 

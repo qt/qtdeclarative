@@ -7,6 +7,8 @@ import QtTest
 import QtQuick.Controls
 import QtQuick.Controls.Universal
 
+import Qt.test
+
 TestCase {
     id: testCase
     width: 200
@@ -342,11 +344,11 @@ TestCase {
         compare(control.Universal[prop], "#80808080")
 
         // unknown
-        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":20:9: QML Button: unknown Universal." + prop + " value: 123")
+        ignoreWarning(new RegExp(".*QML Button: unknown Universal." + prop + " value: 123"))
         control.Universal[prop] = 123
-        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":20:9: QML Button: unknown Universal." + prop + " value: foo")
+        ignoreWarning(new RegExp(".*QML Button: unknown Universal." + prop + " value: foo"))
         control.Universal[prop] = "foo"
-        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":20:9: QML Button: unknown Universal." + prop + " value: #1")
+        ignoreWarning(new RegExp(".*QML Button: unknown Universal." + prop + " value: #1"))
         control.Universal[prop] = "#1"
 
         control.destroy()
@@ -390,5 +392,29 @@ TestCase {
         compare(control.font[data.attribute], data.window)
 
         window.destroy()
+    }
+
+    Component {
+        id: systemThemeComponent
+
+        ApplicationWindow {
+            width: 200
+            height: 200
+            visible: true
+            Universal.theme: Universal.System
+        }
+    }
+
+    function test_systemTheme() {
+        let window = createTemporaryObject(systemThemeComponent, testCase)
+        verify(window)
+
+        const toggleTheme = (theme) => (theme === Universal.Dark) ? Universal.Light : Universal.Dark
+
+        TestHelper.platformTheme = toggleTheme(TestHelper.platformTheme)
+        tryCompare(window.Universal, "theme", TestHelper.platformTheme)
+
+        TestHelper.platformTheme = toggleTheme(TestHelper.platformTheme)
+        tryCompare(window.Universal, "theme", TestHelper.platformTheme)
     }
 }

@@ -5,6 +5,7 @@
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuickControls2Material/private/qquickmaterialstyle_p.h>
 #include <QtQuickTest/quicktest.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 
 namespace {
 static inline Qt::ColorScheme toColorScheme(QQuickMaterialStyle::Theme theme)
@@ -36,25 +37,6 @@ static inline QQuickMaterialStyle::Theme toMaterialTheme(Qt::ColorScheme colorSc
 }
 }
 
-
-class MockPlatformTheme : public QPlatformTheme
-{
-    Qt::ColorScheme colorScheme() const override
-    {
-        return m_colorScheme;
-    }
-    void requestColorScheme(Qt::ColorScheme theme) override
-    {
-        m_colorScheme = theme;
-        QWindowSystemInterfacePrivate::ThemeChangeEvent tce{nullptr};
-        QGuiApplicationPrivate::processThemeChanged(&tce);
-    }
-
-private:
-    Qt::ColorScheme m_colorScheme = Qt::ColorScheme::Unknown;
-};
-
-
 class Setup : public QObject
 {
     Q_OBJECT
@@ -70,7 +52,7 @@ public slots:
     {
         qmlRegisterSingletonInstance("Qt.test", 1, 0, "TestHelper", this);
 
-        QGuiApplicationPrivate::platform_theme = new MockPlatformTheme;
+        QGuiApplicationPrivate::platform_theme = new QQuickControlsTestUtils::MockPlatformTheme;
     }
 
 public:
