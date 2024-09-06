@@ -123,7 +123,7 @@ private:
         QQuickItem *fillTextureProviderItem = nullptr;
     };
 
-    void createRunner(PathData *pathData);
+    void setUpRunner(PathData *pathData);
     void maybeUpdateAsyncItem();
 
     static void processPath(PathData *pathData);
@@ -149,6 +149,7 @@ public:
     ~QQuickShapeCurveRunnable() override;
     void run() override;
 
+    bool isInitialized = false;
     bool isAsync = false;
     bool isDone = false;
     bool orphaned = false;
