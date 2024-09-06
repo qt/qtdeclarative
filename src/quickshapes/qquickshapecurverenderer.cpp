@@ -310,7 +310,7 @@ void QQuickShapeCurveRenderer::setAsyncCallback(void (*callback)(void *), void *
 
 void QQuickShapeCurveRenderer::endSync(bool async)
 {
-    bool didKickOffAsync = false;
+    bool asyncThreadsRunning = false;
 
     for (PathData &pathData : m_paths) {
         if (!pathData.m_dirty)
@@ -324,16 +324,18 @@ void QQuickShapeCurveRenderer::endSync(bool async)
         if (pathData.currentRunner) {
             // Already performing async computing. New dirty flags will be handled in the next sync
             // after the current computation is done and the item is updated
+            asyncThreadsRunning = true;
             continue;
         }
 
-        createRunner(&pathData);
+        pathData.currentRunner = new QQuickShapeCurveRunnable;
+        setUpRunner(&pathData);
 
 #if QT_CONFIG(thread)
         if (async) {
             pathData.currentRunner->isAsync = true;
             QThreadPool::globalInstance()->start(pathData.currentRunner);
-            didKickOffAsync = true;
+            asyncThreadsRunning = true;
         } else
 #endif
         {
@@ -341,31 +343,33 @@ void QQuickShapeCurveRenderer::endSync(bool async)
         }
     }
 
-    if (async && !didKickOffAsync && m_asyncCallback)
+    if (async && !asyncThreadsRunning && m_asyncCallback)
         m_asyncCallback(m_asyncCallbackData);
 }
 
-void QQuickShapeCurveRenderer::createRunner(PathData *pathData)
+void QQuickShapeCurveRenderer::setUpRunner(PathData *pathData)
 {
-    Q_ASSERT(!pathData->currentRunner);
-    QQuickShapeCurveRunnable *runner = new QQuickShapeCurveRunnable;
-    runner->setAutoDelete(false);
+    Q_ASSERT(pathData->currentRunner);
+    QQuickShapeCurveRunnable *runner = pathData->currentRunner;
+    runner->isDone = false;
     runner->pathData = *pathData;
     runner->pathData.fillNodes.clear();
     runner->pathData.strokeNodes.clear();
     runner->pathData.currentRunner = nullptr;
-
-    pathData->currentRunner = runner;
     pathData->m_dirty = 0;
-    QObject::connect(runner, &QQuickShapeCurveRunnable::done, qApp,
-                     [this](QQuickShapeCurveRunnable *r) {
-                         r->isDone = true;
-                         if (r->orphaned) {
-                             delete r; // Renderer was destroyed
-                         } else if (r->isAsync) {
-                             maybeUpdateAsyncItem();
-                         }
-                     });
+    if (!runner->isInitialized) {
+        runner->isInitialized = true;
+        runner->setAutoDelete(false);
+        QObject::connect(runner, &QQuickShapeCurveRunnable::done, qApp,
+                         [this](QQuickShapeCurveRunnable *r) {
+                             r->isDone = true;
+                             if (r->orphaned) {
+                                 delete r; // Renderer was destroyed
+                             } else if (r->isAsync) {
+                                 maybeUpdateAsyncItem();
+                             }
+                         });
+    }
 }
 
 void QQuickShapeCurveRenderer::maybeUpdateAsyncItem()
@@ -442,7 +446,6 @@ void QQuickShapeCurveRenderer::updateNode()
                 }
                 toBeDeleted += pathData.fillNodes;
                 pathData.fillNodes = newData.fillNodes;
-                newData.fillNodes.clear();
             }
             if (newData.m_dirty & StrokeDirty) {
                 for (auto *node : std::as_const(newData.strokeNodes)) {
@@ -453,20 +456,28 @@ void QQuickShapeCurveRenderer::updateNode()
                 }
                 toBeDeleted += pathData.strokeNodes;
                 pathData.strokeNodes = newData.strokeNodes;
-                newData.strokeNodes.clear();
             }
-
             if (newData.m_dirty & UniformsDirty)
-                updateUniforms(pathData);
+                updateUniforms(newData);
 
-            // if (pathData.m_dirty && pathData.m_dirty != UniformsDirty && currentRunner.isAsync)
-            //     qDebug("### should enqueue a new sync?");
+            // Ownership of new nodes have been transferred to root node
+            newData.fillNodes.clear();
+            newData.strokeNodes.clear();
 
-            pathData.currentRunner->deleteLater();
-            pathData.currentRunner = nullptr;
+#if QT_CONFIG(thread)
+            if (pathData.currentRunner->isAsync && (pathData.m_dirty & ~UniformsDirty)) {
+                // New changes have arrived while runner was computing; restart it to handle them
+                setUpRunner(&pathData);
+                QThreadPool::globalInstance()->start(pathData.currentRunner);
+            } else
+#endif
+            {
+                pathData.currentRunner->deleteLater();
+                pathData.currentRunner = nullptr;
+            }
         }
 
-        if (pathData.m_dirty == UniformsDirty) {
+        if (pathData.m_dirty == UniformsDirty && !pathData.currentRunner) {
             // Simple case so no runner was created in endSync(); handle it directly here
             updateUniforms(pathData);
             pathData.m_dirty = 0;
