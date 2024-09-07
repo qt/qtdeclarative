@@ -17,6 +17,7 @@
 #include <QtQuick/private/qquickanchors_p.h>
 #include <QtGui/qstylehints.h>
 #include <private/qquickitem_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 #include <QtQuickTest/QtQuickTest>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
@@ -143,6 +144,7 @@ private slots:
     void embeddedInWidgetsFocus_data();
     void embeddedInWidgetsFocus();
 #endif
+    void gcIntegration();
 
 private:
     QQmlEngine engine;
@@ -4512,6 +4514,50 @@ void tst_QQuickItem::embeddedInWidgetsFocus()
     QVERIFY(lineEdit1->hasFocus());
 }
 #endif
+
+void tst_QQuickItem::gcIntegration()
+{
+    QQmlEngine e;
+    QQmlComponent comp(&e);
+    QQuickItem *parentItem, *child;
+    comp.loadFromModule("QtQuick", "Item");
+    parentItem = qobject_cast<QQuickItem *>(comp.create());
+    child = qobject_cast<QQuickItem *>(comp.create());
+    QVERIFY(parentItem);
+    QVERIFY(child);
+    QV4::ExecutionEngine *v4 = e.handle();
+    QV4::QObjectWrapper::ensureWrapper(v4, child);
+    QV4::QObjectWrapper::ensureWrapper(v4, parentItem);
+    // line blow is a hack; loadFromModule ought to set that up...
+    QQmlData::get(child)->context = QQmlContextData::get(e.rootContext()).data();
+    QPointer<QObject> observer(child);
+    QJSEngine::setObjectOwnership(parentItem, QJSEngine::JavaScriptOwnership);
+    QJSEngine::setObjectOwnership(child, QJSEngine::JavaScriptOwnership);
+    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(child));
+    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(parentItem));
+
+    QV4::MemoryManager *mm = v4->memoryManager;
+
+    QV4::GCStateMachine *sm = mm->gcStateMachine.get();
+    sm->reset();
+    while (sm->state != QV4::GCState::MarkGlobalObject) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+
+    // simulate someone owning the parentItem
+    QV4::QObjectWrapper::markWrapper(parentItem, mm->markStack());
+    mm->markStack()->drain();
+
+    child->setParentItem(parentItem);
+    child->setParent(nullptr);
+    gc(*v4);
+    QVERIFY(observer);
+    child->setParentItem(nullptr);
+    QVERIFY(!child->parent());
+    gc(*v4);
+    QVERIFY(!observer);
+}
 
 QTEST_MAIN(tst_QQuickItem)
 
