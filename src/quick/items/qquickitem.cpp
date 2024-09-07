@@ -2735,6 +2735,13 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
             }
             itemAncestor = itemAncestor->parentItem();
         }
+        auto engine = qmlEngine(this);
+        if (engine) {
+            QV4::ExecutionEngine *v4 = engine->handle();
+            QV4::WriteBarrier::markCustom(v4, [this](QV4::MarkStack *ms){
+                QV4::QObjectWrapper::markWrapper(this, ms);
+            });
+        }
     }
 
     d->removeFromDirtyList();
