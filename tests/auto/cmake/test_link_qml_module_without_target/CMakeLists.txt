@@ -10,7 +10,6 @@ find_package(Qt6 COMPONENTS REQUIRED
     Test
     Quick
     QuickLayouts
-    QuickTestUtilsPrivate
 )
 
 qt_standard_project_setup(REQUIRES 6.5)
@@ -24,7 +23,6 @@ target_link_libraries(test_link_qml_module_without_target PRIVATE
     Qt6::Core
     Qt6::Test
     Qt6::QuickPrivate
-    Qt6::QuickTestUtilsPrivate
 )
 
 # Suppress running qmlimportscanner and auto linking of static qml plugins, to ensure we don't
