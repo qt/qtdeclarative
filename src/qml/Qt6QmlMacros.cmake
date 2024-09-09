@@ -3233,15 +3233,14 @@ function(qt6_target_qml_sources target)
     set_property(TARGET ${target}
         APPEND PROPERTY _qt_qml_module_sanitized_resource_names "${sanitized_resource_name}")
 
-    if(extra_qmldirs)
+    if(extra_qmldirs AND NOT no_extra_qmldirs)
         list(REMOVE_DUPLICATES extra_qmldirs)
         __qt_internal_setup_policy(QTP0004 "6.8.0"
 "You need qmldir files for each extra directory that contains .qml files for your module. \
 Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0004.html for policy details."
         )
         qt6_policy(GET QTP0004 generate_extra_qmldirs_policy)
-        if ("${generate_extra_qmldirs_policy}" STREQUAL "NEW"
-            AND NOT no_qmldir AND NOT no_extra_qmldirs)
+        if ("${generate_extra_qmldirs_policy}" STREQUAL "NEW" AND NOT no_qmldir)
             foreach(extra_qmldir IN LISTS extra_qmldirs)
                 set(__qt_qmldir_content "prefer :${arg_PREFIX}")
                 configure_file(
