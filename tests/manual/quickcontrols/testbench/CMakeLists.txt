@@ -81,6 +81,7 @@ set(qml_resource_files
     "controls/ToolBar.qml"
     "controls/ToolTip.qml"
     "controls/Tumbler.qml"
+    "qtquickcontrols2.conf"
     "testbench.qml"
 )
 
