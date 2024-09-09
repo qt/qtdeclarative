@@ -19,6 +19,7 @@ macro(qt_internal_get_internal_add_qml_module_keywords
         NO_GENERATE_PLUGIN_SOURCE
         NO_GENERATE_QMLTYPES
         NO_GENERATE_QMLDIR
+        NO_GENERATE_EXTRA_QMLDIRS
         NO_LINT
         NO_CACHEGEN
         ENABLE_TYPE_COMPILER
