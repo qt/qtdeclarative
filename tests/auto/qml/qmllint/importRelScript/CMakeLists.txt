@@ -6,7 +6,7 @@ qt_policy(SET QTP0001 NEW)
 set(CMAKE_AUTOMOC ON)
 
 qt_add_qml_module(tst_qmllint_import_rel_script
-    URI ImportRelScript
+    URI importRelScript
     QML_FILES
         Main.qml
         script.js

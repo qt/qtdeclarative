@@ -317,10 +317,12 @@ set_source_files_properties("shared/Slider.qml"
 set_source_files_properties("hidden/Style.qml"
     PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
-qt_policy(SET QTP0001 NEW)
+# Do re-evaluate on each import, please
+set_source_files_properties("NotificationsUtils.js"
+    PROPERTIES QT_QML_SKIP_QMLDIR_ENTRY FALSE)
 
-# Add the module for the hidden files before setting QTP0004, so that we don't add a qmldir in
-# "hidden". That  would defeat the purpose.
+qt_policy(SET QTP0001 NEW)
+qt_policy(SET QTP0004 NEW)
 
 qt_add_library(codegen_test_hidden STATIC)
 qt_autogen_tools_initial_setup(codegen_test_hidden)
@@ -335,7 +337,6 @@ target_compile_definitions(codegen_test_hidden PUBLIC
     -DGENERATED_CPP_FOLDER="${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache"
 )
 
-qt_policy(SET QTP0004 OLD)
 qt6_add_qml_module(codegen_test_hidden
     URI HiddenTestTypes
     QML_FILES
@@ -343,13 +344,14 @@ qt6_add_qml_module(codegen_test_hidden
         hidden/Style.qml
     OUTPUT_DIRECTORY HiddenTestTypes
     __QT_INTERNAL_DISAMBIGUATE_QMLDIR_RESOURCE
+
+    # Don't add a qmldir in "hidden". That  would defeat the purpose.
+    NO_GENERATE_EXTRA_QMLDIRS
 )
 
 add_dependencies(codegen_test_hidden Qt::Quick)
 
 qt_autogen_tools_initial_setup(codegen_test_hiddenplugin)
-
-qt_policy(SET QTP0004 NEW)
 
 qt_add_library(codegen_test_stringbuilder STATIC)
 qt_autogen_tools_initial_setup(codegen_test_stringbuilder)
@@ -371,7 +373,7 @@ qt6_add_qml_module(codegen_test_stringbuilder
         writableVariantMap.h
     QML_FILES
         writeVariantMap.qml
-    OUTPUT_DIRECTORY stringbuilderTestTypes
+    OUTPUT_DIRECTORY StringBuilderTestTypes
     __QT_INTERNAL_DISAMBIGUATE_QMLDIR_RESOURCE
 )
 
