@@ -78,7 +78,6 @@ std::optional<QByteArray> HelpManager::extractDocumentation(const DomItem &item)
                 QQmlLSUtils::resolveExpressionType(item, QQmlLSUtils::ResolveOwnerType);
         if (!resolvedType)
             return std::nullopt;
-
         return extractDocumentationForIdentifiers(item, resolvedType.value());
     } else {
         return extractDocumentationForDomElements(item);
@@ -91,11 +90,9 @@ std::optional<QByteArray>
 HelpManager::extractDocumentationForIdentifiers(const DomItem &item,
                                                 QQmlLSUtils::ExpressionType expr) const
 {
-    const auto qmlFile = item.containingFile().as<QmlFile>();
-    if (!qmlFile)
+    const auto links = collectDocumentationLinks(item, expr.semanticScope, expr.name.value_or(item.name()));
+    if (links.empty())
         return std::nullopt;
-    const auto links = collectDocumentationLinks(expr.semanticScope, qmlFile->typeResolver(),
-                                                 expr.name.value());
     switch (expr.type) {
     case QQmlLSUtils::QmlObjectIdIdentifier:
     case QQmlLSUtils::JavaScriptIdentifier:
@@ -115,8 +112,12 @@ HelpManager::extractDocumentationForIdentifiers(const DomItem &item,
     case QQmlLSUtils::SingletonIdentifier:
     case QQmlLSUtils::AttachedTypeIdentifier:
     case QQmlLSUtils::QmlComponentIdentifier: {
+        const auto &keyword = item.field(Fields::identifier).value().toString();
+        // The keyword is a qmlobject. Keyword search should be sufficient.
+        // TODO: Still there can be multiple qmlobject documentation, with
+        // different Qt versions. We should pick the best one.
         ExtractDocumentation extractor(DomType::QmlObject);
-        return tryExtract(extractor, links, expr.name.value());
+        return tryExtract(extractor, m_helpPlugin->documentsForKeyword(keyword), keyword);
     }
 
     // Not implemented yet
@@ -140,26 +141,25 @@ std::optional<QByteArray> HelpManager::extractDocumentationForDomElements(const 
     std::vector<QQmlLSHelpProviderBase::DocumentLink> links;
     switch (item.internalKind()) {
     case DomType::QmlObject: {
-        links = collectDocumentationLinks(item.nearestSemanticScope(), qmlFile->typeResolver(),
-                                          name);
+        links = collectDocumentationLinks(item, item.nearestSemanticScope(), name);
         break;
     }
     case DomType::PropertyDefinition: {
-        const auto scope =
-                QQmlLSUtils::findDefiningScopeForProperty(item.nearestSemanticScope(), name);
-        links = collectDocumentationLinks(scope, qmlFile->typeResolver(), name);
+        links = collectDocumentationLinks(
+                item, QQmlLSUtils::findDefiningScopeForProperty(item.nearestSemanticScope(), name),
+                name);
         break;
     }
     case DomType::Binding: {
-        const auto scope =
-                QQmlLSUtils::findDefiningScopeForBinding(item.nearestSemanticScope(), name);
-        links = collectDocumentationLinks(scope, qmlFile->typeResolver(), name);
+        links = collectDocumentationLinks(
+                item, QQmlLSUtils::findDefiningScopeForBinding(item.nearestSemanticScope(), name),
+                name);
         break;
     }
     case DomType::MethodInfo: {
-        const auto scope =
-                QQmlLSUtils::findDefiningScopeForMethod(item.nearestSemanticScope(), name);
-        links = collectDocumentationLinks(scope, qmlFile->typeResolver(), name);
+        links = collectDocumentationLinks(
+                item, QQmlLSUtils::findDefiningScopeForMethod(item.nearestSemanticScope(), name),
+                name);
         break;
     }
     default:
@@ -197,7 +197,7 @@ HelpManager::tryExtract(ExtractDocumentation &extractor,
 }
 
 std::optional<QByteArray>
-HelpManager::documentationForItem(const DomItem &file, QLspSpecification::Position position) const
+HelpManager::documentationForItem(const DomItem &file, QLspSpecification::Position position)
 {
     if (!m_helpPlugin)
         return std::nullopt;
@@ -205,10 +205,34 @@ HelpManager::documentationForItem(const DomItem &file, QLspSpecification::Positi
     if (m_helpPlugin->registeredNamespaces().empty())
         return std::nullopt;
 
+    // Prepare Cpp types to Qml types mapping.
+    const auto fileItem = file.containingFile().as<QmlFile>();
+    if (!fileItem)
+        return std::nullopt;
+    const auto typeResolver = fileItem->typeResolver();
+    if (typeResolver) {
+        const auto &names = typeResolver->importedNames();
+        for (auto &&[scope, qmlName] : names.asKeyValueRange()) {
+            auto sc = scope;
+            // in some situations, scope->internalName() could be the same
+            // as qmlName. In those cases, the key we are looking for is the
+            // first scope which is non-composite type.
+            // This is mostly the case for templated controls.
+            // Popup <-> Popup
+            // T.Popup <-> Popup
+            // QQuickPopup <-> Popup
+            if (sc && sc->internalName() == qmlName) {
+                while (sc && sc->isComposite())
+                    sc = sc->baseType();
+            }
+            if (sc && !m_cppTypesToQmlTypes.contains(sc->internalName()))
+                m_cppTypesToQmlTypes.insert(sc->internalName(), qmlName);
+        }
+    }
+
     std::optional<QByteArray> result;
     const auto [line, character] = position;
     const auto itemLocations = QQmlLSUtils::itemsFromTextLocation(file, line, character);
-
     // Process found item's internalKind and fetch its documentation.
     for (const auto &entry : itemLocations) {
         result = extractDocumentation(entry.domItem);
@@ -228,27 +252,46 @@ HelpManager::documentationForItem(const DomItem &file, QLspSpecification::Positi
  * links for qmlobject name.
  */
 std::vector<QQmlLSHelpProviderBase::DocumentLink>
-HelpManager::collectDocumentationLinks(QQmlJSScope::ConstPtr scope,
-                                       std::shared_ptr<QQmlJSTypeResolver> typeResolver,
+HelpManager::collectDocumentationLinks(const DomItem &item, const QQmlJSScope::ConstPtr &definingScope,
                                        const QString &name) const
 {
-    if (!m_helpPlugin)
+    if (!(m_helpPlugin && definingScope))
         return {};
-    const auto potentialDocumentationLinks =
-            [this](QQmlJSScope::ConstPtr scope, std::shared_ptr<QQmlJSTypeResolver> typeResolver)
-            -> std::vector<QQmlLSHelpProviderBase::DocumentLink> {
-        if (!scope || !typeResolver)
-            return {};
+    const auto &qmlFile = item.containingFile().as<QmlFile>();
+    if (!qmlFile)
+        return {};
+    const auto typeResolver = qmlFile->typeResolver();
+    if (!typeResolver)
+        return {};
 
-        std::vector<QQmlLSHelpProviderBase::DocumentLink> links;
-        const auto docLinks = m_helpPlugin->documentsForKeyword(typeResolver->nameForType(scope));
-        std::copy(docLinks.cbegin(), docLinks.cend(), std::back_inserter(links));
-        return links;
-    };
+    std::vector<QQmlLSHelpProviderBase::DocumentLink> links;
+    const auto &foundScopeName = definingScope->internalName();
+    if (m_cppTypesToQmlTypes.contains(foundScopeName)) {
+        const QString id = m_cppTypesToQmlTypes.value(foundScopeName) + "::" + name;
+        links = m_helpPlugin->documentsForIdentifier(id);
+        if (!links.empty())
+            return links;
+    }
 
-    // If the scope is not found for the defined scope, return all the links related to this name.
-    const auto result = potentialDocumentationLinks(scope, typeResolver);
-    return result.empty() ? m_helpPlugin->documentsForKeyword(name) : result;
+    const auto &containingObjectName = item.qmlObject().name();
+    auto scope = item.nearestSemanticScope();
+    while (scope && scope->isComposite()) {
+        const QString id = containingObjectName + "::" + name;
+        links = m_helpPlugin->documentsForIdentifier(id);
+        if (!links.empty())
+            return links;
+        scope = scope->baseType();
+    }
+
+    while (scope && !m_cppTypesToQmlTypes.contains(scope->internalName())) {
+        const QString id = m_cppTypesToQmlTypes.value(scope->internalName()) + "::" + name;
+        links = m_helpPlugin->documentsForIdentifier(id);
+        if (!links.empty())
+            return links;
+        scope = scope->baseType();
+    }
+
+    return m_helpPlugin->documentsForKeyword(name);
 }
 
 QT_END_NAMESPACE

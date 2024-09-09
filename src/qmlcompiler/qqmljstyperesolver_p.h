@@ -92,6 +92,12 @@ public:
     {
         return m_imports.types();
     }
+
+    const auto &importedNames() const
+    {
+        return m_imports.contextualTypes().names();
+    }
+
     QQmlJSScope::ConstPtr typeForName(const QString &name) const
     {
         return m_imports.type(name).scope;
