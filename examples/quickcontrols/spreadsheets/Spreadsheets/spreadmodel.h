@@ -5,7 +5,6 @@
 #define SPREADMODEL_H
 
 #include "datamodel.h"
-#include "spreadformula.h"
 
 #include <QQmlEngine>
 #include <QAbstractTableModel>
@@ -15,6 +14,7 @@
 
 class DataModel;
 class SpreadModel;
+class Formula;
 
 class SpreadModel final : public QAbstractTableModel
 {
