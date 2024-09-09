@@ -22,7 +22,6 @@
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 
 #include <vector>
-#include <string>
 
 QT_BEGIN_NAMESPACE
 
@@ -33,11 +32,11 @@ public:
     void setDocumentationRootPath(const QString &path);
     [[nodiscard]] QString documentationRootPath() const;
     [[nodiscard]] std::optional<QByteArray> documentationForItem(
-            const QQmlJS::Dom::DomItem &file, QLspSpecification::Position position) const;
+            const QQmlJS::Dom::DomItem &file, QLspSpecification::Position position);
 
 private:
-    [[nodiscard]] std::optional<QByteArray> extractDocumentationForIdentifiers(
-            const QQmlJS::Dom::DomItem &item, QQmlLSUtils::ExpressionType) const;
+    [[nodiscard]] std::optional<QByteArray> extractDocumentationForIdentifiers(const QQmlJS::Dom::DomItem &item,
+                                                QQmlLSUtils::ExpressionType expr) const;
     [[nodiscard]] std::optional<QByteArray> extractDocumentationForDomElements(
             const QQmlJS::Dom::DomItem &item) const;
     [[nodiscard]] std::optional<QByteArray> extractDocumentation(
@@ -45,13 +44,13 @@ private:
     [[nodiscard]] std::optional<QByteArray> tryExtract(ExtractDocumentation &extractor,
                                                        const std::vector<QQmlLSHelpProviderBase::DocumentLink> &links,
                                                        const QString &name) const;
-    [[nodiscard]] std::vector<QQmlLSHelpProviderBase::DocumentLink> collectDocumentationLinks(
-            const QQmlJSScope::ConstPtr &scope,
-            const std::shared_ptr<QQmlJSTypeResolver> &typeResolver,
-            const QString &name) const;
+    [[nodiscard]] std::vector<QQmlLSHelpProviderBase::DocumentLink>
+    collectDocumentationLinks(const QQmlJS::Dom::DomItem &item, const QQmlJSScope::ConstPtr &scope,
+                              const QString &name) const;
     void registerDocumentations(const QStringList &docs) const;
     std::unique_ptr<QQmlLSHelpProviderBase> m_helpPlugin;
     QString m_docRootPath;
+    QHash<QString, QString> m_cppTypesToQmlTypes;
 };
 
 QT_END_NAMESPACE

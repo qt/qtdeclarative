@@ -82,6 +82,7 @@ struct ContextualTypes
     }
 
     const QHash<QString, ImportedScope<QQmlJSScope::ConstPtr>> &types() const { return m_types; }
+    const auto &names() const { return m_names; }
 
     void clearTypes()
     {
