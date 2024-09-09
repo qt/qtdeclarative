@@ -84,6 +84,7 @@ private:
     using InlineComponentData = QV4::CompiledData::InlineComponentData;
 
     bool tryLoadFromDiskCache();
+    bool loadFromDiskCache(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit);
     bool loadFromSource();
     void restoreIR(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit);
     void continueLoadFromIR();
