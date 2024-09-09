@@ -55,9 +55,6 @@ set(qml_files
     "qml/+Universal/MessageDialog.qml"
 )
 
-qt_policy(SET QTP0004 OLD)
-# silence old policy warning
-# this should be addressed in the context of QTBUG-126201
 qt_internal_add_qml_module(QuickDialogs2QuickImpl
     URI "QtQuick.Dialogs.quickimpl"
     VERSION "${PROJECT_VERSION}"
@@ -114,6 +111,7 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         Qt::Core
         Qt::Gui
         Qt::Quick
+    NO_GENERATE_EXTRA_QMLDIRS
 )
 
 add_dependencies(QuickDialogs2QuickImpl Qt::QuickControls2Basic)

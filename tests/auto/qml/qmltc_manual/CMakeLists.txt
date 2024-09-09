@@ -29,6 +29,7 @@ qt_policy(SET QTP0001 NEW)
 
 qt6_add_qml_module(tst_qmltc_manual
     URI "QmltcManualTests"
+    NO_GENERATE_EXTRA_QMLDIRS
     QML_FILES
         ${test_data}
 )

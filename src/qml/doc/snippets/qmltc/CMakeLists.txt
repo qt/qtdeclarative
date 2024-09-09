@@ -53,6 +53,7 @@ qt6_add_qml_module(${application_name}
     # Compile qml files (listed in QML_FILES) to C++ using qmltc and add these
     # files to the application binary:
     ENABLE_TYPE_COMPILER
+    NO_GENERATE_EXTRA_QMLDIRS
 )
 #! [qmltc-add-qml-module]
 
