@@ -37,11 +37,11 @@ struct ItemLocation
 
 struct TextPosition
 {
-    int line;
-    int character;
+    int line = 0;
+    int character = 0;
 };
 
-enum IdentifierType : char {
+enum IdentifierType : quint8 {
     JavaScriptIdentifier,
     PropertyIdentifier,
     PropertyChangedSignalIdentifier,
@@ -62,7 +62,7 @@ enum IdentifierType : char {
 
 struct ErrorMessage
 {
-    int code;
+    int code = 0;
     QString message;
 };
 
@@ -70,7 +70,7 @@ struct ExpressionType
 {
     std::optional<QString> name;
     QQmlJSScope::ConstPtr semanticScope;
-    IdentifierType type;
+    IdentifierType type = JavaScriptIdentifier;
 };
 
 class Location
