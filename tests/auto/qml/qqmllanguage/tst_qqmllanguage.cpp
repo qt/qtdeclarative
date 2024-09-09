@@ -468,6 +468,8 @@ private slots:
 
     void innerFunctionWithTypeAnnotation();
 
+    void engineTypeCrossTalk();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -9000,6 +9002,40 @@ void tst_qqmllanguage::innerFunctionWithTypeAnnotation()
     QVERIFY(!o.isNull());
 
     QCOMPARE(o->objectName(), "data12");
+}
+
+class EngineAndObject
+{
+public:
+    EngineAndObject(const QUrl &outer)
+    {
+        QQmlComponent component(&engine, outer);
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        object.reset(component.create());
+        QVERIFY(object);
+    }
+
+    void wreck(const QUrl &inner) {
+        QQmlComponent component(&engine, inner);
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        object->setProperty("delegate", QVariant::fromValue(&component));
+        QMetaObject::invokeMethod(object.get(), "doInstantiate");
+        QVERIFY(object->property("innerObject").value<QObject *>() != nullptr);
+    }
+
+    QQmlEngine engine;
+    std::unique_ptr<QObject> object;
+};
+
+void tst_qqmllanguage::engineTypeCrossTalk()
+{
+    const QUrl outer("qrc:/StaticTest/data/outerObject.qml");
+    EngineAndObject first(outer);
+    EngineAndObject second(outer);
+
+    const QUrl inner("qrc:/StaticTest/data/InnerObject.qml");
+    first.wreck(inner);
+    second.wreck(inner);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
