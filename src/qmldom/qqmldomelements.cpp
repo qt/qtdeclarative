@@ -1877,6 +1877,28 @@ QString MethodInfo::postCode(const DomItem &) const
     return QLatin1String("\n}\n");
 }
 
+void MethodInfo::writeOutArguments(const DomItem &self, OutWriter &ow) const
+{
+    bool first = true;
+    for (const DomItem &arg : self.field(Fields::parameters).values()) {
+        if (first)
+            first = false;
+        else
+            ow.writeRegion(CommaTokenRegion).space();
+        arg.writeOut(ow);
+    }
+}
+
+void MethodInfo::writeOutReturnType(OutWriter &ow) const
+{
+    if (typeName.isEmpty())
+        return;
+
+    ow.writeRegion(ColonTokenRegion);
+    ow.space();
+    ow.writeRegion(TypeIdentifierRegion, typeName);
+}
+
 void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
 {
     switch (methodType) {
@@ -1886,44 +1908,24 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
         ow.writeRegion(SignalKeywordRegion).space().writeRegion(IdentifierRegion, name);
         if (parameters.isEmpty())
             return;
-        bool first = true;
+
         ow.writeRegion(LeftParenthesisRegion);
         int baseIndent = ow.increaseIndent();
-        for (const DomItem &arg : self.field(Fields::parameters).values()) {
-            if (first)
-                first = false;
-            else
-                ow.write(u", ");
-
-            if (const MethodParameter *argPtr = arg.as<MethodParameter>()) {
-                if (argPtr->typeAnnotationStyle == MethodParameter::TypeAnnotationStyle::Prefix)
-                    argPtr->writeOutSignal(arg, ow);
-                else
-                    argPtr->writeOut(arg, ow);
-            } else
-                qCWarning(domLog) << "failed to cast to MethodParameter";
-        }
+        writeOutArguments(self, ow);
         ow.writeRegion(RightParenthesisRegion);
         ow.decreaseIndent(1, baseIndent);
+
         return;
     } break;
     case MethodType::Method: {
         ow.writeRegion(FunctionKeywordRegion).space().writeRegion(IdentifierRegion, name);
-        bool first = true;
+
         ow.writeRegion(LeftParenthesisRegion);
-        for (const DomItem &arg : self.field(Fields::parameters).values()) {
-            if (first)
-                first = false;
-            else
-                ow.write(u", ");
-            arg.writeOut(ow);
-        }
+        writeOutArguments(self, ow);
         ow.writeRegion(RightParenthesisRegion);
-        if (!typeName.isEmpty()) {
-            ow.writeRegion(ColonTokenRegion);
-            ow.space();
-            ow.writeRegion(TypeIdentifierRegion, typeName);
-        }
+
+        writeOutReturnType(ow);
+
         ow.ensureSpace().writeRegion(LeftBraceRegion);
         int baseIndent = ow.increaseIndent();
         if (DomItem b = self.field(Fields::body)) {
@@ -1934,6 +1936,28 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
         ow.ensureNewline().writeRegion(RightBraceRegion);
     } break;
     }
+}
+
+QString MethodInfo::signature(const DomItem &self) const
+{
+    QString resultStr;
+    QTextStream res(&resultStr);
+    LineWriter lw([&res](QStringView s) { res << s; }, QLatin1String("*testStream*"));
+    OutWriter ow(lw);
+    ow.indentNextlines = true;
+    ow.skipComments = true;
+
+    ow.itemStart(self);
+    ow.writeRegion(LeftParenthesisRegion);
+    writeOutArguments(self, ow);
+    ow.writeRegion(RightParenthesisRegion);
+
+    writeOutReturnType(ow);
+
+    ow.itemEnd(self);
+    lw.eof(false);
+    res.flush();
+    return resultStr.simplified();
 }
 
 bool MethodParameter::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
@@ -1962,6 +1986,11 @@ bool MethodParameter::iterateDirectSubpaths(const DomItem &self, DirectVisitor v
 
 void MethodParameter::writeOut(const DomItem &self, OutWriter &ow) const
 {
+    if (typeAnnotationStyle == MethodParameter::TypeAnnotationStyle::Prefix) {
+        writeOutSignal(self, ow);
+        return;
+    }
+
     if (!name.isEmpty()) {
         if (isRestElement)
             ow.writeRegion(EllipsisTokenRegion);

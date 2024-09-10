@@ -764,6 +764,10 @@ public:
     QString postCode(const DomItem &) const;
     void writePre(const DomItem &self, OutWriter &ow) const;
     void writeOut(const DomItem &self, OutWriter &ow) const;
+    void writeOutArguments(const DomItem &self, OutWriter &ow) const;
+    void writeOutReturnType(OutWriter &ow) const;
+    QString signature(const DomItem &self) const;
+
     void setCode(const QString &code)
     {
         body = std::make_shared<ScriptExpression>(

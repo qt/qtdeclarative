@@ -4335,6 +4335,35 @@ private slots:
         QVERIFY(semanticAnalysis.m_mapper->isFile(u"/qt/qml/MyModule/qml/HelloWorld.qml"_s));
     }
 
+    void methodSignature_data()
+    {
+        QTest::addColumn<QString>("name");
+        QTest::addColumn<QString>("expectedSignature");
+
+        QTest::addRow("function") << u"f"_s << u"(a: int, b: string): bool"_s;
+        QTest::addRow("signal") << u"f2"_s << u"(int a, b: string)"_s;
+        QTest::addRow("noArgs") << u"noArgs"_s << u"()"_s;
+        QTest::addRow("returnVoid") << u"returnVoid"_s << u"(): void"_s;
+        QTest::addRow("defaultArgs") << u"defaultArgs"_s << u"(x = 12345, y = { x: 44, y: \"hello\", z: x => x }): void"_s;
+        QTest::addRow("deconstruction") << u"deconstruction"_s << u"({ x = 4 }): void"_s;
+        QTest::addRow("functionWithComments") << u"comments"_s << u"(a: int, b): int"_s;
+    }
+
+    void methodSignature()
+    {
+        QFETCH(QString, name);
+        QFETCH(QString, expectedSignature);
+
+        const QString testFile = baseDir + u"/methods.qml"_s;
+        const DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+
+        const DomItem methods = rootQmlObject.field(Fields::methods);
+        const DomItem method = methods.key(name)[0];
+        const MethodInfo *methodInfo = method.as<MethodInfo>();
+
+        QCOMPARE(methodInfo->signature(method), expectedSignature);
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;
