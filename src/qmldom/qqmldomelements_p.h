@@ -764,8 +764,6 @@ public:
     QString postCode(const DomItem &) const;
     void writePre(const DomItem &self, OutWriter &ow) const;
     void writeOut(const DomItem &self, OutWriter &ow) const;
-    void writeOutArguments(const DomItem &self, OutWriter &ow) const;
-    void writeOutReturnType(OutWriter &ow) const;
     QString signature(const DomItem &self) const;
 
     void setCode(const QString &code)
@@ -782,6 +780,11 @@ public:
     std::shared_ptr<ScriptExpression> body;
     std::shared_ptr<ScriptExpression> returnType;
     bool isConstructor = false;
+
+private:
+    void writeOutArguments(const DomItem &self, OutWriter &ow) const;
+    void writeOutReturnType(OutWriter &ow) const;
+    void writeOutBody(const DomItem &self, OutWriter &ow) const;
 };
 
 class QMLDOM_EXPORT EnumItem

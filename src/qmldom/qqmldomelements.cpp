@@ -1879,6 +1879,10 @@ QString MethodInfo::postCode(const DomItem &) const
 
 void MethodInfo::writeOutArguments(const DomItem &self, OutWriter &ow) const
 {
+    if (parameters.isEmpty() && methodType == MethodType::Signal)
+        return;
+
+    ow.writeRegion(LeftParenthesisRegion);
     bool first = true;
     for (const DomItem &arg : self.field(Fields::parameters).values()) {
         if (first)
@@ -1887,6 +1891,7 @@ void MethodInfo::writeOutArguments(const DomItem &self, OutWriter &ow) const
             ow.writeRegion(CommaTokenRegion).space();
         arg.writeOut(ow);
     }
+    ow.writeRegion(RightParenthesisRegion);
 }
 
 void MethodInfo::writeOutReturnType(OutWriter &ow) const
@@ -1899,43 +1904,33 @@ void MethodInfo::writeOutReturnType(OutWriter &ow) const
     ow.writeRegion(TypeIdentifierRegion, typeName);
 }
 
+void MethodInfo::writeOutBody(const DomItem &self, OutWriter &ow) const
+{
+    ow.ensureSpace().writeRegion(LeftBraceRegion);
+    int baseIndent = ow.increaseIndent();
+    if (DomItem b = self.field(Fields::body)) {
+        ow.ensureNewline();
+        b.writeOut(ow);
+    }
+    ow.decreaseIndent(1, baseIndent);
+    ow.ensureNewline().writeRegion(RightBraceRegion);
+}
+
 void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
 {
-    switch (methodType) {
-    case MethodType::Signal: {
-        if (body)
-            qCWarning(domLog) << "signal should not have a body in" << self.canonicalPath();
-        ow.writeRegion(SignalKeywordRegion).space().writeRegion(IdentifierRegion, name);
-        if (parameters.isEmpty())
-            return;
-
-        ow.writeRegion(LeftParenthesisRegion);
-        int baseIndent = ow.increaseIndent();
-        writeOutArguments(self, ow);
-        ow.writeRegion(RightParenthesisRegion);
-        ow.decreaseIndent(1, baseIndent);
-
-        return;
-    } break;
-    case MethodType::Method: {
-        ow.writeRegion(FunctionKeywordRegion).space().writeRegion(IdentifierRegion, name);
-
-        ow.writeRegion(LeftParenthesisRegion);
-        writeOutArguments(self, ow);
-        ow.writeRegion(RightParenthesisRegion);
-
-        writeOutReturnType(ow);
-
-        ow.ensureSpace().writeRegion(LeftBraceRegion);
-        int baseIndent = ow.increaseIndent();
-        if (DomItem b = self.field(Fields::body)) {
-            ow.ensureNewline();
-            b.writeOut(ow);
-        }
-        ow.decreaseIndent(1, baseIndent);
-        ow.ensureNewline().writeRegion(RightBraceRegion);
-    } break;
+    if (methodType == MethodType::Signal) {
+        ow.writeRegion(SignalKeywordRegion).space();
+    } else {
+        ow.writeRegion(FunctionKeywordRegion).space();
     }
+    ow.writeRegion(IdentifierRegion, name);
+    writeOutArguments(self, ow);
+    if (methodType == MethodType::Signal) {
+        // signal doesn't have returnType or body
+        return;
+    }
+    writeOutReturnType(ow);
+    writeOutBody(self, ow);
 }
 
 QString MethodInfo::signature(const DomItem &self) const
@@ -1948,9 +1943,7 @@ QString MethodInfo::signature(const DomItem &self) const
     ow.skipComments = true;
 
     ow.itemStart(self);
-    ow.writeRegion(LeftParenthesisRegion);
     writeOutArguments(self, ow);
-    ow.writeRegion(RightParenthesisRegion);
 
     writeOutReturnType(ow);
 
