@@ -408,12 +408,21 @@ void tst_qqmlengine::clearComponentCache()
     // Clear cache
     engine.clearComponentCache();
 
+    // Nothing holds on to any CU anymore. They should all be gone.
+    QVERIFY(QQmlEnginePrivate::get(&engine)->v4engine()->compilationUnits().isEmpty());
+
     // Test cache refresh
     {
         QQmlComponent component(&engine, fileUrl);
         std::unique_ptr<QObject> obj { component.create() };
         QVERIFY(obj.get() != nullptr);
         QCOMPARE(obj->property("test").toInt(), 11);
+
+        engine.clearComponentCache();
+
+        // The CU we are holding on to is still alive.
+        // Otherwise we cannot mark its objects for GC anymore.
+        QVERIFY(!QQmlEnginePrivate::get(&engine)->v4engine()->compilationUnits().isEmpty());
     }
 
     // Regular Synchronous loading will leave us with an event posted
