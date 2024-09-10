@@ -767,7 +767,6 @@ public:
     {
         return m_compilationUnits;
     }
-    void clearCompilationUnits() { m_compilationUnits.clear(); }
     void trimCompilationUnits();
 
     QV4::Value *registerNativeModule(const QUrl &url, const QV4::Value &module);
