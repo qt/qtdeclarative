@@ -45,6 +45,7 @@ struct QmlTypesClassDescription
     bool omitFromQmlTypes = false;
     bool extensionIsNamespace = false;
     bool registerEnumClassesScoped = false;
+    bool enforcesScopedEnums = false;
     QStringList implementsInterfaces;
     QStringList deferredNames;
     QStringList immediateNames;
@@ -72,6 +73,8 @@ private:
             const QJsonObject *classDef, const QVector<QJsonObject> &types,
             const QVector<QJsonObject> &foreign, CollectMode mode, QTypeRevision defaultRevision);
     void collectInterfaces(const QJsonObject *classDef);
+
+    void handleRegisterEnumClassesUnscoped(const QString &fileName, const QString &value);
 };
 
 QT_END_NAMESPACE

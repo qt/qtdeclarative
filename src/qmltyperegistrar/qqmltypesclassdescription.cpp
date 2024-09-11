@@ -70,6 +70,21 @@ void QmlTypesClassDescription::collectInterfaces(const QJsonObject *classDef)
     }
 }
 
+void QmlTypesClassDescription::handleRegisterEnumClassesUnscoped(
+        const QString &fileName, const QString &value)
+{
+    if (value == QStringLiteral("false")) {
+        enforcesScopedEnums = true;
+        return;
+    }
+
+    auto warning = qWarning().nospace().noquote() << "Warning: " << fileName << ":: ";
+    if (value == QStringLiteral("true"))
+        warning << "Setting RegisterEnumClassesUnscoped to true has no effect.";
+    else
+        warning << "Unrecognized value for RegisterEnumClassesUnscoped: " << value;
+}
+
 void QmlTypesClassDescription::collectLocalAnonymous(
         const QJsonObject *classDef, const QVector<QJsonObject> &types,
         const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision)
@@ -91,14 +106,12 @@ void QmlTypesClassDescription::collectLocalAnonymous(
         const QJsonObject obj = classInfo.toObject();
         const QString name = obj[QStringLiteral("name")].toString();
         const auto value = [&]() { return obj[QStringLiteral("value")].toString(); };
-        if (name == QStringLiteral("DefaultProperty")) {
+        if (name == QStringLiteral("DefaultProperty"))
             defaultProp = value();
-        } else if (name == QStringLiteral("ParentProperty")) {
+        else if (name == QStringLiteral("ParentProperty"))
             parentProp = value();
-        } else if (name == QStringLiteral("RegisterEnumClassesUnscoped")
-                 && value() == QStringLiteral("false")) {
-            registerEnumClassesScoped = true;
-        }
+        else if (name == QStringLiteral("RegisterEnumClassesUnscoped"))
+            handleRegisterEnumClassesUnscoped(file, value());
     }
 
     collectInterfaces(classDef);
@@ -128,8 +141,10 @@ void QmlTypesClassDescription::collect(
             if (mode != RelatedType && parentProp.isEmpty())
                 parentProp = value;
         } else if (name == QLatin1String("RegisterEnumClassesUnscoped")) {
-            if (mode != RelatedType && value == QLatin1String("false"))
-                registerEnumClassesScoped = true;
+            if (mode != RelatedType) {
+                handleRegisterEnumClassesUnscoped(
+                        classDef->value(QLatin1String("inputFile")).toString(), value);
+            }
         } else if (name == QLatin1String("QML.AddedInVersion")) {
             const QTypeRevision revision = QTypeRevision::fromEncodedVersion(value.toInt());
             if (mode == TopLevel) {
@@ -202,7 +217,7 @@ void QmlTypesClassDescription::collect(
 
             // Default properties and enum classes are always local.
             defaultProp.clear();
-            registerEnumClassesScoped = false;
+            enforcesScopedEnums = false;
 
             // Foreign type can have a default property or an attached types
             // or RegisterEnumClassesUnscoped classinfo.
@@ -216,8 +231,8 @@ void QmlTypesClassDescription::collect(
                 } else if (parentProp.isEmpty() && foreignName == QLatin1String("ParentProperty")) {
                     parentProp = foreignValue;
                 } else if (foreignName == QLatin1String("RegisterEnumClassesUnscoped")) {
-                    if (foreignValue == QLatin1String("false"))
-                        registerEnumClassesScoped = true;
+                    handleRegisterEnumClassesUnscoped(
+                            classDef->value(QLatin1String("inputFile")).toString(), foreignValue);
                 } else if (foreignName == QLatin1String("QML.Attached")) {
                     attachedType = foreignValue;
                     collectRelated(foreignValue, types, foreign, defaultRevision);

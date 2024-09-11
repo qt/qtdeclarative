@@ -1288,6 +1288,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("listConversion") << QStringLiteral("listConversion.qml");
     QTest::newRow("groupedAttachedLayout") << QStringLiteral("groupedAttachedLayout.qml");
     QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
+    QTest::newRow("scopedAndUnscopedEnums") << QStringLiteral("enumValid.qml");
 }
 
 void TestQmllint::cleanQmlCode()
