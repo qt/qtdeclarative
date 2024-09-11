@@ -1228,7 +1228,8 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
             return true;
         }
 
-        if (!enumeration.isScoped() && enumeration.hasKey(name)) {
+        if ((!enumeration.isScoped() || enumeration.isQml() || !scope->enforcesScopedEnums())
+                && enumeration.hasKey(name)) {
             *result = QQmlJSRegisterContent::create(
                     enumeration, name,
                     inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum

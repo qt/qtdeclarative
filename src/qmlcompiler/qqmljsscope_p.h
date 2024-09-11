@@ -166,6 +166,7 @@ public:
         IsListProperty = 0x400,
         Structured = 0x800,
         ExtensionIsJavaScript = 0x1000,
+        EnforcesScopedEnums = 0x2000,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
@@ -401,6 +402,9 @@ public:
     bool isSingleton() const { return m_flags.testFlag(Singleton); }
     void setIsSingleton(bool v) { m_flags.setFlag(Singleton, v); }
 
+    bool enforcesScopedEnums() const;
+    void setEnforcesScopedEnumsFlag(bool v) { m_flags.setFlag(EnforcesScopedEnums, v); }
+
     bool isCreatable() const;
     void setCreatableFlag(bool v) { m_flags.setFlag(Creatable, v); }
 
@@ -497,6 +501,7 @@ private:
 
     void addOwnPropertyBindingInQmlIROrder(const QQmlJSMetaPropertyBinding &binding,
                                            BindingTargetSpecifier specifier);
+    bool hasEnforcesScopedEnumsFlag() const { return m_flags & EnforcesScopedEnums; }
     bool hasCreatableFlag() const { return m_flags & Creatable; }
     bool hasStructuredFlag() const { return m_flags & Structured; }
 

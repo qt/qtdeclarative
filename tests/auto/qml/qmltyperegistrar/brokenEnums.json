@@ -1,0 +1,57 @@
+[
+    {
+        "classes": [
+            {
+                "className": "QObject",
+                "object": true,
+                "qualifiedClassName": "QObject"
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    },
+                    {
+                        "name": "RegisterEnumClassesUnscoped",
+                        "value": "true"
+                    }
+                ],
+                "className": "EnumsExplicitlyUnscoped",
+                "lineNumber": 878,
+                "object": true,
+                "qualifiedClassName": "EnumsExplicitlyUnscoped",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    },
+                    {
+                        "name": "RegisterEnumClassesUnscoped",
+                        "value": "horst"
+                    }
+                ],
+                "className": "EnumScopingConfused",
+                "lineNumber": 885,
+                "object": true,
+                "qualifiedClassName": "EnumScopingConfused",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            }
+        ],
+        "inputFile": "tst_qmltyperegistrar.h",
+        "outputRevision": 68
+    }
+]

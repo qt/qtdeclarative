@@ -1445,6 +1445,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("jsonObjectIsRecognized") << QStringLiteral("jsonObjectIsRecognized.qml");
     QTest::newRow("jsonArrayIsRecognized") << QStringLiteral("jsonArrayIsRecognized.qml");
     QTest::newRow("itemviewattached") << QStringLiteral("itemViewAttached.qml");
+    QTest::newRow("scopedAndUnscopedEnums") << QStringLiteral("enumValid.qml");
 }
 
 void TestQmllint::cleanQmlCode()

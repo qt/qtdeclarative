@@ -157,6 +157,9 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     if (collector.hasCustomParser)
         m_qml.writeBooleanBinding(S_HAS_CUSTOM_PARSER, true);
 
+    if (collector.enforcesScopedEnums)
+        m_qml.writeBooleanBinding(S_ENFORCES_SCOPED_ENUMS, true);
+
     m_qml.writeArrayBinding(S_EXPORT_META_OBJECT_REVISIONS, metaObjects);
 
     if (!collector.attachedType.isEmpty())
@@ -265,8 +268,7 @@ void QmlTypesCreator::writeMethods(const Method::Container &methods, QLatin1Stri
     }
 }
 
-void QmlTypesCreator::writeEnums(
-        const Enum::Container &enums, QmlTypesCreator::EnumClassesMode enumClassesMode)
+void QmlTypesCreator::writeEnums(const Enum::Container &enums)
 {
     for (const Enum &obj : enums) {
         m_qml.writeStartObject(S_ENUM);
@@ -275,12 +277,8 @@ void QmlTypesCreator::writeEnums(
             m_qml.writeStringBinding(S_ALIAS, obj.alias);
         if (obj.isFlag)
             m_qml.writeBooleanBinding(S_IS_FLAG, true);
-
-        if (enumClassesMode == EnumClassesMode::Scoped) {
-            if (obj.isClass)
-                m_qml.writeBooleanBinding(S_IS_SCOPED, true);
-        }
-
+        if (obj.isClass)
+            m_qml.writeBooleanBinding(S_IS_SCOPED, true);
         writeType(obj.type);
         m_qml.writeStringListBinding(S_VALUES, obj.values);
         m_qml.writeEndObject();
@@ -382,12 +380,7 @@ void QmlTypesCreator::writeComponent(const QmlTypesClassDescription &collector)
     writeClassProperties(collector);
 
     if (const MetaType &classDef = collector.resolvedClass; !classDef.isEmpty()) {
-        writeEnums(
-                classDef.enums(),
-                collector.registerEnumClassesScoped
-                        ? EnumClassesMode::Scoped
-                        : EnumClassesMode::Unscoped);
-
+        writeEnums(classDef.enums());
         writeProperties(members(classDef.properties(), m_version));
 
         if (collector.isRootClass) {
