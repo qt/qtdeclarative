@@ -43,11 +43,11 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace Dom {
-
 Q_LOGGING_CATEGORY(writeOutLog, "qt.qmldom.writeOut", QtWarningMsg);
 static Q_LOGGING_CATEGORY(refLog, "qt.qmldom.ref", QtWarningMsg);
+
+namespace QQmlJS {
+namespace Dom {
 
 template<class... TypeList>
 struct CheckDomElementT;

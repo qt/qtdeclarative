@@ -29,10 +29,10 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(domLog);
+
 namespace QQmlJS {
 namespace Dom {
-
-Q_DECLARE_LOGGING_CATEGORY(domLog);
 
 QMLDOM_EXPORT ErrorLevel errorLevelFromQtMsgType(QtMsgType msgType);
 

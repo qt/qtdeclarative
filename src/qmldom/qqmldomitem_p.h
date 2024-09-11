@@ -50,13 +50,13 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(writeOutLog);
+
 namespace QQmlJS {
 // we didn't have enough 'O's to properly name everything...
 namespace Dom {
 
 class Path;
-
-Q_DECLARE_LOGGING_CATEGORY(writeOutLog);
 
 constexpr bool domTypeIsObjWrap(DomType k);
 constexpr bool domTypeIsValueWrap(DomType k);

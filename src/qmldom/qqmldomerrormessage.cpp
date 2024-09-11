@@ -10,10 +10,10 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(domLog, "qt.qmldom", QtWarningMsg);
+
 namespace QQmlJS {
 namespace Dom {
-
-Q_LOGGING_CATEGORY(domLog, "qt.qmldom", QtWarningMsg);
 
 enum {
     FatalMsgMaxLen=511
