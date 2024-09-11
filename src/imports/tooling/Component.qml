@@ -25,6 +25,7 @@ QtObject {
     property bool hasCustomParser: false
     property bool extensionIsJavaScript: false
     property bool extensionIsNamespace: false
+    property bool enforcesScopedEnums: false
     property string accessSemantics: "reference"
     property string defaultProperty
     property string parentProperty

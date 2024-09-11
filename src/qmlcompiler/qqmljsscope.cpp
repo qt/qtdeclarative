@@ -1284,6 +1284,22 @@ QVector<QQmlJSScope::ConstPtr> QQmlJSScope::childScopes() const
 }
 
 /*!
+    \internal
+
+    Returns true if this type or any base type of it has the "EnforcesScopedEnums" flag.
+    The rationale is that you can turn on enforcement of scoped enums, but you cannot turn
+    it off explicitly.
+ */
+bool QQmlJSScope::enforcesScopedEnums() const
+{
+    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().get()) {
+        if (scope->hasEnforcesScopedEnumsFlag())
+            return true;
+    }
+    return false;
+}
+
+/*!
    \internal
    Returns true if the current type is creatable by checking all the required base classes.
    "Uncreatability" is only inherited from base types for composite types (in qml) and not for non-composite types (c++).

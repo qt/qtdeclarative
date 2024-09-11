@@ -43,10 +43,7 @@ private:
     void writeType(QAnyStringView type);
     void writeProperties(const Property::Container &properties);
     void writeMethods(const Method::Container &methods, QLatin1StringView type);
-
-    enum class EnumClassesMode { Scoped, Unscoped };
-    void writeEnums(const Enum::Container &enums, EnumClassesMode enumClassesMode);
-
+    void writeEnums(const Enum::Container &enums);
     void writeComponents();
     void writeRootMethods(const MetaType &classDef);
 

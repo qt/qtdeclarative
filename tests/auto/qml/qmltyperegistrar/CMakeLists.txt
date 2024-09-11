@@ -100,6 +100,7 @@ qt_internal_add_resource(tst_qmltyperegistrar "resources"
     PREFIX
         "/"
     FILES
+        brokenEnums.json
         duplicatedExports.json
         missingTypes.json
 )

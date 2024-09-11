@@ -76,7 +76,7 @@ struct QmlTypesClassDescription
     bool isRootClass = false;
     bool extensionIsJavaScript = false;
     bool extensionIsNamespace = false;
-    bool registerEnumClassesScoped = false;
+    bool enforcesScopedEnums = false;
     QList<QAnyStringView> implementsInterfaces;
     QList<QAnyStringView> deferredNames;
     QList<QAnyStringView> immediateNames;
@@ -109,6 +109,8 @@ private:
             const MetaType &classDef, const QVector<MetaType> &types,
             const QVector<MetaType> &foreign, CollectMode mode, QTypeRevision defaultRevision);
     void collectInterfaces(const MetaType &classDef);
+
+    void handleRegisterEnumClassesUnscoped(const MetaType &classDef, QAnyStringView value);
 };
 
 struct ResolvedTypeAlias

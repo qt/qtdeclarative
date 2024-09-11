@@ -875,6 +875,13 @@ private:
     InaccessibleProperty *m_p = nullptr;
 };
 
+class EnumsExplicitlyScoped : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -943,6 +950,8 @@ private slots:
     void javaScriptExtension();
 
     void consistencyWarnings();
+    void enumWarnings();
+
     void relatedAddedInVersion();
     void longNumberTypes();
     void enumList();
@@ -959,6 +968,7 @@ private slots:
     void preserveVoidStarPropTypes();
 
     void inaccessibleBase();
+    void enumsExplicitlyScoped();
 
 private:
     QByteArray qmltypesData;
