@@ -2108,7 +2108,10 @@ void QV4::GlobalExtensions::init(Object *globalObject, QJSEngine::Extensions ext
     Example:
     \snippet qml/qsTranslate.qml 0
 
+    Use if you have a translation \a context that differs from the file \a context.
+
     \sa {Internationalization with Qt}
+    \sa qsTr()
 */
 ReturnedValue GlobalExtensions::method_qsTranslate(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
@@ -2236,6 +2239,7 @@ QString GlobalExtensions::currentTranslationContext(ExecutionEngine *engine)
     for \a disambiguation. For more information and examples, refer to
     \l{Disambiguate Identical Text}.
 
+    \sa qsTranslate()
     \sa {Internationalization with Qt},{Writing Source Code for Translation}
 */
 ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value *, const Value *argv, int argc)
