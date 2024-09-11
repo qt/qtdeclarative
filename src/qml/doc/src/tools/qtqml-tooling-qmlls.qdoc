@@ -20,6 +20,7 @@ Currently, it enables your editor to:
     \li Find usages of JavaScript variables and QML objects
     \li Rename JavaScript variables and QML objects
     \li Format QML files
+    \li Get help from Qt Documentation
 \endlist
 
 \note qmlls is currently in development, see \l{Known Limitations} for
@@ -73,6 +74,14 @@ QML object properties, methods, and id's.
 types. It automatically rebuilds CMake QML modules to provide
 accurate and up-to-date warnings and completion items for C++
 defined QML types.
+
+\section2 Documentation Hints
+
+\QMLLS includes a documentation hints feature that
+provides programmers with quick access to Qt’s documentation
+by hovering over a keyword. In order to use this feature, your
+Qt kit should contain the Qt documentation and your project
+should be built with \l{QT_QML_GENERATE_QMLLS_INI} variable.
 
 You can
 \l{Disabling automatic CMake builds}{disable this feature}.
@@ -132,6 +141,7 @@ The configuration file should look like this:
 [General]
 buildDir=<path/to/build-directory>
 no-cmake-calls=<true-or-false>
+docDir=<path/to/qt-documentation>
 \endcode
 
 Currently, the configuration file can be used to set the build
