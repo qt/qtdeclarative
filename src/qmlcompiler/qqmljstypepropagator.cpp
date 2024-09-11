@@ -904,14 +904,20 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
         }
 
         if (!fixSuggestion.has_value()
-            && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::MetaType) {
-            QStringList enumKeys;
-            for (const QQmlJSMetaEnum &metaEnum :
-                 m_state.accumulatorIn().scopeType()->enumerations())
-                enumKeys << metaEnum.keys();
+                && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::MetaType) {
 
-            if (auto suggestion =
-                        QQmlJSUtils::didYouMean(propertyName, enumKeys, getCurrentSourceLocation());
+            const QQmlJSScope::ConstPtr scopeType = m_state.accumulatorIn().scopeType();
+            const auto metaEnums = scopeType->enumerations();
+            const bool enforcesScoped = scopeType->enforcesScopedEnums();
+
+            QStringList enumKeys;
+            for (const QQmlJSMetaEnum &metaEnum : metaEnums) {
+                if (!enforcesScoped || !metaEnum.isScoped())
+                    enumKeys << metaEnum.keys();
+            }
+
+            if (auto suggestion = QQmlJSUtils::didYouMean(
+                        propertyName, enumKeys, getCurrentSourceLocation());
                 suggestion.has_value()) {
                 fixSuggestion = suggestion;
             }
