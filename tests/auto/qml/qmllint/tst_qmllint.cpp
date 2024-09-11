@@ -969,8 +969,26 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
             << Result { { Message { QStringLiteral("QML types file does not exist") } } };
     QTest::newRow("enumInvalid")
             << QStringLiteral("enumInvalid.qml")
-            << Result { { Message {
-                       QStringLiteral("Member \"red\" not found on type \"QtObject\"") } } };
+            << Result { {
+                Message { QStringLiteral("Member \"red\" not found on type \"QtObject\""), 5, 25 },
+                Message { QStringLiteral("Member \"red\" not found on type \"QtObject\""), 6, 25 },
+                Message {
+                    QStringLiteral("You cannot access unscoped enum \"Unscoped\" from here."),
+                    8, 32
+                },
+                Message {
+                    QStringLiteral("You cannot access unscoped enum \"Unscoped\" from here."),
+                    9, 38
+                },
+                Message {
+                    QStringLiteral("Member \"S2\" not found on type \"EnumTesterScoped\""),
+                    10, 38
+                },
+               }, {
+                Message { QStringLiteral("Did you mean \"S2\"?"), 0, 0, QtInfoMsg }
+               }, {
+                Message { QStringLiteral("Did you mean \"U2\"?"), 10, 38, QtInfoMsg }
+               } };
     QTest::newRow("inaccessibleId")
             << QStringLiteral("inaccessibleId.qml")
             << Result { { Message {
