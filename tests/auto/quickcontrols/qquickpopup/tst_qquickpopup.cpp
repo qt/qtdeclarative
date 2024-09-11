@@ -2974,9 +2974,20 @@ void tst_QQuickPopup::popupWindowDestructedBeforeQQuickPopup()
     QSignalSpy popupWindowDestroyedSpy(popupPrivate->popupWindow, SIGNAL(destroyed()));
     QVERIFY(popupWindowDestroyedSpy.isValid());
 
+    bool lambdaExecuted = false;
+
+    connect(popupPrivate->popupWindow, &QObject::destroyed, [&popupDestroyedSpy, &lambdaExecuted]() {
+        // Check that the popup window has been destroyed before the popup has been destroyed.
+        // The events come in the same frame, so we can't just use QTRY_COMPARE.
+        QCOMPARE(popupDestroyedSpy.size(), 0);
+
+        lambdaExecuted = true;
+    });
+
     popup->deleteLater();
-    QTRY_COMPARE(popupDestroyedSpy.size(), 1);
-    // Check that the popup window has been destroyed after the popup has been destroyed
+    QTRY_VERIFY(lambdaExecuted);
+
+    QCOMPARE(popupDestroyedSpy.size(), 1);
     QCOMPARE(popupWindowDestroyedSpy.size(), 1);
 
     // Check geometry changes don't cause a crash from hanging connections
