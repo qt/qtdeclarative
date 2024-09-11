@@ -73,7 +73,7 @@ struct QmlTypesClassDescription
     bool isRootClass = false;
     bool extensionIsJavaScript = false;
     bool extensionIsNamespace = false;
-    bool registerEnumClassesScoped = false;
+    bool enforcesScopedEnums = false;
     QList<QAnyStringView> implementsInterfaces;
     QList<QAnyStringView> deferredNames;
     QList<QAnyStringView> immediateNames;
@@ -105,6 +105,8 @@ private:
             const QCborMap &classDef, const QVector<QCborMap> &types,
             const QVector<QCborMap> &foreign, CollectMode mode, QTypeRevision defaultRevision);
     void collectInterfaces(const QCborMap &classDef);
+
+    void handleRegisterEnumClassesUnscoped(const QCborMap &classDef, QAnyStringView value);
 };
 
 QT_END_NAMESPACE

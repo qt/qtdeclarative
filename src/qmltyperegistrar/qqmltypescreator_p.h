@@ -41,10 +41,7 @@ private:
     void writeType(const QCborMap &property, QLatin1StringView key);
     void writeProperties(const QCborArray &properties);
     void writeMethods(const QCborArray &methods, QLatin1StringView type);
-
-    enum class EnumClassesMode { Scoped, Unscoped };
-    void writeEnums(const QCborArray &enums, EnumClassesMode enumClassesMode);
-
+    void writeEnums(const QCborArray &enums);
     void writeComponents();
     void writeRootMethods(const QCborMap &classDef);
 

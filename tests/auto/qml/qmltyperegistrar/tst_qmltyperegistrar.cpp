@@ -472,6 +472,47 @@ void tst_qmltyperegistrar::consistencyWarnings()
     r.generatePluginTypes(pluginTypes.fileName());
 }
 
+void tst_qmltyperegistrar::enumWarnings()
+{
+    QmlTypeRegistrar r;
+    r.setModuleVersions(QTypeRevision::fromVersion(1, 1), {}, false);
+    QString moduleName = "tstmodule";
+    QString targetNamespace = "tstnamespace";
+    r.setModuleNameAndNamespace(moduleName, targetNamespace);
+
+    const auto expectWarning = [](const char *message) {
+        QTest::ignoreMessage(QtWarningMsg, message);
+    };
+
+    expectWarning("Warning: tst_qmltyperegistrar.h:: "
+                  "Unrecognized value for RegisterEnumClassesUnscoped: horst");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: "
+                  "Setting RegisterEnumClassesUnscoped to true has no effect.");
+
+    QTest::failOnWarning(QRegularExpression(".*"));
+
+
+    MetaTypesJsonProcessor processor(true);
+
+    QVERIFY(processor.processTypes({ ":/brokenEnums.json" }));
+    processor.postProcessTypes();
+    processor.postProcessForeignTypes();
+
+    QVector<QCborMap> types = processor.types();
+    QVector<QCborMap> typesforeign = processor.foreignTypes();
+    r.setTypes(types, typesforeign);
+
+    QString outputData;
+    QTextStream output(&outputData, QIODeviceBase::ReadWrite);
+
+    r.write(output, "tst_qmltyperegistrar_qmltyperegistrations.cpp");
+
+    QTemporaryFile pluginTypes;
+    QVERIFY(pluginTypes.open());
+
+    r.generatePluginTypes(pluginTypes.fileName());
+}
+
 void tst_qmltyperegistrar::clonedSignal()
 {
     QVERIFY(qmltypesData.contains(R"(Signal {
@@ -986,6 +1027,19 @@ void tst_qmltyperegistrar::constReturnType()
         exports: ["QmlTypeRegistrarTest/ConstInvokable 1.0"]
         exportMetaObjectRevisions: [256]
         Method { name: "getObject"; type: "QObject"; isPointer: true; isConstant: true }
+    })"));
+}
+
+void tst_qmltyperegistrar::enumsExplicitlyScoped()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "EnumsExplicitlyScoped"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["QmlTypeRegistrarTest/EnumsExplicitlyScoped 1.0"]
+        enforcesScopedEnums: true
+        exportMetaObjectRevisions: [256]
     })"));
 }
 

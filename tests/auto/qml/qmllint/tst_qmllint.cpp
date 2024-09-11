@@ -1363,6 +1363,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QEventPoint") << QStringLiteral("qEventPoint.qml");
     QTest::newRow("locale") << QStringLiteral("locale.qml");
     QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
+    QTest::newRow("scopedAndUnscopedEnums") << QStringLiteral("enumValid.qml");
 }
 
 void TestQmllint::cleanQmlCode()

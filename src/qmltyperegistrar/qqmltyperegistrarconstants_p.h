@@ -31,6 +31,7 @@ static constexpr QLatin1StringView S_BINDABLE                     { "bindable" }
 static constexpr QLatin1StringView S_COMPONENT                    { "Component" };
 static constexpr QLatin1StringView S_DEFAULT_PROPERTY             { "defaultProperty" };
 static constexpr QLatin1StringView S_DEFERRED_NAMES               { "deferredNames" };
+static constexpr QLatin1StringView S_ENFORCES_SCOPED_ENUMS        { "enforcesScopedEnums" };
 static constexpr QLatin1StringView S_ENUM                         { "Enum" };
 static constexpr QLatin1StringView S_EXPORTS                      { "exports" };
 static constexpr QLatin1StringView S_EXPORT_META_OBJECT_REVISIONS { "exportMetaObjectRevisions" };
