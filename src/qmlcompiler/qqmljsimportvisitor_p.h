@@ -357,7 +357,7 @@ private:
 
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
     void processImportWarnings(
-            const QString &what,
+            const QString &what, const QList<QQmlJS::DiagnosticMessage> &warnings,
             const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation());
     void addImportWithLocation(const QString &name, const QQmlJS::SourceLocation &loc);
     void populateCurrentScope(QQmlJSScope::ScopeType type, const QString &name,
@@ -365,10 +365,10 @@ private:
     void enterRootScope(QQmlJSScope::ScopeType type, const QString &name,
                            const QQmlJS::SourceLocation &location);
 
-    void importFromHost(const QString &path, const QString &prefix,
-                        const QQmlJS::SourceLocation &location);
-    void importFromQrc(const QString &path, const QString &prefix,
-                       const QQmlJS::SourceLocation &location);
+    QList<QQmlJS::DiagnosticMessage> importFromHost(
+            const QString &path, const QString &prefix, const QQmlJS::SourceLocation &location);
+    QList<QQmlJS::DiagnosticMessage> importFromQrc(
+            const QString &path, const QString &prefix, const QQmlJS::SourceLocation &location);
 
 public:
     friend class QQmlJS::Dom::QQmlDomAstCreatorWithQQmlJSScope;

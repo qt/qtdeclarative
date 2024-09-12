@@ -176,7 +176,7 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
 
     m_objectsById.clear();
     m_objectsByLocation.clear();
-    m_imports.clearTypes();
+    m_imports.clear();
     m_signalHandlers.clear();
 
     if (program)

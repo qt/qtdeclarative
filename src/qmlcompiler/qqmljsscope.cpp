@@ -1165,8 +1165,10 @@ void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &
     m_importer->m_globalWarnings.append(errors);
 
     scope->setInternalName(internalName());
-    QQmlJSScope::resolveEnums(scope, m_importer->builtinInternalNames());
-    QQmlJSScope::resolveList(scope, m_importer->builtinInternalNames().arrayType());
+    QQmlJSScope::resolveEnums(
+            scope, m_importer->builtinInternalNames().contextualTypes());
+    QQmlJSScope::resolveList(
+            scope, m_importer->builtinInternalNames().contextualTypes().arrayType());
 
     if (m_isSingleton && !scope->isSingleton()) {
         m_importer->m_globalWarnings.append(
