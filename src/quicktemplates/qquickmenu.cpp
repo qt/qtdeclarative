@@ -373,9 +373,6 @@ QQuickMenu *QQuickMenuPrivate::rootMenu() const
 
 bool QQuickMenuPrivate::useNativeMenu() const
 {
-    if (QGuiApplication::testAttribute(Qt::AA_DontUseNativeMenuWindows))
-        return false;
-
     // If we're inside a MenuBar, it'll decide whether or not we should be
     // native. Otherwise, the root menu (which might be this menu) will decide.
     // Note that this is just a preference, QPA can still fail to create a native
@@ -384,6 +381,8 @@ bool QQuickMenuPrivate::useNativeMenu() const
     QQuickMenu *root = rootMenu();
     if (auto menuBar = QQuickMenuPrivate::get(root)->menuBar.get())
         return QQuickMenuBarPrivate::get(menuBar)->useNativeMenu(q_func());
+    if (QGuiApplication::testAttribute(Qt::AA_DontUseNativeMenuWindows))
+        return false;
     return root->popupType() == QQuickPopup::Native;
 }
 
