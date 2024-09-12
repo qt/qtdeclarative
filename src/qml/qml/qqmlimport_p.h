@@ -157,7 +157,7 @@ public:
     }
 
     bool addInlineComponentImport(
-            QQmlImportInstance  *const importInstance, const QString &name, const QUrl importUrl);
+            QQmlImportInstance  *const importInstance, const QString &name, const QUrl &importUrl);
 
     QTypeRevision addFileImport(
             QQmlTypeLoader *typeLoader, const QString &uri, const QString &prefix,

@@ -1476,7 +1476,8 @@ QTypeRevision QQmlImports::updateQmldirContent(
 /*!
  \internal
  */
-bool QQmlImports::addInlineComponentImport(QQmlImportInstance *const importInstance, const QString &name, const QUrl importUrl)
+bool QQmlImports::addInlineComponentImport(
+        QQmlImportInstance *const importInstance, const QString &name, const QUrl &importUrl)
 {
     importInstance->url = importUrl.toString();
     importInstance->uri = name;

@@ -133,7 +133,7 @@ bool QQmlTypeData::loadFromDiskCache(const QQmlRefPointer<QV4::CompiledData::Com
                     auto pendingImport = std::make_shared<PendingImport>(
                                 this, import, QQmlImports::ImportNoFlag);
                     pendingImport->precedence = QQmlImportInstance::Implicit;
-                    if (!fetchQmldir(qmldirUrl, pendingImport, 1, &errors)) {
+                    if (!fetchQmldir(qmldirUrl, std::move(pendingImport), 1, &errors)) {
                         setError(errors);
                         return false;
                     }
