@@ -1069,10 +1069,10 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
 
     if("${CMAKE_VERSION}" VERSION_GREATER_EQUAL "3.19.0")
         set(id qmlaotstats_aggregation)
-        cmake_language(DEFER DIRECTORY ${PROJECT_BINARY_DIR} GET_CALL ${id} call)
+        cmake_language(DEFER DIRECTORY "${PROJECT_BINARY_DIR}" GET_CALL ${id} call)
 
         if("${call}" STREQUAL "")
-            cmake_language(EVAL CODE "cmake_language(DEFER DIRECTORY ${PROJECT_BINARY_DIR} "
+            cmake_language(EVAL CODE "cmake_language(DEFER DIRECTORY \"${PROJECT_BINARY_DIR}\" "
                 "ID ${id} CALL _qt_internal_deferred_aggregate_aotstats_files ${target})")
         endif()
     else()
@@ -1096,35 +1096,35 @@ function(_qt_internal_deferred_aggregate_aotstats_files target)
     endforeach()
 
     set(aotstats_list_file "${PROJECT_BINARY_DIR}/.rcc/qmlcache/all_aotstats.aotstatslist")
-    file(WRITE ${aotstats_list_file} ${module_aotstats_files})
+    file(WRITE "${aotstats_list_file}" "${module_aotstats_files}")
 
-    set(all_aotstats_file ${PROJECT_BINARY_DIR}/.rcc/qmlcache/all_aotstats.aotstats)
-    set(formatted_stats_file ${PROJECT_BINARY_DIR}/.rcc/qmlcache/all_aotstats.txt)
+    set(all_aotstats_file "${PROJECT_BINARY_DIR}/.rcc/qmlcache/all_aotstats.aotstats")
+    set(formatted_stats_file "${PROJECT_BINARY_DIR}/.rcc/qmlcache/all_aotstats.txt")
 
     _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     add_custom_command(
         OUTPUT
-            ${all_aotstats_file}
-            ${formatted_stats_file}
+            "${all_aotstats_file}"
+            "${formatted_stats_file}"
         DEPENDS ${module_aotstats_targets}
         COMMAND
             ${tool_wrapper}
             $<TARGET_FILE:Qt6::qmlaotstats>
             aggregate
-            ${aotstats_list_file}
-            ${all_aotstats_file}
+            "${aotstats_list_file}"
+            "${all_aotstats_file}"
         COMMAND
             ${tool_wrapper}
             $<TARGET_FILE:Qt6::qmlaotstats>
             format
-            ${all_aotstats_file}
-            ${formatted_stats_file}
+            "${all_aotstats_file}"
+            "${formatted_stats_file}"
     )
 
     if(NOT TARGET all_aotstats)
         add_custom_target(all_aotstats
-            DEPENDS ${formatted_stats_file}
-            COMMAND ${CMAKE_COMMAND} -E cat ${formatted_stats_file}
+            DEPENDS "${formatted_stats_file}"
+            COMMAND "${CMAKE_COMMAND}" -E cat "${formatted_stats_file}"
         )
     endif()
 endfunction()
