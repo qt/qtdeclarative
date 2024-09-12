@@ -777,11 +777,12 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         types->cppNames.addTypes(cacheEntry->cppNames);
         types->staticModules << cacheEntry->staticModules;
         types->hasSystemModule |= cacheEntry->hasSystemModule;
-        types->warnings.append(cacheEntry->warnings);
 
         // No need to import qml names for dependencies
-        if (!isDependency)
+        if (!isDependency) {
+            types->warnings.append(cacheEntry->warnings);
             types->qmlNames.addTypes(cacheEntry->qmlNames);
+        }
 
         return true;
     };

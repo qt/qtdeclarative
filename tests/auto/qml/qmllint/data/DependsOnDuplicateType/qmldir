@@ -1,0 +1,3 @@
+module DependsOnDuplicateType
+depends DuplicateType
+V 1.0 V.qml
