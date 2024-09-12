@@ -30,8 +30,8 @@
     \section2 Current state
 
     The Windows style is under development, and some controls are not yet supported. Those controls
-    are: \l BusyIndicator, \l DelayButton, \l Menu, \l MenuBar, \l PageIndicator, \l RangeSlider,
-    \l Switch, \l TabBar and \l Tumbler. Those will fall back to use the \l {Fusion Style}.
+    are: \l BusyIndicator, \l PageIndicator, \l TabBar and \l Tumbler.
+    Those will fall back to use the \l {Fusion Style}.
 
     \section2 Customization
 
