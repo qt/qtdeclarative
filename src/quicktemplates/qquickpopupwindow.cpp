@@ -32,7 +32,7 @@ public:
 
     void setVisible(bool visible) override;
 
-    void forwardEventToParentMenuOrMenuBar(QEvent *event);
+    bool filterPopupSpecialCases(QEvent *event);
 };
 
 QQuickPopupWindow::QQuickPopupWindow(QQuickPopup *popup, QWindow *parent)
@@ -120,24 +120,35 @@ void QQuickPopupWindowPrivate::setVisible(bool visible)
 }
 
 /*! \internal
-    We want to handle menus specially, compared to other popups. For menus, we
-    want all open parent menus and sub menus that belong together to almost
-    act as a single popup WRT hover event delivery. This will allow the user to
-    hover and highlight MenuItems inside all of them, not just the leaf menu.
-    This function will therefore find the menu, or menu bar, under the event's
-    position, and forward the event to it. But note that this forwarding will
-    happen in parallel with normal event delivery (we don't eat the events), as
-    we don't want to break the delivery to e.g grabbers.
+    Even if all pointer events are sent to the active popup, there are cases
+    where we need to take several popups, or even the menu bar, into account
+    to figure out what the event should do.
+
+    - If a press happens outside of any popups (and not just this one, we close
+    all popups from this function.
+
+    - We want all open menus and sub menus that belong together to almost act as
+    a single popup WRT hover event delivery. This will allow the user to hover and
+    highlight MenuItems inside all of them, not just this menu. This function
+    will therefore find the menu, or menu bar, under the event's position, and
+    forward hover events to it.
+
+    Note that we for most cases want to return false from this function, even if
+    the event was actually handled. That way it will be also sent to the DA, to
+    let normal event delivery to any potential grabbers happen the usual way. It
+    will also allow QGuiApplication to forward the event to the window under the
+    pointer if the event was outside of any popups (if supported by e.g
+    QPlatformIntegration::ReplayMousePressOutsidePopup).
  */
-void QQuickPopupWindowPrivate::forwardEventToParentMenuOrMenuBar(QEvent *event)
+bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
 {
     Q_Q(QQuickPopupWindow);
 
     if (!event->isPointerEvent())
-        return;
+        return false;
     auto menu = qobject_cast<QQuickMenu *>(q->popup());
     if (!menu)
-        return;
+        return false;
 
     auto *pe = static_cast<QPointerEvent *>(event);
     const QPointF globalPos = pe->points().first().globalPosition();
@@ -166,12 +177,21 @@ void QQuickPopupWindowPrivate::forwardEventToParentMenuOrMenuBar(QEvent *event)
     }
 
     if (pe->isBeginEvent()) {
-        if (!targetMenu) {
-            // A QQuickPopupWindow can be bigger than the menu itself, to make room
-            // for a drop-shadow. Close all menus if the user do a press, either on
-            // the shadow, or outside the menu.
+        if (targetMenuBar) {
+            // If the press was on top of the menu bar, we close all menus and return
+            // true. The latter will stop QGuiApplication from propagating the event
+            // to the window under the pointer, and therefore also to the MenuBar.
+            // The latter would otherwise cause a menu to reopen again immediately, and
+            // undermine that we want to close all popups.
             QGuiApplicationPrivate::closeAllPopups();
-            return;
+            return true;
+        } else if (!targetMenu) {
+            // If the user did a press outside any of the visible menus (and menu bars),
+            // then close all menus. Note that A QQuickPopupWindow can be bigger than the
+            // menu itself, to make room for a drop-shadow. But if the press was on top
+            // of the shadow, targetMenu will still be nullptr.
+            QGuiApplicationPrivate::closeAllPopups();
+            return false;
         }
     } else if (pe->isUpdateEvent()){
         QQuickWindow *targetWindow = nullptr;
@@ -180,7 +200,7 @@ void QQuickPopupWindowPrivate::forwardEventToParentMenuOrMenuBar(QEvent *event)
         else if (targetMenuBar)
             targetWindow = targetMenuBar->window();
         else
-            return;
+            return false;
 
         // Forward move events to the target window
         const auto scenePos = pe->point(0).scenePosition();
@@ -209,7 +229,7 @@ void QQuickPopupWindowPrivate::forwardEventToParentMenuOrMenuBar(QEvent *event)
             int pressDuration = pe->point(0).timestamp() - pe->point(0).pressTimestamp();
             if (pressDuration >= QGuiApplication::styleHints()->mousePressAndHoldInterval())
                 QGuiApplicationPrivate::closeAllPopups();
-            return;
+            return false;
         }
 
         // To support opening a Menu on press (e.g on a MenuBarItem), followed by
@@ -217,12 +237,15 @@ void QQuickPopupWindowPrivate::forwardEventToParentMenuOrMenuBar(QEvent *event)
         // perform a click on the active MenuItem, if any.
         QQuickMenuPrivate::get(targetMenu)->handleReleaseWithoutGrab(pe->point(0));
     }
+
+    return false;
 }
 
 bool QQuickPopupWindow::event(QEvent *e)
 {
     Q_D(QQuickPopupWindow);
-    d->forwardEventToParentMenuOrMenuBar(e);
+    if (d->filterPopupSpecialCases(e))
+        return true;
 
     if (d->m_popup && !d->m_popup->hasFocus() && (e->type() == QEvent::KeyPress || e->type() == QEvent::KeyRelease)
 #if QT_CONFIG(shortcut)
