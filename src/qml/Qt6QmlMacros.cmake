@@ -828,7 +828,7 @@ function(_qt_internal_target_enable_qmllint target)
     )
 
     set(cmd
-        ${tool_wrapper}
+       "${tool_wrapper}"
         $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
         @${qmllint_rsp_path}
     )
@@ -860,7 +860,7 @@ function(_qt_internal_target_enable_qmllint target)
     )
 
     set(cmd
-        ${tool_wrapper}
+        "${tool_wrapper}"
         $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
         @${qmllint_rsp_path}
     )
@@ -898,7 +898,7 @@ function(_qt_internal_target_enable_qmllint target)
    )
 
    set(cmd
-       ${tool_wrapper}
+       "${tool_wrapper}"
        $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
        @${qmllint_rsp_path}
    )
@@ -1069,7 +1069,7 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var qmlcac
 
     _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     set(cmd
-        ${tool_wrapper}
+        "${tool_wrapper}"
         ${qmlcachegen}
         --resource-name "${qmlcache_resource_name}"
         -o "${qmlcache_loader_cpp}"
