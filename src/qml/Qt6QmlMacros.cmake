@@ -2918,14 +2918,14 @@ but this file does not exist.  Possible reasons include:
     endif()
 
     _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
-    set(import_scanner_args ${tool_wrapper} ${tool_path} ${cmd_args})
+    set(import_scanner_args "${tool_path}" ${cmd_args})
 
     # Run qmlimportscanner to generate the cmake file that records the import entries
     if(scan_at_build_time)
         add_custom_command(
             OUTPUT "${imports_file}"
             COMMENT "Running qmlimportscanner for ${target}"
-            COMMAND ${import_scanner_args}
+            COMMAND ${tool_wrapper} ${import_scanner_args}
             WORKING_DIRECTORY ${target_source_dir}
             DEPENDS
                 ${tool_path}
@@ -2940,11 +2940,14 @@ but this file does not exist.  Possible reasons include:
         message(VERBOSE "Running qmlimportscanner for ${target}.")
         list(JOIN import_scanner_args " " import_scanner_args_string)
         message(DEBUG "qmlimportscanner command: ${import_scanner_args_string}")
-        execute_process(
+
+        # Pack arguments to avoid escaping issues.
+        set(import_scanner_execute_process_args
             COMMAND ${import_scanner_args}
-            WORKING_DIRECTORY ${target_source_dir}
+            WORKING_DIRECTORY "${target_source_dir}"
             RESULT_VARIABLE result
         )
+        _qt_internal_execute_proccess_in_qt_env(import_scanner_execute_process_args)
         if(result)
             message(FATAL_ERROR
                 "Failed to scan target ${target} for QML imports: ${result}"
