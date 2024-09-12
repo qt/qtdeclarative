@@ -674,7 +674,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(
     const QQmlJSImporter::ImportedTypes types = m_importer.importModule(module);
 
     QList<QQmlJS::DiagnosticMessage> importWarnings =
-            m_importer.takeGlobalWarnings() + m_importer.takeWarnings();
+            m_importer.takeGlobalWarnings() + types.warnings();
 
     if (!importWarnings.isEmpty()) {
         m_logger->log(QStringLiteral("Warnings occurred while importing module:"), qmlImport,

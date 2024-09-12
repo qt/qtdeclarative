@@ -122,6 +122,8 @@ private Q_SLOTS:
     void importRelScript();
 #endif
 
+    void replayImportWarnings();
+
 private:
     enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
     enum ContainOption { StringNotContained, StringContained };
@@ -2472,6 +2474,21 @@ void TestQmllint::importRelScript()
     QVERIFY(proc.readAllStandardError().isEmpty());
 }
 #endif
+
+void TestQmllint::replayImportWarnings()
+{
+    QJsonArray warnings;
+    callQmllint(testFile(u"duplicateTypeUserUser.qml"_s), true, &warnings);
+
+    // No warning because the offending import is indirect.
+    QVERIFY2(warnings.isEmpty(), qPrintable(QJsonDocument(warnings).toJson()));
+
+    // No cache clearing here. We want the warnings restored.
+    callQmllint(testFile(u"DuplicateTypeUser.qml"_s), false, &warnings);
+
+    // Warning because the offending import is now direct.
+    searchWarnings(warnings, "Ambiguous type detected. T 1.0 is defined multiple times.");
+}
 
 QTEST_GUILESS_MAIN(TestQmllint)
 #include "tst_qmllint.moc"

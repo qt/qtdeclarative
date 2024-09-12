@@ -1,0 +1,4 @@
+module DuplicateType
+T 1.0 T.qml
+T 1.0 U.qml
+U 1.0 U.qml
