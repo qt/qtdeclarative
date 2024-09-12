@@ -62,6 +62,7 @@ private slots:
     void closeByClickingOutside_data();
     void closeByClickingOutside();
     void AA_DontUseNativeMenuBar();
+    void AA_DontUseNativeMenuWindows();
     void containerItems_data();
     void containerItems();
     void mixedContainerItems_data();
@@ -1328,6 +1329,32 @@ void tst_qquickmenubar::AA_DontUseNativeMenuBar()
     const auto firstMenu = menuBar->menuAt(0);
     QVERIFY(firstMenu);
     QVERIFY(!QQuickMenuPrivate::get(firstMenu)->maybeNativeHandle());
+}
+
+void tst_qquickmenubar::AA_DontUseNativeMenuWindows()
+{
+    if (!nativeMenuBarSupported)
+        QSKIP("this test is only valid when native menu bars are supported!");
+
+    // Check that we end up with a native menu bar _with_ native
+    // menus, even if AA_DontUseNativeMenuWindows is set.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, false);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, true);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+    QQuickItem *contents = window->property("contents").value<QQuickItem *>();
+    QVERIFY(contents);
+
+    QVERIFY(menuBarPrivate->nativeHandle());
+    const auto firstMenu = menuBar->menuAt(0);
+    QVERIFY(firstMenu);
+    QVERIFY(QQuickMenuPrivate::get(firstMenu)->maybeNativeHandle());
 }
 
 void tst_qquickmenubar::containerItems_data()
