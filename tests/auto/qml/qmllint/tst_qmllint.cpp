@@ -1466,6 +1466,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("jsonArrayIsRecognized") << QStringLiteral("jsonArrayIsRecognized.qml");
     QTest::newRow("itemviewattached") << QStringLiteral("itemViewAttached.qml");
     QTest::newRow("scopedAndUnscopedEnums") << QStringLiteral("enumValid.qml");
+    QTest::newRow("dependsOnDuplicateType") << QStringLiteral("dependsOnDuplicateType.qml");
 }
 
 void TestQmllint::cleanQmlCode()
@@ -1706,7 +1707,6 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
     }
 
     bool success = lintResult == QQmlJSLinter::LintSuccess;
-    QEXPECT_FAIL("qtquickdialog", "Will fail until QTBUG-104091 is implemented", Abort);
     QVERIFY2(success == shouldSucceed, QJsonDocument(jsonOutput).toJson());
 
     if (warnings) {
