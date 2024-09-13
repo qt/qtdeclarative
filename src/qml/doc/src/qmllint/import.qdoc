@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Warnings occurred while importing
-\brief The imported module was not found.
+\brief [import] The imported module was not found.
 
 \qmllintwarningcategory import
 

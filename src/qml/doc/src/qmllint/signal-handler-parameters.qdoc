@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Signal handler parameters
-\brief The signal handler does not satisfy the signal types.
+\brief [signal-handler-parameters] The signal handler does not satisfy the signal types.
 
 \qmllintwarningcategory signal-handler-parameters
 

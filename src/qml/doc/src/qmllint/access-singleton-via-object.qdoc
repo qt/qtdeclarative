@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Cannot access singleton as a property of an object
-\brief A singleton was incorrectly accessed.
+\brief [access-singleton-via-object] A singleton was incorrectly accessed.
 
 \section1 Access singleton via object
 

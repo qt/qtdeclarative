@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Attached property reuse
-\brief Attached type was initialized multiple times.
+\brief [attached-property-reuse] Attached type was initialized multiple times.
 
 \qmllintwarningcategory attached-property-reuse
 

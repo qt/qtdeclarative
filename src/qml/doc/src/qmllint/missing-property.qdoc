@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Missing property
-\brief Binding a value to a non-existing property.
+\brief [missing-property] Binding a value to a non-existing property.
 
 \qmllintwarningcategory missing-property
 

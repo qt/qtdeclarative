@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Recursion depths errors
-\brief Qml statement or expression is too deeply nested.
+\brief [recursion-depth-errors] Qml statement or expression is too deeply nested.
 
 \qmllintwarningcategory recursion-depth-errors
 

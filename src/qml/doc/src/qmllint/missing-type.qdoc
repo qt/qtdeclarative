@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Missing type
-\brief A type used in a binding or alias was not found.
+\brief [missing-type] A type used in a binding or alias was not found.
 
 \qmllintwarningcategory missing-type
 

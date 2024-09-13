@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Unused imports
-\brief Types of the imported module were not used.
+\brief [unused-imports] Types of the imported module were not used.
 
 \qmllintwarningcategory unused-imports
 

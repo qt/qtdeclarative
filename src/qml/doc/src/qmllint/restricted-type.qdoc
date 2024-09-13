@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Restricted type
-\brief A restricted type was accessed.
+\brief [restricted-type] A restricted type was accessed.
 
 \qmllintwarningcategory restricted-type
 

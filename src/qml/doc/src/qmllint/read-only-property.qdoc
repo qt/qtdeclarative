@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Readonly property
-\brief A readonly property was written.
+\brief [read-only-property] A readonly property was written.
 
 \section1 read-only-property
 
