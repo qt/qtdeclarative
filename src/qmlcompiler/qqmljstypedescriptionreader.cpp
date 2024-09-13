@@ -326,7 +326,9 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(
                 auto metaReturnType = metaMethod.returnValue();
                 metaReturnType.setIsPointer(readBoolBinding(script));
                 metaMethod.setReturnValue(metaReturnType);
-            } else if (name == QLatin1String("isTypeConstant")) {
+            } else if (name == QLatin1String("isTypeConstant")
+                       || name == QLatin1String("isConstant")) {
+                // note: isConstant is only read for backwards compatibility
                 auto metaReturnType = metaMethod.returnValue();
                 metaReturnType.setTypeQualifier(readBoolBinding(script)
                                                         ? QQmlJSMetaParameter::Const
@@ -388,6 +390,9 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
         } else if (id == QLatin1String("isTypeConstant")) {
             property.setIsTypeConstant(readBoolBinding(script));
         } else if (id == QLatin1String("isPropertyConstant")) {
+            property.setIsPropertyConstant(readBoolBinding(script));
+        } else if (id == QLatin1String("isConstant")) {
+            // support old "isConstant" for backwards compatibility
             property.setIsPropertyConstant(readBoolBinding(script));
         } else if (id == QLatin1String("revision")) {
             property.setRevision(readIntBinding(script));
@@ -481,7 +486,8 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
             type = readStringBinding(script);
         } else if (id == QLatin1String("isPointer")) {
             isPointer = readBoolBinding(script);
-        } else if (id == QLatin1String("isTypeConstant")) {
+        } else if (id == QLatin1String("isTypeConstant") || id == QLatin1String("isConstant")) {
+            // note: isConstant is only read for backwards compatibility
             isConstant = readBoolBinding(script);
         } else if (id == QLatin1String("isReadonly")) {
             // ### unhandled

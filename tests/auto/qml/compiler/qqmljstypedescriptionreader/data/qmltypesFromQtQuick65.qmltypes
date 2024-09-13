@@ -1,0 +1,66 @@
+import QtQuick.tooling 1.2
+
+// This file describes the plugin-supplied types contained in the library.
+// It is used for QML tooling purposes only.
+//
+// This file was copied from QtQuick version 6.5.6 and trimmed.
+Module {
+    Component {
+        file: "qaccessible_base.h"
+        name: "QAccessible"
+        accessSemantics: "value"
+        Enum {
+            name: "Event"
+            values: [
+                "SoundPlayed",
+            ]
+        }
+    }
+    Component {
+        file: "private/qquickforeignutils_p.h"
+        name: "QEventPoint"
+        accessSemantics: "value"
+        exports: ["QtQuick/eventPoint 6.5"]
+        isCreatable: false
+        exportMetaObjectRevisions: [1541]
+        Enum {
+            name: "States"
+            alias: "State"
+            isFlag: true
+            values: [
+                "Unknown",
+                "Stationary",
+                "Pressed",
+                "Updated",
+                "Released"
+            ]
+        }
+        Property { name: "accepted"; type: "bool"; read: "isAccepted"; write: "setAccepted"; index: 0 }
+        Property {
+            name: "device"
+            type: "QPointingDevice"
+            isPointer: true
+            isConstant: true
+            read: "device"
+            index: 1
+            isReadonly: true
+            isConstant: true
+        }
+    }
+    Component {
+        file: "private/qquickitemsmodule_p.h"
+        name: "QPointingDevice"
+        accessSemantics: "reference"
+        prototype: "QInputDevice"
+        exports: ["QtQuick/PointerDevice 2.12", "QtQuick/PointerDevice 6.0"]
+        isCreatable: false
+        exportMetaObjectRevisions: [524, 1536]
+        Signal {
+            name: "grabChanged"
+            Parameter { name: "grabber"; type: "QObject"; isPointer: true }
+            Parameter { name: "transition"; type: "GrabTransition" }
+            Parameter { name: "event"; type: "QPointerEvent"; isPointer: true; isConstant: true }
+            Parameter { name: "point"; type: "QEventPoint" }
+        }
+    }
+}
