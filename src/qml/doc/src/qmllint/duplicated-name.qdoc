@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Duplicated name
-\brief Multiple signals or properties share the same name in the same Component.
+\brief [duplicated-name] Multiple signals or properties share the same name in the same Component.
 
 \qmllintwarningcategory duplicated-name
 

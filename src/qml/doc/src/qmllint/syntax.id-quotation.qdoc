@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Id quotation
-\brief Id has quotation marks.
+\brief [syntax.id-quotation] Id has quotation marks.
 
 \qmllintwarningcategory syntax.id-quotation
 

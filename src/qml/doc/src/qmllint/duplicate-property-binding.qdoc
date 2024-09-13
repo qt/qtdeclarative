@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Duplicate bindings
-\brief A property was bound multiple times.
+\brief [duplicate-property-binding] A property was bound multiple times.
 
 \qmllintwarningcategory duplicate-property-binding
 

@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Unqualified
-\brief Accessing an outer scope without its id.
+\brief [unqualified] Accessing an outer scope without its id.
 
 \qmllintwarningcategory unqualified
 

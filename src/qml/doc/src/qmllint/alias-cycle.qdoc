@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Alias cycle
-\brief Alias property is part of an alias cycle.
+\brief [alias-cycle] Alias property is part of an alias cycle.
 
 \qmllintwarningcategory alias-cycle
 

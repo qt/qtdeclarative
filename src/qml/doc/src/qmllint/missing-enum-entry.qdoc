@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Missing enum entry
-\brief Enum value is missing from its declaration.
+\brief [missing-enum-entry] Enum value is missing from its declaration.
 
 \qmllintwarningcategory missing-enum-entry
 
