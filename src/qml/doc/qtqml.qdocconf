@@ -81,4 +81,4 @@ spurious += "C\\+\\+ class .*\\\\instantiates .*"
 # Enforce zero documentation warnings
 warninglimit = 0
 
-macro.qmllintwarningcategory = "This warning category is spelled \c{[\1]} by qmllint."
+macro.qmllintwarningcategory = "This warning category is spelled \\c{[\1]} by qmllint."
