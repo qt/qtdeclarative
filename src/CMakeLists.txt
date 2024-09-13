@@ -96,6 +96,7 @@ add_subdirectory(labs)
 
 add_subdirectory(qmlcompiler)
 add_subdirectory(qmldom)
+add_subdirectory(qmlformat)
 
 # Build qmlcachegen now, so that we can use it in src/imports.
 if(QT_FEATURE_xmlstreamwriter)

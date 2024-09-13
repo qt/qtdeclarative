@@ -17,6 +17,7 @@ qt_internal_add_tool(${target_name}
         Qt::Core
         Qt::QmlDomPrivate
         Qt::QmlToolingSettingsPrivate
+        Qt::QmlFormatPrivate
 )
 qt_internal_return_unless_building_tools()
 
