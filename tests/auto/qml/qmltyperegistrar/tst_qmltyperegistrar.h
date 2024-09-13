@@ -969,6 +969,7 @@ private slots:
 
     void inaccessibleBase();
     void enumsExplicitlyScoped();
+    void namespacedExtracted();
 
 private:
     QByteArray qmltypesData;

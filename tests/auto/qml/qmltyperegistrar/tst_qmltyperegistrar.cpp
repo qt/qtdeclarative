@@ -10,6 +10,7 @@
 #include <QtQml/qqmlprivate.h>
 
 #include "hppheader.hpp"
+#include "tst_qmltyperegistrar_namespaced_tst_qmltyperegistrar_namespaced_module.h"
 #include "UnregisteredTypes/uncreatable.h"
 
 void tst_qmltyperegistrar::initTestCase()
@@ -1198,5 +1199,19 @@ void tst_qmltyperegistrar::enumsExplicitlyScoped()
     })"));
 }
 
+void tst_qmltyperegistrar::namespacedExtracted()
+{
+    // Make sure that the foreign type declaration is in the namespace "nnn"
+    static_assert(std::is_same_v<
+        decltype(nnn::NamespacedForeign::staticMetaObject),
+        const QMetaObject
+    >);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, "Namespaced", "Namespaced");
+    QVERIFY(c.isReady());
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+}
 
 QTEST_MAIN(tst_qmltyperegistrar)

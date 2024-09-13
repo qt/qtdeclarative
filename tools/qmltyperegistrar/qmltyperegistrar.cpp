@@ -157,7 +157,7 @@ int main(int argc, char **argv)
             return EXIT_FAILURE;
         }
         QString baseName = parser.value(outputOption);
-        return QmlTypeRegistrar::runExtract(baseName, processor);
+        return QmlTypeRegistrar::runExtract(baseName, parser.value(namespaceOption), processor);
     }
 
     processor.postProcessTypes();

@@ -53,7 +53,9 @@ public:
 
     static bool argumentsFromCommandLineAndFile(QStringList &allArguments,
                                                 const QStringList &arguments);
-    static int runExtract(const QString &baseName, const MetaTypesJsonProcessor &processor);
+    static int runExtract(
+            const QString &baseName, const QString &nameSpace,
+            const MetaTypesJsonProcessor &processor);
 };
 
 QT_END_NAMESPACE

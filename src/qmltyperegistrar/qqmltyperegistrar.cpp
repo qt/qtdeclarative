@@ -81,7 +81,8 @@ bool QmlTypeRegistrar::argumentsFromCommandLineAndFile(QStringList &allArguments
     return true;
 }
 
-int QmlTypeRegistrar::runExtract(const QString &baseName, const MetaTypesJsonProcessor &processor)
+int QmlTypeRegistrar::runExtract(
+        const QString &baseName, const QString &nameSpace, const MetaTypesJsonProcessor &processor)
 {
     if (processor.types().isEmpty()) {
         error(baseName) << "No types to register found in library";
@@ -103,10 +104,17 @@ int QmlTypeRegistrar::runExtract(const QString &baseName, const MetaTypesJsonPro
             "#define %1_H\n"
             "#include <QtQml/qqml.h>\n"
             "#include <QtQml/qqmlmoduleregistration.h>\n").arg(includeGuard);
+    auto postfix = QString::fromLatin1("\n#endif // %1_H\n").arg(includeGuard);
+
     const QList<QString> includes = processor.includes();
     for (const QString &include: includes)
         prefix += u"\n#include <%1>"_s.arg(include);
-    headerFile.write((prefix + processor.extractRegisteredTypes()).toUtf8() + "\n#endif\n");
+    if (!nameSpace.isEmpty()) {
+        prefix += u"\nnamespace %1 {"_s.arg(nameSpace);
+        postfix.prepend(u"\n} // namespace %1"_s.arg(nameSpace));
+    }
+
+    headerFile.write((prefix + processor.extractRegisteredTypes() + postfix).toUtf8());
 
     QFile sourceFile(baseName + u".cpp");
     ok = sourceFile.open(QFile::WriteOnly);
