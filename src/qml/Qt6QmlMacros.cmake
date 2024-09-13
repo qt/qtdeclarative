@@ -753,6 +753,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         QT_QML_MODULE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
         QT_QML_MODULE_RESOURCE_PREFIX "${qt_qml_module_resource_prefix}"
         QT_QML_MODULE_PAST_MAJOR_VERSIONS "${arg_PAST_MAJOR_VERSIONS}"
+        QT_QML_MODULE_NAMESPACE "${arg_NAMESPACE}"
 
         # TODO: Check how this is used by qt6_android_generate_deployment_settings()
         QT_QML_IMPORT_PATH "${all_qml_import_paths}"
@@ -3314,6 +3315,12 @@ function(qt6_generate_foreign_qml_types source_target destination_qml_target)
         "${CMAKE_CURRENT_BINARY_DIR}/${registration_files_base}.h"
     )
 
+    set(namespace_args "")
+    get_target_property(namespace ${destination_qml_target} QT_QML_MODULE_NAMESPACE)
+    if (namespace)
+        list(APPEND namespace_args "--namespace" "${namespace}")
+    endif()
+
     _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     add_custom_command(
         OUTPUT
@@ -3326,6 +3333,7 @@ function(qt6_generate_foreign_qml_types source_target destination_qml_target)
             ${tool_wrapper}
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
             "--extract"
+            ${namespace_args}
             -o ${registration_files_base}
             ${target_metatypes_json_file}
         COMMENT "Generate QML registration code for target ${source_target}"
