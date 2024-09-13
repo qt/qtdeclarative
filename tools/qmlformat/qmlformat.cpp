@@ -21,76 +21,196 @@
 
 #include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
 
-
 using namespace QQmlJS::Dom;
 
-struct Options
-{
-    bool verbose = false;
-    bool inplace = false;
-    bool force = false;
-    bool tabs = false;
-    bool valid = false;
-    bool normalize = false;
-    bool ignoreSettings = false;
-    bool writeDefaultSettings = false;
-    bool objectsSpacing = false;
-    bool functionsSpacing = false;
-
-    int indentWidth = 4;
-    bool indentWidthSet = false;
-    QString newline = "native";
-
-    QStringList files;
-    QStringList arguments;
-    QStringList errors;
+enum QQmlFormatOptionLineEndings {
+    Native,
+    Windows,
+    Unix,
+    OldMacOs,
 };
 
-// TODO refactor
-// Move out to the LineWriterOptions class / helper
-static LineWriterOptions composeLwOptions(const Options &options, QStringView code)
+class QQmlFormatSettings : public QQmlToolingSettings
 {
-    LineWriterOptions lwOptions;
-    lwOptions.formatOptions.indentSize = options.indentWidth;
-    lwOptions.formatOptions.useTabs = options.tabs;
-    lwOptions.updateOptions = LineWriterOptions::Update::None;
-    if (options.newline == "native") {
-        // find out current line endings...
-        int newlineIndex = code.indexOf(QChar(u'\n'));
-        int crIndex = code.indexOf(QChar(u'\r'));
-        if (newlineIndex >= 0) {
-            if (crIndex >= 0) {
-                if (crIndex + 1 == newlineIndex)
-                    lwOptions.lineEndings = LineWriterOptions::LineEndings::Windows;
-                else
-                    qWarning().noquote() << "Invalid line ending in file, using default";
+public:
+    QQmlFormatSettings(const QString &toolName = u"qmlformat"_s);
+    static const inline QLatin1StringView s_useTabsSetting = QLatin1String("UseTabs");
+    static const inline QLatin1StringView s_indentWidthSetting = QLatin1String("IndentWidth");
+    static const inline QLatin1StringView s_normalizeSetting = QLatin1String("NormalizeOrder");
+    static const inline QLatin1StringView s_newlineSetting = QLatin1String("NewlineType");
+    static const inline QLatin1StringView s_objectsSpacingSetting = QLatin1String("ObjectsSpacing");
+    static const inline QLatin1StringView s_functionsSpacingSetting = QLatin1String("FunctionsSpacing");
+};
 
-            } else {
-                lwOptions.lineEndings = LineWriterOptions::LineEndings::Unix;
-            }
-        } else if (crIndex >= 0) {
-            lwOptions.lineEndings = LineWriterOptions::LineEndings::OldMacOs;
-        } else {
-            qWarning().noquote() << "Unknown line ending in file, using default";
+QQmlFormatSettings::QQmlFormatSettings(const QString &toolName) : QQmlToolingSettings(toolName)
+{
+    addOption(s_useTabsSetting);
+    addOption(s_indentWidthSetting, 4);
+    addOption(s_normalizeSetting);
+    addOption(s_newlineSetting, QStringLiteral("native"));
+    addOption(s_objectsSpacingSetting);
+    addOption(s_functionsSpacingSetting);
+}
+
+class QQmlFormatOptions
+{
+public:
+    QQmlFormatOptions();
+    using LineEndings = QQmlJS::Dom::LineWriterOptions::LineEndings;
+    using AttributesSequence = QQmlJS::Dom::LineWriterOptions::AttributesSequence;
+    static LineEndings detectLineEndings(const QString &code);
+    static LineEndings lineEndings(QQmlFormatOptionLineEndings endings, const QString &code)
+    {
+        switch (endings) {
+        case Native:
+            return detectLineEndings(code);
+        case OldMacOs:
+            return LineEndings::OldMacOs;
+        case Windows:
+            return LineEndings::Windows;
+        case Unix:
+            return LineEndings::Unix;
         }
-    } else if (options.newline == "macos") {
-        lwOptions.lineEndings = LineWriterOptions::LineEndings::OldMacOs;
-    } else if (options.newline == "windows") {
-        lwOptions.lineEndings = LineWriterOptions::LineEndings::Windows;
-    } else if (options.newline == "unix") {
-        lwOptions.lineEndings = LineWriterOptions::LineEndings::Unix;
-    } else {
-        qWarning().noquote() << "Unknown line ending type" << options.newline << ", using default";
+        Q_UNREACHABLE_RETURN(LineEndings::Unix);
     }
+    bool tabsEnabled() const { return m_options.formatOptions.useTabs; }
+    void setTabsEnabled(bool tabs) { m_options.formatOptions.useTabs = tabs; }
+    bool normalizeEnabled() const
+    {
+        return m_options.attributesSequence == AttributesSequence::Normalize;
+    }
+    void setNormalizeEnabled(bool normalize)
+    {
+        m_options.attributesSequence =
+                (normalize ? AttributesSequence::Normalize : AttributesSequence::Preserve);
+    }
+    bool objectsSpacing() const { return m_options.objectsSpacing; }
+    void setObjectsSpacing(bool spacing) { m_options.objectsSpacing = spacing; }
+    bool functionsSpacing() const { return m_options.functionsSpacing; }
+    void setFunctionsSpacing(bool spacing) { m_options.functionsSpacing = spacing; }
+    int indentWidth() const { return m_options.formatOptions.indentSize; }
+    void setIndentWidth(int width) { m_options.formatOptions.indentSize = width; }
+    QQmlJS::Dom::LineWriterOptions optionsForCode(const QString &code) const
+    {
+        QQmlJS::Dom::LineWriterOptions result = m_options;
+        result.lineEndings = lineEndings(m_newline, code);
+        return result;
+    }
+    static QQmlFormatOptionLineEndings parseEndings(const QString &endings);
+    QQmlFormatOptionLineEndings newline() const { return m_newline; }
+    void setNewline(const QQmlFormatOptionLineEndings &endings) { m_newline = endings; }
+    QStringList files() const { return m_files; }
+    void setFiles(const QStringList &newFiles) { m_files = newFiles; }
+    QStringList arguments() const { return m_arguments; }
+    void setArguments(const QStringList &newArguments) { m_arguments = newArguments; }
+    bool isVerbose() const { return m_verbose; }
+    void setIsVerbose(bool newVerbose) { m_verbose = newVerbose; }
+    bool isValid() const { return m_valid; }
+    void setIsValid(bool newValid) { m_valid = newValid; }
+    bool isInplace() const { return m_inplace; }
+    void setIsInplace(bool newInplace) { m_inplace = newInplace; }
+    bool forceEnabled() const { return m_force; }
+    void setForceEnabled(bool newForce) { m_force = newForce; }
+    bool ignoreSettingsEnabled() const { return m_ignoreSettings; }
+    void setIgnoreSettingsEnabled(bool newIgnoreSettings) { m_ignoreSettings = newIgnoreSettings; }
+    bool writeDefaultSettingsEnabled() const { return m_writeDefaultSettings; }
+    void setWriteDefaultSettingsEnabled(bool newWriteDefaultSettings)
+    {
+        m_writeDefaultSettings = newWriteDefaultSettings;
+    }
+    bool indentWidthSet() const { return m_indentWidthSet; }
+    void setIndentWidthSet(bool newIndentWidthSet) { m_indentWidthSet = newIndentWidthSet; }
+    QStringList errors() const { return m_errors; }
+    void addError(const QString &newError) { m_errors.append(newError); };
+    void applySettings(const QQmlFormatSettings &settings);
 
-    if (options.normalize)
-        lwOptions.attributesSequence = LineWriterOptions::AttributesSequence::Normalize;
-    else
-        lwOptions.attributesSequence = LineWriterOptions::AttributesSequence::Preserve;
+private:
+    QQmlJS::Dom::LineWriterOptions m_options;
+    QQmlFormatOptionLineEndings m_newline = Native;
+    QStringList m_files;
+    QStringList m_arguments;
+    QStringList m_errors;
+    bool m_verbose = false;
+    bool m_valid = false;
+    bool m_inplace = false;
+    bool m_force = false;
+    bool m_ignoreSettings = false;
+    bool m_writeDefaultSettings = false;
+    bool m_indentWidthSet = false;
+};
 
-    lwOptions.objectsSpacing = options.objectsSpacing;
-    lwOptions.functionsSpacing = options.functionsSpacing;
-    return lwOptions;
+QQmlFormatOptions::QQmlFormatOptions()
+{
+    m_options.updateOptions = QQmlJS::Dom::LineWriterOptions::Update::None;
+    setTabsEnabled(false);
+    setNormalizeEnabled(false);
+    setObjectsSpacing(false);
+    setFunctionsSpacing(false);
+    setIndentWidth(4);
+}
+
+QQmlFormatOptions::LineEndings QQmlFormatOptions::detectLineEndings(const QString &code)
+{
+    const QQmlJS::Dom::LineWriterOptions::LineEndings defaultEndings =
+#if defined(Q_OS_WIN)
+            LineEndings::Windows;
+#else
+            LineEndings::Unix;
+#endif
+    // find out current line endings...
+    int newlineIndex = code.indexOf(QChar(u'\n'));
+    int crIndex = code.indexOf(QChar(u'\r'));
+    if (newlineIndex >= 0) {
+        if (crIndex >= 0) {
+            if (crIndex + 1 == newlineIndex)
+                return LineEndings::Windows;
+            qWarning().noquote() << "Invalid line ending in file, using default";
+            return defaultEndings;
+        }
+        return LineEndings::Unix;
+    }
+    if (crIndex >= 0) {
+        return LineEndings::OldMacOs;
+    }
+    qWarning().noquote() << "Unknown line ending in file, using default";
+    return defaultEndings;
+}
+
+QQmlFormatOptionLineEndings QQmlFormatOptions::parseEndings(const QString &endings)
+{
+    if (endings == u"unix")
+        return Unix;
+    if (endings == u"windows")
+        return Windows;
+    if (endings == u"macos")
+        return OldMacOs;
+    if (endings == u"native")
+        return Native;
+    qWarning().noquote() << "Unknown line ending type" << endings << ", using default";
+#if defined (Q_OS_WIN)
+    return Windows;
+#else
+    return Unix;
+#endif
+}
+
+void QQmlFormatOptions::applySettings(const QQmlFormatSettings &settings)
+{
+    // Don't overwrite tab settings that were already set.
+    if (!indentWidthSet()) {
+        if (settings.isSet(QQmlFormatSettings::s_indentWidthSetting))
+            setIndentWidth(settings.value(QQmlFormatSettings::s_indentWidthSetting).toInt());
+        if (settings.isSet(QQmlFormatSettings::s_useTabsSetting))
+            setTabsEnabled(settings.value(QQmlFormatSettings::s_useTabsSetting).toBool());
+    }
+    if (settings.isSet(QQmlFormatSettings::s_normalizeSetting))
+        setNormalizeEnabled(settings.value(QQmlFormatSettings::s_normalizeSetting).toBool());
+    if (settings.isSet(QQmlFormatSettings::s_newlineSetting))
+        setNewline(QQmlFormatOptions::parseEndings(settings.value(QQmlFormatSettings::s_newlineSetting).toString()));
+    if (settings.isSet(QQmlFormatSettings::s_objectsSpacingSetting))
+        setObjectsSpacing(settings.value(QQmlFormatSettings::s_objectsSpacingSetting).toBool());
+    if (settings.isSet(QQmlFormatSettings::s_functionsSpacingSetting))
+        setFunctionsSpacing(settings.value(QQmlFormatSettings::s_functionsSpacingSetting).toBool());
 }
 
 static void logParsingErrors(const DomItem &fileItem, const QString &filename)
@@ -144,7 +264,7 @@ static std::pair<DomItem, bool> parse(const QString &filename)
     return { fItem, filePtr && filePtr->isValid() };
 }
 
-static bool parseFile(const QString &filename, const Options &options)
+static bool parseFile(const QString &filename, const QQmlFormatOptions &options)
 {
     const auto [fileItem, validFile] = parse(filename);
     if (!validFile) {
@@ -153,22 +273,22 @@ static bool parseFile(const QString &filename, const Options &options)
     }
 
     // Turn AST back into source code
-    if (options.verbose)
+    if (options.isVerbose())
         qWarning().noquote() << "Dumping" << filename;
 
     const auto &code = getFileItemOwner(fileItem)->code();
-    auto lwOptions = composeLwOptions(options, code);
+    auto lwOptions = options.optionsForCode(code);
     WriteOutChecks checks = WriteOutCheck::Default;
     //Disable writeOutChecks for some usecases
-    if (options.force ||
+    if (options.forceEnabled() ||
         code.size() > 32000 ||
         fileItem.internalKind() == DomType::JsFile) {
         checks = WriteOutCheck::None;
     }
 
     bool res = false;
-    if (options.inplace) {
-        if (options.verbose)
+    if (options.isInplace()) {
+        if (options.isVerbose())
             qWarning().noquote() << "Writing to file" << filename;
         FileWriter fw;
         const unsigned numberOfBackupFiles = 0;
@@ -187,7 +307,7 @@ static bool parseFile(const QString &filename, const Options &options)
     return res;
 }
 
-Options buildCommandLineOptions(const QCoreApplication &app)
+QQmlFormatOptions buildCommandLineOptions(const QCoreApplication &app)
 {
 #if QT_CONFIG(commandlineparser)
     QCommandLineParser parser;
@@ -245,17 +365,17 @@ Options buildCommandLineOptions(const QCoreApplication &app)
     parser.process(app);
 
     if (parser.isSet(writeDefaultsOption)) {
-        Options options;
-        options.writeDefaultSettings = true;
-        options.valid = true;
+        QQmlFormatOptions options;
+        options.setWriteDefaultSettingsEnabled(true);
+        options.setIsValid(true);
         return options;
     }
 
     bool indentWidthOkay = false;
     const int indentWidth = parser.value("indent-width").toInt(&indentWidthOkay);
     if (!indentWidthOkay) {
-        Options options;
-        options.errors.push_back("Error: Invalid value passed to -w");
+        QQmlFormatOptions options;
+        options.addError("Error: Invalid value passed to -w");
         return options;
     }
 
@@ -275,22 +395,22 @@ Options buildCommandLineOptions(const QCoreApplication &app)
         }
     }
 
-    Options options;
-    options.verbose = parser.isSet("verbose");
-    options.inplace = parser.isSet("inplace");
-    options.force = parser.isSet("force");
-    options.tabs = parser.isSet("tabs");
-    options.normalize = parser.isSet("normalize");
-    options.ignoreSettings = parser.isSet("ignore-settings");
-    options.objectsSpacing = parser.isSet("objects-spacing");
-    options.functionsSpacing = parser.isSet("functions-spacing");
-    options.valid = true;
+    QQmlFormatOptions options;
+    options.setIsVerbose(parser.isSet("verbose"));
+    options.setIsInplace(parser.isSet("inplace"));
+    options.setForceEnabled(parser.isSet("force"));
+    options.setTabsEnabled(parser.isSet("tabs"));
+    options.setIgnoreSettingsEnabled(parser.isSet("ignore-settings"));
+    options.setNormalizeEnabled(parser.isSet("normalize"));
+    options.setObjectsSpacing(parser.isSet("objects-spacing"));
+    options.setFunctionsSpacing(parser.isSet("functions-spacing"));
+    options.setIsValid(true);
 
-    options.indentWidth = indentWidth;
-    options.indentWidthSet = parser.isSet("indent-width");
-    options.newline = parser.value("newline");
-    options.files = files;
-    options.arguments = parser.positionalArguments();
+    options.setIndentWidth(indentWidth);
+    options.setIndentWidthSet(parser.isSet("indent-width"));
+    options.setNewline(QQmlFormatOptions::parseEndings(parser.value("newline"))); // TODO
+    options.setFiles(files);
+    options.setArguments(parser.positionalArguments());
     return options;
 #else
     return Options {};
@@ -303,84 +423,48 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("qmlformat");
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
 
-    QQmlToolingSettings settings(QLatin1String("qmlformat"));
-
-    const QString &useTabsSetting = QStringLiteral("UseTabs");
-    settings.addOption(useTabsSetting);
-
-    const QString &indentWidthSetting = QStringLiteral("IndentWidth");
-    settings.addOption(indentWidthSetting, 4);
-
-    const QString &normalizeSetting = QStringLiteral("NormalizeOrder");
-    settings.addOption(normalizeSetting);
-
-    const QString &newlineSetting = QStringLiteral("NewlineType");
-    settings.addOption(newlineSetting, QStringLiteral("native"));
-
-    const QString &objectsSpacingSetting = QStringLiteral("ObjectsSpacing");
-    settings.addOption(objectsSpacingSetting);
-
-    const QString &functionsSpacingSetting = QStringLiteral("FunctionsSpacing");
-    settings.addOption(functionsSpacingSetting);
+    QQmlFormatSettings settings(QLatin1String("qmlformat"));
 
     const auto options = buildCommandLineOptions(app);
-    if (!options.valid) {
-        for (const auto &error : options.errors) {
+    if (!options.isValid()) {
+        for (const auto &error : options.errors()) {
             qWarning().noquote() << error;
         }
 
         return -1;
     }
 
-    if (options.writeDefaultSettings)
+    if (options.writeDefaultSettingsEnabled())
         return settings.writeDefaults() ? 0 : -1;
 
-    auto getSettings = [&](const QString &file, Options options) {
+    auto getSettings = [&](const QString &file, QQmlFormatOptions options) {
         // Perform formatting inplace if --files option is set.
-        if (!options.files.isEmpty())
-            options.inplace = true;
+        if (!options.files().isEmpty())
+            options.setIsInplace(true);
 
-        if (options.ignoreSettings || !settings.search(file))
+        if (options.ignoreSettingsEnabled() || !settings.search(file))
             return options;
 
-        Options perFileOptions = options;
+        QQmlFormatOptions perFileOptions = options;
 
-        // Allow for tab settings to be overwritten by the command line
-        if (!options.indentWidthSet) {
-            if (settings.isSet(indentWidthSetting))
-                perFileOptions.indentWidth = settings.value(indentWidthSetting).toInt();
-            if (settings.isSet(useTabsSetting))
-                perFileOptions.tabs = settings.value(useTabsSetting).toBool();
-        }
-
-        if (settings.isSet(normalizeSetting))
-            perFileOptions.normalize = settings.value(normalizeSetting).toBool();
-
-        if (settings.isSet(newlineSetting))
-            perFileOptions.newline = settings.value(newlineSetting).toString();
-
-        if (settings.isSet(objectsSpacingSetting))
-            perFileOptions.objectsSpacing = settings.value(objectsSpacingSetting).toBool();
-
-        if (settings.isSet(functionsSpacingSetting))
-            perFileOptions.functionsSpacing = settings.value(functionsSpacingSetting).toBool();
+        perFileOptions.applySettings(settings);
 
         return perFileOptions;
     };
 
     bool success = true;
-    if (!options.files.isEmpty()) {
-        if (!options.arguments.isEmpty())
+    if (!options.files().isEmpty()) {
+        if (!options.arguments().isEmpty())
             qWarning() << "Warning: Positional arguments are ignored when -F is used";
 
-        for (const QString &file : options.files) {
+        for (const QString &file : options.files()) {
             Q_ASSERT(!file.isEmpty());
 
             if (!parseFile(file, getSettings(file, options)))
                 success = false;
         }
     } else {
-        for (const QString &file : options.arguments) {
+        for (const QString &file : options.arguments()) {
             if (!parseFile(file, getSettings(file, options)))
                 success = false;
         }
