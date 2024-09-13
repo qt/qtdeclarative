@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Var used before declaration
-\brief A JavaScript variable was used before its declaration.
+\brief [var-used-before-declaration] A JavaScript variable was used before its declaration.
 
 \qmllintwarningcategory var-used-before-declaration
 

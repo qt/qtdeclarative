@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Inheritance cycle
-\brief A component inherits from itself.
+\brief [inheritance-cycle] A component inherits from itself.
 
 \qmllintwarningcategory inheritance-cycle
 

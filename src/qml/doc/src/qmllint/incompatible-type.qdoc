@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Incompatible type
-\brief An object, value, or expression is used on an incompatible type.
+\brief [incompatible-type] An object, value, or expression is used on an incompatible type.
 
 \qmllintwarningcategory incompatible-type
 

@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Use proper function
-\brief Calling something that might not be a function.
+\brief [use-proper-function] Calling something that might not be a function.
 
 \qmllintwarningcategory use-proper-function
 
