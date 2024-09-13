@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Multiline strings
-\brief A string is spanning over multiple lines.
+\brief [multiline-strings] A string is spanning over multiple lines.
 
 \qmllintwarningcategory multiline-strings
 

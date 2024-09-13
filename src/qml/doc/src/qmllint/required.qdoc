@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Component is missing a required property
-\brief A component's required property was not bound.
+\brief [required] A component's required property was not bound.
 
 \qmllintwarningcategory required
 

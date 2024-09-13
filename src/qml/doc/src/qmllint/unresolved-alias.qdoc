@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Unresolved alias
-\brief Property of property alias was not found.
+\brief [unresolved-alias] Property of property alias was not found.
 
 \qmllintwarningcategory unresolved-alias
 

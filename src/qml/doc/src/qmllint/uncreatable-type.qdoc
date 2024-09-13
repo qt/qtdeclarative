@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Uncreatable type
-\brief Types that can't be created.
+\brief [uncreatable-type] Types that can't be created.
 
 \qmllintwarningcategory uncreatable-type
 

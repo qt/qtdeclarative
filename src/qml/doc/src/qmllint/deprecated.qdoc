@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Deprecated
-\brief A deprecated property or type was used.
+\brief [deprecated] A deprecated property or type was used.
 
 \qmllintwarningcategory deprecated
 

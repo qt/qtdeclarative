@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title With
-\brief With statements are strongly discouraged in QML.
+\brief [with] With statements are strongly discouraged in QML.
 
 \qmllintwarningcategory with
 

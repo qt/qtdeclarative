@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Unresolved type
-\brief A used type was not found.
+\brief [unresolved-type] A used type was not found.
 
 This category contains following warnings:
 \list

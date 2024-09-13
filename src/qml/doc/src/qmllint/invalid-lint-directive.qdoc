@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Invalid qmllint directives
-\brief Invalid qmllint comments.
+\brief [invalid-lint-directive] Invalid qmllint comments.
 
 \qmllintwarningcategory invalid-lint-directive
 

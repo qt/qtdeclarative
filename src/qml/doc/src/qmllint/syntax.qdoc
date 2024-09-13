@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Syntax
-\brief Various syntactic errors.
+\brief [syntax] Various syntactic errors.
 
 \qmllintwarningcategory syntax
 

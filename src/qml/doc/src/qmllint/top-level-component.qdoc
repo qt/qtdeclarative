@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Top level component
-\brief Root QML type is a component
+\brief [top-level-component] Root QML type is a component
 
 \qmllintwarningcategory top-level-component
 

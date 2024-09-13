@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Duplicate id
-\brief An id is not unique.
+\brief [syntax.duplicate-ids] An id is not unique.
 
 \qmllintwarningcategory syntax.duplicate-ids
 

@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Non-list property
-\brief Multiple values were assigned to a non-list property.
+\brief [non-list-property] Multiple values were assigned to a non-list property.
 
 \qmllintwarningcategory non-list-property
 
