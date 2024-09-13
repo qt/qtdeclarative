@@ -151,6 +151,15 @@ int main(int argc, char **argv)
     if (!processor.processTypes(files))
         return EXIT_FAILURE;
 
+    if (parser.isSet(extract)) {
+        if (!parser.isSet(outputOption)) {
+            error(module) << "The output file name must be provided";
+            return EXIT_FAILURE;
+        }
+        QString baseName = parser.value(outputOption);
+        return QmlTypeRegistrar::runExtract(baseName, processor);
+    }
+
     processor.postProcessTypes();
 
     if (!parser.isSet(jsroot)) {
@@ -160,15 +169,6 @@ int main(int argc, char **argv)
     }
 
     processor.postProcessForeignTypes();
-
-    if (parser.isSet(extract)) {
-        if (!parser.isSet(outputOption)) {
-            error(module) << "The output file name must be provided";
-            return EXIT_FAILURE;
-        }
-        QString baseName = parser.value(outputOption);
-        return QmlTypeRegistrar::runExtract(baseName, processor);
-    }
 
     QmlTypeRegistrar typeRegistrar;
     typeRegistrar.setIncludes(processor.includes());
