@@ -7,6 +7,7 @@
 #include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlinfo.h>
 
+#include <QtCore/qbasictimer.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qdebug.h>
@@ -14,6 +15,8 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qpointer.h>
 #include <QtCore/qsettings.h>
+
+using namespace std::chrono_literals;
 
 QT_BEGIN_NAMESPACE
 
@@ -202,7 +205,7 @@ using namespace Qt::StringLiterals;
 
 Q_STATIC_LOGGING_CATEGORY(lcQmlSettings, "qt.core.settings")
 
-static constexpr const int settingsWriteDelay = 500;
+static constexpr auto settingsWriteDelay = 500ms;
 
 class QQmlSettingsPrivate
 {
@@ -225,7 +228,7 @@ public:
     QVariant readProperty(const QMetaProperty &property) const;
 
     QQmlSettings *q_ptr = nullptr;
-    int timerId = 0;
+    QBasicTimer timer;
     bool initialized = false;
     QString category = {};
     QUrl location = {};
@@ -351,9 +354,7 @@ void QQmlSettingsPrivate::_q_propertyChanged()
         changedProperties.insert(property.name(), value);
         qCDebug(lcQmlSettings) << "QQmlSettings: cache" << property.name() << ":" << value;
     }
-    if (timerId != 0)
-        q->killTimer(timerId);
-    timerId = q->startTimer(settingsWriteDelay);
+    timer.start(settingsWriteDelay, q);
 }
 
 QVariant QQmlSettingsPrivate::readProperty(const QMetaProperty &property) const
@@ -496,10 +497,9 @@ void QQmlSettings::timerEvent(QTimerEvent *event)
 {
     Q_D(QQmlSettings);
     QObject::timerEvent(event);
-    if (event->timerId() != d->timerId)
+    if (!event->matches(d->timer))
         return;
-    killTimer(d->timerId);
-    d->timerId = 0;
+    d->timer.stop();
     d->store();
 }
 
