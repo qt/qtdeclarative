@@ -64,12 +64,12 @@ T.Menu {
                 border.width: 0.5
                 visible: false
             }
-            shadowScale: 1.04
-            shadowOpacity: Application.styleHints.colorScheme === Qt.Light ? 0.15 : 0.2
+            shadowScale: 1
+            shadowOpacity: Application.styleHints.colorScheme === Qt.Light ? 0.45 : 0.6
             shadowColor: 'black'
             shadowEnabled: true
             shadowHorizontalOffset: 0
-            shadowVerticalOffset: 7
+            shadowVerticalOffset: 6
         }
     }
 

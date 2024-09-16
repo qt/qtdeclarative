@@ -60,11 +60,11 @@ T.Menu {
                 visible: false
             }
             shadowScale: 1.04
-            shadowOpacity: 0.1
+            shadowOpacity: 0.35
             shadowColor: 'black'
             shadowEnabled: true
             shadowHorizontalOffset: 0
-            shadowVerticalOffset: 10
+            shadowVerticalOffset: 6
         }
     }
 
